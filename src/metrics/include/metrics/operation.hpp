@@ -125,10 +125,14 @@ class StreamInterfaceImpl;
 template <typename Clocksource, typename StreamInterface>
 class EventStream;
 
+template <typename Clocksource, typename StreamInterface>
+class GrpcClient;
+
 }  // namespace v2
 
 template <typename Clocksource>
 class RegistryT;
+
 
 /**
  * Throw this to indicate the percentage of operations exceeding the
@@ -183,26 +187,20 @@ public:
 
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
-    using stream_t = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>;
+    using StreamPtr = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>*;
 
-    OperationImpl(const ActorId& actorId,
-                  std::string actorName,
+    OperationImpl(std::string actorName,
                   const RegistryT<ClockSource>& registry,
                   std::string opName,
-                  std::optional<genny::PhaseNumber> phase,
-                  const boost::filesystem::path& pathPrefix,
-                  const std::optional<std::string>& collector_name = std::nullopt,
+                  StreamPtr stream,
                   std::optional<OperationThreshold> threshold = std::nullopt)
         : _actorName(std::move(actorName)),
           _registry(registry),
           _useGrpc(registry.getFormat().useGrpc()),
           _useCsv(registry.getFormat().useCsv()),
           _opName(std::move(opName)),
-          _phase(std::move(phase)),
+          _stream{stream},
           _threshold(threshold) {
-        if (_useGrpc) {
-            _stream.reset(new stream_t(actorId, *collector_name, this->_phase, pathPrefix));
-        }
         if (_useCsv) {
             _events.reset(new EventSeries());
         }
@@ -233,8 +231,9 @@ public:
         if (_threshold) {
             _threshold->check(started, finished);
         }
-        if (_useGrpc) {
-            _stream->addAt(finished, event, _registry.getWorkerCount(_actorName, _opName));
+        if (_stream) {
+            _stream->addAt(
+                finished, std::move(event), _registry.getWorkerCount(_actorName, _opName));
         }
         if (_useCsv) {
             _events->addAt(finished, event);
@@ -265,10 +264,9 @@ private:
     const bool _useGrpc;
     const bool _useCsv;
     const std::string _opName;
-    OptionalPhaseNumber _phase;
+    StreamPtr _stream; // Streams are owned by the grpc client.
     OptionalOperationThreshold _threshold;
     std::unique_ptr<EventSeries> _events;
-    std::unique_ptr<stream_t> _stream;
 };
 
 /**

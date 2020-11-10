@@ -41,6 +41,8 @@ public:
         events.push_back(event);
     }
 
+    void finish() {}
+
     // We make this static so we can access it even several private objects deep.
     static std::vector<poplar::EventMetrics> events;
 };
@@ -62,12 +64,13 @@ void assertDurationsEqual(RegistryClockSourceStub::duration dur1,
     REQUIRE(Period<RegistryClockSourceStub>{dur1} == Period<RegistryClockSourceStub>{dur2});
 }
 
+
 TEST_CASE("metrics::OperationContext interface") {
     RegistryClockSourceStub::reset();
 
     auto dummy_metrics = internals::RegistryT<RegistryClockSourceStub>{};
     auto op = internals::OperationImpl<RegistryClockSourceStub>{
-        5, "Actor", dummy_metrics, "Op", std::nullopt, "output"};
+        "Actor", dummy_metrics, "Op", nullptr};
 
     RegistryClockSourceStub::advance(5ns);
     auto ctx = std::make_optional<internals::OperationContextT<RegistryClockSourceStub>>(&op);
@@ -557,20 +560,23 @@ TEST_CASE("Events stream to gRPC") {
 
 
     SECTION("Empty stream") {
+
         RegistryClockSourceStub::reset();
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                1, "TestName", 1, "/test/prefix"};
+                1, "TestName", 1};
+        REQUIRE_FALSE(stream.sendOne(true));
 
         EventVec expected;
         compareEventsAndClear(expected);
     }
 
     SECTION("Three events") {
+
         RegistryClockSourceStub::reset();
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                1, "EventName", 9, "/test/prefix"};
+                1, "EventName", 9};
         EventVec expected;
 
 
@@ -586,6 +592,7 @@ TEST_CASE("Events stream to gRPC") {
                 OutcomeType::kSuccess                                           // outcome
             );
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
+            REQUIRE(stream.sendOne(true));
 
             // Streamed Event
             // ---------------
@@ -627,6 +634,9 @@ TEST_CASE("Events stream to gRPC") {
                 OutcomeType::kFailure                                           // outcome
             );
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
+            // Drive-by test that we won't send when the buffer is under capacity.
+            REQUIRE_FALSE(stream.sendOne());
+            REQUIRE(stream.sendOne(true));
 
             // Streamed Event
             // ---------------
@@ -669,6 +679,7 @@ TEST_CASE("Events stream to gRPC") {
                 OutcomeType::kSuccess                                           // outcome
             );
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
+            REQUIRE(stream.sendOne(true));
 
             // Streamed Event
             // ---------------
@@ -712,7 +723,7 @@ TEST_CASE("Events stream to gRPC") {
 
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                3, "LateEventName", 1, "/test/prefix"};
+                3, "LateEventName", 1,};
         EventVec expected;
         {
             OperationEventT<RegistryClockSourceStub> event(
@@ -724,6 +735,7 @@ TEST_CASE("Events stream to gRPC") {
                 OutcomeType::kSuccess                                           // outcome
             );
             stream.addAt(endTime, event, 1);
+            REQUIRE(stream.sendOne(true));
 
             // Streamed Event
             // ---------------
@@ -800,6 +812,50 @@ TEST_CASE("Events stream to gRPC") {
         REQUIRE(file_count == 4);
 
         REQUIRE(boost::filesystem::remove_all(metricsPath));
+
+    }
+
+    SECTION("Un-forced metrics buffer only pops at capacity.") {
+        auto metricsBuffer =
+            internals::v2::MetricsBuffer<RegistryClockSourceStub>(16, "test_buffer");
+        auto endTime = RegistryClockSourceStub::now();
+        OperationEventT<RegistryClockSourceStub> event(
+            2,                                                              // number
+            77,                                                             // ops
+            2,                                                              // size
+            0,                                                              // errors
+            Period<RegistryClockSourceStub>{std::chrono::microseconds(6)},  // duration
+            OutcomeType::kSuccess                                           // outcome
+        );
+
+        metricsBuffer.addAt(endTime, event, 1);
+        REQUIRE_FALSE(metricsBuffer.pop(false));
+        metricsBuffer.addAt(endTime, event, 1);
+        REQUIRE_FALSE(metricsBuffer.pop(false));
+        metricsBuffer.addAt(endTime, event, 1);
+        REQUIRE_FALSE(metricsBuffer.pop(false));
+        metricsBuffer.addAt(endTime, event, 1);
+        REQUIRE(metricsBuffer.pop(false));
+    }
+
+    SECTION("Metrics buffer throws when capacity exceeded.") {
+        auto metricsBuffer =
+            internals::v2::MetricsBuffer<RegistryClockSourceStub>(3, "test_buffer");
+        auto endTime = RegistryClockSourceStub::now();
+        OperationEventT<RegistryClockSourceStub> event(
+            2,                                                              // number
+            77,                                                             // ops
+            2,                                                              // size
+            0,                                                              // errors
+            Period<RegistryClockSourceStub>{std::chrono::microseconds(6)},  // duration
+            OutcomeType::kSuccess                                           // outcome
+        );
+
+        metricsBuffer.addAt(endTime, event, 1);
+        metricsBuffer.addAt(endTime, event, 1);
+        metricsBuffer.addAt(endTime, event, 1);
+        metricsBuffer.addAt(endTime, event, 1);
+        REQUIRE_THROWS(metricsBuffer.pop(false));
     }
 }
 

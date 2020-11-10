@@ -115,7 +115,7 @@ Nanosecond Loops<Task, Args...>::metricsFtdcLoop(Args&&... args) {
     auto metricsPath = (ph / "genny-metrics").string();
     auto format = genny::metrics::MetricsFormat("ftdc");
 
-    auto metrics = genny::metrics::Registry{format, metricsPath};
+    auto metrics = genny::metrics::Registry{format, metricsPath, false};
     metrics::Reporter reporter(metrics);
 
     auto dummyOp = metrics.operation("metricsFtdcLoop", "dummyOp", 0u);
@@ -187,7 +187,7 @@ Nanosecond Loops<Task, Args...>::metricsFtdcPhaseLoop(Args&&... args) {
     auto metricsPath = (ph / "genny-metrics").string();
     auto format = genny::metrics::MetricsFormat("ftdc");
 
-    auto metrics = genny::metrics::Registry{format, metricsPath};
+    auto metrics = genny::metrics::Registry{format, metricsPath, false};
     metrics::Reporter{metrics};
 
     auto dummyOp = metrics.operation("metricsLoop", "dummyOp", 0u);

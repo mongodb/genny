@@ -17,7 +17,17 @@
 #define HEADER_960919A5_5455_4DD2_BC68_EFBAEB228BB0_INCLUDED
 
 #include <atomic>
+#include <cstdint>
 #include <cstdlib>
+#include <mutex>
+#include <optional>
+#include <queue>
+#include <deque>
+#include <set>
+#include <thread>
+#include <vector>
+#include <unordered_map>
+#include <condition_variable>
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -42,7 +52,22 @@ class OperationEventT;
 
 namespace internals::v2 {
 
+// There's not a super motivated reason for these values other than running
+// a lot of patches and seeing what worked.
+const int MULTIPLIER = 4000;
+const int NUM_CHANNELS = 4;
+const int BUFFER_SIZE = 1000 * MULTIPLIER;
+const int GRPC_THREAD_SLEEP_MS = 200 * MULTIPLIER;
+const double SWAP_BUFFER_PERCENT = .25;
+const int GRPC_BUFFER_SIZE = 5000; // Max possible: 67108864
+const int SEND_CHUNK_SIZE = 1000;
+
 class PoplarRequestError : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+};
+
+class MetricsError : public std::runtime_error {
 public:
     using std::runtime_error::runtime_error;
 };
@@ -65,23 +90,34 @@ public:
     }
 
 private:
-    // We should only have one channel across all threads.
-    static std::unique_ptr<poplar::PoplarEventCollector::StubInterface> _stub;
+
+    std::unique_ptr<poplar::PoplarEventCollector::StubInterface> _stub;
 
     // Should only be called by setStub(), is statically guarded
     // so only one thread will execute.
-    auto createStub() {
+    auto createChannels() {
+        std::vector<std::shared_ptr<grpc::Channel>> _channels;
+
         grpc::ChannelArguments args;
         // The BDP estimator overwhelms the server with pings on a heavy workload.
         args.SetInt(GRPC_ARG_HTTP2_BDP_PROBE, 0);
-        auto channel =
-            grpc::CreateCustomChannel("localhost:2288", grpc::InsecureChannelCredentials(), args);
-        _stub = poplar::PoplarEventCollector::NewStub(channel);
-        return true;
+        // Maximum buffer size grpc will allow.
+        args.SetInt(GRPC_ARG_HTTP2_WRITE_BUFFER_SIZE, GRPC_BUFFER_SIZE);
+        // Local subchannels prohibit global sharing and forces multiple TCP connections.
+        args.SetInt(GRPC_ARG_USE_LOCAL_SUBCHANNEL_POOL, 1);
+        for (int i = 0; i < NUM_CHANNELS; i++) {
+            _channels.push_back(grpc::CreateCustomChannel(
+                "localhost:2288", grpc::InsecureChannelCredentials(), args));
+        }
+
+        return _channels;
     }
 
     void setStub() {
-        static bool stubCreated = createStub();
+        static auto _channels = createChannels();
+        static std::atomic<size_t> _curChannel = 0;
+
+        _stub = poplar::PoplarEventCollector::NewStub(_channels[_curChannel++ % _channels.size()]);
         return;
     }
 };
@@ -124,7 +160,8 @@ public:
         _inFlight = true;
     }
 
-    ~StreamInterfaceImpl() {
+    // Finish the stream. Don't write after calling this.
+    void finish() {
         if (!_stream) {
             BOOST_LOG_TRIVIAL(error) << "Tried to close gRPC stream for operation name " << _name
                                      << " and actor ID " << _actorId << ", but no stream existed.";
@@ -142,18 +179,23 @@ public:
                                        << " and actor ID " << _actorId << ".";
         }
 
-        grpc::Status status;
-        _stream->Finish(&status, _grpcTag);
+        _stream->Finish(&_status, _grpcTag);
         if (!finishCall()) {
             BOOST_LOG_TRIVIAL(error) << "Failed to finish writes to stream for operation name "
                                      << _name << " and actor ID " << _actorId << ".";
             return;
         }
-        if (!status.ok()) {
+    }
+
+    ~StreamInterfaceImpl() {
+        shutdownQueue();
+
+        if (!_status.ok()) {
             BOOST_LOG_TRIVIAL(error)
                 << "Problem closing grpc stream for operation name " << _name << " and actor ID "
                 << _actorId << ": " << _context.debug_error_string();
         }
+
     }
 
 private:
@@ -171,6 +213,16 @@ private:
         return true;
     }
 
+    void shutdownQueue() {
+        _cq.Shutdown();
+        void* gotTag;
+        bool ok = false;
+
+        // Flush the queue.
+        while (_cq.Next(&gotTag, &ok)) {
+        };
+    }
+
     std::string _name;
     ActorId _actorId;
     bool _inFlight;
@@ -179,6 +231,7 @@ private:
     poplar::PoplarResponse _response;
     grpc::ClientContext _context;
     grpc::CompletionQueue _cq;
+    grpc::Status _status;
     void* _grpcTag;
     std::unique_ptr<grpc::ClientAsyncWriterInterface<poplar::EventMetrics>> _stream;
 };
@@ -197,11 +250,24 @@ public:
     explicit Collector(const std::string& name, const boost::filesystem::path& pathPrefix)
         : _name{name}, _id{} {
         _id.set_name(_name);
+        _namePb.set_name(_name);
 
         grpc::ClientContext context;
         poplar::PoplarResponse response;
         poplar::CreateOptions options = createOptions(_name, pathPrefix.string());
         auto status = _stub->CreateCollector(&context, options, &response);
+
+        if (!status.ok()) {
+            std::ostringstream os;
+            os << "Collector " << _name << " status not okay: " << status.error_message();
+            BOOST_THROW_EXCEPTION(PoplarRequestError(os.str()));
+        }
+    }
+
+    void incStreams() {
+        grpc::ClientContext context;
+        poplar::PoplarResponse response;
+        auto status = _stub->RegisterStream(&context, _namePb, &response);
 
         if (!status.ok()) {
             std::ostringstream os;
@@ -243,74 +309,280 @@ private:
     }
 
     std::string _name;
+    poplar::CollectorName _namePb;
     poplar::PoplarID _id;
     CollectorStubInterface _stub;
 };
 
+template <typename Clocksource, typename StreamInterface>
+class EventStream;
+
+// Manages a thread of grpc client execution .
+template <typename ClockSource, typename StreamInterface>
+class GrpcThread {
+public:
+    typedef EventStream<ClockSource, StreamInterface> Stream;
+
+    GrpcThread(bool assertMetricsBuffer, Stream& stream) : _assertMetricsBuffer{assertMetricsBuffer},
+        _stream{stream}, _thread{&GrpcThread::run, this} {}
+
+    void finish() {
+        _finishing = true;
+        _cv.notify_all();
+    }
+
+    ~GrpcThread() {
+        _thread.join();
+    }
+
+private:
+    void run() {
+        while (!_finishing) {
+            reapActor();
+            std::unique_lock<std::mutex> lk(_cvLock);
+            // We sleep for performance reasons, not correctness, so we don't need to
+            // guard against spurious wakeups.
+            _cv.wait_for(lk, std::chrono::milliseconds(GRPC_THREAD_SLEEP_MS));
+        }
+
+        // Drain buffer and finish.
+        reapActor();
+        _stream.finish();
+    }
+
+    void reapActor() {
+        int counter = 0;
+        while(_stream.sendOne(_finishing, _assertMetricsBuffer)) {
+            counter++;
+            // If finishing and all threads are draining, this helps 
+            // balance the server-side buffers.
+            if (counter >= SEND_CHUNK_SIZE) {
+                std::this_thread::yield();
+                counter = 0;
+            }
+        }
+    }
+
+    std::atomic<bool> _finishing = false;
+    std::mutex _streamsMutex;
+    std::mutex _cvLock;
+    std::condition_variable _cv;
+
+    bool _assertMetricsBuffer;
+    Stream& _stream;
+    std::thread _thread;
+};
+
+// Manages all the grpc threads. Divides the workload evenly between them.
+// Owns / manages streams, through which OperationsImpl can add events.
+template <typename ClockSource, typename StreamInterface>
+class GrpcClient {
+public:
+    // Map from "Actor.Operation.Phase" to a Collector.
+    using CollectorsMap = std::unordered_map<std::string, v2::Collector>;
+    using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
+    typedef EventStream<ClockSource, StreamInterface> Stream;
+
+    GrpcClient(bool assertMetricsBuffer, const boost::filesystem::path& pathPrefix) : _pathPrefix{pathPrefix}, _assertMetricsBuffer{assertMetricsBuffer} {}
+
+    Stream* createStream(const ActorId& actorId,
+                      const std::string& name,
+                      const OptionalPhaseNumber& phase) {
+        _collectors.try_emplace(name, name, _pathPrefix);
+        _collectors.at(name).incStreams();
+        _streams.emplace_back(actorId, name, phase);
+        _threads.emplace_back(_assertMetricsBuffer, _streams.back());
+        return &_streams.back();
+    }
+
+    ~GrpcClient() {
+        for (int i = 0; i < _threads.size(); i++) {
+            _threads[i].finish();
+        }
+    }
+
+private:
+    const boost::filesystem::path _pathPrefix;
+    const bool _assertMetricsBuffer;
+    CollectorsMap _collectors;
+    // deque avoid copy-constructor calls
+    std::deque<Stream> _streams;
+    std::deque<GrpcThread<ClockSource, StreamInterface>> _threads;
+};
+
+template <typename ClockSource>
+struct MetricsArgs {
+    using time_point = typename ClockSource::time_point;
+
+    MetricsArgs(const typename ClockSource::time_point& finish,
+                OperationEventT<ClockSource> event,
+                size_t workerCount)
+        : finish{finish}, event{std::move(event)}, workerCount{workerCount} {}
+    time_point finish;
+    OperationEventT<ClockSource> event;
+    size_t workerCount;
+};
+
+// Efficient buffer that should rarely be blocked on insertions.
+template <typename ClockSource>
+class MetricsBuffer {
+public:
+    using time_point = typename ClockSource::time_point;
+
+    explicit MetricsBuffer(size_t size, const std::string& name)
+        : size{size},
+          name{name},
+          _loading{std::make_unique<std::vector<MetricsArgs<ClockSource>>>()},
+          _draining{std::make_unique<std::vector<MetricsArgs<ClockSource>>>()} {
+              _loading->reserve(size);
+              _draining->reserve(size);
+    }
+
+    // Thread-safe.
+    void addAt(const time_point& finish,
+               OperationEventT<ClockSource> event,
+               size_t workerCount) {
+        const std::lock_guard<std::mutex> lock(_loadingMutex);
+        _loading->emplace_back(finish, std::move(event), workerCount);
+    }
+
+    // Not thread-safe.
+    std::optional<MetricsArgs<ClockSource>> pop(bool force, bool assertMetricsBuffer=true) {
+        refresh(force, assertMetricsBuffer);
+        if (_location >= _draining->size()) {
+            return std::nullopt;
+        } else {
+            // Tracking location explicitly lets us create FIFO semantics with a vector.
+            // No STL queue allows us to reserve space.
+            auto ret = std::move(_draining->at(_location++));
+            return ret;
+        }
+    }
+
+    const std::string name;
+    const size_t size;
+
+private:
+    void refresh(bool force, bool assertMetricsBuffer) {
+        if (_location < _draining->size()) {
+            return;
+        }
+
+        _draining->clear();
+        _location = 0;
+        const std::lock_guard<std::mutex> lock(_loadingMutex);
+        if (force || _loading->size() >= size * SWAP_BUFFER_PERCENT) {
+            _draining.swap(_loading);
+        }
+
+        // Maybe a bit nuclear, but this draws a box around the entire grpc system
+        // and errors if it ever backs up enough to slow down an actor thread.
+        if (_draining->size() > size && assertMetricsBuffer) {
+            std::ostringstream os;
+            os << "Metrics buffer for operation name " << name << " exceeded pre-allocated space"
+               << ". Expected size: " << size << ". Actual size: " << _draining->size()
+               << ". This may affect recorded performance.";
+
+            BOOST_THROW_EXCEPTION(MetricsError(os.str()));
+        }
+    }
+
+    std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _loading;
+    std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _draining;
+    std::mutex _loadingMutex;
+    size_t _location = 0;
+};
 /**
  * Primary point of interaction between v2 poplar internals and the metrics system.
  */
 template <typename ClockSource, typename StreamInterface>
 class EventStream {
     using duration = typename ClockSource::duration;
+    using time_point = typename ClockSource::time_point;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
 
 public:
     explicit EventStream(const ActorId& actorId,
                          const std::string& name,
-                         const OptionalPhaseNumber& phase,
-                         const boost::filesystem::path& pathPrefix)
-        : _name{name}, _stream{name, actorId}, _phase{phase}, _last_finish{ClockSource::now()} {
+                         const OptionalPhaseNumber& phase)
+        : _name{name},
+          _stream{name, actorId},
+          _phase{phase},
+          _lastFinish{ClockSource::now()},
+          _buffer(std::make_unique<MetricsBuffer<ClockSource>>(BUFFER_SIZE, _name)) {
         _metrics.set_name(_name);
         _metrics.set_id(actorId);
     }
 
-    void addAt(const typename ClockSource::time_point& finish,
-               const OperationEventT<ClockSource>& event,
+    // Record a metrics event to the loading buffer.
+    void addAt(const time_point& finish,
+               OperationEventT<ClockSource> event,
                size_t workerCount) {
+        _buffer->addAt(finish, std::move(event), workerCount);
+    }
+
+    // Send one event from the draining buffer to the grpc api.
+    // Returns true if there are more events to send.
+    bool sendOne(bool force = false, bool assertMetricsBuffer = true) {
+        auto metricsArgsOptional = _buffer->pop(force, assertMetricsBuffer);
+        if (!metricsArgsOptional)
+            return false;
+        auto metricsArgs = *metricsArgsOptional;
+
         _metrics.mutable_time()->set_seconds(
-            Period<ClockSource>(finish.time_since_epoch()).getSecondsCount());
+            Period<ClockSource>(metricsArgs.finish.time_since_epoch()).getSecondsCount());
         _metrics.mutable_time()->set_nanos(
-            Period<ClockSource>(finish.time_since_epoch()).getNanosecondsCount());
+            Period<ClockSource>(metricsArgs.finish.time_since_epoch()).getNanosecondsCount());
 
         _metrics.mutable_timers()->mutable_duration()->set_seconds(
-            event.duration.getSecondsCount());
+            metricsArgs.event.duration.getSecondsCount());
         _metrics.mutable_timers()->mutable_duration()->set_nanos(
-            event.duration.getNanosecondsCount());
+            metricsArgs.event.duration.getNanosecondsCount());
 
         // If the EventStream was constructed after the end time was recorded.
-        if (finish < _last_finish) {
+        if (metricsArgs.finish < _lastFinish) {
             _metrics.mutable_timers()->mutable_total()->set_seconds(
-                event.duration.getSecondsCount());
+                metricsArgs.event.duration.getSecondsCount());
             _metrics.mutable_timers()->mutable_total()->set_nanos(
-                event.duration.getNanosecondsCount());
+                metricsArgs.event.duration.getNanosecondsCount());
         } else {
             _metrics.mutable_timers()->mutable_total()->set_seconds(
-                Period<ClockSource>(finish - _last_finish).getSecondsCount());
+                Period<ClockSource>(metricsArgs.finish - _lastFinish).getSecondsCount());
             _metrics.mutable_timers()->mutable_total()->set_nanos(
-                Period<ClockSource>(finish - _last_finish).getNanosecondsCount());
+                Period<ClockSource>(metricsArgs.finish - _lastFinish).getNanosecondsCount());
         }
 
-        _metrics.mutable_counters()->set_number(event.number);
-        _metrics.mutable_counters()->set_ops(event.ops);
-        _metrics.mutable_counters()->set_size(event.size);
-        _metrics.mutable_counters()->set_errors(event.errors);
+        _metrics.mutable_counters()->set_number(metricsArgs.event.number);
+        _metrics.mutable_counters()->set_ops(metricsArgs.event.ops);
+        _metrics.mutable_counters()->set_size(metricsArgs.event.size);
+        _metrics.mutable_counters()->set_errors(metricsArgs.event.errors);
 
-        _metrics.mutable_gauges()->set_failed(event.isFailure());
-        _metrics.mutable_gauges()->set_workers(workerCount);
+        _metrics.mutable_gauges()->set_failed(metricsArgs.event.isFailure());
+        _metrics.mutable_gauges()->set_workers(metricsArgs.workerCount);
         if (_phase) {
             _metrics.mutable_gauges()->set_state(*_phase);
         }
         _stream.write(_metrics);
-        _last_finish = finish;
+        _lastFinish = metricsArgs.finish;
+
+        return true;
     }
+
+    void finish() {
+        _stream.finish();
+    }
+
+    EventStream(const EventStream<ClockSource, StreamInterface>&) = delete;
+    EventStream<ClockSource, StreamInterface>& operator=(
+        const EventStream<ClockSource, StreamInterface>&) = delete;
 
 private:
     std::string _name;
     StreamInterface _stream;
     poplar::EventMetrics _metrics;
     std::optional<genny::PhaseNumber> _phase;
-    typename ClockSource::time_point _last_finish;
+    time_point _lastFinish;
+    std::unique_ptr<MetricsBuffer<ClockSource>> _buffer;
 };
 
 

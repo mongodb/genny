@@ -133,15 +133,17 @@ private:
     // OperationsMap is a map of
     // actor name -> operation name -> actor id -> OperationImpl (time series).
     using OperationsMap = std::unordered_map<std::string, OperationsByType>;
-    // Map from "Actor.Operation.Phase" to a Collector.
-    using CollectorsMap = std::unordered_map<std::string, v2::Collector>;
+
+    using GrpcClient = v2::GrpcClient<ClockSource, v2::StreamInterfaceImpl>;
+    // The client owns the stream and we only instantiate if using grpc.
+    using StreamPtr = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>*;
 
 public:
     using clock = ClockSource;
 
     explicit RegistryT() = default;
 
-    explicit RegistryT(MetricsFormat format, boost::filesystem::path pathPrefix)
+    explicit RegistryT(MetricsFormat format, boost::filesystem::path pathPrefix, bool assertMetricsBuffer = true)
         : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
         if (_format.useGrpc()) {
             boost::filesystem::create_directories(_pathPrefix);
@@ -150,6 +152,8 @@ public:
             std::ofstream startTimeFile(startTimeFilePath.string());
             startTimeFile << "This file only exists to mark execution start time.";
             startTimeFile.close();
+
+            _grpcClient = std::make_unique<GrpcClient>(assertMetricsBuffer, _pathPrefix);
         }
     }
 
@@ -158,22 +162,19 @@ public:
                                       std::string opName,
                                       ActorId actorId,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
-        std::optional<std::string> name;
+        StreamPtr stream = nullptr;
         if (_format.useGrpc()) {
-            name = createName(actorName, opName, phase);
-            _collectors.try_emplace(*name, *name, _pathPrefix);
+            auto name = createName(actorName, opName, phase);
+            stream = _grpcClient->createStream(actorId, name, phase);
         }
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         auto opIt = opsByThread
                         .try_emplace(actorId,
-                                     actorId,
                                      std::move(actorName),
                                      *this,
                                      std::move(opName),
-                                     std::move(phase),
-                                     _pathPrefix,
-                                     name)
+                                     stream)
                         .first;
         return OperationT{opIt->second};
     }
@@ -186,22 +187,19 @@ public:
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
-        std::optional<std::string> name;
+        StreamPtr stream = nullptr;
         if (_format.useGrpc()) {
-            name = createName(actorName, opName, phase);
-            _collectors.try_emplace(*name, *name, _pathPrefix);
+            auto name = createName(actorName, opName, phase);
+            stream = _grpcClient->createStream(actorId, name, phase);
         }
         auto opIt =
             opsByThread
                 .try_emplace(
                     actorId,
-                    actorId,
                     std::move(actorName),
                     *this,
                     std::move(opName),
-                    std::move(phase),
-                    _pathPrefix,
-                    name,
+                    stream,
                     std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
                         threshold, percentage))
                 .first;
@@ -245,7 +243,7 @@ private:
         return str.str();
     }
 
-    CollectorsMap _collectors;
+    std::unique_ptr<GrpcClient> _grpcClient;
     OperationsMap _ops;
     MetricsFormat _format;
     boost::filesystem::path _pathPrefix;

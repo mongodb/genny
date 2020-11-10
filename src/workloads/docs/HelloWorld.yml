@@ -14,6 +14,10 @@ Actors:
     # MetricsName: 🐳Message
   - Message: Hello Phase 1 👬
     Repeat: 100
+    # To limit the throughput to a percentage of the max, specify global rate as a percent.
+    # This will run at max throughput for 1 minute or 3 iterations, whichever is longer,
+    # then limit to a fraction of that for the rest of the phase.
+    # GlobalRate: 80%
   - ExternalPhaseConfig:
       Path: ../../phases/HelloWorld/ExamplePhase2.yml
       Key: UseMe  # Only load the YAML structure from this top-level key.

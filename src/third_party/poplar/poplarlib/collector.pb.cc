@@ -20,6 +20,10 @@ extern PROTOBUF_INTERNAL_EXPORT_collector_2eproto ::PROTOBUF_NAMESPACE_ID::inter
 extern PROTOBUF_INTERNAL_EXPORT_collector_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_EventMetricsGauges_collector_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_collector_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_EventMetricsTimers_collector_2eproto;
 namespace poplar {
+class CollectorNameDefaultTypeInternal {
+ public:
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<CollectorName> _instance;
+} _CollectorName_default_instance_;
 class EventMetricsDefaultTypeInternal {
  public:
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<EventMetrics> _instance;
@@ -37,6 +41,20 @@ class EventMetricsGaugesDefaultTypeInternal {
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<EventMetricsGauges> _instance;
 } _EventMetricsGauges_default_instance_;
 }  // namespace poplar
+static void InitDefaultsscc_info_CollectorName_collector_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::poplar::_CollectorName_default_instance_;
+    new (ptr) ::poplar::CollectorName();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::poplar::CollectorName::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_CollectorName_collector_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_CollectorName_collector_2eproto}, {}};
+
 static void InitDefaultsscc_info_EventMetrics_collector_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
@@ -98,11 +116,17 @@ static void InitDefaultsscc_info_EventMetricsTimers_collector_2eproto() {
     {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_EventMetricsTimers_collector_2eproto}, {
       &scc_info_Duration_google_2fprotobuf_2fduration_2eproto.base,}};
 
-static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_collector_2eproto[4];
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_collector_2eproto[5];
 static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_collector_2eproto = nullptr;
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_collector_2eproto = nullptr;
 
 const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_collector_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::poplar::CollectorName, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  PROTOBUF_FIELD_OFFSET(::poplar::CollectorName, name_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -140,13 +164,15 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_collector_2eproto::offsets[] P
   PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsGauges, failed_),
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, -1, sizeof(::poplar::EventMetrics)},
-  { 11, -1, sizeof(::poplar::EventMetricsCounters)},
-  { 20, -1, sizeof(::poplar::EventMetricsTimers)},
-  { 27, -1, sizeof(::poplar::EventMetricsGauges)},
+  { 0, -1, sizeof(::poplar::CollectorName)},
+  { 6, -1, sizeof(::poplar::EventMetrics)},
+  { 17, -1, sizeof(::poplar::EventMetricsCounters)},
+  { 26, -1, sizeof(::poplar::EventMetricsTimers)},
+  { 33, -1, sizeof(::poplar::EventMetricsGauges)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_CollectorName_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_EventMetrics_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_EventMetricsCounters_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_EventMetricsTimers_default_instance_),
@@ -156,34 +182,37 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 const char descriptor_table_protodef_collector_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\017collector.proto\022\006poplar\032\014poplar.proto\032"
   "\037google/protobuf/timestamp.proto\032\036google"
-  "/protobuf/duration.proto\"\332\001\n\014EventMetric"
-  "s\022\014\n\004name\030\001 \001(\t\022(\n\004time\030\002 \001(\0132\032.google.p"
-  "rotobuf.Timestamp\022\n\n\002id\030\003 \001(\003\022.\n\010counter"
-  "s\030\004 \001(\0132\034.poplar.EventMetricsCounters\022*\n"
-  "\006timers\030\005 \001(\0132\032.poplar.EventMetricsTimer"
-  "s\022*\n\006gauges\030\006 \001(\0132\032.poplar.EventMetricsG"
-  "auges\"Q\n\024EventMetricsCounters\022\016\n\006number\030"
-  "\001 \001(\003\022\013\n\003ops\030\002 \001(\003\022\014\n\004size\030\003 \001(\003\022\016\n\006erro"
-  "rs\030\004 \001(\003\"k\n\022EventMetricsTimers\022(\n\005total\030"
-  "\001 \001(\0132\031.google.protobuf.Duration\022+\n\010dura"
-  "tion\030\002 \001(\0132\031.google.protobuf.Duration\"D\n"
-  "\022EventMetricsGauges\022\r\n\005state\030\001 \001(\003\022\017\n\007wo"
-  "rkers\030\002 \001(\003\022\016\n\006failed\030\003 \001(\0102\217\002\n\024PoplarEv"
-  "entCollector\022@\n\017CreateCollector\022\025.poplar"
-  ".CreateOptions\032\026.poplar.PoplarResponse\0229"
-  "\n\tSendEvent\022\024.poplar.EventMetrics\032\026.popl"
-  "ar.PoplarResponse\022>\n\014StreamEvents\022\024.popl"
-  "ar.EventMetrics\032\026.poplar.PoplarResponse("
-  "\001\022:\n\016CloseCollector\022\020.poplar.PoplarID\032\026."
-  "poplar.PoplarResponseB\nZ\010internalb\006proto"
-  "3"
+  "/protobuf/duration.proto\"\035\n\rCollectorNam"
+  "e\022\014\n\004name\030\001 \001(\t\"\332\001\n\014EventMetrics\022\014\n\004name"
+  "\030\001 \001(\t\022(\n\004time\030\002 \001(\0132\032.google.protobuf.T"
+  "imestamp\022\n\n\002id\030\003 \001(\003\022.\n\010counters\030\004 \001(\0132\034"
+  ".poplar.EventMetricsCounters\022*\n\006timers\030\005"
+  " \001(\0132\032.poplar.EventMetricsTimers\022*\n\006gaug"
+  "es\030\006 \001(\0132\032.poplar.EventMetricsGauges\"Q\n\024"
+  "EventMetricsCounters\022\016\n\006number\030\001 \001(\003\022\013\n\003"
+  "ops\030\002 \001(\003\022\014\n\004size\030\003 \001(\003\022\016\n\006errors\030\004 \001(\003\""
+  "k\n\022EventMetricsTimers\022(\n\005total\030\001 \001(\0132\031.g"
+  "oogle.protobuf.Duration\022+\n\010duration\030\002 \001("
+  "\0132\031.google.protobuf.Duration\"D\n\022EventMet"
+  "ricsGauges\022\r\n\005state\030\001 \001(\003\022\017\n\007workers\030\002 \001"
+  "(\003\022\016\n\006failed\030\003 \001(\0102\320\002\n\024PoplarEventCollec"
+  "tor\022@\n\017CreateCollector\022\025.poplar.CreateOp"
+  "tions\032\026.poplar.PoplarResponse\0229\n\tSendEve"
+  "nt\022\024.poplar.EventMetrics\032\026.poplar.Poplar"
+  "Response\022\?\n\016RegisterStream\022\025.poplar.Coll"
+  "ectorName\032\026.poplar.PoplarResponse\022>\n\014Str"
+  "eamEvents\022\024.poplar.EventMetrics\032\026.poplar"
+  ".PoplarResponse(\001\022:\n\016CloseCollector\022\020.po"
+  "plar.PoplarID\032\026.poplar.PoplarResponseB\nZ"
+  "\010internalb\006proto3"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_collector_2eproto_deps[3] = {
   &::descriptor_table_google_2fprotobuf_2fduration_2eproto,
   &::descriptor_table_google_2fprotobuf_2ftimestamp_2eproto,
   &::descriptor_table_poplar_2eproto,
 };
-static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_collector_2eproto_sccs[4] = {
+static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_collector_2eproto_sccs[5] = {
+  &scc_info_CollectorName_collector_2eproto.base,
   &scc_info_EventMetrics_collector_2eproto.base,
   &scc_info_EventMetricsCounters_collector_2eproto.base,
   &scc_info_EventMetricsGauges_collector_2eproto.base,
@@ -192,15 +221,214 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_col
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_collector_2eproto_once;
 static bool descriptor_table_collector_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_collector_2eproto = {
-  &descriptor_table_collector_2eproto_initialized, descriptor_table_protodef_collector_2eproto, "collector.proto", 881,
-  &descriptor_table_collector_2eproto_once, descriptor_table_collector_2eproto_sccs, descriptor_table_collector_2eproto_deps, 4, 3,
+  &descriptor_table_collector_2eproto_initialized, descriptor_table_protodef_collector_2eproto, "collector.proto", 977,
+  &descriptor_table_collector_2eproto_once, descriptor_table_collector_2eproto_sccs, descriptor_table_collector_2eproto_deps, 5, 3,
   schemas, file_default_instances, TableStruct_collector_2eproto::offsets,
-  file_level_metadata_collector_2eproto, 4, file_level_enum_descriptors_collector_2eproto, file_level_service_descriptors_collector_2eproto,
+  file_level_metadata_collector_2eproto, 5, file_level_enum_descriptors_collector_2eproto, file_level_service_descriptors_collector_2eproto,
 };
 
 // Force running AddDescriptors() at dynamic initialization time.
 static bool dynamic_init_dummy_collector_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_collector_2eproto), true);
 namespace poplar {
+
+// ===================================================================
+
+void CollectorName::InitAsDefaultInstance() {
+}
+class CollectorName::_Internal {
+ public:
+};
+
+CollectorName::CollectorName()
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:poplar.CollectorName)
+}
+CollectorName::CollectorName(const CollectorName& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_name().empty()) {
+    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+  }
+  // @@protoc_insertion_point(copy_constructor:poplar.CollectorName)
+}
+
+void CollectorName::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_CollectorName_collector_2eproto.base);
+  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+
+CollectorName::~CollectorName() {
+  // @@protoc_insertion_point(destructor:poplar.CollectorName)
+  SharedDtor();
+}
+
+void CollectorName::SharedDtor() {
+  name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+
+void CollectorName::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+const CollectorName& CollectorName::default_instance() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_CollectorName_collector_2eproto.base);
+  return *internal_default_instance();
+}
+
+
+void CollectorName::Clear() {
+// @@protoc_insertion_point(message_clear_start:poplar.CollectorName)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  name_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _internal_metadata_.Clear();
+}
+
+const char* CollectorName::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
+      // string name = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          auto str = _internal_mutable_name();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "poplar.CollectorName.name"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      default: {
+      handle_unusual:
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
+          goto success;
+        }
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
+      }
+    }  // switch
+  }  // while
+success:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto success;
+#undef CHK_
+}
+
+::PROTOBUF_NAMESPACE_ID::uint8* CollectorName::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:poplar.CollectorName)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string name = 1;
+  if (this->name().size() > 0) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "poplar.CollectorName.name");
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_name(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:poplar.CollectorName)
+  return target;
+}
+
+size_t CollectorName::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:poplar.CollectorName)
+  size_t total_size = 0;
+
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string name = 1;
+  if (this->name().size() > 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_name());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void CollectorName::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:poplar.CollectorName)
+  GOOGLE_DCHECK_NE(&from, this);
+  const CollectorName* source =
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<CollectorName>(
+          &from);
+  if (source == nullptr) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:poplar.CollectorName)
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:poplar.CollectorName)
+    MergeFrom(*source);
+  }
+}
+
+void CollectorName::MergeFrom(const CollectorName& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:poplar.CollectorName)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.name().size() > 0) {
+
+    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+  }
+}
+
+void CollectorName::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:poplar.CollectorName)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void CollectorName::CopyFrom(const CollectorName& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:poplar.CollectorName)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool CollectorName::IsInitialized() const {
+  return true;
+}
+
+void CollectorName::InternalSwap(CollectorName* other) {
+  using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata CollectorName::GetMetadata() const {
+  return GetMetadataStatic();
+}
+
 
 // ===================================================================
 
@@ -1374,6 +1602,9 @@ void EventMetricsGauges::InternalSwap(EventMetricsGauges* other) {
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace poplar
 PROTOBUF_NAMESPACE_OPEN
+template<> PROTOBUF_NOINLINE ::poplar::CollectorName* Arena::CreateMaybeMessage< ::poplar::CollectorName >(Arena* arena) {
+  return Arena::CreateInternal< ::poplar::CollectorName >(arena);
+}
 template<> PROTOBUF_NOINLINE ::poplar::EventMetrics* Arena::CreateMaybeMessage< ::poplar::EventMetrics >(Arena* arena) {
   return Arena::CreateInternal< ::poplar::EventMetrics >(arena);
 }
