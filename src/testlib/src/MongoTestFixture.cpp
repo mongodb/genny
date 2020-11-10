@@ -43,7 +43,7 @@ void MongoTestFixture::dropAllDatabases() {
 
 ApmCallback makeApmCallback(ApmEvents& events) {
     // This was copied from
-    // github.com/mongodb/mongo-cxx-driver/blob/r3.4.0/src/mongocxx/test/client_session.cpp#L224
+    // github.com/mongodb/mongo-cxx-driver/blob/r3.6.0/src/mongocxx/test/client_session.cpp#L228
     return [&](const mongocxx::events::command_started_event& event) {
         std::string command_name{event.command_name().data()};
 
