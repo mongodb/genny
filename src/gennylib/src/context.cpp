@@ -51,7 +51,19 @@ WorkloadContext::WorkloadContext(const Node& node,
     // Make sure we have a valid mongocxx instance happening here
     mongocxx::instance::current();
 
-    _registry = genny::metrics::Registry(metrics::MetricsFormat("ftdc"), "build/genny-metrics");
+    // Set the metrics format information.
+    auto format = ((*this)["Metrics"]["Format"])
+                      .maybe<metrics::MetricsFormat>()
+                      .value_or(metrics::MetricsFormat("cedar-csv"));
+
+    if (format != genny::metrics::MetricsFormat("ftdc")) {
+        BOOST_LOG_TRIVIAL(info) << "Metrics format " << format.toString() << " is deprecated in favor of ftdc.";
+    }
+
+    auto metricsPath =
+        ((*this)["Metrics"]["Path"]).maybe<std::string>().value_or("build/genny-metrics");
+    _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
+
 
     // Make a bunch of actor contexts
     for (const auto& [k, actor] : (*this)["Actors"]) {

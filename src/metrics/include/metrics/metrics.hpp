@@ -61,6 +61,21 @@ public:
         return _format;
     }
 
+    [[nodiscard]]
+    bool operator!=(const MetricsFormat& rhs) const {
+        return this->_format != rhs._format;
+    }
+
+    [[nodiscard]]
+    std::string toString() const {
+        switch(this->_format) {
+            case Format::kCsv: return "csv";
+            case Format::kCedarCsv: return "cedar-csv";
+            case Format::kFtdc: return "ftdc";
+            case Format::kCsvFtdc: return "csv-ftdc";
+        }
+    }
+
 private:
     Format _format;
     Format strToEnum(const std::string& toConvert) {
