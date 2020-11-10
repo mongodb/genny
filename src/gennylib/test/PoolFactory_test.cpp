@@ -57,9 +57,7 @@ TEST_CASE("PoolFactory behavior") {
         auto factory = genny::v1::PoolFactory(kSourceUri);
 
         auto factoryUri = factory.makeUri();
-        auto expectedUri = [&]() {
-            return std::string{"mongodb://"} + kSourceUri + std::string{"/?appName=Genny"};
-        };
+        auto expectedUri = [&]() { return std::string{"mongodb://"} + kSourceUri + std::string{"/?appName=Genny"}; };
         REQUIRE(factoryUri == expectedUri());
 
         auto pool = factory.makePool();
@@ -75,9 +73,7 @@ TEST_CASE("PoolFactory behavior") {
 
         SECTION("Validate the original URI") {
             auto factoryUri = factory.makeUri();
-            auto expectedUri = [&]() {
-                return kBaseString + "bigdata?appName=Genny&replicaSet=badChoices";
-            };
+            auto expectedUri = [&]() { return kBaseString + "bigdata?appName=Genny&replicaSet=badChoices"; };
             REQUIRE(factoryUri == expectedUri());
 
             auto pool = factory.makePool();
@@ -85,9 +81,7 @@ TEST_CASE("PoolFactory behavior") {
         }
 
         SECTION("Modify the URI and check that it works") {
-            auto expectedUri = [&]() {
-                return kBaseString + "webscale?appName=Genny&replicaSet=threeNode";
-            };
+            auto expectedUri = [&]() { return kBaseString + "webscale?appName=Genny&replicaSet=threeNode"; };
             factory.setOption(OptionType::kQueryOption, "replicaSet", "threeNode");
             factory.setOption(OptionType::kAccessOption, "Database", "webscale");
 
@@ -205,7 +199,7 @@ TEST_CASE("PoolFactory behavior") {
         REQUIRE(getOneMore());
     }
 
-    SECTION("Make a pool with ssl enabled and auth params") {
+    SECTION("Make a pool with tls enabled and auth params") {
         const std::string kProtocol = "mongodb://";
         const std::string kHost = "127.0.0.1";
         constexpr auto kCAFile = "some-random-ca.pem";
@@ -213,13 +207,11 @@ TEST_CASE("PoolFactory behavior") {
         auto sourceUrl = [&]() { return kProtocol + kHost; };
         auto factory = genny::v1::PoolFactory(sourceUrl());
 
-        auto expectedUri = [&]() {
-            return kProtocol + "boss:pass@" + kHost + "/admin?appName=Genny&ssl=true";
-        };
+        auto expectedUri = [&]() { return kProtocol + "boss:pass@" + kHost + "/admin?appName=Genny&tls=true"; };
         factory.setOptions(OptionType::kAccessOption,
                            {{"Username", "boss"}, {"Password", "pass"}, {"Database", "admin"}});
 
-        factory.setFlag(OptionType::kQueryOption, "ssl");
+        factory.setFlag(OptionType::kQueryOption, "tls");
         factory.setFlag(OptionType::kAccessOption, "AllowInvalidCertificates");
         factory.setOption(OptionType::kAccessOption, "CAFile", kCAFile);
 
@@ -228,11 +220,11 @@ TEST_CASE("PoolFactory behavior") {
 
         auto factoryOpts = factory.makeOptions();
 
-        auto sslOpts = *factoryOpts.client_opts().ssl_opts();
-        auto allowInvalid = *sslOpts.allow_invalid_certificates();
+        auto tlsOpts = *factoryOpts.client_opts().tls_opts();
+        auto allowInvalid = *tlsOpts.allow_invalid_certificates();
         REQUIRE(allowInvalid);
 
-        std::string caFile = sslOpts.ca_file()->terminated().data();
+        std::string caFile = tlsOpts.ca_file()->terminated().data();
         REQUIRE(kCAFile == caFile);
 
         auto pool = factory.makePool();
