@@ -61,18 +61,20 @@ public:
         return _format;
     }
 
-    [[nodiscard]]
-    bool operator!=(const MetricsFormat& rhs) const {
+    [[nodiscard]] bool operator!=(const MetricsFormat& rhs) const {
         return this->_format != rhs._format;
     }
 
-    [[nodiscard]]
-    std::string toString() const {
-        switch(this->_format) {
-            case Format::kCsv: return "csv";
-            case Format::kCedarCsv: return "cedar-csv";
-            case Format::kFtdc: return "ftdc";
-            case Format::kCsvFtdc: return "csv-ftdc";
+    [[nodiscard]] std::string toString() const {
+        switch (this->_format) {
+            case Format::kCsv:
+                return "csv";
+            case Format::kCedarCsv:
+                return "cedar-csv";
+            case Format::kFtdc:
+                return "ftdc";
+            case Format::kCsvFtdc:
+                return "csv-ftdc";
         }
     }
 
@@ -158,7 +160,9 @@ public:
 
     explicit RegistryT() = default;
 
-    explicit RegistryT(MetricsFormat format, boost::filesystem::path pathPrefix, bool assertMetricsBuffer = true)
+    explicit RegistryT(MetricsFormat format,
+                       boost::filesystem::path pathPrefix,
+                       bool assertMetricsBuffer = true)
         : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
         if (_format.useGrpc()) {
             boost::filesystem::create_directories(_pathPrefix);
@@ -184,13 +188,9 @@ public:
         }
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
-        auto opIt = opsByThread
-                        .try_emplace(actorId,
-                                     std::move(actorName),
-                                     *this,
-                                     std::move(opName),
-                                     stream)
-                        .first;
+        auto opIt =
+            opsByThread.try_emplace(actorId, std::move(actorName), *this, std::move(opName), stream)
+                .first;
         return OperationT{opIt->second};
     }
 

@@ -17,17 +17,17 @@
 #define HEADER_960919A5_5455_4DD2_BC68_EFBAEB228BB0_INCLUDED
 
 #include <atomic>
+#include <condition_variable>
 #include <cstdint>
 #include <cstdlib>
+#include <deque>
 #include <mutex>
 #include <optional>
 #include <queue>
-#include <deque>
 #include <set>
 #include <thread>
-#include <vector>
 #include <unordered_map>
-#include <condition_variable>
+#include <vector>
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -59,7 +59,7 @@ const int NUM_CHANNELS = 4;
 const int BUFFER_SIZE = 1000 * MULTIPLIER;
 const int GRPC_THREAD_SLEEP_MS = 200 * MULTIPLIER;
 const double SWAP_BUFFER_PERCENT = .25;
-const int GRPC_BUFFER_SIZE = 5000; // Max possible: 67108864
+const int GRPC_BUFFER_SIZE = 5000;  // Max possible: 67108864
 const int SEND_CHUNK_SIZE = 1000;
 
 class PoplarRequestError : public std::runtime_error {
@@ -90,7 +90,6 @@ public:
     }
 
 private:
-
     std::unique_ptr<poplar::PoplarEventCollector::StubInterface> _stub;
 
     // Should only be called by setStub(), is statically guarded
@@ -195,7 +194,6 @@ public:
                 << "Problem closing grpc stream for operation name " << _name << " and actor ID "
                 << _actorId << ": " << _context.debug_error_string();
         }
-
     }
 
 private:
@@ -323,8 +321,10 @@ class GrpcThread {
 public:
     typedef EventStream<ClockSource, StreamInterface> Stream;
 
-    GrpcThread(bool assertMetricsBuffer, Stream& stream) : _assertMetricsBuffer{assertMetricsBuffer},
-        _stream{stream}, _thread{&GrpcThread::run, this} {}
+    GrpcThread(bool assertMetricsBuffer, Stream& stream)
+        : _assertMetricsBuffer{assertMetricsBuffer},
+          _stream{stream},
+          _thread{&GrpcThread::run, this} {}
 
     void finish() {
         _finishing = true;
@@ -352,9 +352,9 @@ private:
 
     void reapActor() {
         int counter = 0;
-        while(_stream.sendOne(_finishing, _assertMetricsBuffer)) {
+        while (_stream.sendOne(_finishing, _assertMetricsBuffer)) {
             counter++;
-            // If finishing and all threads are draining, this helps 
+            // If finishing and all threads are draining, this helps
             // balance the server-side buffers.
             if (counter >= SEND_CHUNK_SIZE) {
                 std::this_thread::yield();
@@ -383,11 +383,12 @@ public:
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
     typedef EventStream<ClockSource, StreamInterface> Stream;
 
-    GrpcClient(bool assertMetricsBuffer, const boost::filesystem::path& pathPrefix) : _pathPrefix{pathPrefix}, _assertMetricsBuffer{assertMetricsBuffer} {}
+    GrpcClient(bool assertMetricsBuffer, const boost::filesystem::path& pathPrefix)
+        : _pathPrefix{pathPrefix}, _assertMetricsBuffer{assertMetricsBuffer} {}
 
     Stream* createStream(const ActorId& actorId,
-                      const std::string& name,
-                      const OptionalPhaseNumber& phase) {
+                         const std::string& name,
+                         const OptionalPhaseNumber& phase) {
         _collectors.try_emplace(name, name, _pathPrefix);
         _collectors.at(name).incStreams();
         _streams.emplace_back(actorId, name, phase);
@@ -434,20 +435,18 @@ public:
           name{name},
           _loading{std::make_unique<std::vector<MetricsArgs<ClockSource>>>()},
           _draining{std::make_unique<std::vector<MetricsArgs<ClockSource>>>()} {
-              _loading->reserve(size);
-              _draining->reserve(size);
+        _loading->reserve(size);
+        _draining->reserve(size);
     }
 
     // Thread-safe.
-    void addAt(const time_point& finish,
-               OperationEventT<ClockSource> event,
-               size_t workerCount) {
+    void addAt(const time_point& finish, OperationEventT<ClockSource> event, size_t workerCount) {
         const std::lock_guard<std::mutex> lock(_loadingMutex);
         _loading->emplace_back(finish, std::move(event), workerCount);
     }
 
     // Not thread-safe.
-    std::optional<MetricsArgs<ClockSource>> pop(bool force, bool assertMetricsBuffer=true) {
+    std::optional<MetricsArgs<ClockSource>> pop(bool force, bool assertMetricsBuffer = true) {
         refresh(force, assertMetricsBuffer);
         if (_location >= _draining->size()) {
             return std::nullopt;
@@ -515,9 +514,7 @@ public:
     }
 
     // Record a metrics event to the loading buffer.
-    void addAt(const time_point& finish,
-               OperationEventT<ClockSource> event,
-               size_t workerCount) {
+    void addAt(const time_point& finish, OperationEventT<ClockSource> event, size_t workerCount) {
         _buffer->addAt(finish, std::move(event), workerCount);
     }
 
