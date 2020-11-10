@@ -264,7 +264,7 @@ private:
     const bool _useGrpc;
     const bool _useCsv;
     const std::string _opName;
-    StreamPtr _stream; // Streams are owned by the grpc client.
+    StreamPtr _stream;  // Streams are owned by the grpc client.
     OptionalOperationThreshold _threshold;
     std::unique_ptr<EventSeries> _events;
 };

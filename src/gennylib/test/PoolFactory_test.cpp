@@ -57,7 +57,9 @@ TEST_CASE("PoolFactory behavior") {
         auto factory = genny::v1::PoolFactory(kSourceUri);
 
         auto factoryUri = factory.makeUri();
-        auto expectedUri = [&]() { return std::string{"mongodb://"} + kSourceUri + std::string{"/?appName=Genny"}; };
+        auto expectedUri = [&]() {
+            return std::string{"mongodb://"} + kSourceUri + std::string{"/?appName=Genny"};
+        };
         REQUIRE(factoryUri == expectedUri());
 
         auto pool = factory.makePool();
@@ -73,7 +75,9 @@ TEST_CASE("PoolFactory behavior") {
 
         SECTION("Validate the original URI") {
             auto factoryUri = factory.makeUri();
-            auto expectedUri = [&]() { return kBaseString + "bigdata?appName=Genny&replicaSet=badChoices"; };
+            auto expectedUri = [&]() {
+                return kBaseString + "bigdata?appName=Genny&replicaSet=badChoices";
+            };
             REQUIRE(factoryUri == expectedUri());
 
             auto pool = factory.makePool();
@@ -81,7 +85,9 @@ TEST_CASE("PoolFactory behavior") {
         }
 
         SECTION("Modify the URI and check that it works") {
-            auto expectedUri = [&]() { return kBaseString + "webscale?appName=Genny&replicaSet=threeNode"; };
+            auto expectedUri = [&]() {
+                return kBaseString + "webscale?appName=Genny&replicaSet=threeNode";
+            };
             factory.setOption(OptionType::kQueryOption, "replicaSet", "threeNode");
             factory.setOption(OptionType::kAccessOption, "Database", "webscale");
 
@@ -207,7 +213,9 @@ TEST_CASE("PoolFactory behavior") {
         auto sourceUrl = [&]() { return kProtocol + kHost; };
         auto factory = genny::v1::PoolFactory(sourceUrl());
 
-        auto expectedUri = [&]() { return kProtocol + "boss:pass@" + kHost + "/admin?appName=Genny&tls=true"; };
+        auto expectedUri = [&]() {
+            return kProtocol + "boss:pass@" + kHost + "/admin?appName=Genny&tls=true";
+        };
         factory.setOptions(OptionType::kAccessOption,
                            {{"Username", "boss"}, {"Password", "pass"}, {"Database", "admin"}});
 

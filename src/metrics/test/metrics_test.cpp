@@ -69,8 +69,8 @@ TEST_CASE("metrics::OperationContext interface") {
     RegistryClockSourceStub::reset();
 
     auto dummy_metrics = internals::RegistryT<RegistryClockSourceStub>{};
-    auto op = internals::OperationImpl<RegistryClockSourceStub>{
-        "Actor", dummy_metrics, "Op", nullptr};
+    auto op =
+        internals::OperationImpl<RegistryClockSourceStub>{"Actor", dummy_metrics, "Op", nullptr};
 
     RegistryClockSourceStub::advance(5ns);
     auto ctx = std::make_optional<internals::OperationContextT<RegistryClockSourceStub>>(&op);
@@ -723,7 +723,10 @@ TEST_CASE("Events stream to gRPC") {
 
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                3, "LateEventName", 1,};
+                3,
+                "LateEventName",
+                1,
+            };
         EventVec expected;
         {
             OperationEventT<RegistryClockSourceStub> event(
@@ -812,7 +815,6 @@ TEST_CASE("Events stream to gRPC") {
         REQUIRE(file_count == 4);
 
         REQUIRE(boost::filesystem::remove_all(metricsPath));
-
     }
 
     SECTION("Un-forced metrics buffer only pops at capacity.") {
