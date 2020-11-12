@@ -76,6 +76,7 @@ public:
             case Format::kCsvFtdc:
                 return "csv-ftdc";
         }
+        BOOST_THROW_EXCEPTION(InvalidConfigurationException("Impossible"));
     }
 
 private:
