@@ -16,7 +16,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
 
 - Name: IndexCollection
   Type: RunCommand
@@ -36,11 +35,6 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: Create2dSphereGeoJsonIndexesCmd
-      Parameters:
-        Repeat: 5
-  - ExternalPhaseConfig:
-      Path: ../../phases/execution/CreateIndexPhase.yml
-      Key: CreateGeoHaystackIndexesCmd
       Parameters:
         Repeat: 5
   - ExternalPhaseConfig:
