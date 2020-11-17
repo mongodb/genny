@@ -21,7 +21,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
 
 - Name: ShardCollection
   Type: AdminCommand
@@ -44,7 +43,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
 
 - Name: InsertData
   Type: Loader
@@ -57,7 +55,6 @@ Actors:
       Key: InsertData
       Parameters:
         db: *db
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -85,11 +82,6 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: Create2dSphereGeoJsonIndexesCmd
-      Parameters:
-        Duration: 5 minutes
-  - ExternalPhaseConfig:
-      Path: ../../phases/execution/CreateIndexPhase.yml
-      Key: CreateGeoHaystackIndexesCmd
       Parameters:
         Duration: 5 minutes
   - ExternalPhaseConfig:

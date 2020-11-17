@@ -78,27 +78,6 @@ Create2dSphereGeoJsonIndexesCmd:
       dropIndexes: Collection0
       index: 2dsphereGeoJsonIndex
 
-CreateGeoHaystackIndexesCmd:
-  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
-  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
-  Database: *db
-  Operations:
-  - OperationMetricsName: CreateGeoHaystackIndexesCmd
-    OperationName: RunCommand
-    OperationCommand:
-      createIndexes: Collection0
-      indexes:
-      - key:
-          loc2d: "geoHaystack"
-          randomString: 1
-        bucketSize: 5
-        name: geoHaystackIndex
-  - OperationMetricsName: DropCreatedGeoHaystackIndexesCmd
-    OperationName: RunCommand
-    OperationCommand:
-      dropIndexes: Collection0
-      index: geoHaystackIndex
-
 CreateHashedIndexesCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
   Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
