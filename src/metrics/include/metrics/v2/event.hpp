@@ -54,11 +54,12 @@ namespace internals::v2 {
 
 // There's not a super motivated reason for these values other than running
 // a lot of patches and seeing what worked.
-const int MULTIPLIER = 4000;
+const int MULTIPLIER = 1000;
 const int NUM_CHANNELS = 4;
 const int BUFFER_SIZE = 1000 * MULTIPLIER;
-const int GRPC_THREAD_SLEEP_MS = 200 * MULTIPLIER;
-const double SWAP_BUFFER_PERCENT = .25;
+const int GRPC_THREAD_SLEEP_MS = 2000 * MULTIPLIER;
+const double SWAP_BUFFER_PERCENT = .4;
+const double GRPC_THREAD_WAKEUP_PERCENT = .95;
 const int GRPC_BUFFER_SIZE = 5000;  // Max possible: 67108864
 const int SEND_CHUNK_SIZE = 1000;
 
@@ -296,7 +297,6 @@ private:
                                                const boost::filesystem::path& pathPrefix) {
         poplar::CreateOptions options;
         options.set_name(name);
-        options.set_events(poplar::CreateOptions_EventsCollectorType_BASIC);
         options.set_path(createPath(name, pathPrefix));
         options.set_chunksize(1000);
         options.set_streaming(true);
@@ -324,10 +324,16 @@ public:
     GrpcThread(bool assertMetricsBuffer, Stream& stream)
         : _assertMetricsBuffer{assertMetricsBuffer},
           _stream{stream},
-          _thread{&GrpcThread::run, this} {}
+          _thread{&GrpcThread::run, this} {
+              stream.subscribe(this);
+          }
 
     void finish() {
         _finishing = true;
+        wake();
+    }
+
+    void wake() {
         _cv.notify_all();
     }
 
@@ -440,9 +446,10 @@ public:
     }
 
     // Thread-safe.
-    void addAt(const time_point& finish, OperationEventT<ClockSource> event, size_t workerCount) {
+    size_t addAt(const time_point& finish, OperationEventT<ClockSource> event, size_t workerCount) {
         const std::lock_guard<std::mutex> lock(_loadingMutex);
         _loading->emplace_back(finish, std::move(event), workerCount);
+        return _loading->size();
     }
 
     // Not thread-safe.
@@ -515,7 +522,10 @@ public:
 
     // Record a metrics event to the loading buffer.
     void addAt(const time_point& finish, OperationEventT<ClockSource> event, size_t workerCount) {
-        _buffer->addAt(finish, std::move(event), workerCount);
+        auto size = _buffer->addAt(finish, std::move(event), workerCount);
+        if (size >= BUFFER_SIZE * GRPC_THREAD_WAKEUP_PERCENT) {
+            subscriber->wake();
+        }
     }
 
     // Send one event from the draining buffer to the grpc api.
@@ -569,6 +579,10 @@ public:
         _stream.finish();
     }
 
+    void subscribe(GrpcThread<ClockSource, StreamInterface>* thread) {
+        subscriber = thread;
+    }
+
     EventStream(const EventStream<ClockSource, StreamInterface>&) = delete;
     EventStream<ClockSource, StreamInterface>& operator=(
         const EventStream<ClockSource, StreamInterface>&) = delete;
@@ -579,6 +593,7 @@ private:
     poplar::EventMetrics _metrics;
     std::optional<genny::PhaseNumber> _phase;
     time_point _lastFinish;
+    GrpcThread<ClockSource, StreamInterface>* subscriber;
     std::unique_ptr<MetricsBuffer<ClockSource>> _buffer;
 };
 
