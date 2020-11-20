@@ -33,12 +33,20 @@ GlobalDefaults:
     - keys: {g: 1, h: 1}
     - keys: {h: 1, i: 1}
 
+  # Commonly used parameters.
+  DatabaseParam: &DatabaseParam {^Parameter: {Name: "Database", Default: db}}
+  CollectionCountParam: &CollectionCountParam {^Parameter: {Name: "CollectionCount", Default: 0}}
+  TrackProportionParam: &TrackProportionParam {^Parameter: {Name: "TrackProportion", Default: 0}}
+  DocumentCountParam: &DocumentCountParam {^Parameter: {Name: "DocumentCount", Default: 0}}
+  WritesParam: &WritesParam {^Parameter: {Name: "Writes", Default: 0}}
+  ReadsParam: &ReadsParam {^Parameter: {Name: "Reads", Default: 0}}
+
 LongLivedCreatorCmd:
   Repeat: 1
-  Database: &LongLivedDB {^Parameter: {Name: "DB", Default: db}}
-  CollectionCount: &LongLivedCollectionCount {^Parameter: {Name: "CollectionCount", Default: 0}}
+  Database: *DatabaseParam
+  CollectionCount: *CollectionCountParam
   Threads: 10
-  DocumentCount: &LongLivedDocumentCount {^Parameter: {Name: "DocumentCount", Default: 0}}
+  DocumentCount: *DocumentCountParam
   BatchSize: 1000
   Document:
     # Each document ranges in size from about 90 to 150 bytes (average 120)
@@ -65,24 +73,24 @@ LongLivedCreatorCmd:
 
 LongLivedIndexReaderCmd:
   Duration: *Duration
-  Database: *LongLivedDB
-  CollectionCount: *LongLivedCollectionCount
-  DocumentCount: *LongLivedDocumentCount
+  Database: *DatabaseParam
+  CollectionCount: *CollectionCountParam
+  DocumentCount: *DocumentCountParam
   Filter: {x0: *rand_10k_int}
 
 LongLivedReaderCmd:
   Duration: *Duration
-  Database: *LongLivedDB
-  CollectionCount: *LongLivedCollectionCount
-  DocumentCount: *LongLivedDocumentCount
+  Database: *DatabaseParam
+  CollectionCount: *CollectionCountParam
+  DocumentCount: *DocumentCountParam
   Filter: {_id: *rand_10k_int}
 
 LongLivedWriterCmd:
   Duration: *Duration
   MetricsName: Update
-  Database: *LongLivedDB
-  CollectionCount: *LongLivedCollectionCount
-  DocumentCount: *LongLivedDocumentCount
+  Database: *DatabaseParam
+  CollectionCount: *CollectionCountParam
+  DocumentCount: *DocumentCountParam
   UpdateFilter: {_id: *rand_10k_int}
   Update: {$inc: {x1: 1}}
 
@@ -91,7 +99,7 @@ RollingSetupCmd:
   CollectionWindowSize: 3600
   Document: *RollingDocument
   DocumentCount: 10
-  TrackProportion: &TrackProportion {^Parameter: {Name: "TrackProportion", Default: 0}}
+  TrackProportion: *TrackProportionParam
   Indexes: *RollingIndexes
 
 RollingManageCmd:
@@ -101,28 +109,28 @@ RollingManageCmd:
 
 RollingWriterCmd:
   Duration: *Duration
-  TrackProportion: *TrackProportion
+  TrackProportion: *TrackProportionParam
   Document: *RollingDocument
-  GlobalRate: &RollingWrites {^Parameter: {Name: "Writes", Default: 0}}
+  GlobalRate: *WritesParam
 
 RollingReader1Cmd:
   Duration: *Duration
-  TrackProportion: *TrackProportion
+  TrackProportion: *TrackProportionParam
   # Distribution is a linear distribution from 0 to 1
   Distribution: 0.8
-  GlobalRate: &RollingReads1 {^Parameter: {Name: "Reads", Default: 0}}
+  GlobalRate: *ReadsParam
 
 RollingReader2Cmd:
   Duration: *Duration
-  TrackProportion: *TrackProportion
+  TrackProportion: *TrackProportionParam
   Distribution: 0.25
   # Filter modifies the find to use whatever filter you pass to it
   Filter: {a: 1}
-  GlobalRate: &RollingReads2 {^Parameter: {Name: "Reads", Default: 0}}
+  GlobalRate: *ReadsParam
 
 HotDocumentLoaderCmd:
   Repeat: 1
-  Database: &HotDocumentDB {^Parameter: {Name: "DB", Default: db}}
+  Database: *DatabaseParam
   CollectionCount: 1
   Threads: 1
   DocumentCount: 1
@@ -141,11 +149,11 @@ HotDocumentUpdaterCmd:
       - WriteCommand: updateOne
         Filter: {first : first}
         Update: {$set: {second: *rand_1k_int}}
-  GlobalRate: &HotDocumentWrites {^Parameter: {Name: "Writes", Default: 0}}
+  GlobalRate: *WritesParam
 
 HotCollectionLoaderCmd:
   Repeat: 1
-  Database: &HotCollectionDB {^Parameter: {Name: "DB", Default: db}}
+  Database: *DatabaseParam
   CollectionCount: 1
   Threads: 1
   DocumentCount: 1
@@ -163,7 +171,7 @@ HotCollectionUpdaterCmd:
       WriteOperations:
       - WriteCommand: insertOne
         Document: { a : *rand_1k_int}
-  GlobalRate: &HotCollectionWrites {^Parameter: {Name: "Writes", Default: 0}}
+  GlobalRate: *WritesParam
 
 HotCollectionDeleterCmd:
   Duration: *Duration
@@ -172,8 +180,8 @@ HotCollectionDeleterCmd:
 
 ScannerLoaderCmd:
   Repeat: 1
-  Database: &ScannerColdDB {^Parameter: {Name: "DB", Default: db}}
-  CollectionCount: &ScannerColdDBGigabytes {^Parameter: {Name: "CollectionCount", Default: 0}}
+  Database: *DatabaseParam
+  CollectionCount: *CollectionCountParam
   Threads: 1
   DocumentCount: 50000
   BatchSize: 1000

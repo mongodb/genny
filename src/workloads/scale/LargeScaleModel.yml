@@ -69,7 +69,7 @@ Actors:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedCreatorCmd
       Parameters:
-        DB: *LongLivedDB
+        Database: *LongLivedDB
         DocumentCount: *LongLivedDocumentCount
   - {Nop: true}
 
@@ -85,7 +85,7 @@ Actors:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedIndexReaderCmd
       Parameters:
-        DB: *LongLivedDB
+        Database: *LongLivedDB
         DocumentCount: *LongLivedDocumentCount
 
 - Name: LongLivedReader
@@ -100,7 +100,7 @@ Actors:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedReaderCmd
       Parameters:
-        DB: *LongLivedDB
+        Database: *LongLivedDB
         DocumentCount: *LongLivedDocumentCount
 
 - Name: LongLivedWriter
@@ -115,7 +115,7 @@ Actors:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedWriterCmd
       Parameters:
-        DB: *LongLivedDB
+        Database: *LongLivedDB
         DocumentCount: *LongLivedDocumentCount
 
 - Name: RollingSetup
@@ -204,7 +204,7 @@ Actors:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: HotDocumentLoaderCmd
       Parameters:
-        DB: *HotDocumentDB
+        Database: *HotDocumentDB
   - {Nop: true}
 
 - Name: HotDocumentUpdater
@@ -231,7 +231,7 @@ Actors:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: HotCollectionLoaderCmd
       Parameters:
-        DB: *HotCollectionDB
+        Database: *HotCollectionDB
   - {Nop: true}
 
 - Name: HotCollectionUpdater
@@ -276,7 +276,7 @@ Actors:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: ScannerLoaderCmd
       Parameters:
-        DB: *ScannerColdDB
+        Database: *ScannerColdDB
         CollectionCount: *ScannerColdDBGigabytes
   - {Nop: true}
   - {Nop: true}
