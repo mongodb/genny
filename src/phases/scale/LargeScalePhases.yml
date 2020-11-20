@@ -1,7 +1,12 @@
 PhaseSchemaVersion: 2018-07-01
 Owner: Storage Engines
 
-# This section contains shared definitions that are used in the workload.
+# This is the set of shared phases for the Large Scale Workload Automation project.
+#
+# Since the LSWA workloads contain common phases, they've been separated in this phase file and can
+# be included in each workload as needed via the `ExternalPhaseConfig` functionality.
+
+# This section contains definitions that are used in the following phases.
 GlobalDefaults:
   Random10KInt: &rand_10k_int {^RandomInt: {min: 0, max: 10000}}
   Random10KInt: &rand_1k_int {^RandomInt: {min: 0, max: 1000}}
