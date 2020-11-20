@@ -10,46 +10,6 @@ GlobalDefaults:
   Random130String: &rand_100b_string {^RandomString: {length: 100}}
 
   Duration: &Duration 12 hours
-  TrackProportion: &TrackProportion 0
-
-  LongLivedDB: &LongLivedDB longlived  # name of the long lived database
-  LongLivedDocumentCount: &LongLivedDocumentCount 1000
-  LongLivedCollectionCount: &LongLivedCollectionCount 1000
-
-  RollingDB: &RollingDB rolling
-
-  # Note: if HotCollectionDB and HotDocumentDB reference the same
-  # database name, only one of their loaders should be enabled.
-  HotCollectionDB: &HotCollectionDB hotcoll
-  HotDocumentDB: &HotDocumentDB hotdoc
-
-  ScannerColdDB: &ScannerColdDB scancold
-  ScannerHotDB: &ScannerHotDB rolling
-
-  # Set to how many gigabytes we want the "cold" database to be.
-  # This database is initially created, but not used for anything,
-  # except for the snapshot scanner that scans all databases.
-  # We expect this to be larger than the amount of physical memory,
-  # so that we'll displace lots of hot data in the cache.
-  # CHANGE: the spec says 10TB of live data (total in all databases).
-  ScannerColdDBGigabytes: &ScannerColdDBGigabytes 150
-
-  # This list is used to scan all databases. By putting first the hot databases,
-  # which have high concentrations of updates, we'll be referencing more
-  # and "older" updates. That should stress the WiredTiger version history.
-  AllDB: &AllDB hotdoc,hotcoll,rolling,longlived,scancold
-
-  # According to the design, the number of writes should add up to 10K second.
-  LongLivedWrites: &LongLivedWrites 600 per 1 second          #  x5 threads
-  RollingWrites: &RollingWrites 1000 per 1 second             # x40 threads
-  HotDocumentWrites: &HotDocumentWrites 1000 per 1 second     # x40 threads
-  HotCollectionWrites: &HotCollectionWrites 1000 per 1 second # x40 threads
-
-  # According to the design, the number of reads should add up to 1K second.
-  LongLivedReads: &LongLivedReads 20 per 1 second            # x10 threads
-  LongLivedIndexReads: &LongLivedIndexReads 20 per 1 second  # x10 threads
-  RollingReads1: &RollingReads1 50 per 1 second              # x10 threads
-  RollingReads2: &RollingReads2 100 per 1 second             # x1 thread
 
   # We want about 200 bytes, 9 fields (they will all be indexed).
   RollingDocument: &RollingDocument
@@ -75,10 +35,10 @@ GlobalDefaults:
 
 LongLivedCreatorCmd:
   Repeat: 1
-  Database: *LongLivedDB
-  CollectionCount: *LongLivedCollectionCount
+  Database: &LongLivedDB {^Parameter: {Name: "DB", Default: db}}
+  CollectionCount: &LongLivedCollectionCount {^Parameter: {Name: "CollectionCount", Default: 0}}
   Threads: 10
-  DocumentCount: *LongLivedDocumentCount
+  DocumentCount: &LongLivedDocumentCount {^Parameter: {Name: "DocumentCount", Default: 0}}
   BatchSize: 1000
   Document:
     # Each document ranges in size from about 90 to 150 bytes (average 120)
@@ -131,7 +91,7 @@ RollingSetupCmd:
   CollectionWindowSize: 3600
   Document: *RollingDocument
   DocumentCount: 10
-  TrackProportion: *TrackProportion
+  TrackProportion: &TrackProportion {^Parameter: {Name: "TrackProportion", Default: 0}}
   Indexes: *RollingIndexes
 
 RollingManageCmd:
@@ -143,14 +103,14 @@ RollingWriterCmd:
   Duration: *Duration
   TrackProportion: *TrackProportion
   Document: *RollingDocument
-  GlobalRate: *RollingWrites
+  GlobalRate: &RollingWrites {^Parameter: {Name: "Writes", Default: 0}}
 
 RollingReader1Cmd:
   Duration: *Duration
   TrackProportion: *TrackProportion
   # Distribution is a linear distribution from 0 to 1
   Distribution: 0.8
-  GlobalRate: *RollingReads1
+  GlobalRate: &RollingReads1 {^Parameter: {Name: "Reads", Default: 0}}
 
 RollingReader2Cmd:
   Duration: *Duration
@@ -158,11 +118,11 @@ RollingReader2Cmd:
   Distribution: 0.25
   # Filter modifies the find to use whatever filter you pass to it
   Filter: {a: 1}
-  GlobalRate: *RollingReads2
+  GlobalRate: &RollingReads2 {^Parameter: {Name: "Reads", Default: 0}}
 
 HotDocumentLoaderCmd:
   Repeat: 1
-  Database: *HotDocumentDB
+  Database: &HotDocumentDB {^Parameter: {Name: "DB", Default: db}}
   CollectionCount: 1
   Threads: 1
   DocumentCount: 1
@@ -181,11 +141,11 @@ HotDocumentUpdaterCmd:
       - WriteCommand: updateOne
         Filter: {first : first}
         Update: {$set: {second: *rand_1k_int}}
-  GlobalRate: *HotDocumentWrites
+  GlobalRate: &HotDocumentWrites {^Parameter: {Name: "Writes", Default: 0}}
 
 HotCollectionLoaderCmd:
   Repeat: 1
-  Database: *HotCollectionDB
+  Database: &HotCollectionDB {^Parameter: {Name: "DB", Default: db}}
   CollectionCount: 1
   Threads: 1
   DocumentCount: 1
@@ -203,7 +163,7 @@ HotCollectionUpdaterCmd:
       WriteOperations:
       - WriteCommand: insertOne
         Document: { a : *rand_1k_int}
-  GlobalRate: *HotCollectionWrites
+  GlobalRate: &HotCollectionWrites {^Parameter: {Name: "Writes", Default: 0}}
 
 HotCollectionDeleterCmd:
   Duration: *Duration
@@ -212,8 +172,8 @@ HotCollectionDeleterCmd:
 
 ScannerLoaderCmd:
   Repeat: 1
-  Database: *ScannerColdDB
-  CollectionCount: *ScannerColdDBGigabytes
+  Database: &ScannerColdDB {^Parameter: {Name: "DB", Default: db}}
+  CollectionCount: &ScannerColdDBGigabytes {^Parameter: {Name: "CollectionCount", Default: 0}}
   Threads: 1
   DocumentCount: 50000
   BatchSize: 1000

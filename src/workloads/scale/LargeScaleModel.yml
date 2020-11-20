@@ -7,13 +7,6 @@ Owner: Storage Engines
 
 # This section contains shared definitions that are used in the workload.
 GlobalDefaults:
-  Random10KInt: &rand_10k_int {^RandomInt: {min: 0, max: 10000}}
-  Random10KInt: &rand_1k_int {^RandomInt: {min: 0, max: 1000}}
-  Random4ByteInt: &rand_4b_int {^RandomInt: {min: 0, max: 2147483647}}
-  Random30String: &rand_30b_string {^RandomString: {length: 30}}
-  Random130String: &rand_100b_string {^RandomString: {length: 100}}
-
-  Duration: &Duration 12 hours
   TrackProportion: &TrackProportion 0
 
   LongLivedDB: &LongLivedDB longlived  # name of the long lived database
@@ -55,28 +48,6 @@ GlobalDefaults:
   RollingReads1: &RollingReads1 50 per 1 second              # x10 threads
   RollingReads2: &RollingReads2 100 per 1 second             # x1 thread
 
-  # We want about 200 bytes, 9 fields (they will all be indexed).
-  RollingDocument: &RollingDocument
-    a: *rand_30b_string
-    b: *rand_30b_string
-    c: *rand_30b_string
-    d: *rand_30b_string
-    e: *rand_30b_string
-    f: *rand_30b_string
-    g: *rand_4b_int
-    h: *rand_4b_int
-    i: *rand_4b_int
-  RollingIndexes: &RollingIndexes
-    - keys: {a: 1}
-    - keys: {b: 1}
-    - keys: {c: 1}
-    - keys: {d: 1}
-    - keys: {e: 1}
-    - keys: {f: 1}
-    - keys: {i: 1, g: 1}
-    - keys: {g: 1, h: 1}
-    - keys: {h: 1, i: 1}
-
 Clients:
   Default:
     QueryOptions:
@@ -97,6 +68,9 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedCreatorCmd
+      Parameters:
+        DB: *LongLivedDB
+        DocumentCount: *LongLivedDocumentCount
   - {Nop: true}
 
 - Name: LongLivedIndexReader
@@ -110,6 +84,9 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedIndexReaderCmd
+      Parameters:
+        DB: *LongLivedDB
+        DocumentCount: *LongLivedDocumentCount
 
 - Name: LongLivedReader
   Type: MultiCollectionQuery
@@ -122,6 +99,9 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedReaderCmd
+      Parameters:
+        DB: *LongLivedDB
+        DocumentCount: *LongLivedDocumentCount
 
 - Name: LongLivedWriter
   Type: MultiCollectionUpdate
@@ -134,6 +114,9 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedWriterCmd
+      Parameters:
+        DB: *LongLivedDB
+        DocumentCount: *LongLivedDocumentCount
 
 - Name: RollingSetup
   Type: RollingCollections
@@ -148,6 +131,8 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: RollingSetupCmd
+      Parameters:
+        TrackProportion: *TrackProportion
   - {Nop: true}
 
 - Name: RollingManage
@@ -175,6 +160,9 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: RollingWriterCmd
+      Parameters:
+        TrackProportion: *TrackProportion
+        Writes: *RollingWrites
 
 - Name: RollingReader1
   Type: RollingCollections
@@ -187,6 +175,9 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: RollingReader1Cmd
+      Parameters:
+        TrackProportion: *TrackProportion
+        Reads: *RollingReads1
 
 - Name: RollingReader2
   Type: RollingCollections
@@ -199,6 +190,9 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: RollingReader2Cmd
+      Parameters:
+        TrackProportion: *TrackProportion
+        Reads: *RollingReads2
 
 - Name: HotDocumentLoader
   Type: Loader
@@ -209,6 +203,8 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: HotDocumentLoaderCmd
+      Parameters:
+        DB: *HotDocumentDB
   - {Nop: true}
 
 - Name: HotDocumentUpdater
@@ -222,6 +218,8 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: HotDocumentUpdaterCmd
+      Parameters:
+        Writes: *HotDocumentWrites
 
 - Name: HotCollectionLoader
   Type: Loader
@@ -232,6 +230,8 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: HotCollectionLoaderCmd
+      Parameters:
+        DB: *HotCollectionDB
   - {Nop: true}
 
 - Name: HotCollectionUpdater
@@ -245,6 +245,8 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: HotCollectionUpdaterCmd
+      Parameters:
+        Writes: *HotCollectionWrites
 
 - Name: HotCollectionDeleter
   Type: Deleter
@@ -273,6 +275,9 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: ScannerLoaderCmd
+      Parameters:
+        DB: *ScannerColdDB
+        CollectionCount: *ScannerColdDBGigabytes
   - {Nop: true}
   - {Nop: true}
 
