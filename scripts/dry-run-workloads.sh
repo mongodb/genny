@@ -19,12 +19,18 @@ set -euo pipefail
 LAMP_VENV_DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(cd "${LAMP_VENV_DIR}/.." && pwd)"
 BUILD_DIR="${ROOT_DIR}/build"
+OUTPUT_DIR="${BUILD_DIR}/genny-metrics"
 
 if [[ -z "${GENNY+x}" && -e "$ROOT_DIR/scripts/genny" ]]; then
     GENNY="$ROOT_DIR/scripts/genny"
 fi
 
 GENNY_EXECUTABLE="${GENNY:-genny}"
+
+if [[ -d $OUTPUT_DIR ]]; then
+    echo "Clearing previous results in ${OUTPUT_DIR}"
+    rm $OUTPUT_DIR/*
+fi
 
 echo "Dry running with genny [$GENNY_EXECUTABLE]"
 
