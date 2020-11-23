@@ -39,6 +39,9 @@ Actors:
   Phases:
   - LogEvery: 3 milliseconds
     Blocking: None
+Metrics:
+  Format: cedar-csv
+  Path: build/genny-metrics
 )",
                           ""};
         ActorHelper ah(config.root(), 2, MongoTestFixture::connectionUri().to_string());

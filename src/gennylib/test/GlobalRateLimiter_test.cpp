@@ -284,6 +284,7 @@ Actors:
   Phases:
   - GlobalRate: 3 per 500 milliseconds
     Duration: 1200 milliseconds
+
 )",
                       "");
         auto& config = ns.root();
