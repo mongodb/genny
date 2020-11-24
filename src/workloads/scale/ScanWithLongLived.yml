@@ -1,0 +1,74 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+
+GlobalDefaults:
+  TrackProportion: &TrackProportion 0
+
+  LongLivedDB: &LongLivedDB longlived # name of the long lived database
+  LongLivedDocumentCount: &LongLivedDocumentCount 1000
+
+  ScannerHotDB: &ScannerHotDB rolling
+
+  LongLivedWrites: &LongLivedWrites 600 per 1 second # x5 threads
+  LongLivedReads: &LongLivedReads 20 per 1 second    # x10 threads
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 5000
+
+Actors:
+- Name: LongLivedCreator
+  Type: Loader
+  Threads: 10
+  TrackProportion: *TrackProportion
+  Phases:
+  - {Nop: true}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: LongLivedCreatorCmd
+      Parameters:
+        Database: *LongLivedDB
+        DocumentCount: *LongLivedDocumentCount
+  - {Nop: true}
+
+- Name: LongLivedReader
+  Type: MultiCollectionQuery
+  Threads: 10
+  GlobalRate: *LongLivedReads
+  TrackProportion: *TrackProportion
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: LongLivedReaderCmd
+      Parameters:
+        Database: *LongLivedDB
+        DocumentCount: *LongLivedDocumentCount
+
+- Name: LongLivedWriter
+  Type: MultiCollectionUpdate
+  Threads: 5
+  GlobalRate: *LongLivedWrites
+  TrackProportion: *TrackProportion
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: LongLivedWriterCmd
+      Parameters:
+        Database: *LongLivedDB
+        DocumentCount: *LongLivedDocumentCount
+
+- Name: SnapshotScanner5Gigabytes
+  Type: CollectionScanner
+  Threads: 10
+  Database: *ScannerHotDB
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: SnapshotScanner5GigabytesCmd
