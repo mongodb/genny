@@ -65,7 +65,7 @@ Actors:
 - Name: SnapshotScanner5Gigabytes
   Type: CollectionScanner
   Threads: 10
-  Database: *ScannerHotDB
+  Database: *LongLivedDB
   Phases:
   - {Nop: true}
   - {Nop: true}
