@@ -12,6 +12,8 @@ GlobalDefaults:
   LongLivedWrites: &LongLivedWrites 600 per 1 second # x5 threads
   LongLivedReads: &LongLivedReads 20 per 1 second    # x10 threads
 
+  binomial_10k_int: &binomial_10k_int {^RandomInt: {distribution: binomial, t: 10000, p: 0.5}}
+
 Clients:
   Default:
     QueryOptions:
@@ -46,6 +48,7 @@ Actors:
       Parameters:
         Database: *LongLivedDB
         DocumentCount: *LongLivedDocumentCount
+        IdFilter: *binomial_10k_int
 
 - Name: LongLivedWriter
   Type: MultiCollectionUpdate
@@ -61,6 +64,7 @@ Actors:
       Parameters:
         Database: *LongLivedDB
         DocumentCount: *LongLivedDocumentCount
+        IdFilter: *binomial_10k_int
 
 - Name: SnapshotScanner5Gigabytes
   Type: CollectionScanner
