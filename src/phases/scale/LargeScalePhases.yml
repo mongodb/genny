@@ -235,6 +235,25 @@ SnapshotScanner5GigabytesCmd:
   CollectionSortOrder: forward
   GlobalRate: 1 per 5 minutes
 
+FixedRateSnapshotScanner5GigabytesCmd:
+  Duration: *Duration
+  ScanSizeBytes: 5000000000
+  # tetsuo-cpp: We don't supply scan duration since documents and scan rate implies it.
+  #
+  # This is how it's described in the technical design but I'm thinking that scan rate
+  # should be bytes per second rather than documents per second.
+  #
+  # The reasoning is that we don't know the document size. So for example, we could scan
+  # 100 large documents and exceed the 5GB size meaning that the scan will complete within
+  # a second. Similarly, we could scan 100000 tiny documents and finish the phase without
+  # hitting 5GB in total.
+  Documents: 100000
+  ScanRate: 100 per 1 second
+  ScanType: snapshot
+  CollectionSkip: 300
+  CollectionSortOrder: forward
+  GlobalRate: 1 per 5 minutes
+
 SnapshotScannerAllCmd:
   Duration: *Duration
   Documents: 100000000000

@@ -65,6 +65,7 @@ struct CollectionScanner::PhaseConfig {
     ScanType scanType;
     SortOrderType sortOrder;
     int64_t collectionSkip;
+    std::optional<RateSpec> scanRate;
     std::optional<TimeSpec> scanDuration;
     bool selectClusterTimeOnly = false;
     bool queryCollectionList;
@@ -84,6 +85,7 @@ struct CollectionScanner::PhaseConfig {
           documents{context["Documents"].maybe<IntegerSpec>().value_or(0)},
           scanSizeBytes{context["ScanSizeBytes"].maybe<IntegerSpec>().value_or(0)},
           collectionSkip{context["CollectionSkip"].maybe<IntegerSpec>().value_or(0)},
+          scanRate{context["ScanRate"].maybe<RateSpec>()},
           scanDuration{context["ScanDuration"].maybe<TimeSpec>()},
           selectClusterTimeOnly{context["SelectClusterTimeOnly"].maybe<bool>().value_or(false)} {
         // The list of databases is comma separated.
@@ -116,6 +118,10 @@ struct CollectionScanner::PhaseConfig {
             scanType = ScanType::kPointInTime;
         } else if (!selectClusterTimeOnly) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException("ScanType is invalid."));
+        }
+        if (scanDuration && scanRate) {
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("ScanDuration and ScanRate are mutually exclusive"));
         }
         if (scanDuration) {
             if (scanDuration->count() < 0) {
@@ -189,6 +195,10 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
     size_t scanSize = 0;
     bool scanFinished = false;
     auto statTracker = config->scanOperation.start();
+    /*
+     * tetsuo-cpp: We need to figure out how frequently we're inserting and do some sleeping to
+     * ensure that we're keeping in line with the scan rate.
+     */
     for (auto& collection : collections) {
         auto filter = config->filterExpr ? config->filterExpr->evaluate()
                                          : bsoncxx::document::view_or_value{};

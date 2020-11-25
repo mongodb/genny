@@ -71,4 +71,4 @@ Actors:
   - {Nop: true}
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
-      Key: SnapshotScanner5GigabytesCmd
+      Key: FixedRateSnapshotScanner5GigabytesCmd
