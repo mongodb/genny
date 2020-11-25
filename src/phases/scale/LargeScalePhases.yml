@@ -39,12 +39,12 @@ GlobalDefaults:
     - keys: {h: 1, i: 1}
 
   # Commonly used parameters.
-  DatabaseParam: &DatabaseParam {^Parameter: {Name: "Database", Default: db}}
-  CollectionCountParam: &CollectionCountParam {^Parameter: {Name: "CollectionCount", Default: 0}}
-  TrackProportionParam: &TrackProportionParam {^Parameter: {Name: "TrackProportion", Default: 0}}
-  DocumentCountParam: &DocumentCountParam {^Parameter: {Name: "DocumentCount", Default: 0}}
-  WritesParam: &WritesParam {^Parameter: {Name: "Writes", Default: 0}}
-  ReadsParam: &ReadsParam {^Parameter: {Name: "Reads", Default: 0}}
+  DatabaseParam: &DatabaseParam {^Parameter: {Name: "Database", Default: ""}}
+  CollectionCountParam: &CollectionCountParam {^Parameter: {Name: "CollectionCount", Default: -1}}
+  TrackProportionParam: &TrackProportionParam {^Parameter: {Name: "TrackProportion", Default: -1}}
+  DocumentCountParam: &DocumentCountParam {^Parameter: {Name: "DocumentCount", Default: -1}}
+  WritesParam: &WritesParam {^Parameter: {Name: "Writes", Default: -1}}
+  ReadsParam: &ReadsParam {^Parameter: {Name: "Reads", Default: -1}}
 
 LongLivedCreatorCmd:
   Repeat: 1
