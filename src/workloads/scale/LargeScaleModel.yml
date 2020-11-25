@@ -70,6 +70,7 @@ Actors:
       Key: LongLivedCreatorCmd
       Parameters:
         Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
         DocumentCount: *LongLivedDocumentCount
   - {Nop: true}
 
@@ -86,6 +87,7 @@ Actors:
       Key: LongLivedIndexReaderCmd
       Parameters:
         Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
         DocumentCount: *LongLivedDocumentCount
 
 - Name: LongLivedReader
@@ -101,6 +103,7 @@ Actors:
       Key: LongLivedReaderCmd
       Parameters:
         Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
         DocumentCount: *LongLivedDocumentCount
 
 - Name: LongLivedWriter
@@ -116,6 +119,7 @@ Actors:
       Key: LongLivedWriterCmd
       Parameters:
         Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
         DocumentCount: *LongLivedDocumentCount
 
 - Name: RollingSetup
