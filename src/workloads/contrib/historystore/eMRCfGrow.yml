@@ -1,0 +1,181 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+
+# Test workload to evaluate Storage Engine behavior when running in a 
+# degraded replica set with or without eMRCf enabled.  A "degraded" replica
+# set here means one without an active majority of data bearing nodes.  I.e.,
+# a PSA set with the Secondary offline.  
+
+# Currently the workload is split across several yml files because we need to script
+# some things between different parts.  This is the grow phase.  It churns our dataset
+# with a lot of updates, inserts, and deletes.  It intent is to keep the logical size
+# of the data set the same (i.e., same number of documents with the same large/small mix)
+# but to cause the WT history store to grow when we run it on a degraded PSA replica set.
+
+# This section contains shared definitions that are used in the workload.
+# These defaults should match the similar declarations in the yml files for the other
+# parts of the workload.
+GlobalDefaults:
+  Random10KInt: &rand_10k_int {^RandomInt: {min: 1, max: 10000}}
+  Random1KInt: &rand_1k_int {^RandomInt: {min: 1, max: 1000}}
+  Random4ByteInt: &rand_4b_int {^RandomInt: {min: 0, max: 2147483647}}
+  ShortString: &short_string {^RandomString: {length: 16}}
+  RandomShortString: &rand_short_string {^RandomString: {length: {^RandomInt: {min: 10, max: 160}}}}
+  RandomMediumString: &rand_medium_string {^RandomString: {length: {^RandomInt: {min: 160, max: 960}}}}
+  RandomLargeString: &rand_large_string {^RandomString: {length: {^RandomInt: {min: 960, max: 4960}}}}
+
+  TestDB: &TestDB test # Name of test database
+
+  SmallDocCount: &small_doc_count 10000000
+  LargeDocCount: &large_doc_count 1000000
+
+  # Documents have a key field.  Large and small documents use different, non-overlapping key
+  # ranges so that we can choose one type of document or the other in later phases.
+  # Key space for large and small docs should be 1% of the number of documents of each type.
+  # This means that a updateOne request to a random key will select among 1% of the documents:
+  # the oldest doc with each key value.
+  SmallDocKey: &small_doc_key {^RandomInt: {min: 0, max: 100000}}
+  LargeDocKey: &large_doc_key {^RandomInt: {min: 1000000, max: 1010000}}
+
+# Each document has two keys.  A primary key (key1) is assigned randomly from the keyspace.
+# The number of documents in the collection is 100x the range of the primary key.  So we will
+# wind up with, on average, 100 documets per key value.  This is a hack so we can target tests
+# at a set of "hot" documents.  Calling updateOne (or any of the other *One operations) with
+# a random key will target the oldest document with that key value, thus 1% of the dataset
+#
+# The secondary key (key2) is a random value selected from 1 to 1000.  It can be used (awkwardly)
+# to broaden the set of documents that a test targets.  For example, issuing a pair of operations 
+# to random primary keys and one selecting key2 <= 500 and the other selecting key2 > 500 will
+# target two documents for each primary key value, thus targeting 2 documents for each key
+# value, or 2% of the population.
+
+Document: &small_doc
+  key1: *small_doc_key
+  key2: *rand_1k_int
+  data1: *rand_4b_int
+  data2: *rand_4b_int
+  data3: *rand_10k_int
+  data4: *rand_1k_int
+  type: "small"
+  tag: *short_string
+  payload: *rand_short_string
+
+Document: &large_doc
+  key1: *large_doc_key
+  key2: *rand_1k_int
+  data1: *rand_4b_int
+  data2: *rand_4b_int
+  data3: *rand_10k_int
+  data4: *rand_1k_int
+  type: "large"
+  tag: *short_string
+  payload: *rand_medium_string
+
+# Only way I could come up with to get the desired mix of small/large operations is to have
+# two copies of the same actor operating in parallel on small and large documents respectively.
+#
+# Workload is 80% updates, 10% insert, 10% delete.  Most updates target the "hot" 1% of
+# documents with occasionally operations on 10% of the data set (documents with key2 > 900)
+# Deletes remove from the hot 1%, so over time the hot set changes.  It also means we 
+# typically delete documents with a bunch of history.
+
+Actors:
+- Name: SmallDocChurn
+  Type: CrudActor
+  Database: *TestDB
+  Threads: 10
+  Phases: 
+  - &ChurnPhase
+    Repeat: 50000
+    Collection: Collection0
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *small_doc_key}
+        Update: {$set: {data1: *rand_4b_int}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *small_doc_key}
+        Update: {$set: {data2: *rand_4b_int}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *small_doc_key}
+        Update: {$set: {data3: *rand_10k_int}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *small_doc_key}
+        Update: {$inc: {data4: 1}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *small_doc_key}
+        Update: {$inc: {data4: -1}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *small_doc_key}
+        Update: {$set: {tag: *short_string}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *small_doc_key}
+        Update: {$set: {payload: *rand_short_string}}
+    - OperationName: updateMany
+      OperationCommand:
+        Filter: {$and: [ {key1: *small_doc_key}, {key2: {$gt: 900}} ] }
+        Update: {$set: {data2: *rand_4b_int}}
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *small_doc
+    - OperationName: deleteOne
+      OperationCommand:
+        Filter: {key1: *small_doc_key}
+
+- Name: LargeDocChurn
+  Type: CrudActor
+  Database: *TestDB
+  Threads: 1
+  Phases: 
+  - &ChurnPhase
+    Repeat: 50000
+    Collection: Collection0
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *large_doc_key}
+        Update: {$set: {data1: *rand_4b_int}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *large_doc_key}
+        Update: {$set: {data2: *rand_4b_int}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *large_doc_key}
+        Update: {$set: {data3: *rand_10k_int}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *large_doc_key}
+        Update: {$inc: {data4: 1}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *large_doc_key}
+        Update: {$inc: {data4: -1}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *large_doc_key}
+        Update: {$set: {tag: *short_string}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key1: *large_doc_key}
+        Update: {$set: {payload: *rand_medium_string}}
+    - OperationName: updateMany
+      OperationCommand:
+        Filter: {$and: [ {key1: *large_doc_key}, {key2: {$gt: 900}} ] }
+        Update: {$set: {data2: *rand_4b_int}}
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *large_doc
+    - OperationName: deleteOne
+      OperationCommand:
+        Filter: {key1: *large_doc_key}
+
+Metrics:
+  Format: csv-ftdc
+  Path: build/genny-metrics

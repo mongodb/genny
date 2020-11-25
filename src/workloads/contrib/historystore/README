@@ -1,0 +1,59 @@
+BACKGROUND
+
+This directory contains some Genny workloads and scripts developed for PM-1844.  
+The goal of this project was to measure the performance impact of removing 
+support for enableMajorityReadConcern=false (eMRCf) on degraded 
+Primary-Secondary-Arbiter (PSA) replica sets.  
+
+Without eMRCf, when the secondary fails in a PSA replica set, MongoDB will
+not be able to advance its majority commited timestamp, because the replica
+set doesn't have a majority of data-bearing nodes.  As a result WiredTiger
+will not delete old or overwritten values, storing them instead in its
+history store.  So the effect we were insterested in measuring is what
+happens to MongoDB performance when the WiredTiger history store grows
+a lot as might happen during an extended outage of the secondary in a
+PSA replica set.
+
+TEST DESCRIPTION
+
+The test is structured as several Genny workloads that are executed by
+a control script (eMRCf_runner.sh).  The test performs the following
+steps:
+
+  1. Set up a PSA replica set on the local host
+  2. Populate a collection (using eMRCfPopulate.yml)
+  3. Shutdown the secondary
+  4. Run a benchmark workload (using eMRCfBench.yml)
+  5. Repetedly run a workload to grow the history store (using eMRCfGrow.yml).  
+     The -g option to the test script controls how many this workload runs.
+  6. Repeat the benchmark workload (eMRCfBench.yml)
+
+By comparing the performance of the two benchmark executions (steps #4 & #6,
+above) we can see the effect of the larger history store.
+
+RUNNING THE TEST
+
+To run this test, you'll need to install and build Genny on your test system.
+You'll also need to have MongoDB installed.
+
+Edit eMRCf_runner.sh and update the four variable declarations at the 
+beginning to point to the appropriate places in your test environment.
+    
+Execute eMRCf_runner.sh
+
+By default the script will execute the test described above with 10 iterations
+of the Grow workload.  You can use the following options to change the 
+behavior of the test:
+
+The test script has several other options:
+    -b        baseline run; don't kill secondary node in replset
+    -f        set enableMajorityReadConcern to false (default true)
+    -g iters  number of iterations to run of HS grow phase (default 10)
+    -m dir    directory to store metrics data 
+    -p        plot performance after run (requires gnuplot)
+
+WARNINGS, CAVEATS, ETC.
+
+The control script removes the contents of the metrics directory before
+executing. So you'll want to save the results from your runs, or provide
+new directories for each run (or fix the script to do this for you).
