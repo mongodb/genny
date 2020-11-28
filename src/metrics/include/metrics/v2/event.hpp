@@ -344,11 +344,11 @@ public:
 private:
     void run() {
         while (!_finishing) {
-            reapActor();
             std::unique_lock<std::mutex> lk(_cvLock);
             // We sleep for performance reasons, not correctness, so we don't need to
             // guard against spurious wakeups.
             _cv.wait_for(lk, std::chrono::milliseconds(GRPC_THREAD_SLEEP_MS));
+            reapActor();
         }
 
         // Drain buffer and finish.
