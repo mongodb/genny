@@ -838,12 +838,10 @@ TEST_CASE("Events stream to gRPC") {
             OutcomeType::kSuccess                                           // outcome
         );
 
-        metricsBuffer.addAt(endTime, event, 1);
-        REQUIRE_FALSE(metricsBuffer.pop(false));
-        metricsBuffer.addAt(endTime, event, 1);
-        REQUIRE_FALSE(metricsBuffer.pop(false));
-        metricsBuffer.addAt(endTime, event, 1);
-        REQUIRE_FALSE(metricsBuffer.pop(false));
+        for (int i = 0; i < 6; i++) {
+            metricsBuffer.addAt(endTime, event, 1);
+            REQUIRE_FALSE(metricsBuffer.pop(false));
+        }
         metricsBuffer.addAt(endTime, event, 1);
         REQUIRE(metricsBuffer.pop(false));
     }
