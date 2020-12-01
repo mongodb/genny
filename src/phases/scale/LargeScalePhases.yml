@@ -1,0 +1,247 @@
+PhaseSchemaVersion: 2018-07-01
+Owner: Storage Engines
+
+# This is the set of shared phases for the Large Scale Workload Automation project.
+#
+# Since the LSWA workloads contain common phases, they've been separated in this phase file and can
+# be included in each workload as needed via the `ExternalPhaseConfig` functionality.
+
+# This section contains definitions that are used in the following phases.
+GlobalDefaults:
+  Random10KInt: &rand_10k_int {^RandomInt: {min: 0, max: 10000}}
+  Random10KInt: &rand_1k_int {^RandomInt: {min: 0, max: 1000}}
+  Random4ByteInt: &rand_4b_int {^RandomInt: {min: 0, max: 2147483647}}
+  Random30String: &rand_30b_string {^RandomString: {length: 30}}
+  Random130String: &rand_100b_string {^RandomString: {length: 100}}
+
+  Duration: &Duration 12 hours
+
+  # We want about 200 bytes, 9 fields (they will all be indexed).
+  RollingDocument: &RollingDocument
+    a: *rand_30b_string
+    b: *rand_30b_string
+    c: *rand_30b_string
+    d: *rand_30b_string
+    e: *rand_30b_string
+    f: *rand_30b_string
+    g: *rand_4b_int
+    h: *rand_4b_int
+    i: *rand_4b_int
+  RollingIndexes: &RollingIndexes
+    - keys: {a: 1}
+    - keys: {b: 1}
+    - keys: {c: 1}
+    - keys: {d: 1}
+    - keys: {e: 1}
+    - keys: {f: 1}
+    - keys: {i: 1, g: 1}
+    - keys: {g: 1, h: 1}
+    - keys: {h: 1, i: 1}
+
+  # Commonly used parameters.
+  DatabaseParam: &DatabaseParam {^Parameter: {Name: "Database", Default: ""}}
+  CollectionCountParam: &CollectionCountParam {^Parameter: {Name: "CollectionCount", Default: -1}}
+  TrackProportionParam: &TrackProportionParam {^Parameter: {Name: "TrackProportion", Default: -1}}
+  DocumentCountParam: &DocumentCountParam {^Parameter: {Name: "DocumentCount", Default: -1}}
+  WritesParam: &WritesParam {^Parameter: {Name: "Writes", Default: -1}}
+  ReadsParam: &ReadsParam {^Parameter: {Name: "Reads", Default: -1}}
+
+LongLivedCreatorCmd:
+  Repeat: 1
+  Database: *DatabaseParam
+  CollectionCount: *CollectionCountParam
+  Threads: 10
+  DocumentCount: *DocumentCountParam
+  BatchSize: 1000
+  Document:
+    # Each document ranges in size from about 90 to 150 bytes (average 120)
+    x0: *rand_10k_int
+    x1: *rand_4b_int
+    x2: *rand_4b_int
+    x3: *rand_4b_int
+    x4: *rand_4b_int
+    x5: *rand_4b_int
+    x6: *rand_4b_int
+    x7: *rand_4b_int
+    x8: *rand_4b_int
+    s0: {^RandomString: {length: {^RandomInt: {min: 20, max: 80}}}}
+  Indexes:
+  - keys: {x0: 1}
+  - keys: {x1: 1}
+  - keys: {x2: 1}
+  - keys: {x3: 1}
+  - keys: {x4: 1}
+  - keys: {x5: 1}
+  - keys: {x6: 1}
+  - keys: {x7: 1}
+  - keys: {x8: 1}
+
+LongLivedIndexReaderCmd:
+  Duration: *Duration
+  Database: *DatabaseParam
+  CollectionCount: *CollectionCountParam
+  DocumentCount: *DocumentCountParam
+  Filter: {x0: *rand_10k_int}
+
+LongLivedReaderCmd:
+  Duration: *Duration
+  Database: *DatabaseParam
+  CollectionCount: *CollectionCountParam
+  DocumentCount: *DocumentCountParam
+  Filter: {_id: *rand_10k_int}
+
+LongLivedWriterCmd:
+  Duration: *Duration
+  MetricsName: Update
+  Database: *DatabaseParam
+  CollectionCount: *CollectionCountParam
+  DocumentCount: *DocumentCountParam
+  UpdateFilter: {_id: *rand_10k_int}
+  Update: {$inc: {x1: 1}}
+
+RollingSetupCmd:
+  Repeat: 1
+  CollectionWindowSize: 3600
+  Document: *RollingDocument
+  DocumentCount: 10
+  TrackProportion: *TrackProportionParam
+  Indexes: *RollingIndexes
+
+RollingManageCmd:
+  Duration: *Duration
+  GlobalRate: 1 per 1 second
+  Indexes: *RollingIndexes
+
+RollingWriterCmd:
+  Duration: *Duration
+  TrackProportion: *TrackProportionParam
+  Document: *RollingDocument
+  GlobalRate: *WritesParam
+
+RollingReader1Cmd:
+  Duration: *Duration
+  TrackProportion: *TrackProportionParam
+  # Distribution is a linear distribution from 0 to 1
+  Distribution: 0.8
+  GlobalRate: *ReadsParam
+
+RollingReader2Cmd:
+  Duration: *Duration
+  TrackProportion: *TrackProportionParam
+  Distribution: 0.25
+  # Filter modifies the find to use whatever filter you pass to it
+  Filter: {a: 1}
+  GlobalRate: *ReadsParam
+
+HotDocumentLoaderCmd:
+  Repeat: 1
+  Database: *DatabaseParam
+  CollectionCount: 1
+  Threads: 1
+  DocumentCount: 1
+  BatchSize: 1
+  Document:
+    first: first
+    second: *rand_1k_int
+
+HotDocumentUpdaterCmd:
+  Duration: *Duration
+  Collection: Collection0
+  Operations:
+  - OperationName: bulkWrite
+    OperationCommand:
+      WriteOperations:
+      - WriteCommand: updateOne
+        Filter: {first : first}
+        Update: {$set: {second: *rand_1k_int}}
+  GlobalRate: *WritesParam
+
+HotCollectionLoaderCmd:
+  Repeat: 1
+  Database: *DatabaseParam
+  CollectionCount: 1
+  Threads: 1
+  DocumentCount: 1
+  BatchSize: 1
+  Document:
+    first: first
+    second: *rand_1k_int
+
+HotCollectionUpdaterCmd:
+  Duration: *Duration
+  Collection: Collection0
+  Operations:
+  - OperationName: bulkWrite
+    OperationCommand:
+      WriteOperations:
+      - WriteCommand: insertOne
+        Document: { a : *rand_1k_int}
+  GlobalRate: *WritesParam
+
+HotCollectionDeleterCmd:
+  Duration: *Duration
+  Collection: Collection0
+  GlobalRate: 1000 per 1 second
+
+ScannerLoaderCmd:
+  Repeat: 1
+  Database: *DatabaseParam
+  CollectionCount: *CollectionCountParam
+  Threads: 1
+  DocumentCount: 50000
+  BatchSize: 1000
+  Document:
+    a0: *rand_100b_string
+    a1: *rand_100b_string
+    a2: *rand_100b_string
+    a3: *rand_100b_string
+    a4: *rand_100b_string
+    a5: *rand_100b_string
+    a6: *rand_100b_string
+    a7: *rand_100b_string
+    a8: *rand_100b_string
+    a9: *rand_100b_string
+    a10: *rand_100b_string
+    a11: *rand_100b_string
+    a12: *rand_100b_string
+    a13: *rand_100b_string
+    a14: *rand_100b_string
+    a15: *rand_100b_string
+    a16: *rand_100b_string
+    a17: *rand_100b_string
+    a18: *rand_100b_string
+    a19: *rand_100b_string
+
+SnapshotScanner1GigabytesCmd:
+  Duration: *Duration
+  ScanSizeBytes: 1000000000
+  ScanDuration: 2 minutes
+  ScanType: snapshot
+  # starting at 1 minute old, and going older
+  CollectionSkip: 60
+  CollectionSortOrder: forward
+  GlobalRate: 1 per 1 minute
+  # Note: to peform an index scan use the Filter config.
+  # We'd need to know the layout of the collections we're using.
+  # Filter: {a : 1}
+
+SnapshotScanner5GigabytesCmd:
+  Duration: *Duration
+  ScanSizeBytes: 5000000000
+  ScanDuration: 10 minutes
+  ScanType: snapshot
+  # starting at 5 minutes old, and going older
+  CollectionSkip: 300
+  CollectionSortOrder: forward
+  GlobalRate: 1 per 5 minutes
+
+SnapshotScannerAllCmd:
+  Duration: *Duration
+  Documents: 100000000000
+  ScanType: snapshot
+  #GlobalRate: 1 per 24 hours   # CHANGE
+  #Note: using "2 per 1" hour kicks off two scans at the top of the hour!
+  GlobalRate: 1 per 30 minutes
+
+OplogTrailerCmd:
+  Duration: *Duration

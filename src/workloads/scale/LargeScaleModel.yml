@@ -7,13 +7,6 @@ Owner: Storage Engines
 
 # This section contains shared definitions that are used in the workload.
 GlobalDefaults:
-  Random10KInt: &rand_10k_int {^RandomInt: {min: 0, max: 10000}}
-  Random10KInt: &rand_1k_int {^RandomInt: {min: 0, max: 1000}}
-  Random4ByteInt: &rand_4b_int {^RandomInt: {min: 0, max: 2147483647}}
-  Random30String: &rand_30b_string {^RandomString: {length: 30}}
-  Random130String: &rand_100b_string {^RandomString: {length: 100}}
-
-  Duration: &Duration 12 hours
   TrackProportion: &TrackProportion 0
 
   LongLivedDB: &LongLivedDB longlived  # name of the long lived database
@@ -55,28 +48,6 @@ GlobalDefaults:
   RollingReads1: &RollingReads1 50 per 1 second              # x10 threads
   RollingReads2: &RollingReads2 100 per 1 second             # x1 thread
 
-  # We want about 200 bytes, 9 fields (they will all be indexed).
-  RollingDocument: &RollingDocument
-    a: *rand_30b_string
-    b: *rand_30b_string
-    c: *rand_30b_string
-    d: *rand_30b_string
-    e: *rand_30b_string
-    f: *rand_30b_string
-    g: *rand_4b_int
-    h: *rand_4b_int
-    i: *rand_4b_int
-  RollingIndexes: &RollingIndexes
-    - keys: {a: 1}
-    - keys: {b: 1}
-    - keys: {c: 1}
-    - keys: {d: 1}
-    - keys: {e: 1}
-    - keys: {f: 1}
-    - keys: {i: 1, g: 1}
-    - keys: {g: 1, h: 1}
-    - keys: {h: 1, i: 1}
-
 Clients:
   Default:
     QueryOptions:
@@ -94,34 +65,13 @@ Actors:
   TrackProportion: *TrackProportion
   Phases:
   - {Nop: true}
-  - Repeat: 1
-    Database: *LongLivedDB
-    CollectionCount: *LongLivedCollectionCount
-    Threads: 10
-    DocumentCount: *LongLivedDocumentCount
-    BatchSize: 1000
-    Document:
-      # Each document ranges in size from about 90 to 150 bytes (average 120)
-      x0: *rand_10k_int
-      x1: *rand_4b_int
-      x2: *rand_4b_int
-      x3: *rand_4b_int
-      x4: *rand_4b_int
-      x5: *rand_4b_int
-      x6: *rand_4b_int
-      x7: *rand_4b_int
-      x8: *rand_4b_int
-      s0: {^RandomString: {length: {^RandomInt: {min: 20, max: 80}}}}
-    Indexes:
-    - keys: {x0: 1}
-    - keys: {x1: 1}
-    - keys: {x2: 1}
-    - keys: {x3: 1}
-    - keys: {x4: 1}
-    - keys: {x5: 1}
-    - keys: {x6: 1}
-    - keys: {x7: 1}
-    - keys: {x8: 1}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: LongLivedCreatorCmd
+      Parameters:
+        Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
+        DocumentCount: *LongLivedDocumentCount
   - {Nop: true}
 
 - Name: LongLivedIndexReader
@@ -132,11 +82,13 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    Database: *LongLivedDB
-    CollectionCount: *LongLivedCollectionCount
-    DocumentCount: *LongLivedDocumentCount
-    Filter: {x0: *rand_10k_int}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: LongLivedIndexReaderCmd
+      Parameters:
+        Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
+        DocumentCount: *LongLivedDocumentCount
 
 - Name: LongLivedReader
   Type: MultiCollectionQuery
@@ -146,11 +98,13 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    Database: *LongLivedDB
-    CollectionCount: *LongLivedCollectionCount
-    DocumentCount: *LongLivedDocumentCount
-    Filter: {_id: *rand_10k_int}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: LongLivedReaderCmd
+      Parameters:
+        Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
+        DocumentCount: *LongLivedDocumentCount
 
 - Name: LongLivedWriter
   Type: MultiCollectionUpdate
@@ -160,13 +114,13 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    MetricsName: Update
-    Database: *LongLivedDB
-    CollectionCount: *LongLivedCollectionCount
-    DocumentCount: *LongLivedDocumentCount
-    UpdateFilter: {_id: *rand_10k_int}
-    Update: {$inc: {x1: 1}}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: LongLivedWriterCmd
+      Parameters:
+        Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
+        DocumentCount: *LongLivedDocumentCount
 
 - Name: RollingSetup
   Type: RollingCollections
@@ -178,12 +132,11 @@ Actors:
   Threads: 1
   Phases:
   - {Nop: true}
-  - Repeat: 1
-    CollectionWindowSize: 3600
-    Document: *RollingDocument
-    DocumentCount: 10
-    TrackProportion: *TrackProportion
-    Indexes: *RollingIndexes
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: RollingSetupCmd
+      Parameters:
+        TrackProportion: *TrackProportion
   - {Nop: true}
 
 - Name: RollingManage
@@ -196,9 +149,9 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    GlobalRate: 1 per 1 second
-    Indexes: *RollingIndexes
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: RollingManageCmd
 
 - Name: RollingWriter
   Type: RollingCollections
@@ -208,10 +161,12 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    TrackProportion: *TrackProportion
-    Document: *RollingDocument
-    GlobalRate: *RollingWrites
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: RollingWriterCmd
+      Parameters:
+        TrackProportion: *TrackProportion
+        Writes: *RollingWrites
 
 - Name: RollingReader1
   Type: RollingCollections
@@ -221,11 +176,12 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    TrackProportion: *TrackProportion
-    # Distribution is a linear distribution from 0 to 1
-    Distribution: 0.8
-    GlobalRate: *RollingReads1
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: RollingReader1Cmd
+      Parameters:
+        TrackProportion: *TrackProportion
+        Reads: *RollingReads1
 
 - Name: RollingReader2
   Type: RollingCollections
@@ -235,12 +191,12 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    TrackProportion: *TrackProportion
-    Distribution: 0.25
-    # Filter modifies the find to use whatever filter you pass to it
-    Filter: {a: 1}
-    GlobalRate: *RollingReads2
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: RollingReader2Cmd
+      Parameters:
+        TrackProportion: *TrackProportion
+        Reads: *RollingReads2
 
 - Name: HotDocumentLoader
   Type: Loader
@@ -248,15 +204,11 @@ Actors:
   Threads: 1
   Phases:
   - {Nop: true}
-  - Repeat: 1
-    Database: *HotDocumentDB
-    CollectionCount: 1
-    Threads: 1
-    DocumentCount: 1
-    BatchSize: 1
-    Document:
-      first: first
-      second: *rand_1k_int
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: HotDocumentLoaderCmd
+      Parameters:
+        Database: *HotDocumentDB
   - {Nop: true}
 
 - Name: HotDocumentUpdater
@@ -267,16 +219,11 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    Collection: Collection0
-    Operations:
-    - OperationName: bulkWrite
-      OperationCommand:
-        WriteOperations:
-        - WriteCommand: updateOne
-          Filter: {first : first}
-          Update: {$set: {second: *rand_1k_int}}
-    GlobalRate: *HotDocumentWrites
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: HotDocumentUpdaterCmd
+      Parameters:
+        Writes: *HotDocumentWrites
 
 - Name: HotCollectionLoader
   Type: Loader
@@ -284,15 +231,11 @@ Actors:
   Threads: 1
   Phases:
   - {Nop: true}
-  - Repeat: 1
-    Database: *HotCollectionDB
-    CollectionCount: 1
-    Threads: 1
-    DocumentCount: 1
-    BatchSize: 1
-    Document:
-      first: first
-      second: *rand_1k_int
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: HotCollectionLoaderCmd
+      Parameters:
+        Database: *HotCollectionDB
   - {Nop: true}
 
 - Name: HotCollectionUpdater
@@ -303,15 +246,11 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    Collection: Collection0
-    Operations:
-    - OperationName: bulkWrite
-      OperationCommand:
-        WriteOperations:
-        - WriteCommand: insertOne
-          Document: { a : *rand_1k_int}
-    GlobalRate: *HotCollectionWrites
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: HotCollectionUpdaterCmd
+      Parameters:
+        Writes: *HotCollectionWrites
 
 - Name: HotCollectionDeleter
   Type: Deleter
@@ -320,9 +259,9 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    Collection: Collection0
-    GlobalRate: 1000 per 1 second
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: HotCollectionDeleterCmd
 
 # Create the cold database only.  For the hot database, we'll
 # use the rolling collection or the longlived collection, as they
@@ -337,33 +276,12 @@ Actors:
     # Each collection is ~100M.  Assuming N is equal to ScannerColdDBGigabytes.
     # Each thread has N collections, and with 10 threads, that's
     # 10*N collections, or N gigabytes of space.
-  - Repeat: 1
-    Database: *ScannerColdDB
-    CollectionCount: *ScannerColdDBGigabytes
-    Threads: 1
-    DocumentCount: 50000
-    BatchSize: 1000
-    Document:
-      a0: *rand_100b_string
-      a1: *rand_100b_string
-      a2: *rand_100b_string
-      a3: *rand_100b_string
-      a4: *rand_100b_string
-      a5: *rand_100b_string
-      a6: *rand_100b_string
-      a7: *rand_100b_string
-      a8: *rand_100b_string
-      a9: *rand_100b_string
-      a10: *rand_100b_string
-      a11: *rand_100b_string
-      a12: *rand_100b_string
-      a13: *rand_100b_string
-      a14: *rand_100b_string
-      a15: *rand_100b_string
-      a16: *rand_100b_string
-      a17: *rand_100b_string
-      a18: *rand_100b_string
-      a19: *rand_100b_string
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: ScannerLoaderCmd
+      Parameters:
+        Database: *ScannerColdDB
+        CollectionCount: *ScannerColdDBGigabytes
   - {Nop: true}
   - {Nop: true}
 
@@ -381,17 +299,9 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    ScanSizeBytes: 1000000000
-    ScanDuration: 2 minutes
-    ScanType: snapshot
-     # starting at 1 minute old, and going older    
-    CollectionSkip: 60
-    CollectionSortOrder: forward
-    GlobalRate: 1 per 1 minute
-    # Note: to peform an index scan use the Filter config.
-    # We'd need to know the layout of the collections we're using.
-    # Filter: {a : 1}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: SnapshotScanner1GigabytesCmd
 
 - Name: SnapshotScanner5Gigabytes
   Type: CollectionScanner
@@ -400,14 +310,9 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    ScanSizeBytes: 5000000000
-    ScanDuration: 10 minutes
-    ScanType: snapshot
-     # starting at 5 minutes old, and going older    
-    CollectionSkip: 300
-    CollectionSortOrder: forward
-    GlobalRate: 1 per 5 minutes
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: SnapshotScanner5GigabytesCmd
 
 # We scan all the documents in all databases.
 - Name: SnapshotScannerAll
@@ -417,12 +322,9 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
-    Documents: 100000000000
-    ScanType: snapshot
-    #GlobalRate: 1 per 24 hours   # CHANGE
-    #Note: using "2 per 1" hour kicks off two scans at the top of the hour!
-    GlobalRate: 1 per 30 minutes
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: SnapshotScannerAllCmd
 
 - Name: OplogTailer
   Type: RollingCollections
@@ -432,7 +334,9 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: *Duration
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: OplogTrailerCmd
 
 AutoRun:
   Requires:
