@@ -57,3 +57,10 @@ WARNINGS, CAVEATS, ETC.
 The control script removes the contents of the metrics directory before
 executing. So you'll want to save the results from your runs, or provide
 new directories for each run (or fix the script to do this for you).
+
+This test uses a soon-to-be-deprecated metrics option to produce
+a CSV file with the latency of each MongoDB requests in the workloads.  
+When this option goes away, the "Format: csv-ftdc" metrics option will
+no longer work and will probably need to be removed from the yml 
+workload descriptions.  Without this CSV data, the -p option to the 
+test script will no longer work.

@@ -90,7 +90,7 @@ Actors:
     - keys: {tag: 1}
 
 # Load large documents.  We use 1/10 as many threads in the hope that the rate
-# of insertion will be roughly 1/10.  
+# of insertion will be roughly 1/10 of the small document insertation rate.
 - Name: LargeDocumentCreator
   Type: Loader
   Threads: 1
@@ -103,6 +103,7 @@ Actors:
     BatchSize: 100
     Document: *large_doc
 
+# WARNING: Future versions of Genny won't support the cvs-ftdc metrics format.
 Metrics:
   Format: csv-ftdc
   Path: build/genny-metrics

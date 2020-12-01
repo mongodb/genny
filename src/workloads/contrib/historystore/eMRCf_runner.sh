@@ -154,8 +154,11 @@ cd $metrics_dir
 # For each benchmark phase, we pull the relevant operations out of the CSV files and sort them
 # to generate a CDF.  
 #
-# Note that the csv files created by Genny capture per request latency in nanoseconds.
+# Note that the CSV files created by Genny capture per request latency in nanoseconds.
 # We divide by 1000 and plot them in microseconds.
+#
+# WARNING:  Future versions of Genny won't provide this CSV metrics output.  The following
+# code (and the -p option) will stop working at that point.
 
 echo "Preparing plots..."
 tmpfile=$(mktemp)

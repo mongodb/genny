@@ -194,6 +194,7 @@ Actors:
         OperationCommand: 
           Filter: {key1: *small_doc_key}
 
+# WARNING: Future versions of Genny won't support the cvs-ftdc metrics format.
 Metrics:
   Format: csv-ftdc
   Path: build/genny-metrics
