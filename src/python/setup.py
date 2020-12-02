@@ -31,7 +31,6 @@ setup(
     install_requires=_install_requires(),
     entry_points={
         "console_scripts": [
-            "genny-metrics-report = gennylib.cedar_report:main__cedar_report",
             "genny-metrics-legacy-report = gennylib.legacy_report:main__legacy_report",
             "lint-yaml = gennylib.yaml_linter:main",
             "genny = gennylib.genny_runner:main_genny_runner",
