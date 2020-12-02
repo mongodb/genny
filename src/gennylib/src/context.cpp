@@ -54,7 +54,7 @@ WorkloadContext::WorkloadContext(const Node& node,
     // Set the metrics format information.
     auto format = ((*this)["Metrics"]["Format"])
                       .maybe<metrics::MetricsFormat>()
-                      .value_or(metrics::MetricsFormat("cedar-csv"));
+                      .value_or(metrics::MetricsFormat("ftdc"));
 
     if (format != genny::metrics::MetricsFormat("ftdc")) {
         BOOST_LOG_TRIVIAL(info) << "Metrics format " << format.toString()

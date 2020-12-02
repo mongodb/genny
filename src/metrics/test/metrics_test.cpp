@@ -481,6 +481,10 @@ TEST_CASE("Phases can set metrics") {
           Phases:
           - Repeat: 1
             MetricsName: Phase1Metrics
+
+        Metrics:
+          Format: cedar-csv
+          Path: build/genny-metrics
         )",
                         "");
 
@@ -501,6 +505,10 @@ TEST_CASE("Phases can set metrics") {
       Threads: 1
       Phases:
       - Repeat: 1
+
+    Metrics:
+      Format: cedar-csv
+      Path: build/genny-metrics
     )",
                         "");
 
@@ -830,12 +838,10 @@ TEST_CASE("Events stream to gRPC") {
             OutcomeType::kSuccess                                           // outcome
         );
 
-        metricsBuffer.addAt(endTime, event, 1);
-        REQUIRE_FALSE(metricsBuffer.pop(false));
-        metricsBuffer.addAt(endTime, event, 1);
-        REQUIRE_FALSE(metricsBuffer.pop(false));
-        metricsBuffer.addAt(endTime, event, 1);
-        REQUIRE_FALSE(metricsBuffer.pop(false));
+        for (int i = 0; i < 6; i++) {
+            metricsBuffer.addAt(endTime, event, 1);
+            REQUIRE_FALSE(metricsBuffer.pop(false));
+        }
         metricsBuffer.addAt(endTime, event, 1);
         REQUIRE(metricsBuffer.pop(false));
     }
