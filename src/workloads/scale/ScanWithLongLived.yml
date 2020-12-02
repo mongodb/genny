@@ -5,6 +5,7 @@ GlobalDefaults:
   TrackProportion: &TrackProportion 0
 
   LongLivedDB: &LongLivedDB longlived # name of the long lived database
+  LongLivedCollectionCount: &LongLivedCollectionCount 1000
   LongLivedDocumentCount: &LongLivedDocumentCount 1000
 
   ScannerHotDB: &ScannerHotDB rolling
@@ -31,6 +32,7 @@ Actors:
       Key: LongLivedCreatorCmd
       Parameters:
         Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
         DocumentCount: *LongLivedDocumentCount
   - {Nop: true}
 
@@ -47,6 +49,7 @@ Actors:
       Key: LongLivedReaderCmd
       Parameters:
         Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
         DocumentCount: *LongLivedDocumentCount
         IdFilter: *binomial_10k_int
 
@@ -63,6 +66,7 @@ Actors:
       Key: LongLivedWriterCmd
       Parameters:
         Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
         DocumentCount: *LongLivedDocumentCount
         IdFilter: *binomial_10k_int
 
