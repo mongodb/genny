@@ -156,7 +156,10 @@ UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node, Def
 UniqueGenerator<double> doubleGenerator(const Node& node, DefaultRandom& rng);
 UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node, DefaultRandom& rng);
 UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rng);
-
+template <bool Verbatim, typename Out>
+Out valueGenerator(const Node& node,
+                   DefaultRandom& rng,
+                   const std::map<std::string, Parser<Out>>& parsers);
 
 template <bool Verbatim>
 std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, DefaultRandom& rng);
@@ -283,6 +286,30 @@ private:
     const double _p;
 };
 
+
+class ChooseGenerator : public Appendable {
+public:
+    // constructore defined at bottom of the file to use other symbol
+    ChooseGenerator(const Node& node, DefaultRandom& rng);
+    Appendable& choose() {
+        // Pick a random number between 0 and sum(weights)
+        // Pick value based on that.
+        return (*_choices[0]);
+    }
+
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        choose().append(key, builder);
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        choose().append(builder);
+    }
+
+protected:
+    DefaultRandom& _rng;
+    std::vector<UniqueAppendable> _choices;
+    std::vector<int64_t> _weights;
+
+};  // namespace
 
 class JoinGenerator : public Generator<std::string> {
 public:
@@ -511,7 +538,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, DefaultRandom& rng) {
          return std::make_unique<JoinGenerator>(node, rng);
      }},
-    //{"^Choose", chooseGenerator},
+    {"^Choose",
+     [](const Node& node, DefaultRandom& rng) {
+         return std::make_unique<ChooseGenerator>(node, rng);
+     }},
     {"^RandomInt", int64GeneratorBasedOnDistribution},
     {"^RandomDouble", doubleGeneratorBasedOnDistribution},
     {"^Verbatim",
@@ -715,6 +745,21 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rn
     return std::make_unique<ConstantAppender<std::string>>(node.to<std::string>());
 }
 
+ChooseGenerator::ChooseGenerator(const Node& node, DefaultRandom& rng) : _rng{rng} {
+    if (!node["from"].isSequence()) {
+        std::stringstream msg;
+        msg << "Malformed node for join array. Not a sequence " << node;
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+    }
+    for (const auto&& [k, v] : node["from"]) {
+        _choices.push_back(valueGenerator<true, UniqueAppendable>(v, rng, allParsers));
+    }
+    if (node["weights"]) {
+    } else {
+        // If not passed in, give each choice equal weight
+        _weights.assign(_choices.size(), 1);
+    }
+}
 
 }  // namespace
 
