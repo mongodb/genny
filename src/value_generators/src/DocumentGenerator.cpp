@@ -19,6 +19,7 @@
 #include <map>
 #include <sstream>
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/log/trivial.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
@@ -152,12 +153,38 @@ using Parser = std::function<O(const Node&, DefaultRandom&)>;
 
 UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng);
 UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node, DefaultRandom& rng);
+UniqueGenerator<double> doubleGenerator(const Node& node, DefaultRandom& rng);
+UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node, DefaultRandom& rng);
+UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rng);
+
 
 template <bool Verbatim>
 std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, DefaultRandom& rng);
 
 template <bool Verbatim>
 UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultRandom& rng);
+
+/** `{^RandomDouble:{distribution:uniform ...}}` */
+class UniformDoubleGenerator : public Generator<double> {
+public:
+    /** @param node `{min:<int>, max:<int>}` */
+    UniformDoubleGenerator(const Node& node, DefaultRandom& rng)
+        : _rng{rng},
+          _minGen{doubleGenerator(extract(node, "min", "uniform"), _rng)},
+          _maxGen{doubleGenerator(extract(node, "max", "uniform"), _rng)} {}
+
+    double evaluate() override {
+        auto min = _minGen->evaluate();
+        auto max = _maxGen->evaluate();
+        auto distribution = boost::random::uniform_real_distribution<double>{min, max};
+        return distribution(_rng);
+    }
+
+private:
+    DefaultRandom& _rng;
+    UniqueGenerator<double> _minGen;
+    UniqueGenerator<double> _maxGen;
+};
 
 /** `{^RandomInt:{distribution:uniform ...}}` */
 class UniformInt64Generator : public Generator<int64_t> {
@@ -256,6 +283,39 @@ private:
     const double _p;
 };
 
+
+class JoinGenerator : public Generator<std::string> {
+public:
+    JoinGenerator(const Node& node, DefaultRandom& rng)
+        : _rng{rng}, _sep{node["sep"].maybe<std::string>().value_or("")} {
+        if (!node["array"].isSequence()) {
+            std::stringstream msg;
+            msg << "Malformed node for join array. Not a sequence " << node;
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
+        for (const auto&& [k, v] : node["array"]) {
+            _parts.push_back(stringGenerator(v, rng));
+        }
+    }
+    std::string evaluate() override {
+        std::ostringstream output;
+        bool first = true;
+        for (auto&& part : _parts) {
+            if (first) {
+                first = false;
+            } else {
+                output << _sep;
+            }
+            output << part->evaluate();
+        }
+        return output.str();
+    }
+
+protected:
+    DefaultRandom& _rng;
+    std::vector<UniqueGenerator<std::string>> _parts;
+    std::string _sep;
+};
 
 class StringGenerator : public Generator<std::string> {
 public:
@@ -447,7 +507,13 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, DefaultRandom& rng) {
          return std::make_unique<NormalRandomStringGenerator>(node, rng);
      }},
+    {"^Join",
+     [](const Node& node, DefaultRandom& rng) {
+         return std::make_unique<JoinGenerator>(node, rng);
+     }},
+    //{"^Choose", chooseGenerator},
     {"^RandomInt", int64GeneratorBasedOnDistribution},
+    {"^RandomDouble", doubleGeneratorBasedOnDistribution},
     {"^Verbatim",
      [](const Node& node, DefaultRandom& rng) {
          return valueGenerator<true, UniqueAppendable>(node, rng, allParsers);
@@ -491,7 +557,8 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, Def
 /**
  * @tparam Verbatim if we're in a `^Verbatim block`
  * @param node sequence node
- * @return array generator that has one valueGenerator (recursive type) for each element in the node
+ * @return array generator that has one valueGenerator (recursive type) for each element in
+ * the node
  */
 template <bool Verbatim>
 UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultRandom& rng) {
@@ -503,6 +570,41 @@ UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultR
     return std::make_unique<ArrayGenerator>(std::move(entries));
 }
 
+/**
+ * @param node
+ *   the *value* from a `^RandomInt` node.
+ *   E.g. if higher-up has `{^RandomInt:{v}}`, this will have `node={v}`
+ */
+//
+// We need this additional lookup function for int64s (but not for other types)
+// because we do "double-dispatch" for ^RandomInt. So int64Operand determines
+// if we're looking at ^RandomInt or a constant. If we're looking at ^RandomInt
+// it dispatches to here to determine which Int64Generator to use.
+//
+// An alternative would have been to have ^RandomIntUniform etc.
+//
+UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node, DefaultRandom& rng) {
+    if (!node.isMap()) {
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("random int must be given mapping type"));
+    }
+    auto distribution = node["distribution"].maybe<std::string>().value_or("uniform");
+
+    if (distribution == "uniform") {
+        return std::make_unique<UniformDoubleGenerator>(node, rng);
+        // } else if (distribution == "binomial") {
+        //     return std::make_unique<BinomialInt64Generator>(node, rng);
+        // } else if (distribution == "negative_binomial") {
+        //     return std::make_unique<NegativeBinomialInt64Generator>(node, rng);
+        // } else if (distribution == "poisson") {
+        //     return std::make_unique<PoissonInt64Generator>(node, rng);
+        // } else if (distribution == "geometric") {
+        //     return std::make_unique<GeometricInt64Generator>(node, rng);
+    } else {
+        std::stringstream error;
+        error << "Unknown distribution '" << distribution << "'";
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(error.str()));
+    }
+}
 
 /**
  * @param node
@@ -560,6 +662,59 @@ UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng) {
     }
     return std::make_unique<ConstantAppender<int64_t>>(node.to<int64_t>());
 }
+
+/**
+ * @param node
+ *   a top-level document value i.e. either a scalar or a `^RandomInt` value
+ * @return
+ *   either a `^RantomInt` generator (etc--see `intParsers`)
+ *   or a constant generator if given a constant/scalar.
+ */
+UniqueGenerator<double> doubleGenerator(const Node& node, DefaultRandom& rng) {
+    // Set of parsers to look when we request an double parser
+    // see doubleGenerator
+    const static std::map<std::string, Parser<UniqueGenerator<double>>> doubleParsers{
+        {"^RandomDouble", doubleGeneratorBasedOnDistribution},
+    };
+
+    if (auto parserPair = extractKnownParser(node, rng, doubleParsers)) {
+        // known parser type
+        return parserPair->first(node[parserPair->second], rng);
+    }
+    return std::make_unique<ConstantAppender<double>>(node.to<double>());
+}
+/**
+ * @param node
+ *   a top-level document value i.e. either a scalar or a `^String` value
+ * @return
+ *   either a `^String` generator (etc--see `intParsers`)
+ *   or a constant generator if given a constant/scalar.
+ */
+UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rng) {
+    // Set of parsers to look when we request an int parser
+    // see int64Generator
+    const static std::map<std::string, Parser<UniqueGenerator<std::string>>> stringParsers{
+        {"^FastRandomString",
+         [](const Node& node, DefaultRandom& rng) {
+             return std::make_unique<FastRandomStringGenerator>(node, rng);
+         }},
+        {"^RandomString",
+         [](const Node& node, DefaultRandom& rng) {
+             return std::make_unique<NormalRandomStringGenerator>(node, rng);
+         }},
+        {"^Join",
+         [](const Node& node, DefaultRandom& rng) {
+             return std::make_unique<JoinGenerator>(node, rng);
+         }},
+    };
+
+    if (auto parserPair = extractKnownParser(node, rng, stringParsers)) {
+        // known parser type
+        return parserPair->first(node[parserPair->second], rng);
+    }
+    return std::make_unique<ConstantAppender<std::string>>(node.to<std::string>());
+}
+
 
 }  // namespace
 
