@@ -294,7 +294,8 @@ public:
     Appendable& choose() {
         // Pick a random number between 0 and sum(weights)
         // Pick value based on that.
-        return (*_choices[0]);
+        auto distribution = boost::random::discrete_distribution(_weights);
+        return (*_choices[distribution(_rng)]);
     }
 
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {

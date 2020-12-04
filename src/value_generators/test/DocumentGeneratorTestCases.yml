@@ -392,3 +392,23 @@ Tests:
           - ^RandomInt: {min: 10000000050, max: 10000000060}
           - ^RandomString: {length: 10000000015}
           - scalarValue
+
+  - Name: ChooseGenerator
+    GivenTemplate:
+      a: {^choose: {from: [1, "abc", {a: 1}]}}
+    ThenReturns:
+      - a: 1
+      - a: 1
+      - a: 1
+
+  - Name: Join Generator
+    GivenTemplate:
+      a: {^Join: {array: ["It", "worked"]}}
+    ThenReturns:
+      - a: "Itworked"
+
+  - Name: Join Generator with seperator
+    GivenTemplate:
+      a: {^Join: {array: ["It", "worked"], sep: " "}}
+    ThenReturns:
+      - a: "It worked"
