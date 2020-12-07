@@ -1,0 +1,132 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/stm"
+
+# This workload demonstrates all the current Document and Value Generators. It creates documents
+# that look like this (simple)
+# {
+# 	"_id" : ObjectId("5fce73ec86b193746c34c2f2"),
+# 	"type" : "simple",
+# 	"int1" : NumberLong(15),
+# 	"int2" : NumberLong(19),
+# 	"int3" : NumberLong(7),
+# 	"int4" : NumberLong(1835),
+# 	"int5" : NumberLong(3),
+# 	"int6" : NumberLong(112),
+# 	"double" : 12.830223930995928,
+# 	"string1" : "T336d",
+# 	"string2" : "B2A54",
+# 	"string3" : "LChkGtHKBI",
+# 	"choose" : 12,
+# 	"join" : "This is a joined string",
+# 	"ip" : "77.220.130.163"
+# }
+
+
+# And this (nested)
+# {
+# 	"_id" : ObjectId("5fce73ec86b193746c34c2f3"),
+# 	"type" : "nested",
+# 	"a" : "i75b2+HJe6Lugl8jS",
+# 	"b" : "aaaaaaaaaa4gQX11ZMY1",
+# 	"c" : "Avb98qy4-hr3NmxrS-uQ0SB9lR-9pewNtJq",
+# 	"task_id" : "lint-zA0eAQxsYm"
+# }
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 10
+  SomeOtherPool:
+    QueryOptions:
+      maxPoolSize: 400
+
+Actors:
+- Name: Generator Examples
+  Type: CrudActor
+  Database: mydb
+  ClientName: SomeOtherPool  # Which connection pool to use. Must be defined in Clients section.
+  Phases:
+  - Repeat: 10
+    Collection: test
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: insertOne  # Simple Generators
+          Document:
+            type: simple
+            # Generate a random integer between 10 and 20. This uses the uniform distribution, which
+            # is the default distribution. You must specify a min and max with the uniform
+            # distribution.
+            int1: {^RandomInt: {min: 10, max: 20}}
+            int2: {^RandomInt: {min: 10, max: 20, distribution: uniform}}
+
+            # Other supported distributions include:
+            # Binomial with parameters t and p
+            int3: {^RandomInt: {distribution: binomial, t: 100, p: 0.05}}
+            # Negative Binomial with parameters k and p
+            int4: {^RandomInt: {distribution: negative_binomial, k: 100, p: 0.05}}
+            # Geometric distribution with parameter p
+            int5: {^RandomInt: {distribution: geometric, p: 0.05}}
+            # Poisson distribution with parameter mean
+            int6: {^RandomInt: {distribution: poisson, mean: 100}}
+
+            # Can generate random doubles as well. They are 64 bit numbers. Currently only uniform
+            # distribution is supported, similar to RandomInt
+            double: {^RandomDouble: {min: 10, max: 20}}
+
+            # Random String of length 5
+            string1: {^RandomString: {length: 5}}
+            # You can also specify a custom alhpabet for random strings
+            string2: {^RandomString: {length: 5, alphabet: "0123456789ABCDEF"}}
+            # FastRandomString is computationally faster, but the letters are not all equally
+            # likely. It matches the string generational algorithm in YCSB.
+            string3: {^FastRandomString: {length: 10}}
+
+            # You can randomly choose objects. from is an array of values to pick from. Weigths is
+            # optional and weights the probability of each option in the from array. If Weights is
+            # ommitted, each entry has the same probability. The choices can be any valid generator
+            # or json value.
+            choose: {^Choose: {from: ["A", 12, {b: {c: d}}]}}
+
+            # You can combine strings. Each string in array is combined, with sep in between. sep is
+            # optional, and defaults to the empty string. See nested generators below for more
+            # interesting examples.
+            join: {^Join: {array: ["This", "is", "a", "joined", "string"], sep: " "}}
+
+
+            # Generate a random IP Address. In the future this will support a netmask and prefix
+            # options to narrow the range of IP addresses. Every IP address is equally likely.
+            ip: {^IP: {}}
+
+        - WriteCommand: insertOne  # Nested Generators
+          # You can nest generators to make complex values.
+          Document:
+            type: nested
+            # Random strings of a random length between 10 and 20.
+            a: {^RandomString: {length: {^RandomInt: {min: 10, max: 20}}}}
+
+            # Create a random string that is 50% compressible by using join. The first 10 characters
+            # are all the same and compressible, while the remaining 10 are random.
+            b: {^Join: {array: ["aaaaaaaaaa", {^RandomString: {length: 10}}]}}
+
+            # Can Match common string formats
+            c: {^Join: {array: [{^RandomString: {length: 8}},
+                                {^RandomString: {length: 8}},
+                                {^RandomString: {length: 8}},
+                                {^RandomString: {length: 8}}],
+                        sep: "-"}}
+
+            # Or match different formats. Note that for ^Choose within a ^Join, all the entries in
+            # the from sequence must generate strings. You cannot embed a number or a document.
+            task_id: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"]}},
+                                      {^RandomString: {length: 10}}], sep: "-"}}
+
+  - Repeat: 1
+    Collection: test
+    Operation:
+      OperationName: drop
+      OperationCommand:
+        Options:
+          WriteConcern:
+            Level: majority
