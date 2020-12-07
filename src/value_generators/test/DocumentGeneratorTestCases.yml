@@ -395,10 +395,11 @@ Tests:
 
   - Name: ChooseGenerator
     GivenTemplate:
-      a: {^choose: {from: [1, "abc", {a: 1}]}}
+      a: {^Choose: {from: [1, "abc", {a: 1}]}}
     ThenReturns:
-      - a: 1
-      - a: 1
+      - a: abc
+      - a: abc
+      - a: {a: 1}
       - a: 1
 
   - Name: Join Generator
@@ -412,3 +413,20 @@ Tests:
       a: {^Join: {array: ["It", "worked"], sep: " "}}
     ThenReturns:
       - a: "It worked"
+
+  - Name: Join With Choose
+    GivenTemplate:
+      a: {^Join: {array: ["Hello", "random", "person:", {^Choose: {from: ["Huey", "Duey",
+    {^FastRandomString: {length: 10}}]}}], sep: " "}}
+    ThenReturns:
+      - a: "Hello random person: Duey"
+      - a: "Hello random person: Duey"
+      - a: "Hello random person: smlCLkHjFD"
+      - a: "Hello random person: mnqojklKFs"
+        
+  - Name: Double Generator
+    GivenTemplate:
+      a: {^RandomDouble: {min: 1.0, max: 20.0}}
+    ThenReturns:
+      - a: 13.924048727986317431
+      - a: 17.635930848275933158

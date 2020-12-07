@@ -18,29 +18,10 @@ Actors:
   - Repeat: 10
     Collection: test
     Operations:
-    - OperationName: bulkWrite
-      OperationCommand:
-        WriteOperations:
-        - WriteCommand: insertOne
-          Document: {a: 1}
-        - WriteCommand: updateOne
-          Filter: {a: 1}
-          Update: {$set: {a: {^RandomInt: {min: 5, max: 15}}}}
-          Options:
-            WriteConcern:
-              Level: majority
-              TimeoutMillis: 5000
     - OperationName: insertMany
       OperationCommand:
         Documents:
-        - {a: 1}
-        - {a: {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}}
-        - {b: {^RandomInt: {min: 5, max: 15}}}
-  - Repeat: 1
-    Collection: test
-    Operation:
-      OperationName: drop
-      OperationCommand:
-        Options:
-          WriteConcern:
-            Level: majority
+        - a: {^Choose: {from: ["a", 1, {a:1}]}}
+          b: {^Join: {array: ["hi", "there", {^Choose: {from: ["Sam", "Julie", "Barbara", "Pat"]}}], sep: " "}}
+          c: {^RandomDouble: {min: 1, max: 10}}
+          d: 1

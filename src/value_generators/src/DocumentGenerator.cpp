@@ -286,7 +286,8 @@ private:
     const double _p;
 };
 
-
+// Question: How to make this nestable within a Join?
+// {a: {^Join: {array: ["Hello", {^Choose: {from: ["Fred", "George", "Ron", "Ginny"]}}], sep: " "}}}
 class ChooseGenerator : public Appendable {
 public:
     // constructore defined at bottom of the file to use other symbol
@@ -309,9 +310,43 @@ protected:
     DefaultRandom& _rng;
     std::vector<UniqueAppendable> _choices;
     std::vector<int64_t> _weights;
+};
 
-};  // namespace
+class ChooseStringGenerator : public Generator<std::string> {
+public:
+    ChooseStringGenerator(const Node& node, DefaultRandom& rng) : _rng{rng} {
+        if (!node["from"].isSequence()) {
+            std::stringstream msg;
+            msg << "Malformed node for choose from array. Not a sequence " << node;
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
+        for (const auto&& [k, v] : node["from"]) {
+            _choices.push_back(stringGenerator(v, rng));
+        }
+        if (node["weights"]) {
+            for (const auto&& [k, v] : node["weights"]) {
+                _weights.push_back(v.to<int64_t>());
+            }
+        } else {
+            // If not passed in, give each choice equal weight
+            _weights.assign(_choices.size(), 1);
+        }
+    }
+    std::string evaluate() override {
+        // Pick a random number between 0 and sum(weights)
+        // Pick value based on that.
+        auto distribution = boost::random::discrete_distribution(_weights);
+        return (_choices[distribution(_rng)]->evaluate());
+    };
 
+protected:
+    DefaultRandom& _rng;
+    std::vector<UniqueGenerator<std::string>> _choices;
+    std::vector<int64_t> _weights;
+};
+// Currently can only join stringGenerators. Ideally any generator would be able to be
+// transformed into a string. If we could do that we could then nest a choose generator within a
+// join generator.
 class JoinGenerator : public Generator<std::string> {
 public:
     JoinGenerator(const Node& node, DefaultRandom& rng)
@@ -737,6 +772,10 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rn
          [](const Node& node, DefaultRandom& rng) {
              return std::make_unique<JoinGenerator>(node, rng);
          }},
+        {"^Choose",
+         [](const Node& node, DefaultRandom& rng) {
+             return std::make_unique<ChooseStringGenerator>(node, rng);
+         }},
     };
 
     if (auto parserPair = extractKnownParser(node, rng, stringParsers)) {
@@ -749,13 +788,16 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rn
 ChooseGenerator::ChooseGenerator(const Node& node, DefaultRandom& rng) : _rng{rng} {
     if (!node["from"].isSequence()) {
         std::stringstream msg;
-        msg << "Malformed node for join array. Not a sequence " << node;
+        msg << "Malformed node for choose from array. Not a sequence " << node;
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
     }
     for (const auto&& [k, v] : node["from"]) {
         _choices.push_back(valueGenerator<true, UniqueAppendable>(v, rng, allParsers));
     }
     if (node["weights"]) {
+        for (const auto&& [k, v] : node["weights"]) {
+            _weights.push_back(v.to<int64_t>());
+        }
     } else {
         // If not passed in, give each choice equal weight
         _weights.assign(_choices.size(), 1);
