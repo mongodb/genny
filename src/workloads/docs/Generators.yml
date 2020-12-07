@@ -71,8 +71,11 @@ Actors:
             # Poisson distribution with parameter mean
             int6: {^RandomInt: {distribution: poisson, mean: 100}}
 
-            # Can generate random doubles as well. They are 64 bit numbers. Currently only uniform
-            # distribution is supported, similar to RandomInt
+            # Can generate random doubles as well. They are 64 bit numbers. Supported distributions
+            # include: uniform, exponential, gamma, weibull, extreme_value, beta, laplace, normal,
+            # lognormal, chi_squared, non_central_chi_squared, cauchy, fisher_f, and student_t. See
+            # https://www.boost.org/doc/libs/1_66_0/doc/html/boost_random/reference.html#boost_random.reference.generators
+            # for parameters. Uniform is used by default if no distribution is specified.
             double: {^RandomDouble: {min: 10, max: 20}}
 
             # Random String of length 5
