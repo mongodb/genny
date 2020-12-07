@@ -16,6 +16,7 @@
 
 #include <fstream>
 #include <functional>
+#include <limits>
 #include <map>
 #include <sstream>
 
@@ -312,6 +313,7 @@ protected:
     std::vector<int64_t> _weights;
 };
 
+
 class ChooseStringGenerator : public Generator<std::string> {
 public:
     ChooseStringGenerator(const Node& node, DefaultRandom& rng) : _rng{rng} {
@@ -344,6 +346,36 @@ protected:
     std::vector<UniqueGenerator<std::string>> _choices;
     std::vector<int64_t> _weights;
 };
+
+class IPGenerator : public Generator<std::string> {
+public:
+    IPGenerator(const Node& node, DefaultRandom& rng)
+        : _rng(rng), subnet_mask{std::numeric_limits<uint32_t>::max()}, prefix{} {}
+
+    std::string evaluate() override {
+        // Pick a random 32 bit integer
+        // Bitwise add with subbet_mast and add to prefix
+        auto distribution = boost::random::uniform_int_distribution<int32_t>{};
+        auto ipint = (distribution(_rng) /*& subnet_mask*/) + prefix;
+        int32_t octets[4];
+        for (int i = 0; i < 4; i++) {
+            octets[i] = ipint & 255;
+            ipint = ipint >> 8;
+        }
+        // // convert to a string
+        std::ostringstream ipout;
+        ipout << octets[3] << "." << octets[2] << "." << octets[1] << "." << octets[0];
+        // ipout << ipint;
+        return (ipout.str());
+    }
+
+protected:
+    DefaultRandom& _rng;
+    uint32_t subnet_mask;
+    uint32_t prefix;
+};
+
+
 // Currently can only join stringGenerators. Ideally any generator would be able to be
 // transformed into a string. If we could do that we could then nest a choose generator within a
 // join generator.
@@ -578,6 +610,8 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, DefaultRandom& rng) {
          return std::make_unique<ChooseGenerator>(node, rng);
      }},
+    {"^IP",
+     [](const Node& node, DefaultRandom& rng) { return std::make_unique<IPGenerator>(node, rng); }},
     {"^RandomInt", int64GeneratorBasedOnDistribution},
     {"^RandomDouble", doubleGeneratorBasedOnDistribution},
     {"^Verbatim",
@@ -775,6 +809,10 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rn
         {"^Choose",
          [](const Node& node, DefaultRandom& rng) {
              return std::make_unique<ChooseStringGenerator>(node, rng);
+         }},
+        {"^IP",
+         [](const Node& node, DefaultRandom& rng) {
+             return std::make_unique<IPGenerator>(node, rng);
          }},
     };
 

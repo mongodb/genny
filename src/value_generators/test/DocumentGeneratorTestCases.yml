@@ -423,10 +423,19 @@ Tests:
       - a: "Hello random person: Duey"
       - a: "Hello random person: smlCLkHjFD"
       - a: "Hello random person: mnqojklKFs"
-        
+
   - Name: Double Generator
     GivenTemplate:
       a: {^RandomDouble: {min: 1.0, max: 20.0}}
     ThenReturns:
       - a: 13.924048727986317431
       - a: 17.635930848275933158
+
+  - Name: IP Generator
+    GivenTemplate:
+      a: {^IP: {}}
+    ThenReturns:
+      - a : "33.196.98.252"
+      - a : "105.210.255.63"
+      - a : "105.26.104.117"
+      - a : "124.157.158.215
