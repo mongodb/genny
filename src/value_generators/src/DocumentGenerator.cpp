@@ -646,10 +646,9 @@ public:
             octets[i] = ipint & 255;
             ipint = ipint >> 8;
         }
-        // // convert to a string
+        // convert to a string
         std::ostringstream ipout;
         ipout << octets[3] << "." << octets[2] << "." << octets[1] << "." << octets[0];
-        // ipout << ipint;
         return (ipout.str());
     }
 
