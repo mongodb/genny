@@ -168,91 +168,75 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, Def
 template <bool Verbatim>
 UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultRandom& rng);
 
-/** `{^RandomDouble:{distribution:uniform ...}}` */
-class UniformDoubleGenerator : public Generator<double> {
+template <typename distribution,
+          const char* diststring,
+          const char* param1name,
+          const char* param2name>
+class DoubleGenerator2Parm : public Generator<double> {
 public:
-    /** @param node `{min:<int>, max:<int>}` */
-    UniformDoubleGenerator(const Node& node, DefaultRandom& rng)
+    DoubleGenerator2Parm(const Node& node, DefaultRandom& rng)
         : _rng{rng},
-          _minGen{doubleGenerator(extract(node, "min", "uniform"), _rng)},
-          _maxGen{doubleGenerator(extract(node, "max", "uniform"), _rng)} {}
+          _param1Gen{doubleGenerator(extract(node, param1name, diststring), _rng)},
+          _param2Gen{doubleGenerator(extract(node, param2name, diststring), _rng)} {}
 
     double evaluate() override {
-        auto min = _minGen->evaluate();
-        auto max = _maxGen->evaluate();
-        auto distribution = boost::random::uniform_real_distribution<double>{min, max};
-        return distribution(_rng);
+        auto param1 = _param1Gen->evaluate();
+        auto param2 = _param2Gen->evaluate();
+        auto dist = distribution{param1, param2};
+        return dist(_rng);
     }
 
 private:
     DefaultRandom& _rng;
-    UniqueGenerator<double> _minGen;
-    UniqueGenerator<double> _maxGen;
+    UniqueGenerator<double> _param1Gen;
+    UniqueGenerator<double> _param2Gen;
 };
 
-/** `{^RandomDouble:{distribution:exponential ...}}` */
-class ExponentialDoubleGenerator : public Generator<double> {
+template <typename distribution, const char* diststring, const char* param1name>
+class DoubleGenerator1Parm : public Generator<double> {
 public:
-    /** @param node `{lambda:<double>}` */
-    ExponentialDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng}, _lambdaGen{doubleGenerator(extract(node, "lambda", "exponential"), _rng)} {}
+    DoubleGenerator1Parm(const Node& node, DefaultRandom& rng)
+        : _rng{rng}, _param1Gen{doubleGenerator(extract(node, param1name, diststring), _rng)} {}
 
     double evaluate() override {
-        auto lambda = _lambdaGen->evaluate();
-        auto distribution = boost::random::exponential_distribution{lambda};
-        return distribution(_rng);
+        auto param1 = _param1Gen->evaluate();
+        auto dist = distribution{param1};
+        return dist(_rng);
     }
 
 private:
     DefaultRandom& _rng;
-    UniqueGenerator<double> _lambdaGen;
+    UniqueGenerator<double> _param1Gen;
 };
 
-// gamma_distribution parameter alpha and beta
-/** `{^RandomDouble:{distribution:gamma ...}}` */
-class GammaDoubleGenerator : public Generator<double> {
-public:
-    /** @param node `{alpha:<double>}` */
-    GammaDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng},
-          _alphaGen{doubleGenerator(extract(node, "alpha", "gamma"), _rng)},
-          _betaGen{doubleGenerator(extract(node, "beta", "gamma"), _rng)} {}
+// Constant strings for arguments for templates
+static const char astr[] = "a";
+static const char bstr[] = "b";
+static const char minstr[] = "min";
+static const char maxstr[] = "max";
+static const char alphastr[] = "alpha";
+static const char betastr[] = "beta";
+static const char lambdastr[] = "lambda";
 
-    double evaluate() override {
-        auto alpha = _alphaGen->evaluate();
-        auto beta = _betaGen->evaluate();
-        auto distribution = boost::random::gamma_distribution{alpha, beta};
-        return distribution(_rng);
-    }
+// constant strings for distribution names in templates
+static const char uniformstr[] = "uniform";
+static const char exponentialstr[] = "exponential";
+static const char gammastr[] = "gamma";
+static const char weibullstr[] = "weibull";
 
-private:
-    DefaultRandom& _rng;
-    UniqueGenerator<double> _alphaGen;
-    UniqueGenerator<double> _betaGen;
-};
-
-// weibull_distribution parameters a and b
-/** `{^RandomDouble:{distribution:weibull ...}}` */
-class WeibullDoubleGenerator : public Generator<double> {
-public:
-    /** @param node `{a:<double>, b:<double>}` */
-    WeibullDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng},
-          _aGen{doubleGenerator(extract(node, "a", "weibull"), _rng)},
-          _bGen{doubleGenerator(extract(node, "b", "weibull"), _rng)} {}
-
-    double evaluate() override {
-        auto a = _aGen->evaluate();
-        auto b = _bGen->evaluate();
-        auto distribution = boost::random::weibull_distribution{a, b};
-        return distribution(_rng);
-    }
-
-private:
-    DefaultRandom& _rng;
-    UniqueGenerator<double> _aGen;
-    UniqueGenerator<double> _bGen;
-};
+using UniformDoubleGenerator =
+    DoubleGenerator2Parm<boost::random::uniform_real_distribution<double>,
+                         uniformstr,
+                         minstr,
+                         maxstr>;
+using ExponentialDoubleGenerator =
+    DoubleGenerator1Parm<boost::random::exponential_distribution<double>,
+                         exponentialstr,
+                         lambdastr>;
+using GammaDoubleGenerator =
+    DoubleGenerator2Parm<boost::random::gamma_distribution<double>, gammastr, alphastr, betastr>;
+using WeibullDoubleGenerator =
+    DoubleGenerator2Parm<boost::random::weibull_distribution<double>, weibullstr, astr, bstr>;
 
 // extreme_value_distribution parameters a and b
 /** `{^RandomDouble:{distribution:extreme_value ...}}` */
