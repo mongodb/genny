@@ -16,9 +16,11 @@
 
 #include <fstream>
 #include <functional>
+#include <limits>
 #include <map>
 #include <sstream>
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/log/trivial.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
@@ -152,12 +154,143 @@ using Parser = std::function<O(const Node&, DefaultRandom&)>;
 
 UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng);
 UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node, DefaultRandom& rng);
+UniqueGenerator<double> doubleGenerator(const Node& node, DefaultRandom& rng);
+UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node, DefaultRandom& rng);
+UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rng);
+template <bool Verbatim, typename Out>
+Out valueGenerator(const Node& node,
+                   DefaultRandom& rng,
+                   const std::map<std::string, Parser<Out>>& parsers);
 
 template <bool Verbatim>
 std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, DefaultRandom& rng);
 
 template <bool Verbatim>
 UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultRandom& rng);
+template <typename Distribution,
+          const char* diststring,
+          const char* parameter1name,
+          const char* parameter2name>
+class DoubleGenerator2Parameter : public Generator<double> {
+public:
+    DoubleGenerator2Parameter(const Node& node, DefaultRandom& rng)
+        : _rng{rng},
+          _parameter1Gen{doubleGenerator(extract(node, parameter1name, diststring), _rng)},
+          _parameter2Gen{doubleGenerator(extract(node, parameter2name, diststring), _rng)} {}
+
+    double evaluate() override {
+        auto parameter1 = _parameter1Gen->evaluate();
+        auto parameter2 = _parameter2Gen->evaluate();
+        auto dist = Distribution{parameter1, parameter2};
+        return dist(_rng);
+    }
+
+private:
+    DefaultRandom& _rng;
+    UniqueGenerator<double> _parameter1Gen;
+    UniqueGenerator<double> _parameter2Gen;
+};
+
+template <typename Distribution, const char* diststring, const char* parameter1name>
+class DoubleGenerator1Parameter : public Generator<double> {
+public:
+    DoubleGenerator1Parameter(const Node& node, DefaultRandom& rng)
+        : _rng{rng},
+          _parameter1Gen{doubleGenerator(extract(node, parameter1name, diststring), _rng)} {}
+
+    double evaluate() override {
+        auto parameter1 = _parameter1Gen->evaluate();
+        auto dist = Distribution{parameter1};
+        return dist(_rng);
+    }
+
+private:
+    DefaultRandom& _rng;
+    UniqueGenerator<double> _parameter1Gen;
+};
+
+// Constant strings for arguments for templates
+static const char astr[] = "a";
+static const char bstr[] = "b";
+static const char kstr[] = "k";
+static const char mstr[] = "m";
+static const char nstr[] = "n";
+static const char sstr[] = "s";
+static const char minstr[] = "min";
+static const char maxstr[] = "max";
+static const char alphastr[] = "alpha";
+static const char betastr[] = "beta";
+static const char lambdastr[] = "lambda";
+static const char meanstr[] = "mean";
+static const char medianstr[] = "median";
+static const char sigmastr[] = "sigma";
+
+// constant strings for distribution names in templates
+static const char uniformstr[] = "uniform";
+static const char exponentialstr[] = "exponential";
+static const char gammastr[] = "gamma";
+static const char weibullstr[] = "weibull";
+static const char extremestr[] = "extreme_value";
+static const char laplacestr[] = "laplace";
+static const char normalstr[] = "normal";
+static const char lognormalstr[] = "lognormal";
+static const char chisquaredstr[] = "chi_squared";
+static const char noncentralchisquaredstr[] = "non_central_chi_squared";
+static const char cauchystr[] = "cauchy";
+static const char fisherfstr[] = "fisher_f";
+static const char studenttstr[] = "student_t";
+
+using UniformDoubleGenerator =
+    DoubleGenerator2Parameter<boost::random::uniform_real_distribution<double>,
+                              uniformstr,
+                              minstr,
+                              maxstr>;
+using ExponentialDoubleGenerator =
+    DoubleGenerator1Parameter<boost::random::exponential_distribution<double>,
+                              exponentialstr,
+                              lambdastr>;
+using GammaDoubleGenerator = DoubleGenerator2Parameter<boost::random::gamma_distribution<double>,
+                                                       gammastr,
+                                                       alphastr,
+                                                       betastr>;
+using WeibullDoubleGenerator =
+    DoubleGenerator2Parameter<boost::random::weibull_distribution<double>, weibullstr, astr, bstr>;
+using ExtremeValueDoubleGenerator =
+    DoubleGenerator2Parameter<boost::random::extreme_value_distribution<double>,
+                              extremestr,
+                              astr,
+                              bstr>;
+using BetaDoubleGenerator =
+    DoubleGenerator1Parameter<boost::random::beta_distribution<double>, betastr, alphastr>;
+using LaplaceDoubleGenerator =
+    DoubleGenerator2Parameter<boost::random::laplace_distribution<double>,
+                              laplacestr,
+                              meanstr,
+                              betastr>;
+using NormalDoubleGenerator = DoubleGenerator2Parameter<boost::random::normal_distribution<double>,
+                                                        normalstr,
+                                                        meanstr,
+                                                        sigmastr>;
+using LognormalDoubleGenerator =
+    DoubleGenerator2Parameter<boost::random::lognormal_distribution<double>,
+                              lognormalstr,
+                              mstr,
+                              sstr>;
+using ChiSquaredDoubleGenerator =
+    DoubleGenerator1Parameter<boost::random::chi_squared_distribution<double>, chisquaredstr, nstr>;
+using NonCentralChiSquaredDoubleGenerator =
+    DoubleGenerator2Parameter<boost::random::non_central_chi_squared_distribution<double>,
+                              noncentralchisquaredstr,
+                              kstr,
+                              lambdastr>;
+using CauchyDoubleGenerator = DoubleGenerator2Parameter<boost::random::cauchy_distribution<double>,
+                                                        cauchystr,
+                                                        medianstr,
+                                                        sigmastr>;
+using FisherFDoubleGenerator =
+    DoubleGenerator2Parameter<boost::random::cauchy_distribution<double>, fisherfstr, mstr, nstr>;
+using StudentTDoubleGenerator =
+    DoubleGenerator1Parameter<boost::random::student_t_distribution<double>, studenttstr, nstr>;
 
 /** `{^RandomInt:{distribution:uniform ...}}` */
 class UniformInt64Generator : public Generator<int64_t> {
@@ -256,6 +389,133 @@ private:
     const double _p;
 };
 
+// This generator allows choosing any valid generator, incuding documents. As such it cannot be used
+// by JoinGenerator today. See ChooseStringGenerator.
+class ChooseGenerator : public Appendable {
+public:
+    // constructore defined at bottom of the file to use other symbol
+    ChooseGenerator(const Node& node, DefaultRandom& rng);
+    Appendable& choose() {
+        // Pick a random number between 0 and sum(weights)
+        // Pick value based on that.
+        auto distribution = boost::random::discrete_distribution(_weights);
+        return (*_choices[distribution(_rng)]);
+    }
+
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        choose().append(key, builder);
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        choose().append(builder);
+    }
+
+protected:
+    DefaultRandom& _rng;
+    std::vector<UniqueAppendable> _choices;
+    std::vector<int64_t> _weights;
+};
+
+
+// This is a a more specific version of ChooseGenerator that produces strings. It is only used
+// within the JoinGenerator.
+class ChooseStringGenerator : public Generator<std::string> {
+public:
+    ChooseStringGenerator(const Node& node, DefaultRandom& rng) : _rng{rng} {
+        if (!node["from"].isSequence()) {
+            std::stringstream msg;
+            msg << "Malformed node for choose from array. Not a sequence " << node;
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
+        for (const auto&& [k, v] : node["from"]) {
+            _choices.push_back(stringGenerator(v, rng));
+        }
+        if (node["weights"]) {
+            for (const auto&& [k, v] : node["weights"]) {
+                _weights.push_back(v.to<int64_t>());
+            }
+        } else {
+            // If not passed in, give each choice equal weight
+            _weights.assign(_choices.size(), 1);
+        }
+    }
+    std::string evaluate() override {
+        // Pick a random number between 0 and sum(weights)
+        // Pick value based on that.
+        auto distribution = boost::random::discrete_distribution(_weights);
+        return (_choices[distribution(_rng)]->evaluate());
+    };
+
+protected:
+    DefaultRandom& _rng;
+    std::vector<UniqueGenerator<std::string>> _choices;
+    std::vector<int64_t> _weights;
+};
+
+class IPGenerator : public Generator<std::string> {
+public:
+    IPGenerator(const Node& node, DefaultRandom& rng)
+        : _rng{rng}, _subnetMask{std::numeric_limits<uint32_t>::max()}, _prefix{} {}
+
+    std::string evaluate() override {
+        // Pick a random 32 bit integer
+        // Bitwise add with _subnetMask and add to _prefix
+        // Note that _subnetMask and _prefix are always default values for now.
+        auto distribution = boost::random::uniform_int_distribution<int32_t>{};
+        auto ipint = (distribution(_rng) & _subnetMask) + _prefix;
+        int32_t octets[4];
+        for (int i = 0; i < 4; i++) {
+            octets[i] = ipint & 255;
+            ipint = ipint >> 8;
+        }
+        // convert to a string
+        std::ostringstream ipout;
+        ipout << octets[3] << "." << octets[2] << "." << octets[1] << "." << octets[0];
+        return ipout.str();
+    }
+
+protected:
+    DefaultRandom& _rng;
+    uint32_t _subnetMask;
+    uint32_t _prefix;
+};
+
+
+// Currently can only join stringGenerators. Ideally any generator would be able to be
+// transformed into a string. To work around this there is a ChooseStringGenerator in addition to
+// the ChooseGenerator, to allow embedding a choose node within a join node, but ideally it would
+// not be neded.
+class JoinGenerator : public Generator<std::string> {
+public:
+    JoinGenerator(const Node& node, DefaultRandom& rng)
+        : _rng{rng}, _separator{node["sep"].maybe<std::string>().value_or("")} {
+        if (!node["array"].isSequence()) {
+            std::stringstream msg;
+            msg << "Malformed node for join array. Not a sequence " << node;
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
+        for (const auto&& [k, v] : node["array"]) {
+            _parts.push_back(stringGenerator(v, rng));
+        }
+    }
+    std::string evaluate() override {
+        std::ostringstream output;
+        bool first = true;
+        for (auto&& part : _parts) {
+            if (first) {
+                first = false;
+            } else {
+                output << _separator;
+            }
+            output << part->evaluate();
+        }
+        return output.str();
+    }
+
+protected:
+    DefaultRandom& _rng;
+    std::vector<UniqueGenerator<std::string>> _parts;
+    std::string _separator;
+};
 
 class StringGenerator : public Generator<std::string> {
 public:
@@ -447,7 +707,18 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, DefaultRandom& rng) {
          return std::make_unique<NormalRandomStringGenerator>(node, rng);
      }},
+    {"^Join",
+     [](const Node& node, DefaultRandom& rng) {
+         return std::make_unique<JoinGenerator>(node, rng);
+     }},
+    {"^Choose",
+     [](const Node& node, DefaultRandom& rng) {
+         return std::make_unique<ChooseGenerator>(node, rng);
+     }},
+    {"^IP",
+     [](const Node& node, DefaultRandom& rng) { return std::make_unique<IPGenerator>(node, rng); }},
     {"^RandomInt", int64GeneratorBasedOnDistribution},
+    {"^RandomDouble", doubleGeneratorBasedOnDistribution},
     {"^Verbatim",
      [](const Node& node, DefaultRandom& rng) {
          return valueGenerator<true, UniqueAppendable>(node, rng, allParsers);
@@ -491,7 +762,8 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, Def
 /**
  * @tparam Verbatim if we're in a `^Verbatim block`
  * @param node sequence node
- * @return array generator that has one valueGenerator (recursive type) for each element in the node
+ * @return array generator that has one valueGenerator (recursive type) for each element in
+ * the node
  */
 template <bool Verbatim>
 UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultRandom& rng) {
@@ -503,6 +775,59 @@ UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultR
     return std::make_unique<ArrayGenerator>(std::move(entries));
 }
 
+/**
+ * @param node
+ *   the *value* from a `^RandomInt` node.
+ *   E.g. if higher-up has `{^RandomInt:{v}}`, this will have `node={v}`
+ */
+//
+// We need this additional lookup function for int64s (but not for other types)
+// because we do "double-dispatch" for ^RandomInt. So int64Operand determines
+// if we're looking at ^RandomInt or a constant. If we're looking at ^RandomInt
+// it dispatches to here to determine which Int64Generator to use.
+//
+// An alternative would have been to have ^RandomIntUniform etc.
+//
+UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node, DefaultRandom& rng) {
+    if (!node.isMap()) {
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("random int must be given mapping type"));
+    }
+    auto distribution = node["distribution"].maybe<std::string>().value_or("uniform");
+
+    if (distribution == "uniform") {
+        return std::make_unique<UniformDoubleGenerator>(node, rng);
+    } else if (distribution == "exponential") {
+        return std::make_unique<ExponentialDoubleGenerator>(node, rng);
+    } else if (distribution == "gamma") {
+        return std::make_unique<GammaDoubleGenerator>(node, rng);
+    } else if (distribution == "weibull") {
+        return std::make_unique<WeibullDoubleGenerator>(node, rng);
+    } else if (distribution == "extreme_value") {
+        return std::make_unique<ExtremeValueDoubleGenerator>(node, rng);
+    } else if (distribution == "beta") {
+        return std::make_unique<BetaDoubleGenerator>(node, rng);
+    } else if (distribution == "laplace") {
+        return std::make_unique<LaplaceDoubleGenerator>(node, rng);
+    } else if (distribution == "normal") {
+        return std::make_unique<NormalDoubleGenerator>(node, rng);
+    } else if (distribution == "lognormal") {
+        return std::make_unique<LognormalDoubleGenerator>(node, rng);
+    } else if (distribution == "chi_squared") {
+        return std::make_unique<ChiSquaredDoubleGenerator>(node, rng);
+    } else if (distribution == "non_central_chi_squared") {
+        return std::make_unique<NonCentralChiSquaredDoubleGenerator>(node, rng);
+    } else if (distribution == "cauchy") {
+        return std::make_unique<CauchyDoubleGenerator>(node, rng);
+    } else if (distribution == "fisher_f") {
+        return std::make_unique<FisherFDoubleGenerator>(node, rng);
+    } else if (distribution == "student_t") {
+        return std::make_unique<StudentTDoubleGenerator>(node, rng);
+    } else {
+        std::stringstream error;
+        error << "Unknown distribution '" << distribution << "'";
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(error.str()));
+    }
+}
 
 /**
  * @param node
@@ -559,6 +884,85 @@ UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng) {
         return parserPair->first(node[parserPair->second], rng);
     }
     return std::make_unique<ConstantAppender<int64_t>>(node.to<int64_t>());
+}
+
+/**
+ * @param node
+ *   a top-level document value i.e. either a scalar or a `^RandomInt` value
+ * @return
+ *   either a `^RantomInt` generator (etc--see `intParsers`)
+ *   or a constant generator if given a constant/scalar.
+ */
+UniqueGenerator<double> doubleGenerator(const Node& node, DefaultRandom& rng) {
+    // Set of parsers to look when we request an double parser
+    // see doubleGenerator
+    const static std::map<std::string, Parser<UniqueGenerator<double>>> doubleParsers{
+        {"^RandomDouble", doubleGeneratorBasedOnDistribution},
+    };
+
+    if (auto parserPair = extractKnownParser(node, rng, doubleParsers)) {
+        // known parser type
+        return parserPair->first(node[parserPair->second], rng);
+    }
+    return std::make_unique<ConstantAppender<double>>(node.to<double>());
+}
+/**
+ * @param node
+ *   a top-level document value i.e. either a scalar or a `^String` value
+ * @return
+ *   either a `^String` generator (etc--see `intParsers`)
+ *   or a constant generator if given a constant/scalar.
+ */
+UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rng) {
+    // Set of parsers to look when we request an int parser
+    // see int64Generator
+    const static std::map<std::string, Parser<UniqueGenerator<std::string>>> stringParsers{
+        {"^FastRandomString",
+         [](const Node& node, DefaultRandom& rng) {
+             return std::make_unique<FastRandomStringGenerator>(node, rng);
+         }},
+        {"^RandomString",
+         [](const Node& node, DefaultRandom& rng) {
+             return std::make_unique<NormalRandomStringGenerator>(node, rng);
+         }},
+        {"^Join",
+         [](const Node& node, DefaultRandom& rng) {
+             return std::make_unique<JoinGenerator>(node, rng);
+         }},
+        {"^Choose",
+         [](const Node& node, DefaultRandom& rng) {
+             return std::make_unique<ChooseStringGenerator>(node, rng);
+         }},
+        {"^IP",
+         [](const Node& node, DefaultRandom& rng) {
+             return std::make_unique<IPGenerator>(node, rng);
+         }},
+    };
+
+    if (auto parserPair = extractKnownParser(node, rng, stringParsers)) {
+        // known parser type
+        return parserPair->first(node[parserPair->second], rng);
+    }
+    return std::make_unique<ConstantAppender<std::string>>(node.to<std::string>());
+}
+
+ChooseGenerator::ChooseGenerator(const Node& node, DefaultRandom& rng) : _rng{rng} {
+    if (!node["from"].isSequence()) {
+        std::stringstream msg;
+        msg << "Malformed node for choose from array. Not a sequence " << node;
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+    }
+    for (const auto&& [k, v] : node["from"]) {
+        _choices.push_back(valueGenerator<true, UniqueAppendable>(v, rng, allParsers));
+    }
+    if (node["weights"]) {
+        for (const auto&& [k, v] : node["weights"]) {
+            _weights.push_back(v.to<int64_t>());
+        }
+    } else {
+        // If not passed in, give each choice equal weight
+        _weights.assign(_choices.size(), 1);
+    }
 }
 
 }  // namespace
