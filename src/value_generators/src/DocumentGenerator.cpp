@@ -212,17 +212,33 @@ private:
 // Constant strings for arguments for templates
 static const char astr[] = "a";
 static const char bstr[] = "b";
+static const char kstr[] = "k";
+static const char mstr[] = "m";
+static const char nstr[] = "n";
+static const char sstr[] = "s";
 static const char minstr[] = "min";
 static const char maxstr[] = "max";
 static const char alphastr[] = "alpha";
 static const char betastr[] = "beta";
 static const char lambdastr[] = "lambda";
+static const char meanstr[] = "mean";
+static const char medianstr[] = "median";
+static const char sigmastr[] = "sigma";
 
 // constant strings for distribution names in templates
 static const char uniformstr[] = "uniform";
 static const char exponentialstr[] = "exponential";
 static const char gammastr[] = "gamma";
 static const char weibullstr[] = "weibull";
+static const char extremestr[] = "extreme_value";
+static const char laplacestr[] = "laplace";
+static const char normalstr[] = "normal";
+static const char lognormalstr[] = "lognormal";
+static const char chisquaredstr[] = "chi_squared";
+static const char noncentralchisquaredstr[] = "non_central_chi_squared";
+static const char cauchystr[] = "cauchy";
+static const char fisherfstr[] = "fisher_f";
+static const char studenttstr[] = "student_t";
 
 using UniformDoubleGenerator =
     DoubleGenerator2Parm<boost::random::uniform_real_distribution<double>,
@@ -237,224 +253,31 @@ using GammaDoubleGenerator =
     DoubleGenerator2Parm<boost::random::gamma_distribution<double>, gammastr, alphastr, betastr>;
 using WeibullDoubleGenerator =
     DoubleGenerator2Parm<boost::random::weibull_distribution<double>, weibullstr, astr, bstr>;
-
-// extreme_value_distribution parameters a and b
-/** `{^RandomDouble:{distribution:extreme_value ...}}` */
-class ExtremeValueDoubleGenerator : public Generator<double> {
-public:
-    /** @param node `{a:<double>, b:<double>}` */
-    ExtremeValueDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng},
-          _aGen{doubleGenerator(extract(node, "a", "extreme_value"), _rng)},
-          _bGen{doubleGenerator(extract(node, "b", "extreme_value"), _rng)} {}
-
-    double evaluate() override {
-        auto a = _aGen->evaluate();
-        auto b = _bGen->evaluate();
-        auto distribution = boost::random::extreme_value_distribution{a, b};
-        return distribution(_rng);
-    }
-
-private:
-    DefaultRandom& _rng;
-    UniqueGenerator<double> _aGen;
-    UniqueGenerator<double> _bGen;
-};
-
-// beta_distribution parameter alpha
-/** `{^RandomDouble:{distribution:beta ...}}` */
-class BetaDoubleGenerator : public Generator<double> {
-public:
-    /** @param node `{alpha:<double>}` */
-    BetaDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng}, _alphaGen{doubleGenerator(extract(node, "alpha", "beta"), _rng)} {}
-
-    double evaluate() override {
-        auto alpha = _alphaGen->evaluate();
-        auto distribution = boost::random::beta_distribution{alpha};
-        return distribution(_rng);
-    }
-
-private:
-    DefaultRandom& _rng;
-    UniqueGenerator<double> _alphaGen;
-};
-
-// laplace_distribution mean and beta
-/** `{^RandomDouble:{distribution:laplace ...}}` */
-class LaplaceDoubleGenerator : public Generator<double> {
-public:
-    /** @param node `{mean:<double>, beta:<double>}` */
-    LaplaceDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng},
-          _meanGen{doubleGenerator(extract(node, "mean", "laplace"), _rng)},
-          _betaGen{doubleGenerator(extract(node, "beta", "laplace"), _rng)} {}
-
-    double evaluate() override {
-        auto mean = _meanGen->evaluate();
-        auto beta = _betaGen->evaluate();
-        auto distribution = boost::random::laplace_distribution{mean, beta};
-        return distribution(_rng);
-    }
-
-private:
-    DefaultRandom& _rng;
-    UniqueGenerator<double> _meanGen;
-    UniqueGenerator<double> _betaGen;
-};
-
-// normal_distribution mean and sigma
-/** `{^RandomDouble:{distribution:normal ...}}` */
-class NormalDoubleGenerator : public Generator<double> {
-public:
-    /** @param node `{mean:<double>, sigma:<double>}` */
-    NormalDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng},
-          _meanGen{doubleGenerator(extract(node, "mean", "normal"), _rng)},
-          _sigmaGen{doubleGenerator(extract(node, "sigma", "normal"), _rng)} {}
-
-    double evaluate() override {
-        auto mean = _meanGen->evaluate();
-        auto sigma = _sigmaGen->evaluate();
-        auto distribution = boost::random::normal_distribution{mean, sigma};
-        return distribution(_rng);
-    }
-
-private:
-    DefaultRandom& _rng;
-    UniqueGenerator<double> _meanGen;
-    UniqueGenerator<double> _sigmaGen;
-};
-
-// lognormal_distribution m and s
-/** `{^RandomDouble:{distribution:lognormal ...}}` */
-class LognormalDoubleGenerator : public Generator<double> {
-public:
-    /** @param node `{m:<double>, s:<double>}` */
-    LognormalDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng},
-          _mGen{doubleGenerator(extract(node, "m", "lognormal"), _rng)},
-          _sGen{doubleGenerator(extract(node, "s", "lognormal"), _rng)} {}
-
-    double evaluate() override {
-        auto m = _mGen->evaluate();
-        auto s = _sGen->evaluate();
-        auto distribution = boost::random::lognormal_distribution{m, s};
-        return distribution(_rng);
-    }
-
-private:
-    DefaultRandom& _rng;
-    UniqueGenerator<double> _mGen;
-    UniqueGenerator<double> _sGen;
-};
-
-// chi_squared_distribution n
-/** `{^RandomDouble:{distribution:chi_squared ...}}` */
-class ChiSquaredDoubleGenerator : public Generator<double> {
-public:
-    /** @param node `{n:<double>}` */
-    ChiSquaredDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng}, _nGen{doubleGenerator(extract(node, "n", "chi_squared"), _rng)} {}
-
-    double evaluate() override {
-        auto n = _nGen->evaluate();
-        auto distribution = boost::random::chi_squared_distribution{n};
-        return distribution(_rng);
-    }
-
-private:
-    DefaultRandom& _rng;
-    UniqueGenerator<double> _nGen;
-};
-
-// non_central_chi_squared_distribution k and lambda
-/** `{^RandomDouble:{distribution:non_central_chi_squared ...}}` */
-class NonCentralChiSquaredDoubleGenerator : public Generator<double> {
-public:
-    /** @param node `{k:<double>, lambda:<double>}` */
-    NonCentralChiSquaredDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng},
-          _lambdaGen{doubleGenerator(extract(node, "lambda", "non_central_chi_squared"), _rng)} {}
-
-    double evaluate() override {
-        auto k = _kGen->evaluate();
-        auto lambda = _lambdaGen->evaluate();
-        auto distribution = boost::random::non_central_chi_squared_distribution{k, lambda};
-        return distribution(_rng);
-    }
-
-private:
-    DefaultRandom& _rng;
-    UniqueGenerator<double> _kGen;
-    UniqueGenerator<double> _lambdaGen;
-};
-
-// cauchy_distribution median and sigma
-/** `{^RandomDouble:{distribution:cauchy ...}}` */
-class CauchyDoubleGenerator : public Generator<double> {
-public:
-    /** @param node `{median:<double>, sigma:<double>}` */
-    CauchyDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng},
-          _medianGen{doubleGenerator(extract(node, "median", "cauchy"), _rng)},
-          _sigmaGen{doubleGenerator(extract(node, "sigma", "cauchy"), _rng)} {}
-
-    double evaluate() override {
-        auto median = _medianGen->evaluate();
-        auto sigma = _sigmaGen->evaluate();
-        auto distribution = boost::random::cauchy_distribution{median, sigma};
-        return distribution(_rng);
-    }
-
-private:
-    DefaultRandom& _rng;
-    UniqueGenerator<double> _medianGen;
-    UniqueGenerator<double> _sigmaGen;
-};
-
-// fisher_f_distribution m and n
-/** `{^RandomDouble:{distribution:fischer_f ...}}` */
-class FisherFDoubleGenerator : public Generator<double> {
-public:
-    /** @param node `{m:<double>, n:<double>}` */
-    FisherFDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng},
-          _mGen{doubleGenerator(extract(node, "m", "fischer_f"), _rng)},
-          _nGen{doubleGenerator(extract(node, "n", "fischer_f"), _rng)} {}
-
-    double evaluate() override {
-        auto m = _mGen->evaluate();
-        auto n = _nGen->evaluate();
-        auto distribution = boost::random::fisher_f_distribution{m, n};
-        return distribution(_rng);
-    }
-
-private:
-    DefaultRandom& _rng;
-    UniqueGenerator<double> _mGen;
-    UniqueGenerator<double> _nGen;
-};
-
-// student_t n
-/** `{^RandomDouble:{distribution:student_t ...}}` */
-class StudentTDoubleGenerator : public Generator<double> {
-public:
-    /** @param node `{n:<double>}` */
-    StudentTDoubleGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng}, _nGen{doubleGenerator(extract(node, "n", "student_t"), _rng)} {}
-
-    double evaluate() override {
-        auto n = _nGen->evaluate();
-        auto distribution = boost::random::student_t_distribution{n};
-        return distribution(_rng);
-    }
-
-private:
-    DefaultRandom& _rng;
-    UniqueGenerator<double> _nGen;
-};
-
+using ExtremeValueDoubleGenerator =
+    DoubleGenerator2Parm<boost::random::extreme_value_distribution<double>, extremestr, astr, bstr>;
+using BetaDoubleGenerator =
+    DoubleGenerator1Parm<boost::random::beta_distribution<double>, betastr, alphastr>;
+using LaplaceDoubleGenerator =
+    DoubleGenerator2Parm<boost::random::laplace_distribution<double>, laplacestr, meanstr, betastr>;
+using NormalDoubleGenerator =
+    DoubleGenerator2Parm<boost::random::normal_distribution<double>, normalstr, meanstr, sigmastr>;
+using LognormalDoubleGenerator =
+    DoubleGenerator2Parm<boost::random::lognormal_distribution<double>, lognormalstr, mstr, sstr>;
+using ChiSquaredDoubleGenerator =
+    DoubleGenerator1Parm<boost::random::chi_squared_distribution<double>, chisquaredstr, nstr>;
+using NonCentralChiSquaredDoubleGenerator =
+    DoubleGenerator2Parm<boost::random::non_central_chi_squared_distribution<double>,
+                         noncentralchisquaredstr,
+                         kstr,
+                         lambdastr>;
+using CauchyDoubleGenerator = DoubleGenerator2Parm<boost::random::cauchy_distribution<double>,
+                                                   cauchystr,
+                                                   medianstr,
+                                                   sigmastr>;
+using FisherFDoubleGenerator =
+    DoubleGenerator2Parm<boost::random::cauchy_distribution<double>, fisherfstr, mstr, nstr>;
+using StudentTDoubleGenerator =
+    DoubleGenerator1Parm<boost::random::student_t_distribution<double>, studenttstr, nstr>;
 
 /** `{^RandomInt:{distribution:uniform ...}}` */
 class UniformInt64Generator : public Generator<int64_t> {
