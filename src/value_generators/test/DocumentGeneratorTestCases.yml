@@ -388,54 +388,102 @@ Tests:
           - ^RandomString: {length: 10000000015}
           - scalarValue
     ThenReturns:
-      - a:
-          - ^RandomInt: {min: 10000000050, max: 10000000060}
-          - ^RandomString: {length: 10000000015}
-          - scalarValue
+    - a:
+      - ^RandomInt: {min: 10000000050, max: 10000000060}
+      - ^RandomString: {length: 10000000015}
+      - scalarValue
 
   - Name: ChooseGenerator
     GivenTemplate:
       a: {^Choose: {from: [1, "abc", {a: 1}]}}
     ThenReturns:
-      - a: abc
-      - a: abc
-      - a: {a: 1}
-      - a: 1
+    - a: abc
+    - a: abc
+    - a: {a: 1}
+    - a: 1
 
   - Name: Join Generator
     GivenTemplate:
       a: {^Join: {array: ["It", "worked"]}}
     ThenReturns:
-      - a: "Itworked"
+    - a: "Itworked"
 
   - Name: Join Generator with seperator
     GivenTemplate:
       a: {^Join: {array: ["It", "worked"], sep: " "}}
     ThenReturns:
-      - a: "It worked"
+    - a: "It worked"
 
   - Name: Join With Choose
     GivenTemplate:
-      a: {^Join: {array: ["Hello", "random", "person:", {^Choose: {from: ["Huey", "Duey",
-    {^FastRandomString: {length: 10}}]}}], sep: " "}}
+      a: {^Join: {array: ["Hello",
+                          "random",
+                          "person:",
+                          {^Choose: {from: ["Huey", "Duey",
+                                            {^FastRandomString: {length: 10}}]}}], sep: " "}}
     ThenReturns:
-      - a: "Hello random person: Duey"
-      - a: "Hello random person: Duey"
-      - a: "Hello random person: smlCLkHjFD"
-      - a: "Hello random person: mnqojklKFs"
+    - a: "Hello random person: Duey"
+    - a: "Hello random person: Duey"
+    - a: "Hello random person: smlCLkHjFD"
+    - a: "Hello random person: mnqojklKFs"
+    - a: "Hello random person: nsvOnhPhIO"
+    - a: "Hello random person: LJomLqKPrk"
+    - a: "Hello random person: Huey"
 
   - Name: Double Generator
     GivenTemplate:
       a: {^RandomDouble: {min: 1.0, max: 20.0}}
+      uniform: {^RandomDouble: {distribution: uniform, min: 1.0, max: 20.0}}
+      exponential: {^RandomDouble: {distribution: exponential, lambda: 1.0}}
+      gamma: {^RandomDouble: {distribution: gamma, alpha: 1.0, beta: 2.0}}
+      weibull: {^RandomDouble: {distribution: weibull, a: 1.0, b: 2.0}}
+      extremeValue: {^RandomDouble: {distribution: extreme_value, a: 1.0, b: 2.0}}
+      beta: {^RandomDouble: {distribution: beta, alpha: 1.0}}
+      laplace: {^RandomDouble: {distribution: laplace, mean: 10.1, beta: 2.1}}
+      normal: {^RandomDouble: {distribution: normal, mean: 50, sigma: 10.0}}
+      lognormal: {^RandomDouble: {distribution: lognormal, m: 1.0, s: 2.0}}
+      chisquared: {^RandomDouble: {distribution: chi_squared, n: 10}}
+      noncentralchi: {^RandomDouble: {distribution: non_central_chi_squared, k: 7, lambda: 2}}
+      cauchy: {^RandomDouble: {distribution: cauchy, median: 17.2, sigma: 2.3}}
+      fisherf: {^RandomDouble: {distribution: fisher_f, m: 12, n: 7}}
+      studentt: {^RandomDouble: {distribution: student_t, n: 17}}
     ThenReturns:
-      - a: 13.924048727986317431
-      - a: 17.635930848275933158
+    - a: {"$numberDouble": "3.1072252315940791512"}
+      uniform: {"$numberDouble": "9.0324627976119451489"}
+      "exponential": {"$numberDouble": "1.22877935746732736"}
+      "gamma": {"$numberDouble": "0.30907777173004674642"}
+      "weibull": {"$numberDouble": "2.7685758708440277864"}
+      "extremeValue": {"$numberDouble": "1.4087551784675507172"}
+      "beta": {"$numberDouble": "0.84499342631514873236"}
+      "laplace": {"$numberDouble": "7.6225726487470284454"}
+      "normal": {"$numberDouble": "33.219361880498198047"}
+      "lognormal": {"$numberDouble": "5.2620928977596443943"}
+      "chisquared": {"$numberDouble": "7.8762174520246670539"}
+      "noncentralchi": {"$numberDouble": "6.6881922445921997422"}
+      "cauchy": {"$numberDouble": "14.109054790966553128"}
+      "fisherf": {"$numberDouble": "7.5724556054847980135"}
+      "studentt": {"$numberDouble": "-0.051598503988862669256"}
+    - "a": {"$numberDouble": "9.6319300658140161175"}
+      "uniform": {"$numberDouble": "10.52535496767269585"}
+      "exponential": {"$numberDouble": "1.9060004139882231744"}
+      "gamma": {"$numberDouble": "3.7049777857971011308"}
+      "weibull": {"$numberDouble": "0.79359489035688579595"}
+      "extremeValue": {"$numberDouble": "-1.5165768490729787388"}
+      "beta": {"$numberDouble": "0.30757815651654396572"}
+      "laplace": {"$numberDouble": "12.314518418718506609"}
+      "normal": {"$numberDouble": "38.646139529150403291"}
+      "lognormal": {"$numberDouble": "90.294329902228028573"}
+      "chisquared": {"$numberDouble": "15.860615919223810977"}
+      "noncentralchi": {"$numberDouble": "9.8268965448150318309"}
+      "cauchy": {"$numberDouble": "15.242090640429511339"}
+      "fisherf": {"$numberDouble": "-12.590746037108534239"}
+      "studentt": {"$numberDouble": "-0.74853901423911906043"}
 
   - Name: IP Generator
     GivenTemplate:
       a: {^IP: {}}
     ThenReturns:
-      - a : "33.196.98.252"
-      - a : "105.210.255.63"
-      - a : "105.26.104.117"
-      - a : "124.157.158.215"
+    - a: "8.54.224.78"
+    - a: "4.237.2.84"
+    - a: "64.83.195.254"
+    - a: "12.171.202.78"
