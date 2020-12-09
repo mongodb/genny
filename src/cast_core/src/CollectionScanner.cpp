@@ -119,10 +119,6 @@ struct CollectionScanner::PhaseConfig {
         } else if (!selectClusterTimeOnly) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException("ScanType is invalid."));
         }
-        if (scanDuration && scanRate) {
-            BOOST_THROW_EXCEPTION(
-                InvalidConfigurationException("ScanDuration and ScanRate are mutually exclusive."));
-        }
         if (scanDuration) {
             if (scanDuration->count() < 0) {
                 BOOST_THROW_EXCEPTION(
@@ -194,6 +190,7 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
     size_t docCount = 0;
     size_t scanSize = 0;
     bool scanFinished = false;
+    const auto start = SteadyClock::now();
     auto statTracker = config->scanOperation.start();
     /*
      * tetsuo-cpp: Figure out frequently we're inserting and then add some sleeps to ensure that
@@ -218,6 +215,30 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
                 if (config->scanSizeBytes != 0 && scanSize >= config->scanSizeBytes) {
                     scanFinished = true;
                     break;
+                }
+                // tetsuo-cpp: We don't want to do this after every insert.
+                // Figure out a better spot to put this.
+                if (config->scanRate) {
+                    const auto now = SteadyClock::now();
+
+                    // Calculate the scan rate as a double for ease of use.
+                    const auto spec = config->scanRate->getBaseSpec();
+                    assert(spec);
+                    const auto secs = spec->per.count() / (1000 * 1000 * 1000);
+                    const auto elapsed = (now - start).count() / (1000 * 1000 * 1000);
+                    const auto expectedSize =
+                        (static_cast<double>(elapsed) / secs) * spec->operations;
+
+                    // Now figure out if we're scanning too fast.
+                    // If so, sleep the right amount of time to make it such that we're following
+                    // the rate.
+                    if (scanSize > expectedSize) {
+                        const auto extraSize = scanSize - expectedSize;
+                        const auto sleepTime =
+                            extraSize * (static_cast<double>(secs) / spec->operations);
+                        std::this_thread::sleep_for(
+                            std::chrono::seconds{static_cast<uint64_t>(sleepTime)});
+                    }
                 }
             }
             if (scanFinished) {
