@@ -26,13 +26,11 @@ def _install_requires():
 setup(
     name="genny",
     version="1.0",
-    packages=["gennylib", "gennylib.parsers", "third_party"],
+    packages=["gennylib"],
     setup_requires=["nose==1.3.7"],
     install_requires=_install_requires(),
     entry_points={
         "console_scripts": [
-            "genny-metrics-report = gennylib.cedar_report:main__cedar_report",
-            "genny-metrics-legacy-report = gennylib.legacy_report:main__legacy_report",
             "lint-yaml = gennylib.yaml_linter:main",
             "genny = gennylib.genny_runner:main_genny_runner",
             "genny-canaries = gennylib.canaries_runner:main_canaries_runner",
