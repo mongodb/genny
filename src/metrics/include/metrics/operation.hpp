@@ -302,15 +302,15 @@ public:
      * an actor is periodically reporting its operations. By default an `number = 1` value is
      * automatically reported.
      */
-    void addIterations(count_type number) {
-        _event.number += number;
+    void addIterations(count_type ops) {
+        _event.ops += ops;
     }
 
     /**
      * Increments the counter for the number of documents inserted, modified, deleted, etc.
      */
-    void addDocuments(count_type ops) {
-        _event.ops += ops;
+    void addDocuments(count_type number) {
+        _event.number += number;
     }
 
     /**
@@ -361,10 +361,10 @@ private:
         _event.duration = finished - _started;
         _event.outcome = outcome;
 
-        if (_event.number == 0) {
+        if (_event.ops == 0) {
             // We default the event to represent a single iteration of a loop if addIterations() was
             // never called.
-            _event.number = 1;
+            _event.ops = 1;
         }
 
         _op->reportAt(_started, finished, std::move(_event));

@@ -128,11 +128,11 @@ private:
             });
         writeMetricValuesLegacy(
             out, "_docs", perm, [](const OperationEventT<MetricsClockSource>& event) {
-                return event.ops;
+                return event.number;
             });
         writeMetricValuesLegacy(
             out, "_iters", perm, [](const OperationEventT<MetricsClockSource>& event) {
-                return event.number;
+                return event.ops;
             });
         out << std::endl;
 
