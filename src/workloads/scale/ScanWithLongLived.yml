@@ -80,3 +80,8 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: SnapshotScanner5GigabytesCmd
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+      -standalone
