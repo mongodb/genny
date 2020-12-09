@@ -192,10 +192,6 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
     bool scanFinished = false;
     const auto start = SteadyClock::now();
     auto statTracker = config->scanOperation.start();
-    /*
-     * tetsuo-cpp: Figure out frequently we're inserting and then add some sleeps to ensure that
-     * we're keeping in line with the scan rate.
-     */
     for (auto& collection : collections) {
         auto filter = config->filterExpr ? config->filterExpr->evaluate()
                                          : bsoncxx::document::view_or_value{};
