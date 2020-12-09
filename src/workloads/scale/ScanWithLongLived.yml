@@ -1,5 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
+Description: |
+  This workload is designed to test the effectiveness of durable history as
+  described in PM-1986.
 
 GlobalDefaults:
   TrackProportion: &TrackProportion 0
