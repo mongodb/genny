@@ -83,8 +83,8 @@ TEST_CASE("metrics::OperationContext interface") {
     REQUIRE(op.getEvents().size() == 0);
 
     auto expected = OperationEventT<RegistryClockSourceStub>{};
-    expected.number = 1;
-    expected.ops = 200;
+    expected.ops = 1;
+    expected.number = 200;
     expected.size = 3000;
     expected.errors = 4;
 
@@ -127,8 +127,8 @@ TEST_CASE("metrics::OperationContext interface") {
 
         REQUIRE(op.getEvents().size() == 0);
 
-        expected.number = 17;
-        expected.ops += 200;
+        expected.ops = 17;
+        expected.number += 200;
         expected.size += 3000;
         expected.errors += 4;
 
@@ -170,9 +170,9 @@ TEST_CASE("metrics output format") {
     synthetic.report(RegistryClockSourceStub::now(),
                      std::chrono::microseconds{300},
                      OutcomeType::kSuccess,
-                     1,
-                     2,
                      3,
+                     2,
+                     1,
                      4);
 
     auto insert1Ctx = insert1.start();
@@ -269,12 +269,12 @@ TEST_CASE("metrics output format") {
             "\n"
             "Operations\n"
             "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n"
-            "5,HelloWorld,4,Synthetic,300000,0,3,1,2,4\n"
-            "26,HelloWorld,3,Greetings,13,0,2,0,0,0\n"
-            "42,InsertRemove,2,Remove,10,0,1,7,0,30\n"
-            "45,InsertRemove,1,Remove,17,0,1,6,0,40\n"
-            "30,InsertRemove,2,Insert,20,0,1,8,0,200\n"
-            "28,InsertRemove,1,Insert,23,0,1,9,0,300\n";
+            "5,HelloWorld,4,Synthetic,300000,0,1,3,2,4\n"
+            "26,HelloWorld,3,Greetings,13,0,0,2,0,0\n"
+            "42,InsertRemove,2,Remove,10,0,7,1,0,30\n"
+            "45,InsertRemove,1,Remove,17,0,6,1,0,40\n"
+            "30,InsertRemove,2,Insert,20,0,8,1,0,200\n"
+            "28,InsertRemove,1,Insert,23,0,9,1,0,300\n";
 
         std::ostringstream out;
         reporter.report<ReporterClockSourceStub>(out, MetricsFormat("cedar-csv"));
@@ -328,7 +328,7 @@ TEST_CASE("Genny.Setup metric") {
             "\n"
             "Operations\n"
             "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n"
-            "15,Genny,0,Setup,10,0,1,0,0,0\n";
+            "15,Genny,0,Setup,10,0,0,1,0,0\n";
 
         std::ostringstream out;
         reporter.report<ReporterClockSourceStub>(out, MetricsFormat("cedar-csv"));
