@@ -1,0 +1,90 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+Description: |
+  This workload is designed to test the effectiveness of durable history as
+  described in PM-1986.
+
+GlobalDefaults:
+  TrackProportion: &TrackProportion 0
+
+  LongLivedDB: &LongLivedDB longlived # name of the long lived database
+  LongLivedCollectionCount: &LongLivedCollectionCount 1000
+  LongLivedDocumentCount: &LongLivedDocumentCount 1000
+
+  ScannerHotDB: &ScannerHotDB rolling
+
+  LongLivedWrites: &LongLivedWrites 600 per 1 second # x5 threads
+  LongLivedReads: &LongLivedReads 20 per 1 second    # x10 threads
+
+  binomial_10k_int: &binomial_10k_int {^RandomInt: {distribution: binomial, t: 1000, p: 0.5}}
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 5000
+
+Actors:
+- Name: LongLivedCreator
+  Type: Loader
+  Threads: 10
+  TrackProportion: *TrackProportion
+  Phases:
+  - {Nop: true}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: LongLivedCreatorCmd
+      Parameters:
+        Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
+        DocumentCount: *LongLivedDocumentCount
+  - {Nop: true}
+
+- Name: LongLivedReader
+  Type: MultiCollectionQuery
+  Threads: 10
+  GlobalRate: *LongLivedReads
+  TrackProportion: *TrackProportion
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: LongLivedReaderCmd
+      Parameters:
+        Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
+        DocumentCount: *LongLivedDocumentCount
+        IdFilter: *binomial_10k_int
+
+- Name: LongLivedWriter
+  Type: MultiCollectionUpdate
+  Threads: 5
+  GlobalRate: *LongLivedWrites
+  TrackProportion: *TrackProportion
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: LongLivedWriterCmd
+      Parameters:
+        Database: *LongLivedDB
+        CollectionCount: *LongLivedCollectionCount
+        DocumentCount: *LongLivedDocumentCount
+        IdFilter: *binomial_10k_int
+
+- Name: SnapshotScanner5Gigabytes
+  Type: CollectionScanner
+  Threads: 10
+  Database: *LongLivedDB
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - ExternalPhaseConfig:
+      Path: ../../phases/scale/LargeScalePhases.yml
+      Key: SnapshotScanner5GigabytesCmd
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+      -standalone

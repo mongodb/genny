@@ -45,6 +45,7 @@ GlobalDefaults:
   DocumentCountParam: &DocumentCountParam {^Parameter: {Name: "DocumentCount", Default: -1}}
   WritesParam: &WritesParam {^Parameter: {Name: "Writes", Default: -1}}
   ReadsParam: &ReadsParam {^Parameter: {Name: "Reads", Default: -1}}
+  IdFilterParam: &IdFilterParam {^Parameter: {Name: "IdFilter", Default: *rand_10k_int}}
 
 LongLivedCreatorCmd:
   Repeat: 1
@@ -88,7 +89,7 @@ LongLivedReaderCmd:
   Database: *DatabaseParam
   CollectionCount: *CollectionCountParam
   DocumentCount: *DocumentCountParam
-  Filter: {_id: *rand_10k_int}
+  Filter: {_id: *IdFilterParam}
 
 LongLivedWriterCmd:
   Duration: *Duration
@@ -96,7 +97,7 @@ LongLivedWriterCmd:
   Database: *DatabaseParam
   CollectionCount: *CollectionCountParam
   DocumentCount: *DocumentCountParam
-  UpdateFilter: {_id: *rand_10k_int}
+  UpdateFilter: {_id: *IdFilterParam}
   Update: {$inc: {x1: 1}}
 
 RollingSetupCmd:
