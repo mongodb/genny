@@ -40,7 +40,7 @@ class DocumentGenerator {
 public:
     explicit DocumentGenerator(const Node& node, PhaseContext& phaseContext, ActorId id);
     explicit DocumentGenerator(const Node& node, ActorContext& phaseContext, ActorId id);
-    explicit DocumentGenerator(const Node& node, DefaultRandom& rng);
+    explicit DocumentGenerator(const Node& node, DefaultRandom& rng, ActorId id);
     /**
      * @return a document according to the template given by the node in the constructor.
      */

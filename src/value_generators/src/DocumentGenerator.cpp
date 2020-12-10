@@ -147,36 +147,46 @@ static const std::string kDefaultAlphabet = std::string{
 // Useful typedefs
 
 template <typename O>
-using Parser = std::function<O(const Node&, DefaultRandom&)>;
+using Parser = std::function<O(const Node&, DefaultRandom&, ActorId)>;
 
 // Pre-declaring all at once
 // Documentation is at the implementations-site.
 
-UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng);
-UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node, DefaultRandom& rng);
-UniqueGenerator<double> doubleGenerator(const Node& node, DefaultRandom& rng);
-UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node, DefaultRandom& rng);
-UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rng);
+UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng, ActorId id);
+UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
+                                                           DefaultRandom& rng,
+                                                           ActorId id);
+UniqueGenerator<double> doubleGenerator(const Node& node, DefaultRandom& rng, ActorId id);
+UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
+                                                           DefaultRandom& rng,
+                                                           ActorId id);
+UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rng, ActorId id);
 template <bool Verbatim, typename Out>
 Out valueGenerator(const Node& node,
                    DefaultRandom& rng,
+                   ActorId id,
                    const std::map<std::string, Parser<Out>>& parsers);
 
 template <bool Verbatim>
-std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, DefaultRandom& rng);
+std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node,
+                                                           DefaultRandom& rng,
+                                                           ActorId id);
 
 template <bool Verbatim>
-UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultRandom& rng);
+UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node,
+                                                      DefaultRandom& rng,
+                                                      ActorId id);
 template <typename Distribution,
           const char* diststring,
           const char* parameter1name,
           const char* parameter2name>
 class DoubleGenerator2Parameter : public Generator<double> {
 public:
-    DoubleGenerator2Parameter(const Node& node, DefaultRandom& rng)
+    DoubleGenerator2Parameter(const Node& node, DefaultRandom& rng, ActorId id)
         : _rng{rng},
-          _parameter1Gen{doubleGenerator(extract(node, parameter1name, diststring), _rng)},
-          _parameter2Gen{doubleGenerator(extract(node, parameter2name, diststring), _rng)} {}
+          _id{id},
+          _parameter1Gen{doubleGenerator(extract(node, parameter1name, diststring), _rng, _id)},
+          _parameter2Gen{doubleGenerator(extract(node, parameter2name, diststring), _rng, _id)} {}
 
     double evaluate() override {
         auto parameter1 = _parameter1Gen->evaluate();
@@ -187,6 +197,7 @@ public:
 
 private:
     DefaultRandom& _rng;
+    ActorId _id;
     UniqueGenerator<double> _parameter1Gen;
     UniqueGenerator<double> _parameter2Gen;
 };
@@ -194,9 +205,10 @@ private:
 template <typename Distribution, const char* diststring, const char* parameter1name>
 class DoubleGenerator1Parameter : public Generator<double> {
 public:
-    DoubleGenerator1Parameter(const Node& node, DefaultRandom& rng)
+    DoubleGenerator1Parameter(const Node& node, DefaultRandom& rng, ActorId id)
         : _rng{rng},
-          _parameter1Gen{doubleGenerator(extract(node, parameter1name, diststring), _rng)} {}
+          _id{id},
+          _parameter1Gen{doubleGenerator(extract(node, parameter1name, diststring), _rng, _id)} {}
 
     double evaluate() override {
         auto parameter1 = _parameter1Gen->evaluate();
@@ -206,6 +218,7 @@ public:
 
 private:
     DefaultRandom& _rng;
+    ActorId _id;
     UniqueGenerator<double> _parameter1Gen;
 };
 
@@ -296,10 +309,11 @@ using StudentTDoubleGenerator =
 class UniformInt64Generator : public Generator<int64_t> {
 public:
     /** @param node `{min:<int>, max:<int>}` */
-    UniformInt64Generator(const Node& node, DefaultRandom& rng)
+    UniformInt64Generator(const Node& node, DefaultRandom& rng, ActorId id)
         : _rng{rng},
-          _minGen{intGenerator(extract(node, "min", "uniform"), _rng)},
-          _maxGen{intGenerator(extract(node, "max", "uniform"), _rng)} {}
+          _id{id},
+          _minGen{intGenerator(extract(node, "min", "uniform"), _rng, _id)},
+          _maxGen{intGenerator(extract(node, "max", "uniform"), _rng, _id)} {}
 
     int64_t evaluate() override {
         auto min = _minGen->evaluate();
@@ -310,6 +324,7 @@ public:
 
 private:
     DefaultRandom& _rng;
+    ActorId _id;
     UniqueGenerator<int64_t> _minGen;
     UniqueGenerator<int64_t> _maxGen;
 };
@@ -318,9 +333,10 @@ private:
 class BinomialInt64Generator : public Generator<int64_t> {
 public:
     /** @param node `{t:<int>, p:double}` */
-    BinomialInt64Generator(const Node& node, DefaultRandom& rng)
+    BinomialInt64Generator(const Node& node, DefaultRandom& rng, ActorId id)
         : _rng{rng},
-          _tGen{intGenerator(extract(node, "t", "binomial"), _rng)},
+          _id{id},
+          _tGen{intGenerator(extract(node, "t", "binomial"), _rng, _id)},
           _p{extract(node, "p", "binomial").to<double>()} {}
 
     int64_t evaluate() override {
@@ -330,6 +346,7 @@ public:
 
 private:
     DefaultRandom& _rng;
+    ActorId _id;
     double _p;
     UniqueGenerator<int64_t> _tGen;
 };
@@ -338,9 +355,10 @@ private:
 class NegativeBinomialInt64Generator : public Generator<int64_t> {
 public:
     /** @param node `{k:<int>, p:double}` */
-    NegativeBinomialInt64Generator(const Node& node, DefaultRandom& rng)
+    NegativeBinomialInt64Generator(const Node& node, DefaultRandom& rng, ActorId id)
         : _rng{rng},
-          _kGen{intGenerator(extract(node, "k", "negative_binomial"), _rng)},
+          _id{id},
+          _kGen{intGenerator(extract(node, "k", "negative_binomial"), _rng, _id)},
           _p{extract(node, "p", "negative_binomial").to<double>()} {}
 
     int64_t evaluate() override {
@@ -351,6 +369,7 @@ public:
 
 private:
     DefaultRandom& _rng;
+    ActorId _id;
     double _p;
     UniqueGenerator<int64_t> _kGen;
 };
@@ -359,8 +378,8 @@ private:
 class PoissonInt64Generator : public Generator<int64_t> {
 public:
     /** @param node `{mean:double}` */
-    PoissonInt64Generator(const Node& node, DefaultRandom& rng)
-        : _rng{rng}, _mean{extract(node, "mean", "poisson").to<double>()} {}
+    PoissonInt64Generator(const Node& node, DefaultRandom& rng, ActorId id)
+        : _rng{rng}, _id{id}, _mean{extract(node, "mean", "poisson").to<double>()} {}
 
     int64_t evaluate() override {
         auto distribution = boost::random::poisson_distribution<int64_t>{_mean};
@@ -369,6 +388,7 @@ public:
 
 private:
     DefaultRandom& _rng;
+    ActorId _id;
     double _mean;
 };
 
@@ -376,8 +396,8 @@ private:
 class GeometricInt64Generator : public Generator<int64_t> {
 public:
     /** @param node `{mean:double}` */
-    GeometricInt64Generator(const Node& node, DefaultRandom& rng)
-        : _rng{rng}, _p{extract(node, "p", "geometric").to<double>()} {}
+    GeometricInt64Generator(const Node& node, DefaultRandom& rng, ActorId id)
+        : _rng{rng}, _id{id}, _p{extract(node, "p", "geometric").to<double>()} {}
 
     int64_t evaluate() override {
         auto distribution = boost::random::geometric_distribution<int64_t>{_p};
@@ -386,6 +406,7 @@ public:
 
 private:
     DefaultRandom& _rng;
+    ActorId _id;
     const double _p;
 };
 
@@ -394,7 +415,7 @@ private:
 class ChooseGenerator : public Appendable {
 public:
     // constructore defined at bottom of the file to use other symbol
-    ChooseGenerator(const Node& node, DefaultRandom& rng);
+    ChooseGenerator(const Node& node, DefaultRandom& rng, ActorId id);
     Appendable& choose() {
         // Pick a random number between 0 and sum(weights)
         // Pick value based on that.
@@ -411,6 +432,7 @@ public:
 
 protected:
     DefaultRandom& _rng;
+    ActorId _id;
     std::vector<UniqueAppendable> _choices;
     std::vector<int64_t> _weights;
 };
@@ -420,14 +442,14 @@ protected:
 // within the JoinGenerator.
 class ChooseStringGenerator : public Generator<std::string> {
 public:
-    ChooseStringGenerator(const Node& node, DefaultRandom& rng) : _rng{rng} {
+    ChooseStringGenerator(const Node& node, DefaultRandom& rng, ActorId id) : _rng{rng}, _id{id} {
         if (!node["from"].isSequence()) {
             std::stringstream msg;
             msg << "Malformed node for choose from array. Not a sequence " << node;
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
         }
         for (const auto&& [k, v] : node["from"]) {
-            _choices.push_back(stringGenerator(v, rng));
+            _choices.push_back(stringGenerator(v, rng, id));
         }
         if (node["weights"]) {
             for (const auto&& [k, v] : node["weights"]) {
@@ -447,14 +469,15 @@ public:
 
 protected:
     DefaultRandom& _rng;
+    ActorId _id;
     std::vector<UniqueGenerator<std::string>> _choices;
     std::vector<int64_t> _weights;
 };
 
 class IPGenerator : public Generator<std::string> {
 public:
-    IPGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng}, _subnetMask{std::numeric_limits<uint32_t>::max()}, _prefix{} {}
+    IPGenerator(const Node& node, DefaultRandom& rng, ActorId id)
+        : _rng{rng}, _id{id}, _subnetMask{std::numeric_limits<uint32_t>::max()}, _prefix{} {}
 
     std::string evaluate() override {
         // Pick a random 32 bit integer
@@ -475,6 +498,7 @@ public:
 
 protected:
     DefaultRandom& _rng;
+    ActorId _id;
     uint32_t _subnetMask;
     uint32_t _prefix;
 };
@@ -486,15 +510,15 @@ protected:
 // not be neded.
 class JoinGenerator : public Generator<std::string> {
 public:
-    JoinGenerator(const Node& node, DefaultRandom& rng)
-        : _rng{rng}, _separator{node["sep"].maybe<std::string>().value_or("")} {
+    JoinGenerator(const Node& node, DefaultRandom& rng, ActorId id)
+        : _rng{rng}, _id{id}, _separator{node["sep"].maybe<std::string>().value_or("")} {
         if (!node["array"].isSequence()) {
             std::stringstream msg;
             msg << "Malformed node for join array. Not a sequence " << node;
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
         }
         for (const auto&& [k, v] : node["array"]) {
-            _parts.push_back(stringGenerator(v, rng));
+            _parts.push_back(stringGenerator(v, rng, id));
         }
     }
     std::string evaluate() override {
@@ -513,15 +537,17 @@ public:
 
 protected:
     DefaultRandom& _rng;
+    ActorId _id;
     std::vector<UniqueGenerator<std::string>> _parts;
     std::string _separator;
 };
 
 class StringGenerator : public Generator<std::string> {
 public:
-    StringGenerator(const Node& node, DefaultRandom& rng)
+    StringGenerator(const Node& node, DefaultRandom& rng, ActorId id)
         : _rng{rng},
-          _lengthGen{intGenerator(extract(node, "length", "^RandomString"), rng)},
+          _id{id},
+          _lengthGen{intGenerator(extract(node, "length", "^RandomString"), rng, id)},
           _alphabet{node["alphabet"].maybe<std::string>().value_or(kDefaultAlphabet)},
           _alphabetLength{_alphabet.size()} {
         if (_alphabetLength <= 0) {
@@ -532,6 +558,7 @@ public:
 
 protected:
     DefaultRandom& _rng;
+    ActorId _id;
     UniqueGenerator<int64_t> _lengthGen;
     std::string _alphabet;
     const size_t _alphabetLength;
@@ -543,8 +570,8 @@ public:
     /**
      * @param node `{length:<int>, alphabet:opt string}`
      */
-    NormalRandomStringGenerator(const Node& node, DefaultRandom& rng)
-        : StringGenerator(node, rng) {}
+    NormalRandomStringGenerator(const Node& node, DefaultRandom& rng, ActorId id)
+        : StringGenerator(node, rng, id) {}
 
     std::string evaluate() override {
         auto distribution = boost::random::uniform_int_distribution<size_t>{0, _alphabetLength - 1};
@@ -564,7 +591,8 @@ public:
 class FastRandomStringGenerator : public StringGenerator {
 public:
     /** @param node `{length:<int>, alphabet:opt str}` */
-    FastRandomStringGenerator(const Node& node, DefaultRandom& rng) : StringGenerator(node, rng) {}
+    FastRandomStringGenerator(const Node& node, DefaultRandom& rng, ActorId id)
+        : StringGenerator(node, rng, id) {}
 
     std::string evaluate() override {
         auto length = _lengthGen->evaluate();
@@ -622,7 +650,7 @@ private:
  */
 template <typename O>
 std::optional<std::pair<Parser<O>, std::string>> extractKnownParser(
-    const Node& node, DefaultRandom& rng, std::map<std::string, Parser<O>> parsers) {
+    const Node& node, DefaultRandom& rng, ActorId id, std::map<std::string, Parser<O>> parsers) {
     if (!node || !node.isMap()) {
         return std::nullopt;
     }
@@ -653,11 +681,12 @@ std::optional<std::pair<Parser<O>, std::string>> extractKnownParser(
 template <bool Verbatim, typename Out>
 Out valueGenerator(const Node& node,
                    DefaultRandom& rng,
+                   ActorId id,
                    const std::map<std::string, Parser<Out>>& parsers) {
     if constexpr (!Verbatim) {
-        if (auto parserPair = extractKnownParser(node, rng, parsers)) {
+        if (auto parserPair = extractKnownParser(node, rng, id, parsers)) {
             // known parser type
-            return parserPair->first(node[parserPair->second], rng);
+            return parserPair->first(node[parserPair->second], rng, id);
         }
     }
     // switch-statement on node.Type() may be clearer
@@ -687,10 +716,10 @@ Out valueGenerator(const Node& node,
         return std::make_unique<ConstantAppender<std::string>>(node.to<std::string>());
     }
     if (node.isSequence()) {
-        return arrayGenerator<Verbatim>(node, rng);
+        return arrayGenerator<Verbatim>(node, rng, id);
     }
     if (node.isMap()) {
-        return documentGenerator<Verbatim>(node, rng);
+        return documentGenerator<Verbatim>(node, rng, id);
     }
 
     std::stringstream msg;
@@ -700,28 +729,30 @@ Out valueGenerator(const Node& node,
 
 const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^FastRandomString",
-     [](const Node& node, DefaultRandom& rng) {
-         return std::make_unique<FastRandomStringGenerator>(node, rng);
+     [](const Node& node, DefaultRandom& rng, ActorId id) {
+         return std::make_unique<FastRandomStringGenerator>(node, rng, id);
      }},
     {"^RandomString",
-     [](const Node& node, DefaultRandom& rng) {
-         return std::make_unique<NormalRandomStringGenerator>(node, rng);
+     [](const Node& node, DefaultRandom& rng, ActorId id) {
+         return std::make_unique<NormalRandomStringGenerator>(node, rng, id);
      }},
     {"^Join",
-     [](const Node& node, DefaultRandom& rng) {
-         return std::make_unique<JoinGenerator>(node, rng);
+     [](const Node& node, DefaultRandom& rng, ActorId id) {
+         return std::make_unique<JoinGenerator>(node, rng, id);
      }},
     {"^Choose",
-     [](const Node& node, DefaultRandom& rng) {
-         return std::make_unique<ChooseGenerator>(node, rng);
+     [](const Node& node, DefaultRandom& rng, ActorId id) {
+         return std::make_unique<ChooseGenerator>(node, rng, id);
      }},
     {"^IP",
-     [](const Node& node, DefaultRandom& rng) { return std::make_unique<IPGenerator>(node, rng); }},
+     [](const Node& node, DefaultRandom& rng, ActorId id) {
+         return std::make_unique<IPGenerator>(node, rng, id);
+     }},
     {"^RandomInt", int64GeneratorBasedOnDistribution},
     {"^RandomDouble", doubleGeneratorBasedOnDistribution},
     {"^Verbatim",
-     [](const Node& node, DefaultRandom& rng) {
-         return valueGenerator<true, UniqueAppendable>(node, rng, allParsers);
+     [](const Node& node, DefaultRandom& rng, ActorId id) {
+         return valueGenerator<true, UniqueAppendable>(node, rng, id, allParsers);
      }},
 };
 
@@ -732,7 +763,9 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
  * @param node a "top-level"-like node e.g. `{a:1, b:{^RandomInt:{...}}`
  */
 template <bool Verbatim>
-std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, DefaultRandom& rng) {
+std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node,
+                                                           DefaultRandom& rng,
+                                                           ActorId id) {
     if (!node.isMap()) {
         std::ostringstream stm;
         stm << "Node " << node << " must be mapping type";
@@ -742,7 +775,7 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, Def
         auto meta = getMetaKey(node);
         if (meta) {
             if (meta == "^Verbatim") {
-                return documentGenerator<true>(node["^Verbatim"], rng);
+                return documentGenerator<true>(node["^Verbatim"], rng, id);
             }
             std::stringstream msg;
             msg << "Invalid meta-key " << *meta << " at top-level";
@@ -753,7 +786,7 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, Def
     DocumentGenerator::Impl::Entries entries;
     for (const auto&& [k, v] : node) {
         auto key = k.toString();
-        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, rng, allParsers);
+        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, rng, id, allParsers);
         entries.emplace_back(key, std::move(valgen));
     }
     return std::make_unique<DocumentGenerator::Impl>(std::move(entries));
@@ -766,10 +799,12 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, Def
  * the node
  */
 template <bool Verbatim>
-UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultRandom& rng) {
+UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node,
+                                                      DefaultRandom& rng,
+                                                      ActorId id) {
     ArrayGenerator::ValueType entries;
     for (const auto&& [k, v] : node) {
-        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, rng, allParsers);
+        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, rng, id, allParsers);
         entries.push_back(std::move(valgen));
     }
     return std::make_unique<ArrayGenerator>(std::move(entries));
@@ -788,40 +823,42 @@ UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultR
 //
 // An alternative would have been to have ^RandomIntUniform etc.
 //
-UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node, DefaultRandom& rng) {
+UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
+                                                           DefaultRandom& rng,
+                                                           ActorId id) {
     if (!node.isMap()) {
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("random int must be given mapping type"));
     }
     auto distribution = node["distribution"].maybe<std::string>().value_or("uniform");
 
     if (distribution == "uniform") {
-        return std::make_unique<UniformDoubleGenerator>(node, rng);
+        return std::make_unique<UniformDoubleGenerator>(node, rng, id);
     } else if (distribution == "exponential") {
-        return std::make_unique<ExponentialDoubleGenerator>(node, rng);
+        return std::make_unique<ExponentialDoubleGenerator>(node, rng, id);
     } else if (distribution == "gamma") {
-        return std::make_unique<GammaDoubleGenerator>(node, rng);
+        return std::make_unique<GammaDoubleGenerator>(node, rng, id);
     } else if (distribution == "weibull") {
-        return std::make_unique<WeibullDoubleGenerator>(node, rng);
+        return std::make_unique<WeibullDoubleGenerator>(node, rng, id);
     } else if (distribution == "extreme_value") {
-        return std::make_unique<ExtremeValueDoubleGenerator>(node, rng);
+        return std::make_unique<ExtremeValueDoubleGenerator>(node, rng, id);
     } else if (distribution == "beta") {
-        return std::make_unique<BetaDoubleGenerator>(node, rng);
+        return std::make_unique<BetaDoubleGenerator>(node, rng, id);
     } else if (distribution == "laplace") {
-        return std::make_unique<LaplaceDoubleGenerator>(node, rng);
+        return std::make_unique<LaplaceDoubleGenerator>(node, rng, id);
     } else if (distribution == "normal") {
-        return std::make_unique<NormalDoubleGenerator>(node, rng);
+        return std::make_unique<NormalDoubleGenerator>(node, rng, id);
     } else if (distribution == "lognormal") {
-        return std::make_unique<LognormalDoubleGenerator>(node, rng);
+        return std::make_unique<LognormalDoubleGenerator>(node, rng, id);
     } else if (distribution == "chi_squared") {
-        return std::make_unique<ChiSquaredDoubleGenerator>(node, rng);
+        return std::make_unique<ChiSquaredDoubleGenerator>(node, rng, id);
     } else if (distribution == "non_central_chi_squared") {
-        return std::make_unique<NonCentralChiSquaredDoubleGenerator>(node, rng);
+        return std::make_unique<NonCentralChiSquaredDoubleGenerator>(node, rng, id);
     } else if (distribution == "cauchy") {
-        return std::make_unique<CauchyDoubleGenerator>(node, rng);
+        return std::make_unique<CauchyDoubleGenerator>(node, rng, id);
     } else if (distribution == "fisher_f") {
-        return std::make_unique<FisherFDoubleGenerator>(node, rng);
+        return std::make_unique<FisherFDoubleGenerator>(node, rng, id);
     } else if (distribution == "student_t") {
-        return std::make_unique<StudentTDoubleGenerator>(node, rng);
+        return std::make_unique<StudentTDoubleGenerator>(node, rng, id);
     } else {
         std::stringstream error;
         error << "Unknown distribution '" << distribution << "'";
@@ -842,22 +879,24 @@ UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node, Def
 //
 // An alternative would have been to have ^RandomIntUniform etc.
 //
-UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node, DefaultRandom& rng) {
+UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
+                                                           DefaultRandom& rng,
+                                                           ActorId id) {
     if (!node.isMap()) {
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("random int must be given mapping type"));
     }
     auto distribution = node["distribution"].maybe<std::string>().value_or("uniform");
 
     if (distribution == "uniform") {
-        return std::make_unique<UniformInt64Generator>(node, rng);
+        return std::make_unique<UniformInt64Generator>(node, rng, id);
     } else if (distribution == "binomial") {
-        return std::make_unique<BinomialInt64Generator>(node, rng);
+        return std::make_unique<BinomialInt64Generator>(node, rng, id);
     } else if (distribution == "negative_binomial") {
-        return std::make_unique<NegativeBinomialInt64Generator>(node, rng);
+        return std::make_unique<NegativeBinomialInt64Generator>(node, rng, id);
     } else if (distribution == "poisson") {
-        return std::make_unique<PoissonInt64Generator>(node, rng);
+        return std::make_unique<PoissonInt64Generator>(node, rng, id);
     } else if (distribution == "geometric") {
-        return std::make_unique<GeometricInt64Generator>(node, rng);
+        return std::make_unique<GeometricInt64Generator>(node, rng, id);
     } else {
         std::stringstream error;
         error << "Unknown distribution '" << distribution << "'";
@@ -872,16 +911,16 @@ UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node, Def
  *   either a `^RantomInt` generator (etc--see `intParsers`)
  *   or a constant generator if given a constant/scalar.
  */
-UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng) {
+UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng, ActorId id) {
     // Set of parsers to look when we request an int parser
     // see int64Generator
     const static std::map<std::string, Parser<UniqueGenerator<int64_t>>> intParsers{
         {"^RandomInt", int64GeneratorBasedOnDistribution},
     };
 
-    if (auto parserPair = extractKnownParser(node, rng, intParsers)) {
+    if (auto parserPair = extractKnownParser(node, rng, id, intParsers)) {
         // known parser type
-        return parserPair->first(node[parserPair->second], rng);
+        return parserPair->first(node[parserPair->second], rng, id);
     }
     return std::make_unique<ConstantAppender<int64_t>>(node.to<int64_t>());
 }
@@ -893,16 +932,16 @@ UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng) {
  *   either a `^RantomInt` generator (etc--see `intParsers`)
  *   or a constant generator if given a constant/scalar.
  */
-UniqueGenerator<double> doubleGenerator(const Node& node, DefaultRandom& rng) {
+UniqueGenerator<double> doubleGenerator(const Node& node, DefaultRandom& rng, ActorId id) {
     // Set of parsers to look when we request an double parser
     // see doubleGenerator
     const static std::map<std::string, Parser<UniqueGenerator<double>>> doubleParsers{
         {"^RandomDouble", doubleGeneratorBasedOnDistribution},
     };
 
-    if (auto parserPair = extractKnownParser(node, rng, doubleParsers)) {
+    if (auto parserPair = extractKnownParser(node, rng, id, doubleParsers)) {
         // known parser type
-        return parserPair->first(node[parserPair->second], rng);
+        return parserPair->first(node[parserPair->second], rng, id);
     }
     return std::make_unique<ConstantAppender<double>>(node.to<double>());
 }
@@ -913,47 +952,48 @@ UniqueGenerator<double> doubleGenerator(const Node& node, DefaultRandom& rng) {
  *   either a `^String` generator (etc--see `intParsers`)
  *   or a constant generator if given a constant/scalar.
  */
-UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rng) {
+UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rng, ActorId id) {
     // Set of parsers to look when we request an int parser
     // see int64Generator
     const static std::map<std::string, Parser<UniqueGenerator<std::string>>> stringParsers{
         {"^FastRandomString",
-         [](const Node& node, DefaultRandom& rng) {
-             return std::make_unique<FastRandomStringGenerator>(node, rng);
+         [](const Node& node, DefaultRandom& rng, ActorId id) {
+             return std::make_unique<FastRandomStringGenerator>(node, rng, id);
          }},
         {"^RandomString",
-         [](const Node& node, DefaultRandom& rng) {
-             return std::make_unique<NormalRandomStringGenerator>(node, rng);
+         [](const Node& node, DefaultRandom& rng, ActorId id) {
+             return std::make_unique<NormalRandomStringGenerator>(node, rng, id);
          }},
         {"^Join",
-         [](const Node& node, DefaultRandom& rng) {
-             return std::make_unique<JoinGenerator>(node, rng);
+         [](const Node& node, DefaultRandom& rng, ActorId id) {
+             return std::make_unique<JoinGenerator>(node, rng, id);
          }},
         {"^Choose",
-         [](const Node& node, DefaultRandom& rng) {
-             return std::make_unique<ChooseStringGenerator>(node, rng);
+         [](const Node& node, DefaultRandom& rng, ActorId id) {
+             return std::make_unique<ChooseStringGenerator>(node, rng, id);
          }},
         {"^IP",
-         [](const Node& node, DefaultRandom& rng) {
-             return std::make_unique<IPGenerator>(node, rng);
+         [](const Node& node, DefaultRandom& rng, ActorId id) {
+             return std::make_unique<IPGenerator>(node, rng, id);
          }},
     };
 
-    if (auto parserPair = extractKnownParser(node, rng, stringParsers)) {
+    if (auto parserPair = extractKnownParser(node, rng, id, stringParsers)) {
         // known parser type
-        return parserPair->first(node[parserPair->second], rng);
+        return parserPair->first(node[parserPair->second], rng, id);
     }
     return std::make_unique<ConstantAppender<std::string>>(node.to<std::string>());
 }
 
-ChooseGenerator::ChooseGenerator(const Node& node, DefaultRandom& rng) : _rng{rng} {
+ChooseGenerator::ChooseGenerator(const Node& node, DefaultRandom& rng, ActorId id)
+    : _rng{rng}, _id{id} {
     if (!node["from"].isSequence()) {
         std::stringstream msg;
         msg << "Malformed node for choose from array. Not a sequence " << node;
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
     }
     for (const auto&& [k, v] : node["from"]) {
-        _choices.push_back(valueGenerator<true, UniqueAppendable>(v, rng, allParsers));
+        _choices.push_back(valueGenerator<true, UniqueAppendable>(v, rng, id, allParsers));
     }
     if (node["weights"]) {
         for (const auto&& [k, v] : node["weights"]) {
@@ -968,12 +1008,12 @@ ChooseGenerator::ChooseGenerator(const Node& node, DefaultRandom& rng) : _rng{rn
 }  // namespace
 
 // Kick the recursion into motion
-DocumentGenerator::DocumentGenerator(const Node& node, DefaultRandom& rng)
-    : _impl{documentGenerator<false>(node, rng)} {}
+DocumentGenerator::DocumentGenerator(const Node& node, DefaultRandom& rng, ActorId id)
+    : _impl{documentGenerator<false>(node, rng, id)} {}
 DocumentGenerator::DocumentGenerator(const Node& node, PhaseContext& phaseContext, ActorId id)
-    : DocumentGenerator{node, phaseContext.rng(id)} {}
+    : DocumentGenerator{node, phaseContext.rng(id), id} {}
 DocumentGenerator::DocumentGenerator(const Node& node, ActorContext& actorContext, ActorId id)
-    : DocumentGenerator{node, actorContext.rng(id)} {}
+    : DocumentGenerator{node, actorContext.rng(id), id} {}
 
 
 DocumentGenerator::DocumentGenerator(DocumentGenerator&&) noexcept = default;
