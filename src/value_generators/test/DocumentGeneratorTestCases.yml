@@ -487,3 +487,12 @@ Tests:
     - a: "4.237.2.84"
     - a: "64.83.195.254"
     - a: "12.171.202.78"
+
+  - Name: Thread ID
+    GivenTemplate:
+      int: {^ThreadID: {}}
+      string: {^ThreadIDString: {}}
+    ThenReturns:
+    - "int": {"$numberLong": "2"}
+      "string": "2"
+

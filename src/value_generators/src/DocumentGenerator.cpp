@@ -615,6 +615,31 @@ public:
     }
 };
 
+/** `{^ThreadID: {}}` */
+class ThreadIDIntGenerator : public Generator<int64_t> {
+public:
+    ThreadIDIntGenerator(const Node& node, DefaultRandom& rng, ActorId id) : _id{id} {}
+    int64_t evaluate() override {
+        return _id;
+    }
+
+private:
+    int64_t _id;
+};
+
+/** `{^ThreadIDString: {}}` */
+class ThreadIDStringGenerator : public Generator<std::string> {
+public:
+    ThreadIDStringGenerator(const Node& node, DefaultRandom& rng, ActorId id)
+        : _id{std::to_string(id)} {}
+    std::string evaluate() override {
+        return _id;
+    }
+
+private:
+    std::string _id;
+};
+
 /** `{a: [...]}` */
 class ArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
@@ -747,6 +772,14 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^IP",
      [](const Node& node, DefaultRandom& rng, ActorId id) {
          return std::make_unique<IPGenerator>(node, rng, id);
+     }},
+    {"^ThreadIDString",
+     [](const Node& node, DefaultRandom& rng, ActorId id) {
+         return std::make_unique<ThreadIDStringGenerator>(node, rng, id);
+     }},
+    {"^ThreadID",
+     [](const Node& node, DefaultRandom& rng, ActorId id) {
+         return std::make_unique<ThreadIDIntGenerator>(node, rng, id);
      }},
     {"^RandomInt", int64GeneratorBasedOnDistribution},
     {"^RandomDouble", doubleGeneratorBasedOnDistribution},
@@ -916,6 +949,10 @@ UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng, Acto
     // see int64Generator
     const static std::map<std::string, Parser<UniqueGenerator<int64_t>>> intParsers{
         {"^RandomInt", int64GeneratorBasedOnDistribution},
+        {"^ThreadID",
+         [](const Node& node, DefaultRandom& rng, ActorId id) {
+             return std::make_unique<ThreadIDIntGenerator>(node, rng, id);
+         }},
     };
 
     if (auto parserPair = extractKnownParser(node, rng, id, intParsers)) {
@@ -975,6 +1012,10 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rn
         {"^IP",
          [](const Node& node, DefaultRandom& rng, ActorId id) {
              return std::make_unique<IPGenerator>(node, rng, id);
+         }},
+        {"^ThreadIDString",
+         [](const Node& node, DefaultRandom& rng, ActorId id) {
+             return std::make_unique<ThreadIDStringGenerator>(node, rng, id);
          }},
     };
 
