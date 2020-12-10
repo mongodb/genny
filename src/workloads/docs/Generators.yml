@@ -4,33 +4,37 @@ Owner: "@mongodb/stm"
 # This workload demonstrates all the current Document and Value Generators. It creates documents
 # that look like this (simple)
 # {
-# 	"_id" : ObjectId("5fce73ec86b193746c34c2f2"),
+# 	"_id" : ObjectId("5fd2876c1a7e764b4c165fc8"),
 # 	"type" : "simple",
-# 	"int1" : NumberLong(15),
-# 	"int2" : NumberLong(19),
-# 	"int3" : NumberLong(7),
-# 	"int4" : NumberLong(1835),
-# 	"int5" : NumberLong(3),
-# 	"int6" : NumberLong(112),
-# 	"double" : 12.830223930995928,
-# 	"string1" : "T336d",
-# 	"string2" : "B2A54",
-# 	"string3" : "LChkGtHKBI",
-# 	"choose" : 12,
+# 	"int1" : NumberLong(19),
+# 	"int2" : NumberLong(13),
+# 	"int3" : NumberLong(4),
+# 	"int4" : NumberLong(1859),
+# 	"int5" : NumberLong(15),
+# 	"int6" : NumberLong(95),
+# 	"double" : 19.152527748379878,
+# 	"string1" : "j3tEB",
+# 	"string2" : "92DBC",
+# 	"string3" : "tiAqAosBCF",
+# 	"choose" : "A",
 # 	"join" : "This is a joined string",
-# 	"ip" : "77.220.130.163"
+# 	"ip" : "19.81.37.180",
+# 	"threadNum" : NumberLong(2),
+# 	"threadString" : "2"
 # }
 
 
-# And this (nested)
+# # And this (nested)
 # {
-# 	"_id" : ObjectId("5fce73ec86b193746c34c2f3"),
+# 	"_id" : ObjectId("5fd2876c1a7e764b4c165fc9"),
 # 	"type" : "nested",
-# 	"a" : "i75b2+HJe6Lugl8jS",
-# 	"b" : "aaaaaaaaaa4gQX11ZMY1",
-# 	"c" : "Avb98qy4-hr3NmxrS-uQ0SB9lR-9pewNtJq",
-# 	"task_id" : "lint-zA0eAQxsYm"
+# 	"a" : "jzt8uZhMpDf2d",
+# 	"b" : "aaaaaaaaaah+IStu9JiR",
+# 	"c" : "da5scSf5-HJ7ohw44-U7sZR8Ra-uXnkbKjk",
+# 	"task_id" : "test-hgfg54bMYD",
+# 	"id_with_thread" : "ThreadID-2"
 # }
+
 
 Clients:
   Default:
@@ -44,6 +48,7 @@ Actors:
 - Name: Generator Examples
   Type: CrudActor
   Database: mydb
+  Threads: 10
   ClientName: SomeOtherPool  # Which connection pool to use. Must be defined in Clients section.
   Phases:
   - Repeat: 10
@@ -102,6 +107,12 @@ Actors:
             # options to narrow the range of IP addresses. Every IP address is equally likely.
             ip: {^IP: {}}
 
+            # Generate the thread ID as a numbers. This will be constant for a given actor, but
+            # unique across actors
+            threadNum: {^ThreadID: {}}
+            # Generate the thread ID as a string
+            threadString: {^ThreadIDString: {}}
+
         - WriteCommand: insertOne  # Nested Generators
           # You can nest generators to make complex values.
           Document:
@@ -124,6 +135,8 @@ Actors:
             # the from sequence must generate strings. You cannot embed a number or a document.
             task_id: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"]}},
                                       {^RandomString: {length: 10}}], sep: "-"}}
+
+            id_with_thread: {^Join: {array: ["ThreadID-", {^ThreadIDString: {}}]}}
 
   - Repeat: 1
     Collection: test
