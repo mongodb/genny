@@ -68,7 +68,7 @@ public:
             if (_runMode == RunMode::kExpectException) {
                 try {
                     NodeSource ns = toNode(this->_givenTemplate);
-                    genny::DocumentGenerator(ns.root(), rng);
+                    genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 1});
                     FAIL("Expected exception " << this->_expectedExceptionMessage.as<std::string>()
                                                << " but none occurred");
                 } catch (const std::exception& x) {
@@ -79,7 +79,7 @@ public:
             }
 
             NodeSource ns = toNode(this->_givenTemplate);
-            auto docGen = genny::DocumentGenerator(ns.root(), rng);
+            auto docGen = genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 2});
             for (const auto&& nextValue : this->_thenReturns) {
                 auto expected = testing::toDocumentBson(nextValue);
                 auto actual = docGen();
