@@ -490,10 +490,10 @@ Tests:
 
   # The commented portions of this test should work, but do not. This appears to be due to a bson or
   # testlib error in formatting of bson. One case will have an extra whitespace than the other.
-  - Name: Thread ID
+  - Name: Actor ID
     GivenTemplate:
-      # int: {^ThreadID: {}}
-      string: {^ThreadIDString: {}}
+      # int: {^ActorID: {}}
+      string: {^ActorIDString: {}}
     ThenReturns:
     #    - { "int" : { "$numberLong" : "2000000000"}, "string" : "2000000000" }
     - "string": "2"

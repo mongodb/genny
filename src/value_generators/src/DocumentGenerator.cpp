@@ -182,11 +182,13 @@ template <typename Distribution,
           const char* parameter2name>
 class DoubleGenerator2Parameter : public Generator<double> {
 public:
-    DoubleGenerator2Parameter(const Node& node, DefaultRandom& rng, ActorId id)
+    DoubleGenerator2Parameter(const Node& node, DefaultRandom& rng, ActorId actorID)
         : _rng{rng},
-          _id{id},
-          _parameter1Gen{doubleGenerator(extract(node, parameter1name, diststring), _rng, _id)},
-          _parameter2Gen{doubleGenerator(extract(node, parameter2name, diststring), _rng, _id)} {}
+          _actorID{actorID},
+          _parameter1Gen{
+              doubleGenerator(extract(node, parameter1name, diststring), _rng, _actorID)},
+          _parameter2Gen{
+              doubleGenerator(extract(node, parameter2name, diststring), _rng, _actorID)} {}
 
     double evaluate() override {
         auto parameter1 = _parameter1Gen->evaluate();
@@ -197,7 +199,7 @@ public:
 
 private:
     DefaultRandom& _rng;
-    ActorId _id;
+    ActorId _actorID;
     UniqueGenerator<double> _parameter1Gen;
     UniqueGenerator<double> _parameter2Gen;
 };
@@ -205,10 +207,11 @@ private:
 template <typename Distribution, const char* diststring, const char* parameter1name>
 class DoubleGenerator1Parameter : public Generator<double> {
 public:
-    DoubleGenerator1Parameter(const Node& node, DefaultRandom& rng, ActorId id)
+    DoubleGenerator1Parameter(const Node& node, DefaultRandom& rng, ActorId actorID)
         : _rng{rng},
-          _id{id},
-          _parameter1Gen{doubleGenerator(extract(node, parameter1name, diststring), _rng, _id)} {}
+          _actorID{actorID},
+          _parameter1Gen{
+              doubleGenerator(extract(node, parameter1name, diststring), _rng, _actorID)} {}
 
     double evaluate() override {
         auto parameter1 = _parameter1Gen->evaluate();
@@ -218,7 +221,7 @@ public:
 
 private:
     DefaultRandom& _rng;
-    ActorId _id;
+    ActorId _actorID;
     UniqueGenerator<double> _parameter1Gen;
 };
 
@@ -615,7 +618,7 @@ public:
     }
 };
 
-/** `{^ThreadID: {}}` */
+/** `{^ActorID: {}}` */
 class ThreadIDIntGenerator : public Generator<int64_t> {
 public:
     ThreadIDIntGenerator(const Node& node, DefaultRandom& rng, ActorId id) : _id{id} {}
@@ -627,7 +630,7 @@ private:
     int64_t _id;
 };
 
-/** `{^ThreadIDString: {}}` */
+/** `{^ActorIDString: {}}` */
 class ThreadIDStringGenerator : public Generator<std::string> {
 public:
     ThreadIDStringGenerator(const Node& node, DefaultRandom& rng, ActorId id)
@@ -773,11 +776,11 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, DefaultRandom& rng, ActorId id) {
          return std::make_unique<IPGenerator>(node, rng, id);
      }},
-    {"^ThreadIDString",
+    {"^ActorIDString",
      [](const Node& node, DefaultRandom& rng, ActorId id) {
          return std::make_unique<ThreadIDStringGenerator>(node, rng, id);
      }},
-    {"^ThreadID",
+    {"^ActorID",
      [](const Node& node, DefaultRandom& rng, ActorId id) {
          return std::make_unique<ThreadIDIntGenerator>(node, rng, id);
      }},
@@ -949,7 +952,7 @@ UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng, Acto
     // see int64Generator
     const static std::map<std::string, Parser<UniqueGenerator<int64_t>>> intParsers{
         {"^RandomInt", int64GeneratorBasedOnDistribution},
-        {"^ThreadID",
+        {"^ActorID",
          [](const Node& node, DefaultRandom& rng, ActorId id) {
              return std::make_unique<ThreadIDIntGenerator>(node, rng, id);
          }},
@@ -1013,7 +1016,7 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, DefaultRandom& rn
          [](const Node& node, DefaultRandom& rng, ActorId id) {
              return std::make_unique<IPGenerator>(node, rng, id);
          }},
-        {"^ThreadIDString",
+        {"^ActorIDString",
          [](const Node& node, DefaultRandom& rng, ActorId id) {
              return std::make_unique<ThreadIDStringGenerator>(node, rng, id);
          }},
