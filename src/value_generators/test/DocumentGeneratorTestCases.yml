@@ -492,8 +492,8 @@ Tests:
   # testlib error in formatting of bson. One case will have an extra whitespace than the other.
   - Name: Actor ID
     GivenTemplate:
-      # int: {^ActorID: {}}
-      string: {^ActorIDString: {}}
+      # int: {^ActorId: {}}
+      string: {^ActorIdString: {}}
     ThenReturns:
     #    - { "int" : { "$numberLong" : "2000000000"}, "string" : "2000000000" }
     - "string": "2"

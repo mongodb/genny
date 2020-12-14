@@ -36,11 +36,17 @@ public:
     using std::invalid_argument::invalid_argument;
 };
 
+struct GeneratorArgs {
+    DefaultRandom& rng;
+    ActorId actorId;
+};
+
+
 class DocumentGenerator {
 public:
     explicit DocumentGenerator(const Node& node, PhaseContext& phaseContext, ActorId id);
     explicit DocumentGenerator(const Node& node, ActorContext& phaseContext, ActorId id);
-    explicit DocumentGenerator(const Node& node, DefaultRandom& rng, ActorId id);
+    explicit DocumentGenerator(const Node& node, GeneratorArgs generatorArgs);
     /**
      * @return a document according to the template given by the node in the constructor.
      */
