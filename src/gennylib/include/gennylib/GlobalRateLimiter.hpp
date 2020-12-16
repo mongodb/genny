@@ -243,7 +243,7 @@ using GlobalRateLimiter = BaseGlobalRateLimiter<std::chrono::steady_clock>;
 inline void simpleLimitRate(GlobalRateLimiter& rateLimiter) {
     while (true) {
         const auto now = SteadyClock::now();
-        auto success = rateLimiter.consumeIfWithinRate(now);
+        const auto success = rateLimiter.consumeIfWithinRate(now);
         if (!success) {
 
             // Don't sleep for more than 1 second (1e9 nanoseconds). Otherwise rates
