@@ -47,8 +47,6 @@ namespace genny {
  */
 namespace v1 {
 
-using SteadyClock = std::chrono::steady_clock;
-
 /**
  * Determine the conditions for continuing to iterate a given Phase.
  *
