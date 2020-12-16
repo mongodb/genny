@@ -21,7 +21,7 @@
 
 #include <gennylib/conventions.hpp>
 
-namespace genny::v1 {
+namespace genny {
 
 /**
  * Rate limiter that applies globally across all threads using the token
@@ -237,6 +237,6 @@ private:
 
 using GlobalRateLimiter = BaseGlobalRateLimiter<std::chrono::steady_clock>;
 
-}  // namespace genny::v1
+}  // namespace genny
 
 #endif  // HEADER_FE10BCC4_FF45_4D79_B92F_72CE19437F81_INCLUDED

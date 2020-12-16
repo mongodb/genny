@@ -253,7 +253,7 @@ public:
      *
      * @private
      */
-    v1::GlobalRateLimiter* getRateLimiter(const std::string& name, const RateSpec& spec);
+    GlobalRateLimiter* getRateLimiter(const std::string& name, const RateSpec& spec);
 
     metrics::Registry& getMetrics() {
         return _registry;
@@ -290,7 +290,7 @@ private:
 
     std::unordered_map<ActorId, DefaultRandom> _rngRegistry;
 
-    std::unordered_map<std::string, std::unique_ptr<v1::GlobalRateLimiter>> _rateLimiters;
+    std::unordered_map<std::string, std::unique_ptr<GlobalRateLimiter>> _rateLimiters;
 };
 
 // For some reason need to decl this; see impl below

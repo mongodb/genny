@@ -18,8 +18,8 @@
 #include <ratio>
 #include <thread>
 
-#include <gennylib/PhaseLoop.hpp>
 #include <gennylib/GlobalRateLimiter.hpp>
+#include <gennylib/PhaseLoop.hpp>
 
 #include <testlib/ActorHelper.hpp>
 #include <testlib/clocks.hpp>
@@ -55,7 +55,7 @@ TEST_CASE("Global rate limiter") {
     const int64_t per = 3;
     const int64_t burst = 2;
     const BaseRateSpec rs{per, burst};  // 2 operations per 3 ticks.
-    v1::BaseGlobalRateLimiter<MyDummyClock> grl{rs};
+    BaseGlobalRateLimiter<MyDummyClock> grl{rs};
 
     SECTION("Limits Rate") {
         grl.resetLastEmptied();
@@ -86,7 +86,7 @@ TEST_CASE("Percentile rate limiting") {
 
     const int64_t percent = 50;  // 50%
     const PercentileRateSpec rs{percent};
-    v1::BaseGlobalRateLimiter<MyDummyClock> grl{rs};
+    BaseGlobalRateLimiter<MyDummyClock> grl{rs};
     grl.addUser();
 
     SECTION("Limits Rate") {

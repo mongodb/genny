@@ -204,7 +204,7 @@ private:
     const std::optional<IntegerSpec> _minIterations;
 
     // The rate limiter is owned by the workload context.
-    v1::GlobalRateLimiter* _rateLimiter = nullptr;
+    GlobalRateLimiter* _rateLimiter = nullptr;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
     std::optional<v1::Sleeper> _sleeper;
 };
