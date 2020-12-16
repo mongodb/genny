@@ -28,10 +28,10 @@
 #include <boost/exception/exception.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <gennylib/GlobalRateLimiter.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/v1/GlobalRateLimiter.hpp>
 #include <gennylib/v1/Sleeper.hpp>
 
 /**

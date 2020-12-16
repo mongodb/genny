@@ -19,7 +19,7 @@
 #include <thread>
 
 #include <gennylib/PhaseLoop.hpp>
-#include <gennylib/v1/GlobalRateLimiter.hpp>
+#include <gennylib/GlobalRateLimiter.hpp>
 
 #include <testlib/ActorHelper.hpp>
 #include <testlib/clocks.hpp>

@@ -34,11 +34,11 @@
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/ActorVector.hpp>
 #include <gennylib/Cast.hpp>
+#include <gennylib/GlobalRateLimiter.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Node.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
-#include <gennylib/v1/GlobalRateLimiter.hpp>
 #include <gennylib/v1/PoolManager.hpp>
 
 #include <metrics/metrics.hpp>
