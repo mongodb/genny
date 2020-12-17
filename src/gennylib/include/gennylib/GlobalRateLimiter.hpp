@@ -216,6 +216,27 @@ private:
         return true;
     }
 
+    void simpleLimitRate() {
+        while (true) {
+            const auto now = SteadyClock::now();
+            const auto success = this->consumeIfWithinRate(now);
+            if (!success) {
+
+                // Don't sleep for more than 1 second (1e9 nanoseconds). Otherwise rates
+                // specified in seconds or lower resolution can cause the workloads to
+                // run visibly longer than the specified duration.
+                const auto rate = this->getRate() > 1e9 ? 1e9 : this->getRate();
+
+                // Add ±5% jitter to avoid threads waking up at once.
+                std::this_thread::sleep_for(std::chrono::nanoseconds(
+                    int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))));
+                continue;
+            }
+            break;
+        }
+        this->notifyOfIteration();
+    }
+
 
     // Manually align _lastEmptiedTimeNS and _burstCount here to vastly improve performance.
     // Lazily initialized by the first call to consumeIfWithinRate().
@@ -239,27 +260,6 @@ private:
 };
 
 using GlobalRateLimiter = BaseGlobalRateLimiter<std::chrono::steady_clock>;
-
-inline void simpleLimitRate(GlobalRateLimiter& rateLimiter) {
-    while (true) {
-        const auto now = SteadyClock::now();
-        const auto success = rateLimiter.consumeIfWithinRate(now);
-        if (!success) {
-
-            // Don't sleep for more than 1 second (1e9 nanoseconds). Otherwise rates
-            // specified in seconds or lower resolution can cause the workloads to
-            // run visibly longer than the specified duration.
-            const auto rate = rateLimiter.getRate() > 1e9 ? 1e9 : rateLimiter.getRate();
-
-            // Add ±5% jitter to avoid threads waking up at once.
-            std::this_thread::sleep_for(std::chrono::nanoseconds(
-                int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))));
-            continue;
-        }
-        break;
-    }
-    rateLimiter.notifyOfIteration();
-}
 
 }  // namespace genny
 
