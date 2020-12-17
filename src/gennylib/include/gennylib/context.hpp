@@ -34,11 +34,11 @@
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/ActorVector.hpp>
 #include <gennylib/Cast.hpp>
+#include <gennylib/GlobalRateLimiter.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Node.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
-#include <gennylib/v1/GlobalRateLimiter.hpp>
 #include <gennylib/v1/PoolManager.hpp>
 
 #include <metrics/metrics.hpp>
@@ -235,12 +235,9 @@ public:
     /**
      * Access global rate-limiters.
      *
-     * @warning
-     *   This is intended to only be used internally. It is called
-     *   by PhaseLoop in response to the `GlobalRate:` yaml keyword.
-     *   Additionally it cannot be called after the WorkloadContext
-     *   has been constructed: it can only be called during Actors'
-     *   constructors, etc.
+     * It is called by PhaseLoop in response to the `GlobalRate:` yaml keyword. Additionally it
+     * cannot be called after the WorkloadContext has been constructed: it can only be called during
+     * Actors' constructors, etc.
      *
      * @param name
      *   name/id to use
@@ -253,7 +250,7 @@ public:
      *
      * @private
      */
-    v1::GlobalRateLimiter* getRateLimiter(const std::string& name, const RateSpec& spec);
+    GlobalRateLimiter* getRateLimiter(const std::string& name, const RateSpec& spec);
 
     metrics::Registry& getMetrics() {
         return _registry;
@@ -290,7 +287,7 @@ private:
 
     std::unordered_map<ActorId, DefaultRandom> _rngRegistry;
 
-    std::unordered_map<std::string, std::unique_ptr<v1::GlobalRateLimiter>> _rateLimiters;
+    std::unordered_map<std::string, std::unique_ptr<GlobalRateLimiter>> _rateLimiters;
 };
 
 // For some reason need to decl this; see impl below

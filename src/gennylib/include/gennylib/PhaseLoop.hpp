@@ -28,10 +28,10 @@
 #include <boost/exception/exception.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <gennylib/GlobalRateLimiter.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/v1/GlobalRateLimiter.hpp>
 #include <gennylib/v1/Sleeper.hpp>
 
 /**
@@ -46,8 +46,6 @@ namespace genny {
  * Reminder: the v1 namespace types are *not* intended to be used directly.
  */
 namespace v1 {
-
-using SteadyClock = std::chrono::steady_clock;
 
 /**
  * Determine the conditions for continuing to iterate a given Phase.
@@ -204,7 +202,7 @@ private:
     const std::optional<IntegerSpec> _minIterations;
 
     // The rate limiter is owned by the workload context.
-    v1::GlobalRateLimiter* _rateLimiter = nullptr;
+    GlobalRateLimiter* _rateLimiter = nullptr;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
     std::optional<v1::Sleeper> _sleeper;
 };
