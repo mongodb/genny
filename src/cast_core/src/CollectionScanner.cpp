@@ -188,6 +188,7 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
      */
     size_t docCount = 0;
     size_t scanSize = 0;
+    size_t scanMegabytes = 0;
     bool scanFinished = false;
     auto statTracker = config->scanOperation.start();
     for (auto& collection : collections) {
@@ -210,11 +211,10 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
                     scanFinished = true;
                     break;
                 }
-                if (rateLimiter) {
-                    // Perform an iteration for each byte since our rate will be bytes/time.
-                    for (auto i = 0; i < scanSize; ++i) {
-                        simpleLimitRate(*rateLimiter);
-                    }
+                if (rateLimiter && scanSize >= (scanMegabytes + 1) * 1e6) {
+                    // Perform an iteration for each megabyte since our rate will be MB/time.
+                    simpleLimitRate(*rateLimiter);
+                    ++scanMegabytes;
                 }
             }
             if (scanFinished) {
@@ -444,9 +444,10 @@ CollectionScanner::CollectionScanner(genny::ActorContext& context)
             context["GenerateCollectionNames"].maybe<bool>().value_or(false)} {
     _runningActorCounter.store(0);
 
-    const auto scanRate = context["ScanRate"].maybe<RateSpec>();
-    _rateLimiter =
-        scanRate ? context.workload().getRateLimiter("CollectionScanner", *scanRate) : nullptr;
+    const auto scanRateMegabytes = context["ScanRateMegabytes"].maybe<RateSpec>();
+    _rateLimiter = scanRateMegabytes
+        ? context.workload().getRateLimiter("CollectionScanner", *scanRateMegabytes)
+        : nullptr;
 }
 
 std::vector<std::string> distributeCollectionNames(size_t collectionCount,
