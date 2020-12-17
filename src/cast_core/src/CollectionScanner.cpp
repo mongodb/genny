@@ -213,7 +213,7 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
                 }
                 if (rateLimiter && scanSize >= (scanMegabytes + 1) * 1e6) {
                     // Perform an iteration for each megabyte since our rate will be MB/time.
-                    simpleLimitRate(*rateLimiter);
+                    rateLimiter->simpleLimitRate();
                     ++scanMegabytes;
                 }
             }
