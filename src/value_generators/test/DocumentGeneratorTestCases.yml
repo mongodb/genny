@@ -498,4 +498,40 @@ Tests:
     #    - { "int" : { "$numberLong" : "2000000000"}, "string" : "2000000000" }
     - "string": "2"
 
+  # Now moves with time so would always fail.
+  # - Name: Now
+  #   GivenTemplate:
+  #     date: {^Now: {}}
+  #   ThenReturns:
+  #   - { "date" : { "$date" : { "$numberLong" : "1453689676330" } } }
 
+  - Name: DateMinMax
+    GivenTemplate:
+      date: {^Date: {min: "2020-01-01", max: "2021-01-01"}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "1606971090942" } } }
+
+  # The tests with no max generate different values every time as max moves.
+  # - Name: DateMin
+  #   GivenTemplate:
+  #     date: {^Date: {min: "2020-01-01"}}
+  #   ThenReturns:
+  #   - { "date" : { "$date" : { "$numberLong" : "1606971090942" } } }
+
+  - Name: DateMax
+    GivenTemplate:
+      date: {^Date: {max: "2021-01-01"}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "1023097804925" } } }
+
+  - Name: DateSingle
+    GivenTemplate:
+      date: {^Date: {max: "2020-01-01", max: "2020-01-01"}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "1468895229847" } } }
+
+  - Name: DateRange
+    GivenTemplate:
+      date: {^Date: {max: "2020-01-01 00:00:00", max: "2020-06-01T12:00:00"}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "179757581005" } } }

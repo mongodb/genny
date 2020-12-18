@@ -112,6 +112,9 @@ Actors:
             # Generate the actor ID as a string
             actorString: {^ActorIdString: {}}
 
+            # Generate the current Date
+            now: {^Now: {}}
+
         - WriteCommand: insertOne  # Nested Generators
           # You can nest generators to make complex values.
           Document:

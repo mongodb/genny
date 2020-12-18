@@ -19,9 +19,11 @@
 #include <limits>
 #include <map>
 #include <sstream>
+#include <iostream>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/date_time.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
@@ -648,6 +650,89 @@ private:
     std::string _actorId;
 };
 
+/** `{^Now: {}}` */
+class NowGenerator : public Generator<bsoncxx::types::b_date> {
+public:
+    NowGenerator(const Node& node, GeneratorArgs generatorArgs) {}
+    bsoncxx::types::b_date evaluate() override {
+        return bsoncxx::types::b_date{std::chrono::system_clock::now()};
+    }
+};
+
+// The 2 formats also cover "%Y-%m-%d", timezones are not permissible,
+// %z, %Q are output only https://www.boost.org/doc/libs/1_75_0/doc/html/date_time/date_time_io.html.
+const std::locale formats[] = {
+    std::locale(std::locale::classic(),new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S.%F")),
+    std::locale(std::locale::classic(),new boost::posix_time::time_input_facet("%Y-%m-%d %H:%M:%S.%F")),
+};
+const size_t formats_n = sizeof(formats)/sizeof(formats[0]);
+const static boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
+
+static unsigned long long parseDateAsMillis(const std::string &datetime) {
+    boost::posix_time::ptime pt;
+    auto millis =  0LL;
+
+    // Empty datetime is 0.
+    if(!datetime.empty()){
+        for(size_t i=0; i<formats_n; ++i) {
+            std::istringstream is(datetime);
+            is.imbue(formats[i]);
+            is >> pt;
+            if(pt != boost::posix_time::ptime()){
+                millis =  (pt - epoch).total_milliseconds();
+                break;
+            }
+        }
+
+        // No format matched.
+        if(pt == boost::posix_time::ptime()) {
+            auto msg = "^Date: Invalid Dateformat '" + datetime + "'";
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg));
+        }
+    }
+    return millis;
+}
+
+
+/** `{^Date: {min: "2015-01-01", max: "2015-01-01T23:59:59.999Z"}}` */
+class DateGenerator : public Generator<bsoncxx::types::b_date> {
+public:
+    DateGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _rng{generatorArgs.rng},
+          _min{parseDateAsMillis(node["min"].maybe<std::string>().value_or(""))},
+          _max{parseDateAsMillis(node["max"].maybe<std::string>().value_or(""))} {
+        if(to() < from()) {
+            auto max = node["max"].maybe<std::string>().value_or("");
+            auto min = node["min"].maybe<std::string>().value_or("");
+
+            std::string msg = "^Date: max('" + max +"') must be greater / equal than min('" + min +"')";
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg));
+        }
+    }
+
+    bsoncxx::types::b_date evaluate() override {
+        boost::random::uniform_int_distribution<unsigned long long> dist(from(), to());
+        return bsoncxx::types::b_date{std::chrono::milliseconds{dist(_rng)}};
+    }
+
+    unsigned long long from() {
+        return _min;
+    }
+
+    unsigned long long to() {
+        if (_max == 0) {
+            return std::chrono::duration_cast< std::chrono::milliseconds >(
+                std::chrono::system_clock::now().time_since_epoch()
+            ).count();
+        }
+        return _max;
+    }
+private:
+    DefaultRandom& _rng;
+    const unsigned long long _min;
+    const unsigned long long _max;
+};
+
 /** `{a: [...]}` */
 class ArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
@@ -664,8 +749,7 @@ public:
     }
 
 private:
-    const ValueType _values;
-};
+    const ValueType _values;};
 
 /**
  * @tparam O
@@ -790,6 +874,14 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      }},
     {"^RandomInt", int64GeneratorBasedOnDistribution},
     {"^RandomDouble", doubleGeneratorBasedOnDistribution},
+    {"^Now",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<NowGenerator>(node, generatorArgs);
+     }},
+    {"^Date",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<DateGenerator>(node, generatorArgs);
+     }},
     {"^Verbatim",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return valueGenerator<true, UniqueAppendable>(node, generatorArgs, allParsers);
