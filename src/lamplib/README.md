@@ -118,7 +118,7 @@ pip install virtualenv
 virtualenv venv
 source ./venv/bin/activate
 pip install .
-python setup.py nosetests
+python setup.py pytest
 ```
 
 Python Formatting

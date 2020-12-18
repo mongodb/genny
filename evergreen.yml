@@ -479,7 +479,7 @@ functions:
 
         # Run Genny Python unit tests
         pushd src/lamplib
-          python3 setup.py nosetests
+          python3 -mpytest
         popd
 
         # Run Genny build scripts unit tests
