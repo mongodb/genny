@@ -131,6 +131,6 @@ pip install virtualenv
 virtualenv venv
 source ./venv/bin/activate
 pip install .
-black src/lamplib src/python
+black src/lamplib
 ```
 
