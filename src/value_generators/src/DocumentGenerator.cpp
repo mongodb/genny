@@ -659,7 +659,7 @@ public:
     }
 };
 
-// The 2 formats also cover "%Y-%m-%d", timezones are not permissible,
+// The 2 formats also cover "%Y-%m-%d", timezones are not parsed,
 // %z, %Q are output only https://www.boost.org/doc/libs/1_75_0/doc/html/date_time/date_time_io.html.
 const std::locale formats[] = {
     std::locale(std::locale::classic(),new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S.%F")),

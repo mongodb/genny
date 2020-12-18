@@ -115,6 +115,24 @@ Actors:
             # Generate the current Date
             now: {^Now: {}}
 
+            # Generate a Date in 2015
+            year2015: {^Date: {min: "2015-01-01", max: "2016-01-01"}}
+
+            # Generate a Date from 2015
+            greaterThan2105: {^Date: {min: "2015-01-01"}}
+
+            # Generate a Date less than 2015
+            lessThan2105: {^Date: {max: "2015-01-01"}}
+
+            # Generate the exact Date 2015-01-01T00:00:00Z.
+            exact: {^Date: {min: "2015-01-01", max: "2015-01-01"}}
+
+            # Generate date.
+            zulu: {^Date: {min: "2015-01-01T00:00:00Z", max: "2016-01-01T00:00:00Z"}}
+
+            # Generate date.
+            utc: {^Date: {min: "2015-01-01T00:00:00+00:00", max: "2016-01-01T00:00:00+00:00"}}
+
         - WriteCommand: insertOne  # Nested Generators
           # You can nest generators to make complex values.
           Document:
