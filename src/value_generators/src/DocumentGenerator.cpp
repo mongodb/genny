@@ -749,7 +749,8 @@ public:
     }
 
 private:
-    const ValueType _values;};
+    const ValueType _values;
+};
 
 /**
  * @tparam O
