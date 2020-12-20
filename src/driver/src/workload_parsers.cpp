@@ -95,7 +95,6 @@ YAML::Node WorkloadParser::parse(const std::string& source,
 }
 
 YAML::Node WorkloadParser::recursiveParse(YAML::Node node) {
-    ContextGuard guard(_context);
     YAML::Node out;
     switch (node.Type()) {
         case YAML::NodeType::Map: {
@@ -139,6 +138,10 @@ YAML::Node WorkloadParser::replaceParam(YAML::Node input) {
 void WorkloadParser::preprocess(std::string key, YAML::Node value, YAML::Node& out) {
     if (key == "^Parameter") {
         out = replaceParam(value);
+    } else if (key == "ActorTemplates") {
+        parseTemplates(value);
+    } else if (key == "ActorInstances") {
+        parseInstances(value);   
     } else if (key == "ExternalPhaseConfig") {
         auto external = parseExternal(value);
         // Merge the external node with the any other parameters specified
@@ -150,6 +153,33 @@ void WorkloadParser::preprocess(std::string key, YAML::Node value, YAML::Node& o
     } else {
         out[key] = recursiveParse(value);
     }
+}
+
+void WorkloadParser::parseTemplates(YAML::Node templates) {
+    for (auto temp : templates) {
+        _context->insert(temp["TemplateName"].as<std::string>(), temp["Config"], Type::kActorTemplate);
+    }
+}
+
+YAML::Node WorkloadParser::parseInstances(YAML::Node instances) {
+    YAML::Node result;
+    YAML::Node parsedInstances;
+
+    for (auto instance : instances) {
+        ContextGuard guard(_context);
+        auto temp = _context->get(instance["Template"].as<std::string>(), Type::kActorTemplate);
+        if (!temp) {
+            auto os = std::ostringstream();
+            os << "Expected template named " << instance["Template"].as<std::string>()
+               << " but could not be found.";
+            throw InvalidConfigurationException(os.str());
+        }
+        _context->insert(instance["Parameters"], Type::kParameter);
+        result.push_back(recursiveParse(*temp));
+    }
+
+    result["ActorInstances"] = parsedInstances;
+    return result;
 }
 
 YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
