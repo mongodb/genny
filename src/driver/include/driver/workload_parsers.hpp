@@ -25,8 +25,18 @@ namespace genny::driver::v1 {
 
 namespace fs = boost::filesystem;
 
-
-using YamlParameters = std::map<std::string, YAML::Node>;
+/**
+ * Values stored in a Context are tagged with a type to ensure
+ * they aren't used incorrectly.
+ *
+ * If updating, please add to typeNames in workload_parsers.cpp
+ * Enums don't have good string-conversion or introspection :(
+ */
+enum class Type {
+    kParameter,
+    kActorTemplate,
+    kActorInstance,
+};
 
 /**
  * Manages scoped context for stored values.
@@ -35,12 +45,14 @@ using YamlParameters = std::map<std::string, YAML::Node>;
  */
 class Context {
 public:
-    using ContextMap = std::map<std::string, YAML::Node>;
+    using ContextMap = std::map<std::string, std::pair<YAML::Node, Type>>;
     Context(Context* enclosing) : _enclosing{enclosing} {}
 
-    std::optional<YAML::Node> get(const std::string&);
-    void insert(const std::string&, const YAML::Node&);
-    void insert(const YAML::Node&);
+    std::optional<YAML::Node> get(const std::string&, const Type& type);
+    void insert(const std::string&, const YAML::Node&, const Type& type);
+
+    // Insert all the values of a node, assuming they are of a type.
+    void insert(const YAML::Node&, const Type& type);
     Context* enclosing() {return _enclosing;}
 
 private:

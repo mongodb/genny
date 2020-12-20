@@ -29,20 +29,35 @@ YAML::Node loadFile(const std::string& source) {
     }
 }
 
-std::optional<YAML::Node> Context::get(const std::string& name) {
+std::map<Type, std::string> typeNames = {
+    {Type::kParameter, "Parameter"}, 
+    {Type::kActorTemplate, "ActorTemplate"}, 
+    {Type::kActorInstance, "ActorInstance"}
+};
+
+
+std::optional<YAML::Node> Context::get(const std::string& name, const Type& type) {
     if (auto val = _values.find(name); val != _values.end()) {
-        return val->second;
+        Type expected = val->second.second;
+        if (expected != type) {
+            auto os = std::ostringstream();
+            os << "Type mismatch for node named " << name 
+               << ". Expected " << typeNames[expected] << " but received " 
+               << typeNames[type] << ".";
+            throw InvalidConfigurationException(os.str());
+        }
+        return val->second.first;
     } else if (_enclosing) {
-        return _enclosing->get(name);
+        return _enclosing->get(name, type);
     } else {
         return std::nullopt;
     }
 }
 
-void Context::insert(const std::string& name, const YAML::Node& val) {
-    _values.insert_or_assign(name, val);
+void Context::insert(const std::string& name, const YAML::Node& val, const Type& type) {
+    _values.insert_or_assign(name, std::make_pair(val, type));
 }
-void Context::insert(const YAML::Node& node) {
+void Context::insert(const YAML::Node& node, const Type& type) {
     if (node.Type() != YAML::NodeType::Map) {
         auto os = std::ostringstream();
         os << "Invalid context storage of node: " << node
@@ -51,7 +66,7 @@ void Context::insert(const YAML::Node& node) {
     }
 
     for (auto kvp : node) {
-        insert(kvp.first.as<std::string>(), kvp.second);
+        insert(kvp.first.as<std::string>(), kvp.second, type);
     }
 }
 
@@ -114,7 +129,7 @@ YAML::Node WorkloadParser::replaceParam(YAML::Node input) {
     auto defaultVal = input["Default"];
 
     // Nested params are ignored for simplicity.
-    if (auto paramVal = _context->get(name)) {
+    if (auto paramVal = _context->get(name, Type::kParameter)) {
         return *paramVal;
     } else {
         return input["Default"];
@@ -138,6 +153,7 @@ void WorkloadParser::preprocess(std::string key, YAML::Node value, YAML::Node& o
 }
 
 YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
+    ContextGuard guard(_context);
     int keysSeen = 0;
 
     if (!external["Path"]) {
@@ -183,7 +199,7 @@ YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
 
     if (external["Parameters"]) {
         keysSeen++;
-        _context->insert(external["Parameters"]);
+        _context->insert(external["Parameters"], Type::kParameter);
     }
 
     if (external["Key"]) {
