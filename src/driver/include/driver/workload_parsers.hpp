@@ -90,9 +90,7 @@ private:
 
     // Contexts are owned by their recursion level.
     // The class-level pointer is just for ease of access.
-    Context* _context;
-
-    YamlParameters _params;
+    Context* _context = nullptr;
 
     YAML::Node recursiveParse(YAML::Node);
 

@@ -58,6 +58,7 @@ void Context::insert(const YAML::Node& node) {
 YAML::Node WorkloadParser::parse(const std::string& source,
                                  const DefaultDriver::ProgramOptions::YamlSource sourceType,
                                  const Mode mode) {
+    ContextGuard guard(_context);
     YAML::Node workload;
     if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
         workload = YAML::Load(source);
@@ -79,6 +80,7 @@ YAML::Node WorkloadParser::parse(const std::string& source,
 }
 
 YAML::Node WorkloadParser::recursiveParse(YAML::Node node) {
+    ContextGuard guard(_context);
     YAML::Node out;
     switch (node.Type()) {
         case YAML::NodeType::Map: {
@@ -112,8 +114,8 @@ YAML::Node WorkloadParser::replaceParam(YAML::Node input) {
     auto defaultVal = input["Default"];
 
     // Nested params are ignored for simplicity.
-    if (auto paramVal = _params.find(name); paramVal != _params.end()) {
-        return paramVal->second;
+    if (auto paramVal = _context->get(name)) {
+        return *paramVal;
     } else {
         return input["Default"];
     }
@@ -181,8 +183,7 @@ YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
 
     if (external["Parameters"]) {
         keysSeen++;
-        auto newParams = external["Parameters"].as<YamlParameters>();
-        _params.insert(newParams.begin(), newParams.end());
+        _context->insert(external["Parameters"]);
     }
 
     if (external["Key"]) {
