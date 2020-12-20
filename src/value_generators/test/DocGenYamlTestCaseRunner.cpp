@@ -131,7 +131,7 @@ struct convert<genny::ValGenTestCase> {
 
 }  // namespace YAML
 
-TEMPLATE_TEST_CASE("YAML Tests", "[vector][template]", genny::ValGenTestCase) {
+TEMPLATE_TEST_CASE("YAML Tests", "", genny::ValGenTestCase) {
     genny::testing::runTestCaseYaml<TestType>(
         "/src/value_generators/test/DocumentGeneratorTestCases.yml");
 }

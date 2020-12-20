@@ -115,23 +115,36 @@ Actors:
             # Generate the current Date
             now: {^Now: {}}
 
-            # Generate a Date in 2015
-            year2015: {^Date: {min: "2015-01-01", max: "2016-01-01"}}
+            # ^RandomDate max precision is to the millisecond as bson dates are to the millisecond
+            # (see https://docs.mongodb.com/manual/reference/bson-types/#date). However, nanos can be
+            # specified, but will be ignored.
+            # The min / max range is a half open interval, that is from min (inclusive) to max (exclusive).
+            # Default min is 1970-01-01.
+            # Default max is 2030-01-01. But you can specify a date greater than this value.
+            # min must be greater than max (so by extension max cannot be 1970-01-01).
+            # The generated date uses the extended json $date notation 
+            # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
 
-            # Generate a Date from 2015
-            greaterThan2105: {^Date: {min: "2015-01-01"}}
+            # Generate a random date in 2015. That is the Half Open interval : ["2015-01-01 00:00:00.000", "2016-01-01 00:00:00.000")
+            year2015: {^RandomDate: {min: "2015-01-01", max: "2016-01-01"}}
 
-            # Generate a Date less than 2015
-            lessThan2105: {^Date: {max: "2015-01-01"}}
+            # Generate a random date from 2015 to the default max date of 2030-01-01
+            greaterThan2105: {^RandomDate: {min: "2015-01-01"}}
 
-            # Generate the exact Date 2015-01-01T00:00:00Z.
-            exact: {^Date: {min: "2015-01-01", max: "2015-01-01"}}
+            # Generate a random date less than 2015 (but greater than 1970-01-01)
+            lessThan2105: {^RandomDate: {max: "2015-01-01"}}
 
-            # Generate date.
-            zulu: {^Date: {min: "2015-01-01T00:00:00Z", max: "2016-01-01T00:00:00Z"}}
+            # Generate the exact Date 2015-01-01T00:00:00Z (as the min / max range only contains one possibility).
+            exact: {^RandomDate: {min: "2015-01-01", max: "2015-01-01 00:00:00.001"}}
 
-            # Generate date.
-            utc: {^Date: {min: "2015-01-01T00:00:00+00:00", max: "2016-01-01T00:00:00+00:00"}}
+            # Generate a random date.
+            zulu: {^RandomDate: {min: "2015-01-01T00:00:00Z", max: "2016-01-01T00:00:00Z"}}
+
+            # Generate a random date.
+            utc: {^RandomDate: {min: "2015-01-01T00:00:00+00:00", max: "2016-01-01T00:00:00+00:00"}}
+
+            # Generate a random date with a TZ offset.
+            kolkata: {^RandomDate: {min: "2015-01-01T00:00:00+05:30", max: "2016-01-01T00:00:00+05:30"}}
 
         - WriteCommand: insertOne  # Nested Generators
           # You can nest generators to make complex values.

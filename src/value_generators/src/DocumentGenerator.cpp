@@ -16,14 +16,14 @@
 
 #include <fstream>
 #include <functional>
+#include <iostream>
 #include <limits>
 #include <map>
 #include <sstream>
-#include <iostream>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/log/trivial.hpp>
 #include <boost/date_time.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
@@ -659,78 +659,81 @@ public:
     }
 };
 
-// The 2 formats also cover "%Y-%m-%d", timezones are not parsed,
-// %z, %Q are output only https://www.boost.org/doc/libs/1_75_0/doc/html/date_time/date_time_io.html.
-const std::locale formats[] = {
-    std::locale(std::locale::classic(),new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S.%F")),
-    std::locale(std::locale::classic(),new boost::posix_time::time_input_facet("%Y-%m-%d %H:%M:%S.%F")),
+// The 2 formats also cover "%Y-%m-%d". Timezones require local_time_input_facet AND local_date_time
+// see https://www.boost.org/doc/libs/1_75_0/doc/html/date_time/date_time_io.html.
+// We strive to use smart pointers where possible. In this case this is not possible
+// but not a huge deal as these objects are statically allocated.
+const std::array formats = {
+    std::locale(std::locale::classic(),
+                new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M:%s%ZP")),
+    std::locale(std::locale::classic(),
+                new boost::local_time::local_time_input_facet("%Y-%m-%d %H:%M:%s%ZP")),
 };
-const size_t formats_n = sizeof(formats)/sizeof(formats[0]);
-const static boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
+const static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
+const static boost::posix_time::ptime max_date(boost::gregorian::date(2030, 1, 1));
 
-static unsigned long long parseDateAsMillis(const std::string &datetime) {
+static std::chrono::milliseconds parseDateAsMillis(
+    const std::string& datetime, const boost::posix_time::ptime& default_time = epoch) {
     boost::posix_time::ptime pt;
-    auto millis =  0LL;
+    auto millis = 0LL;
 
     // Empty datetime is 0.
-    if(!datetime.empty()){
-        for(size_t i=0; i<formats_n; ++i) {
-            std::istringstream is(datetime);
-            is.imbue(formats[i]);
-            is >> pt;
-            if(pt != boost::posix_time::ptime()){
-                millis =  (pt - epoch).total_milliseconds();
+    if (!datetime.empty()) {
+        for (const auto& format : formats) {
+            std::istringstream is{datetime};
+            is.imbue(format);
+            boost::local_time::local_date_time ldt{boost::local_time::not_a_date_time};
+            if (is >> ldt) {
+                pt = ldt.utc_time();
+
+                millis = (pt - epoch).total_milliseconds();
                 break;
             }
         }
 
-        // No format matched.
-        if(pt == boost::posix_time::ptime()) {
-            auto msg = "^Date: Invalid Dateformat '" + datetime + "'";
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg));
+        if (pt == boost::posix_time::ptime()) {
+            try {
+                // Last gasp try to interpret unsigned long long.
+                millis = std::stoull(datetime);
+            } catch (const std::invalid_argument& _) {
+                auto msg = "^RandomDate: Invalid Dateformat '" + datetime + "'";
+                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax{msg});
+            }
         }
+
+    } else {
+        millis = (default_time - epoch).total_milliseconds();
     }
-    return millis;
+    return std::chrono::milliseconds{millis};
 }
 
-
-/** `{^Date: {min: "2015-01-01", max: "2015-01-01T23:59:59.999Z"}}` */
-class DateGenerator : public Generator<bsoncxx::types::b_date> {
+/** `{^RandomDate: {min: "2015-01-01", max: "2015-01-01T23:59:59.999Z"}}` */
+class RandomDateGenerator : public Generator<bsoncxx::types::b_date> {
 public:
-    DateGenerator(const Node& node, GeneratorArgs generatorArgs)
+    RandomDateGenerator(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng},
           _min{parseDateAsMillis(node["min"].maybe<std::string>().value_or(""))},
-          _max{parseDateAsMillis(node["max"].maybe<std::string>().value_or(""))} {
-        if(to() < from()) {
+          _max{parseDateAsMillis(node["max"].maybe<std::string>().value_or(""), max_date)} {
+
+        if (_max <= _min) {
             auto max = node["max"].maybe<std::string>().value_or("");
             auto min = node["min"].maybe<std::string>().value_or("");
 
-            std::string msg = "^Date: max('" + max +"') must be greater / equal than min('" + min +"')";
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg));
+            std::string msg = "^RandomDate: max('" + max + " / " + std::to_string(_max.count()) +
+                "') must be greater than min('" + min + " / " + std::to_string(_min.count()) + "')";
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax{msg});
         }
     }
 
     bsoncxx::types::b_date evaluate() override {
-        boost::random::uniform_int_distribution<unsigned long long> dist(from(), to());
+        boost::random::uniform_int_distribution<long long> dist{_min.count(), _max.count() - 1};
         return bsoncxx::types::b_date{std::chrono::milliseconds{dist(_rng)}};
     }
 
-    unsigned long long from() {
-        return _min;
-    }
-
-    unsigned long long to() {
-        if (_max == 0) {
-            return std::chrono::duration_cast< std::chrono::milliseconds >(
-                std::chrono::system_clock::now().time_since_epoch()
-            ).count();
-        }
-        return _max;
-    }
 private:
     DefaultRandom& _rng;
-    const unsigned long long _min;
-    const unsigned long long _max;
+    const std::chrono::milliseconds _min;
+    const std::chrono::milliseconds _max;
 };
 
 /** `{a: [...]}` */
@@ -879,9 +882,9 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<NowGenerator>(node, generatorArgs);
      }},
-    {"^Date",
+    {"^RandomDate",
      [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<DateGenerator>(node, generatorArgs);
+         return std::make_unique<RandomDateGenerator>(node, generatorArgs);
      }},
     {"^Verbatim",
      [](const Node& node, GeneratorArgs generatorArgs) {
