@@ -29,6 +29,32 @@ YAML::Node loadFile(const std::string& source) {
     }
 }
 
+std::optional<YAML::Node> Context::get(const std::string& name) {
+    if (auto val = _values.find(name); val != _values.end()) {
+        return val->second;
+    } else if (_enclosing) {
+        return _enclosing->get(name);
+    } else {
+        return std::nullopt;
+    }
+}
+
+void Context::insert(const std::string& name, const YAML::Node& val) {
+    _values.insert_or_assign(name, val);
+}
+void Context::insert(const YAML::Node& node) {
+    if (node.Type() != YAML::NodeType::Map) {
+        auto os = std::ostringstream();
+        os << "Invalid context storage of node: " << node
+           << ". Please ensure this node is a map rather than a sequence.";
+        throw InvalidConfigurationException(os.str());
+    }
+
+    for (auto kvp : node) {
+        insert(kvp.first.as<std::string>(), kvp.second);
+    }
+}
+
 YAML::Node WorkloadParser::parse(const std::string& source,
                                  const DefaultDriver::ProgramOptions::YamlSource sourceType,
                                  const Mode mode) {
@@ -57,7 +83,7 @@ YAML::Node WorkloadParser::recursiveParse(YAML::Node node) {
     switch (node.Type()) {
         case YAML::NodeType::Map: {
             for (auto kvp : node) {
-                convertExternal(kvp.first.as<std::string>(), kvp.second, out);
+                preprocess(kvp.first.as<std::string>(), kvp.second, out);
             }
             break;
         }
@@ -93,7 +119,7 @@ YAML::Node WorkloadParser::replaceParam(YAML::Node input) {
     }
 }
 
-void WorkloadParser::convertExternal(std::string key, YAML::Node value, YAML::Node& out) {
+void WorkloadParser::preprocess(std::string key, YAML::Node value, YAML::Node& out) {
     if (key == "^Parameter") {
         out = replaceParam(value);
     } else if (key == "ExternalPhaseConfig") {

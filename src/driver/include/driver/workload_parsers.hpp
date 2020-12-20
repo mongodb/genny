@@ -15,6 +15,7 @@
 #ifndef HEADER_0369D27D_9A68_4981_B344_4BAB3EE09A80_INCLUDED
 #define HEADER_0369D27D_9A68_4981_B344_4BAB3EE09A80_INCLUDED
 
+#include <optional>
 #include <boost/filesystem.hpp>
 #include <yaml-cpp/yaml.h>
 
@@ -22,8 +23,51 @@
 
 namespace genny::driver::v1 {
 
-using YamlParameters = std::map<std::string, YAML::Node>;
 namespace fs = boost::filesystem;
+
+
+using YamlParameters = std::map<std::string, YAML::Node>;
+
+/**
+ * Manages scoped context for stored values.
+ *
+ * Only create using a ContextGuard.
+ */
+class Context {
+public:
+    using ContextMap = std::map<std::string, YAML::Node>;
+    Context(Context* enclosing) : _enclosing{enclosing} {}
+
+    std::optional<YAML::Node> get(const std::string&);
+    void insert(const std::string&, const YAML::Node&);
+    void insert(const YAML::Node&);
+    Context* enclosing() {return _enclosing;}
+
+private:
+    // A context should be a unique_ptr owned by its recursion level.
+    Context* _enclosing;
+    ContextMap _values;
+};
+
+/**
+ * Opens a context, closes it when exiting scope.
+ */
+class ContextGuard {
+public:
+    ContextGuard(Context*& contextPtr) : _contextPtr{contextPtr}, 
+        _managedContext{std::make_unique<Context>(_contextPtr)} {
+
+        _contextPtr = _managedContext.get();
+    }
+
+    ~ContextGuard() {
+        _contextPtr = _managedContext->enclosing();
+    }
+
+private:
+    Context*& _contextPtr;
+    std::unique_ptr<Context> _managedContext;
+};
 
 /**
  * Parse user-defined workload files into shapes suitable for Genny.
@@ -42,13 +86,18 @@ public:
                      Mode mode = Mode::kNormal);
 
 private:
-    YamlParameters _params;
     const fs::path _phaseConfigPath;
+
+    // Contexts are owned by their recursion level.
+    // The class-level pointer is just for ease of access.
+    Context* _context;
+
+    YamlParameters _params;
 
     YAML::Node recursiveParse(YAML::Node);
 
-    // The following group of methods handle workload files containing external configuration files.
-    void convertExternal(std::string key, YAML::Node value, YAML::Node& out);
+    // The following group of methods handle workload files containing preprocess-able keywords.
+    void preprocess(std::string key, YAML::Node value, YAML::Node& out);
     YAML::Node parseExternal(YAML::Node);
     YAML::Node replaceParam(YAML::Node);
 };
