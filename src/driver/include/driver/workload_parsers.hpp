@@ -109,7 +109,7 @@ private:
     // The following group of methods handle workload files containing preprocess-able keywords.
     void preprocess(std::string key, YAML::Node value, YAML::Node& out);
     void parseTemplates(YAML::Node);
-    YAML::Node parseInstances(YAML::Node);
+    YAML::Node parseInstance(YAML::Node);
     YAML::Node parseExternal(YAML::Node);
     YAML::Node replaceParam(YAML::Node);
 };

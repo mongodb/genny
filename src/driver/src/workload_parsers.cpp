@@ -140,8 +140,8 @@ void WorkloadParser::preprocess(std::string key, YAML::Node value, YAML::Node& o
         out = replaceParam(value);
     } else if (key == "ActorTemplates") {
         parseTemplates(value);
-    } else if (key == "ActorInstances") {
-        parseInstances(value);   
+    } else if (key == "ActorInstance") {
+        out = parseInstance(value);   
     } else if (key == "ExternalPhaseConfig") {
         auto external = parseExternal(value);
         // Merge the external node with the any other parameters specified
@@ -161,11 +161,10 @@ void WorkloadParser::parseTemplates(YAML::Node templates) {
     }
 }
 
-YAML::Node WorkloadParser::parseInstances(YAML::Node instances) {
-    YAML::Node result;
-    YAML::Node parsedInstances;
+YAML::Node WorkloadParser::parseInstance(YAML::Node instance) {
+    YAML::Node actor;
 
-    for (auto instance : instances) {
+    {
         ContextGuard guard(_context);
         auto temp = _context->get(instance["Template"].as<std::string>(), Type::kActorTemplate);
         if (!temp) {
@@ -175,11 +174,10 @@ YAML::Node WorkloadParser::parseInstances(YAML::Node instances) {
             throw InvalidConfigurationException(os.str());
         }
         _context->insert(instance["Parameters"], Type::kParameter);
-        result.push_back(recursiveParse(*temp));
+        actor.push_back(recursiveParse(*temp));
     }
 
-    result["ActorInstances"] = parsedInstances;
-    return result;
+    return actor;
 }
 
 YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
