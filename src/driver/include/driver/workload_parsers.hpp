@@ -111,6 +111,7 @@ private:
     void parseTemplates(YAML::Node);
     YAML::Node parseInstance(YAML::Node);
     YAML::Node parseExternal(YAML::Node);
+    YAML::Node parseOnlyIn(YAML::Node);
     YAML::Node replaceParam(YAML::Node);
 };
 
