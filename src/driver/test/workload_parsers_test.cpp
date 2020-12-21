@@ -102,5 +102,59 @@ Actors:
     REQUIRE(YAML::Dump(parsedConfig) == expected);
 }
 
+TEST_CASE("WorkloadParser can preprocess keywords") {
+    const auto input = (R"(
+ActorTemplates:
+- TemplateName: TestTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "IncorrectDefault"}}
+    SomeKey: SomeValue
+    Phases:
+      OnlyIn:
+        Active: [{^Parameter: {Name: "Phase", Default: 1}}]
+        Max: 3
+        Config:
+          Duration: {^Parameter: {Name: "Duration", Default: 3 minutes}}
+Actors:
+- ActorInstance:
+    Template: TestTemplate
+    Parameters:
+      Name: ActorName1
+      Phase: 0
+      Duration: 5 minutes
+- ActorInstance:
+    Template: TestTemplate
+    Parameters:
+      Phase: 1
+      Name: ActorName2
+)");
+
+    const auto expected = (R"(Actors:
+  - Name: ActorName1
+    SomeKey: &1 SomeValue
+    Phases:
+      - Duration: 5 minutes
+      - &2
+        Nop: true
+      - *2
+      - *2
+  - Name: ActorName2
+    SomeKey: *1
+    Phases:
+      - &3
+        Nop: true
+      - Duration: 3 minutes
+      - *3
+      - *3)");
+
+    auto cwd = boost::filesystem::current_path();
+
+    WorkloadParser p{cwd};
+    auto parsedConfig = p.parse(input, DefaultDriver::ProgramOptions::YamlSource::kString);
+
+    REQUIRE(YAML::Dump(parsedConfig) == expected);
+}
+
+
 }  // namespace
 }  // namespace genny::driver::v1
