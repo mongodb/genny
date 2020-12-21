@@ -47,7 +47,7 @@ ActorTemplates:
         Max: 10
         Config:
           ExternalPhaseConfig:
-            Path: &PhasePath ../../phases/scale/MixPhases.yml
+            Path: ../../phases/scale/MixPhases.yml
             Key: UpdatePhase
 
 - TemplateName: RemoveTemplate
@@ -63,7 +63,7 @@ ActorTemplates:
         Max: 10
         Config:
           ExternalPhaseConfig:
-            Path: &PhasePath ../../phases/scale/MixPhases.yml
+            Path: ../../phases/scale/MixPhases.yml
             Key: RemovePhase
 
 - TemplateName: InsertTemplate
@@ -79,7 +79,7 @@ ActorTemplates:
         Max: 10
         Config:
           ExternalPhaseConfig:
-            Path: &PhasePath ../../phases/scale/MixPhases.yml
+            Path: ../../phases/scale/MixPhases.yml
             Key: InsertPhase
 
 - TemplateName: FindTemplate
@@ -95,7 +95,7 @@ ActorTemplates:
         Max: 10
         Config:
           ExternalPhaseConfig:
-            Path: &PhasePath ../../phases/scale/MixPhases.yml
+            Path: ../../phases/scale/MixPhases.yml
             Key: FindPhase
 
 Actors:
