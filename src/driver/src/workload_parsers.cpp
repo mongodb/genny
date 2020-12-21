@@ -174,9 +174,9 @@ YAML::Node WorkloadParser::parseInstance(YAML::Node instance) {
             throw InvalidConfigurationException(os.str());
         }
         _context->insert(instance["Parameters"], Type::kParameter);
-        actor.push_back(recursiveParse(*temp));
+        actor = recursiveParse(*temp);
     }
-
+    
     return actor;
 }
 
