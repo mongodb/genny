@@ -19,6 +19,51 @@
 namespace genny::driver::v1 {
 namespace {
 
+TEST_CASE("Contexts have scope") {
+    Context* context = nullptr;
+    ContextGuard outerContext(context);
+
+    YAML::Node outer;
+    outer["outerKey"] = "outerVal";
+    context->insert("outerName", outer, Type::kParameter);
+
+    {
+        ContextGuard innerContext(context);
+        YAML::Node inner;
+        inner["innerKey1"] = "innerVal1";
+        context->insert("innerName1", inner, Type::kParameter);
+
+        auto retrievedOuter = context->get("outerName", Type::kParameter);
+        REQUIRE(retrievedOuter == outer);
+
+        auto retrievedInner = context->get("innerName1", Type::kParameter);
+        REQUIRE(retrievedInner == inner);
+    }
+
+    {
+        ContextGuard innerContext(context);
+        YAML::Node inner;
+        inner["innerKey2"] = "innerVal2";
+        context->insert("innerName2", inner, Type::kParameter);
+
+        auto retrievedOuter = context->get("outerName", Type::kParameter);
+        REQUIRE(retrievedOuter == outer);
+
+        auto retrievedInner = context->get("innerName2", Type::kParameter);
+        REQUIRE(retrievedInner == inner);
+
+        auto retrievedOldInner = context->get("innerName1", Type::kParameter);
+        REQUIRE_FALSE(retrievedOldInner == inner);
+
+    }
+
+    auto retrievedOuter = context->get("outerName", Type::kParameter);
+    REQUIRE(retrievedOuter == outer);
+
+    REQUIRE_THROWS(context->get("outerName", Type::kActorTemplate));
+
+}
+
 TEST_CASE("WorkloadParser can run generate smoke test configurations") {
     const auto input = (R"(
 Actors:

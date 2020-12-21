@@ -168,7 +168,7 @@ YAML::Node WorkloadParser::parseOnlyIn(YAML::Node onlyIn) {
     YAML::Node nop;
     nop["Nop"] = true;
     int max = recursiveParse(onlyIn["Max"]).as<int>();
-    for (int i = 0; i < max; i++) {
+    for (int i = 0; i <= max; i++) {
         bool isActivePhase = false;
         for (auto activePhase : recursiveParse(onlyIn["Active"])) {
             if (activePhase.as<int>() == i) {
