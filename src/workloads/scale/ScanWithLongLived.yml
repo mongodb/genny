@@ -77,7 +77,7 @@ Actors:
   Type: CollectionScanner
   Threads: 10
   Database: *LongLivedDB
-  ScanRateMegaBytes: 5 per second
+  ScanRateMegaBytes: 5 per 1 second
   Phases:
   - {Nop: true}
   - {Nop: true}
