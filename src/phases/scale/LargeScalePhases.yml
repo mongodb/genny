@@ -236,6 +236,15 @@ SnapshotScanner5GigabytesCmd:
   CollectionSortOrder: forward
   GlobalRate: 1 per 5 minutes
 
+# Leave out the ScanDuration since we'll be supplying the ScanRateMegaBytes option.
+SnapshotScanner5GigabytesFixedRateCmd:
+  Duration: *Duration
+  ScanSizeBytes: 500000000
+  ScanType: snapshot
+  CollectionSkip: 300
+  CollectionSortOrder: forward
+  GlobalRate: 1 per 5 minutes
+
 SnapshotScannerAllCmd:
   Duration: *Duration
   Documents: 100000000000
