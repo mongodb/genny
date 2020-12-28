@@ -43,7 +43,7 @@ def validate_environment():
 
     # Check the macOS version. Non-mac platforms return a tuple of empty strings
     # for platform.mac_ver().
-    if platform.mac_ver()[0]:
+    if platform.mac_ver()[0] == "10":
         release_triplet = platform.mac_ver()[0].split(".")
         if int(release_triplet[1]) < 14:
             # You could technically compile clang or gcc yourself on an older version
