@@ -65,10 +65,12 @@ public:
 
     void run() const {
         DYNAMIC_SECTION("DocGenYamlTestCaseRunner " << name()) {
+            int64_t counter=1;
+            //int64_t * pcounter = &counter;
             if (_runMode == RunMode::kExpectException) {
                 try {
                     NodeSource ns = toNode(this->_givenTemplate);
-                    genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 1});
+                    genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 1, counter});
                     FAIL("Expected exception " << this->_expectedExceptionMessage.as<std::string>()
                                                << " but none occurred");
                 } catch (const std::exception& x) {
@@ -79,7 +81,7 @@ public:
             }
 
             NodeSource ns = toNode(this->_givenTemplate);
-            auto docGen = genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 2});
+            auto docGen = genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 2, counter});
             for (const auto&& nextValue : this->_thenReturns) {
                 auto expected = testing::toDocumentBson(nextValue);
                 auto actual = docGen();

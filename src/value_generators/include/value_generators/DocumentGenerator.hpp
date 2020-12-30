@@ -39,6 +39,7 @@ public:
 struct GeneratorArgs {
     DefaultRandom& rng;
     ActorId actorId;
+    int64_t& counter;
 };
 
 

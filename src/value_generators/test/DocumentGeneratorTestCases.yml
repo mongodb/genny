@@ -592,3 +592,22 @@ Tests:
     ThenReturns:
     - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
 
+  - Name: Inc0
+    GivenTemplate:
+      int: {^Inc: {multiplier: 100, step: 1}}
+    ThenReturns:
+    - "int": { "$numberLong" : "201"}
+
+  - Name: Inc1
+    GivenTemplate:
+      int : {^Inc: {multiplier: 100, step: 1}}
+    ThenReturns:
+    - "int": { "$numberLong" : "202"}
+
+  - Name: Inc2
+    GivenTemplate:
+      int: {^Inc: {multiplier: 200, step: 1}}
+    ThenReturns:
+    - "int" : { "$numberLong" :"403"}
+
+
