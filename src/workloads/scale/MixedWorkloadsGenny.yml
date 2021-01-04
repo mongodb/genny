@@ -72,7 +72,7 @@ ActorTemplates:
     Type: CrudActor
     Database: *dbname
     ClientName: Insert
-    Threads: {^Parameter: {Name: "Thread", Default: 1}}
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyIn:
         Active: [{^Parameter: {Name: "Phase", Default: 1}}]
