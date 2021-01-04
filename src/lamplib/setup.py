@@ -27,7 +27,7 @@ setup(
     name="genny",
     version="1.0",
     packages=["gennylib"],
-    setup_requires=["nose==1.3.7"],
+    setup_requires=["pytest==6.0.2"],
     install_requires=_install_requires(),
     entry_points={
         "console_scripts": [
