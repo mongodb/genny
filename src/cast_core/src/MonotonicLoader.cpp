@@ -33,6 +33,8 @@
 
 #include <value_generators/DocumentGenerator.hpp>
 
+#include <bsoncxx/builder/stream/document.hpp>
+
 
 namespace genny::actor {
 
@@ -80,6 +82,7 @@ void genny::actor::MonotonicLoader::run() {
                 auto collection = config->database[collectionName];
                 // Insert the documents
                 uint remainingInserts = config->numDocuments;
+                int id_num = 0;
                 {
                     auto totalOpCtx = _totalBulkLoad.start();
                     while (remainingInserts > 0) {
@@ -89,7 +92,12 @@ void genny::actor::MonotonicLoader::run() {
                         auto docs = std::vector<bsoncxx::document::view_or_value>{};
                         docs.reserve(remainingInserts);
                         for (uint j = 0; j < numberToInsert; j++) {
-                            auto newDoc = config->documentExpr();
+                            auto tmpDoc = config->documentExpr();
+                            auto builder = bsoncxx::builder::stream::document();
+                            builder << "_id" << ++id_num;
+                            builder << bsoncxx::builder::concatenate(tmpDoc.view());
+                            bsoncxx::document::value newDoc = builder
+                                << bsoncxx::builder::stream::finalize;
                             docs.push_back(std::move(newDoc));
                         }
                         {
