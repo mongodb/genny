@@ -25,7 +25,7 @@ Clients:
 
 Actors:
 - Name: LongLivedCreator
-  Type: Loader
+  Type: MonotonicLoader
   Threads: 10
   TrackProportion: *TrackProportion
   Phases:
