@@ -60,7 +60,7 @@ public:
      */
     struct ScopeGuard {
         ScopeGuard(Context& context) : _context{context} {
-            //Emplace (push) a new Context onto the stack
+            // Emplace (push) a new Context onto the stack.
             _context._scopes.emplace_back();
         }
         ~ScopeGuard() {
