@@ -41,7 +41,8 @@ enum class Type {
 /**
  * Manages scoped context for stored values.
  *
- * Only create using a ContextGuard.
+ * Contexts are helpers for the workload parser, and are only included in
+ * the header for testing purposes.
  */
 class Context {
 public:
@@ -59,6 +60,7 @@ public:
      */
     struct ScopeGuard {
         ScopeGuard(Context& context) : _context{context} {
+            //Emplace (push) a new Context onto the stack
             _context._scopes.emplace_back();
         }
         ~ScopeGuard() {
