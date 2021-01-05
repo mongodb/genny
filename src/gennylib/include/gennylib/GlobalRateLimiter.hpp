@@ -18,10 +18,13 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <thread>
 
 #include <gennylib/conventions.hpp>
 
-namespace genny::v1 {
+namespace genny {
+
+using SteadyClock = std::chrono::steady_clock;
 
 /**
  * Rate limiter that applies globally across all threads using the token
@@ -181,6 +184,27 @@ public:
         }
     }
 
+    void simpleLimitRate() {
+        while (true) {
+            const auto now = SteadyClock::now();
+            const auto success = this->consumeIfWithinRate(now);
+            if (!success) {
+
+                // Don't sleep for more than 1 second (1e9 nanoseconds). Otherwise rates
+                // specified in seconds or lower resolution can cause the workloads to
+                // run visibly longer than the specified duration.
+                const auto rate = this->getRate() > 1e9 ? 1e9 : this->getRate();
+
+                // Add ±5% jitter to avoid threads waking up at once.
+                std::this_thread::sleep_for(std::chrono::nanoseconds(
+                    int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))));
+                continue;
+            }
+            break;
+        }
+        this->notifyOfIteration();
+    }
+
     const int64_t _nsPerMinute = 60000000000;
 
 private:
@@ -237,6 +261,6 @@ private:
 
 using GlobalRateLimiter = BaseGlobalRateLimiter<std::chrono::steady_clock>;
 
-}  // namespace genny::v1
+}  // namespace genny
 
 #endif  // HEADER_FE10BCC4_FF45_4D79_B92F_72CE19437F81_INCLUDED

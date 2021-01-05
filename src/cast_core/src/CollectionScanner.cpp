@@ -180,13 +180,15 @@ struct CollectionScanner::PhaseConfig {
 };
 
 void collectionScan(CollectionScanner::PhaseConfig* config,
-                    std::vector<mongocxx::collection>& collections) {
+                    std::vector<mongocxx::collection>& collections,
+                    GlobalRateLimiter* rateLimiter) {
     /*
      * Here we are either doing a snapshot collection scan
      * or just a normal scan?
      */
     size_t docCount = 0;
     size_t scanSize = 0;
+    size_t scanMegabytes = 0;
     bool scanFinished = false;
     auto statTracker = config->scanOperation.start();
     for (auto& collection : collections) {
@@ -208,6 +210,11 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
                 if (config->scanSizeBytes != 0 && scanSize >= config->scanSizeBytes) {
                     scanFinished = true;
                     break;
+                }
+                if (rateLimiter && scanSize >= (scanMegabytes + 1) * 1e6) {
+                    // Perform an iteration for each megabyte since our rate will be MB/time.
+                    rateLimiter->simpleLimitRate();
+                    ++scanMegabytes;
                 }
             }
             if (scanFinished) {
@@ -387,7 +394,7 @@ void CollectionScanner::run() {
             } else if (config->scanType == ScanType::kSnapshot) {
                 mongocxx::client_session session = _client->start_session({});
                 session.start_transaction(*config->transactionOptions);
-                collectionScan(config, collections);
+                collectionScan(config, collections, _rateLimiter);
                 // If a scan duration was specified, we must make the scan
                 // last at least that long.  We'll do this within any
                 // running transaction, so we keep the "long running
@@ -411,7 +418,7 @@ void CollectionScanner::run() {
             } else if (config->scanType == ScanType::kPointInTime) {
                 pointInTimeScan(_client, config, readClusterTime);
             } else {
-                collectionScan(config, collections);
+                collectionScan(config, collections, _rateLimiter);
             }
 
             _runningActorCounter--;
@@ -436,6 +443,11 @@ CollectionScanner::CollectionScanner(genny::ActorContext& context)
             context["Threads"].to<IntegerSpec>(),
             context["GenerateCollectionNames"].maybe<bool>().value_or(false)} {
     _runningActorCounter.store(0);
+
+    const auto scanRateMegabytes = context["ScanRateMegabytes"].maybe<RateSpec>();
+    _rateLimiter = scanRateMegabytes
+        ? context.workload().getRateLimiter("CollectionScanner", *scanRateMegabytes)
+        : nullptr;
 }
 
 std::vector<std::string> distributeCollectionNames(size_t collectionCount,

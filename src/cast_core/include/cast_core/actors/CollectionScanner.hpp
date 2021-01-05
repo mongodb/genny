@@ -62,6 +62,7 @@ private:
     std::string _databaseNames;
     PhaseLoop<PhaseConfig> _loop;
     bool _generateCollectionNames;
+    GlobalRateLimiter* _rateLimiter;
 };
 
 // Defined in CollectionScanner.cpp but used by CollectionScanner and RandomSampler

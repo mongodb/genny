@@ -139,7 +139,7 @@ resmoke.py can be run locally as follows:
 ```sh
 # Set up virtualenv and install resmoke requirements if needed.
 # From Genny's top-level directory.
-python /path/to/resmoke.py --suite src/resmokeconfig/genny_standalone.yml
+python /path/to/resmoke.py run --suite src/resmokeconfig/genny_standalone.yml
 ```
 
 Each yaml configuration file will only run tests that are associated

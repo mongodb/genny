@@ -4,7 +4,7 @@ Owner: "@mongodb/stm"
 # This workload demonstrates all the current Document and Value Generators. It creates documents
 # that look like this (simple)
 # {
-# 	"_id" : ObjectId("5fce73ec86b193746c34c2f2"),
+# 	"_id" : ObjectId("5fd7c984e0f8d74bdb04d3b4"),
 # 	"type" : "simple",
 # 	"int1" : NumberLong(15),
 # 	"int2" : NumberLong(19),
@@ -18,19 +18,22 @@ Owner: "@mongodb/stm"
 # 	"string3" : "LChkGtHKBI",
 # 	"choose" : 12,
 # 	"join" : "This is a joined string",
-# 	"ip" : "77.220.130.163"
+# 	"ip" : "77.220.130.163",
+# 	"actorNum" : NumberLong(1),
+# 	"actorString" : "1"
 # }
 
 
-# And this (nested)
+# # And this (nested)
 # {
-# 	"_id" : ObjectId("5fce73ec86b193746c34c2f3"),
-# 	"type" : "nested",
-# 	"a" : "i75b2+HJe6Lugl8jS",
-# 	"b" : "aaaaaaaaaa4gQX11ZMY1",
-# 	"c" : "Avb98qy4-hr3NmxrS-uQ0SB9lR-9pewNtJq",
-# 	"task_id" : "lint-zA0eAQxsYm"
-# }
+# 	# "_id" : ObjectId("5fd7c984e0f8d74bdb04d3b8"),
+# 	# "type" : "nested",
+# 	# "a" : "cjyuclu2jVjxpo5nSG",
+# 	# "b" : "aaaaaaaaaa5phojR5oVp",
+# 	# "c" : "LcSd8voZ-Q7F3jXcT-clWnwH/N-XP7caBjG",
+# 	# "task_id" : "test-duH4N0/500",
+# 	# "id_with_actor" : "ActorId-7"
+
 
 Clients:
   Default:
@@ -44,6 +47,7 @@ Actors:
 - Name: Generator Examples
   Type: CrudActor
   Database: mydb
+  Threads: 10
   ClientName: SomeOtherPool  # Which connection pool to use. Must be defined in Clients section.
   Phases:
   - Repeat: 10
@@ -102,6 +106,12 @@ Actors:
             # options to narrow the range of IP addresses. Every IP address is equally likely.
             ip: {^IP: {}}
 
+            # Generate the actor ID as a numbers. This will be constant for a given actor, but
+            # unique across actors
+            actorNum: {^ActorId: {}}
+            # Generate the actor ID as a string
+            actorString: {^ActorIdString: {}}
+
         - WriteCommand: insertOne  # Nested Generators
           # You can nest generators to make complex values.
           Document:
@@ -124,6 +134,8 @@ Actors:
             # the from sequence must generate strings. You cannot embed a number or a document.
             task_id: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"]}},
                                       {^RandomString: {length: 10}}], sep: "-"}}
+
+            id_with_actor: {^Join: {array: ["ActorId-", {^ActorIdString: {}}]}}
 
   - Repeat: 1
     Collection: test

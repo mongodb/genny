@@ -487,3 +487,15 @@ Tests:
     - a: "4.237.2.84"
     - a: "64.83.195.254"
     - a: "12.171.202.78"
+
+  # The commented portions of this test should work, but do not. This appears to be due to a bson or
+  # testlib error in formatting of bson. One case will have an extra whitespace than the other.
+  - Name: Actor ID
+    GivenTemplate:
+      # int: {^ActorId: {}}
+      string: {^ActorIdString: {}}
+    ThenReturns:
+    #    - { "int" : { "$numberLong" : "2000000000"}, "string" : "2000000000" }
+    - "string": "2"
+
+
