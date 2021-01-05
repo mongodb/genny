@@ -116,15 +116,15 @@ ActorTemplates:
         Config:
           Duration: {^Parameter: {Name: "Duration", Default: 3 minutes}}
 Actors:
-- ActorInstance:
-    Template: TestTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: TestTemplate
+    TemplateParameters:
       Name: ActorName1
       Phase: 0
       Duration: 5 minutes
-- ActorInstance:
-    Template: TestTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: TestTemplate
+    TemplateParameters:
       Phase: 1
       Name: ActorName2
 )");

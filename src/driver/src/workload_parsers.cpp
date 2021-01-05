@@ -32,7 +32,6 @@ YAML::Node loadFile(const std::string& source) {
 std::map<Type, std::string> typeNames = {
     {Type::kParameter, "Parameter"}, 
     {Type::kActorTemplate, "ActorTemplate"}, 
-    {Type::kActorInstance, "ActorInstance"}
 };
 
 
@@ -142,7 +141,7 @@ void WorkloadParser::preprocess(std::string key, YAML::Node value, YAML::Node& o
         out = replaceParam(value);
     } else if (key == "ActorTemplates") {
         parseTemplates(value);
-    } else if (key == "ActorInstance") {
+    } else if (key == "ActorFromTemplate") {
         out = parseInstance(value);   
     } else if (key == "OnlyIn") {
         out = parseOnlyIn(value);
@@ -191,14 +190,14 @@ YAML::Node WorkloadParser::parseInstance(YAML::Node instance) {
 
     {
         ContextGuard guard(_context);
-        auto temp = _context->get(instance["Template"].as<std::string>(), Type::kActorTemplate);
+        auto temp = _context->get(instance["TemplateName"].as<std::string>(), Type::kActorTemplate);
         if (!temp) {
             auto os = std::ostringstream();
-            os << "Expected template named " << instance["Template"].as<std::string>()
+            os << "Expected template named " << instance["TemplateName"].as<std::string>()
                << " but could not be found.";
             throw InvalidConfigurationException(os.str());
         }
-        _context->insert(instance["Parameters"], Type::kParameter);
+        _context->insert(instance["TemplateParameters"], Type::kParameter);
         actor = recursiveParse(*temp);
     }
     

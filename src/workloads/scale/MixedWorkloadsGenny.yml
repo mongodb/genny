@@ -146,37 +146,37 @@ Actors:
   - *nop
 
 # Update Actors
-- ActorInstance:
-    Template: UpdateTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: UpdateTemplate
+    TemplateParameters:
       Name: Update_1
       Threads: 1
       Phase: 2
 
-- ActorInstance:
-    Template: UpdateTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: UpdateTemplate
+    TemplateParameters:
       Name: Update_16
       Threads: 16
       Phase: 4
 
-- ActorInstance:
-    Template: UpdateTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: UpdateTemplate
+    TemplateParameters:
       Name: Update_32
       Threads: 32
       Phase: 6
 
-- ActorInstance:
-    Template: UpdateTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: UpdateTemplate
+    TemplateParameters:
       Name: Update_64
       Threads: 64
       Phase: 8
 
-- ActorInstance:
-    Template: UpdateTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: UpdateTemplate
+    TemplateParameters:
       Name: Update_128
       Threads: 128
       Phase: 10
@@ -184,111 +184,111 @@ Actors:
 #
 ## Remove Actors
 #
-- ActorInstance:
-    Template: RemoveTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: RemoveTemplate
+    TemplateParameters:
       Name: Remove_1
       Threads: 1
       Phase: 2
 
-- ActorInstance:
-    Template: RemoveTemplate 
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: RemoveTemplate 
+    TemplateParameters:
       Name: Remove_16
       Threads: 16
       Phase: 4
 
-- ActorInstance:
-    Template: RemoveTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: RemoveTemplate
+    TemplateParameters:
       Name: Remove_32
       Threads: 32
       Phase: 6
 
-- ActorInstance:
-    Template: RemoveTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: RemoveTemplate
+    TemplateParameters:
       Name: Remove_64
       Threads: 64
       Phase: 8
 
-- ActorInstance:
-    Template: RemoveTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: RemoveTemplate
+    TemplateParameters:
       Name: Remove_128
       Threads: 128
       Phase: 10
 
 ## Insert Actors
 #
-- ActorInstance:
-    Template: InsertTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: InsertTemplate
+    TemplateParameters:
       Name: Insert_1
       Threads: 1
       Phase: 2
 
-- ActorInstance:
-    Template: InsertTemplate 
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: InsertTemplate 
+    TemplateParameters:
       Name: Insert_16
       Threads: 16
       Phase: 4
 
-- ActorInstance:
-    Template: InsertTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: InsertTemplate
+    TemplateParameters:
       Name: Insert_32
       Threads: 32
       Phase: 6
 
-- ActorInstance:
-    Template: InsertTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: InsertTemplate
+    TemplateParameters:
       Name: Insert_64
       Threads: 64
       Phase: 8
 
-- ActorInstance:
-    Template: InsertTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: InsertTemplate
+    TemplateParameters:
       Name: Insert_128
       Threads: 128
       Phase: 10
 
 ## Find Actors
 
-- ActorInstance:
-    Template: FindTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: FindTemplate
+    TemplateParameters:
       Name: Find_1
       Threads: 1
       Phase: 2
 
-- ActorInstance:
-    Template: FindTemplate 
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: FindTemplate 
+    TemplateParameters:
       Name: Find_16
       Threads: 16
       Phase: 4
 
-- ActorInstance:
-    Template: FindTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: FindTemplate
+    TemplateParameters:
       Name: Find_32
       Threads: 32
       Phase: 6
 
-- ActorInstance:
-    Template: FindTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: FindTemplate
+    TemplateParameters:
       Name: Find_64
       Threads: 64
       Phase: 8
 
-- ActorInstance:
-    Template: FindTemplate
-    Parameters:
+- ActorFromTemplate:
+    TemplateName: FindTemplate
+    TemplateParameters:
       Name: Find_128
       Threads: 128
       Phase: 10
