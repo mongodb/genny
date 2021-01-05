@@ -498,7 +498,7 @@ Tests:
     #    - { "int" : { "$numberLong" : "2000000000"}, "string" : "2000000000" }
     - "string": "2"
 
-  # Now moves with time so would always fail.
+  # Now moves with time so would always fail until PERF-2086 is available.
   - Name: Now
     GivenTemplate:
       date: {^Now: {}}
@@ -526,6 +526,7 @@ Tests:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
     - { "date" : { "$date" : { "$numberLong" : "1778468968160" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1871664110292" } } }
 
   # Date: Half Open interval: ["1970-01-01", "2021-01-01"). 1970-01-01 is the default min date.
   - Name: RandomDateMax
@@ -534,7 +535,7 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "1498334384475" } } }
+    - { "date" : { "$date" : { "$numberLong" : "183360228161" } } }
 
   # Date: 2020-01-01T00:00:00.000 (only one possible value here).
   - Name: RandomDateSingle
@@ -552,7 +553,7 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "1579337896873" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1578819502267" } } }
 
   # Date: Half Open interval: ["1970-01-01", "2030-01-01").
   - Name: RandomDateFull
@@ -561,7 +562,7 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "141219154995" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1454812640684" } } }
 
   # Date: Half Open interval: ["2030-01-01", "2040-01-01").
   - Name: RandomDateFuture
@@ -570,7 +571,7 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "2135891573152" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1918332607011" } } }
 
   # Date: Half Open interval: ["2020-01-01", "2020-01-01").
   - Name: RandomDateULL

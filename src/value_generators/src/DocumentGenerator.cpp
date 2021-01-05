@@ -674,24 +674,24 @@ const static boost::posix_time::ptime max_date(boost::gregorian::date(2030, 1, 1
 
 static std::chrono::milliseconds parseDateAsMillis(
     const std::string& datetime, const boost::posix_time::ptime& default_time = epoch) {
-    boost::posix_time::ptime pt;
+    boost::posix_time::ptime utc_time{boost::posix_time::not_a_date_time};
     auto millis = 0LL;
 
     // Empty datetime is 0.
     if (!datetime.empty()) {
         for (const auto& format : formats) {
-            std::istringstream is{datetime};
-            is.imbue(format);
-            boost::local_time::local_date_time ldt{boost::local_time::not_a_date_time};
-            if (is >> ldt) {
-                pt = ldt.utc_time();
+            std::istringstream date_stream{datetime};
+            date_stream.imbue(format);
+            boost::local_time::local_date_time local_date{boost::local_time::not_a_date_time};
+            if (date_stream >> local_date) {
+                utc_time = local_date.utc_time();
 
-                millis = (pt - epoch).total_milliseconds();
+                millis = (utc_time - epoch).total_milliseconds();
                 break;
             }
         }
 
-        if (pt == boost::posix_time::ptime()) {
+        if (utc_time == boost::posix_time::not_a_date_time) {
             try {
                 // Last gasp try to interpret unsigned long long.
                 millis = std::stoull(datetime);
