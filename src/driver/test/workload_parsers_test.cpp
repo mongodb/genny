@@ -113,10 +113,10 @@ ActorTemplates:
     Name: {^Parameter: {Name: "Name", Default: "DefaultValue"}}
     SomeKey: SomeValue
     Phases:
-      OnlyIn:
+      OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "Phase", Default: 1}}]
-        Max: 3
-        Config:
+        NopInPhasesUpTo: 3
+        PhaseConfig:
           Duration: {^Parameter: {Name: "Duration", Default: 3 minutes}}
 
 - TemplateName: TestTemplate2
@@ -201,10 +201,10 @@ ActorTemplates:
     Name: {^Parameter: {Name: "Name", Default: "IncorrectDefault"}}
     SomeKey: SomeValue
     Phases:
-      OnlyIn:
+      OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "Phase", Default: 1}}]
-        Max: 3
-        Config:
+        NopInPhasesUpTo: 3
+        PhaseConfig:
           Duration: {^Parameter: {Name: "Duration", Default: 3 minutes}}
 Actors:
 - ActorFromTemplate:

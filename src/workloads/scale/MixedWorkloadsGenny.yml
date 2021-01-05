@@ -42,10 +42,10 @@ ActorTemplates:
     ClientName: Update
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
-      OnlyIn:
+      OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        Max: 10
-        Config:
+        NopInPhasesUpTo: 10
+        PhaseConfig:
           ExternalPhaseConfig:
             Path: ../../phases/scale/MixPhases.yml
             Key: UpdatePhase
@@ -58,10 +58,10 @@ ActorTemplates:
     ClientName: Remove
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
-      OnlyIn:
+      OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        Max: 10
-        Config:
+        NopInPhasesUpTo: 10
+        PhaseConfig:
           ExternalPhaseConfig:
             Path: ../../phases/scale/MixPhases.yml
             Key: RemovePhase
@@ -74,10 +74,10 @@ ActorTemplates:
     ClientName: Insert
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
-      OnlyIn:
+      OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        Max: 10
-        Config:
+        NopInPhasesUpTo: 10
+        PhaseConfig:
           ExternalPhaseConfig:
             Path: ../../phases/scale/MixPhases.yml
             Key: InsertPhase
@@ -90,10 +90,10 @@ ActorTemplates:
     ClientName: Query
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
-      OnlyIn:
+      OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        Max: 10
-        Config:
+        NopInPhasesUpTo: 10
+        PhaseConfig:
           ExternalPhaseConfig:
             Path: ../../phases/scale/MixPhases.yml
             Key: FindPhase

@@ -143,7 +143,7 @@ void WorkloadParser::preprocess(std::string key, YAML::Node value, YAML::Node& o
         parseTemplates(value);
     } else if (key == "ActorFromTemplate") {
         out = parseInstance(value);
-    } else if (key == "OnlyIn") {
+    } else if (key == "OnlyActiveInPhases") {
         out = parseOnlyIn(value);
     } else if (key == "ExternalPhaseConfig") {
         auto external = parseExternal(value);
@@ -170,12 +170,12 @@ YAML::Node WorkloadParser::parseOnlyIn(YAML::Node onlyIn) {
     YAML::Node out;
     YAML::Node nop;
     nop["Nop"] = true;
-    int max = recursiveParse(onlyIn["Max"]).as<int>();
+    int max = recursiveParse(onlyIn["NopInPhasesUpTo"]).as<int>();
     for (int i = 0; i <= max; i++) {
         bool isActivePhase = false;
         for (auto activePhase : recursiveParse(onlyIn["Active"])) {
             if (activePhase.as<int>() == i) {
-                out.push_back(recursiveParse(onlyIn["Config"]));
+                out.push_back(recursiveParse(onlyIn["PhaseConfig"]));
                 isActivePhase = true;
                 break;
             }
