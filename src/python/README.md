@@ -84,32 +84,6 @@ genny-auto-tasks --autorun --variants linux-1-node-replSet --output build/varian
 ```
 
 
-Script: `genny-metrics-legacy-report`
----------------------------------
-
-Produces a summary in legacy JSON format for the Evergreen perf plugin.
-
-```sh
-./genny run -o metrics.csv -m cedar-csv InsertRemove.yml
-genny-metrics-legacy-report metrics.csv
-```
-
-
-Script: `genny-metrics-report`
----------------------------------
-
-Send metrics to Evergreen's metrics collection service (Cedar).
-
-This code snippet is provided for reference only as Cedar does
-not yet support local environments.
-
-```sh
-./genny run -o metrics.csv -m cedar-csv InsertRemove.yml
-# requires expansions.yml in cwd for cedar parameters
-genny-metrics-report metrics.csv
-```
-
-
 Running Self-Tests
 ------------------
 
