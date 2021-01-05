@@ -30,8 +30,8 @@ YAML::Node loadFile(const std::string& source) {
 }
 
 std::map<Type, std::string> typeNames = {
-    {Type::kParameter, "Parameter"}, 
-    {Type::kActorTemplate, "ActorTemplate"}, 
+    {Type::kParameter, "Parameter"},
+    {Type::kActorTemplate, "ActorTemplate"},
 };
 
 
@@ -43,14 +43,13 @@ std::optional<YAML::Node> Context::get(const std::string& name, const Type& type
             Type expected = storedValue.second;
             if (expected != type) {
                 auto os = std::ostringstream();
-                os << "Type mismatch for node named " << name 
-                   << ". Expected " << typeNames[expected] << " but received " 
-                   << typeNames[type] << ".";
+                os << "Type mismatch for node named " << name << ". Expected "
+                   << typeNames[expected] << " but received " << typeNames[type] << ".";
                 throw InvalidConfigurationException(os.str());
             }
             return storedValue.first;
-        } 
-    } 
+        }
+    }
 
     return std::nullopt;
 }
@@ -143,7 +142,7 @@ void WorkloadParser::preprocess(std::string key, YAML::Node value, YAML::Node& o
     } else if (key == "ActorTemplates") {
         parseTemplates(value);
     } else if (key == "ActorFromTemplate") {
-        out = parseInstance(value);   
+        out = parseInstance(value);
     } else if (key == "OnlyIn") {
         out = parseOnlyIn(value);
     } else if (key == "ExternalPhaseConfig") {
@@ -161,7 +160,9 @@ void WorkloadParser::preprocess(std::string key, YAML::Node value, YAML::Node& o
 
 void WorkloadParser::parseTemplates(YAML::Node templates) {
     for (auto templateNode : templates) {
-        _context.insert(templateNode["TemplateName"].as<std::string>(), templateNode["Config"], Type::kActorTemplate);
+        _context.insert(templateNode["TemplateName"].as<std::string>(),
+                        templateNode["Config"],
+                        Type::kActorTemplate);
     }
 }
 
@@ -180,7 +181,7 @@ YAML::Node WorkloadParser::parseOnlyIn(YAML::Node onlyIn) {
             }
         }
         if (!isActivePhase) {
-           out.push_back(nop);
+            out.push_back(nop);
         }
     }
     return out;
@@ -191,7 +192,8 @@ YAML::Node WorkloadParser::parseInstance(YAML::Node instance) {
 
     {
         Context::ScopeGuard guard = _context.enter();
-        auto templateNode = _context.get(instance["TemplateName"].as<std::string>(), Type::kActorTemplate);
+        auto templateNode =
+            _context.get(instance["TemplateName"].as<std::string>(), Type::kActorTemplate);
         if (!templateNode) {
             auto os = std::ostringstream();
             os << "Expected template named " << instance["TemplateName"].as<std::string>()
@@ -201,7 +203,7 @@ YAML::Node WorkloadParser::parseInstance(YAML::Node instance) {
         _context.insert(instance["TemplateParameters"], Type::kParameter);
         actor = recursiveParse(*templateNode);
     }
-    
+
     return actor;
 }
 

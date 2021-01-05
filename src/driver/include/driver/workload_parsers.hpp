@@ -15,8 +15,8 @@
 #ifndef HEADER_0369D27D_9A68_4981_B344_4BAB3EE09A80_INCLUDED
 #define HEADER_0369D27D_9A68_4981_B344_4BAB3EE09A80_INCLUDED
 
-#include <optional>
 #include <boost/filesystem.hpp>
+#include <optional>
 #include <yaml-cpp/yaml.h>
 
 #include <driver/v1/DefaultDriver.hpp>
@@ -64,10 +64,13 @@ public:
         ~ScopeGuard() {
             _context._scopes.pop_back();
         }
-        private:
-            Context& _context;     
+
+    private:
+        Context& _context;
     };
-    ScopeGuard enter() {return ScopeGuard(*this);}
+    ScopeGuard enter() {
+        return ScopeGuard(*this);
+    }
 
 private:
     // Use vector as a stack since std::stack isn't iterable.

@@ -57,14 +57,12 @@ TEST_CASE("Contexts have scope") {
 
         auto retrievedOldInner = context.get("innerName1", Type::kParameter);
         REQUIRE_FALSE(retrievedOldInner == inner);
-
     }
 
     auto retrievedOuter = context.get("outerName", Type::kParameter);
     REQUIRE(retrievedOuter == outer);
 
     REQUIRE_THROWS(context.get("outerName", Type::kActorTemplate));
-
 }
 
 TEST_CASE("WorkloadParser can run generate smoke test configurations") {
