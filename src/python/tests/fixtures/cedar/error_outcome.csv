@@ -1,0 +1,14 @@
+Clocks
+clock,nanoseconds
+SystemTime,100014000000
+MetricsTime,10014000000
+
+OperationThreadCounts
+actor,operation,workers
+MyActor,MyOperation,2
+
+Operations
+timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size
+12345000000,MyActor,0,MyOperation,100,0,1,6,2,40
+12345000000,MyActor,0,MyOperation,100,2,1,6,2,40
+12345000000,MyActor,0,MyOperation,100,0,1,6,2,40

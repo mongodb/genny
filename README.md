@@ -86,7 +86,7 @@ You just need to set the "Generation Path" to your `build` directory.
 
 ## Lint Workload YAML Files and Generate Test Reports
 
-Please refer to `src/lamplib/README.md` for more information on how to
+Please refer to `src/python/README.md` for more information on how to
 lint YAML files and generating test reports.
 
 
@@ -194,7 +194,7 @@ Logging currently goes to stdout, and in this example, metrics data is
 written to `./build/genny-metrics.csv`.
 
 Post-processing of metrics data is done by Python scripts in the
-`src/lamplib` directory. See [the README there](./src/lamplib/README.md).
+`src/python` directory. See [the README there](./src/python/README.md).
 
 
 ## Creating New Actors
