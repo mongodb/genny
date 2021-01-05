@@ -159,8 +159,8 @@ void WorkloadParser::preprocess(std::string key, YAML::Node value, YAML::Node& o
 }
 
 void WorkloadParser::parseTemplates(YAML::Node templates) {
-    for (auto temp : templates) {
-        _context->insert(temp["TemplateName"].as<std::string>(), temp["Config"], Type::kActorTemplate);
+    for (auto templateNode : templates) {
+        _context->insert(templateNode["TemplateName"].as<std::string>(), templateNode["Config"], Type::kActorTemplate);
     }
 }
 
@@ -190,15 +190,15 @@ YAML::Node WorkloadParser::parseInstance(YAML::Node instance) {
 
     {
         ContextGuard guard(_context);
-        auto temp = _context->get(instance["TemplateName"].as<std::string>(), Type::kActorTemplate);
-        if (!temp) {
+        auto templateNode = _context->get(instance["TemplateName"].as<std::string>(), Type::kActorTemplate);
+        if (!templateNode) {
             auto os = std::ostringstream();
             os << "Expected template named " << instance["TemplateName"].as<std::string>()
                << " but could not be found.";
             throw InvalidConfigurationException(os.str());
         }
         _context->insert(instance["TemplateParameters"], Type::kParameter);
-        actor = recursiveParse(*temp);
+        actor = recursiveParse(*templateNode);
     }
     
     return actor;

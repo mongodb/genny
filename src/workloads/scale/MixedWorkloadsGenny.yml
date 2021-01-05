@@ -43,7 +43,7 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyIn:
-        Active: [{^Parameter: {Name: "Phase", Default: 1}}]
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
         Max: 10
         Config:
           ExternalPhaseConfig:
@@ -59,7 +59,7 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyIn:
-        Active: [{^Parameter: {Name: "Phase", Default: 1}}]
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
         Max: 10
         Config:
           ExternalPhaseConfig:
@@ -75,7 +75,7 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyIn:
-        Active: [{^Parameter: {Name: "Phase", Default: 1}}]
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
         Max: 10
         Config:
           ExternalPhaseConfig:
@@ -91,7 +91,7 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyIn:
-        Active: [{^Parameter: {Name: "Phase", Default: 1}}]
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
         Max: 10
         Config:
           ExternalPhaseConfig:
@@ -151,35 +151,35 @@ Actors:
     TemplateParameters:
       Name: Update_1
       Threads: 1
-      Phase: 2
+      OnlyActiveInPhase: 2
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_16
       Threads: 16
-      Phase: 4
+      OnlyActiveInPhase: 4
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_32
       Threads: 32
-      Phase: 6
+      OnlyActiveInPhase: 6
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_64
       Threads: 64
-      Phase: 8
+      OnlyActiveInPhase: 8
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_128
       Threads: 128
-      Phase: 10
+      OnlyActiveInPhase: 10
 
 #
 ## Remove Actors
@@ -189,35 +189,35 @@ Actors:
     TemplateParameters:
       Name: Remove_1
       Threads: 1
-      Phase: 2
+      OnlyActiveInPhase: 2
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate 
     TemplateParameters:
       Name: Remove_16
       Threads: 16
-      Phase: 4
+      OnlyActiveInPhase: 4
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Remove_32
       Threads: 32
-      Phase: 6
+      OnlyActiveInPhase: 6
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Remove_64
       Threads: 64
-      Phase: 8
+      OnlyActiveInPhase: 8
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Remove_128
       Threads: 128
-      Phase: 10
+      OnlyActiveInPhase: 10
 
 ## Insert Actors
 #
@@ -226,35 +226,35 @@ Actors:
     TemplateParameters:
       Name: Insert_1
       Threads: 1
-      Phase: 2
+      OnlyActiveInPhase: 2
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate 
     TemplateParameters:
       Name: Insert_16
       Threads: 16
-      Phase: 4
+      OnlyActiveInPhase: 4
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Insert_32
       Threads: 32
-      Phase: 6
+      OnlyActiveInPhase: 6
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Insert_64
       Threads: 64
-      Phase: 8
+      OnlyActiveInPhase: 8
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Insert_128
       Threads: 128
-      Phase: 10
+      OnlyActiveInPhase: 10
 
 ## Find Actors
 
@@ -263,35 +263,35 @@ Actors:
     TemplateParameters:
       Name: Find_1
       Threads: 1
-      Phase: 2
+      OnlyActiveInPhase: 2
 
 - ActorFromTemplate:
     TemplateName: FindTemplate 
     TemplateParameters:
       Name: Find_16
       Threads: 16
-      Phase: 4
+      OnlyActiveInPhase: 4
 
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
       Name: Find_32
       Threads: 32
-      Phase: 6
+      OnlyActiveInPhase: 6
 
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
       Name: Find_64
       Threads: 64
-      Phase: 8
+      OnlyActiveInPhase: 8
 
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
       Name: Find_128
       Threads: 128
-      Phase: 10
+      OnlyActiveInPhase: 10
 
 AutoRun:
   Requires:
