@@ -45,6 +45,7 @@ enum class Type {
  */
 class Context {
 public:
+    using ContextValue = std::pair<YAML::Node, Type>;
     using ContextMap = std::map<std::string, std::pair<YAML::Node, Type>>;
     Context(Context* enclosing) : _enclosing{enclosing} {}
 

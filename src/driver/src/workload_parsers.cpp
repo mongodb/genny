@@ -38,7 +38,8 @@ std::map<Type, std::string> typeNames = {
 
 std::optional<YAML::Node> Context::get(const std::string& name, const Type& type) {
     if (auto val = _values.find(name); val != _values.end()) {
-        Type expected = val->second.second;
+        ContextValue storedValue = val->second;
+        Type expected = storedValue.second;
         if (expected != type) {
             auto os = std::ostringstream();
             os << "Type mismatch for node named " << name 
@@ -46,7 +47,7 @@ std::optional<YAML::Node> Context::get(const std::string& name, const Type& type
                << typeNames[type] << ".";
             throw InvalidConfigurationException(os.str());
         }
-        return val->second.first;
+        return storedValue.first;
     } else if (_enclosing) {
         return _enclosing->get(name, type);
     } else {
@@ -57,6 +58,7 @@ std::optional<YAML::Node> Context::get(const std::string& name, const Type& type
 void Context::insert(const std::string& name, const YAML::Node& val, const Type& type) {
     _values.insert_or_assign(name, std::make_pair(val, type));
 }
+
 void Context::insert(const YAML::Node& node, const Type& type) {
     if (node.Type() != YAML::NodeType::Map) {
         auto os = std::ostringstream();
