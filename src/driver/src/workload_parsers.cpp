@@ -36,26 +36,27 @@ std::map<Type, std::string> typeNames = {
 
 
 std::optional<YAML::Node> Context::get(const std::string& name, const Type& type) {
-    if (auto val = _values.find(name); val != _values.end()) {
-        ContextValue storedValue = val->second;
-        Type expected = storedValue.second;
-        if (expected != type) {
-            auto os = std::ostringstream();
-            os << "Type mismatch for node named " << name 
-               << ". Expected " << typeNames[expected] << " but received " 
-               << typeNames[type] << ".";
-            throw InvalidConfigurationException(os.str());
-        }
-        return storedValue.first;
-    } else if (_enclosing) {
-        return _enclosing->get(name, type);
-    } else {
-        return std::nullopt;
-    }
+    for (auto it = _scopes.rbegin(); it != _scopes.rend(); it++) {
+        auto values = *it;
+        if (auto val = values.find(name); val != values.end()) {
+            ContextValue storedValue = val->second;
+            Type expected = storedValue.second;
+            if (expected != type) {
+                auto os = std::ostringstream();
+                os << "Type mismatch for node named " << name 
+                   << ". Expected " << typeNames[expected] << " but received " 
+                   << typeNames[type] << ".";
+                throw InvalidConfigurationException(os.str());
+            }
+            return storedValue.first;
+        } 
+    } 
+
+    return std::nullopt;
 }
 
 void Context::insert(const std::string& name, const YAML::Node& val, const Type& type) {
-    _values.insert_or_assign(name, std::make_pair(val, type));
+    _scopes.back().insert_or_assign(name, std::make_pair(val, type));
 }
 
 void Context::insert(const YAML::Node& node, const Type& type) {
@@ -74,7 +75,7 @@ void Context::insert(const YAML::Node& node, const Type& type) {
 YAML::Node WorkloadParser::parse(const std::string& source,
                                  const DefaultDriver::ProgramOptions::YamlSource sourceType,
                                  const Mode mode) {
-    ContextGuard guard(_context);
+    Context::ScopeGuard guard = _context.enter();
     YAML::Node workload;
     if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
         workload = YAML::Load(source);
@@ -129,7 +130,7 @@ YAML::Node WorkloadParser::replaceParam(YAML::Node input) {
     auto defaultVal = input["Default"];
 
     // Nested params are ignored for simplicity.
-    if (auto paramVal = _context->get(name, Type::kParameter)) {
+    if (auto paramVal = _context.get(name, Type::kParameter)) {
         return *paramVal;
     } else {
         return input["Default"];
@@ -160,7 +161,7 @@ void WorkloadParser::preprocess(std::string key, YAML::Node value, YAML::Node& o
 
 void WorkloadParser::parseTemplates(YAML::Node templates) {
     for (auto templateNode : templates) {
-        _context->insert(templateNode["TemplateName"].as<std::string>(), templateNode["Config"], Type::kActorTemplate);
+        _context.insert(templateNode["TemplateName"].as<std::string>(), templateNode["Config"], Type::kActorTemplate);
     }
 }
 
@@ -189,15 +190,15 @@ YAML::Node WorkloadParser::parseInstance(YAML::Node instance) {
     YAML::Node actor;
 
     {
-        ContextGuard guard(_context);
-        auto templateNode = _context->get(instance["TemplateName"].as<std::string>(), Type::kActorTemplate);
+        Context::ScopeGuard guard = _context.enter();
+        auto templateNode = _context.get(instance["TemplateName"].as<std::string>(), Type::kActorTemplate);
         if (!templateNode) {
             auto os = std::ostringstream();
             os << "Expected template named " << instance["TemplateName"].as<std::string>()
                << " but could not be found.";
             throw InvalidConfigurationException(os.str());
         }
-        _context->insert(instance["TemplateParameters"], Type::kParameter);
+        _context.insert(instance["TemplateParameters"], Type::kParameter);
         actor = recursiveParse(*templateNode);
     }
     
@@ -205,7 +206,7 @@ YAML::Node WorkloadParser::parseInstance(YAML::Node instance) {
 }
 
 YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
-    ContextGuard guard(_context);
+    Context::ScopeGuard guard = _context.enter();
     int keysSeen = 0;
 
     if (!external["Path"]) {
@@ -251,7 +252,7 @@ YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
 
     if (external["Parameters"]) {
         keysSeen++;
-        _context->insert(external["Parameters"], Type::kParameter);
+        _context.insert(external["Parameters"], Type::kParameter);
     }
 
     if (external["Key"]) {

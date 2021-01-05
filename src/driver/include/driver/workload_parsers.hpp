@@ -46,41 +46,34 @@ enum class Type {
 class Context {
 public:
     using ContextValue = std::pair<YAML::Node, Type>;
-    using ContextMap = std::map<std::string, std::pair<YAML::Node, Type>>;
-    Context(Context* enclosing) : _enclosing{enclosing} {}
+    using Scope = std::map<std::string, std::pair<YAML::Node, Type>>;
 
     std::optional<YAML::Node> get(const std::string&, const Type& type);
     void insert(const std::string&, const YAML::Node&, const Type& type);
 
     // Insert all the values of a node, assuming they are of a type.
     void insert(const YAML::Node&, const Type& type);
-    Context* enclosing() {return _enclosing;}
+
+    /**
+     * Opens a scope, closes it when exiting scope.
+     */
+    struct ScopeGuard {
+        ScopeGuard(Context& context) : _context{context} {
+            _context._scopes.emplace_back();
+        }
+        ~ScopeGuard() {
+            _context._scopes.pop_back();
+        }
+        private:
+            Context& _context;     
+    };
+    ScopeGuard enter() {return ScopeGuard(*this);}
 
 private:
-    // A context should be a unique_ptr owned by its recursion level.
-    Context* _enclosing;
-    ContextMap _values;
+    // Use vector as a stack since std::stack isn't iterable.
+    std::vector<Scope> _scopes;
 };
 
-/**
- * Opens a context, closes it when exiting scope.
- */
-class ContextGuard {
-public:
-    ContextGuard(Context*& contextPtr) : _contextPtr{contextPtr}, 
-        _managedContext{std::make_unique<Context>(_contextPtr)} {
-
-        _contextPtr = _managedContext.get();
-    }
-
-    ~ContextGuard() {
-        _contextPtr = _managedContext->enclosing();
-    }
-
-private:
-    Context*& _contextPtr;
-    std::unique_ptr<Context> _managedContext;
-};
 
 /**
  * Parse user-defined workload files into shapes suitable for Genny.
@@ -101,9 +94,7 @@ public:
 private:
     const fs::path _phaseConfigPath;
 
-    // Contexts are owned by their recursion level.
-    // The class-level pointer is just for ease of access.
-    Context* _context = nullptr;
+    Context _context;
 
     YAML::Node recursiveParse(YAML::Node);
 
