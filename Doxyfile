@@ -126,7 +126,6 @@ FILE_PATTERNS          = *.hpp \
 RECURSIVE              = YES
 EXCLUDE                = build \
                          dist \
-                         src/python \
                          src/lamplib \
                          src/third_party \
                          src/gennylib/test \

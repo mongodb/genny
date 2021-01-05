@@ -28,7 +28,7 @@ if [[ $RUN_GLOBAL != 1 ]]; then
     set -u
 
     if [[ ! -e "$LAMP_VENV_DIR/venv/.setup-complete" ]]; then
-        python3 -m pip install -e "$LAMP_VENV_DIR/../src/python"
+        python3 -m pip install -e "$LAMP_VENV_DIR/../src/lamplib"
         touch "$LAMP_VENV_DIR/venv/.setup-complete"
     fi
 fi
