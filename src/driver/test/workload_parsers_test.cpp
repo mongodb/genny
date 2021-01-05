@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <boost/filesystem.hpp>
+
 #include <driver/workload_parsers.hpp>
 
+#include <testlib/findRepoRoot.hpp>
 #include <testlib/helpers.hpp>
 
 namespace genny::driver::v1 {
@@ -103,6 +106,8 @@ Actors:
 }
 
 TEST_CASE("WorkloadParser parameters are scoped") {
+    boost::filesystem::current_path(genny::findRepoRoot());
+
     const auto input = (R"(
 ActorTemplates:
 - TemplateName: TestTemplate1
