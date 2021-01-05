@@ -663,7 +663,7 @@ public:
 // see https://www.boost.org/doc/libs/1_75_0/doc/html/date_time/date_time_io.html.
 // We strive to use smart pointers where possible. In this case this is not possible
 // but not a huge deal as these objects are statically allocated.
-const std::array formats = {
+const static auto formats = {
     std::locale(std::locale::classic(),
                 new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M:%s%ZP")),
     std::locale(std::locale::classic(),
