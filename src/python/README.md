@@ -118,7 +118,7 @@ pip install virtualenv
 virtualenv venv
 source ./venv/bin/activate
 pip install .
-python setup.py pytest
+python setup.py nosetests
 ```
 
 Python Formatting
@@ -131,6 +131,6 @@ pip install virtualenv
 virtualenv venv
 source ./venv/bin/activate
 pip install .
-black src/lamplib
+black src/lamplib src/python
 ```
 
