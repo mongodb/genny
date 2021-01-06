@@ -25,7 +25,7 @@ Clients:
 
 Actors:
 - Name: LongLivedCreator
-  Type: Loader
+  Type: MonotonicLoader
   Threads: 10
   TrackProportion: *TrackProportion
   Phases:
@@ -77,12 +77,13 @@ Actors:
   Type: CollectionScanner
   Threads: 10
   Database: *LongLivedDB
+  ScanRateMegabytes: 5 per 1 second
   Phases:
   - {Nop: true}
   - {Nop: true}
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
-      Key: SnapshotScanner5GigabytesCmd
+      Key: SnapshotScanner5GigabytesFixedRateCmd
 
 AutoRun:
   Requires:

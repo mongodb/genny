@@ -232,7 +232,9 @@ ThrowMode decodeThrowMode(const Node& operation, PhaseContext& phaseContext) {
 
     bool throwOnFailure = operation[throwKey] ? operation[throwKey].to<bool>()
                                               : phaseContext[throwKey].maybe<bool>().value_or(true);
-    bool ignoreFailure = operation[ignoreKey] ? true : false;
+    bool ignoreFailure = operation[ignoreKey]
+        ? operation[ignoreKey].to<bool>()
+        : phaseContext[ignoreKey].maybe<bool>().value_or(false);
     if (ignoreFailure) {
         return ThrowMode::kSwallowAndRecord;
     }
