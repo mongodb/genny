@@ -538,6 +538,23 @@ TEST_CASE("Registry counts the number of workers") {
     REQUIRE(metrics.getWorkerCount("actor2", "op1") == 2);
 }
 
+using EventVec = std::vector<poplar::EventMetrics>;
+
+const auto compareEventsAndClear = [](const EventVec& eventsIn) {
+    internals::v2::MockStreamInterface interface("dummyDebugName", 5);
+    REQUIRE(eventsIn.size() == interface.events.size());
+    for (int i = 0; i < eventsIn.size(); i++) {
+        REQUIRE(google::protobuf::util::MessageDifferencer::Equals(eventsIn[i],
+                                                                   interface.events[i]));
+    };
+    interface.events.clear();
+};
+
+const auto getMetricsPath = []() {
+    boost::filesystem::path ph =
+            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+    return (ph / "build" / "CedarMetrics").string();
+};
 
 /**
  * These tests work for the happy cases, but after we remove legacy
@@ -548,25 +565,6 @@ TEST_CASE("Registry counts the number of workers") {
  * - What happens if there's a gRPC error?
  */
 TEST_CASE("Events stream to gRPC") {
-    using EventVec = std::vector<poplar::EventMetrics>;
-
-    auto compareEventsAndClear = [](const EventVec& eventsIn) {
-        internals::v2::MockStreamInterface interface("dummyDebugName", 5);
-        REQUIRE(eventsIn.size() == interface.events.size());
-        for (int i = 0; i < eventsIn.size(); i++) {
-            REQUIRE(google::protobuf::util::MessageDifferencer::Equals(eventsIn[i],
-                                                                       interface.events[i]));
-        };
-        interface.events.clear();
-    };
-
-    auto getMetricsPath = []() {
-        boost::filesystem::path ph =
-            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
-        return (ph / "genny-metrics").string();
-    };
-
-
     SECTION("Empty stream") {
 
         RegistryClockSourceStub::reset();
@@ -778,8 +776,9 @@ TEST_CASE("Events stream to gRPC") {
 
         compareEventsAndClear(expected);
     }
+}
 
-
+TEST_CASE("Events stream to gRPC pt 2") {
     SECTION("Create folder for ftdc output") {
         auto metricsPath = getMetricsPath();
 
@@ -797,7 +796,9 @@ TEST_CASE("Events stream to gRPC") {
 
         REQUIRE(boost::filesystem::remove_all(metricsPath));
     }
+}
 
+TEST_CASE("Events stream to gRPC part 3") {
     SECTION("One Collector is created per actor-operation.") {
         auto metricsPath = getMetricsPath();
         auto metrics =
@@ -824,7 +825,9 @@ TEST_CASE("Events stream to gRPC") {
 
         REQUIRE(boost::filesystem::remove_all(metricsPath));
     }
+}
 
+TEST_CASE("Events stream to gRPC part 4") {
     SECTION("Un-forced metrics buffer only pops at capacity.") {
         auto metricsBuffer =
             internals::v2::MetricsBuffer<RegistryClockSourceStub>(16, "test_buffer");
