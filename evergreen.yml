@@ -478,8 +478,8 @@ functions:
         export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
 
         # Run Genny Python unit tests
-        pushd src/python
-          python3 setup.py nosetests
+        pushd src/lamplib
+          python3 -mpytest
         popd
 
         # Run Genny build scripts unit tests
@@ -503,7 +503,7 @@ functions:
         source venv/bin/activate
 
         # Install Genny python scripts into the virtualenv
-        pushd src/python
+        pushd src/lamplib
           python3 setup.py install
         popd
 
@@ -527,11 +527,11 @@ functions:
         source venv/bin/activate
 
         # Install Genny python scripts into the virtualenv
-        pushd src/python
+        pushd src/lamplib
           python3 setup.py install
         popd
 
-        black --check src/python src/lamplib
+        black --check src/lamplib
 
 
   ##
@@ -553,7 +553,7 @@ functions:
   - command: attach.xunit_results
     params:
       optional: true
-      file: src/src/python/nosetests.xml
+      file: src/src/lamplib/nosetests.xml
 
   ##
   # Removes the test results files from the local filesystem.
@@ -568,4 +568,4 @@ functions:
         rm -f \
         src/build/*.junit.xml \
         src/build/src/*/*.junit.xml \
-        src/src/python/nosetests.xml
+        src/src/lamplib/nosetests.xml
