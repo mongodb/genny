@@ -33,6 +33,70 @@ Clients:
     QueryOptions:
       maxPoolSize: 500
 
+ActorTemplates:
+- TemplateName: UpdateTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Update"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Update
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+        NopInPhasesUpTo: 10
+        PhaseConfig:
+          ExternalPhaseConfig:
+            Path: ../../phases/scale/MixPhases.yml
+            Key: UpdatePhase
+
+- TemplateName: RemoveTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Remove"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Remove
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+        NopInPhasesUpTo: 10
+        PhaseConfig:
+          ExternalPhaseConfig:
+            Path: ../../phases/scale/MixPhases.yml
+            Key: RemovePhase
+
+- TemplateName: InsertTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Insert"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Insert
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+        NopInPhasesUpTo: 10
+        PhaseConfig:
+          ExternalPhaseConfig:
+            Path: ../../phases/scale/MixPhases.yml
+            Key: InsertPhase
+
+- TemplateName: FindTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Find"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Query
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+        NopInPhasesUpTo: 10
+        PhaseConfig:
+          ExternalPhaseConfig:
+            Path: ../../phases/scale/MixPhases.yml
+            Key: FindPhase
 
 Actors:
 - Name: Setup
@@ -81,278 +145,153 @@ Actors:
   - *quiesce
   - *nop
 
-- Name: Update_1
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Update
-  Threads: 1
-  Phases:
-  - Phase: 0..1
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
-      Key: UpdatePhase
-  - Phase: 3..10
-    Nop: true
+# Update Actors
+- ActorFromTemplate:
+    TemplateName: UpdateTemplate
+    TemplateParameters:
+      Name: Update_1
+      Threads: 1
+      OnlyActiveInPhase: 2
 
-- Name: Update_16
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Update
-  Threads: 16
-  Phases:
-  - Phase: 0..3
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: UpdatePhase
-  - Phase: 5..10
-    Nop: true
+- ActorFromTemplate:
+    TemplateName: UpdateTemplate
+    TemplateParameters:
+      Name: Update_16
+      Threads: 16
+      OnlyActiveInPhase: 4
 
-- Name: Update_32
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Update
-  Threads: 32
-  Phases:
-  - Phase: 0..5
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: UpdatePhase
-  - Phase: 7..10
-    Nop: true
+- ActorFromTemplate:
+    TemplateName: UpdateTemplate
+    TemplateParameters:
+      Name: Update_32
+      Threads: 32
+      OnlyActiveInPhase: 6
 
-- Name: Update_64
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Update
-  Threads: 64
-  Phases:
-  - Phase: 0..7
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: UpdatePhase
-  - Phase: 9..10
-    Nop: true
+- ActorFromTemplate:
+    TemplateName: UpdateTemplate
+    TemplateParameters:
+      Name: Update_64
+      Threads: 64
+      OnlyActiveInPhase: 8
 
-- Name: Update_128
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Update
-  Threads: 128
-  Phases:
-  - Phase: 0..9
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: UpdatePhase
+- ActorFromTemplate:
+    TemplateName: UpdateTemplate
+    TemplateParameters:
+      Name: Update_128
+      Threads: 128
+      OnlyActiveInPhase: 10
 
-- Name: Remove_1
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Remove
-  Threads: 1
-  Phases:
-  - Phase: 0..1
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
-  - Phase: 3..10
-    Nop: true
+#
+## Remove Actors
+#
+- ActorFromTemplate:
+    TemplateName: RemoveTemplate
+    TemplateParameters:
+      Name: Remove_1
+      Threads: 1
+      OnlyActiveInPhase: 2
 
-- Name: Remove_16
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Remove
-  Threads: 16
-  Phases:
-  - Phase: 0..3
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
-  - Phase: 5..10
-    Nop: true
+- ActorFromTemplate:
+    TemplateName: RemoveTemplate 
+    TemplateParameters:
+      Name: Remove_16
+      Threads: 16
+      OnlyActiveInPhase: 4
 
-- Name: Remove_32
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Remove
-  Threads: 32
-  Phases:
-  - Phase: 0..5
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
-  - Phase: 7..10
-    Nop: true
+- ActorFromTemplate:
+    TemplateName: RemoveTemplate
+    TemplateParameters:
+      Name: Remove_32
+      Threads: 32
+      OnlyActiveInPhase: 6
 
-- Name: Remove_64
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Remove
-  Threads: 64
-  Phases:
-  - Phase: 0..7
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
-  - Phase: 9..10
-    Nop: true
+- ActorFromTemplate:
+    TemplateName: RemoveTemplate
+    TemplateParameters:
+      Name: Remove_64
+      Threads: 64
+      OnlyActiveInPhase: 8
 
-- Name: Remove_128
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Remove
-  Threads: 128
-  Phases:
-  - Phase: 0..9
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
+- ActorFromTemplate:
+    TemplateName: RemoveTemplate
+    TemplateParameters:
+      Name: Remove_128
+      Threads: 128
+      OnlyActiveInPhase: 10
 
-- Name: Insert_1
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Insert
-  Threads: 1
-  Phases:
-  - Phase: 0..1
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
-  - Phase: 3..10
-    Nop: true
+## Insert Actors
+#
+- ActorFromTemplate:
+    TemplateName: InsertTemplate
+    TemplateParameters:
+      Name: Insert_1
+      Threads: 1
+      OnlyActiveInPhase: 2
 
-- Name: Insert_16
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Insert
-  Threads: 16
-  Phases:
-  - Phase: 0..3
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
-  - Phase: 5..10
-    Nop: true
+- ActorFromTemplate:
+    TemplateName: InsertTemplate 
+    TemplateParameters:
+      Name: Insert_16
+      Threads: 16
+      OnlyActiveInPhase: 4
 
-- Name: Insert_32
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Insert
-  Threads: 32
-  Phases:
-  - Phase: 0..5
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
-  - Phase: 7..10
-    Nop: true
+- ActorFromTemplate:
+    TemplateName: InsertTemplate
+    TemplateParameters:
+      Name: Insert_32
+      Threads: 32
+      OnlyActiveInPhase: 6
 
-- Name: Insert_64
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Insert
-  Threads: 64
-  Phases:
-  - Phase: 0..7
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
-  - Phase: 9..10
-    Nop: true
+- ActorFromTemplate:
+    TemplateName: InsertTemplate
+    TemplateParameters:
+      Name: Insert_64
+      Threads: 64
+      OnlyActiveInPhase: 8
 
-- Name: Insert_128
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Insert
-  Threads: 128
-  Phases:
-  - Phase: 0..9
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
+- ActorFromTemplate:
+    TemplateName: InsertTemplate
+    TemplateParameters:
+      Name: Insert_128
+      Threads: 128
+      OnlyActiveInPhase: 10
 
-- Name: Find_1
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Query
-  Threads: 1
-  Phases:
-  - Phase: 0..1
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: FindPhase
-  - Phase: 3..10
-    Nop: true
+## Find Actors
 
-- Name: Find_16
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Query
-  Threads: 16
-  Phases:
-  - Phase: 0..3
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: FindPhase
-  - Phase: 5..10
-    Nop: true
+- ActorFromTemplate:
+    TemplateName: FindTemplate
+    TemplateParameters:
+      Name: Find_1
+      Threads: 1
+      OnlyActiveInPhase: 2
 
-- Name: Find_32
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Query
-  Threads: 32
-  Phases:
-  - Phase: 0..5
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: FindPhase
-  - Phase: 7..10
-    Nop: true
+- ActorFromTemplate:
+    TemplateName: FindTemplate 
+    TemplateParameters:
+      Name: Find_16
+      Threads: 16
+      OnlyActiveInPhase: 4
 
-- Name: Find_64
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Query
-  Threads: 64
-  Phases:
-  - Phase: 0..7
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: FindPhase
-  - Phase: 9..10
-    Nop: true
+- ActorFromTemplate:
+    TemplateName: FindTemplate
+    TemplateParameters:
+      Name: Find_32
+      Threads: 32
+      OnlyActiveInPhase: 6
 
-- Name: Find_128
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Query
-  Threads: 128
-  Phases:
-  - Phase: 0..9
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: FindPhase
+- ActorFromTemplate:
+    TemplateName: FindTemplate
+    TemplateParameters:
+      Name: Find_64
+      Threads: 64
+      OnlyActiveInPhase: 8
 
+- ActorFromTemplate:
+    TemplateName: FindTemplate
+    TemplateParameters:
+      Name: Find_128
+      Threads: 128
+      OnlyActiveInPhase: 10
 
 AutoRun:
   Requires:

@@ -29,9 +29,52 @@ YAML::Node loadFile(const std::string& source) {
     }
 }
 
+std::map<Type, std::string> typeNames = {
+    {Type::kParameter, "Parameter"},
+    {Type::kActorTemplate, "ActorTemplate"},
+};
+
+
+std::optional<YAML::Node> Context::get(const std::string& name, const Type& type) {
+    for (auto it = _scopes.rbegin(); it != _scopes.rend(); it++) {
+        auto values = *it;
+        if (auto val = values.find(name); val != values.end()) {
+            ContextValue storedValue = val->second;
+            Type expected = storedValue.second;
+            if (expected != type) {
+                auto os = std::ostringstream();
+                os << "Type mismatch for node named " << name << ". Expected "
+                   << typeNames[expected] << " but received " << typeNames[type] << ".";
+                throw InvalidConfigurationException(os.str());
+            }
+            return storedValue.first;
+        }
+    }
+
+    return std::nullopt;
+}
+
+void Context::insert(const std::string& name, const YAML::Node& val, const Type& type) {
+    _scopes.back().insert_or_assign(name, std::make_pair(val, type));
+}
+
+void Context::insert(const YAML::Node& node, const Type& type) {
+    if (node.Type() != YAML::NodeType::Map) {
+        auto os = std::ostringstream();
+        os << "Invalid context storage of node: " << node
+           << ". Please ensure this node is a map rather than a sequence.";
+        throw InvalidConfigurationException(os.str());
+    }
+
+    for (auto kvp : node) {
+        insert(kvp.first.as<std::string>(), kvp.second, type);
+    }
+}
+
 YAML::Node WorkloadParser::parse(const std::string& source,
                                  const DefaultDriver::ProgramOptions::YamlSource sourceType,
                                  const Mode mode) {
+    Context::ScopeGuard guard = _context.enter();
     YAML::Node workload;
     if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
         workload = YAML::Load(source);
@@ -57,7 +100,7 @@ YAML::Node WorkloadParser::recursiveParse(YAML::Node node) {
     switch (node.Type()) {
         case YAML::NodeType::Map: {
             for (auto kvp : node) {
-                convertExternal(kvp.first.as<std::string>(), kvp.second, out);
+                preprocess(kvp.first.as<std::string>(), kvp.second, out);
             }
             break;
         }
@@ -86,16 +129,22 @@ YAML::Node WorkloadParser::replaceParam(YAML::Node input) {
     auto defaultVal = input["Default"];
 
     // Nested params are ignored for simplicity.
-    if (auto paramVal = _params.find(name); paramVal != _params.end()) {
-        return paramVal->second;
+    if (auto paramVal = _context.get(name, Type::kParameter)) {
+        return *paramVal;
     } else {
         return input["Default"];
     }
 }
 
-void WorkloadParser::convertExternal(std::string key, YAML::Node value, YAML::Node& out) {
+void WorkloadParser::preprocess(std::string key, YAML::Node value, YAML::Node& out) {
     if (key == "^Parameter") {
         out = replaceParam(value);
+    } else if (key == "ActorTemplates") {
+        parseTemplates(value);
+    } else if (key == "ActorFromTemplate") {
+        out = parseInstance(value);
+    } else if (key == "OnlyActiveInPhases") {
+        out = parseOnlyIn(value);
     } else if (key == "ExternalPhaseConfig") {
         auto external = parseExternal(value);
         // Merge the external node with the any other parameters specified
@@ -109,7 +158,57 @@ void WorkloadParser::convertExternal(std::string key, YAML::Node value, YAML::No
     }
 }
 
+void WorkloadParser::parseTemplates(YAML::Node templates) {
+    for (auto templateNode : templates) {
+        _context.insert(templateNode["TemplateName"].as<std::string>(),
+                        templateNode["Config"],
+                        Type::kActorTemplate);
+    }
+}
+
+YAML::Node WorkloadParser::parseOnlyIn(YAML::Node onlyIn) {
+    YAML::Node out;
+    YAML::Node nop;
+    nop["Nop"] = true;
+    int max = recursiveParse(onlyIn["NopInPhasesUpTo"]).as<int>();
+    for (int i = 0; i <= max; i++) {
+        bool isActivePhase = false;
+        for (auto activePhase : recursiveParse(onlyIn["Active"])) {
+            if (activePhase.as<int>() == i) {
+                out.push_back(recursiveParse(onlyIn["PhaseConfig"]));
+                isActivePhase = true;
+                break;
+            }
+        }
+        if (!isActivePhase) {
+            out.push_back(nop);
+        }
+    }
+    return out;
+}
+
+YAML::Node WorkloadParser::parseInstance(YAML::Node instance) {
+    YAML::Node actor;
+
+    {
+        Context::ScopeGuard guard = _context.enter();
+        auto templateNode =
+            _context.get(instance["TemplateName"].as<std::string>(), Type::kActorTemplate);
+        if (!templateNode) {
+            auto os = std::ostringstream();
+            os << "Expected template named " << instance["TemplateName"].as<std::string>()
+               << " but could not be found.";
+            throw InvalidConfigurationException(os.str());
+        }
+        _context.insert(instance["TemplateParameters"], Type::kParameter);
+        actor = recursiveParse(*templateNode);
+    }
+
+    return actor;
+}
+
 YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
+    Context::ScopeGuard guard = _context.enter();
     int keysSeen = 0;
 
     if (!external["Path"]) {
@@ -155,8 +254,7 @@ YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
 
     if (external["Parameters"]) {
         keysSeen++;
-        auto newParams = external["Parameters"].as<YamlParameters>();
-        _params.insert(newParams.begin(), newParams.end());
+        _context.insert(external["Parameters"], Type::kParameter);
     }
 
     if (external["Key"]) {

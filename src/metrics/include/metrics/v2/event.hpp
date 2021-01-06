@@ -325,8 +325,8 @@ public:
         : _assertMetricsBuffer{assertMetricsBuffer},
           _stream{stream},
           _thread{&GrpcThread::run, this} {
-              stream.subscribe(this);
-          }
+        stream.subscribe(this);
+    }
 
     void finish() {
         _finishing = true;
