@@ -544,15 +544,15 @@ const auto compareEventsAndClear = [](const EventVec& eventsIn) {
     internals::v2::MockStreamInterface interface("dummyDebugName", 5);
     REQUIRE(eventsIn.size() == interface.events.size());
     for (int i = 0; i < eventsIn.size(); i++) {
-        REQUIRE(google::protobuf::util::MessageDifferencer::Equals(eventsIn[i],
-                                                                   interface.events[i]));
+        REQUIRE(
+            google::protobuf::util::MessageDifferencer::Equals(eventsIn[i], interface.events[i]));
     };
     interface.events.clear();
 };
 
 const auto getMetricsPath = []() {
     boost::filesystem::path ph =
-            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     return (ph / "build" / "CedarMetrics").string();
 };
 
