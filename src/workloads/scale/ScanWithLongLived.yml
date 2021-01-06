@@ -88,4 +88,4 @@ Actors:
 AutoRun:
   Requires:
     mongodb_setup:
-      -standalone
+    - standalone
