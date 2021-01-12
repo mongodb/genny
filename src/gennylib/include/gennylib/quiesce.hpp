@@ -25,12 +25,16 @@
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
 
+#include <gennylib/topology.hpp>
+
 namespace genny {
 
-using bsoncxx::builder::basic::kvp;
-using bsoncxx::builder::basic::make_document;
+
 
 void doFSyncReplicaSet(mongocxx::pool::entry& client) {
+    using bsoncxx::builder::basic::kvp;
+    using bsoncxx::builder::basic::make_document;
+
     auto admin = client->database("admin");
     auto status = admin.run_command(make_document(kvp("replSetGetStatus", 1))).view();
     if (!status["ok"].get_bool()) {
