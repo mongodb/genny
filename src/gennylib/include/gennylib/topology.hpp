@@ -57,9 +57,9 @@ struct ShardedDescription {
 };
 
 class TopologyDescription {
-    TopologyDescription(mongocxx::pool::entry& client) {
+    /*TopologyDescription(mongocxx::pool::entry& client) {
 
-    }
+    }*/
 
     std::vector<MongodDescription> getNodes() { return _topology->getNodes(); }
 

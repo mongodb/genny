@@ -1,0 +1,54 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include <algorithm>
+#include <gennylib/topology.hpp>
+
+#include <testlib/helpers.hpp>
+
+using namespace genny;
+using namespace std;
+
+
+TEST_CASE("Topology descriptions get nodes correctly") {
+
+    ShardedDescription shardedCluster;
+
+    // Config server
+    shardedCluster.configsvr.primary = "testConfigPrimaryUri";
+    shardedCluster.configsvr.nodes.emplace_back();
+    shardedCluster.configsvr.nodes[0].mongod = "testConfigPrimaryUri";
+
+    // Shards
+    for (int i = 0; i < 2; i++) {
+        ReplSetDescription replSet;
+        replSet.primary = "testSet" + std::to_string(i) + "node0";
+        for (int j = 0; j < 2; j++) {
+            auto nodeName = "testSet" + std::to_string(i) + "node" + std::to_string(j);
+            replSet.nodes.emplace_back();
+            replSet.nodes[j].mongod = nodeName;
+        }
+        shardedCluster.shards.push_back(replSet);
+    }
+
+    // Mongos
+    shardedCluster.mongos.mongos = "testMongos";
+
+    auto nodes = shardedCluster.getNodes();
+    std::vector<std::string> expected{"testConfigPrimaryUri", "testSet0node0", "testSet0node1", "testSet1node0", "testSet1node1"};
+    REQUIRE(nodes.size() == expected.size());
+    for (auto node : nodes) {
+        REQUIRE(std::count(expected.begin(), expected.end(), node.mongod));
+    }
+};
