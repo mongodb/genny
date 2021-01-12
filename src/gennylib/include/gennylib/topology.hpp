@@ -3,49 +3,69 @@
 
 #include <vector>
 #include <variant>
+#include <mutex>
 
 #include <mongocxx/client.hpp>
 
 namespace genny {
 
-enum class Topology {
-    kStandalone,
-    kRouter,
-    kReplicaSet,
-    kShardedCluster
+struct MongodDescription;
+
+struct AbstractTopologyDescription {
+    virtual std::vector<MongodDescription> getNodes() = 0;
+    virtual ~AbstractTopologyDescription() = 0;
 };
 
 struct MongodDescription {
-    Topology type = Topology::kStandalone;
     std::string mongod;
+    virtual std::vector<MongodDescription> getNodes() {
+        return std::vector<MongodDescription>{*this};
+    }
 };
 
 struct MongosDescription {
-    Topology type = Topology::kRouter;
     std::string mongos;
 };
 
 struct ReplSetDescription {
-    Topology type = Topology::kReplicaSet;
     std::string primary;
     std::vector<MongodDescription> nodes;
+    virtual std::vector<MongodDescription> getNodes() {
+        std::vector<MongodDescription> output;
+        for (auto node : nodes) {
+            output.push_back(node);
+        }
+        return output;
+    }
 };
 
 struct ShardedDescription {
-    Topology type = Topology::kShardedCluster;
     ReplSetDescription configsvr;
     std::vector<ReplSetDescription> shards;
     MongosDescription mongos;
+    virtual std::vector<MongodDescription> getNodes() {
+        std::vector<MongodDescription> output;
+        for (auto shard : shards) {
+            auto shardNodes = shard.getNodes();
+            output.insert(output.end(), shardNodes.begin(), shardNodes.end());
+        }
+        auto configNodes = configsvr.getNodes();
+        output.insert(output.end(), configNodes.begin(), configNodes.end());
+
+        return output;
+    }
 };
 
-using TopologyDescription = std::variant<std::monostate, MongodDescription, MongosDescription, 
-      ReplSetDescription, ShardedDescription>;
+class TopologyDescription {
+    TopologyDescription(mongocxx::pool::entry& client) {
 
-Topology discoverTopology(mongocxx::pool::entry& client) {
+    }
 
-    //TODO: remove
-    return Topology::kStandalone;
-}
+    std::vector<MongodDescription> getNodes() { return _topology->getNodes(); }
+
+private:
+    std::unique_ptr<AbstractTopologyDescription> _topology;
+};
 
 }
 
