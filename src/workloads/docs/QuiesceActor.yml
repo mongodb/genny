@@ -1,0 +1,12 @@
+SchemaVersion: 2018-07-01
+Owner: @mongodb/stm
+
+Actors:
+- Name: QuiesceActor
+  Type: QuiesceActor
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Repeat: 1
+  - Phase: 1
+    Repeat: 1

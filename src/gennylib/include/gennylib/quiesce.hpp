@@ -58,6 +58,10 @@ bool quiesceImpl(entry& client) {
     return true;
 }
 
+bool quiesce() {
+    return true;
+}
+
 }
 
 #endif  // HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
