@@ -5,66 +5,75 @@
 #include <variant>
 #include <mutex>
 
+#include <mongocxx/uri.hpp>
 #include <mongocxx/client.hpp>
+#include <mongocxx/pool.hpp>
 
 namespace genny {
 
-struct MongodDescription;
+class MongodDescription;
+class MongosDescription;
+class ReplSetDescription;
+class ShardedDescription;
+
+class TopologyVisitor {
+public:
+    virtual void visitMongodDescription(const MongodDescription&) {}
+    virtual void visitMongosDescription(const MongosDescription&) {}
+    virtual void visitReplSetDescription(const ReplSetDescription&) {}
+    virtual void visitShardedDescription(const ShardedDescription&) {}
+    virtual ~TopologyVisitor() {}
+};
 
 struct AbstractTopologyDescription {
-    virtual std::vector<MongodDescription> getNodes() = 0;
-    virtual ~AbstractTopologyDescription() = 0;
+    virtual void accept(TopologyVisitor&) = 0;
 };
 
-struct MongodDescription {
-    std::string mongod;
-    virtual std::vector<MongodDescription> getNodes() {
-        return std::vector<MongodDescription>{*this};
-    }
+struct MongodDescription : public AbstractTopologyDescription {
+    std::string mongodUri;
+
+    void accept(TopologyVisitor& v) { v.visitMongodDescription(*this); }
 };
 
-struct MongosDescription {
-    std::string mongos;
+struct MongosDescription : public AbstractTopologyDescription {
+    std::string mongosUri;
+
+    void accept(TopologyVisitor& v) { v.visitMongosDescription(*this); }
 };
 
-struct ReplSetDescription {
-    std::string primary;
+struct ReplSetDescription : public AbstractTopologyDescription {
+    std::string primaryUri;
     std::vector<MongodDescription> nodes;
-    virtual std::vector<MongodDescription> getNodes() {
-        std::vector<MongodDescription> output;
+
+    void accept(TopologyVisitor& v) { 
+        v.visitReplSetDescription(*this); 
         for (auto node : nodes) {
-            output.push_back(node);
+            node.accept(v);
         }
-        return output;
     }
 };
 
-struct ShardedDescription {
+struct ShardedDescription : public AbstractTopologyDescription {
     ReplSetDescription configsvr;
     std::vector<ReplSetDescription> shards;
     MongosDescription mongos;
-    virtual std::vector<MongodDescription> getNodes() {
-        std::vector<MongodDescription> output;
-        for (auto shard : shards) {
-            auto shardNodes = shard.getNodes();
-            output.insert(output.end(), shardNodes.begin(), shardNodes.end());
-        }
-        auto configNodes = configsvr.getNodes();
-        output.insert(output.end(), configNodes.begin(), configNodes.end());
 
-        return output;
+    void accept(TopologyVisitor& v) { 
+        v.visitShardedDescription(*this); 
+        configsvr.accept(v);
+        for (auto shard : shards) {
+            shard.accept(v);
+        }
+        mongos.accept(v);
     }
 };
 
-class TopologyDescription {
-    /*TopologyDescription(mongocxx::pool::entry& client) {
-
-    }*/
-
-    std::vector<MongodDescription> getNodes() { return _topology->getNodes(); }
+class Topology {
+    void accept(TopologyVisitor& v) { _topology->accept(v); }
+    void update(mongocxx::pool::entry& client) {}
 
 private:
-    std::unique_ptr<AbstractTopologyDescription> _topology;
+    std::shared_ptr<AbstractTopologyDescription> _topology;
 };
 
 }

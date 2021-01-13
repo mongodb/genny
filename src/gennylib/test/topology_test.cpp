@@ -23,32 +23,44 @@ using namespace std;
 
 TEST_CASE("Topology descriptions get nodes correctly") {
 
+    class TestVisitor : public TopologyVisitor {
+    public:
+        virtual void visitMongodDescription(const MongodDescription& desc) { names.push_back(desc.mongodUri); }
+        // Mongos falls back to default nop-visit.
+        //virtual void visitMongosDescription(const MongosDescription& desc) {}
+        // Same with replset
+        //virtual void visitReplSetDescription(const ReplSetDescription& desc) { names.push_back("visitedPrimary"); }
+        virtual void visitShardedDescription(const ShardedDescription& desc) { names.push_back("visitedShard"); }
+        std::vector<std::string> names;
+    };
+
     ShardedDescription shardedCluster;
 
     // Config server
-    shardedCluster.configsvr.primary = "testConfigPrimaryUri";
+    shardedCluster.configsvr.primaryUri = "testConfigPrimaryUri";
     shardedCluster.configsvr.nodes.emplace_back();
-    shardedCluster.configsvr.nodes[0].mongod = "testConfigPrimaryUri";
+    shardedCluster.configsvr.nodes[0].mongodUri = "testConfigPrimaryUri";
 
     // Shards
     for (int i = 0; i < 2; i++) {
         ReplSetDescription replSet;
-        replSet.primary = "testSet" + std::to_string(i) + "node0";
+        replSet.primaryUri = "testSet" + std::to_string(i) + "node0";
         for (int j = 0; j < 2; j++) {
             auto nodeName = "testSet" + std::to_string(i) + "node" + std::to_string(j);
             replSet.nodes.emplace_back();
-            replSet.nodes[j].mongod = nodeName;
+            replSet.nodes[j].mongodUri = nodeName;
         }
         shardedCluster.shards.push_back(replSet);
     }
 
     // Mongos
-    shardedCluster.mongos.mongos = "testMongos";
+    shardedCluster.mongos.mongosUri = "testMongos";
 
-    auto nodes = shardedCluster.getNodes();
-    std::vector<std::string> expected{"testConfigPrimaryUri", "testSet0node0", "testSet0node1", "testSet1node0", "testSet1node1"};
-    REQUIRE(nodes.size() == expected.size());
-    for (auto node : nodes) {
-        REQUIRE(std::count(expected.begin(), expected.end(), node.mongod));
+    std::vector<std::string> expected{"testConfigPrimaryUri", "testSet0node0", "testSet0node1", "testSet1node0", "testSet1node1", "visitedShard"};
+    TestVisitor visitor;
+    shardedCluster.accept(visitor);
+    REQUIRE(visitor.names.size() == expected.size());
+    for (auto name : visitor.names) {
+        REQUIRE(std::count(expected.begin(), expected.end(), name));
     }
 };
