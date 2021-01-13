@@ -19,6 +19,7 @@
 #include <vector>
 #include <variant>
 #include <mutex>
+#include <sstream>
 
 #include <mongocxx/uri.hpp>
 #include <mongocxx/client.hpp>
@@ -26,6 +27,7 @@
 
 namespace genny {
 
+class AbstractTopologyDescription;
 class MongodDescription;
 class MongosDescription;
 class ReplSetDescription;
@@ -41,6 +43,7 @@ class ShardedDescription;
  */
 class TopologyVisitor {
 public:
+    virtual void visitTopLevel(const AbstractTopologyDescription&) {}
     virtual void visitMongodDescription(const MongodDescription&) {}
     virtual void visitMongosDescription(const MongosDescription&) {}
     virtual void visitReplSetDescription(const ReplSetDescription&) {}
@@ -50,6 +53,7 @@ public:
 
 struct AbstractTopologyDescription {
     virtual void accept(TopologyVisitor&) = 0;
+    virtual ~AbstractTopologyDescription() {};
 };
 
 struct MongodDescription : public AbstractTopologyDescription {
@@ -100,7 +104,11 @@ public:
     /**
      * Traverse the cluster, using the visitor to act on it.
      */
-    void accept(TopologyVisitor& v) { _topology->accept(v); }
+    void accept(TopologyVisitor& v) { 
+        if (_topology) {
+            _topology->accept(v); 
+        }
+    }
 
     /**
      * Update the Topology's view of the cluster.
@@ -108,8 +116,30 @@ public:
     void update(mongocxx::pool::entry& client);
 
 private:
-    std::shared_ptr<AbstractTopologyDescription> _topology;
+    void getDataMemberConnectionStrings(mongocxx::pool::entry& client);
+    void findConnectedNodesViaMongos(mongocxx::pool::entry& client);
+    std::unique_ptr<AbstractTopologyDescription> _topology = nullptr;
 };
+
+class JsonVisitor : public TopologyVisitor {
+public:
+    void visitTopLevel(const AbstractTopologyDescription&) {
+        result.str("");
+        result.clear();
+    }
+    void visitMongodDescription(const MongodDescription& desc) {
+        result << "{mongodUri: " << desc.mongodUri << "}"; 
+    }
+    void visitMongosDescription(const MongosDescription&) {}
+    void visitReplSetDescription(const ReplSetDescription&) {}
+    void visitShardedDescription(const ShardedDescription&) {}
+
+    std::string str() { return result.str(); }
+
+private:
+    std::stringstream result;
+};
+
 
 } // namespace genny
 

@@ -23,18 +23,30 @@
 
 #include <gennylib/topology.hpp>
 
-
 namespace genny {
 
+using bsoncxx::builder::basic::kvp;
+using bsoncxx::builder::basic::make_document;
+
+void Topology::getDataMemberConnectionStrings(mongocxx::pool::entry& client) {
+    auto admin = client->database("admin");
+    auto res = admin.run_command(make_document(kvp("isMaster", 1)));
+    if (!res.view()["setName"]) {
+        std::unique_ptr<MongodDescription> desc = std::make_unique<MongodDescription>();
+        desc->mongodUri = client->uri().to_string();
+        this->_topology.reset(desc.release());
+        return;
+    }
+}
+
+void Topology::findConnectedNodesViaMongos(mongocxx::pool::entry& client) {
+
+}
+
 void Topology::update(mongocxx::pool::entry& client) {
-    using bsoncxx::builder::basic::kvp;
-    using bsoncxx::builder::basic::make_document;
-
-
     auto admin = client->database("admin");
 
     bool isMongos = false;
-
     auto res = admin.run_command(make_document(kvp("isMaster", 1)));
     auto msg = res.view()["msg"];
     if (msg && msg.type() == bsoncxx::type::k_utf8) {
@@ -42,10 +54,14 @@ void Topology::update(mongocxx::pool::entry& client) {
     }
 
     if (isMongos) {
-        BOOST_LOG_TRIVIAL(error) << "Connected to a mongos";
+        findConnectedNodesViaMongos(client);
     } else {
-        BOOST_LOG_TRIVIAL(error) << "Connected to a mongod";
+        getDataMemberConnectionStrings(client);
     }
+
+    JsonVisitor visitor;
+    accept(visitor);
+    BOOST_LOG_TRIVIAL(error) << "output: " << visitor.str();
 }
 
 }  // namespace genny
