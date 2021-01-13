@@ -135,7 +135,7 @@ private:
     std::unique_ptr<AbstractTopologyDescription> _topology = nullptr;
 };
 
-class JsonVisitor : public TopologyVisitor {
+class ToJsonVisitor : public TopologyVisitor {
 public:
     void visitTopLevel(const AbstractTopologyDescription&) {
         result.str("");

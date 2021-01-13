@@ -54,6 +54,16 @@ void Topology::getDataMemberConnectionStrings(mongocxx::pool::entry& client) {
         }
     }
 
+    auto passives = res.view()["passives"];
+    if (passives && passives.type() == bsoncxx::type::k_array) {
+        bsoncxx::array::view passives_view = passives.get_array();
+        for (auto member : passives_view) {
+            MongodDescription memberDesc;
+            memberDesc.mongodUri = std::string(member.get_utf8().value);
+            desc->nodes.push_back(memberDesc);
+        }
+    }
+
     this->_topology.reset(desc.release());
 }
 
@@ -77,7 +87,7 @@ void Topology::update(mongocxx::pool::entry& client) {
         getDataMemberConnectionStrings(client);
     }
 
-    JsonVisitor visitor;
+    ToJsonVisitor visitor;
     accept(visitor);
     BOOST_LOG_TRIVIAL(error) << "output: " << visitor.str();
 }
