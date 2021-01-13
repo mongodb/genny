@@ -95,6 +95,7 @@ struct ShardedDescription : public AbstractTopologyDescription {
  * Represents the topology of a MongoDB cluster.
  */
 class Topology {
+public:
 
     /**
      * Traverse the cluster, using the visitor to act on it.

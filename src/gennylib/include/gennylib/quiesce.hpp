@@ -62,7 +62,9 @@ bool quiesceImpl(entry& client) {
     return true;
 }
 
-bool quiesce() {
+bool quiesce(mongocxx::pool::entry& client) {
+    Topology topology;
+    topology.update(client);
     return true;
 }
 
