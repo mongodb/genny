@@ -37,6 +37,24 @@ void Topology::getDataMemberConnectionStrings(mongocxx::pool::entry& client) {
         this->_topology.reset(desc.release());
         return;
     }
+
+    auto primary = res.view()["primary"];
+    //bsoncxx::array::view passives = res.view()["passives"].get_array();
+
+    std::unique_ptr<ReplSetDescription> desc = std::make_unique<ReplSetDescription>();
+    desc->primaryUri = std::string(primary.get_utf8().value);
+
+    auto hosts = res.view()["hosts"];
+    if (hosts && hosts.type() == bsoncxx::type::k_array) {
+        bsoncxx::array::view hosts_view = hosts.get_array();
+        for (auto member : hosts_view) {
+            MongodDescription memberDesc;
+            memberDesc.mongodUri = std::string(member.get_utf8().value);
+            desc->nodes.push_back(memberDesc);
+        }
+    }
+
+    this->_topology.reset(desc.release());
 }
 
 void Topology::findConnectedNodesViaMongos(mongocxx::pool::entry& client) {

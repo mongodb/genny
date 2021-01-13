@@ -43,11 +43,19 @@ class ShardedDescription;
  */
 class TopologyVisitor {
 public:
-    virtual void visitTopLevel(const AbstractTopologyDescription&) {}
+    virtual void visitTopLevelPre(const AbstractTopologyDescription&) {}
+    virtual void visitTopLevelPost(const AbstractTopologyDescription&) {}
+
     virtual void visitMongodDescription(const MongodDescription&) {}
+    virtual void visitMongodDescriptionBetween(const MongodDescription&) {}
+
     virtual void visitMongosDescription(const MongosDescription&) {}
-    virtual void visitReplSetDescription(const ReplSetDescription&) {}
-    virtual void visitShardedDescription(const ShardedDescription&) {}
+
+    virtual void visitReplSetDescriptionPre(const ReplSetDescription&) {}
+    virtual void visitReplSetDescriptionPost(const ReplSetDescription&) {}
+
+    virtual void visitShardedDescriptionPre(const ShardedDescription&) {}
+    virtual void visitShardedDescriptionPost(const ShardedDescription&) {}
     virtual ~TopologyVisitor() {}
 };
 
@@ -73,10 +81,13 @@ struct ReplSetDescription : public AbstractTopologyDescription {
     std::vector<MongodDescription> nodes;
 
     void accept(TopologyVisitor& v) { 
-        v.visitReplSetDescription(*this); 
-        for (auto node : nodes) {
-            node.accept(v);
+        v.visitReplSetDescriptionPre(*this); 
+        for (int i = 0; i < nodes.size() - 1; i++) {
+            nodes[i].accept(v);
+            v.visitMongodDescriptionBetween(nodes[i]);
         }
+        nodes[nodes.size() - 1].accept(v);
+        v.visitReplSetDescriptionPost(*this); 
     }
 };
 
@@ -86,12 +97,13 @@ struct ShardedDescription : public AbstractTopologyDescription {
     MongosDescription mongos;
 
     void accept(TopologyVisitor& v) { 
-        v.visitShardedDescription(*this); 
+        v.visitShardedDescriptionPre(*this); 
         configsvr.accept(v);
         for (auto shard : shards) {
             shard.accept(v);
         }
         mongos.accept(v);
+        v.visitShardedDescriptionPost(*this); 
     }
 };
 
@@ -105,9 +117,11 @@ public:
      * Traverse the cluster, using the visitor to act on it.
      */
     void accept(TopologyVisitor& v) { 
+        v.visitTopLevelPre(*_topology);
         if (_topology) {
             _topology->accept(v); 
         }
+        v.visitTopLevelPost(*_topology);
     }
 
     /**
@@ -130,9 +144,19 @@ public:
     void visitMongodDescription(const MongodDescription& desc) {
         result << "{mongodUri: " << desc.mongodUri << "}"; 
     }
+    void visitMongodDescriptionBetween(const MongodDescription& desc) {
+        result << ", ";
+    }
     void visitMongosDescription(const MongosDescription&) {}
-    void visitReplSetDescription(const ReplSetDescription&) {}
-    void visitShardedDescription(const ShardedDescription&) {}
+    void visitReplSetDescriptionPre(const ReplSetDescription& desc) {
+        result << "{primaryUri: " << desc.primaryUri << ", nodes: [";
+    }
+
+    void visitReplSetDescriptionPost(const ReplSetDescription& desc) {
+        result << "]}";
+    }
+
+    //void visitShardedDescription(const ShardedDescription&) {}
 
     std::string str() { return result.str(); }
 
