@@ -54,7 +54,9 @@ TEST_CASE("Topology descriptions get nodes correctly") {
     }
 
     // Mongos
-    shardedCluster.mongos.mongosUri = "testMongos";
+    MongosDescription mongosDesc;
+    mongosDesc.mongosUri = "testMongos";
+    shardedCluster.mongoses.push_back(mongosDesc);
 
     std::vector<std::string> expected{"testConfigPrimaryUri", "testSet0node0", "testSet0node1", "testSet1node0", "testSet1node1", "visitedShard"};
     TestVisitor visitor;

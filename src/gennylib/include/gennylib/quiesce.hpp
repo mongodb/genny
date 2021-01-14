@@ -25,6 +25,8 @@
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
 
+#include <boost/log/trivial.hpp>
+
 #include <gennylib/topology.hpp>
 
 namespace genny {
@@ -63,8 +65,10 @@ bool quiesceImpl(entry& client) {
 }
 
 bool quiesce(mongocxx::pool::entry& client) {
-    Topology topology;
-    topology.update(client);
+    Topology topology(client);
+    ToJsonVisitor visitor;
+    topology.accept(visitor);
+    BOOST_LOG_TRIVIAL(error) << "output: " << visitor.str();
     return true;
 }
 

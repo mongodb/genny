@@ -28,18 +28,42 @@ namespace genny {
 using bsoncxx::builder::basic::kvp;
 using bsoncxx::builder::basic::make_document;
 
-void Topology::getDataMemberConnectionStrings(mongocxx::pool::entry& client) {
-    auto admin = client->database("admin");
+// Used to make sure we set a proper URI for connections we make.
+mongocxx::uri nameToUri(const mongocxx::uri& uri, const std::string& name) {
+    auto uriStr = uri.to_string();
+    auto strippedName = name;
+    if (name.find('/') != std::string::npos) {
+        strippedName = name.substr(name.find('/') + 1, name.find(','));
+    }
+
+    std::string output;
+    if (uriStr.find('@') != std::string::npos) {
+        // The uri has a username:password field.
+        size_t start = uriStr.find("@");
+        size_t end = uriStr.find("/", start + 1);
+        output = uriStr.erase(start + 1, end - start - 1);
+        output = output.insert(start + 1, strippedName);
+    } else {
+        size_t start = uriStr.find("//");
+        size_t end = uriStr.find("/", start + 2);
+        output = uriStr.erase(start + 2, end - start - 2);
+        output = output.insert(start + 2, strippedName);
+    }
+
+    return mongocxx::uri(output);
+}
+
+void Topology::getDataMemberConnectionStrings(mongocxx::client& client) {
+    auto admin = client.database("admin");
     auto res = admin.run_command(make_document(kvp("isMaster", 1)));
     if (!res.view()["setName"]) {
         std::unique_ptr<MongodDescription> desc = std::make_unique<MongodDescription>();
-        desc->mongodUri = client->uri().to_string();
+        desc->mongodUri = client.uri().to_string();
         this->_topology.reset(desc.release());
         return;
     }
 
     auto primary = res.view()["primary"];
-    //bsoncxx::array::view passives = res.view()["passives"].get_array();
 
     std::unique_ptr<ReplSetDescription> desc = std::make_unique<ReplSetDescription>();
     desc->primaryUri = std::string(primary.get_utf8().value);
@@ -51,9 +75,13 @@ void Topology::getDataMemberConnectionStrings(mongocxx::pool::entry& client) {
             MongodDescription memberDesc;
             memberDesc.mongodUri = std::string(member.get_utf8().value);
             desc->nodes.push_back(memberDesc);
+            BOOST_LOG_TRIVIAL(error) << "added member to replset with name " << memberDesc.mongodUri;
         }
+        BOOST_LOG_TRIVIAL(error) << "done adding members";
     }
 
+    // The "passives" field contains the list of unelectable (priority=0) secondaries
+    // and is omitted from the server's response when there are none.
     auto passives = res.view()["passives"];
     if (passives && passives.type() == bsoncxx::type::k_array) {
         bsoncxx::array::view passives_view = passives.get_array();
@@ -67,12 +95,50 @@ void Topology::getDataMemberConnectionStrings(mongocxx::pool::entry& client) {
     this->_topology.reset(desc.release());
 }
 
-void Topology::findConnectedNodesViaMongos(mongocxx::pool::entry& client) {
+void Topology::findConnectedNodesViaMongos(mongocxx::client& client) {
+    class ReplSetRetriever : public TopologyVisitor {
+    public:
+        void visitReplSetDescriptionPre(const ReplSetDescription& desc) {
+            replSet = desc; 
+        }
+        ReplSetDescription replSet;
+    };
 
+    auto admin = client.database("admin");
+    std::unique_ptr<ShardedDescription> desc = std::make_unique<ShardedDescription>();
+    ReplSetRetriever retriever;
+
+    // Config Server
+    auto shardMap = admin.run_command(make_document(kvp("getShardMap", 1)));
+    std::string configServerConn(shardMap.view()["map"]["config"].get_utf8().value);
+    Topology configTopology(nameToUri(_baseUri, configServerConn));
+    configTopology.accept(retriever);
+    desc->configsvr = retriever.replSet;
+    desc->configsvr.configsvr = true;
+
+    // Shards
+    auto shardListRes = admin.run_command(make_document(kvp("listShards", 1)));
+    bsoncxx::array::view shards = shardListRes.view()["shards"].get_array();
+    for (auto shard : shards) {
+        std::string shardConn(shard["host"].get_utf8().value);
+        Topology shardTopology(nameToUri(_baseUri, shardConn));
+        shardTopology.accept(retriever);
+        desc->shards.push_back(retriever.replSet);
+    }
+
+    // Mongos
+    for (auto host : _baseUri.hosts()) {
+        std::string hostName = host.name + ":" + std::to_string(host.port);
+        MongosDescription mongosDesc;
+        mongosDesc.mongosUri = nameToUri(_baseUri, host.name).to_string();
+        desc->mongoses.push_back(mongosDesc);
+    }
+
+    this->_topology.reset(desc.release());
 }
 
-void Topology::update(mongocxx::pool::entry& client) {
-    auto admin = client->database("admin");
+void Topology::update(mongocxx::client& client) {
+    auto admin = client.database("admin");
 
     bool isMongos = false;
     auto res = admin.run_command(make_document(kvp("isMaster", 1)));
@@ -87,9 +153,6 @@ void Topology::update(mongocxx::pool::entry& client) {
         getDataMemberConnectionStrings(client);
     }
 
-    ToJsonVisitor visitor;
-    accept(visitor);
-    BOOST_LOG_TRIVIAL(error) << "output: " << visitor.str();
 }
 
 }  // namespace genny
