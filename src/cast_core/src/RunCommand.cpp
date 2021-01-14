@@ -257,7 +257,8 @@ void actor::RunCommand::run() {
 
 actor::RunCommand::RunCommand(ActorContext& context)
     : Actor(context),
-      _client{std::move(context.client())},
+      _client{std::move(
+          context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
       _loop{context, context, _client, RunCommand::id()} {}
 
 namespace {

@@ -1,0 +1,154 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: |
+  Runs the reshardCollection command while read and write operations are active on the collection
+  being resharded.
+
+  The workload consists of 5 phases:
+    1. Creating an empty sharded collection distributed across all shards in the cluster.
+    2. Populating the sharded collection with data.
+    3. Running read and write operations on the collection before it is resharded.
+    4. Running read and write operations on the collection while it is being resharded.
+    5. Running read and write operations on the collection after it has been resharded.
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+
+  Database: &Database test
+  # Collection0 is the default collection populated by the MonotonicLoader.
+  Collection: &Collection Collection0
+  Namespace: &Namespace test.Collection0
+
+  DocumentSize: &DocumentSize 10000  # = 10kB
+  DocumentSize80Pct: &DocumentSize80Pct 8000  # = 8kB
+  DocumentCount: &DocumentCount 100000  # for an approximate total of 1GB
+
+  ShardKeyValueMin: &ShardKeyValueMin 1
+  ShardKeyValueMax: &ShardKeyValueMax 100
+
+  ReadWriteOperations: &ReadWriteOperations
+  - OperationName: findOne
+    OperationCommand:
+      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+  - OperationName: updateOne
+    OperationCommand:
+      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+      Update: {$inc: {counter: 1}}
+      # Write operations can fail with a ShardInvalidatedForTargeting error response due to the
+      # routing information for the temporary resharding collection not being available on the
+      # donor shard. TODO: Investigate why mongos isn't automatically retrying on it.
+      ThrowOnFailure: false
+
+Clients:
+  # The reshardCollection command is expected to take a long to complete so we give the actor
+  # running it a much higher socket timeout.
+  ReshardCollection:
+    QueryOptions:
+      maxPoolSize: 1
+      socketTimeoutMS: 3600000  # = 1 hour
+
+Actors:
+- Name: CreateShardedCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *Database
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: *Namespace
+        # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
+        # the shards.
+        key: {oldKey: hashed}
+        numInitialChunks: 60
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: LoadInitialData
+  Type: MonotonicLoader
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    BatchSize: 1000
+    Threads: 1
+    DocumentCount: *DocumentCount
+    Database: *Database
+    CollectionCount: 1
+    Document:
+      oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+      newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+      counter: 0
+      padding: {^FastRandomString: {length: {^RandomInt: {min: *DocumentSize80Pct, max: *DocumentSize}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: ReshardCollection
+  Type: AdminCommand
+  Threads: 1
+  ClientName: ReshardCollection
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    # Until SERVER-53373 is implemented, donor shards aren't guaranteed to preserve enough history
+    # on their own for the atClusterTime read by recipient shards to succeed. We enable the
+    # WTPreserveSnapshotHistoryIndefinitely failpoint in the meantime. The testing-only multicast
+    # command in mongos runs the specified command across all shard primaries and secondaries. This
+    # ensures all nodes in the replica set shards preserve enough history, regardless of which the
+    # "nearest" read preference for collection cloning ends up targeting. TODO: Stop enabling the
+    # WTPreserveSnapshotHistoryIndefinitely failpoint once SERVER-53373 is implemented.
+    - OperationName: AdminCommand
+      OperationCommand:
+        multicast:
+          configureFailPoint: WTPreserveSnapshotHistoryIndefinitely
+          mode: alwaysOn
+    - OperationMetricsName: ReshardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        reshardCollection: *Namespace
+        # There is a known bug where the config.chunks entries generated for the temporary
+        # resharding collection are identical to the config.chunks entries for the existing sharded
+        # collection. TODO: Use {newKey: 1} as the new shard key pattern after this issue has been
+        # addressed by SERVER-49526.
+        key: {oldKey: hashed, newKey: 1}
+  - *Nop
+
+- Name: ReadWriteCollectionBeingResharded
+  Type: CrudActor
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - MetricsName: BeforeResharding
+    Duration: 10 seconds
+    Threads: 100
+    Collection: *Collection
+    Operations: *ReadWriteOperations
+  - MetricsName: DuringResharding
+    Blocking: None
+    Threads: 100
+    Collection: *Collection
+    Operations: *ReadWriteOperations
+  - MetricsName: AfterResharding
+    Duration: 10 seconds
+    Threads: 100
+    Collection: *Collection
+    Operations: *ReadWriteOperations
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+    - shard-lite
