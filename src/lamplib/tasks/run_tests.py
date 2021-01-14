@@ -138,5 +138,8 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
     )
 
     _run_command_with_sentinel_report(
-        lambda: subprocess.run(";".join(cmds), cwd=workdir, env=env, shell=True, executable="/bin/bash"), checker_func
+        lambda: subprocess.run(
+            ";".join(cmds), cwd=workdir, env=env, shell=True, executable="/bin/bash"
+        ),
+        checker_func,
     )

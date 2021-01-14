@@ -498,4 +498,97 @@ Tests:
     #    - { "int" : { "$numberLong" : "2000000000"}, "string" : "2000000000" }
     - "string": "2"
 
+  # Now moves with time so would always fail until PERF-2086 is available.
+  - Name: Now
+    GivenTemplate:
+      date: {^Now: {}}
+    ThenReturns:
+    # The $date notation is extended json
+    # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
+    # Check with linux command line `date --utc -d@$((1453689676330 / 1000.0))  +"%Y-%m-%dT%H:%M:%S.%3N"`
+    - { "date" : { "$date" : { "$numberLong" : "1453689676330" } } }
+
+  # Date: Half Open interval: ["2020-01-01", "2021-01-01").
+  - Name: RandomDateMinMax
+    GivenTemplate:
+      date: {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}}
+    ThenReturns:
+    # The $date notation is extended json
+    # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
+    # Check with linux command line `date --utc -d@$((1606971090942 / 1000.0))  +"%Y-%m-%dT%H:%M:%S.%3N"`
+    - { "date" : { "$date" : { "$numberLong" : "1606971090942" } } }
+
+  # Date: Half Open interval: ["2020-01-01", "2030-01-01"). 2030-01-01 is the default max date.
+  - Name: RandomDateMin
+    GivenTemplate:
+      date: {^RandomDate: {min: "2020-01-01"}}
+    ThenReturns:
+    # The $date notation is extended json
+    # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
+    - { "date" : { "$date" : { "$numberLong" : "1778468968160" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1871664110292" } } }
+
+  # Date: Half Open interval: ["1970-01-01", "2021-01-01"). 1970-01-01 is the default min date.
+  - Name: RandomDateMax
+    GivenTemplate:
+      date: {^RandomDate: {max: "2021-01-01"}}
+    ThenReturns:
+    # The $date notation is extended json
+    # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
+    - { "date" : { "$date" : { "$numberLong" : "183360228161" } } }
+
+  # Date: 2020-01-01T00:00:00.000 (only one possible value here).
+  - Name: RandomDateSingle
+    GivenTemplate:
+      date: {^RandomDate: {min: "2020-01-01", max: "2020-01-01T00:00:00.001"}}
+    ThenReturns:
+    # The $date notation is extended json
+    # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
+    - { "date" : { "$date" : { "$numberLong" : "1577836800000" } } }
+
+  # Date: Half Open interval: ["2020-01-01 00:00:00", "2020-06-01T12:00:00").
+  - Name: RandomDateRange
+    GivenTemplate:
+      date: {^RandomDate: {min: "2020-01-01 00:00:00", max: "2020-06-01T12:00:00"}}
+    ThenReturns:
+    # The $date notation is extended json
+    # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
+    - { "date" : { "$date" : { "$numberLong" : "1578819502267" } } }
+
+  # Date: Half Open interval: ["1970-01-01", "2030-01-01").
+  - Name: RandomDateFull
+    GivenTemplate:
+      date: {^RandomDate: {}}
+    ThenReturns:
+    # The $date notation is extended json
+    # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
+    - { "date" : { "$date" : { "$numberLong" : "1454812640684" } } }
+
+  # Date: Half Open interval: ["2030-01-01", "2040-01-01").
+  - Name: RandomDateFuture
+    GivenTemplate:
+      date: {^RandomDate: {min: "2030-01-01", max: "2040-01-01"}}
+    ThenReturns:
+    # The $date notation is extended json
+    # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
+    - { "date" : { "$date" : { "$numberLong" : "1918332607011" } } }
+
+  # Date: Half Open interval: ["2020-01-01", "2020-01-01").
+  - Name: RandomDateULL
+    GivenTemplate:
+      date: {^RandomDate: {min: 1577836800000, max: 1577836800001}}
+    ThenReturns:
+    # The $date notation is extended json
+    # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
+    - { "date" : { "$date" : { "$numberLong" : "1577836800000" } } }
+
+  # Date: Random Dates including tz offset.
+  # Ensure that the generated value is correct '2013-05-30T00:57:04.299'.
+  # Note the +05:30 (Asia/Kolkata) v +06:30 (with incremented hour in the datetime string).
+  # As a result, the test fails if the TZ is not correctly processed (max will be less than min).
+  - Name: RandomDateKolkata
+    GivenTemplate:
+      date: {^RandomDate: {min: "2013-05-30T07:27:04.299+06:30", max: "2013-05-30 06:27:04.300+05:30"}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
 

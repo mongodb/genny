@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This script wraps the genny-auto-tasks entry-point in src/python,
+# This script wraps the genny-auto-tasks entry-point in src/lamplib,
 # running it inside a virtual environment with python3 and required dependencies.
 
 pushd "$(dirname "$0")" >/dev/null

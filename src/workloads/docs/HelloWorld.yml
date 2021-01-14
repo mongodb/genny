@@ -23,3 +23,13 @@ Actors:
       Key: UseMe  # Only load the YAML structure from this top-level key.
       Parameters:
         Repeat: 2
+
+  # As an alternate phase syntax, use the following for an actor that
+  # runs a total of 3 phases, active in phases named 0 and 2 and Nop for the rest:
+  # Phases:
+  #   OnlyActiveInPhases:
+  #     Active: [0, 2]
+  #     NopInPhasesUpTo: 2
+  #     PhaseConfig:
+  #       Message: Alternate Phase 1
+  #       Repeat: 100

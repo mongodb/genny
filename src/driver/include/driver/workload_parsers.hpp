@@ -16,14 +16,69 @@
 #define HEADER_0369D27D_9A68_4981_B344_4BAB3EE09A80_INCLUDED
 
 #include <boost/filesystem.hpp>
+#include <optional>
 #include <yaml-cpp/yaml.h>
 
 #include <driver/v1/DefaultDriver.hpp>
 
 namespace genny::driver::v1 {
 
-using YamlParameters = std::map<std::string, YAML::Node>;
 namespace fs = boost::filesystem;
+
+/**
+ * Values stored in a Context are tagged with a type to ensure
+ * they aren't used incorrectly.
+ *
+ * If updating, please add to typeNames in workload_parsers.cpp
+ * Enums don't have good string-conversion or introspection :(
+ */
+enum class Type {
+    kParameter,
+    kActorTemplate,
+    kActorInstance,
+};
+
+/**
+ * Manages scoped context for stored values.
+ *
+ * Contexts are helpers for the workload parser, and are only included in
+ * the header for testing purposes.
+ */
+class Context {
+public:
+    using ContextValue = std::pair<YAML::Node, Type>;
+    using Scope = std::map<std::string, std::pair<YAML::Node, Type>>;
+
+    std::optional<YAML::Node> get(const std::string&, const Type& type);
+    void insert(const std::string&, const YAML::Node&, const Type& type);
+
+    // Insert all the values of a node, assuming they are of a type.
+    void insert(const YAML::Node&, const Type& type);
+
+    /**
+     * Opens a scope, closes it when exiting scope.
+     */
+    struct ScopeGuard {
+        ScopeGuard(Context& context) : _context{context} {
+            // Emplace (push) a new Context onto the stack.
+            _context._scopes.emplace_back();
+        }
+        ~ScopeGuard() {
+            _context._scopes.pop_back();
+        }
+
+    private:
+        Context& _context;
+    };
+    ScopeGuard enter() {
+        return ScopeGuard(*this);
+    }
+
+private:
+    // Use vector as a stack since std::stack isn't iterable.
+    std::vector<Scope> _scopes;
+};
+
 
 /**
  * Parse user-defined workload files into shapes suitable for Genny.
@@ -42,14 +97,18 @@ public:
                      Mode mode = Mode::kNormal);
 
 private:
-    YamlParameters _params;
     const fs::path _phaseConfigPath;
+
+    Context _context;
 
     YAML::Node recursiveParse(YAML::Node);
 
-    // The following group of methods handle workload files containing external configuration files.
-    void convertExternal(std::string key, YAML::Node value, YAML::Node& out);
+    // The following group of methods handle workload files containing preprocess-able keywords.
+    void preprocess(std::string key, YAML::Node value, YAML::Node& out);
+    void parseTemplates(YAML::Node);
+    YAML::Node parseInstance(YAML::Node);
     YAML::Node parseExternal(YAML::Node);
+    YAML::Node parseOnlyIn(YAML::Node);
     YAML::Node replaceParam(YAML::Node);
 };
 
