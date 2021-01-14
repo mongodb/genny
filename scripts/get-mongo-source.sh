@@ -19,13 +19,13 @@ set -o pipefail
 set -o nounset
 
 pushd "$(dirname "$0")" >/dev/null
-    LAMP_VENV_DIR="$(pwd -P)"
+    SCRIPTS_DIR="$(pwd -P)"
 popd > /dev/null
 
-source "$LAMP_VENV_DIR/env.sh"
+source "$SCRIPTS_DIR/env.sh"
 
 
-ROOT_DIR="$(cd "${LAMP_VENV_DIR}/.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
 SOURCE_DIR="${ROOT_DIR}/build/mongo"
 
 export PATH="/opt/mongodbtoolchain/v3/bin:$PATH"
@@ -40,5 +40,5 @@ fi
     git checkout 298d4d6bbb9980b74bded06241067fe6771bef68
 )
 
-source "${LAMP_VENV_DIR}/venv/bin/activate"
+source "${SCRIPTS_DIR}/venv/bin/activate"
 python3 -m pip install -r "${SOURCE_DIR}/etc/pip/evgtest-requirements.txt"
