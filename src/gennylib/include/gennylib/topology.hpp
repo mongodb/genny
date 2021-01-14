@@ -78,7 +78,7 @@ public:
     virtual ~TopologyVisitor() {}
 };
 
-// Be careful change the traversal order of the cluster; visitors may depend on it.
+// Be careful changing the traversal order of the cluster; visitors may depend on it.
 struct AbstractTopologyDescription {
     virtual void accept(TopologyVisitor&) = 0;
     virtual ~AbstractTopologyDescription() {};
@@ -170,6 +170,12 @@ public:
      * Update the Topology's view of the cluster.
      */
     void update(mongocxx::client& client);
+
+    
+    /**
+     * Convert a node's name to a URI. Mostly just public for testing.
+     */
+    mongocxx::uri nameToUri(const mongocxx::uri& uri, const std::string& name);
 
 private:
     mongocxx::uri _baseUri;

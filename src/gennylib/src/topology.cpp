@@ -29,7 +29,7 @@ using bsoncxx::builder::basic::kvp;
 using bsoncxx::builder::basic::make_document;
 
 // Used to make sure we set a proper URI for connections we make.
-mongocxx::uri nameToUri(const mongocxx::uri& uri, const std::string& name) {
+mongocxx::uri Topology::nameToUri(const mongocxx::uri& uri, const std::string& name) {
     auto uriStr = uri.to_string();
     auto strippedName = name;
     if (name.find('/') != std::string::npos) {
@@ -58,7 +58,7 @@ void Topology::getDataMemberConnectionStrings(mongocxx::client& client) {
     auto res = admin.run_command(make_document(kvp("isMaster", 1)));
     if (!res.view()["setName"]) {
         std::unique_ptr<MongodDescription> desc = std::make_unique<MongodDescription>();
-        desc->mongodUri = client.uri().to_string();
+        desc->mongodUri = nameToUri(_baseUri, client.uri().to_string()).to_string();
         this->_topology.reset(desc.release());
         return;
     }
@@ -66,18 +66,16 @@ void Topology::getDataMemberConnectionStrings(mongocxx::client& client) {
     auto primary = res.view()["primary"];
 
     std::unique_ptr<ReplSetDescription> desc = std::make_unique<ReplSetDescription>();
-    desc->primaryUri = std::string(primary.get_utf8().value);
+    desc->primaryUri = nameToUri(_baseUri, std::string(primary.get_utf8().value)).to_string();
 
     auto hosts = res.view()["hosts"];
     if (hosts && hosts.type() == bsoncxx::type::k_array) {
         bsoncxx::array::view hosts_view = hosts.get_array();
         for (auto member : hosts_view) {
             MongodDescription memberDesc;
-            memberDesc.mongodUri = std::string(member.get_utf8().value);
+            memberDesc.mongodUri = nameToUri(_baseUri, std::string(member.get_utf8().value)).to_string();
             desc->nodes.push_back(memberDesc);
-            BOOST_LOG_TRIVIAL(error) << "added member to replset with name " << memberDesc.mongodUri;
         }
-        BOOST_LOG_TRIVIAL(error) << "done adding members";
     }
 
     // The "passives" field contains the list of unelectable (priority=0) secondaries
@@ -87,7 +85,7 @@ void Topology::getDataMemberConnectionStrings(mongocxx::client& client) {
         bsoncxx::array::view passives_view = passives.get_array();
         for (auto member : passives_view) {
             MongodDescription memberDesc;
-            memberDesc.mongodUri = std::string(member.get_utf8().value);
+            memberDesc.mongodUri = nameToUri(_baseUri, std::string(member.get_utf8().value)).to_string();
             desc->nodes.push_back(memberDesc);
         }
     }
