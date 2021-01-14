@@ -27,10 +27,10 @@ TEST_CASE("Topology descriptions get nodes correctly") {
     public:
         virtual void visitMongodDescription(const MongodDescription& desc) { names.push_back(desc.mongodUri); }
         // Mongos falls back to default nop-visit.
-        //virtual void visitMongosDescription(const MongosDescription& desc) {}
+        //virtual void visitMongosDescriptionPre(const MongosDescription& desc) {}
         // Same with replset
-        //virtual void visitReplSetDescription(const ReplSetDescription& desc) { names.push_back("visitedPrimary"); }
-        virtual void visitShardedDescription(const ShardedDescription& desc) { names.push_back("visitedShard"); }
+        //virtual void visitReplSetDescriptionPre(const ReplSetDescription& desc) { names.push_back("visitedPrimary"); }
+        virtual void visitShardedDescriptionPre(const ShardedDescription& desc) { names.push_back("visitedShard"); }
         std::vector<std::string> names;
     };
 
