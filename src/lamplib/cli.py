@@ -13,10 +13,9 @@ from parser import add_args_to_context
 
 
 def check_venv(args):
-    if not "VIRTUAL_ENV" in os.environ and not args.run_global:
+    if "VIRTUAL_ENV" not in os.environ and not args.run_global:
         logging.error(
-            "Tried to execute without active virtualenv. If you want to run lamp "
-            "without a virtualenv, use the --run-global option."
+            "Tried to execute without active virtualenv."
         )
         sys.exit(1)
 
@@ -67,6 +66,9 @@ def main():
 
     check_venv(args)
 
+    # TODO: barf if not set or not exists.
+    os.chdir(os.environ["GENNY_REPO_ROOT"])
+
     # Execute the minimum amount of code possible to run self tests to minimize
     # untestable code (i.e. code that runs the self-test).
     if args.subcommand == "self-test":
@@ -81,7 +83,6 @@ def main():
     curator_downloader = CuratorDownloader(os_family, args.linux_distro)
     if not curator_downloader.fetch_and_install():
         sys.exit(1)
-    curator_path = curator_downloader.result_dir
 
     if not args.subcommand:
         logging.info("No subcommand specified; running cmake, compile and install")

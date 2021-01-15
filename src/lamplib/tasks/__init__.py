@@ -62,9 +62,9 @@ def clean(context, env):
     subprocess.run(clean_cmd, env=env)
 
     # Physically remove all built files.
-    logging.debug("Erasing `build/` and `dist/`")
+    logging.debug("Erasing `build/` and `genny_venv`")
     subprocess.run(["rm", "-rf", "build"], env=env)
-    subprocess.run(["rm", "-rf", "dist"], env=env)
+    subprocess.run(["rm", "-rf", "genny_venv"], env=env)
 
     # Put back build/.gitinore
     subprocess.run(["git", "checkout", "--", "build"], env=env)

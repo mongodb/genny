@@ -19,6 +19,7 @@ dist
 # python
 __pycache__
 venv
+genny_venv
 .eggs/
 genny.egg-info
 

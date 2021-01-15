@@ -5,4 +5,5 @@ __pycache__
 .eggs
 nosetests.xml
 build
-dist
+genny_venv
+
