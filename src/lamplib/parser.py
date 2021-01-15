@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from context import Context
+from tasks.compile import Context
 
 
 def parse_args(args, os_family):
@@ -21,6 +21,7 @@ def parse_args(args, os_family):
         " please contact us at #workload-generation",
     )
     parser.add_argument("-v", "--verbose", action="store_true")
+    # TODO: kill --run-global
     parser.add_argument(
         "-g", "--run-global", action="store_true", help="allow installation outside of a virtualenv"
     )

@@ -3,7 +3,7 @@ import unittest
 from typing import NamedTuple, List, Optional
 from unittest.mock import MagicMock
 
-from gennylib.auto_tasks import (
+from tasks.auto_tasks import (
     CurrentBuildInfo,
     CLIOperation,
     WorkloadLister,

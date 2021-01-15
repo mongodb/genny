@@ -7,8 +7,8 @@ import sys
 import parser
 import tasks
 import tasks.run_tests
-from tasks.download import ToolchainDownloader, CuratorDownloader
-from context import Context
+from download import ToolchainDownloader, CuratorDownloader
+from tasks.compile import Context
 from parser import add_args_to_context
 
 

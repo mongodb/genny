@@ -1,8 +1,6 @@
 import subprocess
 
-from gennylib.genny_runner import poplar_grpc
-from gennylib.genny_runner import get_program_args
-
+from curator import poplar_grpc
 
 def main_canaries_runner():
     """
@@ -10,7 +8,7 @@ def main_canaries_runner():
     """
 
     with poplar_grpc():
-        res = subprocess.run(get_program_args("genny-canaries"))
+        res = subprocess.run("genny-canaries")
         res.check_returncode()
 
 

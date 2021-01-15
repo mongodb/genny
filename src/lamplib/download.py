@@ -6,7 +6,7 @@ import sys
 import platform
 import urllib.request
 
-from context import Context
+from tasks.compile import Context
 
 
 class Downloader:
