@@ -18,9 +18,9 @@ def check_venv(args):
 def run_self_test():
     cwd = os.path.dirname(os.path.abspath(__file__))
     SLOG.info("Running self-test", cwd=cwd)
-    res = subprocess.run(["python3", "-m", "unittest"], cwd=cwd)
-    SLOG.info("Self-test finished.", return_code=res.returncode)
-    res.check_returncode()
+    import pytest
+    pytest.main([])
+    SLOG.info("Self-test finished.")
     sys.exit(0)
 
 
