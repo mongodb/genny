@@ -61,16 +61,17 @@ def install(context, env):
     subprocess.run(install_cmd, env=env)
 
 
-def clean(build_system, os_family, linux_distro, ignore_toolchain_version):
-    env = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
+def clean(build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool):
+    print(f"locals={locals()}")
+    toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
     clean_cmd = [build_system, "-C", "build", "clean"]
-    SLOG.debug("Running clean: %s", " ".join(clean_cmd))
-    subprocess.run(clean_cmd, env=env)
+    SLOG.info("Running clean", cmd=clean_cmd)
+    subprocess.run(clean_cmd, env=toolchain_info["toolchain_env"])
 
     # Physically remove all built files.
     SLOG.debug("Erasing `build/` and `genny_venv`")
-    subprocess.run(["rm", "-rf", "build"], env=env)
-    subprocess.run(["rm", "-rf", "genny_venv"], env=env)
+    subprocess.run(["rm", "-rf", "build"], env=toolchain_info["toolchain_env"])
+    subprocess.run(["rm", "-rf", "genny_venv"], env=toolchain_info["toolchain_env"])
 
     # Put back build/.gitinore
-    subprocess.run(["git", "checkout", "--", "build"], env=env)
+    subprocess.run(["git", "checkout", "--", "build"], env=toolchain_info["toolchain_env"])
