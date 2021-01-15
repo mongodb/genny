@@ -18,9 +18,7 @@ def check_venv(args):
 def run_self_test():
     cwd = os.path.dirname(os.path.abspath(__file__))
     SLOG.info("Running self-test", cwd=cwd)
-    res = subprocess.run(
-        ["python3", "-m", "unittest"], cwd=cwd
-    )
+    res = subprocess.run(["python3", "-m", "unittest"], cwd=cwd)
     SLOG.info("Self-test finished.", return_code=res.returncode)
     res.check_returncode()
     sys.exit(0)
@@ -84,35 +82,40 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     "--linux-distro",
     required=False,
     default="not-linux",
-    type=click.Choice(["ubuntu1804", "archlinux", "rhel8", "rhel70", "rhel62", "amazon2", "not-linux"]),
+    type=click.Choice(
+        ["ubuntu1804", "archlinux", "rhel8", "rhel70", "rhel62", "amazon2", "not-linux"]
+    ),
     help="specify the linux distro you're on; if your system isn't available,"
-         " please contact us at #workload-generation",
+    " please contact us at #workload-generation",
 )
 @click.option(
     "-i",
     "--ignore-toolchain-version",
     help="ignore the toolchain version, useful for testing toolchain changes",
-
 )
 @click.option(
-    "-b", "--build-system",
+    "-b",
+    "--build-system",
     type=click.Choice(["make", "ninja"]),
     default="ninja",
     help="Which build-system to use for compilation. May need to use make for IDEs.",
 )
 @click.option(
-    "-s", "--sanitizer",
-    type=click.Choice(["asan", "tsan", "ubsan"]),
+    "-s", "--sanitizer", type=click.Choice(["asan", "tsan", "ubsan"]),
 )
 @click.option(
-    "-f", "--os-family",
-    default=platform.system(),
+    "-f", "--os-family", default=platform.system(),
 )
 @click.pass_context
-def requires_build_system(ctx,
-                          verbose: bool,
-                          linux_distro: str, ignore_toolchain_version: bool, build_system: str, sanitizer: str,
-                          os_family: str):
+def requires_build_system(
+    ctx,
+    verbose: bool,
+    linux_distro: str,
+    ignore_toolchain_version: bool,
+    build_system: str,
+    sanitizer: str,
+    os_family: str,
+):
     ctx.ensure_object(dict)
     ctx.obj["VERBOSE"] = verbose
     ctx.obj["LINUX_DISTRO"] = linux_distro
@@ -124,35 +127,42 @@ def requires_build_system(ctx,
     loggers.setup_logging(verbose=ctx.obj["VERBOSE"])
 
     from tasks import compile
-    compile.cmake(ctx.obj["BUILD_SYSTEM"],
-                  ctx.obj["OS_FAMILY"],
-                  ctx.obj["LINUX_DISTRO"],
-                  ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-                  ctx.obj["SANITIZER"])
+
+    compile.cmake(
+        ctx.obj["BUILD_SYSTEM"],
+        ctx.obj["OS_FAMILY"],
+        ctx.obj["LINUX_DISTRO"],
+        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+        ctx.obj["SANITIZER"],
+    )
 
 
 @requires_build_system.command(
-    name="compile",
-    help="Compile",
+    name="compile", help="Compile",
 )
 @click.pass_context
 def compile(ctx) -> None:
     from tasks import compile
 
-    compile.compile_all(ctx.obj["BUILD_SYSTEM"],
-                        ctx.obj["OS_FAMILY"],
-                        ctx.obj["LINUX_DISTRO"],
-                        ctx.obj["IGNORE_TOOLCHAIN_VERSION"])
+    compile.compile_all(
+        ctx.obj["BUILD_SYSTEM"],
+        ctx.obj["OS_FAMILY"],
+        ctx.obj["LINUX_DISTRO"],
+        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+    )
 
 
 @requires_build_system.command("clean")
 @click.pass_context
 def clean(ctx) -> None:
     from tasks import compile
-    compile.clean(ctx.obj["BUILD_SYSTEM"],
-                  ctx.obj["OS_FAMILY"],
-                  ctx.obj["LINUX_DISTRO"],
-                  ctx.obj["IGNORE_TOOLCHAIN_VERSION"])
+
+    compile.clean(
+        ctx.obj["BUILD_SYSTEM"],
+        ctx.obj["OS_FAMILY"],
+        ctx.obj["LINUX_DISTRO"],
+        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+    )
 
 
 # TODO: this doesn't require the build-system (cmake) but shrug.
@@ -160,8 +170,6 @@ def clean(ctx) -> None:
 @click.pass_context
 def self_test(ctx):
     run_self_test()
-
-
 
 
 # TODO: common stuff

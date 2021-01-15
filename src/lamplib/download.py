@@ -7,6 +7,7 @@ import urllib.request
 
 SLOG = structlog.get_logger(__name__)
 
+
 class Downloader:
     """
     Abstract base class for things that can be downloaded.
@@ -174,5 +175,3 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
 
     def _can_ignore(self):
         raise NotImplementedError
-
-

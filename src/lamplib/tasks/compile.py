@@ -23,7 +23,13 @@ def _sanitizer_flags(sanitizer: str = None):
 
 
 # TODO: cmdline_cmake_args
-def cmake(build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool, sanitizer: str):
+def cmake(
+    build_system: str,
+    os_family: str,
+    linux_distro: str,
+    ignore_toolchain_version: bool,
+    sanitizer: str,
+):
     toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
 
     generators = {"make": "Unix Makefiles", "ninja": "Ninja"}
@@ -33,9 +39,11 @@ def cmake(build_system: str, os_family: str, linux_distro: str, ignore_toolchain
     # using both.
     cmake_prefix_path = os.path.join(
         toolchain_info["toolchain_dir"],
-        "installed/x64-{}-shared".format(toolchain_info["triplet_os"])
+        "installed/x64-{}-shared".format(toolchain_info["triplet_os"]),
     )
-    cmake_toolchain_file = os.path.join(toolchain_info["toolchain_dir"], "scripts/buildsystems/vcpkg.cmake")
+    cmake_toolchain_file = os.path.join(
+        toolchain_info["toolchain_dir"], "scripts/buildsystems/vcpkg.cmake"
+    )
 
     cmake_cmd += [
         "-DCMAKE_PREFIX_PATH={}".format(cmake_prefix_path),
@@ -52,7 +60,9 @@ def cmake(build_system: str, os_family: str, linux_distro: str, ignore_toolchain
     subprocess.run(cmake_cmd, env=toolchain_info["toolchain_env"])
 
 
-def compile_all(build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool):
+def compile_all(
+    build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool
+):
     toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
     compile_cmd = [build_system, "-C", "build"]
     SLOG.info("Compiling", compile_cmd=compile_cmd)

@@ -52,6 +52,7 @@ def setup_logging(verbose: bool = False) -> None:
     _tweak_structlog_log_line()
     _LOGGING_SETUP = True
 
+
 def _tweak_structlog_log_line() -> None:
     """
     Unfortunately structlog's ConsoleRenderer doesn't give us any ability to format the log message.
