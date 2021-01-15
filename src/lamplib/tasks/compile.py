@@ -50,7 +50,8 @@ def cmake(context, toolchain_dir, env, cmdline_cmake_args):
 def compile_all(build_system, os_family, linux_distro, ignore_toolchain_version):
     env = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
     compile_cmd = [build_system, "-C", "build"]
-    SLOG.info("Compiling", compile_cmd=compile_cmd, env=env)
+    SLOG.info("Compiling", compile_cmd=compile_cmd)
+    SLOG.debug("Compile env", env=env)
     subprocess.run(compile_cmd, env=env["toolchain_env"])
 
 

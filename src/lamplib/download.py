@@ -145,24 +145,24 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
             return False
 
         if self._can_ignore():
-            SLOG.debug("Skipping installing the %s into: %s", self._name, self.result_dir)
+            SLOG.debug("Skipping installing", name=self._name, into_dir=self.result_dir)
         else:
             tarball = os.path.join(self._install_dir, self._name + ".tgz")
             if os.path.isfile(tarball):
-                SLOG.info("Skipping downloading %s", tarball)
+                SLOG.info("Skipping downloading", tarball=tarball)
             else:
-                SLOG.info("Downloading %s, please wait...", self._name)
+                SLOG.info("Downloading", name=self._name)
                 url = self._get_url()
                 urllib.request.urlretrieve(url, tarball)
-                SLOG.info("Finished Downloading %s as %s", self._name, tarball)
+                SLOG.info("Finished Downloading", name=self._name, tarball=tarball)
 
-            SLOG.info("Extracting %s into %s, please wait...", self._name, self.result_dir)
+            SLOG.info("Extracting", name=self._name, into=self.result_dir)
 
             shutil.rmtree(self.result_dir, ignore_errors=True)
             os.mkdir(self.result_dir)
             # use tar(1) because python's TarFile was inexplicably truncating the tarball
             subprocess.run(["tar", "-xzf", tarball, "-C", self.result_dir], check=True)
-            SLOG.info("Finished extracting %s into %s", self._name, self.result_dir)
+            SLOG.info("Finished extracting", name=self._name, into=self.result_dir)
 
             # Get space back.
             os.remove(tarball)

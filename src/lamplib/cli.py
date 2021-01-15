@@ -51,15 +51,15 @@ def validate_environment():
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 
-@click.group(name="DSI", context_settings=CONTEXT_SETTINGS)
-@click.option("-d", "--debug", default=False, is_flag=True, help="Enable debug logging.")
-@click.pass_context
-def cli(ctx: click.Context, debug: bool) -> None:
-    # Ensure that ctx.obj exists and is a dict.
-    ctx.ensure_object(dict)
-
-    ctx.obj["DEBUG"] = debug
-    loggers.setup_logging(verbose=debug)
+# @click.group(name="DSI", context_settings=CONTEXT_SETTINGS)
+#
+# @click.pass_context
+# def cli(ctx: click.Context, debug: bool) -> None:
+#     # Ensure that ctx.obj exists and is a dict.
+#     ctx.ensure_object(dict)
+#
+#     ctx.obj["DEBUG"] = debug
+#
 
 """
 
@@ -72,9 +72,9 @@ def cli(ctx: click.Context, debug: bool) -> None:
 #     )
 """
 
-@cli.command(
-    "compile", help="Compile",
-)
+
+@click.group()
+@click.option("-v", "--verbose", default=False, is_flag=True, help="Enable debug logging.")
 # Python can't natively check the distros of our supported platforms.
 # See https://bugs.python.org/issue18872 for more info.
 @click.option(
@@ -102,28 +102,56 @@ def cli(ctx: click.Context, debug: bool) -> None:
     "-s", "--sanitizer",
     type=click.Choice(["asan", "tsan", "ubsan"]),
 )
-def compile(linux_distro: str,
-            ignore_toolchain_version: bool,
-            build_system: str,
-            sanitizer: str,) -> None:
-    from tasks import compile
-    os_family = platform.system()
-
-    compile.compile_all(build_system, os_family, linux_distro, ignore_toolchain_version)
-
-
-@cli.command("clean")
 @click.option(
-    "-b", "--build-system",
-    type=click.Choice(["make", "ninja"]),
-    help="Which build-system to use for compilation. May need to use make for IDEs.",
+    "-f", "--os-family",
+    default=platform.system(),
 )
-def clean(build_system: str):
+@click.pass_context
+def requires_build_system(ctx,
+                          verbose: bool,
+                          linux_distro: str, ignore_toolchain_version: bool, build_system: str, sanitizer: str,
+                          os_family: str):
+    ctx.ensure_object(dict)
+    ctx.obj["VERBOSE"] = verbose
+    ctx.obj["LINUX_DISTRO"] = linux_distro
+    ctx.obj["IGNORE_TOOLCHAIN_VERSION"] = ignore_toolchain_version
+    ctx.obj["BUILD_SYSTEM"] = build_system
+    ctx.obj["SANITIZER"] = sanitizer
+    ctx.obj["OS_FAMILY"] = os_family
+
+    loggers.setup_logging(verbose=ctx.obj["VERBOSE"])
+
+
+@requires_build_system.command(
+    "compile", help="Compile",
+)
+@click.pass_context
+def compile(ctx) -> None:
     from tasks import compile
-    compile.clean(build_system)
+
+    compile.compile_all(ctx.obj["BUILD_SYSTEM"],
+                        ctx.obj["OS_FAMILY"],
+                        ctx.obj["LINUX_DISTRO"],
+                        ctx.obj["IGNORE_TOOLCHAIN_VERSION"])
 
 
-@cli.command("self-test")
+@requires_build_system.command("clean")
+@click.pass_context
+def clean(ctx) -> None:
+    from tasks import compile
+    compile.clean(ctx.obj["BUILD_SYSTEM"],
+                  ctx.obj["OS_FAMILY"],
+                  ctx.obj["LINUX_DISTRO"],
+                  ctx.obj["IGNORE_TOOLCHAIN_VERSION"])
+
+
+@click.group()
+def other_commands():
+    pass
+
+
+# TODO
+@other_commands.command("self-test")
 def self_test():
     run_self_test()
 
@@ -182,9 +210,10 @@ def self_test():
 #             raise ValueError("Unknown subcommand: ", args.subcommand)
 #
 
+
 if __name__ == "__main__":
     sys.argv[0] = "run-genny"
-    cli()
+    requires_build_system()
 
 
 #
