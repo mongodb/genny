@@ -152,8 +152,8 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
             if os.path.isfile(tarball):
                 SLOG.info("Skipping downloading", tarball=tarball)
             else:
-                SLOG.info("Downloading", name=self._name)
                 url = self._get_url()
+                SLOG.info("Downloading", name=self._name, url=url)
                 urllib.request.urlretrieve(url, tarball)
                 SLOG.info("Finished Downloading", name=self._name, tarball=tarball)
 
