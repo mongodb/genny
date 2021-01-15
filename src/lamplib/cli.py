@@ -36,10 +36,14 @@ SLOG = structlog.get_logger(__name__)
     help="Which build-system to use for compilation. May need to use make for IDEs.",
 )
 @click.option(
-    "-s", "--sanitizer", type=click.Choice(["asan", "tsan", "ubsan"]),
+    "-s",
+    "--sanitizer",
+    type=click.Choice(["asan", "tsan", "ubsan"]),
 )
 @click.option(
-    "-f", "--os-family", default=platform.system(),
+    "-f",
+    "--os-family",
+    default=platform.system(),
 )
 # TODO
 #     if os_family == "Linux" and not known_args.subcommand and not known_args.linux_distro:
@@ -80,7 +84,8 @@ def requires_build_system(
 
 
 @requires_build_system.command(
-    name="compile", help="Compile",
+    name="compile",
+    help="Compile",
 )
 @click.pass_context
 def compile(ctx) -> None:

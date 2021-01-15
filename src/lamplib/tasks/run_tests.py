@@ -6,6 +6,7 @@ import structlog
 import os
 import subprocess
 
+import resmoke
 import toolchain
 from cli import SLOG
 
@@ -121,7 +122,11 @@ def _check_create_new_actor_test_report(workdir):
 
 
 def resmoke_test(
-    genny_repo_root: str, suites: str, is_cnats: bool, mongo_dir: str, env: dict,
+    genny_repo_root: str,
+    suites: str,
+    is_cnats: bool,
+    mongo_dir: str,
+    env: dict,
 ):
     workdir = genny_repo_root
     checker_func = None
@@ -133,49 +138,27 @@ def resmoke_test(
     if (not suites) and (not is_cnats):
         raise ValueError('Must specify either "--suites" or "--create-new-actor-test-suite"')
 
-    if not mongo_dir:
-        # Default mongo directory in Evergreen.
-        mongo_dir = os.path.join(workdir, "build", "mongo")
-        # Default download location for MongoDB binaries.
-        env["PATH"] = os.path.join(mongo_dir, "bin") + ":" + mongo_dir + ":" + env["PATH"]
+    resmoke.run_resmoke(genny_repo_root=genny_repo_root, resmoke_args=["--help"])
 
-    if "VIRTUAL_ENV" not in os.environ:
-        raise ValueError(
-            "The venv directory is required for resmoke and does not exist, "
-            "please ensure you're running with the run-genny script."
-        )
-
-    cmds = []
-    cmds.append(
-        " ".join(
-            [
-                "python",
-                "-mpip",
-                "install",
-                "-r",
-                os.path.join(mongo_dir, "etc", "pip", "evgtest-requirements.txt"),
-            ]
-        )
-    )
-    cmds.append(
-        " ".join(
-            [
-                "python",
-                os.path.join(mongo_dir, "buildscripts", "resmoke.py"),
-                "run",
-                "--suite",
-                suites,
-                "--configDir",
-                os.path.join(mongo_dir, "buildscripts", "resmokeconfig"),
-                "--mongod mongod --mongo mongo --mongos mongos",
-            ]
-        )
+    cmd = resmoke.run_resmoke(
+        genny_repo_root=genny_repo_root,
+        resmoke_args=[
+            "run",
+            "--suite",
+            suites,
+            "--configDir",
+            os.path.join(mongo_dir, "buildscripts", "resmokeconfig"),
+            "--mongod",
+            "mongod",
+            "--mongo",
+            "mongo",
+            "--mongos",
+            "mongos",
+        ],
     )
 
     _run_command_with_sentinel_report(
-        lambda: subprocess.run(
-            ";".join(cmds), cwd=workdir, env=env, shell=True, executable="/bin/bash"
-        ),
+        lambda: subprocess.run(cmd, cwd=workdir, env=env),
         checker_func,
     )
 

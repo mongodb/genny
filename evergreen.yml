@@ -271,6 +271,7 @@ functions:
   #   mongodb_archive_url: url to download pre-compiled mongo from
   ##
   f_checkout_mongodb:
+  # TODO: we can do better than this
   - command: subprocess.exec
     params:
       working_dir: src
