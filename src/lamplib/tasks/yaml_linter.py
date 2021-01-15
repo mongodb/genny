@@ -1,4 +1,4 @@
-import logging
+import loggers
 import os
 import os.path as path
 import sys
@@ -7,10 +7,10 @@ import yamllint.cli
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
+    loggers.basicConfig(level=loggers.INFO)
 
     if not path.exists(".genny-root"):
-        logging.error("Please run this script from the root of the Genny repository")
+        loggers.error("Please run this script from the root of the Genny repository")
         sys.exit(1)
 
     yaml_dirs = [
@@ -27,7 +27,7 @@ def main():
         for dirpath, dirnames, filenames in os.walk(yaml_dir):
             for filename in filenames:
                 if filename.endswith(".yaml"):
-                    logging.error(
+                    loggers.error(
                         "All YAML files should have the .yml extension, found %s", filename
                     )
                     # Don't error immediately so all violations can be printed with one run
@@ -40,7 +40,7 @@ def main():
         sys.exit(1)
 
     if len(yaml_files) == 0:
-        logging.error(
+        loggers.error(
             "Did not find any YAML files to lint in the directories: %s", " ".join(yaml_dirs)
         )
         sys.exit(1)
@@ -51,7 +51,7 @@ def main():
 
     print("Linting {} Genny workload YAML files with yamllint".format(len(yaml_files)))
 
-    logging.debug("Invoking yamllint with the following command: ".join(yamllint_argv))
+    loggers.debug("Invoking yamllint with the following command: ".join(yamllint_argv))
 
     yamllint.cli.run(yamllint_argv)
 

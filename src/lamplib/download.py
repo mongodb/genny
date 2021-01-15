@@ -1,4 +1,4 @@
-import logging
+import loggers
 import os
 import shutil
 import subprocess
@@ -38,20 +38,20 @@ class Downloader:
         :return: Whether the operation succeeded.
         """
         if not os.path.exists(self._install_dir):
-            logging.critical("Please create the parent directory for %s.", self._name)
+            loggers.critical("Please create the parent directory for %s.", self._name)
 
             if platform.mac_ver()[0]:
                 release_triplet = platform.mac_ver()[0].split(".")
                 minor_ver = int(release_triplet[1])
                 if minor_ver >= 12 and minor_ver < 15:
-                    logging.info(
+                    loggers.info(
                         "On versions of MacOS between 10.12 and 10.14, "
                         "you have to disable System Integrity Protection first. "
                         "See https://apple.stackexchange.com/a/208481 for instructions"
                     )
                 if minor_ver >= 15:
                     # Instructions derived from https://github.com/NixOS/nix/issues/2925#issuecomment-539570232
-                    logging.info(
+                    loggers.info(
                         f"""
 
 😲 You must create the parent directory {self._name} for the genny toolchain.
@@ -125,7 +125,7 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
                     )
                     return False
 
-            logging.critical(
+            loggers.critical(
                 '`sudo mkdir -p "%s"; sudo chown "$USER" "%s"`',
                 self._install_dir,
                 self._install_dir,
@@ -134,11 +134,11 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
             return False
 
         if not os.path.isdir(self._install_dir):
-            logging.critical("Install dir %s is not a directory.", self._install_dir)
+            loggers.critical("Install dir %s is not a directory.", self._install_dir)
             return False
 
         if not os.access(self._install_dir, os.W_OK):
-            logging.critical(
+            loggers.critical(
                 "Please ensure you have write access to the parent directory for %s: "
                 "`sudo chown $USER %s`",
                 self._name,
@@ -148,24 +148,24 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
 
         self.result_dir = os.path.join(self._install_dir, self._name)
         if self._can_ignore():
-            logging.debug("Skipping installing the %s into: %s", self._name, self.result_dir)
+            loggers.debug("Skipping installing the %s into: %s", self._name, self.result_dir)
         else:
             tarball = os.path.join(self._install_dir, self._name + ".tgz")
             if os.path.isfile(tarball):
-                logging.info("Skipping downloading %s", tarball)
+                loggers.info("Skipping downloading %s", tarball)
             else:
-                logging.info("Downloading %s, please wait...", self._name)
+                loggers.info("Downloading %s, please wait...", self._name)
                 url = self._get_url()
                 urllib.request.urlretrieve(url, tarball)
-                logging.info("Finished Downloading %s as %s", self._name, tarball)
+                loggers.info("Finished Downloading %s as %s", self._name, tarball)
 
-            logging.info("Extracting %s into %s, please wait...", self._name, self.result_dir)
+            loggers.info("Extracting %s into %s, please wait...", self._name, self.result_dir)
 
             shutil.rmtree(self.result_dir, ignore_errors=True)
             os.mkdir(self.result_dir)
             # use tar(1) because python's TarFile was inexplicably truncating the tarball
             subprocess.run(["tar", "-xzf", tarball, "-C", self.result_dir], check=True)
-            logging.info("Finished extracting %s into %s", self._name, self.result_dir)
+            loggers.info("Finished extracting %s into %s", self._name, self.result_dir)
 
             # Get space back.
             os.remove(tarball)

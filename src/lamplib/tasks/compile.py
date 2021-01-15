@@ -1,4 +1,4 @@
-import logging
+import loggers
 import os
 import sys
 import subprocess
@@ -40,29 +40,29 @@ def cmake(context, toolchain_dir, env, cmdline_cmake_args):
 
     cmake_cmd += cmdline_cmake_args
 
-    logging.info("Running cmake: %s", " ".join(cmake_cmd))
+    loggers.info("Running cmake: %s", " ".join(cmake_cmd))
     subprocess.run(cmake_cmd, env=env)
 
 
 def compile_all(context, env):
     compile_cmd = [context.BUILD_SYSTEM, "-C", "build"]
-    logging.debug("Compiling: %s", " ".join(compile_cmd))
+    loggers.debug("Compiling: %s", " ".join(compile_cmd))
     subprocess.run(compile_cmd, env=env)
 
 
 def install(context, env):
     install_cmd = [context.BUILD_SYSTEM, "-C", "build", "install"]
-    logging.debug("Running install: %s", " ".join(install_cmd))
+    loggers.debug("Running install: %s", " ".join(install_cmd))
     subprocess.run(install_cmd, env=env)
 
 
 def clean(context, env):
     clean_cmd = [context.BUILD_SYSTEM, "-C", "build", "clean"]
-    logging.debug("Running clean: %s", " ".join(clean_cmd))
+    loggers.debug("Running clean: %s", " ".join(clean_cmd))
     subprocess.run(clean_cmd, env=env)
 
     # Physically remove all built files.
-    logging.debug("Erasing `build/` and `genny_venv`")
+    loggers.debug("Erasing `build/` and `genny_venv`")
     subprocess.run(["rm", "-rf", "build"], env=env)
     subprocess.run(["rm", "-rf", "genny_venv"], env=env)
 
@@ -98,7 +98,7 @@ def _create_compile_environment(triplet_os, toolchain_dir):
     env["PATH"] = ":".join(paths)
     env["NINJA_STATUS"] = "[%f/%t (%p) %es] "  # make the ninja output even nicer
 
-    logging.debug("Using environment: %s", env)
+    loggers.debug("Using environment: %s", env)
     return env
 
 

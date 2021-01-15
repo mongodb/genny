@@ -20,6 +20,7 @@ dist
 __pycache__
 venv
 genny_venv
+pip-requirements.txt
 .eggs/
 genny.egg-info
 

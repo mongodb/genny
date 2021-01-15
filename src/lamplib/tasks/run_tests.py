@@ -1,4 +1,4 @@
-import logging
+import loggers
 import os
 import subprocess
 
@@ -39,10 +39,10 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
         success = res.returncode == 0
 
     if success:
-        logging.debug("Test succeeded, removing sentinel report")
+        loggers.debug("Test succeeded, removing sentinel report")
         os.remove(sentinel_file)
     else:
-        logging.debug("Test failed, leaving sentinel report in place")
+        loggers.debug("Test failed, leaving sentinel report in place")
 
 
 def cmake_test(env):
@@ -72,7 +72,7 @@ def _check_create_new_actor_test_report(workdir):
     report_file = os.path.join(workdir, "build", "create_new_actor_test.junit.xml")
 
     if not os.path.isfile(report_file):
-        logging.error("Failed to find report file: %s", report_file)
+        loggers.error("Failed to find report file: %s", report_file)
         return passed
 
     expected_error = 'failure message="100 == 101"'
@@ -84,7 +84,7 @@ def _check_create_new_actor_test_report(workdir):
     if passed:
         os.remove(report_file)  # Remove the report file for the expected failure.
     else:
-        logging.error(
+        loggers.error(
             "test for create-new-actor script did not succeed. Failed to find expected "
             "error message %s in report file",
             expected_error,

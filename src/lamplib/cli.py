@@ -1,20 +1,19 @@
-import logging
+import click
+import loggers
 import os
 import platform
 import subprocess
 import sys
 
-import parser
 import tasks
 import tasks.run_tests
 from download import ToolchainDownloader, CuratorDownloader
 from tasks.compile import Context
-from parser import add_args_to_context
 
 
 def check_venv(args):
     if "VIRTUAL_ENV" not in os.environ and not args.run_global:
-        logging.error("Tried to execute without active virtualenv.")
+        loggers.error("Tried to execute without active virtualenv.")
         sys.exit(1)
 
 
@@ -46,69 +45,178 @@ def validate_environment():
             # You could technically compile clang or gcc yourself on an older version
             # of macOS, but it's untested so we might as well just enforce
             # a blanket minimum macOS version for simplicity.
-            logging.error("Genny requires macOS 10.14 Mojave or newer")
+            loggers.error("Genny requires macOS 10.14 Mojave or newer")
             sys.exit(1)
     return
 
 
-def main():
-    validate_environment()
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
-    # Initialize the global context.
-    os_family = platform.system()
-    Context.set_triplet_os(os_family)
-    args, cmake_args = parser.parse_args(sys.argv[1:], os_family)
-    add_args_to_context(args)
-    # Pass around Context instead of using the global one to facilitate testing.
-    context = Context
 
-    check_venv(args)
+@click.group(name="DSI", context_settings=CONTEXT_SETTINGS)
+@click.option("-d", "--debug", default=False, is_flag=True, help="Enable debug logging.")
+@click.pass_context
+def cli(ctx: click.Context, debug: bool) -> None:
+    # Ensure that ctx.obj exists and is a dict.
+    ctx.ensure_object(dict)
 
-    # TODO: barf if not set or not exists.
-    os.chdir(os.environ["GENNY_REPO_ROOT"])
+    ctx.obj["DEBUG"] = debug
+    loggers.setup_logging(verbose=debug)
 
-    # Execute the minimum amount of code possible to run self tests to minimize
-    # untestable code (i.e. code that runs the self-test).
-    if args.subcommand == "self-test":
-        run_self_test()
 
-    toolchain_downloader = ToolchainDownloader(os_family, args.linux_distro)
-    if not toolchain_downloader.fetch_and_install():
-        sys.exit(1)
-    toolchain_dir = toolchain_downloader.result_dir
-    compile_env = context.get_compile_environment(toolchain_dir)
-
-    curator_downloader = CuratorDownloader(os_family, args.linux_distro)
-    if not curator_downloader.fetch_and_install():
-        sys.exit(1)
-
-    if not args.subcommand:
-        logging.info("No subcommand specified; running cmake, compile and install")
-        tasks.cmake(
-            context, toolchain_dir=toolchain_dir, env=compile_env, cmdline_cmake_args=cmake_args
-        )
-        tasks.compile_all(context, compile_env)
-        tasks.install(context, compile_env)
-    elif args.subcommand == "clean":
-        tasks.clean(context, compile_env)
-    else:
-        tasks.compile_all(context, compile_env)
-        if args.subcommand == "install":
-            tasks.install(context, compile_env)
-        elif args.subcommand == "cmake-test":
-            tasks.run_tests.cmake_test(compile_env)
-        elif args.subcommand == "benchmark-test":
-            tasks.run_tests.benchmark_test(compile_env)
-        elif args.subcommand == "resmoke-test":
-            tasks.run_tests.resmoke_test(
-                compile_env,
-                suites=args.resmoke_suites,
-                mongo_dir=args.resmoke_mongo_dir,
-                is_cnats=args.resmoke_cnats,
-            )
-        else:
-            raise ValueError("Unknown subcommand: ", args.subcommand)
-
+# def main():
+#     validate_environment()
+#
+#     # Initialize the global context.
+#     os_family = platform.system()
+#     Context.set_triplet_os(os_family)
+#     args, cmake_args = parse_args(sys.argv[1:], os_family)
+#     add_args_to_context(args)
+#     # Pass around Context instead of using the global one to facilitate testing.
+#     context = Context
+#
+#     check_venv(args)
+#
+#     # TODO: barf if not set or not exists.
+#     os.chdir(os.environ["GENNY_REPO_ROOT"])
+#
+#     # Execute the minimum amount of code possible to run self tests to minimize
+#     # untestable code (i.e. code that runs the self-test).
+#     if args.subcommand == "self-test":
+#         run_self_test()
+#
+#     toolchain_downloader = ToolchainDownloader(os_family, args.linux_distro)
+#     if not toolchain_downloader.fetch_and_install():
+#         sys.exit(1)
+#     toolchain_dir = toolchain_downloader.result_dir
+#     compile_env = context.get_compile_environment(toolchain_dir)
+#
+#     curator_downloader = CuratorDownloader(os_family, args.linux_distro)
+#     if not curator_downloader.fetch_and_install():
+#         sys.exit(1)
+#
+#     if not args.subcommand:
+#         loggers.info("No subcommand specified; running cmake, compile and install")
+#         tasks.cmake(
+#             context, toolchain_dir=toolchain_dir, env=compile_env, cmdline_cmake_args=cmake_args
+#         )
+#         tasks.compile_all(context, compile_env)
+#         tasks.install(context, compile_env)
+#     elif args.subcommand == "clean":
+#         tasks.clean(context, compile_env)
+#     else:
+#         tasks.compile_all(context, compile_env)
+#         if args.subcommand == "install":
+#             tasks.install(context, compile_env)
+#         elif args.subcommand == "cmake-test":
+#             tasks.run_tests.cmake_test(compile_env)
+#         elif args.subcommand == "benchmark-test":
+#             tasks.run_tests.benchmark_test(compile_env)
+#         elif args.subcommand == "resmoke-test":
+#             tasks.run_tests.resmoke_test(
+#                 compile_env,
+#                 suites=args.resmoke_suites,
+#                 mongo_dir=args.resmoke_mongo_dir,
+#                 is_cnats=args.resmoke_cnats,
+#             )
+#         else:
+#             raise ValueError("Unknown subcommand: ", args.subcommand)
+#
 
 if __name__ == "__main__":
-    main()
+    sys.argv[0] = "run-genny"
+    cli()
+
+
+# def parse_args(args, os_family):
+#     parser = argparse.ArgumentParser(
+#         description="Script for building genny",
+#         epilog="Unknown positional arguments will be forwarded verbatim to the cmake"
+#         " invocation where relevant",
+#     )
+#
+#     # Python can't natively check the distros of our supported platforms.
+#     # See https://bugs.python.org/issue18872 for more info.
+#     parser.add_argument(
+#         "-d",
+#         "--linux-distro",
+#         choices=["ubuntu1804", "archlinux", "rhel8", "rhel70", "rhel62", "amazon2", "not-linux"],
+#         help="specify the linux distro you're on; if your system isn't available,"
+#         " please contact us at #workload-generation",
+#     )
+#     parser.add_argument("-v", "--verbose", action="store_true")
+#     # TODO: kill --run-global
+#     parser.add_argument(
+#         "-g", "--run-global", action="store_true", help="allow installation outside of a virtualenv"
+#     )
+#     parser.add_argument(
+#         "-i",
+#         "--ignore-toolchain-version",
+#         action="store_true",
+#         help="ignore the toolchain version, useful for testing toolchain changes",
+#     )
+#     parser.add_argument(
+#         "-b",
+#         "--build-system",
+#         choices=["make", "ninja"],
+#         default="ninja",
+#         help="Which build-system to use for compilation. May need to use make for " "IDEs.",
+#     )
+#     parser.add_argument("-s", "--sanitizer", choices=["asan", "tsan", "ubsan"])
+#
+#     subparsers = parser.add_subparsers(
+#         dest="subcommand",
+#         description="subcommands perform specific actions; make sure you run this script without "
+#         "any subcommand first to initialize the environment",
+#     )
+#     subparsers.add_parser(
+#         "cmake-test", help="run cmake unit tests that don't connect to a MongoDB cluster"
+#     )
+#     subparsers.add_parser("benchmark-test", help="run benchmark unit tests")
+#
+#     resmoke_test_parser = subparsers.add_parser(
+#         "resmoke-test", help="run cmake unit tests that connect to a MongoDB cluster"
+#     )
+#     group = resmoke_test_parser.add_mutually_exclusive_group()
+#     group.add_argument(
+#         "--suites", dest="resmoke_suites", help='equivalent to resmoke.py\'s "--suites" option'
+#     )
+#     group.add_argument(
+#         "--create-new-actor-test-suite",
+#         action="store_true",
+#         dest="resmoke_cnats",
+#         help='Run the "genny_create_new_actor" resmoke test suite,'
+#         " incompatible with the --suites options",
+#     )
+#     resmoke_test_parser.add_argument(
+#         "--mongo-dir",
+#         dest="resmoke_mongo_dir",
+#         help="path to the mongo repo, which contains buildscripts/resmoke.py",
+#     )
+#
+#     subparsers.add_parser("install", help="just run the install step for genny")
+#     subparsers.add_parser("clean", help="cleanup existing build")
+#     subparsers.add_parser("self-test", help="run lamplib unittests")
+#
+#     known_args, unknown_args = parser.parse_known_args(args)
+#
+#     if os_family == "Linux" and not known_args.subcommand and not known_args.linux_distro:
+#         raise ValueError("--linux-distro must be specified on Linux")
+#
+#     return known_args, unknown_args
+#
+#
+# def add_args_to_context(args):
+#     """
+#     Add command line arguments to the global context object to be used later on.
+#
+#     Consider putting command line arguments onto the context if it is used by more
+#     than one caller.
+#
+#     :param args:
+#     :return:
+#     """
+#     loggers.basicConfig(level=loggers.DEBUG if args.verbose else loggers.INFO)
+#     Context.IGNORE_TOOLCHAIN_VERSION = args.ignore_toolchain_version
+#     Context.BUILD_SYSTEM = args.build_system
+#     Context.SANITIZER = args.sanitizer
