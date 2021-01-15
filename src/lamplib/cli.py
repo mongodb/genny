@@ -148,6 +148,25 @@ def benchmark_test(ctx):
     )
 
 
+@requires_build_system.command("workload")
+# @click.argument("genny_args", nargs=1, help="Commands to pass to the genny binary")
+@click.pass_context
+@click.argument("genny_args", nargs=-1)
+def workload(ctx, genny_args):
+    from tasks import compile
+    from tasks import genny_runner
+
+    # Is there a better way to depend on `run-genny install`?
+    compile.install(
+        ctx.obj["BUILD_SYSTEM"],
+        ctx.obj["OS_FAMILY"],
+        ctx.obj["LINUX_DISTRO"],
+        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+    )
+
+    genny_runner.main_genny_runner(genny_args)
+
+
 # TODO: this doesn't require the build-system (cmake) but shrug.
 @requires_build_system.command("self-test")
 @click.pass_context

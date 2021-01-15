@@ -32,7 +32,6 @@ setup(
     entry_points={
         "console_scripts": [
             "lint-yaml = gennylib.yaml_linter:main",
-            "genny = gennylib.genny_runner:main_genny_runner",
             "genny-canaries = gennylib.canaries_runner:main_canaries_runner",
             "genny-auto-tasks = gennylib.auto_tasks:main",
         ]
