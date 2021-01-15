@@ -1,19 +1,17 @@
 import click
-import loggers
 import os
 import platform
 import subprocess
+import structlog
 import sys
+import loggers
 
-import tasks
-import tasks.run_tests
-from download import ToolchainDownloader, CuratorDownloader
-from tasks.compile import Context
+SLOG = structlog.get_logger(__name__)
 
 
 def check_venv(args):
     if "VIRTUAL_ENV" not in os.environ and not args.run_global:
-        loggers.error("Tried to execute without active virtualenv.")
+        SLOG.error("Tried to execute without active virtualenv.")
         sys.exit(1)
 
 
@@ -45,7 +43,7 @@ def validate_environment():
             # You could technically compile clang or gcc yourself on an older version
             # of macOS, but it's untested so we might as well just enforce
             # a blanket minimum macOS version for simplicity.
-            loggers.error("Genny requires macOS 10.14 Mojave or newer")
+            SLOG.error("Genny requires macOS 10.14 Mojave or newer")
             sys.exit(1)
     return
 
@@ -63,27 +61,85 @@ def cli(ctx: click.Context, debug: bool) -> None:
     ctx.obj["DEBUG"] = debug
     loggers.setup_logging(verbose=debug)
 
+"""
 
-# def main():
-#     validate_environment()
+#     parser.add_argument(
+#         "-b",
+#         "--build-system",
+#         choices=["make", "ninja"],
+#         default="ninja",
+#         help="Which build-system to use for compilation. May need to use make for " "IDEs.",
+#     )
+"""
+
+@cli.command(
+    "compile", help="Compile",
+)
+# Python can't natively check the distros of our supported platforms.
+# See https://bugs.python.org/issue18872 for more info.
+@click.option(
+    "-d",
+    "--linux-distro",
+    required=False,
+    default="not-linux",
+    type=click.Choice(["ubuntu1804", "archlinux", "rhel8", "rhel70", "rhel62", "amazon2", "not-linux"]),
+    help="specify the linux distro you're on; if your system isn't available,"
+         " please contact us at #workload-generation",
+)
+@click.option(
+    "-i",
+    "--ignore-toolchain-version",
+    help="ignore the toolchain version, useful for testing toolchain changes",
+
+)
+@click.option(
+    "-b", "--build-system",
+    type=click.Choice(["make", "ninja"]),
+    default="ninja",
+    help="Which build-system to use for compilation. May need to use make for IDEs.",
+)
+@click.option(
+    "-s", "--sanitizer",
+    type=click.Choice(["asan", "tsan", "ubsan"]),
+)
+def compile(linux_distro: str,
+            ignore_toolchain_version: bool,
+            build_system: str,
+            sanitizer: str,) -> None:
+    from tasks import compile
+    os_family = platform.system()
+
+    compile.compile_all(build_system, os_family, linux_distro, ignore_toolchain_version)
+
+
+@cli.command("clean")
+@click.option(
+    "-b", "--build-system",
+    type=click.Choice(["make", "ninja"]),
+    help="Which build-system to use for compilation. May need to use make for IDEs.",
+)
+def clean(build_system: str):
+    from tasks import compile
+    compile.clean(build_system)
+
+
+@cli.command("self-test")
+def self_test():
+    run_self_test()
+
+
+
+
+# TODO: common stuff
+#
+#     check_venv(args)
 #
 #     # Initialize the global context.
 #     os_family = platform.system()
 #     Context.set_triplet_os(os_family)
-#     args, cmake_args = parse_args(sys.argv[1:], os_family)
-#     add_args_to_context(args)
-#     # Pass around Context instead of using the global one to facilitate testing.
-#     context = Context
-#
-#     check_venv(args)
 #
 #     # TODO: barf if not set or not exists.
 #     os.chdir(os.environ["GENNY_REPO_ROOT"])
-#
-#     # Execute the minimum amount of code possible to run self tests to minimize
-#     # untestable code (i.e. code that runs the self-test).
-#     if args.subcommand == "self-test":
-#         run_self_test()
 #
 #     toolchain_downloader = ToolchainDownloader(os_family, args.linux_distro)
 #     if not toolchain_downloader.fetch_and_install():
@@ -94,6 +150,9 @@ def cli(ctx: click.Context, debug: bool) -> None:
 #     curator_downloader = CuratorDownloader(os_family, args.linux_distro)
 #     if not curator_downloader.fetch_and_install():
 #         sys.exit(1)
+#
+
+# TODO: default subcommand
 #
 #     if not args.subcommand:
 #         loggers.info("No subcommand specified; running cmake, compile and install")
@@ -128,41 +187,7 @@ if __name__ == "__main__":
     cli()
 
 
-# def parse_args(args, os_family):
-#     parser = argparse.ArgumentParser(
-#         description="Script for building genny",
-#         epilog="Unknown positional arguments will be forwarded verbatim to the cmake"
-#         " invocation where relevant",
-#     )
 #
-#     # Python can't natively check the distros of our supported platforms.
-#     # See https://bugs.python.org/issue18872 for more info.
-#     parser.add_argument(
-#         "-d",
-#         "--linux-distro",
-#         choices=["ubuntu1804", "archlinux", "rhel8", "rhel70", "rhel62", "amazon2", "not-linux"],
-#         help="specify the linux distro you're on; if your system isn't available,"
-#         " please contact us at #workload-generation",
-#     )
-#     parser.add_argument("-v", "--verbose", action="store_true")
-#     # TODO: kill --run-global
-#     parser.add_argument(
-#         "-g", "--run-global", action="store_true", help="allow installation outside of a virtualenv"
-#     )
-#     parser.add_argument(
-#         "-i",
-#         "--ignore-toolchain-version",
-#         action="store_true",
-#         help="ignore the toolchain version, useful for testing toolchain changes",
-#     )
-#     parser.add_argument(
-#         "-b",
-#         "--build-system",
-#         choices=["make", "ninja"],
-#         default="ninja",
-#         help="Which build-system to use for compilation. May need to use make for " "IDEs.",
-#     )
-#     parser.add_argument("-s", "--sanitizer", choices=["asan", "tsan", "ubsan"])
 #
 #     subparsers = parser.add_subparsers(
 #         dest="subcommand",

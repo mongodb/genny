@@ -1,13 +1,11 @@
-import loggers
+import structlog
 import os
 import shutil
 import subprocess
-import sys
 import platform
 import urllib.request
 
-from tasks.compile import Context
-
+SLOG = structlog.get_logger(__name__)
 
 class Downloader:
     """
@@ -29,7 +27,7 @@ class Downloader:
 
         # Install dir is the directory we create the actual result in.
         self._install_dir = install_dir
-        self.result_dir = None
+        self.result_dir = os.path.join(self._install_dir, self._name)
 
     def fetch_and_install(self):
         """
@@ -38,20 +36,20 @@ class Downloader:
         :return: Whether the operation succeeded.
         """
         if not os.path.exists(self._install_dir):
-            loggers.critical("Please create the parent directory for %s.", self._name)
+            SLOG.critical("Please create the parent directory for %s.", self._name)
 
             if platform.mac_ver()[0]:
                 release_triplet = platform.mac_ver()[0].split(".")
                 minor_ver = int(release_triplet[1])
                 if minor_ver >= 12 and minor_ver < 15:
-                    loggers.info(
+                    SLOG.info(
                         "On versions of MacOS between 10.12 and 10.14, "
                         "you have to disable System Integrity Protection first. "
                         "See https://apple.stackexchange.com/a/208481 for instructions"
                     )
                 if minor_ver >= 15:
                     # Instructions derived from https://github.com/NixOS/nix/issues/2925#issuecomment-539570232
-                    loggers.info(
+                    SLOG.info(
                         f"""
 
 😲 You must create the parent directory {self._name} for the genny toolchain.
@@ -125,7 +123,7 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
                     )
                     return False
 
-            loggers.critical(
+            SLOG.critical(
                 '`sudo mkdir -p "%s"; sudo chown "$USER" "%s"`',
                 self._install_dir,
                 self._install_dir,
@@ -134,11 +132,11 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
             return False
 
         if not os.path.isdir(self._install_dir):
-            loggers.critical("Install dir %s is not a directory.", self._install_dir)
+            SLOG.critical("Install dir %s is not a directory.", self._install_dir)
             return False
 
         if not os.access(self._install_dir, os.W_OK):
-            loggers.critical(
+            SLOG.critical(
                 "Please ensure you have write access to the parent directory for %s: "
                 "`sudo chown $USER %s`",
                 self._name,
@@ -146,26 +144,25 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
             )
             return False
 
-        self.result_dir = os.path.join(self._install_dir, self._name)
         if self._can_ignore():
-            loggers.debug("Skipping installing the %s into: %s", self._name, self.result_dir)
+            SLOG.debug("Skipping installing the %s into: %s", self._name, self.result_dir)
         else:
             tarball = os.path.join(self._install_dir, self._name + ".tgz")
             if os.path.isfile(tarball):
-                loggers.info("Skipping downloading %s", tarball)
+                SLOG.info("Skipping downloading %s", tarball)
             else:
-                loggers.info("Downloading %s, please wait...", self._name)
+                SLOG.info("Downloading %s, please wait...", self._name)
                 url = self._get_url()
                 urllib.request.urlretrieve(url, tarball)
-                loggers.info("Finished Downloading %s as %s", self._name, tarball)
+                SLOG.info("Finished Downloading %s as %s", self._name, tarball)
 
-            loggers.info("Extracting %s into %s, please wait...", self._name, self.result_dir)
+            SLOG.info("Extracting %s into %s, please wait...", self._name, self.result_dir)
 
             shutil.rmtree(self.result_dir, ignore_errors=True)
             os.mkdir(self.result_dir)
             # use tar(1) because python's TarFile was inexplicably truncating the tarball
             subprocess.run(["tar", "-xzf", tarball, "-C", self.result_dir], check=True)
-            loggers.info("Finished extracting %s into %s", self._name, self.result_dir)
+            SLOG.info("Finished extracting %s into %s", self._name, self.result_dir)
 
             # Get space back.
             os.remove(tarball)
@@ -179,77 +176,3 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
         raise NotImplementedError
 
 
-class ToolchainDownloader(Downloader):
-    # These build IDs are from the genny-toolchain Evergreen task.
-    # https://evergreen.mongodb.com/waterfall/genny-toolchain
-
-    TOOLCHAIN_BUILD_ID = "0db5d1544746c1570371f51109a0a312a7215b65_20_10_01_06_38_39"
-    TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
-    TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
-
-    def __init__(self, os_family, distro):
-        super().__init__(os_family, distro, ToolchainDownloader.TOOLCHAIN_ROOT, "gennytoolchain")
-
-    def _get_url(self):
-        if self._os_family == "Darwin":
-            self._distro = "macos_1014"
-
-        return (
-            "https://s3.amazonaws.com/mciuploads/genny-toolchain/"
-            "genny_toolchain_{}_{}/gennytoolchain.tgz".format(
-                self._distro, ToolchainDownloader.TOOLCHAIN_BUILD_ID
-            )
-        )
-
-    def _can_ignore(self):
-        # If the toolchain dir is outdated or we ignore the toolchain version.
-        return os.path.exists(self.result_dir) and (
-            Context.IGNORE_TOOLCHAIN_VERSION or self._check_toolchain_githash()
-        )
-
-    def _check_toolchain_githash(self):
-        res = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=self.result_dir, capture_output=True, text=True
-        )
-        return res.stdout.strip() == ToolchainDownloader.TOOLCHAIN_GIT_HASH
-
-
-class CuratorDownloader(Downloader):
-    # These build IDs are from the Curator Evergreen task.
-    # https://evergreen.mongodb.com/waterfall/curator
-
-    # Note that DSI also downloads Curator, the location is specified in defaults.yml.
-    # Please try to keep the two versions consistent.
-    CURATOR_VERSION = "d3da25b63141aa192c5ef51b7d4f34e2f3fc3880"
-    CURATOR_ROOT = os.getcwd()
-
-    def __init__(self, os_family, distro):
-        super().__init__(os_family, distro, CuratorDownloader.CURATOR_ROOT, "curator")
-
-    def _get_url(self):
-        if self._os_family == "Darwin":
-            self._distro = "macos"
-
-        if "ubuntu" in self._distro:
-            self._distro = "ubuntu1604"
-
-        if self._distro in ("amazon2", "rhel8", "rhel62"):
-            self._distro = "rhel70"
-
-        return (
-            "https://s3.amazonaws.com/boxes.10gen.com/build/curator/"
-            "curator-dist-{distro}-{build}.tar.gz".format(
-                distro=self._distro, build=CuratorDownloader.CURATOR_VERSION
-            )
-        )
-
-    def _can_ignore(self):
-        return os.path.exists(self.result_dir) and (
-            Context.IGNORE_TOOLCHAIN_VERSION or self._check_curator_version()
-        )
-
-    def _check_curator_version(self):
-        res = subprocess.run(
-            ["./curator", "-v"], cwd=self.result_dir, capture_output=True, text=True
-        )
-        return res.stdout.split()[2] == CuratorDownloader.CURATOR_VERSION
