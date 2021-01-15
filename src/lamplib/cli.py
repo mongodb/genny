@@ -167,6 +167,42 @@ def workload(ctx, genny_args):
     genny_runner.main_genny_runner(genny_args)
 
 
+@requires_build_system.command("resmoke-test")
+@click.option("--suites", required=False, help='equivalent to resmoke.py\'s "--suites" option')
+@click.option(
+    "--create-new-actor-test-suite",
+    is_flag=True,
+    required=False,
+    help='Run the "genny_create_new_actor" resmoke test suite, incompatible with the --suites options',
+)
+@click.option(
+    "--mongo-dir",
+    type=click.Path(),
+    required=True,
+    help="path to the mongo repo, which contains buildscripts/resmoke.py",
+)
+@click.pass_context
+def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str):
+    from tasks import compile
+    from tasks import run_tests
+
+    # Is there a better way to depend on `run-genny install`?
+    compile.install(
+        ctx.obj["BUILD_SYSTEM"],
+        ctx.obj["OS_FAMILY"],
+        ctx.obj["LINUX_DISTRO"],
+        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+    )
+
+    run_tests.resmoke_test(
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        suites=suites,
+        is_cnats=create_new_actor_test_suite,
+        mongo_dir=mongo_dir,
+        env=os.environ.copy(),
+    )
+
+
 # TODO: this doesn't require the build-system (cmake) but shrug.
 @requires_build_system.command("self-test")
 @click.pass_context
@@ -179,31 +215,6 @@ def self_test(ctx):
 # TODO: default subcommand
 # loggers.info("No subcommand specified; running cmake, compile and install")
 
-
-#         elif args.subcommand == "resmoke-test":
-#             tasks.run_tests.resmoke_test(
-#                 compile_env,
-#                 suites=args.resmoke_suites,
-#                 mongo_dir=args.resmoke_mongo_dir,
-#                 is_cnats=args.resmoke_cnats,
-#             )
-#     group = resmoke_test_parser.add_mutually_exclusive_group()
-#     group.add_argument(
-#         "--suites", dest="resmoke_suites", help='equivalent to resmoke.py\'s "--suites" option'
-#     )
-#     group.add_argument(
-#         "--create-new-actor-test-suite",
-#         action="store_true",
-#         dest="resmoke_cnats",
-#         help='Run the "genny_create_new_actor" resmoke test suite,'
-#         " incompatible with the --suites options",
-#     )
-#     resmoke_test_parser.add_argument(
-#         "--mongo-dir",
-#         dest="resmoke_mongo_dir",
-#         help="path to the mongo repo, which contains buildscripts/resmoke.py",
-#     )
-#
 
 if __name__ == "__main__":
     sys.argv[0] = "run-genny"

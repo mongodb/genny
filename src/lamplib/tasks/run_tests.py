@@ -120,8 +120,10 @@ def _check_create_new_actor_test_report(workdir):
     return passed
 
 
-def resmoke_test(env, suites, mongo_dir, is_cnats):
-    workdir = os.getcwd()
+def resmoke_test(
+    genny_repo_root: str, suites: str, is_cnats: bool, mongo_dir: str, env: dict,
+):
+    workdir = genny_repo_root
     checker_func = None
 
     if is_cnats:
@@ -137,18 +139,24 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
         # Default download location for MongoDB binaries.
         env["PATH"] = os.path.join(mongo_dir, "bin") + ":" + mongo_dir + ":" + env["PATH"]
 
-    if "SCRIPTS_DIR" not in os.environ:
+    if "VIRTUAL_ENV" not in os.environ:
         raise ValueError(
             "The venv directory is required for resmoke and does not exist, "
-            "please ensure you're not running Genny with the --run-global flag"
+            "please ensure you're running with the run-genny script."
         )
 
-    evg_venv_dir = os.path.join(os.environ["SCRIPTS_DIR"], "venv")
-
     cmds = []
-    if os.path.isdir(evg_venv_dir):
-        cmds.append("source " + os.path.join(evg_venv_dir, "bin", "activate"))
-
+    cmds.append(
+        " ".join(
+            [
+                "python",
+                "-mpip",
+                "install",
+                "-r",
+                os.path.join(mongo_dir, "etc", "pip", "evgtest-requirements.txt"),
+            ]
+        )
+    )
     cmds.append(
         " ".join(
             [
