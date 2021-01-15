@@ -211,6 +211,7 @@ def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str)
 @requires_build_system.command("create-new-actor")
 @click.argument("actor_name")
 @click.pass_context
+# TODO: this doesn't require the build-system (cmake) but shrug.
 def create_new_actor(ctx, actor_name):
     import subprocess
 
@@ -226,6 +227,26 @@ def self_test(ctx):
     from tasks import run_tests
 
     run_tests.run_self_test()
+
+
+# TODO: this doesn't require the build-system (cmake) but shrug.
+@requires_build_system.command("auto-tasks")
+@click.option(
+    "--tasks",
+    required=True,
+    type=click.Choice(
+        [
+            "all_tasks",
+            "variant_tasks",
+            "patch_tasks",
+        ]
+    ),
+)
+@click.pass_context
+def auto_tasks(ctx, tasks):
+    from tasks import auto_tasks
+
+    auto_tasks.main(tasks)
 
 
 # TODO: default subcommand

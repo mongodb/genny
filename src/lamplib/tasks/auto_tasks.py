@@ -109,17 +109,17 @@ class CLIOperation(NamedTuple):
         return self.output_file_suffix
 
     @staticmethod
-    def parse(argv: List[str], reader: YamlReader) -> "CLIOperation":
+    def parse(mode_name: str, reader: YamlReader) -> "CLIOperation":
         mode = OpName.ALL_TASKS
         variant = None
 
         output_file = "./build/TaskJSON/Tasks.json"
-        if argv[1] == "all_tasks":
+        if mode_name == "all_tasks":
             mode = OpName.ALL_TASKS
-        if argv[1] == "patch_tasks":
+        if mode_name == "patch_tasks":
             mode = OpName.PATCH_TASKS
             variant = reader.load("expansions.yml")["build_variant"]
-        if argv[1] == "variant_tasks":
+        if mode_name == "variant_tasks":
             mode = OpName.VARIANT_TASKS
             variant = reader.load("expansions.yml")["build_variant"]
         return CLIOperation(mode, variant, output_file)
@@ -374,18 +374,13 @@ def _check_output(cwd, *args, **kwargs):
     return out.decode().strip().split("\n")
 
 
-def main() -> None:
-    argv = sys.argv
+def main(mode_name) -> None:
     reader = YamlReader()
     build = CurrentBuildInfo(reader)
-    op = CLIOperation.parse(argv, reader)
+    op = CLIOperation.parse(mode_name, reader)
     lister = WorkloadLister(op.repo_root, reader)
     repo = Repo(lister, reader)
     tasks = repo.tasks(op, build)
 
     writer = ConfigWriter(op)
     writer.write(tasks)
-
-
-if __name__ == "__main__":
-    main()
