@@ -183,12 +183,13 @@ public:
                                       ActorId actorId,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
         StreamPtr stream = nullptr;
-        if (_format.useGrpc()) {
+        
+        auto& opsByType = this->_ops[actorName];
+        auto& opsByThread = opsByType[opName];
+        if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
             auto name = createName(actorName, opName, phase);
             stream = _grpcClient->createStream(actorId, name, phase);
         }
-        auto& opsByType = this->_ops[actorName];
-        auto& opsByThread = opsByType[opName];
         auto opIt =
             opsByThread.try_emplace(actorId, std::move(actorName), *this, std::move(opName), stream)
                 .first;
@@ -204,7 +205,7 @@ public:
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         StreamPtr stream = nullptr;
-        if (_format.useGrpc()) {
+        if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
             auto name = createName(actorName, opName, phase);
             stream = _grpcClient->createStream(actorId, name, phase);
         }
