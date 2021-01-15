@@ -1,6 +1,9 @@
-import loggers
+import structlog
+
 import os
 import subprocess
+
+SLOG = structlog.get_logger(__name__)
 
 # We rely on catch2 to report test failures, but it doesn't always do so.
 # See https://github.com/catchorg/Catch2/issues/1210
@@ -39,10 +42,10 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
         success = res.returncode == 0
 
     if success:
-        loggers.debug("Test succeeded, removing sentinel report")
+        SLOG.debug("Test succeeded, removing sentinel report")
         os.remove(sentinel_file)
     else:
-        loggers.debug("Test failed, leaving sentinel report in place")
+        SLOG.debug("Test failed, leaving sentinel report in place")
 
 
 def cmake_test(env):
@@ -72,7 +75,7 @@ def _check_create_new_actor_test_report(workdir):
     report_file = os.path.join(workdir, "build", "create_new_actor_test.junit.xml")
 
     if not os.path.isfile(report_file):
-        loggers.error("Failed to find report file: %s", report_file)
+        SLOG.error("Failed to find report file", report_file=report_file)
         return passed
 
     expected_error = 'failure message="100 == 101"'
@@ -84,10 +87,10 @@ def _check_create_new_actor_test_report(workdir):
     if passed:
         os.remove(report_file)  # Remove the report file for the expected failure.
     else:
-        loggers.error(
+        SLOG.error(
             "test for create-new-actor script did not succeed. Failed to find expected "
-            "error message %s in report file",
-            expected_error,
+            "error message in report file",
+            expected_to_find=expected_error,
         )
 
     return passed

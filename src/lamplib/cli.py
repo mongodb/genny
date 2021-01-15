@@ -16,9 +16,12 @@ def check_venv(args):
 
 
 def run_self_test():
+    cwd = os.path.dirname(os.path.abspath(__file__))
+    SLOG.info("Running self-test", cwd=cwd)
     res = subprocess.run(
-        ["python3", "-m", "unittest"], cwd=os.path.dirname(os.path.abspath(__file__))
+        ["python3", "-m", "unittest"], cwd=cwd
     )
+    SLOG.info("Self-test finished.", return_code=res.returncode)
     res.check_returncode()
     sys.exit(0)
 
@@ -62,7 +65,6 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 #
 
 """
-
 #     parser.add_argument(
 #         "-b",
 #         "--build-system",
@@ -153,14 +155,10 @@ def clean(ctx) -> None:
                   ctx.obj["IGNORE_TOOLCHAIN_VERSION"])
 
 
-@click.group()
-def other_commands():
-    pass
-
-
-# TODO
-@other_commands.command("self-test")
-def self_test():
+# TODO: this doesn't require the build-system (cmake) but shrug.
+@requires_build_system.command("self-test")
+@click.pass_context
+def self_test(ctx):
     run_self_test()
 
 
@@ -177,11 +175,6 @@ def self_test():
 #     # TODO: barf if not set or not exists.
 #     os.chdir(os.environ["GENNY_REPO_ROOT"])
 #
-#     toolchain_downloader = ToolchainDownloader(os_family, args.linux_distro)
-#     if not toolchain_downloader.fetch_and_install():
-#         sys.exit(1)
-#     toolchain_dir = toolchain_downloader.result_dir
-#     compile_env = context.get_compile_environment(toolchain_dir)
 #
 #     curator_downloader = CuratorDownloader(os_family, args.linux_distro)
 #     if not curator_downloader.fetch_and_install():

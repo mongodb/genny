@@ -50,7 +50,7 @@ class Downloader:
                 if minor_ver >= 15:
                     # Instructions derived from https://github.com/NixOS/nix/issues/2925#issuecomment-539570232
                     SLOG.info(
-                        f"""
+                        fr"""
 
 😲 You must create the parent directory {self._name} for the genny toolchain.
    You are on On MacOS Catalina or later, so use use the synthetic.conf method.
