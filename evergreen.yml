@@ -61,7 +61,6 @@ buildvariants:
       https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/amazon2/298d4d6bbb9980b74bded06241067fe6771bef68/binaries/mongo-mongodb_mongo_master_amazon2_298d4d6bbb9980b74bded06241067fe6771bef68_20_10_22_00_55_19.tgz
   tasks:
   - name: tg_compile_and_test_with_server
-  - name: t_push
 
 - name: rhel70
   display_name: RHEL 7
@@ -72,7 +71,6 @@ buildvariants:
   - rhel70
   tasks:
   - name: tg_compile
-  - name: t_push
 
 - name: rhel8
   display_name: RHEL 8
@@ -83,7 +81,6 @@ buildvariants:
   - rhel80-test
   tasks:
   - name: tg_compile
-  - name: t_push
 
 - name: ubuntu1804
   display_name: Ubuntu 18.04
@@ -94,7 +91,6 @@ buildvariants:
   - ubuntu1804-build
   tasks:
   - name: tg_compile
-  - name: t_push
 
 - name: macos-1014
   display_name: macOS Mojave
@@ -103,7 +99,6 @@ buildvariants:
   - macos-1014
   tasks:
   - name: tg_compile
-  - name: t_push
 
 - name: centos6-perf
   display_name: CentOS 6 for Performance
@@ -124,24 +119,6 @@ tasks:
   - func: f_fetch_source
   - func: f_compile
   - func: f_dry_run_workloads
-  - func: f_push_patch
-    vars:
-      display_name: Genny
-      short_name: genny
-      install_dir: src/dist
-
-- name: t_push
-  depends_on: t_compile
-  patchable: false
-  commands:
-  - func: f_push_official
-    vars:
-      display_name: Genny
-      short_name: genny
-
-- name: t_mongo_server
-  commands:
-  - func: f_checkout_mongodb
 
 - name: t_python_test
   commands:
@@ -165,27 +142,43 @@ tasks:
 
 - name: t_integration_test_standalone
   commands:
-  - func: f_resmoke_test
-    vars:
-      resmoke_test_args: "--suites src/resmokeconfig/genny_standalone.yml"
+  - command: subprocess.exec
+    params:
+      binary: ./src/genny/run-genny
+      args:
+      - resmoke-test
+      - --suites
+      - src/resmokeconfig/genny_standalone.yml
 
 - name: t_integration_test_single_node_replset
   commands:
-  - func: f_resmoke_test
-    vars:
-      resmoke_test_args: "--suites src/resmokeconfig/genny_single_node_replset.yml"
+  - command: subprocess.exec
+    params:
+      binary: ./src/genny/run-genny
+      args:
+      - resmoke-test
+      - --suites
+      - src/resmokeconfig/genny_single_node_replset.yml
 
 - name: t_integration_test_three_node_replset
   commands:
-  - func: f_resmoke_test
-    vars:
-      resmoke_test_args: "--suites src/resmokeconfig/genny_three_node_replset.yml"
+  - command: subprocess.exec
+    params:
+      binary: ./src/genny/run-genny
+      args:
+      - resmoke-test
+      - --suites
+      - src/resmokeconfig/genny_three_node_replset.yml
 
 - name: t_integration_test_sharded
   commands:
-  - func: f_resmoke_test
-    vars:
-      resmoke_test_args: "--suites src/resmokeconfig/genny_sharded.yml"
+  - command: subprocess.exec
+    params:
+      binary: ./src/genny/run-genny
+      args:
+      - resmoke-test
+      - --suites
+      - src/resmokeconfig/genny_sharded.yml
 
 # Must run this task last to avoid polluting test results with tests generated
 # by the new actor.
@@ -194,10 +187,12 @@ tasks:
   - func: f_run_create_new_actor_script
   - func: f_compile
   - func: f_dry_run_workloads  # Test the generated yaml file is valid.
-  - func: f_resmoke_test
-    vars:
-      resmoke_test_args: "--create-new-actor-test-suite"
-
+  - command: subprocess.exec
+    params:
+      binary: ./src/genny/run-genny
+      args:
+      - resmoke-test
+      - --create-new-actor-test-suite
 
 ##                ⚡️ Task Groups ⚡️
 
@@ -206,13 +201,10 @@ task_groups:
 - &a_compile_and_test
   name: tg_compile_and_test
   max_hosts: 1
-  setup_task:
-  - func: f_remove_test_results_files
   teardown_task:
   # Attaching results is prohibited in "teardown_group".
   # So we call it in "teardown_task" but make the result file optional.
   - func: f_report_test_results
-  - func: f_remove_test_results_files
   tasks:
   # Rely on implicit dependencies in task_groups where tasks are executed
   # in the order they're defined. Tasks with explicit "depends_on" tasks
@@ -237,7 +229,6 @@ task_groups:
   name: tg_compile_and_test_with_server
   tasks:
   - t_compile
-  - t_mongo_server
   - t_python_test
   - t_lint_python
   - t_cmake_test
@@ -260,115 +251,7 @@ functions:
   f_fetch_source:
   - command: git.get_project
     params:
-      directory: src
-
-  ##
-  # Download the mongodb binary and then clone and checkout the appropriate
-  # mongodb repository branch that contains the intended gennylib test case
-  # (SERVER-38646). Also installs resmoke dependencies.
-  #
-  # Expansions:
-  #   mongodb_archive_url: url to download pre-compiled mongo from
-  ##
-  f_checkout_mongodb:
-  # TODO: we can do better than this
-  - command: subprocess.exec
-    params:
-      working_dir: src
-      binary: /bin/bash
-      args:
-      - "${workdir}/src/scripts/get-mongo-source.sh"
-  - command: shell.exec
-    params:
-      working_dir: src/build/mongo
-      shell: /bin/bash
-      script: |
-        set -euo pipefail
-        curl -LSs "${mongodb_archive_url}" -o mongodb.tgz
-        tar --strip-components=1 -zxvf mongodb.tgz
-
-  ##
-  # Archive an installed library into a tarball and upload it with
-  # revision suffix.
-  #
-  # Expansions:
-  #  install_dir: The directory in which this dependency was installed
-  #  short_name: The name for the folder and prefix for the tarball to push
-  #  display_name: The name to show in evergreen
-  #  aws_key: aws key
-  #  aws_secret: aws secret key
-  #  project: evergreen project name (genny)
-  #  build_id: evergreen build id
-  ###
-  f_push_patch:
-  - command: archive.targz_pack
-    params:
-      source_dir: ${install_dir|dist}
-      target: ${short_name}.tgz
-      include:
-      - "./**"
-  - command: shell.exec
-    params:
-      working_dir: .
-      shell: bash
-      script: |
-        set -o errexit
-        # Make sure we have a file, give more info
-        find . -iname *.tgz -exec stat {} \;
-  - command: s3.put
-    params:
-      aws_key: ${aws_key}
-      aws_secret: ${aws_secret}
-      local_file: ${short_name}.tgz
-      remote_file: ${project}/patches/${build_id}/${short_name}.tgz
-      bucket: mciuploads
-      permissions: public-read
-      content_type: ${content_type|application/gzip}
-      display_name: ${display_name} Patch
-
-  ##
-  # Copy the library tarball for a given revision to the official path
-  #
-  # Expansions:
-  #  short_name: The name for the folder and prefix for the tarball to push
-  #  display_name: The name to show in evergreen
-  #  aws_key: aws key
-  #  aws_secret: aws secret key
-  #  project: evergreen project name (genny)
-  #  build_id: evergreen build id
-  #  build_variant: build variant (used in s3 path)
-  ###
-  f_push_official:
-  - command: s3.get
-    params:
-      aws_key: ${aws_key}
-      aws_secret: ${aws_secret}
-      local_file: ${short_name}.tgz
-      remote_file: ${project}/patches/${build_id}/${short_name}.tgz
-      bucket: mciuploads
-      permissions: public-read
-      content_type: ${content_type|application/gzip}
-  - command: s3.put
-    params:
-      aws_key: ${aws_key}
-      aws_secret: ${aws_secret}
-      local_file: ${short_name}.tgz
-      remote_file:
-        ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
-      bucket: mciuploads
-      permissions: public-read
-      content_type: ${content_type|application/gzip}
-      display_name: "${display_name} - ${revision}"
-  - command: s3.put
-    params:
-      aws_key: ${aws_key}
-      aws_secret: ${aws_secret}
-      local_file: ${short_name}.tgz
-      remote_file: ${project}/${short_name}/${short_name}-${build_variant}.tgz
-      bucket: mciuploads
-      permissions: public-read
-      content_type: ${content_type|application/gzip}
-      display_name: ${display_name}
+      directory: src/genny
 
   ##
   # Compile the project in src/build.
@@ -380,16 +263,9 @@ functions:
   f_compile:
   - command: shell.exec
     params:
-      working_dir: src
       shell: bash
       script: |
-        set -eo pipefail
-
-        rm -rf /data/mci/gennytoolchain*
-
-        export DEVELOPER_DIR="/Applications/Xcode10.1.app"
-
-        ./scripts/lamp \
+        ./src/genny/run-genny compile \
           -d=${distro|not-linux} \
           -DENABLE_JASPER:BOOL=ON \
           -DGENNY_INSTALL_DIR:PATH="$PWD"/dist \
@@ -402,54 +278,31 @@ functions:
   f_dry_run_workloads:
   - command: subprocess.exec
     params:
-      working_dir: src
-      binary: /bin/bash
+      binary: ./src/genny/run-genny
       args:
-      - scripts/dry-run-workloads.sh
-      env:
-        GENNY: scripts/genny
+      - dry-run-workloads
 
   ##
   # Runs tests via ctest.
   # Requires f_compile to have been run first.
   ##
   f_cmake_test:
-  - command: shell.exec
+  - command: subprocess.exec
     params:
-      continue_on_err: true
-      working_dir: src
-      shell: bash
-      script: |
-        set -euo pipefail
-        ./scripts/lamp cmake-test
+      binary: ./src/genny/run-genny
+      args:
+      - cmake-test
 
   ##
   # Runs benchmarks via ctest.
   # Requires f_compile to have been run first.
   ##
   f_benchmark_test:
-  - command: shell.exec
+  - command: subprocess.exec
     params:
-      continue_on_err: true
-      working_dir: src
-      shell: bash
-      script: |
-        set -euo pipefail
-        ./scripts/lamp benchmark-test
-
-  ##
-  # Runs tests via resmoke.
-  # Requires f_compile to have been run first.
-  ##
-  f_resmoke_test:
-  - command: shell.exec
-    params:
-      continue_on_err: true
-      working_dir: src
-      shell: bash
-      script: |
-        set -eou pipefail
-        ./scripts/lamp resmoke-test ${resmoke_test_args}
+      binary: ./src/genny/run-genny
+      args:
+      - benchmark-test
 
   ##
   # Runs tests for the create_new_actor script.
@@ -457,116 +310,58 @@ functions:
   f_run_create_new_actor_script:
   - command: subprocess.exec
     params:
-      working_dir: src
-      binary: /bin/bash
+      binary: ./src/genny/run-genny
       args:
-      - ${workdir}/src/scripts/create-new-actor.sh
+      - create-new-actor
       - SelfTestActor
 
   ##
   # Runs python unit tests.
   ##
   f_python_test:
-  - command: shell.exec
+  - command: subprocess.exec
     params:
-      continue_on_err: true
-      working_dir: src
-      shell: bash
-      script: |
-        set -eou pipefail
-
-        # for python3
-        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
-
-        # Run Genny Python unit tests
-        pushd src/lamplib
-          python3 -mpytest
-        popd
-
-        # Run Genny build scripts unit tests
-        ./scripts/lamp self-test
+      binary: ./src/genny/run-genny
+      args:
+      - self-test
 
   ##
   # Runs the YAML linter for Genny workloads
   ##
   f_lint_workloads:
-  - command: shell.exec
+  - command: subprocess.exec
     params:
-      continue_on_err: true
-      working_dir: src
-      shell: bash
-      script: |
-        set -eo pipefail
-
-        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
-
-        python3 -m virtualenv venv
-        source venv/bin/activate
-
-        # Install Genny python scripts into the virtualenv
-        pushd src/lamplib
-          python3 setup.py install
-        popd
-
-        lint-workloads
+      binary: ./src/genny/run-genny
+      args:
+      - lint-workloads
 
   ##
   # Lint python
   ##
   f_lint_python:
-  - command: shell.exec
+  - command: subprocess.exec
     params:
-      continue_on_err: true
-      working_dir: src
-      shell: bash
-      script: |
-        set -eo pipefail
-
-        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
-
-        python3 -m virtualenv venv
-        source venv/bin/activate
-
-        # Install Genny python scripts into the virtualenv
-        pushd src/lamplib
-          python3 setup.py install
-        popd
-
-        black --check src/lamplib
-
+      binary: ./src/genny/run-genny
+      args:
+      - lint-python
 
   ##
   # Reports test results to evergreen API.
-  #
-  # If you add a new file to this list, then you should also
-  # add it to the `f_remove_test_results_files` function to
-  # ensure it is cleaned up between tasks in the task group.
   ##
   f_report_test_results:
   - command: attach.xunit_results
     params:
+      # TODO: is this right?
       optional: true
-      file: src/build/src/*/*.junit.xml
+      file: src/genny/build/src/*/*.junit.xml
   - command: attach.xunit_results
     params:
+      # TODO: is this right?
       optional: true
-      file: src/build/*.junit.xml
+      file: src/genny/build/*.junit.xml
   - command: attach.xunit_results
     params:
+      # TODO: is this right?
       optional: true
-      file: src/src/lamplib/nosetests.xml
+      file: src/genny/src/lamplib/nosetests.xml
 
-  ##
-  # Removes the test results files from the local filesystem.
-  ##
-  f_remove_test_results_files:
-  - command: shell.exec
-    params:
-      shell: bash
-      script: |
-        set -eou pipefail
-
-        rm -f \
-        src/build/*.junit.xml \
-        src/build/src/*/*.junit.xml \
-        src/src/lamplib/nosetests.xml
