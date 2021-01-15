@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 from contextlib import contextmanager
 
@@ -22,7 +23,7 @@ def get_poplar_args():
 
 
 @contextmanager
-def poplar_grpc():
+def poplar_grpc(cleanup=False):
     poplar = subprocess.Popen(get_poplar_args())
     if poplar.poll() is not None:
         raise OSError("Failed to start Poplar.")
@@ -41,6 +42,9 @@ def poplar_grpc():
             if poplar.poll() is None:
                 poplar.kill()
             raise
+        finally:
+            if cleanup:
+                shutil.rmtree("build/CedarMetrics", ignore_errors=True)
 
 
 class CuratorDownloader(Downloader):

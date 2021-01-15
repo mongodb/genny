@@ -36,10 +36,14 @@ SLOG = structlog.get_logger(__name__)
     help="Which build-system to use for compilation. May need to use make for IDEs.",
 )
 @click.option(
-    "-s", "--sanitizer", type=click.Choice(["asan", "tsan", "ubsan"]),
+    "-s",
+    "--sanitizer",
+    type=click.Choice(["asan", "tsan", "ubsan"]),
 )
 @click.option(
-    "-f", "--os-family", default=platform.system(),
+    "-f",
+    "--os-family",
+    default=platform.system(),
 )
 # TODO
 #     if os_family == "Linux" and not known_args.subcommand and not known_args.linux_distro:
@@ -80,7 +84,8 @@ def requires_build_system(
 
 
 @requires_build_system.command(
-    name="compile", help="Compile",
+    name="compile",
+    help="Compile",
 )
 @click.pass_context
 def compile(ctx) -> None:
@@ -109,7 +114,7 @@ def clean(ctx) -> None:
 
 @requires_build_system.command("install")
 @click.pass_context
-def self_test(ctx):
+def install(ctx):
     from tasks import compile
 
     compile.install(
@@ -164,6 +169,23 @@ def workload(ctx, genny_args):
     )
 
     genny_runner.main_genny_runner(genny_args)
+
+
+@requires_build_system.command("dry-run-workloads")
+@click.pass_context
+def dry_run_workloads(ctx):
+    from tasks import compile
+    from tasks import dry_run
+
+    # Is there a better way to depend on `run-genny install`?
+    compile.install(
+        ctx.obj["BUILD_SYSTEM"],
+        ctx.obj["OS_FAMILY"],
+        ctx.obj["LINUX_DISTRO"],
+        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+    )
+
+    dry_run.dry_run_workloads(ctx.obj["GENNY_REPO_ROOT"], ctx.obj["OS_FAMILY"])
 
 
 @requires_build_system.command("canaries")
@@ -252,7 +274,15 @@ def lint_yaml(ctx):
 # TODO: this doesn't require the build-system (cmake) but shrug.
 @requires_build_system.command("auto-tasks")
 @click.option(
-    "--tasks", required=True, type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks",]),
+    "--tasks",
+    required=True,
+    type=click.Choice(
+        [
+            "all_tasks",
+            "variant_tasks",
+            "patch_tasks",
+        ]
+    ),
 )
 @click.pass_context
 def auto_tasks(ctx, tasks):

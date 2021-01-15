@@ -122,7 +122,11 @@ def _check_create_new_actor_test_report(workdir):
 
 
 def resmoke_test(
-    genny_repo_root: str, suites: str, is_cnats: bool, mongo_dir: str, env: dict,
+    genny_repo_root: str,
+    suites: str,
+    is_cnats: bool,
+    mongo_dir: str,
+    env: dict,
 ):
     workdir = genny_repo_root
     checker_func = None
@@ -154,7 +158,8 @@ def resmoke_test(
     )
 
     _run_command_with_sentinel_report(
-        lambda: subprocess.run(cmd, cwd=workdir, env=env), checker_func,
+        lambda: subprocess.run(cmd, cwd=workdir, env=env),
+        checker_func,
     )
 
 
