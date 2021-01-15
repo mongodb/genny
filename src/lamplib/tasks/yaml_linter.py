@@ -1,16 +1,17 @@
-import loggers
+import structlog
 import os
 import os.path as path
 import sys
 
 import yamllint.cli
 
+SLOG = structlog.get_logger(__name__)
+
 
 def main():
-    loggers.basicConfig(level=loggers.INFO)
 
     if not path.exists(".genny-root"):
-        loggers.error("Please run this script from the root of the Genny repository")
+        SLOG.error("Please run this script from the root of the Genny repository", cwd=os.getcwd())
         sys.exit(1)
 
     yaml_dirs = [
@@ -27,9 +28,7 @@ def main():
         for dirpath, dirnames, filenames in os.walk(yaml_dir):
             for filename in filenames:
                 if filename.endswith(".yaml"):
-                    loggers.error(
-                        "All YAML files should have the .yml extension, found %s", filename
-                    )
+                    SLOG.error("All YAML files should have the .yml extension", found=filename)
                     # Don't error immediately so all violations can be printed with one run
                     # of this script.
                     has_error = True
@@ -40,21 +39,13 @@ def main():
         sys.exit(1)
 
     if len(yaml_files) == 0:
-        loggers.error(
-            "Did not find any YAML files to lint in the directories: %s", " ".join(yaml_dirs)
-        )
+        SLOG.error("Did not find any YAML files to lint", in_dirs=yaml_dirs)
         sys.exit(1)
 
     config_file_path = path.join(os.getcwd(), ".yamllint")
 
-    yamllint_argv = sys.argv[1:] + ["--strict", "--config-file", config_file_path] + yaml_files
+    yamllint_argv = ["--strict", "--config-file", config_file_path] + yaml_files
 
     print("Linting {} Genny workload YAML files with yamllint".format(len(yaml_files)))
 
-    loggers.debug("Invoking yamllint with the following command: ".join(yamllint_argv))
-
     yamllint.cli.run(yamllint_argv)
-
-
-if __name__ == "__main__":
-    main()

@@ -15,7 +15,5 @@ def main_genny_runner(args):
         cmd = ["./dist/bin/genny_core", *args]
         SLOG.info("Running genny", command=cmd)
 
-        res = subprocess.run(
-            cmd,
-        )
+        res = subprocess.run(cmd,)
         res.check_returncode()
