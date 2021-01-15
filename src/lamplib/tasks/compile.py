@@ -69,6 +69,7 @@ def clean(context, env):
     # Put back build/.gitinore
     subprocess.run(["git", "checkout", "--", "build"], env=env)
 
+
 # Map of platform.system() to vcpkg's OS names.
 _triplet_os_map = {"Darwin": "osx", "Linux": "linux", "NT": "windows"}
 

@@ -2,6 +2,7 @@ import subprocess
 
 from curator import poplar_grpc
 
+
 def main_genny_runner():
     """
     Intended to be the main entry point for running Genny.

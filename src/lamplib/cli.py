@@ -14,9 +14,7 @@ from parser import add_args_to_context
 
 def check_venv(args):
     if "VIRTUAL_ENV" not in os.environ and not args.run_global:
-        logging.error(
-            "Tried to execute without active virtualenv."
-        )
+        logging.error("Tried to execute without active virtualenv.")
         sys.exit(1)
 
 
