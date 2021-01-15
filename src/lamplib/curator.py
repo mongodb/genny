@@ -14,6 +14,7 @@ def get_poplar_args():
     """
     curator = "curator"
 
+    # TODO: look on PATH and download if not exists.
     local_curator = "./curator/curator"
     if os.path.exists(local_curator):
         curator = local_curator

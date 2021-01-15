@@ -1,7 +1,13 @@
+import platform
+import sys
+
 import structlog
 
 import os
 import subprocess
+
+import toolchain
+from cli import SLOG
 
 SLOG = structlog.get_logger(__name__)
 
@@ -48,8 +54,15 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
         SLOG.debug("Test failed, leaving sentinel report in place")
 
 
-def cmake_test(env):
-    workdir = os.path.join(os.getcwd(), "build")
+def cmake_test(
+    build_system: str,
+    os_family: str,
+    linux_distro: str,
+    ignore_toolchain_version: bool,
+    genny_repo_root: str,
+):
+    toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
+    workdir = os.path.join(genny_repo_root, "build")
 
     ctest_cmd = [
         "ctest",
@@ -58,15 +71,26 @@ def cmake_test(env):
         "(standalone|sharded|single_node_replset|three_node_replset|benchmark)",
     ]
 
-    _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
+    _run_command_with_sentinel_report(
+        lambda: subprocess.run(ctest_cmd, cwd=workdir, env=toolchain_info["toolchain_env"])
+    )
 
 
-def benchmark_test(env):
-    workdir = os.path.join(os.getcwd(), "build")
+def benchmark_test(
+    build_system: str,
+    os_family: str,
+    linux_distro: str,
+    ignore_toolchain_version: bool,
+    genny_repo_root: str,
+):
+    toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
+    workdir = os.path.join(genny_repo_root, "build")
 
     ctest_cmd = ["ctest", "--label-regex", "(benchmark)"]
 
-    _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
+    _run_command_with_sentinel_report(
+        lambda: subprocess.run(ctest_cmd, cwd=workdir, env=toolchain_info["toolchain_env"])
+    )
 
 
 def _check_create_new_actor_test_report(workdir):
@@ -146,3 +170,43 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
         ),
         checker_func,
     )
+
+
+def _check_venv():
+    if "VIRTUAL_ENV" not in os.environ:
+        SLOG.error("Tried to execute without active virtualenv.")
+        sys.exit(1)
+
+
+def run_self_test():
+    _check_venv()
+    _validate_environment()
+
+    import pytest
+
+    pytest.main([])
+
+
+def _python_version_string():
+    return ".".join(map(str, sys.version_info))[0:5]
+
+
+def _validate_environment():
+    # Check Python version
+    if not sys.version_info >= (3, 7):
+        raise OSError(
+            "Detected Python version {version} less than 3.7. Please delete "
+            "the virtualenv and run lamp again.".format(version=_python_version_string())
+        )
+
+    # Check the macOS version. Non-mac platforms return a tuple of empty strings
+    # for platform.mac_ver().
+    if platform.mac_ver()[0] == "10":
+        release_triplet = platform.mac_ver()[0].split(".")
+        if int(release_triplet[1]) < 14:
+            # You could technically compile clang or gcc yourself on an older version
+            # of macOS, but it's untested so we might as well just enforce
+            # a blanket minimum macOS version for simplicity.
+            SLOG.error("Genny requires macOS 10.14 Mojave or newer")
+            sys.exit(1)
+    return

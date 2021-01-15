@@ -1,76 +1,11 @@
 import click
-import os
 import platform
-import subprocess
 import structlog
 import sys
+import os
 import loggers
 
 SLOG = structlog.get_logger(__name__)
-
-
-def check_venv(args):
-    if "VIRTUAL_ENV" not in os.environ and not args.run_global:
-        SLOG.error("Tried to execute without active virtualenv.")
-        sys.exit(1)
-
-
-def run_self_test():
-    cwd = os.path.dirname(os.path.abspath(__file__))
-    SLOG.info("Running self-test", cwd=cwd)
-    import pytest
-    pytest.main([])
-    SLOG.info("Self-test finished.")
-    sys.exit(0)
-
-
-def python_version_string():
-    return ".".join(map(str, sys.version_info))[0:5]
-
-
-def validate_environment():
-    # Check Python version
-    if not sys.version_info >= (3, 7):
-        raise OSError(
-            "Detected Python version {version} less than 3.7. Please delete "
-            "the virtualenv and run lamp again.".format(version=python_version_string())
-        )
-
-    # Check the macOS version. Non-mac platforms return a tuple of empty strings
-    # for platform.mac_ver().
-    if platform.mac_ver()[0] == "10":
-        release_triplet = platform.mac_ver()[0].split(".")
-        if int(release_triplet[1]) < 14:
-            # You could technically compile clang or gcc yourself on an older version
-            # of macOS, but it's untested so we might as well just enforce
-            # a blanket minimum macOS version for simplicity.
-            SLOG.error("Genny requires macOS 10.14 Mojave or newer")
-            sys.exit(1)
-    return
-
-
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
-
-
-# @click.group(name="DSI", context_settings=CONTEXT_SETTINGS)
-#
-# @click.pass_context
-# def cli(ctx: click.Context, debug: bool) -> None:
-#     # Ensure that ctx.obj exists and is a dict.
-#     ctx.ensure_object(dict)
-#
-#     ctx.obj["DEBUG"] = debug
-#
-
-"""
-#     parser.add_argument(
-#         "-b",
-#         "--build-system",
-#         choices=["make", "ninja"],
-#         default="ninja",
-#         help="Which build-system to use for compilation. May need to use make for " "IDEs.",
-#     )
-"""
 
 
 @click.group()
@@ -126,6 +61,10 @@ def requires_build_system(
 
     loggers.setup_logging(verbose=ctx.obj["VERBOSE"])
 
+    # TODO: barf if not set or not exists.
+    ctx.obj["GENNY_REPO_ROOT"] = os.environ["GENNY_REPO_ROOT"]
+    os.chdir(ctx.obj["GENNY_REPO_ROOT"])
+
     from tasks import compile
 
     compile.cmake(
@@ -165,45 +104,45 @@ def clean(ctx) -> None:
     )
 
 
+@requires_build_system.command("install")
+@click.pass_context
+def self_test(ctx):
+    from tasks import compile
+
+    compile.install(
+        ctx.obj["BUILD_SYSTEM"],
+        ctx.obj["OS_FAMILY"],
+        ctx.obj["LINUX_DISTRO"],
+        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+    )
+
+
+@requires_build_system.command("cmake-test")
+@click.pass_context
+def cmake_test(ctx):
+    from tasks import run_tests
+
+    run_tests.cmake_test(
+        ctx.obj["BUILD_SYSTEM"],
+        ctx.obj["OS_FAMILY"],
+        ctx.obj["LINUX_DISTRO"],
+        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+        ctx.obj["GENNY_REPO_ROOT"],
+    )
+
+
 # TODO: this doesn't require the build-system (cmake) but shrug.
 @requires_build_system.command("self-test")
 @click.pass_context
 def self_test(ctx):
-    run_self_test()
+    from tasks import run_tests
 
+    run_tests.run_self_test()
 
-# TODO: common stuff
-#
-#     check_venv(args)
-#
-#     # Initialize the global context.
-#     os_family = platform.system()
-#     Context.set_triplet_os(os_family)
-#
-#     # TODO: barf if not set or not exists.
-#     os.chdir(os.environ["GENNY_REPO_ROOT"])
-#
-#
-#     curator_downloader = CuratorDownloader(os_family, args.linux_distro)
-#     if not curator_downloader.fetch_and_install():
-#         sys.exit(1)
-#
 
 # TODO: default subcommand
-#
-#     if not args.subcommand:
-#         loggers.info("No subcommand specified; running cmake, compile and install")
-#         tasks.cmake(
-#             context, toolchain_dir=toolchain_dir, env=compile_env, cmdline_cmake_args=cmake_args
-#         )
-#         tasks.compile_all(context, compile_env)
-#         tasks.install(context, compile_env)
-#     elif args.subcommand == "clean":
-#         tasks.clean(context, compile_env)
-#     else:
-#         tasks.compile_all(context, compile_env)
-#         if args.subcommand == "install":
-#             tasks.install(context, compile_env)
+# loggers.info("No subcommand specified; running cmake, compile and install")
+
 #         elif args.subcommand == "cmake-test":
 #             tasks.run_tests.cmake_test(compile_env)
 #         elif args.subcommand == "benchmark-test":

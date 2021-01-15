@@ -70,10 +70,11 @@ def compile_all(
     subprocess.run(compile_cmd, env=toolchain_info["toolchain_env"])
 
 
-def install(context, env):
-    install_cmd = [context.BUILD_SYSTEM, "-C", "build", "install"]
-    SLOG.debug("Running install: %s", " ".join(install_cmd))
-    subprocess.run(install_cmd, env=env)
+def install(build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool):
+    toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
+    install_cmd = [build_system, "-C", "build", "install"]
+    SLOG.debug("Running install", cmd=install_cmd)
+    subprocess.run(install_cmd, env=toolchain_info["toolchain_env"])
 
 
 def clean(build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool):
