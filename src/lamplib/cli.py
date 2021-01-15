@@ -121,9 +121,17 @@ def requires_build_system(ctx,
 
     loggers.setup_logging(verbose=ctx.obj["VERBOSE"])
 
+    from tasks import compile
+    compile.cmake(ctx.obj["BUILD_SYSTEM"],
+                  ctx.obj["OS_FAMILY"],
+                  ctx.obj["LINUX_DISTRO"],
+                  ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+                  ctx.obj["SANITIZER"])
+
 
 @requires_build_system.command(
-    "compile", help="Compile",
+    name="compile",
+    help="Compile",
 )
 @click.pass_context
 def compile(ctx) -> None:
