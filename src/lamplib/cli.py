@@ -41,6 +41,9 @@ SLOG = structlog.get_logger(__name__)
 @click.option(
     "-f", "--os-family", default=platform.system(),
 )
+# TODO
+#     if os_family == "Linux" and not known_args.subcommand and not known_args.linux_distro:
+#         raise ValueError("--linux-distro must be specified on Linux")
 @click.pass_context
 def requires_build_system(
     ctx,
@@ -131,6 +134,20 @@ def cmake_test(ctx):
     )
 
 
+@requires_build_system.command("benchmark-test")
+@click.pass_context
+def benchmark_test(ctx):
+    from tasks import run_tests
+
+    run_tests.benchmark_test(
+        ctx.obj["BUILD_SYSTEM"],
+        ctx.obj["OS_FAMILY"],
+        ctx.obj["LINUX_DISTRO"],
+        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+        ctx.obj["GENNY_REPO_ROOT"],
+    )
+
+
 # TODO: this doesn't require the build-system (cmake) but shrug.
 @requires_build_system.command("self-test")
 @click.pass_context
@@ -143,10 +160,7 @@ def self_test(ctx):
 # TODO: default subcommand
 # loggers.info("No subcommand specified; running cmake, compile and install")
 
-#         elif args.subcommand == "cmake-test":
-#             tasks.run_tests.cmake_test(compile_env)
-#         elif args.subcommand == "benchmark-test":
-#             tasks.run_tests.benchmark_test(compile_env)
+
 #         elif args.subcommand == "resmoke-test":
 #             tasks.run_tests.resmoke_test(
 #                 compile_env,
@@ -154,31 +168,6 @@ def self_test(ctx):
 #                 mongo_dir=args.resmoke_mongo_dir,
 #                 is_cnats=args.resmoke_cnats,
 #             )
-#         else:
-#             raise ValueError("Unknown subcommand: ", args.subcommand)
-#
-
-
-if __name__ == "__main__":
-    sys.argv[0] = "run-genny"
-    requires_build_system()
-
-
-#
-#
-#     subparsers = parser.add_subparsers(
-#         dest="subcommand",
-#         description="subcommands perform specific actions; make sure you run this script without "
-#         "any subcommand first to initialize the environment",
-#     )
-#     subparsers.add_parser(
-#         "cmake-test", help="run cmake unit tests that don't connect to a MongoDB cluster"
-#     )
-#     subparsers.add_parser("benchmark-test", help="run benchmark unit tests")
-#
-#     resmoke_test_parser = subparsers.add_parser(
-#         "resmoke-test", help="run cmake unit tests that connect to a MongoDB cluster"
-#     )
 #     group = resmoke_test_parser.add_mutually_exclusive_group()
 #     group.add_argument(
 #         "--suites", dest="resmoke_suites", help='equivalent to resmoke.py\'s "--suites" option'
@@ -196,29 +185,7 @@ if __name__ == "__main__":
 #         help="path to the mongo repo, which contains buildscripts/resmoke.py",
 #     )
 #
-#     subparsers.add_parser("install", help="just run the install step for genny")
-#     subparsers.add_parser("clean", help="cleanup existing build")
-#     subparsers.add_parser("self-test", help="run lamplib unittests")
-#
-#     known_args, unknown_args = parser.parse_known_args(args)
-#
-#     if os_family == "Linux" and not known_args.subcommand and not known_args.linux_distro:
-#         raise ValueError("--linux-distro must be specified on Linux")
-#
-#     return known_args, unknown_args
-#
-#
-# def add_args_to_context(args):
-#     """
-#     Add command line arguments to the global context object to be used later on.
-#
-#     Consider putting command line arguments onto the context if it is used by more
-#     than one caller.
-#
-#     :param args:
-#     :return:
-#     """
-#     loggers.basicConfig(level=loggers.DEBUG if args.verbose else loggers.INFO)
-#     Context.IGNORE_TOOLCHAIN_VERSION = args.ignore_toolchain_version
-#     Context.BUILD_SYSTEM = args.build_system
-#     Context.SANITIZER = args.sanitizer
+
+if __name__ == "__main__":
+    sys.argv[0] = "run-genny"
+    requires_build_system()
