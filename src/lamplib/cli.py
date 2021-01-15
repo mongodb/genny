@@ -208,6 +208,17 @@ def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str)
     )
 
 
+@requires_build_system.command("create-new-actor")
+@click.argument("actor_name")
+@click.pass_context
+def create_new_actor(ctx, actor_name):
+    import subprocess
+
+    path = os.path.join(ctx.obj["GENNY_REPO_ROOT"], "src", "lamplib", "create-new-actor.sh")
+    res = subprocess.run([path, actor_name], cwd=ctx.obj["GENNY_REPO_ROOT"])
+    res.check_returncode()
+
+
 # TODO: this doesn't require the build-system (cmake) but shrug.
 @requires_build_system.command("self-test")
 @click.pass_context
