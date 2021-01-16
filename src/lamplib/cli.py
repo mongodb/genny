@@ -1,4 +1,5 @@
 import click
+from click_option_group import optgroup, RequiredMutuallyExclusiveOptionGroup
 import platform
 import structlog
 import sys
@@ -12,7 +13,10 @@ SLOG = structlog.get_logger(__name__)
 @click.option("-v", "--verbose", default=False, is_flag=True, help="Enable debug logging.")
 # Python can't natively check the distros of our supported platforms.
 # See https://bugs.python.org/issue18872 for more info.
-@click.option(
+@optgroup.group(
+    "Build-System Configuration", help="Configure build-system (cmake and curator) parameters"
+)
+@optgroup.option(
     "-d",
     "--linux-distro",
     required=False,
@@ -23,27 +27,24 @@ SLOG = structlog.get_logger(__name__)
     help="specify the linux distro you're on; if your system isn't available,"
     " please contact us at #workload-generation",
 )
-@click.option(
+@optgroup.option(
     "-i",
     "--ignore-toolchain-version",
+    is_flag=True,
     help="ignore the toolchain version, useful for testing toolchain changes",
 )
-@click.option(
+@optgroup.option(
     "-b",
     "--build-system",
     type=click.Choice(["make", "ninja"]),
     default="ninja",
     help="Which build-system to use for compilation. May need to use make for IDEs.",
 )
-@click.option(
-    "-s",
-    "--sanitizer",
-    type=click.Choice(["asan", "tsan", "ubsan"]),
+@optgroup.option(
+    "-s", "--sanitizer", type=click.Choice(["asan", "tsan", "ubsan"]),
 )
-@click.option(
-    "-f",
-    "--os-family",
-    default=platform.system(),
+@optgroup.option(
+    "-f", "--os-family", default=platform.system(),
 )
 # TODO
 #     if os_family == "Linux" and not known_args.subcommand and not known_args.linux_distro:
@@ -84,8 +85,7 @@ def requires_build_system(
 
 
 @requires_build_system.command(
-    name="compile",
-    help="Compile",
+    name="compile", help="Compile",
 )
 @click.pass_context
 def compile(ctx) -> None:
@@ -206,18 +206,18 @@ def canaries(ctx):
 
 
 @requires_build_system.command("resmoke-test")
-@click.option("--suites", required=False, help='equivalent to resmoke.py\'s "--suites" option')
-@click.option(
-    "--create-new-actor-test-suite",
-    is_flag=True,
-    required=False,
-    help='Run the "genny_create_new_actor" resmoke test suite, incompatible with the --suites options',
-)
 @click.option(
     "--mongo-dir",
     type=click.Path(),
     required=True,
     help="path to the mongo repo, which contains buildscripts/resmoke.py",
+)
+@optgroup.group("Type of resmoke task to run", cls=RequiredMutuallyExclusiveOptionGroup)
+@optgroup.option("--suites", help='equivalent to resmoke.py\'s "--suites" option')
+@optgroup.option(
+    "--create-new-actor-test-suite",
+    is_flag=True,
+    help='Run the "genny_create_new_actor" resmoke test suite, incompatible with the --suites options',
 )
 @click.pass_context
 def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str):
@@ -274,15 +274,7 @@ def lint_yaml(ctx):
 # TODO: this doesn't require the build-system (cmake) but shrug.
 @requires_build_system.command("auto-tasks")
 @click.option(
-    "--tasks",
-    required=True,
-    type=click.Choice(
-        [
-            "all_tasks",
-            "variant_tasks",
-            "patch_tasks",
-        ]
-    ),
+    "--tasks", required=True, type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks",]),
 )
 @click.pass_context
 def auto_tasks(ctx, tasks):
