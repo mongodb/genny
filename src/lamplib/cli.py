@@ -8,6 +8,7 @@ import loggers
 
 SLOG = structlog.get_logger(__name__)
 
+# Heavy inspiration from here: https://github.com/pallets/click/issues/108
 
 _build_system_options = [
     click.option("-v", "--verbose", default=False, is_flag=True, help="Enable debug logging."),
@@ -53,6 +54,35 @@ def build_system_options(func):
     return func
 
 
+def save_config(ctx):
+    import json
+
+    settings_path = os.path.join(ctx.obj["GENNY_REPO_ROOT"], "build", "genny-build-settings.json")
+    with open(settings_path, "w") as handle:
+        json.dump(ctx.obj, handle)
+
+
+def current_config(ctx):
+    return ctx.obj
+
+
+def saved_config(ctx):
+    import json
+
+    settings_path = os.path.join(ctx.obj["GENNY_REPO_ROOT"], "build", "genny-build-settings.json")
+    if not os.path.exists(settings_path):
+        return dict()
+    with open(settings_path, "r") as handle:
+        return json.load(handle)
+
+
+def clean_unless_config_same(ctx):
+    from tasks import compile
+
+    if current_config(ctx) != saved_config(ctx):
+        compile.clean_build_dir()
+
+
 def setup(
     ctx,
     verbose: bool,
@@ -81,6 +111,8 @@ def setup(
 def cmake(ctx):
     from tasks import compile
 
+    clean_unless_config_same(ctx)
+
     compile.cmake(
         ctx.obj["BUILD_SYSTEM"],
         ctx.obj["OS_FAMILY"],
@@ -88,6 +120,8 @@ def cmake(ctx):
         ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
         ctx.obj["SANITIZER"],
     )
+
+    save_config(ctx)
 
 
 @click.group()
@@ -120,7 +154,7 @@ def compile(ctx, **kwargs) -> None:
 @click.pass_context
 def clean(ctx, **kwargs) -> None:
     setup(ctx, **kwargs)
-    # cmake(ctx)
+    from tasks import compile
 
     compile.clean(
         ctx.obj["BUILD_SYSTEM"],
