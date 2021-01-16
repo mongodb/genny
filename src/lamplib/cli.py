@@ -9,48 +9,51 @@ import loggers
 SLOG = structlog.get_logger(__name__)
 
 
-@click.group()
-@click.option("-v", "--verbose", default=False, is_flag=True, help="Enable debug logging.")
-# Python can't natively check the distros of our supported platforms.
-# See https://bugs.python.org/issue18872 for more info.
-@optgroup.group(
-    "Build-System Configuration", help="Configure build-system (cmake and curator) parameters"
-)
-@optgroup.option(
-    "-d",
-    "--linux-distro",
-    required=False,
-    default="not-linux",
-    type=click.Choice(
-        ["ubuntu1804", "archlinux", "rhel8", "rhel70", "rhel62", "amazon2", "not-linux"]
+_build_system_options = [
+    click.option("-v", "--verbose", default=False, is_flag=True, help="Enable debug logging."),
+    # Python can't natively check the distros of our supported platforms.
+    # See https://bugs.python.org/issue18872 for more info.
+    click.option(
+        "-d",
+        "--linux-distro",
+        required=False,
+        default="not-linux",
+        type=click.Choice(
+            ["ubuntu1804", "archlinux", "rhel8", "rhel70", "rhel62", "amazon2", "not-linux"]
+        ),
+        help=(
+            "specify the linux distro you're on; if your system isn't available,"
+            " please contact us at #workload-generation"
+        ),
     ),
-    help="specify the linux distro you're on; if your system isn't available,"
-    " please contact us at #workload-generation",
-)
-@optgroup.option(
-    "-i",
-    "--ignore-toolchain-version",
-    is_flag=True,
-    help="ignore the toolchain version, useful for testing toolchain changes",
-)
-@optgroup.option(
-    "-b",
-    "--build-system",
-    type=click.Choice(["make", "ninja"]),
-    default="ninja",
-    help="Which build-system to use for compilation. May need to use make for IDEs.",
-)
-@optgroup.option(
-    "-s", "--sanitizer", type=click.Choice(["asan", "tsan", "ubsan"]),
-)
-@optgroup.option(
-    "-f", "--os-family", default=platform.system(),
-)
-# TODO
-#     if os_family == "Linux" and not known_args.subcommand and not known_args.linux_distro:
-#         raise ValueError("--linux-distro must be specified on Linux")
-@click.pass_context
-def requires_build_system(
+    # TODO
+    #     if os_family == "Linux" and not known_args.subcommand and not known_args.linux_distro:
+    #         raise ValueError("--linux-distro must be specified on Linux")
+    click.option(
+        "-i",
+        "--ignore-toolchain-version",
+        is_flag=True,
+        help="ignore the toolchain version, useful for testing toolchain changes",
+    ),
+    click.option(
+        "-b",
+        "--build-system",
+        type=click.Choice(["make", "ninja"]),
+        default="ninja",
+        help="Which build-system to use for compilation. May need to use make for IDEs.",
+    ),
+    click.option("-s", "--sanitizer", type=click.Choice(["asan", "tsan", "ubsan"]),),
+    click.option("-f", "--os-family", default=platform.system(),),
+]
+
+
+def build_system_options(func):
+    for option in reversed(_build_system_options):
+        func = option(func)
+    return func
+
+
+def setup(
     ctx,
     verbose: bool,
     linux_distro: str,
@@ -60,6 +63,7 @@ def requires_build_system(
     os_family: str,
 ):
     ctx.ensure_object(dict)
+
     ctx.obj["VERBOSE"] = verbose
     ctx.obj["LINUX_DISTRO"] = linux_distro
     ctx.obj["IGNORE_TOOLCHAIN_VERSION"] = ignore_toolchain_version
@@ -73,6 +77,8 @@ def requires_build_system(
     ctx.obj["GENNY_REPO_ROOT"] = os.environ["GENNY_REPO_ROOT"]
     os.chdir(ctx.obj["GENNY_REPO_ROOT"])
 
+
+def cmake(ctx):
     from tasks import compile
 
     compile.cmake(
@@ -84,11 +90,19 @@ def requires_build_system(
     )
 
 
-@requires_build_system.command(
+@click.group()
+def cli():
+    pass
+
+
+@cli.command(
     name="compile", help="Compile",
 )
+@build_system_options
 @click.pass_context
-def compile(ctx) -> None:
+def compile(ctx, **kwargs) -> None:
+    setup(ctx, **kwargs)
+    cmake(ctx)
     from tasks import compile
 
     compile.compile_all(
@@ -99,10 +113,14 @@ def compile(ctx) -> None:
     )
 
 
-@requires_build_system.command("clean")
+@cli.command(
+    name="clean", help="Clean",
+)
+@build_system_options
 @click.pass_context
-def clean(ctx) -> None:
-    from tasks import compile
+def clean(ctx, **kwargs) -> None:
+    setup(ctx, **kwargs)
+    # cmake(ctx)
 
     compile.clean(
         ctx.obj["BUILD_SYSTEM"],
@@ -112,9 +130,15 @@ def clean(ctx) -> None:
     )
 
 
-@requires_build_system.command("install")
+@cli.command(
+    name="install", help="Install",
+)
+@build_system_options
 @click.pass_context
-def install(ctx):
+def install(ctx, **kwargs) -> None:
+    setup(ctx, **kwargs)
+    cmake(ctx)
+
     from tasks import compile
 
     compile.install(
@@ -125,9 +149,13 @@ def install(ctx):
     )
 
 
-@requires_build_system.command("cmake-test")
+@cli.command(name="cmake-test",)
+@build_system_options
 @click.pass_context
-def cmake_test(ctx):
+def cmake_test(ctx, **kwargs) -> None:
+    setup(ctx, **kwargs)
+    cmake(ctx)
+
     from tasks import run_tests
 
     run_tests.cmake_test(
@@ -139,9 +167,12 @@ def cmake_test(ctx):
     )
 
 
-@requires_build_system.command("benchmark-test")
+@cli.command(name="benchmark-test")
+@build_system_options
 @click.pass_context
-def benchmark_test(ctx):
+def benchmark_test(ctx, **kwargs) -> None:
+    setup(ctx, **kwargs)
+    cmake(ctx)
     from tasks import run_tests
 
     run_tests.benchmark_test(
@@ -153,10 +184,14 @@ def benchmark_test(ctx):
     )
 
 
-@requires_build_system.command("workload")
+@cli.command(name="workload")
+@build_system_options
 @click.pass_context
 @click.argument("genny_args", nargs=-1)
-def workload(ctx, genny_args):
+def workload(ctx, genny_args, **kwargs):
+    setup(ctx, **kwargs)
+    cmake(ctx)
+
     from tasks import compile
     from tasks import genny_runner
 
@@ -171,9 +206,13 @@ def workload(ctx, genny_args):
     genny_runner.main_genny_runner(genny_args)
 
 
-@requires_build_system.command("dry-run-workloads")
+@cli.command(name="dry-run-workloads")
+@build_system_options
 @click.pass_context
-def dry_run_workloads(ctx):
+def dry_run_workloads(ctx, **kwargs):
+    setup(ctx, **kwargs)
+    cmake(ctx)
+
     from tasks import compile
     from tasks import dry_run
 
@@ -188,9 +227,13 @@ def dry_run_workloads(ctx):
     dry_run.dry_run_workloads(ctx.obj["GENNY_REPO_ROOT"], ctx.obj["OS_FAMILY"])
 
 
-@requires_build_system.command("canaries")
+@cli.command(name="canaries")
+@build_system_options
 @click.pass_context
-def canaries(ctx):
+def canaries(ctx, **kwargs):
+    setup(ctx, **kwargs)
+    cmake(ctx)
+
     from tasks import compile
     from tasks import canaries_runner
 
@@ -205,7 +248,8 @@ def canaries(ctx):
     canaries_runner.main_canaries_runner()
 
 
-@requires_build_system.command("resmoke-test")
+@cli.command("resmoke-test")
+@build_system_options
 @click.option(
     "--mongo-dir",
     type=click.Path(),
@@ -220,7 +264,10 @@ def canaries(ctx):
     help='Run the "genny_create_new_actor" resmoke test suite, incompatible with the --suites options',
 )
 @click.pass_context
-def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str):
+def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str, **kwargs):
+    setup(ctx, **kwargs)
+    cmake(ctx)
+
     from tasks import compile
     from tasks import run_tests
 
@@ -241,10 +288,9 @@ def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str)
     )
 
 
-@requires_build_system.command("create-new-actor")
+@cli.command("create-new-actor")
 @click.argument("actor_name")
 @click.pass_context
-# TODO: this doesn't require the build-system (cmake) but shrug.
 def create_new_actor(ctx, actor_name):
     import subprocess
 
@@ -253,8 +299,7 @@ def create_new_actor(ctx, actor_name):
     res.check_returncode()
 
 
-# TODO: this doesn't require the build-system (cmake) but shrug.
-@requires_build_system.command("self-test")
+@cli.command("self-test")
 @click.pass_context
 def self_test(ctx):
     from tasks import run_tests
@@ -262,8 +307,7 @@ def self_test(ctx):
     run_tests.run_self_test()
 
 
-# TODO: this doesn't require the build-system (cmake) but shrug.
-@requires_build_system.command("lint-yaml")
+@cli.command("lint-yaml")
 @click.pass_context
 def lint_yaml(ctx):
     from tasks import yaml_linter
@@ -271,8 +315,7 @@ def lint_yaml(ctx):
     yaml_linter.main()
 
 
-# TODO: this doesn't require the build-system (cmake) but shrug.
-@requires_build_system.command("auto-tasks")
+@cli.command("auto-tasks")
 @click.option(
     "--tasks", required=True, type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks",]),
 )
@@ -289,4 +332,4 @@ def auto_tasks(ctx, tasks):
 
 if __name__ == "__main__":
     sys.argv[0] = "run-genny"
-    requires_build_system()
+    cli()
