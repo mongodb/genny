@@ -108,7 +108,7 @@ def setup(
     os.chdir(ctx.obj["GENNY_REPO_ROOT"])
 
 
-def cmake(ctx):
+def cmake_compile_install(ctx, install: bool):
     from tasks import compile
 
     clean_unless_config_same(ctx)
@@ -120,8 +120,22 @@ def cmake(ctx):
         ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
         ctx.obj["SANITIZER"],
     )
-
     save_config(ctx)
+
+    compile.compile_all(
+        ctx.obj["BUILD_SYSTEM"],
+        ctx.obj["OS_FAMILY"],
+        ctx.obj["LINUX_DISTRO"],
+        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+    )
+    if install:
+        compile.install(
+            ctx.obj["BUILD_SYSTEM"],
+            ctx.obj["OS_FAMILY"],
+            ctx.obj["LINUX_DISTRO"],
+            ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+        )
+
 
 
 @click.group()
@@ -136,15 +150,7 @@ def cli():
 @click.pass_context
 def compile(ctx, **kwargs) -> None:
     setup(ctx, **kwargs)
-    cmake(ctx)
-    from tasks import compile
-
-    compile.compile_all(
-        ctx.obj["BUILD_SYSTEM"],
-        ctx.obj["OS_FAMILY"],
-        ctx.obj["LINUX_DISTRO"],
-        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-    )
+    cmake_compile_install(ctx, install=False)
 
 
 @cli.command(
@@ -171,16 +177,7 @@ def clean(ctx, **kwargs) -> None:
 @click.pass_context
 def install(ctx, **kwargs) -> None:
     setup(ctx, **kwargs)
-    cmake(ctx)
-
-    from tasks import compile
-
-    compile.install(
-        ctx.obj["BUILD_SYSTEM"],
-        ctx.obj["OS_FAMILY"],
-        ctx.obj["LINUX_DISTRO"],
-        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-    )
+    cmake_compile_install(ctx, install=True)
 
 
 @cli.command(name="cmake-test",)
@@ -188,7 +185,7 @@ def install(ctx, **kwargs) -> None:
 @click.pass_context
 def cmake_test(ctx, **kwargs) -> None:
     setup(ctx, **kwargs)
-    cmake(ctx)
+    cmake_compile_install(ctx, install=True)
 
     from tasks import run_tests
 
@@ -206,7 +203,8 @@ def cmake_test(ctx, **kwargs) -> None:
 @click.pass_context
 def benchmark_test(ctx, **kwargs) -> None:
     setup(ctx, **kwargs)
-    cmake(ctx)
+    cmake_compile_install(ctx, install=True)
+
     from tasks import run_tests
 
     run_tests.benchmark_test(
@@ -224,18 +222,9 @@ def benchmark_test(ctx, **kwargs) -> None:
 @click.argument("genny_args", nargs=-1)
 def workload(ctx, genny_args, **kwargs):
     setup(ctx, **kwargs)
-    cmake(ctx)
+    cmake_compile_install(ctx, install=True)
 
-    from tasks import compile
     from tasks import genny_runner
-
-    # Is there a better way to depend on `run-genny install`?
-    compile.install(
-        ctx.obj["BUILD_SYSTEM"],
-        ctx.obj["OS_FAMILY"],
-        ctx.obj["LINUX_DISTRO"],
-        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-    )
 
     genny_runner.main_genny_runner(genny_args)
 
@@ -245,19 +234,9 @@ def workload(ctx, genny_args, **kwargs):
 @click.pass_context
 def dry_run_workloads(ctx, **kwargs):
     setup(ctx, **kwargs)
-    cmake(ctx)
+    cmake_compile_install(ctx, install=True)
 
-    from tasks import compile
     from tasks import dry_run
-
-    # Is there a better way to depend on `run-genny install`?
-    compile.install(
-        ctx.obj["BUILD_SYSTEM"],
-        ctx.obj["OS_FAMILY"],
-        ctx.obj["LINUX_DISTRO"],
-        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-    )
-
     dry_run.dry_run_workloads(ctx.obj["GENNY_REPO_ROOT"], ctx.obj["OS_FAMILY"])
 
 
@@ -266,19 +245,9 @@ def dry_run_workloads(ctx, **kwargs):
 @click.pass_context
 def canaries(ctx, **kwargs):
     setup(ctx, **kwargs)
-    cmake(ctx)
+    cmake_compile_install(ctx, install=True)
 
-    from tasks import compile
     from tasks import canaries_runner
-
-    # Is there a better way to depend on `run-genny install`?
-    compile.install(
-        ctx.obj["BUILD_SYSTEM"],
-        ctx.obj["OS_FAMILY"],
-        ctx.obj["LINUX_DISTRO"],
-        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-    )
-
     canaries_runner.main_canaries_runner()
 
 
@@ -300,19 +269,9 @@ def canaries(ctx, **kwargs):
 @click.pass_context
 def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str, **kwargs):
     setup(ctx, **kwargs)
-    cmake(ctx)
+    cmake_compile_install(ctx, install=True)
 
-    from tasks import compile
     from tasks import run_tests
-
-    # Is there a better way to depend on `run-genny install`?
-    compile.install(
-        ctx.obj["BUILD_SYSTEM"],
-        ctx.obj["OS_FAMILY"],
-        ctx.obj["LINUX_DISTRO"],
-        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-    )
-
     run_tests.resmoke_test(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         suites=suites,
@@ -337,7 +296,6 @@ def create_new_actor(ctx, actor_name):
 @click.pass_context
 def self_test(ctx):
     from tasks import run_tests
-
     run_tests.run_self_test()
 
 
@@ -345,7 +303,6 @@ def self_test(ctx):
 @click.pass_context
 def lint_yaml(ctx):
     from tasks import yaml_linter
-
     yaml_linter.main()
 
 
@@ -356,12 +313,7 @@ def lint_yaml(ctx):
 @click.pass_context
 def auto_tasks(ctx, tasks):
     from tasks import auto_tasks
-
     auto_tasks.main(tasks)
-
-
-# TODO: default subcommand
-# loggers.info("No subcommand specified; running cmake, compile and install")
 
 
 if __name__ == "__main__":
