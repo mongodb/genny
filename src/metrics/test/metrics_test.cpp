@@ -805,7 +805,7 @@ TEST_CASE("Events stream to gRPC") {
 
         metrics.operation("dummyActorName", "dummyOpName", 1, 2);
         metrics.operation("dummyActorName", "dummyOpName", 2, 2);
-        metrics.operation("dummyActorName", "dummyOpName", 2, 3);
+        metrics.operation("dummyActorName", "dummyOpName.3", 2);
         metrics.operation("dummyActorName", "anotherDummyOpName", 2, 4);
 
         REQUIRE(boost::filesystem::exists(metricsPath + "/dummyActorName.dummyOpName.2.ftdc"));
