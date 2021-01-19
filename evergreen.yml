@@ -249,9 +249,12 @@ task_groups:
 functions:
 
   f_fetch_source:
+  - command: manifest.load
   - command: git.get_project
     params:
       directory: src/genny
+      revisions:
+        mongo: ${mongo_rev}
 
   ##
   # Compile the project in src/build.
