@@ -11,6 +11,13 @@ Description: |
     4. Running read and write operations on the collection while it is being resharded.
     5. Running read and write operations on the collection after it has been resharded.
 
+  The inserted documents have the following form:
+
+      {_id: 10, oldKey: 20, newKey: 30, counter: 0, padding: 'random string of bytes ...'}
+
+  The collection is initially sharded on {oldKey: 'hashed'} and then resharded on
+  {oldKey: 'hashed', newKey: 1}.
+
 GlobalDefaults:
   Nop: &Nop {Nop: true}
 
