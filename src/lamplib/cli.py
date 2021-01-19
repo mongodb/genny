@@ -1,3 +1,5 @@
+from typing import List
+
 import click
 from click_option_group import optgroup, RequiredMutuallyExclusiveOptionGroup
 import platform
@@ -45,6 +47,7 @@ _build_system_options = [
     ),
     click.option("-s", "--sanitizer", type=click.Choice(["asan", "tsan", "ubsan"]),),
     click.option("-f", "--os-family", default=platform.system(),),
+    click.argument("cmake_args", nargs=-1),
 ]
 
 
@@ -54,33 +57,8 @@ def build_system_options(func):
     return func
 
 
-def save_config(ctx):
-    import json
-
-    settings_path = os.path.join(ctx.obj["GENNY_REPO_ROOT"], "build", "genny-build-settings.json")
-    with open(settings_path, "w") as handle:
-        json.dump(ctx.obj, handle)
-
-
-def current_config(ctx):
-    return ctx.obj
-
-
-def saved_config(ctx):
-    import json
-
-    settings_path = os.path.join(ctx.obj["GENNY_REPO_ROOT"], "build", "genny-build-settings.json")
-    if not os.path.exists(settings_path):
-        return dict()
-    with open(settings_path, "r") as handle:
-        return json.load(handle)
-
-
-def clean_unless_config_same(ctx):
-    from tasks import compile
-
-    if current_config(ctx) != saved_config(ctx):
-        compile.clean_build_dir()
+# If ctx.obj interactions become any more complicated, please refactor to a Context objects
+# that can be constructed from kwargs and can handle its own saving/cleaning, etc.
 
 
 def setup(
@@ -91,6 +69,7 @@ def setup(
     build_system: str,
     sanitizer: str,
     os_family: str,
+    cmake_args: List[str],
 ):
     ctx.ensure_object(dict)
 
@@ -100,6 +79,7 @@ def setup(
     ctx.obj["BUILD_SYSTEM"] = build_system
     ctx.obj["SANITIZER"] = sanitizer
     ctx.obj["OS_FAMILY"] = os_family
+    ctx.obj["CMAKE_ARGS"] = cmake_args
 
     loggers.setup_logging(verbose=ctx.obj["VERBOSE"])
 
@@ -111,16 +91,14 @@ def setup(
 def cmake_compile_install(ctx, install: bool):
     from tasks import compile
 
-    clean_unless_config_same(ctx)
-
     compile.cmake(
         ctx.obj["BUILD_SYSTEM"],
         ctx.obj["OS_FAMILY"],
         ctx.obj["LINUX_DISTRO"],
         ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
         ctx.obj["SANITIZER"],
+        ctx.obj["CMAKE_ARGS"],
     )
-    save_config(ctx)
 
     compile.compile_all(
         ctx.obj["BUILD_SYSTEM"],
@@ -135,7 +113,6 @@ def cmake_compile_install(ctx, install: bool):
             ctx.obj["LINUX_DISTRO"],
             ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
         )
-
 
 
 @click.group()
@@ -226,7 +203,9 @@ def workload(ctx, genny_args, **kwargs):
 
     from tasks import genny_runner
 
-    genny_runner.main_genny_runner(genny_args)
+    genny_runner.main_genny_runner(
+        args=genny_args, genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], cleanup=False
+    )
 
 
 @cli.command(name="dry-run-workloads")
@@ -237,6 +216,7 @@ def dry_run_workloads(ctx, **kwargs):
     cmake_compile_install(ctx, install=True)
 
     from tasks import dry_run
+
     dry_run.dry_run_workloads(ctx.obj["GENNY_REPO_ROOT"], ctx.obj["OS_FAMILY"])
 
 
@@ -248,6 +228,7 @@ def canaries(ctx, **kwargs):
     cmake_compile_install(ctx, install=True)
 
     from tasks import canaries_runner
+
     canaries_runner.main_canaries_runner()
 
 
@@ -272,6 +253,7 @@ def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str,
     cmake_compile_install(ctx, install=True)
 
     from tasks import run_tests
+
     run_tests.resmoke_test(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         suites=suites,
@@ -296,6 +278,7 @@ def create_new_actor(ctx, actor_name):
 @click.pass_context
 def self_test(ctx):
     from tasks import run_tests
+
     run_tests.run_self_test()
 
 
@@ -303,6 +286,7 @@ def self_test(ctx):
 @click.pass_context
 def lint_yaml(ctx):
     from tasks import yaml_linter
+
     yaml_linter.main()
 
 
@@ -313,6 +297,7 @@ def lint_yaml(ctx):
 @click.pass_context
 def auto_tasks(ctx, tasks):
     from tasks import auto_tasks
+
     auto_tasks.main(tasks)
 
 

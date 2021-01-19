@@ -266,10 +266,11 @@ functions:
       binary: ./src/genny/run-genny
       args:
       - compile
-      - -d=${distro|not-linux}
+      - --linux-distro=${distro|not-linux}
+      - -- # Separator to pass in cmake args
       - -DENABLE_JASPER:BOOL=ON
       - -DGENNY_INSTALL_DIR:PATH="$PWD"
-      - -DGENNY_INSTALL_SSL:BOOL=ON          
+      - -DGENNY_INSTALL_SSL:BOOL=ON
 
   ##
   # Runs each workload as a dry run

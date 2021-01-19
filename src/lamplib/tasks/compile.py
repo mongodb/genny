@@ -1,3 +1,5 @@
+from typing import List
+
 import structlog
 import os
 import subprocess
@@ -29,6 +31,7 @@ def cmake(
     linux_distro: str,
     ignore_toolchain_version: bool,
     sanitizer: str,
+    cmake_args: List[str],
 ):
     toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
 
@@ -53,8 +56,7 @@ def cmake(
 
     cmake_cmd += _sanitizer_flags(sanitizer)
 
-    # TODO:
-    # cmake_cmd += cmdline_cmake_args
+    cmake_cmd += cmake_args
 
     SLOG.info("Running cmake", cmd=cmake_cmd)
     subprocess.run(cmake_cmd, env=toolchain_info["toolchain_env"])

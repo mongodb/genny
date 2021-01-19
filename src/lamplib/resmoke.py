@@ -9,6 +9,13 @@ def run_resmoke(genny_repo_root: str, resmoke_args: List[str]) -> List[str]:
     resmoke_venv: str = os.path.join(mongo_repo_path, "resmoke_venv")
     resmoke_python: str = os.path.join(resmoke_venv, "bin", "python3")
 
+    # ./src/genny/../mongo = ./src/mongo exists so use it
+    if (
+        os.path.exists(os.path.join(genny_repo_root, "..", "mongo"))
+        and os.getcwd() != genny_repo_root
+    ):
+        mongo_repo_path = os.path.join(genny_repo_root, "..", "mongo")
+
     # Clone repo unless exists
     if not os.path.exists(mongo_repo_path):
         res = subprocess.run(["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path])
