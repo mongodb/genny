@@ -26,8 +26,11 @@ GlobalDefaults:
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
 
-  DocumentSize: &DocumentSize 10000  # = 10kB
-  DocumentSize80Pct: &DocumentSize80Pct 8000  # = 8kB
+  # Note that the exact document size may exceed ApproxDocumentSize because of field names and other
+  # fields in the document.
+  ApproxDocumentSize: &ApproxDocumentSize 10000  # = 10kB
+  ApproxDocumentSize80Pct: &ApproxDocumentSize80Pct 8000  # = 8kB
+  # TODO: Increase DocumentCount to 4000000 so there will be ~20GB of data inserted on each shard.
   DocumentCount: &DocumentCount 100000  # for an approximate total of 1GB
 
   ShardKeyValueMin: &ShardKeyValueMin 1
@@ -94,7 +97,7 @@ Actors:
       oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
       newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
       counter: 0
-      padding: {^FastRandomString: {length: {^RandomInt: {min: *DocumentSize80Pct, max: *DocumentSize}}}}
+      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize80Pct, max: *ApproxDocumentSize}}}}
   - *Nop
   - *Nop
   - *Nop
