@@ -246,6 +246,10 @@ void PoolFactory::setOption(OptionType type, const std::string& option, std::str
     _config->set(type, option, value);
 }
 
+void PoolFactory::overrideHosts(const std::set<std::string>& hosts) {
+    _config->hosts = hosts;
+}
+
 void PoolFactory::setOptionFromInt(OptionType type, const std::string& option, int32_t value) {
     auto valueStr = std::to_string(value);
     setOption(type, option, valueStr);
