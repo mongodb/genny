@@ -50,7 +50,7 @@ ignore:
 buildvariants:
 - name: amazon2
   display_name: Amazon Linux 2
-  modules: ~
+  modules: [mongo]
   run_on:
   - amazon2-build
   expansions:
@@ -64,7 +64,7 @@ buildvariants:
 
 - name: rhel70
   display_name: RHEL 7
-  modules: ~
+  modules: [mongo]
   expansions:
     distro: rhel70
   run_on:
@@ -74,7 +74,7 @@ buildvariants:
 
 - name: rhel8
   display_name: RHEL 8
-  modules: ~
+  modules: [mongo]
   expansions:
     distro: rhel8
   run_on:
@@ -84,7 +84,7 @@ buildvariants:
 
 - name: ubuntu1804
   display_name: Ubuntu 18.04
-  modules: ~
+  modules: [mongo]
   expansions:
     distro: ubuntu1804
   run_on:
@@ -94,7 +94,7 @@ buildvariants:
 
 - name: macos-1014
   display_name: macOS Mojave
-  modules: ~
+  modules: [mongo]
   run_on:
   - macos-1014
   tasks:
@@ -102,7 +102,7 @@ buildvariants:
 
 - name: centos6-perf
   display_name: CentOS 6 for Performance
-  modules: ~
+  modules: [mongo]
   expansions:
     distro: rhel62
   run_on:
@@ -261,15 +261,15 @@ functions:
   # previous (unsuccessful) builds in the gennytoolchain project.
   ##
   f_compile:
-  - command: shell.exec
+  - command: subprocess.exec
     params:
-      shell: bash
-      script: |
-        ./src/genny/run-genny compile \
-          -d=${distro|not-linux} \
-          -DENABLE_JASPER:BOOL=ON \
-          -DGENNY_INSTALL_DIR:PATH="$PWD"/dist \
-          -DGENNY_INSTALL_SSL:BOOL=ON
+      binary: ./src/genny/run-genny
+      args:
+      - compile
+      - -d=${distro|not-linux}
+      - -DENABLE_JASPER:BOOL=ON
+      - -DGENNY_INSTALL_DIR:PATH="$PWD"
+      - -DGENNY_INSTALL_SSL:BOOL=ON          
 
   ##
   # Runs each workload as a dry run
@@ -365,3 +365,13 @@ functions:
       optional: true
       file: src/genny/src/lamplib/nosetests.xml
 
+
+##                ⚡️ Modules ⚡️
+
+modules:
+- name: mongo
+  repo: git@github.com:mongodb/mongo.git
+  # This prefix is relative to the path in git.get_project
+  # I.e., src/genny/../../src = ./src
+  prefix: ../../src 
+  branch: master
