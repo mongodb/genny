@@ -95,6 +95,7 @@ void Topology::findConnectedNodesViaMongos(DBService& service) {
     desc->configsvr = retriever.replSet;
     desc->configsvr.configsvr = true;
 
+    BOOST_LOG_TRIVIAL(error) << "dealt with config";
     // Shards
     auto shardListRes = service.runAdminCommand("listShards");
     bsoncxx::array::view shards = shardListRes.view()["shards"].get_array();

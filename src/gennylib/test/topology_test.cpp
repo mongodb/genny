@@ -78,6 +78,8 @@ TEST_CASE("Topology maps the cluster correctly") {
     using bsoncxx::builder::stream::finalize;
     using bsoncxx::builder::stream::open_array;
     using bsoncxx::builder::stream::close_array;
+    using bsoncxx::builder::stream::close_document;
+    using bsoncxx::builder::stream::open_document;
 
     SECTION("Topology correctly maps a standalone") {
         class MockStandaloneService : public DBService {
@@ -116,7 +118,7 @@ TEST_CASE("Topology maps the cluster correctly") {
                     doc << "setName" << "testSetName";
                     doc << "primary" << "testPrimaryHost:testPrimaryPort";
                     doc << "hosts"
-                        << open_array << "testPrimaryHost::testPrimaryPort" << "host2:port2"
+                        << open_array << "testPrimaryHost:testPrimaryPort" << "host2:port2"
                         << "host3:port3" << close_array;
                     return doc << finalize;
 
@@ -133,14 +135,113 @@ TEST_CASE("Topology maps the cluster correctly") {
 
         ToJsonVisitor visitor;
         topology.accept(visitor);
-        BOOST_LOG_TRIVIAL(error) << "visitor output: " << visitor.str();
 
         stringstream expected;
         expected << "{primaryUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny, "
-            << "nodes: [{mongodUri: mongodb://testPrimaryHost::testPrimaryPort/?appName=Genny}, "
+            << "nodes: [{mongodUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny}, "
                     << "{mongodUri: mongodb://host2:port2/?appName=Genny}, "
                     << "{mongodUri: mongodb://host3:port3/?appName=Genny}]}";
 
         REQUIRE(expected.str() == visitor.str());
     }
+
+    SECTION("Topology correctly maps a sharded cluster") {
+        class MockConfigService : public DBService {
+
+            ServiceUri uri() { return "testConfigUriNeverUsedHere"; }
+
+            bsoncxx::document::value runAdminCommand(std::string command) {
+                if (command == "isMaster") {
+                    auto doc = document{};
+                    doc << "setName" << "configSet";
+                    doc << "primary" << "testConfigHost:testConfigPort";
+                    doc << "hosts"
+                        << open_array << "testConfigHost:testConfigPort" << close_array;
+                    return doc << finalize;
+
+                }
+                return document{} << "unplannedKey" << "unplannedValue" << finalize;
+            }
+
+            std::unique_ptr<DBService> makePeer(ServiceUri uri) {
+                return std::make_unique<MockConfigService>();
+            }
+        };
+        class MockShardService : public DBService {
+
+            ServiceUri uri() { return "testShardUriNeverUsedHere"; }
+
+            bsoncxx::document::value runAdminCommand(std::string command) {
+                if (command == "isMaster") {
+                    auto doc = document{};
+                    doc << "setName" << "shard1";
+                    doc << "primary" << "shardNode1:shardPort1";
+                    doc << "hosts"
+                        << open_array << "shardNode1:shardPort1" << "shardNode2:shardPort2" << close_array;
+                    return doc << finalize;
+
+                }
+                return document{} << "unplannedKey" << "unplannedValue" << finalize;
+            }
+
+            std::unique_ptr<DBService> makePeer(ServiceUri uri) {
+                return std::make_unique<MockConfigService>();
+            }
+        };
+
+        class MockShardedClusterService : public DBService {
+
+            ServiceUri uri() { return "mongodb://testMongosUri:11111/?appName=Genny"; }
+
+            bsoncxx::document::value runAdminCommand(std::string command) {
+
+                if (command == "isMaster") {
+                    return document{} << "msg" << "isdbgrid" << finalize;
+
+                }
+                if (command == "getShardMap") {
+                    auto doc = document{};
+                    doc << "map" << open_document
+                        << "config" << "configSvr/configHost:configPort"
+                        << close_document;
+                    return doc << finalize;
+                }
+                if (command == "listShards") {
+                    auto doc = document{};
+                    doc << "shards" << open_array
+                        << open_document << "host"
+                        << "shard1/shardNode1:shardPort1,shardNode2:shardPort2" << close_document
+                        << close_array;
+                    return doc << finalize;
+                }
+                return document{} << "unplannedKey" << "unplannedValue" << finalize;
+            }
+
+            std::unique_ptr<DBService> makePeer(ServiceUri uri) {
+                if (uri == "mongodb://configHost:configPort/?appName=Genny") {
+                    return std::make_unique<MockConfigService>();
+                }
+                if (uri == "mongodb://shardNode1:shardPort1,shardNode2:shardPort2/?appName=Genny") {
+                    return std::make_unique<MockShardService>();
+                }
+                return std::make_unique<MockShardedClusterService>();
+            }
+        };
+        MockShardedClusterService service;
+        Topology topology(service);
+
+        ToJsonVisitor visitor;
+        topology.accept(visitor);
+
+        stringstream expected;
+        expected << "{configsvr: {primaryUri: mongodb://testConfigHost:testConfigPort/?appName=Genny, "
+                      << "nodes: [{mongodUri: mongodb://testConfigHost:testConfigPort/?appName=Genny}]} "
+                 << "shards: [{primaryUri: mongodb://shardNode1:shardPort1/?appName=Genny, "
+                            << "nodes: [{mongodUri: mongodb://shardNode1:shardPort1/?appName=Genny}, "
+                            << "{mongodUri: mongodb://shardNode2:shardPort2/?appName=Genny}]}],  "
+                 << "mongoses: [{mongosUri: mongodb://testmongosuri:11111/?appName=Genny}]}";
+
+        REQUIRE(expected.str() == visitor.str());
+    }
+
 };
