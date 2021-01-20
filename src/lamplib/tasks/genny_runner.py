@@ -15,7 +15,7 @@ def main_genny_runner(args, genny_repo_root, cleanup: bool):
     with poplar_grpc(cleanup):
         path = os.path.join(genny_repo_root, "dist", "bin", "genny_core")
         if not os.path.exists(path):
-            SLOG.error("genny_core not found. Run compile first.", path=path)
+            SLOG.error("genny_core not found. Run install first.", path=path)
             raise Exception(f"genny_core not found at {path}.")
         cmd = [path, *args]
         SLOG.info("Running genny", command=" ".join(shlex.quote(x) for x in cmd))

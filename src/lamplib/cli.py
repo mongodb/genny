@@ -196,15 +196,26 @@ def benchmark_test(ctx, **kwargs) -> None:
 @cli.command(name="workload")
 @build_system_options
 @click.pass_context
-@click.argument("genny_args", nargs=-1)
-def workload(ctx, genny_args, **kwargs):
+def workload(ctx, **kwargs):
+    # TODO: can't call cmake with same args here, since it ends up lookign like:
+    # cmake -B build
+    #       -G Ninja
+    #       -DCMAKE_PREFIX_PATH=/data/mci/gennytoolchain/installed/x64-linux-shared
+    #       -DCMAKE_TOOLCHAIN_FILE=/data/mci/gennytoolchain/scripts/buildsystems/vcpkg.cmake
+    #       -DVCPKG_TARGET_TRIPLET=x64-linux-static
+    #       -u mongodb://username:password@10.2.0.200:27017/admin?ssl=false
+    #     ./etc/genny/workloads/docs/HelloWorld.yml
+    # which ends up with a (benign but confusing) error:
+    #    CMake Error: The source directory "/media/ephemeral0/src/genny/etc/genny/workloads/docs/HelloWorld.yml" does not exist.
+    #
     setup(ctx, **kwargs)
     cmake_compile_install(ctx, install=True)
 
     from tasks import genny_runner
 
     genny_runner.main_genny_runner(
-        args=genny_args, genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], cleanup=False
+        # TODO: cmake_args needs to be renamed.
+        args=ctx.obj["CMAKE_ARGS"], genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], cleanup=False
     )
 
 
