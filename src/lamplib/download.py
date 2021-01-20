@@ -38,6 +38,7 @@ class Downloader:
             SLOG.debug("Skipping installing", name=self._name, into_dir=self.result_dir)
             return True
 
+        okay = True
         #
         # Check for parent directories and permissions.
         #
@@ -50,17 +51,17 @@ class Downloader:
                     trying_to_install=self._name,
                     install_dir_doesnt_exist=self._install_dir,
                 )
-                return False
+                okay = False
 
         if not os.path.isdir(self._install_dir):
             SLOG.critical("Install dir is not a directory.", what_is_not_a_dir=self._install_dir)
-            return False
+            okay = False
 
         if not os.access(self._install_dir, os.W_OK):
             SLOG.critical(
                 "Please ensure you have write access:" f'`sudo chown $USER "{self._install_dir}"`',
             )
-            return False
+            okay = False
 
         if platform.mac_ver()[0]:
             release_triplet = platform.mac_ver()[0].split(".")
@@ -72,7 +73,6 @@ class Downloader:
                     "See https://apple.stackexchange.com/a/208481 for instructions",
                     macos_minor_version=minor_ver,
                 )
-                return False
             if minor_ver >= 15:
                 # Instructions derived from https://github.com/NixOS/nix/issues/2925#issuecomment-539570232
                 SLOG.info(
@@ -147,7 +147,9 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
 
 ☝️ There are some steps you have to before you can build and run genny. Scroll up. ☝️"""
                 )
-                return False
+
+        if not okay:
+            return False
 
         #
         # Okay. Now fetch and install.
