@@ -8,6 +8,7 @@ from download import Downloader
 
 SLOG = structlog.get_logger(__name__)
 
+
 def get_poplar_args():
     """
     Returns the argument list used to create the Poplar gRPC process.
@@ -63,10 +64,9 @@ class CuratorDownloader(Downloader):
     CURATOR_VERSION = "d3da25b63141aa192c5ef51b7d4f34e2f3fc3880"
 
     def __init__(self, os_family: str, distro: str, install_dir: str):
-        super().__init__(os_family=os_family,
-                         distro=distro,
-                         install_dir=install_dir,
-                         name="curator")
+        super().__init__(
+            os_family=os_family, distro=distro, install_dir=install_dir, name="curator"
+        )
         if self._os_family == "Darwin":
             self._distro = "macos"
 

@@ -215,7 +215,9 @@ def workload(ctx, **kwargs):
 
     genny_runner.main_genny_runner(
         # TODO: cmake_args needs to be renamed.
-        args=ctx.obj["CMAKE_ARGS"], genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], cleanup=False
+        args=ctx.obj["CMAKE_ARGS"],
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        cleanup=False,
     )
 
 
