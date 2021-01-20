@@ -290,7 +290,9 @@ def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str,
 def create_new_actor(ctx, actor_name):
     import subprocess
 
-    path = os.path.join(ctx.obj["GENNY_REPO_ROOT"], "src", "lamplib", "create-new-actor.sh")
+    path = os.path.join(
+        ctx.obj["GENNY_REPO_ROOT"], "src", "lamplib", "tasks", "create-new-actor.sh"
+    )
     res = subprocess.run([path, actor_name], cwd=ctx.obj["GENNY_REPO_ROOT"])
     res.check_returncode()
 

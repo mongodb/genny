@@ -35,12 +35,13 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
     # This can only be imported after the setup script has installed gennylib.
     from curator import poplar_grpc
 
+    # TODO: use path relative to genny_repo_root
     sentinel_file = os.path.join(os.getcwd(), "build", "sentinel.junit.xml")
 
     with open(sentinel_file, "w") as f:
         f.write(_sentinel_report)
 
-    with poplar_grpc():
+    with poplar_grpc(cleanup_metrics=True):
         res = cmd_func()
 
     if checker_func:
