@@ -295,6 +295,15 @@ def create_new_actor(ctx, actor_name):
     res.check_returncode()
 
 
+@cli.command("lint-python")
+@click.pass_context
+def lint_python(ctx):
+    from tasks import lint_python
+
+    genny_repo_root = os.environ.get("GENNY_REPO_ROOT")
+    lint_python.lint_python(genny_repo_root)
+
+
 @cli.command("self-test")
 @click.pass_context
 def self_test(ctx):
