@@ -28,6 +28,8 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
 
+#include <gennylib/v1/PoolFactory.hpp>
+
 namespace genny {
 
 class AbstractTopologyDescription;
@@ -146,11 +148,11 @@ struct ShardedDescription : public AbstractTopologyDescription {
  */
 class Topology {
 public:
-    Topology(mongocxx::pool::entry& client) : _baseUri{client->uri()} {
+    Topology(mongocxx::pool::entry& client) : _factory{client->uri().to_string()} {
         update(*client);
     }
 
-    Topology(const mongocxx::uri& uri) : _baseUri{uri.to_string()} {
+    Topology(const mongocxx::uri& uri) : _factory{uri.to_string()} {
         mongocxx::client client(uri);
         update(client);
     }
@@ -171,14 +173,10 @@ public:
      */
     void update(mongocxx::client& client);
 
-    
-    /**
-     * Convert a node's name to a URI. Mostly just public for testing.
-     */
-    mongocxx::uri nameToUri(const mongocxx::uri& uri, const std::string& name);
+    std::string nameToUri(const std::string& name);
 
 private:
-    mongocxx::uri _baseUri;
+    v1::PoolFactory _factory;
     void getDataMemberConnectionStrings(mongocxx::client& client);
     void findConnectedNodesViaMongos(mongocxx::client& client);
     std::unique_ptr<AbstractTopologyDescription> _topology = nullptr;

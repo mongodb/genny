@@ -31,8 +31,6 @@
 
 namespace genny {
 
-
-
 void doFSyncReplicaSet(mongocxx::pool::entry& client) {
     using bsoncxx::builder::basic::kvp;
     using bsoncxx::builder::basic::make_document;
@@ -68,7 +66,7 @@ bool quiesce(mongocxx::pool::entry& client) {
     Topology topology(client);
     ToJsonVisitor visitor;
     topology.accept(visitor);
-    BOOST_LOG_TRIVIAL(error) << "output: " << visitor.str();
+    BOOST_LOG_TRIVIAL(error) << "visitor output: " << visitor.str();
     return true;
 }
 
