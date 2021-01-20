@@ -258,7 +258,8 @@ def canaries(ctx, **kwargs):
 @click.option(
     "--mongo-dir",
     type=click.Path(),
-    required=True,
+    required=False,
+    default=None,
     help="path to the mongo repo, which contains buildscripts/resmoke.py",
 )
 @optgroup.group("Type of resmoke task to run", cls=RequiredMutuallyExclusiveOptionGroup)

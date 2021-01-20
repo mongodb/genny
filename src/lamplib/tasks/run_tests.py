@@ -1,14 +1,11 @@
 import platform
 import sys
-
 import structlog
-
 import os
 import subprocess
+import shutil
 
-import resmoke
 import toolchain
-from cli import SLOG
 
 SLOG = structlog.get_logger(__name__)
 
@@ -125,37 +122,71 @@ def _check_create_new_actor_test_report(workdir):
 def resmoke_test(
     genny_repo_root: str, suites: str, is_cnats: bool, mongo_dir: str, env: dict,
 ):
-    workdir = genny_repo_root
-    checker_func = None
-
-    if is_cnats:
-        suites = os.path.join(workdir, "src", "resmokeconfig", "genny_create_new_actor.yml")
-        checker_func = lambda: _check_create_new_actor_test_report(workdir)
-
     if (not suites) and (not is_cnats):
         raise ValueError('Must specify either "--suites" or "--create-new-actor-test-suite"')
 
-    resmoke.run_resmoke(genny_repo_root=genny_repo_root, resmoke_args=["--help"])
+    if is_cnats:
+        suites = os.path.join(genny_repo_root, "src", "resmokeconfig", "genny_create_new_actor.yml")
+        checker_func = lambda: _check_create_new_actor_test_report(genny_repo_root)
+    else:
+        checker_func = None
 
-    cmd = resmoke.run_resmoke(
-        genny_repo_root=genny_repo_root,
-        resmoke_args=[
-            "run",
-            "--suite",
-            suites,
-            "--configDir",
-            os.path.join(mongo_dir, "buildscripts", "resmokeconfig"),
-            "--mongod",
-            "mongod",
-            "--mongo",
-            "mongo",
-            "--mongos",
-            "mongos",
-        ],
-    )
+    if mongo_dir is not None:
+        mongo_repo_path = mongo_dir
+    else:
+        evergreen_mongo_repo = os.path.join(genny_repo_root, "..", "mongo")
+        run_from_evergreen_workspace = os.getcwd() != genny_repo_root
+
+        if os.path.exists(evergreen_mongo_repo) and run_from_evergreen_workspace:
+            mongo_repo_path = evergreen_mongo_repo
+        else:
+            mongo_repo_path = os.path.join(genny_repo_root, "build", "resmoke-mongo")
+
+    resmoke_venv: str = os.path.join(mongo_repo_path, "resmoke_venv")
+    resmoke_python: str = os.path.join(resmoke_venv, "bin", "python3")
+
+    # Clone repo unless exists
+    if not os.path.exists(mongo_repo_path):
+        res = subprocess.run(["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path])
+        res.check_returncode()
+
+        # See comment in evergreen.yml - mongodb_archive_url
+        res = subprocess.run(
+            ["git", "checkout", "298d4d6bbb9980b74bded06241067fe6771bef68"], cwd=mongo_repo_path
+        )
+        res.check_returncode()
+
+    # Setup resmoke venv unless exists
+    resmoke_setup_sentinel = os.path.join(resmoke_venv, "setup-done")
+    if not os.path.exists(resmoke_setup_sentinel):
+        shutil.rmtree(resmoke_venv, ignore_errors=True)
+        import venv
+
+        venv.create(env_dir=resmoke_venv, with_pip=True, symlinks=True)
+        reqs_file = os.path.join(mongo_repo_path, "etc", "pip", "evgtest-requirements.txt")
+        cmd = [resmoke_python, "-mpip", "install", "-r", reqs_file]
+        res = subprocess.run(cmd)
+        res.check_returncode()
+        open(resmoke_setup_sentinel, "w")
+
+    cmd = [
+        resmoke_python,
+        os.path.join(mongo_repo_path, "buildscripts", "resmoke.py"),
+        "run",
+        "--suite",
+        suites,
+        "--configDir",
+        os.path.join(mongo_repo_path, "buildscripts", "resmokeconfig"),
+        "--mongod",
+        "mongod",
+        "--mongo",
+        "mongo",
+        "--mongos",
+        "mongos",
+    ]
 
     _run_command_with_sentinel_report(
-        lambda: subprocess.run(cmd, cwd=workdir, env=env), checker_func,
+        lambda: subprocess.run(cmd, cwd=genny_repo_root, env=env), checker_func,
     )
 
 
