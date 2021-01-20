@@ -6,7 +6,9 @@ import platform
 import structlog
 import sys
 import os
+
 import loggers
+import curator
 
 SLOG = structlog.get_logger(__name__)
 
@@ -114,6 +116,12 @@ def cmake_compile_install(ctx, install: bool):
             ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
         )
 
+    curator.ensure_curator(
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        os_family=ctx.obj["OS_FAMILY"],
+        distro=ctx.obj["LINUX_DISTRO"],
+    )
+
 
 @click.group()
 def cli():
@@ -213,11 +221,9 @@ def workload(ctx, **kwargs):
 
     from tasks import genny_runner
 
+    # TODO: cmake_args needs to be renamed.
     genny_runner.main_genny_runner(
-        # TODO: cmake_args needs to be renamed.
-        args=ctx.obj["CMAKE_ARGS"],
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
-        cleanup=False,
+        genny_args=ctx.obj["CMAKE_ARGS"], genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
     )
 
 

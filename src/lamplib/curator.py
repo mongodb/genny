@@ -16,19 +16,17 @@ def get_poplar_args():
     If we are in the root of the genny repo, use the local executable.
     Otherwise we search the PATH.
     """
-    curator = "curator"
-
-    # TODO: look on PATH and download if not exists.
-    local_curator = "./curator/curator"
-    if os.path.exists(local_curator):
-        curator = local_curator
+    curator = "./build/curator/curator"
+    if not os.path.exists(curator):
+        SLOG.critical(
+            "Curator not found. Ensure you've run install.", looked_for=curator, in_cwd=os.getcwd()
+        )
+        raise Exception("Curator not found.")
     return [curator, "poplar", "grpc"]
 
 
 @contextmanager
-def poplar_grpc(os_family: str, distro: str, cleanup: bool, install_dir: str):
-    downloader = CuratorDownloader(os_family=os_family, distro=distro, install_dir=install_dir)
-
+def poplar_grpc(cleanup: bool):
     args = get_poplar_args()
 
     SLOG.info("Running poplar", command=args, cwd=os.getcwd())
@@ -53,6 +51,13 @@ def poplar_grpc(os_family: str, distro: str, cleanup: bool, install_dir: str):
         finally:
             if cleanup:
                 shutil.rmtree("build/CedarMetrics", ignore_errors=True)
+
+
+def ensure_curator(genny_repo_root: str, os_family: str, distro: str):
+    install_dir = os.path.join(genny_repo_root, "build")
+    os.makedirs(install_dir, exist_ok=True)
+    downloader = CuratorDownloader(os_family=os_family, distro=distro, install_dir=install_dir)
+    downloader.fetch_and_install()
 
 
 class CuratorDownloader(Downloader):

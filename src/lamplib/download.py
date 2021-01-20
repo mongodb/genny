@@ -34,22 +34,49 @@ class Downloader:
 
         :return: Whether the operation succeeded.
         """
-        if not os.path.exists(self._install_dir):
-            SLOG.critical("Please create the parent directory for %s.", self._name)
+        if self._can_ignore():
+            SLOG.debug("Skipping installing", name=self._name, into_dir=self.result_dir)
+            return True
 
-            if platform.mac_ver()[0]:
-                release_triplet = platform.mac_ver()[0].split(".")
-                minor_ver = int(release_triplet[1])
-                if minor_ver >= 12 and minor_ver < 15:
-                    SLOG.info(
-                        "On versions of MacOS between 10.12 and 10.14, "
-                        "you have to disable System Integrity Protection first. "
-                        "See https://apple.stackexchange.com/a/208481 for instructions"
-                    )
-                if minor_ver >= 15:
-                    # Instructions derived from https://github.com/NixOS/nix/issues/2925#issuecomment-539570232
-                    SLOG.info(
-                        fr"""
+        #
+        # Check for parent directories and permissions.
+        #
+        if not os.path.exists(self._install_dir):
+            try:
+                os.makedirs(self._install_dir)
+            except OSError:
+                SLOG.critical(
+                    "Please create the parent directory.",
+                    trying_to_install=self._name,
+                    install_dir_doesnt_exist=self._install_dir,
+                )
+                return False
+
+        if not os.path.isdir(self._install_dir):
+            SLOG.critical("Install dir is not a directory.", what_is_not_a_dir=self._install_dir)
+            return False
+
+        if not os.access(self._install_dir, os.W_OK):
+            SLOG.critical(
+                "Please ensure you have write access:" f'`sudo chown $USER "{self._install_dir}"`',
+            )
+            return False
+
+        if platform.mac_ver()[0]:
+            release_triplet = platform.mac_ver()[0].split(".")
+            minor_ver = int(release_triplet[1])
+            if 12 <= minor_ver < 15:
+                SLOG.info(
+                    "On versions of MacOS between 10.12 and 10.14, "
+                    "you have to disable System Integrity Protection first. "
+                    "See https://apple.stackexchange.com/a/208481 for instructions",
+                    macos_minor_version=minor_ver,
+                )
+                return False
+            if minor_ver >= 15:
+                # Instructions derived from https://github.com/NixOS/nix/issues/2925#issuecomment-539570232
+                SLOG.info(
+                    fr"""
 
 😲 You must create the parent directory {self._name} for the genny toolchain.
    You are on On MacOS Catalina or later, so use use the synthetic.conf method.
@@ -119,52 +146,31 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
 
 
 ☝️ There are some steps you have to before you can build and run genny. Scroll up. ☝️"""
-                    )
-                    return False
+                )
+                return False
 
-            SLOG.critical(
-                '`sudo mkdir -p "%s"; sudo chown "$USER" "%s"`',
-                self._install_dir,
-                self._install_dir,
-            )
-
-            return False
-
-        if not os.path.isdir(self._install_dir):
-            SLOG.critical("Install dir %s is not a directory.", self._install_dir)
-            return False
-
-        if not os.access(self._install_dir, os.W_OK):
-            SLOG.critical(
-                "Please ensure you have write access to the parent directory for %s: "
-                "`sudo chown $USER %s`",
-                self._name,
-                self._install_dir,
-            )
-            return False
-
-        if self._can_ignore():
-            SLOG.debug("Skipping installing", name=self._name, into_dir=self.result_dir)
+        #
+        # Okay. Now fetch and install.
+        #
+        tarball = os.path.join(self._install_dir, self._name + ".tgz")
+        if os.path.isfile(tarball):
+            SLOG.info("Skipping downloading since already exists", tarball=tarball)
         else:
-            tarball = os.path.join(self._install_dir, self._name + ".tgz")
-            if os.path.isfile(tarball):
-                SLOG.info("Skipping downloading", tarball=tarball)
-            else:
-                url = self._get_url()
-                SLOG.info("Downloading", name=self._name, url=url)
-                urllib.request.urlretrieve(url, tarball)
-                SLOG.info("Finished Downloading", name=self._name, tarball=tarball)
+            url = self._get_url()
+            SLOG.info("Downloading", name=self._name, url=url)
+            urllib.request.urlretrieve(url, tarball)
+            SLOG.info("Finished Downloading", name=self._name, tarball=tarball)
 
-            SLOG.info("Extracting", name=self._name, into=self.result_dir)
+        SLOG.info("Extracting", name=self._name, into=self.result_dir)
 
-            shutil.rmtree(self.result_dir, ignore_errors=True)
-            os.mkdir(self.result_dir)
-            # use tar(1) because python's TarFile was inexplicably truncating the tarball
-            subprocess.run(["tar", "-xzf", tarball, "-C", self.result_dir], check=True)
-            SLOG.info("Finished extracting", name=self._name, into=self.result_dir)
+        shutil.rmtree(self.result_dir, ignore_errors=True)
+        os.mkdir(self.result_dir)
+        # use tar(1) because python's TarFile was inexplicably truncating the tarball
+        subprocess.run(["tar", "-xzf", tarball, "-C", self.result_dir], check=True)
+        SLOG.info("Finished extracting", name=self._name, into=self.result_dir)
 
-            # Get space back.
-            os.remove(tarball)
+        # Get space back.
+        os.remove(tarball)
 
         return True
 
