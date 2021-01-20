@@ -142,15 +142,13 @@ struct ShardedDescription : public AbstractTopologyDescription {
  */
 class Topology {
 public:
-
     Topology(mongocxx::client& client) : _factory{client.uri().to_string()} {
         MongoService service(client.uri().to_string());
         update(service);
     }
 
     Topology(DBService& service) : _factory{service.uri()} {
-        MongoService myService(service.uri());
-        update(myService);
+        update(service);
     }
 
     /**

@@ -13,9 +13,13 @@
 // limitations under the License.
 
 #include <algorithm>
-#include <gennylib/topology.hpp>
 
+#include <bsoncxx/builder/stream/array.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/builder/stream/helpers.hpp>
 #include <boost/log/trivial.hpp>
+
+#include <gennylib/topology.hpp>
 #include <testlib/helpers.hpp>
 
 using namespace genny;
@@ -69,8 +73,74 @@ TEST_CASE("Topology visitor traverses nodes correctly") {
 };
 
 TEST_CASE("Topology maps the cluster correctly") {
+    using bsoncxx::builder::stream::array;
+    using bsoncxx::builder::stream::document;
+    using bsoncxx::builder::stream::finalize;
+    using bsoncxx::builder::stream::open_array;
+    using bsoncxx::builder::stream::close_array;
 
     SECTION("Topology correctly maps a standalone") {
+        class MockStandaloneService : public DBService {
 
+            ServiceUri uri() { return "testUri"; }
+
+            bsoncxx::document::value runAdminCommand(std::string command) {
+                if (command == "isMaster") {
+                    auto doc = document{};
+                    return doc << "junkKey" << "junkValue" << finalize;
+                }
+                return document{} << "unplannedKey" << "unplannedValue" << finalize;
+            }
+
+            std::unique_ptr<DBService> makePeer(ServiceUri uri) {
+                return std::make_unique<MockStandaloneService>();
+            }
+        };
+        MockStandaloneService service;
+        Topology topology(service);
+
+        ToJsonVisitor visitor;
+        topology.accept(visitor);
+        auto expected = "{mongodUri: testUri}";
+        REQUIRE(expected == visitor.str());
+    }
+
+    SECTION("Topology correctly maps a replica set") {
+        class MockReplService : public DBService {
+
+            ServiceUri uri() { return "testPrimaryUriNeverUsedHere"; }
+
+            bsoncxx::document::value runAdminCommand(std::string command) {
+                if (command == "isMaster") {
+                    auto doc = document{};
+                    doc << "setName" << "testSetName";
+                    doc << "primary" << "testPrimaryHost:testPrimaryPort";
+                    doc << "hosts"
+                        << open_array << "testPrimaryHost::testPrimaryPort" << "host2:port2"
+                        << "host3:port3" << close_array;
+                    return doc << finalize;
+
+                }
+                return document{} << "unplannedKey" << "unplannedValue" << finalize;
+            }
+
+            std::unique_ptr<DBService> makePeer(ServiceUri uri) {
+                return std::make_unique<MockReplService>();
+            }
+        };
+        MockReplService service;
+        Topology topology(service);
+
+        ToJsonVisitor visitor;
+        topology.accept(visitor);
+        BOOST_LOG_TRIVIAL(error) << "visitor output: " << visitor.str();
+
+        stringstream expected;
+        expected << "{primaryUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny, "
+            << "nodes: [{mongodUri: mongodb://testPrimaryHost::testPrimaryPort/?appName=Genny}, "
+                    << "{mongodUri: mongodb://host2:port2/?appName=Genny}, "
+                    << "{mongodUri: mongodb://host3:port3/?appName=Genny}]}";
+
+        REQUIRE(expected.str() == visitor.str());
     }
 };
