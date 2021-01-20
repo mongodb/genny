@@ -15,6 +15,7 @@ def main():
         sys.exit(1)
 
     yaml_dirs = [
+        # TODO: use genny_repo_root
         path.join(os.getcwd(), "src", "workloads"),
         path.join(os.getcwd(), "src", "phases"),
         path.join(os.getcwd(), "src", "resmokeconfig"),
