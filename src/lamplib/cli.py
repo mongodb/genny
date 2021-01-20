@@ -90,7 +90,7 @@ def setup(
     os.chdir(ctx.obj["GENNY_REPO_ROOT"])
 
 
-def cmake_compile_install(ctx, install: bool):
+def cmake_compile_install(ctx, perform_install: bool):
     from tasks import compile
 
     compile.cmake(
@@ -108,7 +108,7 @@ def cmake_compile_install(ctx, install: bool):
         ctx.obj["LINUX_DISTRO"],
         ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
     )
-    if install:
+    if perform_install:
         compile.install(
             ctx.obj["BUILD_SYSTEM"],
             ctx.obj["OS_FAMILY"],
@@ -135,7 +135,7 @@ def cli():
 @click.pass_context
 def compile(ctx, **kwargs) -> None:
     setup(ctx, **kwargs)
-    cmake_compile_install(ctx, install=False)
+    cmake_compile_install(ctx, perform_install=False)
 
 
 @cli.command(
@@ -162,7 +162,7 @@ def clean(ctx, **kwargs) -> None:
 @click.pass_context
 def install(ctx, **kwargs) -> None:
     setup(ctx, **kwargs)
-    cmake_compile_install(ctx, install=True)
+    cmake_compile_install(ctx, perform_install=True)
 
 
 @cli.command(name="cmake-test",)
@@ -170,7 +170,7 @@ def install(ctx, **kwargs) -> None:
 @click.pass_context
 def cmake_test(ctx, **kwargs) -> None:
     setup(ctx, **kwargs)
-    cmake_compile_install(ctx, install=True)
+    cmake_compile_install(ctx, perform_install=True)
 
     from tasks import run_tests
 
@@ -188,7 +188,7 @@ def cmake_test(ctx, **kwargs) -> None:
 @click.pass_context
 def benchmark_test(ctx, **kwargs) -> None:
     setup(ctx, **kwargs)
-    cmake_compile_install(ctx, install=True)
+    cmake_compile_install(ctx, perform_install=True)
 
     from tasks import run_tests
 
@@ -217,13 +217,15 @@ def workload(ctx, **kwargs):
     #    CMake Error: The source directory "/media/ephemeral0/src/genny/etc/genny/workloads/docs/HelloWorld.yml" does not exist.
     #
     setup(ctx, **kwargs)
-    cmake_compile_install(ctx, install=True)
+    cmake_compile_install(ctx, perform_install=True)
 
     from tasks import genny_runner
 
     # TODO: cmake_args needs to be renamed.
     genny_runner.main_genny_runner(
-        genny_args=ctx.obj["CMAKE_ARGS"], genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        genny_args=ctx.obj["CMAKE_ARGS"],
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        cleanup_metrics=False,
     )
 
 
@@ -232,7 +234,7 @@ def workload(ctx, **kwargs):
 @click.pass_context
 def dry_run_workloads(ctx, **kwargs):
     setup(ctx, **kwargs)
-    cmake_compile_install(ctx, install=True)
+    cmake_compile_install(ctx, perform_install=True)
 
     from tasks import dry_run
 
@@ -244,7 +246,7 @@ def dry_run_workloads(ctx, **kwargs):
 @click.pass_context
 def canaries(ctx, **kwargs):
     setup(ctx, **kwargs)
-    cmake_compile_install(ctx, install=True)
+    cmake_compile_install(ctx, perform_install=True)
 
     from tasks import canaries_runner
 
@@ -269,7 +271,7 @@ def canaries(ctx, **kwargs):
 @click.pass_context
 def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str, **kwargs):
     setup(ctx, **kwargs)
-    cmake_compile_install(ctx, install=True)
+    cmake_compile_install(ctx, perform_install=True)
 
     from tasks import run_tests
 

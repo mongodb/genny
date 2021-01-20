@@ -26,7 +26,7 @@ def get_poplar_args():
 
 
 @contextmanager
-def poplar_grpc(cleanup: bool):
+def poplar_grpc(cleanup_metrics: bool):
     args = get_poplar_args()
 
     SLOG.info("Running poplar", command=args, cwd=os.getcwd())
@@ -49,7 +49,7 @@ def poplar_grpc(cleanup: bool):
                 poplar.kill()
             raise
         finally:
-            if cleanup:
+            if cleanup_metrics:
                 shutil.rmtree("build/CedarMetrics", ignore_errors=True)
 
 

@@ -13,7 +13,7 @@ def dry_run_workload(yaml_file_path: str, os_family: str, genny_repo_root):
         return
 
     genny_runner.main_genny_runner(
-        ["dry-run", yaml_file_path], genny_repo_root=genny_repo_root, cleanup=True
+        ["dry-run", yaml_file_path], genny_repo_root=genny_repo_root, cleanup_metrics=True
     )
 
 
