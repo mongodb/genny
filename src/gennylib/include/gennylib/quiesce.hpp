@@ -63,7 +63,7 @@ bool quiesceImpl(entry& client) {
 }
 
 bool quiesce(mongocxx::pool::entry& client) {
-    Topology topology(client);
+    Topology topology(*client);
     ToJsonVisitor visitor;
     topology.accept(visitor);
     BOOST_LOG_TRIVIAL(error) << "visitor output: " << visitor.str();

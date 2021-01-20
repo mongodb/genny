@@ -15,13 +15,14 @@
 #include <algorithm>
 #include <gennylib/topology.hpp>
 
+#include <boost/log/trivial.hpp>
 #include <testlib/helpers.hpp>
 
 using namespace genny;
 using namespace std;
 
 
-TEST_CASE("Topology descriptions get nodes correctly") {
+TEST_CASE("Topology visitor traverses nodes correctly") {
 
     class TestVisitor : public TopologyVisitor {
     public:
@@ -64,5 +65,12 @@ TEST_CASE("Topology descriptions get nodes correctly") {
     REQUIRE(visitor.names.size() == expected.size());
     for (auto name : visitor.names) {
         REQUIRE(std::count(expected.begin(), expected.end(), name));
+    }
+};
+
+TEST_CASE("Topology maps the cluster correctly") {
+
+    SECTION("Topology correctly maps a standalone") {
+
     }
 };

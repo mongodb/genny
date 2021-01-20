@@ -21,14 +21,8 @@
 #include <mutex>
 #include <sstream>
 
-
-#include <boost/log/trivial.hpp>
-
-#include <mongocxx/uri.hpp>
-#include <mongocxx/client.hpp>
-#include <mongocxx/pool.hpp>
-
 #include <gennylib/v1/PoolFactory.hpp>
+#include <gennylib/service.hpp>
 
 namespace genny {
 
@@ -148,13 +142,15 @@ struct ShardedDescription : public AbstractTopologyDescription {
  */
 class Topology {
 public:
-    Topology(mongocxx::pool::entry& client) : _factory{client->uri().to_string()} {
-        update(*client);
+
+    Topology(mongocxx::client& client) : _factory{client.uri().to_string()} {
+        MongoService service(client.uri().to_string());
+        update(service);
     }
 
-    Topology(const mongocxx::uri& uri) : _factory{uri.to_string()} {
-        mongocxx::client client(uri);
-        update(client);
+    Topology(DBService& service) : _factory{service.uri()} {
+        MongoService myService(service.uri());
+        update(myService);
     }
 
     /**
@@ -171,14 +167,13 @@ public:
     /**
      * Update the Topology's view of the cluster.
      */
-    void update(mongocxx::client& client);
-
-    std::string nameToUri(const std::string& name);
+    void update(DBService& service);
 
 private:
     v1::PoolFactory _factory;
-    void getDataMemberConnectionStrings(mongocxx::client& client);
-    void findConnectedNodesViaMongos(mongocxx::client& client);
+    std::string nameToUri(const std::string& name);
+    void getDataMemberConnectionStrings(DBService& service);
+    void findConnectedNodesViaMongos(DBService& service);
     std::unique_ptr<AbstractTopologyDescription> _topology = nullptr;
 };
 
