@@ -67,8 +67,6 @@ class CuratorDownloader(Downloader):
                          distro=distro,
                          install_dir=install_dir,
                          name="curator")
-
-    def _get_url(self):
         if self._os_family == "Darwin":
             self._distro = "macos"
 
@@ -78,6 +76,7 @@ class CuratorDownloader(Downloader):
         if self._distro in ("amazon2", "rhel8", "rhel62"):
             self._distro = "rhel70"
 
+    def _get_url(self):
         return (
             "https://s3.amazonaws.com/boxes.10gen.com/build/curator/"
             "curator-dist-{distro}-{build}.tar.gz".format(
