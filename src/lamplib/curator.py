@@ -9,7 +9,7 @@ from download import Downloader
 SLOG = structlog.get_logger(__name__)
 
 
-def get_poplar_args():
+def _get_poplar_args():
     """
     Returns the argument list used to create the Poplar gRPC process.
 
@@ -27,7 +27,7 @@ def get_poplar_args():
 
 @contextmanager
 def poplar_grpc(cleanup_metrics: bool):
-    args = get_poplar_args()
+    args = _get_poplar_args()
 
     SLOG.info("Running poplar", command=args, cwd=os.getcwd())
     poplar = subprocess.Popen(args)
@@ -53,7 +53,9 @@ def poplar_grpc(cleanup_metrics: bool):
                 shutil.rmtree("build/CedarMetrics", ignore_errors=True)
 
 
-def ensure_curator(genny_repo_root: str, os_family: str, distro: str):
+# For now we put curator in ./src/genny/build/curator, but ideally it would be in ./bin
+# or in the python venv (if we make 'pip install curator' a thing).
+def ensure_curator_installed(genny_repo_root: str, os_family: str, distro: str):
     install_dir = os.path.join(genny_repo_root, "build")
     os.makedirs(install_dir, exist_ok=True)
     downloader = CuratorDownloader(os_family=os_family, distro=distro, install_dir=install_dir)

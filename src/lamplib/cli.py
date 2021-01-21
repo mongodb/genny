@@ -116,7 +116,7 @@ def cmake_compile_install(ctx, perform_install: bool):
             ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
         )
 
-    curator.ensure_curator(
+    curator.ensure_curator_installed(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         os_family=ctx.obj["OS_FAMILY"],
         distro=ctx.obj["LINUX_DISTRO"],

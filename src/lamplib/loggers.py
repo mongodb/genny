@@ -50,7 +50,6 @@ def setup_logging(verbose: bool = False) -> None:
     c.init(strip=False)  # Don't strip ansi colors even if we're not on a tty.
 
     _tweak_structlog_log_line()
-    _LOGGING_SETUP = True
 
 
 def _tweak_structlog_log_line() -> None:

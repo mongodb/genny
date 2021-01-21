@@ -38,10 +38,13 @@ class Downloader:
             SLOG.debug("Skipping installing", name=self._name, into_dir=self.result_dir)
             return True
 
+        if self._can_install():
+            self._fetch_and_install_impl()
+            return True
+        return False
+
+    def _can_install(self):
         okay = True
-        #
-        # Check for parent directories and permissions.
-        #
         if not os.path.exists(self._install_dir):
             try:
                 os.makedirs(self._install_dir)
@@ -74,11 +77,44 @@ class Downloader:
                     macos_minor_version=minor_ver,
                 )
             if minor_ver >= 15:
-                # Instructions derived from https://github.com/NixOS/nix/issues/2925#issuecomment-539570232
-                SLOG.info(
-                    fr"""
+                SLOG.info(_macos_install_instructions(self._name))
 
-😲 You must create the parent directory {self._name} for the genny toolchain.
+        if not okay:
+            return False
+
+    def _fetch_and_install_impl(self):
+        tarball = os.path.join(self._install_dir, self._name + ".tgz")
+        if os.path.isfile(tarball):
+            SLOG.info("Skipping downloading since already exists", tarball=tarball)
+        else:
+            url = self._get_url()
+            SLOG.debug("Downloading", name=self._name, url=url)
+            urllib.request.urlretrieve(url, tarball)
+            SLOG.debug("Finished Downloading", name=self._name, tarball=tarball)
+
+        SLOG.debug("Extracting", name=self._name, into=self.result_dir)
+
+        shutil.rmtree(self.result_dir, ignore_errors=True)
+        os.makedirs(self.result_dir, exist_ok=True)
+        # use tar(1) because python's TarFile was inexplicably truncating the tarball
+        subprocess.run(["tar", "-xzf", tarball, "-C", self.result_dir], check=True)
+        SLOG.info("Downloaded and installed.", name=self._name, into=self.result_dir)
+
+        # Get space back.
+        os.remove(tarball)
+
+    def _get_url(self):
+        raise NotImplementedError
+
+    def _can_ignore(self):
+        raise NotImplementedError
+
+
+# Instructions derived from https://github.com/NixOS/nix/issues/2925#issuecomment-539570232
+def _macos_install_instructions(name):
+    return fr"""
+
+😲 You must create the parent directory {name} for the genny toolchain.
    You are on On MacOS Catalina or later, so use use the synthetic.conf method.
 
 We wish we didn't have to do this.
@@ -146,38 +182,3 @@ Re-run the lamp command to download and setup the genny toolchain and build genn
 
 
 ☝️ There are some steps you have to before you can build and run genny. Scroll up. ☝️"""
-                )
-
-        if not okay:
-            return False
-
-        #
-        # Okay. Now fetch and install.
-        #
-        tarball = os.path.join(self._install_dir, self._name + ".tgz")
-        if os.path.isfile(tarball):
-            SLOG.info("Skipping downloading since already exists", tarball=tarball)
-        else:
-            url = self._get_url()
-            SLOG.info("Downloading", name=self._name, url=url)
-            urllib.request.urlretrieve(url, tarball)
-            SLOG.info("Finished Downloading", name=self._name, tarball=tarball)
-
-        SLOG.info("Extracting", name=self._name, into=self.result_dir)
-
-        shutil.rmtree(self.result_dir, ignore_errors=True)
-        os.mkdir(self.result_dir)
-        # use tar(1) because python's TarFile was inexplicably truncating the tarball
-        subprocess.run(["tar", "-xzf", tarball, "-C", self.result_dir], check=True)
-        SLOG.info("Finished extracting", name=self._name, into=self.result_dir)
-
-        # Get space back.
-        os.remove(tarball)
-
-        return True
-
-    def _get_url(self):
-        raise NotImplementedError
-
-    def _can_ignore(self):
-        raise NotImplementedError
