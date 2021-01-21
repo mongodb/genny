@@ -743,26 +743,18 @@ private:
 class IncGenerator : public Generator<int64_t> {
 public:
     IncGenerator(const Node& node, GeneratorArgs generatorArgs)
-        : _actorId{generatorArgs.actorId},
-          _counter{generatorArgs.counter},
-          _step{extract(node, "step", "^Inc").to<int64_t>()},
-          _multiplier{extract(node, "multiplier", "^Inc").to<int64_t>()}
-          {}
+        : _step{node["step"].maybe<int64_t>().value_or(1)} 
+        {_counter = node["start"].maybe<int64_t>().value_or(1) + generatorArgs.actorId * node["multiplier"].maybe<int64_t>().value_or(1);}
 
     int64_t evaluate() override {
-//        std::lock_guard<std::mutex> lg(mtx);
-        std::cout << "Counter before " << _counter << std::endl;
-        _counter=_actorId*_multiplier + _counter + _step;
-        std::cout << "Counter after " << _counter << std::endl;
-        return _counter;
+        auto inc_value = _counter;
+        _counter += _step;
+        return inc_value;
     }
 
 private:
-//    std::mutex mtx;
-    int64_t _actorId;
-    int64_t& _counter;
     int64_t _step;
-    int64_t _multiplier;
+    int64_t _counter;
 };
 
 
@@ -1182,13 +1174,12 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
 }  // namespace
 
 // Kick the recursion into motion
-int64_t counter=0;
 DocumentGenerator::DocumentGenerator(const Node& node, GeneratorArgs generatorArgs)
     : _impl{documentGenerator<false>(node, generatorArgs)} {}
 DocumentGenerator::DocumentGenerator(const Node& node, PhaseContext& phaseContext, ActorId actorId)
-    : DocumentGenerator{node, GeneratorArgs{phaseContext.rng(actorId), actorId, counter}} {}
+    : DocumentGenerator{node, GeneratorArgs{phaseContext.rng(actorId), actorId}} {}
 DocumentGenerator::DocumentGenerator(const Node& node, ActorContext& actorContext, ActorId actorId)
-    : DocumentGenerator{node, GeneratorArgs{actorContext.rng(actorId), actorId, counter}} {}
+    : DocumentGenerator{node, GeneratorArgs{actorContext.rng(actorId), actorId}} {}
 
 
 DocumentGenerator::DocumentGenerator(DocumentGenerator&&) noexcept = default;
@@ -1203,6 +1194,5 @@ bsoncxx::document::value DocumentGenerator::operator()() {
 bsoncxx::document::value DocumentGenerator::evaluate() {
     return operator()();
 }
-
 
 }  // namespace genny

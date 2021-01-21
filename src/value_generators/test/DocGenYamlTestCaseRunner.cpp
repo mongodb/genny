@@ -65,12 +65,10 @@ public:
 
     void run() const {
         DYNAMIC_SECTION("DocGenYamlTestCaseRunner " << name()) {
-            int64_t counter=1;
-            //int64_t * pcounter = &counter;
             if (_runMode == RunMode::kExpectException) {
                 try {
                     NodeSource ns = toNode(this->_givenTemplate);
-                    genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 1, counter});
+                    genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 1});
                     FAIL("Expected exception " << this->_expectedExceptionMessage.as<std::string>()
                                                << " but none occurred");
                 } catch (const std::exception& x) {
@@ -81,11 +79,15 @@ public:
             }
 
             NodeSource ns = toNode(this->_givenTemplate);
-            auto docGen = genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 2, counter});
+            auto docGen = genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 2});
             for (const auto&& nextValue : this->_thenReturns) {
                 auto expected = testing::toDocumentBson(nextValue);
                 auto actual = docGen();
-                REQUIRE(toString(expected.view()) == toString(actual.view()));
+                // After implementing TIG-2839 uncomment the line below and remove the two lines underneath it
+                // as it is a workaround suggested in HELP-21664
+                // REQUIRE(toString(expected.view()) == toString(actual.view()));
+                auto expectedFix = bsoncxx::from_json(toString(expected.view()));
+                REQUIRE(toString(expectedFix.view()) == toString(actual.view()));
             }
         }
     }
