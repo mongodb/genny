@@ -14,7 +14,7 @@ GlobalDefaults:
   Random30String: &rand_30b_string {^RandomString: {length: 30}}
   Random130String: &rand_100b_string {^RandomString: {length: 100}}
 
-  Duration: &Duration 12 hours
+  Duration: &Duration 2 hours
 
   # We want about 200 bytes, 9 fields (they will all be indexed).
   RollingDocument: &RollingDocument
@@ -65,7 +65,7 @@ LongLivedCreatorCmd:
     x6: *rand_4b_int
     x7: *rand_4b_int
     x8: *rand_4b_int
-    s0: {^RandomString: {length: {^RandomInt: {min: 20, max: 80}}}}
+    s0: {^RandomString: {length: {^RandomInt: {min: 2000, max: 8000}}}}
   Indexes:
   - keys: {x0: 1}
   - keys: {x1: 1}
@@ -237,9 +237,9 @@ SnapshotScanner5GigabytesCmd:
   GlobalRate: 1 per 5 minutes
 
 # Leave out the ScanDuration since we'll be supplying the ScanRateMegaBytes option.
-SnapshotScanner5GigabytesFixedRateCmd:
+SnapshotScanner10GigabytesFixedRateCmd:
   Duration: *Duration
-  ScanSizeBytes: 500000000
+  ScanSizeBytes: 10000000000
   ScanType: snapshot
   CollectionSkip: 300
   CollectionSortOrder: forward

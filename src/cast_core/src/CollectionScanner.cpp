@@ -107,7 +107,7 @@ struct CollectionScanner::PhaseConfig {
         } else if (scanTypeString == "snapshot") {
             transactionOptions = mongocxx::options::transaction{};
             auto readConcern = mongocxx::read_concern{};
-            readConcern.acknowledge_level(mongocxx::read_concern::level::k_majority);
+            readConcern.acknowledge_level(mongocxx::read_concern::level::k_snapshot);
             transactionOptions->read_concern(readConcern);
             scanType = ScanType::kSnapshot;
         } else if (scanTypeString == "standard") {

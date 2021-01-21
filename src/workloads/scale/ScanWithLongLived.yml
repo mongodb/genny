@@ -73,17 +73,17 @@ Actors:
         DocumentCount: *LongLivedDocumentCount
         IdFilter: *binomial_10k_int
 
-- Name: SnapshotScanner5Gigabytes
+- Name: SnapshotScanner10Gigabytes
   Type: CollectionScanner
   Threads: 10
   Database: *LongLivedDB
-  ScanRateMegabytes: 5 per 1 second
+  ScanRateMegabytes: 10 per 1 second
   Phases:
   - {Nop: true}
   - {Nop: true}
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
-      Key: SnapshotScanner5GigabytesFixedRateCmd
+      Key: SnapshotScanner10GigabytesFixedRateCmd
 
 AutoRun:
   Requires:
