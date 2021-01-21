@@ -43,7 +43,9 @@ void QuiesceActor::run() {
         for (const auto&& _ : config) {
             auto quiesceContext = _totalQuiesces.start();
             BOOST_LOG_TRIVIAL(debug) << "QuiesceActor quiescing cluster.";
-            quiesceImpl(_client);
+            std::vector<std::string> dbsToCheckDrops;
+            dbsToCheckDrops.push_back("test");
+            quiesceImpl(_client, dbsToCheckDrops);
             quiesceContext.success();
         }
     }

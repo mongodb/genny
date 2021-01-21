@@ -92,14 +92,41 @@ void doFsync(Topology& topology) {
     topology.accept(v);
 }
 
+bool checkForDroppedCollections(mongocxx::database db) {
+    using bsoncxx::builder::basic::kvp;
+    using bsoncxx::builder::basic::make_document;
+
+    auto res = db.run_command(make_document(kvp("serverStatus", 1)));
+    auto idents = res.view()["storageEngine"]["dropPendingIdents"];
+
+    return idents.get_int64() != 0;
+}
+
+bool checkForDroppedCollectionsTestDBs(mongocxx::pool::entry& client, std::vector<std::string> dbsToCheckDrops) {
+    for (auto dbName : dbsToCheckDrops) {
+        auto db = client->database(dbName);
+        int retries = 0;
+        while (checkForDroppedCollections(db) && retries < 1000) {
+            BOOST_LOG_TRIVIAL(debug) << "Sleeping 1 second while waiting for collection to finish dropping.";
+            retries++;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+        BOOST_LOG_TRIVIAL(error) << "Timeout on waiting for collections to drop.";
+        return false;
+    }
+    return true;
+}
+
 /*
  * Helper function to quiesce the system and reduce noise.
  * The appropriate actions will be taken whether the target
  * is a standalone, replica set, or sharded cluster.
  */
-bool quiesceImpl(mongocxx::pool::entry& client) {
+bool quiesceImpl(mongocxx::pool::entry& client, std::vector<std::string> dbsToCheckDrops) {
     Topology topology(*client);
     waitOplog(topology);
+    doFsync(topology);
+    checkForDroppedCollectionsTestDBs(client, dbsToCheckDrops);
     return true;
 }
 
