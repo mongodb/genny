@@ -88,10 +88,11 @@ def clean_build_dir():
 def clean(build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool):
     toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
     clean_cmd = [build_system, "-C", "build", "clean"]
-    SLOG.info("Running clean", cmd=clean_cmd)
+    SLOG.info("Running clean", cmd=clean_cmd, cwd=os.getcwd())
     subprocess.run(clean_cmd, env=toolchain_info["toolchain_env"])
 
     # Physically remove all built files.
-    SLOG.debug("Erasing `build/` and `genny_venv`")
+    SLOG.debug("Erasing build, genny_venv, and dist", cwd=os.getcwd())
     clean_build_dir()
     subprocess.run(["rm", "-rf", "genny_venv"], env=toolchain_info["toolchain_env"])
+    subprocess.run(["rm", "-rf", "dist"], env=toolchain_info["toolchain_env"])

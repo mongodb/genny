@@ -27,18 +27,15 @@ _build_system_options = [
             ["ubuntu1804", "archlinux", "rhel8", "rhel70", "rhel62", "amazon2", "not-linux"]
         ),
         help=(
-            "specify the linux distro you're on; if your system isn't available,"
-            " please contact us at #workload-generation"
+            "Specify the linux distro you're on; if your system isn't available,"
+            " please contact us at #workload-generation. The not-linux value is useful on macOS."
         ),
     ),
-    # TODO
-    #     if os_family == "Linux" and not known_args.subcommand and not known_args.linux_distro:
-    #         raise ValueError("--linux-distro must be specified on Linux")
     click.option(
         "-i",
         "--ignore-toolchain-version",
         is_flag=True,
-        help="ignore the toolchain version, useful for testing toolchain changes",
+        help="Ignore the toolchain version. " "This is useful for testing toolchain changes.",
     ),
     click.option(
         "-b",
@@ -47,8 +44,27 @@ _build_system_options = [
         default="ninja",
         help="Which build-system to use for compilation. May need to use make for IDEs.",
     ),
-    click.option("-s", "--sanitizer", type=click.Choice(["asan", "tsan", "ubsan"]),),
-    click.option("-f", "--os-family", default=platform.system(),),
+    click.option(
+        "-s",
+        "--sanitizer",
+        type=click.Choice(["asan", "tsan", "ubsan"]),
+        help=(
+            "Compile with sanitizers enabled. "
+            "This is only useful on the 'compile' task "
+            "or when compiling for the first time."
+        ),
+    ),
+    click.option(
+        "-f",
+        "--os-family",
+        default=platform.system(),
+        help=(
+            "Override the value of Python's platform.system() "
+            "when determining which version of the genny toolchain "
+            "and curator to download. "
+            "This is useful for testing toolchain changes."
+        ),
+    ),
     click.argument("cmake_args", nargs=-1),
 ]
 
@@ -129,7 +145,13 @@ def cli():
 
 
 @cli.command(
-    name="compile", help="Compile",
+    name="compile",
+    help=(
+        "Run cmake and compile. "
+        "This does not populate or update the 'dist' directory "
+        "where genny's output is installed by default."
+        "To do that, run install."
+    ),
 )
 @build_system_options
 @click.pass_context
@@ -139,7 +161,7 @@ def compile_op(ctx, **kwargs) -> None:
 
 
 @cli.command(
-    name="clean", help="Clean",
+    name="clean", help="Resets output and venv directories to clean checkout state.",
 )
 @build_system_options
 @click.pass_context
@@ -155,9 +177,7 @@ def clean(ctx, **kwargs) -> None:
     )
 
 
-@cli.command(
-    name="install", help="Install",
-)
+@cli.command(name="install", help="Install build output to the output location (dist by default).")
 @build_system_options
 @click.pass_context
 def install(ctx, **kwargs) -> None:
@@ -165,7 +185,7 @@ def install(ctx, **kwargs) -> None:
     cmake_compile_install(ctx, perform_install=True)
 
 
-@cli.command(name="cmake-test",)
+@cli.command(name="cmake-test", help="Run genny's C++ unit tests.")
 @build_system_options
 @click.pass_context
 def cmake_test(ctx, **kwargs) -> None:
@@ -183,7 +203,10 @@ def cmake_test(ctx, **kwargs) -> None:
     )
 
 
-@cli.command(name="benchmark-test")
+@cli.command(
+    name="benchmark-test",
+    help="Run benchmark tests that assert genny's internals are sufficiently performant.",
+)
 @build_system_options
 @click.pass_context
 def benchmark_test(ctx, **kwargs) -> None:
@@ -201,7 +224,15 @@ def benchmark_test(ctx, **kwargs) -> None:
     )
 
 
-@cli.command(name="workload")
+@cli.command(
+    name="workload",
+    help=(
+        "Actually calls the underlying genny binary called genny_core "
+        "which is installed by default to 'dist'. "
+        "Pass '--' to pass additional args to genny_core, e.g."
+        "run-genny workload -- run -w path_to_yaml -u mongodb://localhost:271017"
+    ),
+)
 @build_system_options
 @click.pass_context
 def workload(ctx, **kwargs):
@@ -229,7 +260,15 @@ def workload(ctx, **kwargs):
     )
 
 
-@cli.command(name="dry-run-workloads")
+@cli.command(
+    name="dry-run-workloads",
+    help=(
+        "Iterates over all yaml files src/workloads and asserts that "
+        "the workload context be constructed (all Actors can be constructed) "
+        "but does NOT actually run the workload. This is useful when your Actor's"
+        "constructor validates configuration at constructor time."
+    ),
+)
 @build_system_options
 @click.pass_context
 def dry_run_workloads(ctx, **kwargs):
@@ -241,7 +280,15 @@ def dry_run_workloads(ctx, **kwargs):
     dry_run.dry_run_workloads(ctx.obj["GENNY_REPO_ROOT"], ctx.obj["OS_FAMILY"])
 
 
-@cli.command(name="canaries")
+@cli.command(
+    name="canaries",
+    help=(
+        "Run genny's canaries that exercise workload primitives but don't interact with "
+        "external systems like databases. We expect these canaries to have very little "
+        "'noise' over time such that if the canaries' performance changes significantly "
+        "run-over-run it is indicative of a change in the underlying system."
+    ),
+)
 @build_system_options
 @click.pass_context
 def canaries(ctx, **kwargs):
@@ -253,21 +300,27 @@ def canaries(ctx, **kwargs):
     canaries_runner.main_canaries_runner(cleanup_metrics=True)
 
 
-@cli.command("resmoke-test")
+@cli.command(
+    name="resmoke-test",
+    help="Runs genny's C++-based integration tests under resmoke (lives in the mongo repo)",
+)
 @build_system_options
 @click.option(
     "--mongo-dir",
     type=click.Path(),
     required=False,
     default=None,
-    help="path to the mongo repo, which contains buildscripts/resmoke.py",
+    help="Path to the mongo repo, which contains buildscripts/resmoke.py",
 )
 @optgroup.group("Type of resmoke task to run", cls=RequiredMutuallyExclusiveOptionGroup)
 @optgroup.option("--suites", help='equivalent to resmoke.py\'s "--suites" option')
 @optgroup.option(
     "--create-new-actor-test-suite",
     is_flag=True,
-    help='Run the "genny_create_new_actor" resmoke test suite, incompatible with the --suites options',
+    help=(
+        'Run the "genny_create_new_actor" resmoke test suite.'
+        "This is incompatible with the --suites options"
+    ),
 )
 @click.pass_context
 def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str, **kwargs):
@@ -285,7 +338,13 @@ def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str,
     )
 
 
-@cli.command("create-new-actor")
+@cli.command(
+    "create-new-actor",
+    help=(
+        "Generate the skeleton code for a new C++-based Actor including "
+        "headers, implementation, and a basic unit/integration test."
+    ),
+)
 @click.argument("actor_name")
 @click.pass_context
 def create_new_actor(ctx, actor_name):
@@ -298,16 +357,20 @@ def create_new_actor(ctx, actor_name):
     res.check_returncode()
 
 
-@cli.command("lint-python")
+@cli.command(
+    name="lint-python",
+    help="Run the 'black' python format checker to ensure genny's internal python is 💅.",
+)
 @click.pass_context
 def lint_python(ctx):
     from tasks import lint_python
 
+    # TODO: add --fix option
     genny_repo_root = os.environ.get("GENNY_REPO_ROOT")
     lint_python.lint_python(genny_repo_root)
 
 
-@cli.command("self-test")
+@cli.command(name="self-test", help="Run the pytest tests of genny's internal python.")
 @click.pass_context
 def self_test(ctx):
     from tasks import run_tests
@@ -315,7 +378,7 @@ def self_test(ctx):
     run_tests.run_self_test()
 
 
-@cli.command("lint-yaml")
+@cli.command(name="lint-yaml", help="Run pylint on all workload and phase yamls")
 @click.pass_context
 def lint_yaml(ctx):
     from tasks import yaml_linter
@@ -323,7 +386,15 @@ def lint_yaml(ctx):
     yaml_linter.main()
 
 
-@cli.command("auto-tasks")
+@cli.command(
+    name="auto-tasks",
+    help=(
+        "Determine which Genny workloads to run given the current build variant etc. "
+        "as determined by the ./expansions.yml file. "
+        "This is used by evergreen and allows new genny workloads to be created "
+        "without having to modify any repos outside of genny itself."
+    ),
+)
 @click.option(
     "--tasks", required=True, type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks"]),
 )
