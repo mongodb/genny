@@ -41,10 +41,10 @@ struct QuiesceActor::PhaseConfig {
 void QuiesceActor::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
-            auto inserts = _totalQuiesces.start();
+            auto quiesceContext = _totalQuiesces.start();
             BOOST_LOG_TRIVIAL(debug) << "QuiesceActor quiescing cluster.";
-            quiesce(_client);
-            inserts.success();
+            quiesceImpl(_client);
+            quiesceContext.success();
         }
     }
 }
