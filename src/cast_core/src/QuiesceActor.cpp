@@ -31,22 +31,13 @@
 #include <gennylib/quiesce.hpp>
 
 namespace genny::actor {
-std::string getDbName(const PhaseContext& phaseContext) {
-    auto phaseDb = phaseContext["Database"].maybe<std::string>();
-    auto actorDb = phaseContext.actor()["Database"].maybe<std::string>();
-    if (!phaseDb && !actorDb) {
-        BOOST_THROW_EXCEPTION(
-            InvalidConfigurationException("Must give Database in Phase or Actor block."));
-    }
-    return phaseDb ? *phaseDb : *actorDb;
-}
 
 struct QuiesceActor::PhaseConfig {
     PhaseConfig(PhaseContext& context) {
         auto actorDb = context.actor()["Database"].maybe<std::string>();
         if (!actorDb) {
             BOOST_THROW_EXCEPTION(
-                InvalidConfigurationException("Must give Database in Phase or Actor block."));
+                InvalidConfigurationException("Must give Database in Actor block."));
         }
         dbName = *actorDb;
     }
