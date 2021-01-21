@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import datetime
 import structlog
 from contextlib import contextmanager
 
@@ -25,9 +26,30 @@ def _get_poplar_args():
     return [curator, "poplar", "grpc"]
 
 
+_DATE_FORMAT = "%Y-%m-%dT%H%M%SZ"
+_METRICS_PATH = "build/CedarMetrics"
+
+
+def _cleanup_metrics():
+    if not os.path.exists(_METRICS_PATH):
+        return
+    ts = datetime.datetime.utcnow().strftime(_DATE_FORMAT)
+    dest = f"{_METRICS_PATH}-{ts}"
+    shutil.move(_METRICS_PATH, dest)
+    SLOG.info(
+        "Moved existing metrics (presumably from a prior run).",
+        existing=_METRICS_PATH,
+        moved_to=dest,
+        cwd=os.getcwd(),
+    )
+
+
 @contextmanager
 def poplar_grpc(cleanup_metrics: bool):
     args = _get_poplar_args()
+
+    if cleanup_metrics:
+        _cleanup_metrics()
 
     SLOG.info("Running poplar", command=args, cwd=os.getcwd())
     poplar = subprocess.Popen(args)
@@ -48,9 +70,6 @@ def poplar_grpc(cleanup_metrics: bool):
             if poplar.poll() is None:
                 poplar.kill()
             raise
-        finally:
-            if cleanup_metrics:
-                shutil.rmtree("build/CedarMetrics", ignore_errors=True)
 
 
 # For now we put curator in ./src/genny/build/curator, but ideally it would be in ./bin

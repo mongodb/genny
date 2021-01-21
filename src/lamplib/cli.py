@@ -133,7 +133,7 @@ def cli():
 )
 @build_system_options
 @click.pass_context
-def compile(ctx, **kwargs) -> None:
+def compile_op(ctx, **kwargs) -> None:
     setup(ctx, **kwargs)
     cmake_compile_install(ctx, perform_install=False)
 
@@ -225,7 +225,7 @@ def workload(ctx, **kwargs):
     genny_runner.main_genny_runner(
         genny_args=ctx.obj["CMAKE_ARGS"],
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
-        cleanup_metrics=False,
+        cleanup_metrics=True,
     )
 
 
@@ -250,7 +250,7 @@ def canaries(ctx, **kwargs):
 
     from tasks import canaries_runner
 
-    canaries_runner.main_canaries_runner()
+    canaries_runner.main_canaries_runner(cleanup_metrics=True)
 
 
 @cli.command("resmoke-test")
@@ -325,7 +325,7 @@ def lint_yaml(ctx):
 
 @cli.command("auto-tasks")
 @click.option(
-    "--tasks", required=True, type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks",]),
+    "--tasks", required=True, type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks"]),
 )
 @click.pass_context
 def auto_tasks(ctx, tasks):
