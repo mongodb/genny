@@ -31,6 +31,8 @@
 
 namespace genny {
 
+const int DROPPED_COLLECTION_RETRIES = 1000;
+
 bool waitOplog(Topology& topology) {
     class WaitOplogVisitor : public TopologyVisitor {
     public:
@@ -102,15 +104,15 @@ bool checkForDroppedCollections(mongocxx::database db) {
     return idents.get_int64() != 0;
 }
 
-bool checkForDroppedCollectionsTestDBs(mongocxx::pool::entry& client, std::vector<std::string> dbsToCheckDrops) {
-    for (auto dbName : dbsToCheckDrops) {
-        auto db = client->database(dbName);
-        int retries = 0;
-        while (checkForDroppedCollections(db) && retries < 1000) {
-            BOOST_LOG_TRIVIAL(debug) << "Sleeping 1 second while waiting for collection to finish dropping.";
-            retries++;
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
+bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client, std::string dbName) {
+    auto db = client->database(dbName);
+    int retries = 0;
+    while (checkForDroppedCollections(db) && retries < DROPPED_COLLECTION_RETRIES) {
+        BOOST_LOG_TRIVIAL(debug) << "Sleeping 1 second while waiting for collection to finish dropping.";
+        retries++;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+    if (retries >= DROPPED_COLLECTION_RETRIES) {
         BOOST_LOG_TRIVIAL(error) << "Timeout on waiting for collections to drop.";
         return false;
     }
@@ -122,12 +124,12 @@ bool checkForDroppedCollectionsTestDBs(mongocxx::pool::entry& client, std::vecto
  * The appropriate actions will be taken whether the target
  * is a standalone, replica set, or sharded cluster.
  */
-bool quiesceImpl(mongocxx::pool::entry& client, std::vector<std::string> dbsToCheckDrops) {
+bool quiesce(mongocxx::pool::entry& client, std::string dbName) {
     Topology topology(*client);
-    waitOplog(topology);
+    bool waitOplogSuccess = waitOplog(topology);
     doFsync(topology);
-    checkForDroppedCollectionsTestDBs(client, dbsToCheckDrops);
-    return true;
+    bool checkDroppedCollectionSuccess = checkForDroppedCollectionsTestDB(client, dbName);
+    return waitOplogSuccess && checkDroppedCollectionSuccess;
 }
 
 }

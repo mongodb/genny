@@ -31,22 +31,40 @@
 #include <gennylib/quiesce.hpp>
 
 namespace genny::actor {
+std::string getDbName(const PhaseContext& phaseContext) {
+    auto phaseDb = phaseContext["Database"].maybe<std::string>();
+    auto actorDb = phaseContext.actor()["Database"].maybe<std::string>();
+    if (!phaseDb && !actorDb) {
+        BOOST_THROW_EXCEPTION(
+            InvalidConfigurationException("Must give Database in Phase or Actor block."));
+    }
+    return phaseDb ? *phaseDb : *actorDb;
+}
 
-// TODO: Maybe topology discovery?
-// Otherwise there's not much here.
 struct QuiesceActor::PhaseConfig {
-    PhaseConfig(PhaseContext& context) {}
+    PhaseConfig(PhaseContext& context) {
+        auto actorDb = context.actor()["Database"].maybe<std::string>();
+        if (!actorDb) {
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("Must give Database in Phase or Actor block."));
+        }
+        dbName = *actorDb;
+    }
+
+    std::string dbName;
 };
+
 
 void QuiesceActor::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
             auto quiesceContext = _totalQuiesces.start();
             BOOST_LOG_TRIVIAL(debug) << "QuiesceActor quiescing cluster.";
-            std::vector<std::string> dbsToCheckDrops;
-            dbsToCheckDrops.push_back("test");
-            quiesceImpl(_client, dbsToCheckDrops);
-            quiesceContext.success();
+            if (quiesce(_client, config->dbName)) {
+                quiesceContext.success();
+            } else {
+                quiesceContext.failure();
+            }
         }
     }
 }

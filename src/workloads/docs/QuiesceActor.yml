@@ -5,6 +5,7 @@ Actors:
 - Name: QuiesceActor
   Type: QuiesceActor
   Threads: 1
+  Database: test
   Phases:
   - Phase: 0
     Repeat: 1

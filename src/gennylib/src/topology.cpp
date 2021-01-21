@@ -40,8 +40,6 @@ void Topology::getDataMemberConnectionStrings(DBService& service) {
         return;
     }
 
-    // TODO: Throw if primary field isn't found, implying that we are
-    // connected to a secondary.
     auto primary = res.view()["primary"];
 
     std::unique_ptr<ReplSetDescription> desc = std::make_unique<ReplSetDescription>();
@@ -95,7 +93,6 @@ void Topology::findConnectedNodesViaMongos(DBService& service) {
     desc->configsvr = retriever.replSet;
     desc->configsvr.configsvr = true;
 
-    BOOST_LOG_TRIVIAL(error) << "dealt with config";
     // Shards
     auto shardListRes = service.runAdminCommand("listShards");
     bsoncxx::array::view shards = shardListRes.view()["shards"].get_array();
