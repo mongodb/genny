@@ -77,6 +77,21 @@ bool waitOplog(Topology& topology) {
     return waitVisitor.success_acc;
 }
 
+void doFsync(Topology& topology) {
+    class DoFsyncVisitor : public TopologyVisitor {
+        void visitMongodDescription(const MongodDescription& desc) {
+            using bsoncxx::builder::basic::kvp;
+            using bsoncxx::builder::basic::make_document;
+
+            mongocxx::client client(mongocxx::uri(desc.mongodUri));
+            auto admin = client["admin"];
+            admin.run_command(make_document(kvp("fsync", 1)));
+        }
+    };
+    DoFsyncVisitor v;
+    topology.accept(v);
+}
+
 /*
  * Helper function to quiesce the system and reduce noise.
  * The appropriate actions will be taken whether the target
