@@ -268,7 +268,7 @@ functions:
     params:
       binary: ./src/genny/run-genny
       args:
-      - -d
+      - -v
       - compile
       - --linux-distro=${distro|not-linux}
 
@@ -281,7 +281,7 @@ functions:
     params:
       binary: ./src/genny/run-genny
       args:
-      - -d
+      - -v
       - dry-run-workloads
 
   ##
@@ -304,7 +304,7 @@ functions:
     params:
       binary: ./src/genny/run-genny
       args:
-      - -d
+      - -v
       - benchmark-test
 
   ##
@@ -315,7 +315,7 @@ functions:
     params:
       binary: ./src/genny/run-genny
       args:
-      - -d
+      - -v
       - create-new-actor
       - SelfTestActor
 
@@ -327,7 +327,7 @@ functions:
     params:
       binary: ./src/genny/run-genny
       args:
-      - -d
+      - -v
       - self-test
 
   ##
@@ -338,7 +338,7 @@ functions:
     params:
       binary: ./src/genny/run-genny
       args:
-      - -d
+      - -v
       - lint-workloads
 
   ##
@@ -349,7 +349,7 @@ functions:
     params:
       binary: ./src/genny/run-genny
       args:
-      - -d
+      - -v
       - lint-python
 
   ##
