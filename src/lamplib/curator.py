@@ -2,6 +2,8 @@ import os
 import shutil
 import subprocess
 import datetime
+from uuid import uuid4
+
 import structlog
 from contextlib import contextmanager
 
@@ -33,8 +35,9 @@ _METRICS_PATH = "build/CedarMetrics"
 def _cleanup_metrics():
     if not os.path.exists(_METRICS_PATH):
         return
+    uuid = str(uuid4())[:8]
     ts = datetime.datetime.utcnow().strftime(_DATE_FORMAT)
-    dest = f"{_METRICS_PATH}-{ts}"
+    dest = f"{_METRICS_PATH}-{ts}-{uuid}"
     shutil.move(_METRICS_PATH, dest)
     SLOG.info(
         "Moved existing metrics (presumably from a prior run).",
