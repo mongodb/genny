@@ -79,8 +79,7 @@ class Downloader:
             if minor_ver >= 15:
                 SLOG.info(_macos_install_instructions(self._name))
 
-        if not okay:
-            return False
+        return okay
 
     def _fetch_and_install_impl(self):
         tarball = os.path.join(self._install_dir, self._name + ".tgz")

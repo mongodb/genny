@@ -48,7 +48,7 @@ def toolchain_info(os_family: str, linux_distro: str, ignore_toolchain_version: 
     toolchain_dir = toolchain_downloader.result_dir
     toolchain_env = _create_compile_environment(triplet_os, toolchain_dir)
     if not toolchain_downloader.fetch_and_install():
-        sys.exit(1)
+        raise Exception("Could not fetch and install")
     return {
         "toolchain_dir": toolchain_dir,
         "triplet_os": triplet_os,
