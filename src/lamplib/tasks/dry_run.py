@@ -1,7 +1,10 @@
 import glob
 import os
+import structlog
 
 from tasks import genny_runner
+
+SLOG = structlog.get_logger(__name__)
 
 
 def dry_run_workload(yaml_file_path: str, os_family: str, genny_repo_root):
@@ -20,8 +23,8 @@ def dry_run_workload(yaml_file_path: str, os_family: str, genny_repo_root):
 def dry_run_workloads(genny_repo_root: str, os_family):
     glob_pattern = os.path.join(genny_repo_root, "src", "workloads", "*", "*.yml")
     workloads = glob.glob(glob_pattern)
-    curr = 1
+    curr = 0
     for workload in workloads:
-        print(f"Checking workload {curr} of {len(workloads)}")
+        SLOG.info("Checking workload", workload=workload, index=curr, of_how_many=len(workloads))
         dry_run_workload(workload, os_family, genny_repo_root)
         curr += 1
