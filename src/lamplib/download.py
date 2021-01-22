@@ -1,9 +1,10 @@
 import structlog
 import os
 import shutil
-import subprocess
 import platform
 import urllib.request
+
+from cmd_runner import run_command
 
 SLOG = structlog.get_logger(__name__)
 
@@ -96,7 +97,7 @@ class Downloader:
         shutil.rmtree(self.result_dir, ignore_errors=True)
         os.makedirs(self.result_dir, exist_ok=True)
         # use tar(1) because python's TarFile was inexplicably truncating the tarball
-        subprocess.run(["tar", "-xzf", tarball, "-C", self.result_dir], check=True)
+        run_command(cmd=["tar", "-xzf", tarball, "-C", self.result_dir], capture=False)
         SLOG.info("Downloaded and installed.", name=self._name, into=self.result_dir)
 
         # Get space back.

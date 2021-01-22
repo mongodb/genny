@@ -1,9 +1,7 @@
-import subprocess
-
 import structlog
-import sys
 import os
 
+from cmd_runner import run_command
 from download import Downloader
 
 SLOG = structlog.get_logger(__name__)
@@ -37,8 +35,6 @@ def _create_compile_environment(triplet_os, toolchain_dir):
 
     env["PATH"] = ":".join(paths)
     env["NINJA_STATUS"] = "[%f/%t (%p) %es] "  # make the ninja output even nicer
-
-    SLOG.debug("Using environment", env=env)
     return env
 
 
@@ -86,7 +82,5 @@ class ToolchainDownloader(Downloader):
         )
 
     def _check_toolchain_githash(self):
-        res = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=self.result_dir, capture_output=True, text=True
-        )
-        return res.stdout.strip() == ToolchainDownloader.TOOLCHAIN_GIT_HASH
+        res = "".join(run_command(cmd=["git", "rev-parse", "HEAD"], cwd=self.result_dir))
+        return res.strip() == ToolchainDownloader.TOOLCHAIN_GIT_HASH

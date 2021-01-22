@@ -7,6 +7,7 @@ from uuid import uuid4
 import structlog
 from contextlib import contextmanager
 
+from cmd_runner import run_command
 from download import Downloader
 
 SLOG = structlog.get_logger(__name__)
@@ -117,7 +118,5 @@ class CuratorDownloader(Downloader):
         return os.path.exists(self.result_dir) and self._check_curator_version()
 
     def _check_curator_version(self):
-        res = subprocess.run(
-            ["./curator", "-v"], cwd=self.result_dir, capture_output=True, text=True
-        )
-        return res.stdout.split()[2] == CuratorDownloader.CURATOR_VERSION
+        res = run_command(cmd=["./curator", "-v"], cwd=self.result_dir)
+        return res[0] == CuratorDownloader.CURATOR_VERSION

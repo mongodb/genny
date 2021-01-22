@@ -2,7 +2,7 @@ from typing import List
 
 import structlog
 import os
-import subprocess
+from cmd_runner import run_command
 
 import toolchain
 
@@ -58,8 +58,7 @@ def cmake(
 
     cmake_cmd += cmake_args
 
-    SLOG.info("Running cmake", cmd=cmake_cmd)
-    subprocess.run(cmake_cmd, env=toolchain_info["toolchain_env"])
+    run_command(cmd=cmake_cmd, env=toolchain_info["toolchain_env"], capture=False)
 
 
 def compile_all(
@@ -67,32 +66,28 @@ def compile_all(
 ):
     toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
     compile_cmd = [build_system, "-C", "build"]
-    SLOG.info("Compiling", compile_cmd=compile_cmd)
-    SLOG.debug("Compile env", env=toolchain_info["toolchain_env"])
-    subprocess.run(compile_cmd, env=toolchain_info["toolchain_env"])
+    run_command(cmd=compile_cmd, env=toolchain_info["toolchain_env"], capture=False)
 
 
 def install(build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool):
     toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
     install_cmd = [build_system, "-C", "build", "install"]
-    SLOG.debug("Running install", cmd=install_cmd)
-    subprocess.run(install_cmd, env=toolchain_info["toolchain_env"])
+    run_command(cmd=install_cmd, env=toolchain_info["toolchain_env"], capture=False)
 
 
 def clean_build_dir():
-    subprocess.run(["rm", "-rf", "build"])
+    run_command(cmd=["rm", "-rf", "build"], capture=False)
     # Put back build/.gitinore
-    subprocess.run(["git", "checkout", "--", "build"])
+    run_command(cmd=["git", "checkout", "--", "build"], capture=False)
 
 
 def clean(build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool):
     toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
     clean_cmd = [build_system, "-C", "build", "clean"]
-    SLOG.info("Running clean", cmd=clean_cmd, cwd=os.getcwd())
-    subprocess.run(clean_cmd, env=toolchain_info["toolchain_env"])
+    run_command(cmd=clean_cmd, env=toolchain_info["toolchain_env"], capture=False)
 
     # Physically remove all built files.
     SLOG.debug("Erasing build, genny_venv, and dist", cwd=os.getcwd())
     clean_build_dir()
-    subprocess.run(["rm", "-rf", "genny_venv"], env=toolchain_info["toolchain_env"])
-    subprocess.run(["rm", "-rf", "dist"], env=toolchain_info["toolchain_env"])
+    run_command(cmd=["rm", "-rf", "genny_venv"], env=toolchain_info["toolchain_env"], capture=False)
+    run_command(cmd=["rm", "-rf", "dist"], env=toolchain_info["toolchain_env"], capture=False)

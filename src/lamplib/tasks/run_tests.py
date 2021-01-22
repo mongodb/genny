@@ -2,10 +2,10 @@ import platform
 import sys
 import structlog
 import os
-import subprocess
 import shutil
 
 import toolchain
+from cmd_runner import run_command
 
 SLOG = structlog.get_logger(__name__)
 
@@ -71,7 +71,9 @@ def cmake_test(
     ]
 
     _run_command_with_sentinel_report(
-        lambda: subprocess.run(ctest_cmd, cwd=workdir, env=toolchain_info["toolchain_env"])
+        lambda: run_command(
+            cmd=ctest_cmd, cwd=workdir, env=toolchain_info["toolchain_env"], capture=False
+        )
     )
 
 
@@ -88,7 +90,9 @@ def benchmark_test(
     ctest_cmd = ["ctest", "--label-regex", "(benchmark)"]
 
     _run_command_with_sentinel_report(
-        lambda: subprocess.run(ctest_cmd, cwd=workdir, env=toolchain_info["toolchain_env"])
+        lambda: run_command(
+            cmd=ctest_cmd, cwd=workdir, env=toolchain_info["toolchain_env"], capture=False
+        )
     )
 
 
@@ -147,14 +151,16 @@ def resmoke_test(
 
     # Clone repo unless exists
     if not os.path.exists(mongo_repo_path):
-        res = subprocess.run(["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path])
-        res.check_returncode()
+        run_command(
+            cmd=["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path], capture=False
+        )
 
         # See comment in evergreen.yml - mongodb_archive_url
-        res = subprocess.run(
-            ["git", "checkout", "298d4d6bbb9980b74bded06241067fe6771bef68"], cwd=mongo_repo_path
+        run_command(
+            cmd=["git", "checkout", "298d4d6bbb9980b74bded06241067fe6771bef68"],
+            cwd=mongo_repo_path,
+            capture=False,
         )
-        res.check_returncode()
 
     # Setup resmoke venv unless exists
     resmoke_setup_sentinel = os.path.join(resmoke_venv, "setup-done")
@@ -165,8 +171,7 @@ def resmoke_test(
         venv.create(env_dir=resmoke_venv, with_pip=True, symlinks=True)
         reqs_file = os.path.join(mongo_repo_path, "etc", "pip", "evgtest-requirements.txt")
         cmd = [resmoke_python, "-mpip", "install", "-r", reqs_file]
-        res = subprocess.run(cmd)
-        res.check_returncode()
+        run_command(cmd=cmd, capture=False)
         open(resmoke_setup_sentinel, "w")
 
     cmd = [
@@ -186,7 +191,7 @@ def resmoke_test(
     ]
 
     _run_command_with_sentinel_report(
-        lambda: subprocess.run(cmd, cwd=genny_repo_root, env=env), checker_func,
+        lambda: run_command(cmd=cmd, cwd=genny_repo_root, env=env), checker_func, capture=False
     )
 
 

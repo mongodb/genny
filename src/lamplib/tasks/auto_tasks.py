@@ -6,14 +6,15 @@ import enum
 import glob
 import os
 import re
-import subprocess
-import sys
 from typing import NamedTuple, List, Optional, Set
 
 import yaml
 from shrub.command import CommandDefinition
 from shrub.config import Configuration
 from shrub.variant import TaskSpec
+
+from cmd_runner import run_command
+
 
 #
 # The classes are listed here in dependency order to avoid having to quote typenames.
@@ -77,7 +78,7 @@ class WorkloadLister:
             "git diff --name-only --diff-filter=AMR "
             "$(git merge-base HEAD origin/master) -- src/workloads/"
         )
-        lines = _check_output(self.repo_root, command, shell=True)
+        lines = run_command(cmd=[command], cwd=self.repo_root, shell=True)
         return {os.path.join(self.repo_root, line) for line in lines if line.endswith(".yml")}
 
 
@@ -354,24 +355,6 @@ class ConfigWriter:
                 ]
             )
         return c
-
-
-def _check_output(cwd, *args, **kwargs):
-    old_cwd = os.getcwd()
-    try:
-        if not os.path.exists(cwd):
-            raise Exception(f"Cannot chdir to {cwd} from cwd={os.getcwd()}")
-        os.chdir(cwd)
-        out = subprocess.check_output(*args, **kwargs)
-    except subprocess.CalledProcessError as e:
-        print(e.output, file=sys.stderr)
-        raise e
-    finally:
-        os.chdir(old_cwd)
-
-    if out.decode() == "":
-        return []
-    return out.decode().strip().split("\n")
 
 
 def main(mode_name) -> None:

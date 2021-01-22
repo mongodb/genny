@@ -9,6 +9,7 @@ import os
 
 import loggers
 import curator
+from cmd_runner import run_command
 
 SLOG = structlog.get_logger(__name__)
 
@@ -348,13 +349,10 @@ def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str,
 @click.argument("actor_name")
 @click.pass_context
 def create_new_actor(ctx, actor_name):
-    import subprocess
-
     path = os.path.join(
         ctx.obj["GENNY_REPO_ROOT"], "src", "lamplib", "tasks", "create-new-actor.sh"
     )
-    res = subprocess.run([path, actor_name], cwd=ctx.obj["GENNY_REPO_ROOT"])
-    res.check_returncode()
+    run_command(cmd=[path, actor_name], cwd=ctx.obj["GENNY_REPO_ROOT"], capture=False)
 
 
 @cli.command(

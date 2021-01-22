@@ -1,10 +1,10 @@
-import subprocess
 from typing import List
 
 import structlog
 import shlex
 import os
 
+from cmd_runner import run_command
 from curator import poplar_grpc
 
 SLOG = structlog.get_logger(__name__)
@@ -22,5 +22,4 @@ def main_genny_runner(genny_args: List[str], genny_repo_root: str, cleanup_metri
         cmd = [path, *genny_args]
         SLOG.info("Running genny", command=" ".join(shlex.quote(x) for x in cmd))
 
-        res = subprocess.run(cmd)
-        res.check_returncode()
+        run_command(cmd=cmd, capture=False)
