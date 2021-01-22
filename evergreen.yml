@@ -345,7 +345,7 @@ functions:
       binary: ./src/genny/run-genny
       args:
       - -v
-      - lint-workloads
+      - lint-yaml
 
   ##
   # Lint python

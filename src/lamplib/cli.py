@@ -143,6 +143,7 @@ def cli(ctx, verbose: bool):
     ctx.obj["GENNY_REPO_ROOT"] = os.environ["GENNY_REPO_ROOT"]
     os.chdir(ctx.obj["GENNY_REPO_ROOT"])
 
+
 @cli.command(
     name="compile",
     help=(
