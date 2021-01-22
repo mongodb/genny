@@ -15,7 +15,6 @@ SLOG = structlog.get_logger(__name__)
 # Heavy inspiration from here: https://github.com/pallets/click/issues/108
 
 _build_system_options = [
-    click.option("-v", "--verbose", default=False, is_flag=True, help="Enable debug logging."),
     # Python can't natively check the distros of our supported platforms.
     # See https://bugs.python.org/issue18872 for more info.
     click.option(
@@ -81,7 +80,6 @@ def build_system_options(func):
 
 def setup(
     ctx,
-    verbose: bool,
     linux_distro: str,
     ignore_toolchain_version: bool,
     build_system: str,
@@ -91,19 +89,12 @@ def setup(
 ):
     ctx.ensure_object(dict)
 
-    ctx.obj["VERBOSE"] = verbose
     ctx.obj["LINUX_DISTRO"] = linux_distro
     ctx.obj["IGNORE_TOOLCHAIN_VERSION"] = ignore_toolchain_version
     ctx.obj["BUILD_SYSTEM"] = build_system
     ctx.obj["SANITIZER"] = sanitizer
     ctx.obj["OS_FAMILY"] = os_family
     ctx.obj["CMAKE_ARGS"] = cmake_args
-
-    loggers.setup_logging(verbose=ctx.obj["VERBOSE"])
-
-    # TODO: barf if not set or not exists.
-    ctx.obj["GENNY_REPO_ROOT"] = os.environ["GENNY_REPO_ROOT"]
-    os.chdir(ctx.obj["GENNY_REPO_ROOT"])
 
 
 def cmake_compile_install(ctx, perform_install: bool):
@@ -140,9 +131,17 @@ def cmake_compile_install(ctx, perform_install: bool):
 
 
 @click.group()
-def cli():
-    pass
+@click.option("-v", "--verbose", default=False, is_flag=True, help="Enable debug logging.")
+@click.pass_context
+def cli(ctx, verbose: bool):
+    ctx.ensure_object(dict)
+    ctx.obj["VERBOSE"] = verbose
 
+    loggers.setup_logging(verbose=ctx.obj["VERBOSE"])
+
+    # TODO: barf if not set or not exists.
+    ctx.obj["GENNY_REPO_ROOT"] = os.environ["GENNY_REPO_ROOT"]
+    os.chdir(ctx.obj["GENNY_REPO_ROOT"])
 
 @cli.command(
     name="compile",
