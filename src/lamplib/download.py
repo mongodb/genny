@@ -67,7 +67,7 @@ class Downloader:
             )
             okay = False
 
-        if platform.mac_ver()[0]:
+        if not okay and platform.mac_ver()[0]:
             release_triplet = platform.mac_ver()[0].split(".")
             minor_ver = int(release_triplet[1])
             if 12 <= minor_ver < 15:
