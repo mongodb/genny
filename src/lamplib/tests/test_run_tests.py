@@ -5,6 +5,14 @@ from unittest.mock import patch
 
 from tasks.run_tests import cmake_test
 
+CMAKE_ARGS = dict(
+    build_system="nop",
+    os_family="Linux",
+    linux_distro="the-one-true-distro",
+    ignore_toolchain_version="doesnt-matter",
+    genny_repo_root="/not/a/real/path",
+)
+
 
 class TestRunTests(unittest.TestCase):
     @patch("subprocess.run")
@@ -20,7 +28,7 @@ class TestRunTests(unittest.TestCase):
                 return res
 
             mock_subprocess_run.side_effect = fail
-            cmake_test(env={})
+            cmake_test(**CMAKE_ARGS)
             self.assertTrue(os.path.isfile(expected_file))
 
             def succeed(*args, **kwargs):
@@ -29,5 +37,5 @@ class TestRunTests(unittest.TestCase):
                 return res
 
             mock_subprocess_run.side_effect = succeed
-            cmake_test(env={})
+            cmake_test(**CMAKE_ARGS)
             self.assertFalse(os.path.isfile(expected_file))
