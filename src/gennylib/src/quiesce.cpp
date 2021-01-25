@@ -51,13 +51,15 @@ bool waitOplog(Topology& topology) {
                         std::string name(member["name"].get_utf8().value);
                         BOOST_LOG_TRIVIAL(error) << "Cannot wait oplog, replset member "
                             << name << " is " << state;
-                        success_acc = false;
+                        _successAcc = false;
                         return;
                     }
                 }
             }
 
-            // Do flush
+            // Do flush. We do a write concern of "all" and journaling
+            // enabled, so when the write returns we know everything 
+            // before it is replicated.
             auto collection = admin["wait_oplog"];
             mongocxx::write_concern wc;
             wc.nodes(desc.nodes.size());
@@ -66,15 +68,18 @@ bool waitOplog(Topology& topology) {
             opts.write_concern(wc);
             auto insertRes = collection.insert_one(make_document(kvp("x", "flush")), opts);
         
-            success_acc = success_acc && insertRes && insertRes->result().inserted_count() == 1;
+            _successAcc = _successAcc && insertRes && insertRes->result().inserted_count() == 1;
         }
-        bool success_acc = true;
+
+        bool success() { return _successAcc; }
+    private:
+        bool _successAcc = true;
     };
 
     WaitOplogVisitor waitVisitor;
     topology.accept(waitVisitor);
 
-    return waitVisitor.success_acc;
+    return waitVisitor.success();
 }
 
 void doFsync(Topology& topology) {
