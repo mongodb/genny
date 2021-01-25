@@ -73,7 +73,7 @@ void Topology::getDataMemberConnectionStrings(DBConnection& connection) {
 void Topology::findConnectedNodesViaMongos(DBConnection& connection) {
     class ReplSetRetriever : public TopologyVisitor {
     public:
-        void visitReplSetDescriptionPre(const ReplSetDescription& desc) {
+        void onBeforeReplSet(const ReplSetDescription& desc) {
             replSet = desc; 
         }
         ReplSetDescription replSet;

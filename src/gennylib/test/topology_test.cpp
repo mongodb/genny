@@ -30,12 +30,12 @@ TEST_CASE("Topology visitor traverses nodes correctly") {
 
     class TestVisitor : public TopologyVisitor {
     public:
-        virtual void visitMongodDescription(const MongodDescription& desc) { names.push_back(desc.mongodUri); }
+        virtual void onMongod(const MongodDescription& desc) { names.push_back(desc.mongodUri); }
         // Mongos falls back to default nop-visit.
-        //virtual void visitMongosDescriptionPre(const MongosDescription& desc) {}
+        //virtual void onBeforeMongos(const MongosDescription& desc) {}
         // Same with replset
-        //virtual void visitReplSetDescriptionPre(const ReplSetDescription& desc) { names.push_back("visitedPrimary"); }
-        virtual void visitShardedDescriptionPre(const ShardedDescription& desc) { names.push_back("visitedShard"); }
+        //virtual void onBeforeReplSet(const ReplSetDescription& desc) { names.push_back("visitedPrimary"); }
+        virtual void onBeforeSharded(const ShardedDescription& desc) { names.push_back("visitedShard"); }
         std::vector<std::string> names;
     };
 

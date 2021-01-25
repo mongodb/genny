@@ -34,7 +34,7 @@ const int DROPPED_COLLECTION_RETRIES = 1000;
 bool waitOplog(Topology& topology) {
     class WaitOplogVisitor : public TopologyVisitor {
     public:
-        void visitReplSetDescriptionPre(const ReplSetDescription& desc) {
+        void onBeforeReplSet(const ReplSetDescription& desc) {
             using bsoncxx::builder::basic::kvp;
             using bsoncxx::builder::basic::make_document;
             mongocxx::client client(mongocxx::uri(desc.primaryUri));

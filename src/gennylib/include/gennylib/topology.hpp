@@ -26,7 +26,7 @@
 
 namespace genny {
 
-class AbstractTopologyDescription;
+class TopologyDescription;
 class MongodDescription;
 class MongosDescription;
 class ReplSetDescription;
@@ -43,97 +43,97 @@ class ShardedDescription;
  */
 class TopologyVisitor {
 public:
-    virtual void visitTopLevelPre(const AbstractTopologyDescription&) {}
-    virtual void visitTopLevelPost(const AbstractTopologyDescription&) {}
+    virtual void onBeforeTopology(const TopologyDescription&) {}
+    virtual void onAfterTopology(const TopologyDescription&) {}
 
-    virtual void visitMongodDescription(const MongodDescription&) {}
-    virtual void visitMongosDescription(const MongosDescription&) {}
+    virtual void onMongod(const MongodDescription&) {}
+    virtual void onMongos(const MongosDescription&) {}
 
-    virtual void visitReplSetDescriptionPre(const ReplSetDescription&) {}
-    virtual void visitReplSetDescriptionPost(const ReplSetDescription&) {}
+    virtual void onBeforeReplSet(const ReplSetDescription&) {}
+    virtual void onAfterReplSet(const ReplSetDescription&) {}
 
-    virtual void visitShardedDescriptionPre(const ShardedDescription&) {}
-    virtual void visitShardedDescriptionPost(const ShardedDescription&) {}
+    virtual void onBeforeSharded(const ShardedDescription&) {}
+    virtual void onAfterSharded(const ShardedDescription&) {}
 
 
     /** Misc hooks that most visitors won't need. **/
 
     // Called between mongods in a replica set.
-    virtual void visitMongodDescriptionBetween(const ReplSetDescription&) {}
+    virtual void onBetweenMongods(const ReplSetDescription&) {}
 
     // Called before/after/between visiting shards.
-    virtual void visitShardsPre(const ShardedDescription&) {}
-    virtual void visitShardsPost(const ShardedDescription&) {}
-    virtual void visitShardsBetween(const ShardedDescription&) {}
+    virtual void onBeforeShards(const ShardedDescription&) {}
+    virtual void onAfterShards(const ShardedDescription&) {}
+    virtual void onBetweenShards(const ShardedDescription&) {}
 
     // Called before/after/between visiting mongoses.
-    virtual void visitMongosesPre(const ShardedDescription&) {}
-    virtual void visitMongosesPost(const ShardedDescription&) {}
-    virtual void visitMongosesBetween(const ShardedDescription&) {}
+    virtual void onBeforeMongoses(const ShardedDescription&) {}
+    virtual void onAfterMongoses(const ShardedDescription&) {}
+    virtual void onBetweenMongoses(const ShardedDescription&) {}
 
     virtual ~TopologyVisitor() {}
 };
 
 // Be careful changing the traversal order of the cluster; visitors may depend on it.
-struct AbstractTopologyDescription {
+struct TopologyDescription {
     virtual void accept(TopologyVisitor&) = 0;
-    virtual ~AbstractTopologyDescription() {};
+    virtual ~TopologyDescription() {};
 };
 
-struct MongodDescription : public AbstractTopologyDescription {
+struct MongodDescription : public TopologyDescription {
     std::string mongodUri;
 
-    void accept(TopologyVisitor& v) { v.visitMongodDescription(*this); }
+    void accept(TopologyVisitor& v) { v.onMongod(*this); }
 };
 
-struct MongosDescription : public AbstractTopologyDescription {
+struct MongosDescription : public TopologyDescription {
     std::string mongosUri;
 
-    void accept(TopologyVisitor& v) { v.visitMongosDescription(*this); }
+    void accept(TopologyVisitor& v) { v.onMongos(*this); }
 };
 
-struct ReplSetDescription : public AbstractTopologyDescription {
+struct ReplSetDescription : public TopologyDescription {
     std::string primaryUri;
     bool configsvr = false;
     std::vector<MongodDescription> nodes;
 
     void accept(TopologyVisitor& v) { 
-        v.visitReplSetDescriptionPre(*this); 
+        v.onBeforeReplSet(*this); 
         for (int i = 0; i < nodes.size() - 1; i++) {
             nodes[i].accept(v);
-            v.visitMongodDescriptionBetween(*this);
+            v.onBetweenMongods(*this);
         }
         nodes[nodes.size() - 1].accept(v);
-        v.visitReplSetDescriptionPost(*this); 
+        v.onAfterReplSet(*this); 
     }
 };
 
-struct ShardedDescription : public AbstractTopologyDescription {
+struct ShardedDescription : public TopologyDescription {
     ReplSetDescription configsvr;
     std::vector<ReplSetDescription> shards;
     std::vector<MongosDescription> mongoses;
 
     void accept(TopologyVisitor& v) { 
-        v.visitShardedDescriptionPre(*this); 
+        v.onBeforeSharded(*this); 
         configsvr.accept(v);
 
-        v.visitShardsPre(*this); 
+        v.onBeforeShards(*this); 
         for (int i = 0; i < shards.size() - 1; i++) {
             shards[i].accept(v);
-            v.visitShardsBetween(*this);
+            v.onBetweenShards(*this);
         }
         shards[shards.size() - 1].accept(v);
-        v.visitShardsPost(*this); 
+        v.onAfterShards(*this); 
 
-        v.visitMongosesPre(*this);
+        v.onBeforeMongoses(*this);
         for (int i = 0; i < mongoses.size() - 1; i++) {
             mongoses[i].accept(v);
-            v.visitMongosesBetween(*this);
+            v.onBetweenMongoses(*this);
         }
         mongoses[mongoses.size() - 1].accept(v);
-        v.visitMongosesPost(*this);
+        v.onAfterMongoses(*this);
 
-        v.visitShardedDescriptionPost(*this); 
+        v.onAfterSharded(*this); 
     }
 };
 
@@ -156,9 +156,9 @@ public:
      */
     void accept(TopologyVisitor& v) { 
         if (_topology) {
-            v.visitTopLevelPre(*_topology);
+            v.onBeforeTopology(*_topology);
             _topology->accept(v); 
-            v.visitTopLevelPost(*_topology);
+            v.onAfterTopology(*_topology);
         }
     }
 
@@ -172,40 +172,40 @@ private:
     std::string nameToUri(const std::string& name);
     void getDataMemberConnectionStrings(DBConnection& connection);
     void findConnectedNodesViaMongos(DBConnection& connection);
-    std::unique_ptr<AbstractTopologyDescription> _topology = nullptr;
+    std::unique_ptr<TopologyDescription> _topology = nullptr;
 };
 
 class ToJsonVisitor : public TopologyVisitor {
 public:
-    void visitTopLevelPre(const AbstractTopologyDescription&) {
+    void onBeforeTopology(const TopologyDescription&) {
         result.str("");
         result.clear();
     }
 
-    void visitMongodDescription(const MongodDescription& desc) { result << "{mongodUri: " << desc.mongodUri << "}"; }
-    void visitMongodDescriptionBetween(const ReplSetDescription& desc) { result << ", "; }
+    void onMongod(const MongodDescription& desc) { result << "{mongodUri: " << desc.mongodUri << "}"; }
+    void onBetweenMongods(const ReplSetDescription& desc) { result << ", "; }
 
-    void visitMongosDescription(const MongosDescription& desc) { result << "{mongosUri: " << desc.mongosUri << "}"; }
-    void visitMongosDescriptionBetween(const ReplSetDescription& desc) { result << ", "; }
+    void onMongos(const MongosDescription& desc) { result << "{mongosUri: " << desc.mongosUri << "}"; }
+    void onBetweenMongoses(const ReplSetDescription& desc) { result << ", "; }
 
-    void visitReplSetDescriptionPre(const ReplSetDescription& desc) {
+    void onBeforeReplSet(const ReplSetDescription& desc) {
         if (desc.configsvr) {
             result << "configsvr: ";
         }
         result << "{primaryUri: " << desc.primaryUri << ", nodes: [";
     }
-    void visitReplSetDescriptionPost(const ReplSetDescription& desc) { result << "]}"; }
+    void onAfterReplSet(const ReplSetDescription& desc) { result << "]}"; }
 
-    void visitShardedDescriptionPre(const ShardedDescription&) { result << "{"; }
-    void visitShardedDescriptionPost(const ShardedDescription&) { result << "}"; }
+    void onBeforeSharded(const ShardedDescription&) { result << "{"; }
+    void onAfterSharded(const ShardedDescription&) { result << "}"; }
 
-    void visitShardsPre(const ShardedDescription&) { result << " shards: ["; }
-    void visitShardsBetween(const ShardedDescription&) { result << ", "; }
-    void visitShardsPost(const ShardedDescription&) { result << "], "; }
+    void onBeforeShards(const ShardedDescription&) { result << " shards: ["; }
+    void onBetweenShards(const ShardedDescription&) { result << ", "; }
+    void onAfterShards(const ShardedDescription&) { result << "], "; }
 
-    void visitMongosesPre(const ShardedDescription&) { result << " mongoses: ["; }
-    void visitMongosesBetween(const ShardedDescription&) { result << ", "; }
-    void visitMongosesPost(const ShardedDescription&) { result << "]"; }
+    void onBeforeMongoses(const ShardedDescription&) { result << " mongoses: ["; }
+    void onBetweenMongoses(const ShardedDescription&) { result << ", "; }
+    void onAfterMongoses(const ShardedDescription&) { result << "]"; }
 
     std::string str() { return result.str(); }
 
