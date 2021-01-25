@@ -22,7 +22,7 @@
 #include <sstream>
 
 #include <gennylib/v1/PoolFactory.hpp>
-#include <gennylib/service.hpp>
+#include <gennylib/Connection.hpp>
 
 namespace genny {
 
@@ -143,12 +143,12 @@ struct ShardedDescription : public AbstractTopologyDescription {
 class Topology {
 public:
     Topology(mongocxx::client& client) : _factory{client.uri().to_string()} {
-        MongoService service(client.uri().to_string());
-        update(service);
+        MongoConnection connection(client.uri().to_string());
+        update(connection);
     }
 
-    Topology(DBService& service) : _factory{service.uri()} {
-        update(service);
+    Topology(DBConnection& connection) : _factory{connection.uri()} {
+        update(connection);
     }
 
     /**
@@ -165,13 +165,13 @@ public:
     /**
      * Update the Topology's view of the cluster.
      */
-    void update(DBService& service);
+    void update(DBConnection& connection);
 
 private:
     v1::PoolFactory _factory;
     std::string nameToUri(const std::string& name);
-    void getDataMemberConnectionStrings(DBService& service);
-    void findConnectedNodesViaMongos(DBService& service);
+    void getDataMemberConnectionStrings(DBConnection& connection);
+    void findConnectedNodesViaMongos(DBConnection& connection);
     std::unique_ptr<AbstractTopologyDescription> _topology = nullptr;
 };
 

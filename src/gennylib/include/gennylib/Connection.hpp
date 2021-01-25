@@ -22,14 +22,14 @@
 
 namespace genny {
 
-using ServiceUri = std::string;
+using ConnectionUri = std::string;
 
 /**
  * Abstraction over DB client access.
  */
-class DBService {
+class DBConnection{
 public:
-    virtual ServiceUri uri() = 0;
+    virtual ConnectionUri uri() = 0;
 
     virtual bsoncxx::document::value runAdminCommand(std::string command) = 0;
 
@@ -37,17 +37,17 @@ public:
      * Factory method that returns a peer service of the same concrete type
      * connected to the given uri.
      */
-    virtual std::unique_ptr<DBService> makePeer(ServiceUri uri) = 0;
+    virtual std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) = 0;
 
-    virtual ~DBService() = 0;
+    virtual ~DBConnection() = 0;
 };
 
-class MongoService : public DBService {
+class MongoConnection : public DBConnection {
 public:
-    MongoService(ServiceUri uri);
-    ServiceUri uri();
+    MongoConnection(ConnectionUri uri);
+    ConnectionUri uri();
     bsoncxx::document::value runAdminCommand(std::string command);
-    std::unique_ptr<DBService> makePeer(ServiceUri uri);
+    std::unique_ptr<DBConnection> makePeer(ConnectionUri uri);
 
 private:
     mongocxx::client _client;

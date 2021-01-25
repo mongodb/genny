@@ -14,7 +14,7 @@
 
 #include <string>
 
-#include <gennylib/service.hpp>
+#include <gennylib/Connection.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/uri.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
@@ -22,13 +22,13 @@
 
 namespace genny {
 
-DBService::~DBService() {}
+DBConnection::~DBConnection() {}
 
-MongoService::MongoService(ServiceUri uri) : _client(mongocxx::uri(uri)) {}
+MongoConnection::MongoConnection(ConnectionUri uri) : _client(mongocxx::uri(uri)) {}
 
-ServiceUri MongoService::uri() { return _client.uri().to_string(); }
+ConnectionUri MongoConnection::uri() { return _client.uri().to_string(); }
 
-bsoncxx::document::value MongoService::runAdminCommand(std::string command) { 
+bsoncxx::document::value MongoConnection::runAdminCommand(std::string command) { 
     using bsoncxx::builder::basic::kvp;
     using bsoncxx::builder::basic::make_document;
 
@@ -36,8 +36,8 @@ bsoncxx::document::value MongoService::runAdminCommand(std::string command) {
     return admin.run_command(make_document(kvp(command, 1)));
 }
 
-std::unique_ptr<DBService> MongoService::makePeer(ServiceUri uri) {
-    return std::make_unique<MongoService>(uri);
+std::unique_ptr<DBConnection> MongoConnection::makePeer(ConnectionUri uri) {
+    return std::make_unique<MongoConnection>(uri);
 }
 
 } // namespace genny

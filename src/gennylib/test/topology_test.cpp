@@ -82,9 +82,9 @@ TEST_CASE("Topology maps the cluster correctly") {
     using bsoncxx::builder::stream::open_document;
 
     SECTION("Topology correctly maps a standalone") {
-        class MockStandaloneService : public DBService {
+        class MockStandaloneConnection : public DBConnection {
 
-            ServiceUri uri() { return "testUri"; }
+            ConnectionUri uri() { return "testUri"; }
 
             bsoncxx::document::value runAdminCommand(std::string command) {
                 if (command == "isMaster") {
@@ -94,12 +94,12 @@ TEST_CASE("Topology maps the cluster correctly") {
                 return document{} << "unplannedKey" << "unplannedValue" << finalize;
             }
 
-            std::unique_ptr<DBService> makePeer(ServiceUri uri) {
-                return std::make_unique<MockStandaloneService>();
+            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) {
+                return std::make_unique<MockStandaloneConnection>();
             }
         };
-        MockStandaloneService service;
-        Topology topology(service);
+        MockStandaloneConnection connection;
+        Topology topology(connection);
 
         ToJsonVisitor visitor;
         topology.accept(visitor);
@@ -108,9 +108,9 @@ TEST_CASE("Topology maps the cluster correctly") {
     }
 
     SECTION("Topology correctly maps a replica set") {
-        class MockReplService : public DBService {
+        class MockReplConnection : public DBConnection {
 
-            ServiceUri uri() { return "testPrimaryUriNeverUsedHere"; }
+            ConnectionUri uri() { return "testPrimaryUriNeverUsedHere"; }
 
             bsoncxx::document::value runAdminCommand(std::string command) {
                 if (command == "isMaster") {
@@ -126,12 +126,12 @@ TEST_CASE("Topology maps the cluster correctly") {
                 return document{} << "unplannedKey" << "unplannedValue" << finalize;
             }
 
-            std::unique_ptr<DBService> makePeer(ServiceUri uri) {
-                return std::make_unique<MockReplService>();
+            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) {
+                return std::make_unique<MockReplConnection>();
             }
         };
-        MockReplService service;
-        Topology topology(service);
+        MockReplConnection connection;
+        Topology topology(connection);
 
         ToJsonVisitor visitor;
         topology.accept(visitor);
@@ -146,9 +146,9 @@ TEST_CASE("Topology maps the cluster correctly") {
     }
 
     SECTION("Topology correctly maps a sharded cluster") {
-        class MockConfigService : public DBService {
+        class MockConfigConnection : public DBConnection {
 
-            ServiceUri uri() { return "testConfigUriNeverUsedHere"; }
+            ConnectionUri uri() { return "testConfigUriNeverUsedHere"; }
 
             bsoncxx::document::value runAdminCommand(std::string command) {
                 if (command == "isMaster") {
@@ -163,13 +163,13 @@ TEST_CASE("Topology maps the cluster correctly") {
                 return document{} << "unplannedKey" << "unplannedValue" << finalize;
             }
 
-            std::unique_ptr<DBService> makePeer(ServiceUri uri) {
-                return std::make_unique<MockConfigService>();
+            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) {
+                return std::make_unique<MockConfigConnection>();
             }
         };
-        class MockShardService : public DBService {
+        class MockShardConnection : public DBConnection {
 
-            ServiceUri uri() { return "testShardUriNeverUsedHere"; }
+            ConnectionUri uri() { return "testShardUriNeverUsedHere"; }
 
             bsoncxx::document::value runAdminCommand(std::string command) {
                 if (command == "isMaster") {
@@ -184,14 +184,14 @@ TEST_CASE("Topology maps the cluster correctly") {
                 return document{} << "unplannedKey" << "unplannedValue" << finalize;
             }
 
-            std::unique_ptr<DBService> makePeer(ServiceUri uri) {
-                return std::make_unique<MockConfigService>();
+            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) {
+                return std::make_unique<MockConfigConnection>();
             }
         };
 
-        class MockShardedClusterService : public DBService {
+        class MockShardedClusterConnection : public DBConnection {
 
-            ServiceUri uri() { return "mongodb://testMongosUri:11111/?appName=Genny"; }
+            ConnectionUri uri() { return "mongodb://testMongosUri:11111/?appName=Genny"; }
 
             bsoncxx::document::value runAdminCommand(std::string command) {
 
@@ -217,18 +217,18 @@ TEST_CASE("Topology maps the cluster correctly") {
                 return document{} << "unplannedKey" << "unplannedValue" << finalize;
             }
 
-            std::unique_ptr<DBService> makePeer(ServiceUri uri) {
+            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) {
                 if (uri == "mongodb://configHost:configPort/?appName=Genny") {
-                    return std::make_unique<MockConfigService>();
+                    return std::make_unique<MockConfigConnection>();
                 }
                 if (uri == "mongodb://shardNode1:shardPort1,shardNode2:shardPort2/?appName=Genny") {
-                    return std::make_unique<MockShardService>();
+                    return std::make_unique<MockShardConnection>();
                 }
-                return std::make_unique<MockShardedClusterService>();
+                return std::make_unique<MockShardedClusterConnection>();
             }
         };
-        MockShardedClusterService service;
-        Topology topology(service);
+        MockShardedClusterConnection connection;
+        Topology topology(connection);
 
         ToJsonVisitor visitor;
         topology.accept(visitor);

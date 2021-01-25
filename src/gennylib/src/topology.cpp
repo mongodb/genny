@@ -31,11 +31,11 @@ std::string Topology::nameToUri(const std::string& name) {
     return _factory.makeUri();
 }
 
-void Topology::getDataMemberConnectionStrings(DBService& service) {
-    auto res = service.runAdminCommand("isMaster");
+void Topology::getDataMemberConnectionStrings(DBConnection& connection) {
+    auto res = connection.runAdminCommand("isMaster");
     if (!res.view()["setName"]) {
         std::unique_ptr<MongodDescription> desc = std::make_unique<MongodDescription>();
-        desc->mongodUri = service.uri();
+        desc->mongodUri = connection.uri();
         this->_topology.reset(desc.release());
         return;
     }
@@ -70,7 +70,7 @@ void Topology::getDataMemberConnectionStrings(DBService& service) {
     this->_topology.reset(desc.release());
 }
 
-void Topology::findConnectedNodesViaMongos(DBService& service) {
+void Topology::findConnectedNodesViaMongos(DBConnection& connection) {
     class ReplSetRetriever : public TopologyVisitor {
     public:
         void visitReplSetDescriptionPre(const ReplSetDescription& desc) {
@@ -85,21 +85,21 @@ void Topology::findConnectedNodesViaMongos(DBService& service) {
     ReplSetRetriever retriever;
 
     // Config Server
-    auto shardMap = service.runAdminCommand("getShardMap");
+    auto shardMap = connection.runAdminCommand("getShardMap");
     std::string configServerConn(shardMap.view()["map"]["config"].get_utf8().value);
-    auto configService = service.makePeer(nameToUri(configServerConn));
-    Topology configTopology(*configService);
+    auto configConnection = connection.makePeer(nameToUri(configServerConn));
+    Topology configTopology(*configConnection);
     configTopology.accept(retriever);
     desc->configsvr = retriever.replSet;
     desc->configsvr.configsvr = true;
 
     // Shards
-    auto shardListRes = service.runAdminCommand("listShards");
+    auto shardListRes = connection.runAdminCommand("listShards");
     bsoncxx::array::view shards = shardListRes.view()["shards"].get_array();
     for (auto shard : shards) {
         std::string shardConn(shard["host"].get_utf8().value);
-        auto shardService = service.makePeer(nameToUri(shardConn));
-        Topology shardTopology(*shardService);
+        auto shardConnection = connection.makePeer(nameToUri(shardConn));
+        Topology shardTopology(*shardConnection);
         shardTopology.accept(retriever);
         desc->shards.push_back(retriever.replSet);
     }
@@ -115,19 +115,19 @@ void Topology::findConnectedNodesViaMongos(DBService& service) {
     this->_topology.reset(desc.release());
 }
 
-void Topology::update(DBService& service) {
+void Topology::update(DBConnection& connection) {
 
     bool isMongos = false;
-    auto res = service.runAdminCommand("isMaster");
+    auto res = connection.runAdminCommand("isMaster");
     auto msg = res.view()["msg"];
     if (msg && msg.type() == bsoncxx::type::k_utf8) {
         isMongos = msg.get_utf8().value == "isdbgrid";
     }
 
     if (isMongos) {
-        findConnectedNodesViaMongos(service);
+        findConnectedNodesViaMongos(connection);
     } else {
-        getDataMemberConnectionStrings(service);
+        getDataMemberConnectionStrings(connection);
     }
 
 }
