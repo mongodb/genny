@@ -71,13 +71,13 @@ public:
     virtual void onAfterMongoses(const ShardedDescription&) {}
     virtual void onBetweenMongoses(const ShardedDescription&) {}
 
-    virtual ~TopologyVisitor() {}
+    virtual ~TopologyVisitor() = 0;
 };
 
 // Be careful changing the traversal order of the cluster; visitors may depend on it.
 struct TopologyDescription {
     virtual void accept(TopologyVisitor&) = 0;
-    virtual ~TopologyDescription() {};
+    virtual ~TopologyDescription() = 0;
 };
 
 struct MongodDescription : public TopologyDescription {
@@ -170,47 +170,39 @@ public:
 private:
     v1::PoolFactory _factory;
     std::string nameToUri(const std::string& name);
-    void getDataMemberConnectionStrings(DBConnection& connection);
+    void computeDataMemberConnectionStrings(DBConnection& connection);
     void findConnectedNodesViaMongos(DBConnection& connection);
     std::unique_ptr<TopologyDescription> _topology = nullptr;
 };
 
 class ToJsonVisitor : public TopologyVisitor {
 public:
-    void onBeforeTopology(const TopologyDescription&) {
-        result.str("");
-        result.clear();
-    }
+    void onBeforeTopology(const TopologyDescription&);
 
-    void onMongod(const MongodDescription& desc) { result << "{mongodUri: " << desc.mongodUri << "}"; }
-    void onBetweenMongods(const ReplSetDescription& desc) { result << ", "; }
+    void onMongod(const MongodDescription& desc);
+    void onBetweenMongods(const ReplSetDescription& desc);
 
-    void onMongos(const MongosDescription& desc) { result << "{mongosUri: " << desc.mongosUri << "}"; }
-    void onBetweenMongoses(const ReplSetDescription& desc) { result << ", "; }
+    void onMongos(const MongosDescription& desc);
+    void onBetweenMongoses(const ReplSetDescription& desc);
 
-    void onBeforeReplSet(const ReplSetDescription& desc) {
-        if (desc.configsvr) {
-            result << "configsvr: ";
-        }
-        result << "{primaryUri: " << desc.primaryUri << ", nodes: [";
-    }
-    void onAfterReplSet(const ReplSetDescription& desc) { result << "]}"; }
+    void onBeforeReplSet(const ReplSetDescription& desc);
+    void onAfterReplSet(const ReplSetDescription& desc);
 
-    void onBeforeSharded(const ShardedDescription&) { result << "{"; }
-    void onAfterSharded(const ShardedDescription&) { result << "}"; }
+    void onBeforeSharded(const ShardedDescription&);
+    void onAfterSharded(const ShardedDescription&);
 
-    void onBeforeShards(const ShardedDescription&) { result << " shards: ["; }
-    void onBetweenShards(const ShardedDescription&) { result << ", "; }
-    void onAfterShards(const ShardedDescription&) { result << "], "; }
+    void onBeforeShards(const ShardedDescription&);
+    void onBetweenShards(const ShardedDescription&);
+    void onAfterShards(const ShardedDescription&);
 
-    void onBeforeMongoses(const ShardedDescription&) { result << " mongoses: ["; }
-    void onBetweenMongoses(const ShardedDescription&) { result << ", "; }
-    void onAfterMongoses(const ShardedDescription&) { result << "]"; }
+    void onBeforeMongoses(const ShardedDescription&);
+    void onBetweenMongoses(const ShardedDescription&);
+    void onAfterMongoses(const ShardedDescription&);
 
-    std::string str() { return result.str(); }
+    std::string str();
 
 private:
-    std::stringstream result;
+    std::stringstream _result;
 };
 
 

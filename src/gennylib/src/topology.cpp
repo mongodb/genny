@@ -22,6 +22,10 @@
 
 namespace genny {
 
+TopologyVisitor::~TopologyVisitor() {}
+
+TopologyDescription::~TopologyDescription() {}
+
 std::string Topology::nameToUri(const std::string& name) {
     std::set<std::string> nameSet;
     // Hostnames returned from some commands have the form configRepl/hostname:port
@@ -31,7 +35,7 @@ std::string Topology::nameToUri(const std::string& name) {
     return _factory.makeUri();
 }
 
-void Topology::getDataMemberConnectionStrings(DBConnection& connection) {
+void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
     auto res = connection.runAdminCommand("isMaster");
     if (!res.view()["setName"]) {
         std::unique_ptr<MongodDescription> desc = std::make_unique<MongodDescription>();
@@ -127,9 +131,42 @@ void Topology::update(DBConnection& connection) {
     if (isMongos) {
         findConnectedNodesViaMongos(connection);
     } else {
-        getDataMemberConnectionStrings(connection);
+        computeDataMemberConnectionStrings(connection);
     }
 
 }
+
+void ToJsonVisitor::onBeforeTopology(const TopologyDescription&) {
+    _result.str("");
+    _result.clear();
+}
+
+void ToJsonVisitor::onMongod(const MongodDescription& desc) { _result << "{mongodUri: " << desc.mongodUri << "}"; }
+void ToJsonVisitor::onBetweenMongods(const ReplSetDescription& desc) { _result << ", "; }
+
+void ToJsonVisitor::onMongos(const MongosDescription& desc) { _result << "{mongosUri: " << desc.mongosUri << "}"; }
+void ToJsonVisitor::onBetweenMongoses(const ReplSetDescription& desc) { _result << ", "; }
+
+void ToJsonVisitor::onBeforeReplSet(const ReplSetDescription& desc) {
+    if (desc.configsvr) {
+        _result << "configsvr: ";
+    }
+    _result << "{primaryUri: " << desc.primaryUri << ", nodes: [";
+}
+void ToJsonVisitor::onAfterReplSet(const ReplSetDescription& desc) { _result << "]}"; }
+
+void ToJsonVisitor::onBeforeSharded(const ShardedDescription&) { _result << "{"; }
+void ToJsonVisitor::onAfterSharded(const ShardedDescription&) { _result << "}"; }
+
+void ToJsonVisitor::onBeforeShards(const ShardedDescription&) { _result << " shards: ["; }
+void ToJsonVisitor::onBetweenShards(const ShardedDescription&) { _result << ", "; }
+void ToJsonVisitor::onAfterShards(const ShardedDescription&) { _result << "], "; }
+
+void ToJsonVisitor::onBeforeMongoses(const ShardedDescription&) { _result << " mongoses: ["; }
+void ToJsonVisitor::onBetweenMongoses(const ShardedDescription&) { _result << ", "; }
+void ToJsonVisitor::onAfterMongoses(const ShardedDescription&) { _result << "]"; }
+
+std::string ToJsonVisitor::str() { return _result.str(); }
+
 
 }  // namespace genny
