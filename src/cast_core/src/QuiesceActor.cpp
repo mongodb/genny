@@ -33,15 +33,7 @@
 namespace genny::actor {
 
 struct QuiesceActor::PhaseConfig {
-    PhaseConfig(PhaseContext& context) {
-        auto actorDb = context.actor()["Database"].maybe<std::string>();
-        if (!actorDb) {
-            BOOST_THROW_EXCEPTION(
-                InvalidConfigurationException("Must give Database in Actor block."));
-        }
-        dbName = *actorDb;
-    }
-
+    PhaseConfig(PhaseContext& context) : dbName{context.actor()["Database"].to<std::string>()} {}
     std::string dbName;
 };
 
