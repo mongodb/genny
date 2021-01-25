@@ -37,7 +37,6 @@ struct QuiesceActor::PhaseConfig {
     std::string dbName;
 };
 
-
 void QuiesceActor::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
