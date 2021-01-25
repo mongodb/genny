@@ -18,9 +18,7 @@
 #include <string>
 
 #include <mongocxx/client.hpp>
-#include <mongocxx/uri.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
-#include <bsoncxx/builder/basic/kvp.hpp>
 
 namespace genny {
 
@@ -41,26 +39,15 @@ public:
      */
     virtual std::unique_ptr<DBService> makePeer(ServiceUri uri) = 0;
 
-    virtual ~DBService() {};
+    virtual ~DBService() = 0;
 };
 
 class MongoService : public DBService {
 public:
-    MongoService(ServiceUri uri) : _client(mongocxx::uri(uri)) {}
-
-    ServiceUri uri() { return _client.uri().to_string(); }
-
-    bsoncxx::document::value runAdminCommand(std::string command) { 
-        using bsoncxx::builder::basic::kvp;
-        using bsoncxx::builder::basic::make_document;
-
-        auto admin = _client.database("admin");
-        return admin.run_command(make_document(kvp(command, 1)));
-    }
-
-    std::unique_ptr<DBService> makePeer(ServiceUri uri) {
-        return std::make_unique<MongoService>(uri);
-    }
+    MongoService(ServiceUri uri);
+    ServiceUri uri();
+    bsoncxx::document::value runAdminCommand(std::string command);
+    std::unique_ptr<DBService> makePeer(ServiceUri uri);
 
 private:
     mongocxx::client _client;
