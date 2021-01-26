@@ -40,7 +40,7 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
     if (!res.view()["setName"]) {
         std::unique_ptr<MongodDescription> desc = std::make_unique<MongodDescription>();
         desc->mongodUri = connection.uri();
-        this->_topology.reset(desc.release());
+        this->_topologyDesc.reset(desc.release());
         return;
     }
 
@@ -71,7 +71,7 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
         }
     }
 
-    this->_topology.reset(desc.release());
+    this->_topologyDesc.reset(desc.release());
 }
 
 void Topology::findConnectedNodesViaMongos(DBConnection& connection) {
@@ -116,7 +116,7 @@ void Topology::findConnectedNodesViaMongos(DBConnection& connection) {
         desc->mongoses.push_back(mongosDesc);
     }
 
-    this->_topology.reset(desc.release());
+    this->_topologyDesc.reset(desc.release());
 }
 
 void Topology::update(DBConnection& connection) {

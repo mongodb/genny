@@ -155,10 +155,10 @@ public:
      * Traverse the cluster, using the visitor to act on it.
      */
     void accept(TopologyVisitor& v) { 
-        if (_topology) {
-            v.onBeforeTopology(*_topology);
-            _topology->accept(v); 
-            v.onAfterTopology(*_topology);
+        if (_topologyDesc) {
+            v.onBeforeTopology(*_topologyDesc);
+            _topologyDesc->accept(v); 
+            v.onAfterTopology(*_topologyDesc);
         }
     }
 
@@ -172,7 +172,7 @@ private:
     std::string nameToUri(const std::string& name);
     void computeDataMemberConnectionStrings(DBConnection& connection);
     void findConnectedNodesViaMongos(DBConnection& connection);
-    std::unique_ptr<TopologyDescription> _topology = nullptr;
+    std::unique_ptr<TopologyDescription> _topologyDesc = nullptr;
 };
 
 class ToJsonVisitor : public TopologyVisitor {
