@@ -14,6 +14,8 @@
 
 #include <string_view>
 #include <thread>
+#include <mutex>
+#include <atomic>
 
 #include <mongocxx/uri.hpp>
 #include <mongocxx/client.hpp>
@@ -122,17 +124,24 @@ bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client, std::string
     return true;
 }
 
-/*
- * Helper function to quiesce the system and reduce noise.
- * The appropriate actions will be taken whether the target
- * is a standalone, replica set, or sharded cluster.
- */
+// Only one thread needs to actually do the quiesce.
 bool quiesce(mongocxx::pool::entry& client, std::string dbName) {
-    Topology topology(*client);
-    bool waitOplogSuccess = waitOplog(topology);
-    doFsync(topology);
-    bool checkDroppedCollectionSuccess = checkForDroppedCollectionsTestDB(client, dbName);
-    return waitOplogSuccess && checkDroppedCollectionSuccess;
+    static std::mutex quiesceLock;
+    static std::atomic_bool success;
+
+    if (quiesceLock.try_lock()) {
+        Topology topology(*client);
+        bool waitOplogSuccess = waitOplog(topology);
+        doFsync(topology);
+        bool checkDroppedCollectionSuccess = checkForDroppedCollectionsTestDB(client, dbName);
+        success = waitOplogSuccess && checkDroppedCollectionSuccess;
+        quiesceLock.unlock();
+    } else {
+        quiesceLock.lock();
+        quiesceLock.unlock();
+    }
+
+    return success;
 }
 
 } // namespace genny
