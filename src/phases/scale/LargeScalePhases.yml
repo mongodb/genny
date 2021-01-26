@@ -55,7 +55,7 @@ LongLivedCreatorCmd:
   DocumentCount: *DocumentCountParam
   BatchSize: 1000
   Document:
-    # Each document ranges in size from about 90 to 150 bytes (average 120)
+    # Each document ranges in size from about 2000 to 8000 bytes (average 5000)
     x0: *rand_10k_int
     x1: *rand_4b_int
     x2: *rand_4b_int
@@ -65,7 +65,7 @@ LongLivedCreatorCmd:
     x6: *rand_4b_int
     x7: *rand_4b_int
     x8: *rand_4b_int
-    s0: {^RandomString: {length: {^RandomInt: {min: 20, max: 80}}}}
+    s0: {^RandomString: {length: {^RandomInt: {min: 2000, max: 8000}}}}
   Indexes:
   - keys: {x0: 1}
   - keys: {x1: 1}
@@ -237,9 +237,9 @@ SnapshotScanner5GigabytesCmd:
   GlobalRate: 1 per 5 minutes
 
 # Leave out the ScanDuration since we'll be supplying the ScanRateMegaBytes option.
-SnapshotScanner5GigabytesFixedRateCmd:
+SnapshotScanner10GigabytesFixedRateCmd:
   Duration: *Duration
-  ScanSizeBytes: 500000000
+  ScanSizeBytes: 10000000000
   ScanType: snapshot
   CollectionSkip: 300
   CollectionSortOrder: forward
