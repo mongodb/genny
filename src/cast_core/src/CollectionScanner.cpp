@@ -107,6 +107,8 @@ struct CollectionScanner::PhaseConfig {
         } else if (scanTypeString == "snapshot") {
             transactionOptions = mongocxx::options::transaction{};
             auto readConcern = mongocxx::read_concern{};
+            // The read concern must be "snapshot" to prevent mongod from yielding and breaking the
+            // transaction into multiple shorter ones.
             readConcern.acknowledge_level(mongocxx::read_concern::level::k_snapshot);
             transactionOptions->read_concern(readConcern);
             scanType = ScanType::kSnapshot;
