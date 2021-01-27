@@ -33,6 +33,7 @@ def cmake(context, toolchain_dir, env, cmdline_cmake_args):
     cmake_cmd += [
         "-DCMAKE_PREFIX_PATH={}".format(cmake_prefix_path),
         "-DCMAKE_TOOLCHAIN_FILE={}".format(cmake_toolchain_file),
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
         "-DVCPKG_TARGET_TRIPLET=x64-{}-static".format(context.TRIPLET_OS),
     ]
 
