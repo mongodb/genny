@@ -119,4 +119,6 @@ class CuratorDownloader(Downloader):
 
     def _check_curator_version(self):
         res = run_command(cmd=["./curator", "-v"], cwd=self.result_dir)
-        return res[0] == CuratorDownloader.CURATOR_VERSION
+        installed_version = res[0].strip()
+        wanted_version = CuratorDownloader.CURATOR_VERSION
+        return installed_version == wanted_version
