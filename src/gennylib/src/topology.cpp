@@ -26,6 +26,45 @@ TopologyVisitor::~TopologyVisitor() {}
 
 TopologyDescription::~TopologyDescription() {}
 
+void MongodDescription::accept(TopologyVisitor& v) { 
+    v.onMongod(*this);
+}
+
+void MongosDescription::accept(TopologyVisitor& v) { v.onMongos(*this); }
+
+void ReplSetDescription::accept(TopologyVisitor& v) { 
+    v.onBeforeReplSet(*this); 
+    for (int i = 0; i < nodes.size() - 1; i++) {
+        nodes[i].accept(v);
+        v.onBetweenMongods(*this);
+    }
+    nodes[nodes.size() - 1].accept(v);
+    v.onAfterReplSet(*this); 
+}
+
+void ShardedDescription::accept(TopologyVisitor& v) { 
+    v.onBeforeSharded(*this); 
+    configsvr.accept(v);
+
+    v.onBeforeShards(*this); 
+    for (int i = 0; i < shards.size() - 1; i++) {
+        shards[i].accept(v);
+        v.onBetweenShards(*this);
+    }
+    shards[shards.size() - 1].accept(v);
+    v.onAfterShards(*this); 
+
+    v.onBeforeMongoses(*this);
+    for (int i = 0; i < mongoses.size() - 1; i++) {
+        mongoses[i].accept(v);
+        v.onBetweenMongoses(*this);
+    }
+    mongoses[mongoses.size() - 1].accept(v);
+    v.onAfterMongoses(*this);
+
+    v.onAfterSharded(*this); 
+}
+
 std::string Topology::nameToUri(const std::string& name) {
     std::set<std::string> nameSet;
     // Hostnames returned from some commands have the form configRepl/hostname:port
@@ -34,6 +73,14 @@ std::string Topology::nameToUri(const std::string& name) {
     _factory.overrideHosts(nameSet);
     return _factory.makeUri();
 }
+
+void Topology::accept(TopologyVisitor& v) { 
+        if (_topologyDesc) {
+            v.onBeforeTopology(*_topologyDesc);
+            _topologyDesc->accept(v); 
+            v.onAfterTopology(*_topologyDesc);
+        }
+    }
 
 void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
     auto res = connection.runAdminCommand("isMaster");

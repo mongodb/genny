@@ -83,13 +83,13 @@ struct TopologyDescription {
 struct MongodDescription : public TopologyDescription {
     std::string mongodUri;
 
-    void accept(TopologyVisitor& v) { v.onMongod(*this); }
+    void accept(TopologyVisitor& v);
 };
 
 struct MongosDescription : public TopologyDescription {
     std::string mongosUri;
 
-    void accept(TopologyVisitor& v) { v.onMongos(*this); }
+    void accept(TopologyVisitor& v);
 };
 
 struct ReplSetDescription : public TopologyDescription {
@@ -97,15 +97,7 @@ struct ReplSetDescription : public TopologyDescription {
     bool configsvr = false;
     std::vector<MongodDescription> nodes;
 
-    void accept(TopologyVisitor& v) { 
-        v.onBeforeReplSet(*this); 
-        for (int i = 0; i < nodes.size() - 1; i++) {
-            nodes[i].accept(v);
-            v.onBetweenMongods(*this);
-        }
-        nodes[nodes.size() - 1].accept(v);
-        v.onAfterReplSet(*this); 
-    }
+    void accept(TopologyVisitor& v);
 };
 
 struct ShardedDescription : public TopologyDescription {
@@ -113,28 +105,7 @@ struct ShardedDescription : public TopologyDescription {
     std::vector<ReplSetDescription> shards;
     std::vector<MongosDescription> mongoses;
 
-    void accept(TopologyVisitor& v) { 
-        v.onBeforeSharded(*this); 
-        configsvr.accept(v);
-
-        v.onBeforeShards(*this); 
-        for (int i = 0; i < shards.size() - 1; i++) {
-            shards[i].accept(v);
-            v.onBetweenShards(*this);
-        }
-        shards[shards.size() - 1].accept(v);
-        v.onAfterShards(*this); 
-
-        v.onBeforeMongoses(*this);
-        for (int i = 0; i < mongoses.size() - 1; i++) {
-            mongoses[i].accept(v);
-            v.onBetweenMongoses(*this);
-        }
-        mongoses[mongoses.size() - 1].accept(v);
-        v.onAfterMongoses(*this);
-
-        v.onAfterSharded(*this); 
-    }
+    void accept(TopologyVisitor& v);
 };
 
 /**
@@ -154,13 +125,7 @@ public:
     /**
      * Traverse the cluster, using the visitor to act on it.
      */
-    void accept(TopologyVisitor& v) { 
-        if (_topologyDesc) {
-            v.onBeforeTopology(*_topologyDesc);
-            _topologyDesc->accept(v); 
-            v.onAfterTopology(*_topologyDesc);
-        }
-    }
+    void accept(TopologyVisitor& v);
 
     /**
      * Update the Topology's view of the cluster.
