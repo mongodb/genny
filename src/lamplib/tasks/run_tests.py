@@ -4,6 +4,7 @@ import structlog
 import os
 import shutil
 
+import cmd_runner
 from cmd_runner import run_command
 
 SLOG = structlog.get_logger(__name__)
@@ -31,7 +32,8 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
     # This can only be imported after the setup script has installed gennylib.
     from curator import poplar_grpc
 
-    sentinel_file = os.path.join(os.getcwd(), "build", "JUnitXML", "sentinel.junit.xml")
+    sentinel_file = os.path.join(os.getcwd(), "build", "XUnitXML", "sentinel.junit.xml")
+    os.makedirs(name=os.path.dirname(sentinel_file), exist_ok=True)
 
     with open(sentinel_file, "w") as f:
         f.write(_sentinel_report)
@@ -89,7 +91,7 @@ def benchmark_test(
 def _check_create_new_actor_test_report():
     passed = False
 
-    report_file = os.path.join(os.getcwd(), "build", "JUnitXML", "create_new_actor_test.junit.xml")
+    report_file = os.path.join(os.getcwd(), "build", "XUnitXML", "create_new_actor_test.junit.xml")
 
     if not os.path.isfile(report_file):
         SLOG.error("Failed to find report file", report_file=report_file)
@@ -114,18 +116,7 @@ def _check_create_new_actor_test_report():
     return passed
 
 
-def resmoke_test(
-    genny_repo_root: str, suites: str, is_cnats: bool, mongo_dir: str, env: dict,
-):
-    if (not suites) and (not is_cnats):
-        raise ValueError('Must specify either "--suites" or "--create-new-actor-test-suite"')
-
-    if is_cnats:
-        suites = os.path.join(genny_repo_root, "src", "resmokeconfig", "genny_create_new_actor.yml")
-        checker_func = lambda: _check_create_new_actor_test_report(genny_repo_root)
-    else:
-        checker_func = None
-
+def _setup_resmoke(genny_repo_root: str, mongo_dir: str):
     if mongo_dir is not None:
         mongo_repo_path = mongo_dir
     else:
@@ -146,8 +137,6 @@ def resmoke_test(
         run_command(
             cmd=["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path], capture=False
         )
-
-        # See comment in evergreen.yml - mongodb_archive_url
         run_command(
             cmd=["git", "checkout", "298d4d6bbb9980b74bded06241067fe6771bef68"],
             cwd=mongo_repo_path,
@@ -158,6 +147,48 @@ def resmoke_test(
         run_command(
             cmd=["git", "rev-parse", "HEAD"], cwd=mongo_repo_path, capture=False,
         )
+
+    # Look for mongod in
+    # build/opt/mongo/db/mongod
+    # build/install/bin/mongod
+    opt = os.path.join(mongo_repo_path, "build", "opt", "mongo", "db", "mongod")
+    install = os.path.join(mongo_repo_path, "build", "install", "bin", "mongod")
+    from_tarball = os.path.join(mongo_repo_path, "bin", "mongod")
+    if os.path.exists(opt):
+        mongod = opt
+    elif os.path.exists(install):
+        mongod = install
+    elif os.path.exists(from_tarball):
+        mongod = from_tarball
+    else:
+        mongod = None
+
+    # TODO: assert distro is amazon2
+
+    # Latest successful build from master as of 2020-10-01 on "Amazon Linux 2" compile task "Binaries" file
+    # Should match the same "git checkout" rev above.
+    # TODO: amazon2
+    # mongodb_archive_url = "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/amazon2/298d4d6bbb9980b74bded06241067fe6771bef68/binaries/mongo-mongodb_mongo_master_amazon2_298d4d6bbb9980b74bded06241067fe6771bef68_20_10_22_00_55_19.tgz"
+    # Darwin:
+    mongodb_archive_url = "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/macos/298d4d6bbb9980b74bded06241067fe6771bef68/binaries/mongo-mongodb_mongo_master_macos_298d4d6bbb9980b74bded06241067fe6771bef68_20_10_22_00_55_19.tgz"
+    if mongod is None:
+        SLOG.info(
+            "Couldn't find pre-build monogod. Fetching and installing.",
+            looked_at=(opt, install, from_tarball),
+            fetching=mongodb_archive_url,
+        )
+        cmd_runner.run_command(
+            cmd=["curl", "-LSs", mongodb_archive_url, "-o", "mongodb.tgz"],
+            cwd=mongo_repo_path,
+            capture=False,
+        )
+        cmd_runner.run_command(
+            cmd=["tar", "--strip-components=1", "-zxf", "mongodb.tgz"],
+            cwd=mongo_repo_path,
+            capture=False,
+        )
+        mongod = from_tarball
+    bin_dir = os.path.dirname(mongod)
 
     # Setup resmoke venv unless exists
     resmoke_setup_sentinel = os.path.join(resmoke_venv, "setup-done")
@@ -172,6 +203,27 @@ def resmoke_test(
         run_command(cmd=cmd, capture=False)
         open(resmoke_setup_sentinel, "w")
 
+    return resmoke_python, mongo_repo_path, bin_dir
+
+
+def resmoke_test(
+    genny_repo_root: str, suites: str, is_cnats: bool, mongo_dir: str, env: dict,
+):
+    if (not suites) and (not is_cnats):
+        raise ValueError('Must specify either "--suites" or "--create-new-actor-test-suite"')
+
+    if is_cnats:
+        suites = os.path.join(genny_repo_root, "src", "resmokeconfig", "genny_create_new_actor.yml")
+        checker_func = lambda: _check_create_new_actor_test_report(genny_repo_root)
+    else:
+        checker_func = None
+
+    resmoke_python, mongo_repo_path, bin_dir = _setup_resmoke(genny_repo_root, mongo_dir)
+
+    mongod = os.path.join(bin_dir, "mongod")
+    mongo = os.path.join(bin_dir, "mongo")
+    mongos = os.path.join(bin_dir, "mongos")
+
     cmd = [
         resmoke_python,
         os.path.join(mongo_repo_path, "buildscripts", "resmoke.py"),
@@ -181,11 +233,11 @@ def resmoke_test(
         "--configDir",
         os.path.join(mongo_repo_path, "buildscripts", "resmokeconfig"),
         "--mongod",
-        "mongod",
+        mongod,
         "--mongo",
-        "mongo",
+        mongo,
         "--mongos",
-        "mongos",
+        mongos,
     ]
 
     _run_command_with_sentinel_report(
