@@ -54,13 +54,8 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
 
 
 def cmake_test(
-    build_system: str,
-    os_family: str,
-    linux_distro: str,
-    ignore_toolchain_version: bool,
-    genny_repo_root: str,
+    genny_repo_root: str, env: dict,
 ):
-    toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
     workdir = os.path.join(genny_repo_root, "build")
 
     ctest_cmd = [
@@ -71,28 +66,19 @@ def cmake_test(
     ]
 
     _run_command_with_sentinel_report(
-        lambda: run_command(
-            cmd=ctest_cmd, cwd=workdir, env=toolchain_info["toolchain_env"], capture=False
-        )
+        lambda: run_command(cmd=ctest_cmd, cwd=workdir, env=env, capture=False)
     )
 
 
 def benchmark_test(
-    build_system: str,
-    os_family: str,
-    linux_distro: str,
-    ignore_toolchain_version: bool,
-    genny_repo_root: str,
+    genny_repo_root: str, env: dict,
 ):
-    toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
     workdir = os.path.join(genny_repo_root, "build")
 
     ctest_cmd = ["ctest", "--label-regex", "(benchmark)"]
 
     _run_command_with_sentinel_report(
-        lambda: run_command(
-            cmd=ctest_cmd, cwd=workdir, env=toolchain_info["toolchain_env"], capture=False
-        )
+        lambda: run_command(cmd=ctest_cmd, cwd=workdir, env=env, capture=False)
     )
 
 

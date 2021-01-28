@@ -12,74 +12,76 @@ import curator
 from cmd_runner import run_command
 
 SLOG = structlog.get_logger(__name__)
-
-# Heavy inspiration from here: https://github.com/pallets/click/issues/108
-
-_build_system_options = [
-    # Python can't natively check the distros of our supported platforms.
-    # See https://bugs.python.org/issue18872 for more info.
-    click.option(
-        "-d",
-        "--linux-distro",
-        required=False,
-        default="not-linux",
-        type=click.Choice(
-            ["ubuntu1804", "archlinux", "rhel8", "rhel70", "rhel62", "amazon2", "not-linux"]
-        ),
-        help=(
-            "Specify the linux distro you're on; if your system isn't available,"
-            " please contact us at #workload-generation. The not-linux value is useful on macOS."
-        ),
-    ),
-    click.option(
-        "-i",
-        "--ignore-toolchain-version",
-        is_flag=True,
-        help="Ignore the toolchain version. " "This is useful for testing toolchain changes.",
-    ),
-    click.option(
-        "-b",
-        "--build-system",
-        type=click.Choice(["make", "ninja"]),
-        default="ninja",
-        help="Which build-system to use for compilation. May need to use make for IDEs.",
-    ),
-    click.option(
-        "-s",
-        "--sanitizer",
-        type=click.Choice(["asan", "tsan", "ubsan"]),
-        help=(
-            "Compile with sanitizers enabled. "
-            "This is only useful on the 'compile' task "
-            "or when compiling for the first time."
-        ),
-    ),
-    click.option(
-        "-f",
-        "--os-family",
-        default=platform.system(),
-        help=(
-            "Override the value of Python's platform.system() "
-            "when determining which version of the genny toolchain "
-            "and curator to download. "
-            "This is useful for testing toolchain changes."
-        ),
-    ),
-    click.argument("cmake_args", nargs=-1),
-]
-
-
-def build_system_options(func):
-    for option in reversed(_build_system_options):
-        func = option(func)
-    return func
-
-
 # If ctx.obj interactions become any more complicated, please refactor to a Context objects
 # that can be constructed from kwargs and can handle its own saving/cleaning, etc.
 
 
-def setup(
+@click.group(name="Genny", context_settings=dict(help_option_names=["-h", "--help"]))
+@click.option("-v", "--verbose", default=False, is_flag=True, help="Enable verbose output/logging.")
+@click.pass_context
+def cli(ctx: click.Context, verbose: bool) -> None:
+    # Ensure that ctx.obj exists and is a dict.
+    ctx.ensure_object(dict)
+
+    ctx.obj["VERBOSE"] = verbose
+    loggers.setup_logging(verbose)
+
+    # TODO: barf if not set or not exists.
+    ctx.obj["GENNY_REPO_ROOT"] = os.environ["GENNY_REPO_ROOT"]
+    os.chdir(ctx.obj["GENNY_REPO_ROOT"])
+
+
+@cli.command("install", help="Compile and install. This is required for most other commands.")
+@click.option(
+    "-d",
+    "--linux-distro",
+    required=False,
+    default="not-linux",
+    type=click.Choice(
+        ["ubuntu1804", "archlinux", "rhel8", "rhel70", "rhel62", "amazon2", "not-linux"]
+    ),
+    help=(
+        "Specify the linux distro you're on; if your system isn't available,"
+        " please contact us at #workload-generation. The not-linux value is useful on macOS."
+    ),
+)
+@click.option(
+    "-i",
+    "--ignore-toolchain-version",
+    is_flag=True,
+    help="Ignore the toolchain version. This is useful for testing toolchain changes.",
+)
+@click.option(
+    "-b",
+    "--build-system",
+    type=click.Choice(["make", "ninja"]),
+    default="ninja",
+    help="Which build-system to use for compilation. May need to use make for IDEs.",
+)
+@click.option(
+    "-s",
+    "--sanitizer",
+    type=click.Choice(["asan", "tsan", "ubsan"]),
+    help=(
+        "Compile with sanitizers enabled. "
+        "This is only useful on the 'compile' task "
+        "or when compiling for the first time."
+    ),
+)
+@click.option(
+    "-f",
+    "--os-family",
+    default=platform.system(),
+    help=(
+        "Override the value of Python's platform.system() "
+        "when determining which version of the genny toolchain "
+        "and curator to download. "
+        "This is useful for testing toolchain changes."
+    ),
+)
+@click.argument("cmake_args", nargs=-1)
+@click.pass_context
+def cmake_compile_install(
     ctx,
     linux_distro: str,
     ignore_toolchain_version: bool,
@@ -96,9 +98,6 @@ def setup(
     ctx.obj["SANITIZER"] = sanitizer
     ctx.obj["OS_FAMILY"] = os_family
     ctx.obj["CMAKE_ARGS"] = cmake_args
-
-
-def cmake_compile_install(ctx, perform_install: bool):
     from tasks import compile
 
     compile.cmake(
@@ -116,113 +115,52 @@ def cmake_compile_install(ctx, perform_install: bool):
         ctx.obj["LINUX_DISTRO"],
         ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
     )
-    if perform_install:
-        compile.install(
-            ctx.obj["BUILD_SYSTEM"],
-            ctx.obj["OS_FAMILY"],
-            ctx.obj["LINUX_DISTRO"],
-            ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-        )
+    compile.install(
+        ctx.obj["BUILD_SYSTEM"],
+        ctx.obj["OS_FAMILY"],
+        ctx.obj["LINUX_DISTRO"],
+        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+    )
 
     curator.ensure_curator_installed(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         os_family=ctx.obj["OS_FAMILY"],
         distro=ctx.obj["LINUX_DISTRO"],
     )
-
-
-@click.group()
-@click.option("-v", "--verbose", default=False, is_flag=True, help="Enable debug logging.")
-@click.pass_context
-def cli(ctx, verbose: bool):
-    ctx.ensure_object(dict)
-    ctx.obj["VERBOSE"] = verbose
-
-    loggers.setup_logging(verbose=ctx.obj["VERBOSE"])
-
-    # TODO: barf if not set or not exists.
-    ctx.obj["GENNY_REPO_ROOT"] = os.environ["GENNY_REPO_ROOT"]
-    os.chdir(ctx.obj["GENNY_REPO_ROOT"])
-
-
-@cli.command(
-    name="compile",
-    help=(
-        "Run cmake and compile. "
-        "This does not populate or update the 'dist' directory "
-        "where genny's output is installed by default."
-        "To do that, run install."
-    ),
-)
-@build_system_options
-@click.pass_context
-def compile_op(ctx, **kwargs) -> None:
-    setup(ctx, **kwargs)
-    cmake_compile_install(ctx, perform_install=False)
+    # TODO: write installation file
 
 
 @cli.command(
     name="clean", help="Resets output and venv directories to clean checkout state.",
 )
-@build_system_options
 @click.pass_context
-def clean(ctx, **kwargs) -> None:
-    setup(ctx, **kwargs)
+def clean(ctx) -> None:
     from tasks import compile
 
-    compile.clean(
-        ctx.obj["BUILD_SYSTEM"],
-        ctx.obj["OS_FAMILY"],
-        ctx.obj["LINUX_DISTRO"],
-        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-    )
-
-
-@cli.command(name="install", help="Install build output to the output location (dist by default).")
-@build_system_options
-@click.pass_context
-def install(ctx, **kwargs) -> None:
-    setup(ctx, **kwargs)
-    cmake_compile_install(ctx, perform_install=True)
+    compile.clean()
 
 
 @cli.command(name="cmake-test", help="Run genny's C++ unit tests.")
-@build_system_options
 @click.pass_context
-def cmake_test(ctx, **kwargs) -> None:
-    setup(ctx, **kwargs)
-    cmake_compile_install(ctx, perform_install=True)
-
+def cmake_test(ctx) -> None:
     from tasks import run_tests
 
-    run_tests.cmake_test(
-        ctx.obj["BUILD_SYSTEM"],
-        ctx.obj["OS_FAMILY"],
-        ctx.obj["LINUX_DISTRO"],
-        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-        ctx.obj["GENNY_REPO_ROOT"],
-    )
+    # TODO:
+    env = dict()
+    run_tests.cmake_test(ctx.obj["GENNY_REPO_ROOT"], env)
 
 
 @cli.command(
     name="benchmark-test",
     help="Run benchmark tests that assert genny's internals are sufficiently performant.",
 )
-@build_system_options
 @click.pass_context
-def benchmark_test(ctx, **kwargs) -> None:
-    setup(ctx, **kwargs)
-    cmake_compile_install(ctx, perform_install=True)
-
+def benchmark_test(ctx) -> None:
     from tasks import run_tests
 
-    run_tests.benchmark_test(
-        ctx.obj["BUILD_SYSTEM"],
-        ctx.obj["OS_FAMILY"],
-        ctx.obj["LINUX_DISTRO"],
-        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-        ctx.obj["GENNY_REPO_ROOT"],
-    )
+    # TODO:
+    env = dict()
+    run_tests.benchmark_test(ctx.obj["GENNY_REPO_ROOT"], env)
 
 
 @cli.command(
@@ -234,28 +172,15 @@ def benchmark_test(ctx, **kwargs) -> None:
         "run-genny workload -- run -w path_to_yaml -u mongodb://localhost:271017"
     ),
 )
-@build_system_options
-@click.pass_context
-def workload(ctx, **kwargs):
-    # TODO: can't call cmake with same args here, since it ends up lookign like:
-    # cmake -B build
-    #       -G Ninja
-    #       -DCMAKE_PREFIX_PATH=/data/mci/gennytoolchain/installed/x64-linux-shared
-    #       -DCMAKE_TOOLCHAIN_FILE=/data/mci/gennytoolchain/scripts/buildsystems/vcpkg.cmake
-    #       -DVCPKG_TARGET_TRIPLET=x64-linux-static
-    #       -u mongodb://username:password@10.2.0.200:27017/admin?ssl=false
-    #     ./etc/genny/workloads/docs/HelloWorld.yml
-    # which ends up with a (benign but confusing) error:
-    #    CMake Error: The source directory "/media/ephemeral0/src/genny/etc/genny/workloads/docs/HelloWorld.yml" does not exist.
-    #
-    setup(ctx, **kwargs)
-    cmake_compile_install(ctx, perform_install=True)
-
+@click.argument("genny_args", nargs=-1)
+def workload(ctx, genny_args: List[str]):
     from tasks import genny_runner
 
-    # TODO: cmake_args needs to be renamed.
+    ctx.ensure_obj(dict)
+    ctx["GENNY_ARGS"] = genny_args
+
     genny_runner.main_genny_runner(
-        genny_args=ctx.obj["CMAKE_ARGS"],
+        genny_args=ctx.obj["GENNY_ARGS"],
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         cleanup_metrics=True,
     )
@@ -270,15 +195,12 @@ def workload(ctx, **kwargs):
         "constructor validates configuration at constructor time."
     ),
 )
-@build_system_options
-@click.pass_context
 def dry_run_workloads(ctx, **kwargs):
-    setup(ctx, **kwargs)
-    cmake_compile_install(ctx, perform_install=True)
-
     from tasks import dry_run
 
-    dry_run.dry_run_workloads(ctx.obj["GENNY_REPO_ROOT"], ctx.obj["OS_FAMILY"])
+    # TODO: figure out is_darwin here
+    is_darwin = True
+    dry_run.dry_run_workloads(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], is_darwin=is_darwin)
 
 
 @cli.command(
@@ -290,12 +212,8 @@ def dry_run_workloads(ctx, **kwargs):
         "run-over-run it is indicative of a change in the underlying system."
     ),
 )
-@build_system_options
 @click.pass_context
 def canaries(ctx, **kwargs):
-    setup(ctx, **kwargs)
-    cmake_compile_install(ctx, perform_install=True)
-
     from tasks import canaries_runner
 
     canaries_runner.main_canaries_runner(cleanup_metrics=True)
@@ -305,7 +223,6 @@ def canaries(ctx, **kwargs):
     name="resmoke-test",
     help="Runs genny's C++-based integration tests under resmoke (lives in the mongo repo)",
 )
-@build_system_options
 @click.option(
     "--mongo-dir",
     type=click.Path(),
@@ -325,9 +242,6 @@ def canaries(ctx, **kwargs):
 )
 @click.pass_context
 def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str, **kwargs):
-    setup(ctx, **kwargs)
-    cmake_compile_install(ctx, perform_install=True)
-
     from tasks import run_tests
 
     run_tests.resmoke_test(

@@ -135,4 +135,4 @@ export VIRTUAL_ENV_DISABLE_PROMPT=1  # prevent undefined $PS1 variable
 # shellcheck source=/dev/null
 source "${GENNY_REPO_ROOT}/${_genny_venv}/bin/activate"
 
-python3 "${GENNY_REPO_ROOT}/src/lamplib/cli.py" "${COMMAND[@]}"
+python3 "${GENNY_REPO_ROOT}/src/lamplib/cli.py" "${COMMAND[@]:-}"

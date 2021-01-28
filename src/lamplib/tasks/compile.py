@@ -81,13 +81,9 @@ def clean_build_dir():
     run_command(cmd=["git", "checkout", "--", "build"], capture=False)
 
 
-def clean(build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool):
-    toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
-    clean_cmd = [build_system, "-C", "build", "clean"]
-    run_command(cmd=clean_cmd, env=toolchain_info["toolchain_env"], capture=False)
-
+def clean():
     # Physically remove all built files.
     SLOG.debug("Erasing build, genny_venv, and dist", cwd=os.getcwd())
     clean_build_dir()
-    run_command(cmd=["rm", "-rf", "genny_venv"], env=toolchain_info["toolchain_env"], capture=False)
-    run_command(cmd=["rm", "-rf", "dist"], env=toolchain_info["toolchain_env"], capture=False)
+    run_command(cmd=["rm", "-rf", "genny_venv"], env=os.environ.copy(), capture=False)
+    run_command(cmd=["rm", "-rf", "dist"], env=os.environ.copy(), capture=False)
