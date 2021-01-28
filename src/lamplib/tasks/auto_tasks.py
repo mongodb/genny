@@ -7,13 +7,16 @@ import glob
 import os
 import re
 from typing import NamedTuple, List, Optional, Set
-
 import yaml
+import structlog
+
 from shrub.command import CommandDefinition
 from shrub.config import Configuration
 from shrub.variant import TaskSpec
 
 from cmd_runner import run_command
+
+SLOG = structlog.get_logger(__name__)
 
 
 #
@@ -103,7 +106,10 @@ class CLIOperation(NamedTuple):
 
     @property
     def repo_root(self) -> str:
-        return "./src/genny"
+        out = "./src/genny"
+        if not os.path.exists(out):
+            SLOG.info("Genny repo root does not exist", tried=out, cwd=os.getcwd())
+        return out
 
     @property
     def output_file(self) -> str:
@@ -310,17 +316,21 @@ class ConfigWriter:
         raised = None
         if write:
             try:
+                out_text = config.to_json()
                 os.makedirs(os.path.dirname(self.op.output_file), exist_ok=True)
                 if os.path.exists(self.op.output_file):
                     os.unlink(self.op.output_file)
                 with open(self.op.output_file, "w") as output:
-                    output.write(config.to_json())
+                    output.write(out_text)
+                    SLOG.debug(
+                        "Wrote task json", output_file=self.op.output_file, contents=out_text
+                    )
                 success = True
             except Exception as e:
                 raised = e
                 raise e
             finally:
-                print(
+                SLOG.info(
                     f"{'Succeeded' if success else 'Failed'} to write to {self.op.output_file} from cwd={os.getcwd()}."
                     f"{raised if raised else ''}"
                 )

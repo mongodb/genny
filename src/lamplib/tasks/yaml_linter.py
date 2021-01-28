@@ -12,10 +12,9 @@ def main():
 
     if not path.exists(".genny-root"):
         SLOG.error("Please run this script from the root of the Genny repository", cwd=os.getcwd())
-        sys.exit(1)
+        raise Exception(f"Not run from genny repo root. cwd={os.getcwd()}")
 
     yaml_dirs = [
-        # TODO: use genny_repo_root
         path.join(os.getcwd(), "src", "workloads"),
         path.join(os.getcwd(), "src", "phases"),
         path.join(os.getcwd(), "src", "resmokeconfig"),
@@ -41,12 +40,16 @@ def main():
 
     if len(yaml_files) == 0:
         SLOG.error("Did not find any YAML files to lint", in_dirs=yaml_dirs)
-        sys.exit(1)
+        raise Exception("No yamls found")
 
     config_file_path = path.join(os.getcwd(), ".yamllint")
 
     yamllint_argv = ["--strict", "--config-file", config_file_path] + yaml_files
 
-    print("Linting {} Genny workload YAML files with yamllint".format(len(yaml_files)))
+    SLOG.info(
+        "Linting workload YAML files with yamllint",
+        count=len(yaml_files),
+        yamllint_argv=yamllint_argv,
+    )
 
     yamllint.cli.run(yamllint_argv)

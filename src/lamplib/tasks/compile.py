@@ -24,7 +24,6 @@ def _sanitizer_flags(sanitizer: str = None):
     raise ValueError("Unknown sanitizer {}".format(sanitizer))
 
 
-# TODO: cmdline_cmake_args
 def cmake(
     build_system: str,
     os_family: str,

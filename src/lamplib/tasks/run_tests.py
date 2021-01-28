@@ -4,7 +4,6 @@ import structlog
 import os
 import shutil
 
-import toolchain
 from cmd_runner import run_command
 
 SLOG = structlog.get_logger(__name__)
@@ -32,8 +31,7 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
     # This can only be imported after the setup script has installed gennylib.
     from curator import poplar_grpc
 
-    # TODO: use path relative to genny_repo_root
-    sentinel_file = os.path.join(os.getcwd(), "build", "sentinel.junit.xml")
+    sentinel_file = os.path.join(os.getcwd(), "build", "JUnitXML", "sentinel.junit.xml")
 
     with open(sentinel_file, "w") as f:
         f.write(_sentinel_report)
@@ -47,10 +45,16 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
         success = res.returncode == 0
 
     if success:
-        SLOG.debug("Test succeeded, removing sentinel report")
+        SLOG.debug(
+            "Test succeeded, removing sentinel report", sentinel_file=sentinel_file, cwd=os.getcwd()
+        )
         os.remove(sentinel_file)
     else:
-        SLOG.debug("Test failed, leaving sentinel report in place")
+        SLOG.debug(
+            "Test failed, leaving sentinel report in place",
+            sentinel_file=sentinel_file,
+            cwd=os.getcwd(),
+        )
 
 
 def cmake_test(
@@ -82,10 +86,10 @@ def benchmark_test(
     )
 
 
-def _check_create_new_actor_test_report(workdir):
+def _check_create_new_actor_test_report():
     passed = False
 
-    report_file = os.path.join(workdir, "build", "create_new_actor_test.junit.xml")
+    report_file = os.path.join(os.getcwd(), "build", "JUnitXML", "create_new_actor_test.junit.xml")
 
     if not os.path.isfile(report_file):
         SLOG.error("Failed to find report file", report_file=report_file)
@@ -98,6 +102,7 @@ def _check_create_new_actor_test_report(workdir):
         passed = expected_error in report
 
     if passed:
+        SLOG.debug("Test passed. Removing report file.", report_file=report_file)
         os.remove(report_file)  # Remove the report file for the expected failure.
     else:
         SLOG.error(
@@ -137,6 +142,7 @@ def resmoke_test(
 
     # Clone repo unless exists
     if not os.path.exists(mongo_repo_path):
+        SLOG.info("Mongo repo doesn't exist. Checking it out.", mongo_repo_path=mongo_repo_path)
         run_command(
             cmd=["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path], capture=False
         )
@@ -147,10 +153,16 @@ def resmoke_test(
             cwd=mongo_repo_path,
             capture=False,
         )
+    else:
+        SLOG.info("Using existing mongo repo checkout", mongo_repo_path=mongo_repo_path)
+        run_command(
+            cmd=["git", "rev-parse", "HEAD"], cwd=mongo_repo_path, capture=False,
+        )
 
     # Setup resmoke venv unless exists
     resmoke_setup_sentinel = os.path.join(resmoke_venv, "setup-done")
     if not os.path.exists(resmoke_setup_sentinel):
+        SLOG.info("Resmoke venv doesn't exist. Creating.", resmoke_venv=resmoke_venv)
         shutil.rmtree(resmoke_venv, ignore_errors=True)
         import venv
 
@@ -177,14 +189,15 @@ def resmoke_test(
     ]
 
     _run_command_with_sentinel_report(
-        lambda: run_command(cmd=cmd, cwd=genny_repo_root, env=env), checker_func, capture=False
+        cmd_func=lambda: run_command(cmd=cmd, cwd=genny_repo_root, env=env, capture=False),
+        checker_func=checker_func,
     )
 
 
 def _check_venv():
     if "VIRTUAL_ENV" not in os.environ:
         SLOG.error("Tried to execute without active virtualenv.")
-        sys.exit(1)
+        raise Exception(f"Tried to execute without active virtualenv in cwd={os.getcwd()}")
 
 
 def run_self_test():
@@ -204,8 +217,8 @@ def _validate_environment():
     # Check Python version
     if not sys.version_info >= (3, 7):
         raise OSError(
-            "Detected Python version {version} less than 3.7. Please delete "
-            "the virtualenv and run lamp again.".format(version=_python_version_string())
+            f"Detected Python version {_python_version_string()} less than 3.7. Please delete "
+            "the virtualenv and run lamp again."
         )
 
     # Check the macOS version. Non-mac platforms return a tuple of empty strings
@@ -216,6 +229,8 @@ def _validate_environment():
             # You could technically compile clang or gcc yourself on an older version
             # of macOS, but it's untested so we might as well just enforce
             # a blanket minimum macOS version for simplicity.
-            SLOG.error("Genny requires macOS 10.14 Mojave or newer")
-            sys.exit(1)
+            SLOG.error(
+                "Genny requires macOS 10.14 Mojave or newer.", release_triplet=release_triplet
+            )
+            raise Exception(f"Unknown macOS release triplet {release_triplet}")
     return

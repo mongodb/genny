@@ -133,8 +133,7 @@ def cmake_compile_install(
 @cli.command(
     name="clean", help="Resets output and venv directories to clean checkout state.",
 )
-@click.pass_context
-def clean(ctx) -> None:
+def clean() -> None:
     from tasks import compile
 
     compile.clean()
@@ -195,7 +194,7 @@ def workload(ctx, genny_args: List[str]):
         "constructor validates configuration at constructor time."
     ),
 )
-def dry_run_workloads(ctx, **kwargs):
+def dry_run_workloads(ctx):
     from tasks import dry_run
 
     # TODO: figure out is_darwin here
@@ -212,8 +211,7 @@ def dry_run_workloads(ctx, **kwargs):
         "run-over-run it is indicative of a change in the underlying system."
     ),
 )
-@click.pass_context
-def canaries(ctx, **kwargs):
+def canaries():
     from tasks import canaries_runner
 
     canaries_runner.main_canaries_runner(cleanup_metrics=True)
@@ -241,7 +239,7 @@ def canaries(ctx, **kwargs):
     ),
 )
 @click.pass_context
-def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str, **kwargs):
+def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str):
     from tasks import run_tests
 
     run_tests.resmoke_test(
@@ -273,8 +271,7 @@ def create_new_actor(ctx, actor_name):
     name="lint-python",
     help="Run the 'black' python format checker to ensure genny's internal python is 💅.",
 )
-@click.pass_context
-def lint_python(ctx):
+def lint_python():
     from tasks import lint_python
 
     # TODO: add --fix option
@@ -283,8 +280,7 @@ def lint_python(ctx):
 
 
 @cli.command(name="self-test", help="Run the pytest tests of genny's internal python.")
-@click.pass_context
-def self_test(ctx):
+def self_test():
     from tasks import run_tests
 
     run_tests.run_self_test()
@@ -292,7 +288,7 @@ def self_test(ctx):
 
 @cli.command(name="lint-yaml", help="Run pylint on all workload and phase yamls")
 @click.pass_context
-def lint_yaml(ctx):
+def lint_yaml():
     from tasks import yaml_linter
 
     yaml_linter.main()
@@ -310,8 +306,7 @@ def lint_yaml(ctx):
 @click.option(
     "--tasks", required=True, type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks"]),
 )
-@click.pass_context
-def auto_tasks(ctx, tasks):
+def auto_tasks(tasks):
     from tasks import auto_tasks
 
     auto_tasks.main(tasks)

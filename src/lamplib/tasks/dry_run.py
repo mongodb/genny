@@ -12,7 +12,7 @@ def dry_run_workload(yaml_file_path: str, is_darwin: bool, genny_repo_root):
         "AuthNInsert.yml",
         "ParallelInsert.yml",
     ]:
-        print("TIG-1435 skipping dry run on macOS")
+        SLOG.info("TIG-1435 skipping dry run on macOS", file=yaml_file_path)
         return
 
     genny_runner.main_genny_runner(
