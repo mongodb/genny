@@ -274,7 +274,7 @@ functions:
       binary: ./src/genny/run-genny
       args:
       - -v
-      - compile
+      - install
       - --linux-distro=${distro|not-linux}
 
   ##
