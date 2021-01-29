@@ -82,7 +82,7 @@ def cli(ctx: click.Context, verbose: bool) -> None:
 @click.argument("cmake_args", nargs=-1)
 @click.pass_context
 def cmake_compile_install(
-    ctx,
+    ctx: click.Context,
     linux_distro: str,
     ignore_toolchain_version: bool,
     build_system: str,
@@ -141,7 +141,7 @@ def clean() -> None:
 
 @cli.command(name="cmake-test", help="Run genny's C++ unit tests.")
 @click.pass_context
-def cmake_test(ctx) -> None:
+def cmake_test(ctx: click.Context) -> None:
     from tasks import run_tests
 
     # TODO:
@@ -154,7 +154,7 @@ def cmake_test(ctx) -> None:
     help="Run benchmark tests that assert genny's internals are sufficiently performant.",
 )
 @click.pass_context
-def benchmark_test(ctx) -> None:
+def benchmark_test(ctx: click.Context) -> None:
     from tasks import run_tests
 
     # TODO:
@@ -172,11 +172,12 @@ def benchmark_test(ctx) -> None:
     ),
 )
 @click.argument("genny_args", nargs=-1)
-def workload(ctx, genny_args: List[str]):
+@click.pass_context
+def workload(ctx: click.Context, genny_args: List[str]):
     from tasks import genny_runner
 
-    ctx.ensure_obj(dict)
-    ctx["GENNY_ARGS"] = genny_args
+    ctx.ensure_object(dict)
+    ctx.obj["GENNY_ARGS"] = genny_args
 
     genny_runner.main_genny_runner(
         genny_args=ctx.obj["GENNY_ARGS"],
@@ -194,7 +195,8 @@ def workload(ctx, genny_args: List[str]):
         "constructor validates configuration at constructor time."
     ),
 )
-def dry_run_workloads(ctx):
+@click.pass_context
+def dry_run_workloads(ctx: click.Context):
     from tasks import dry_run
 
     # TODO: figure out is_darwin here
@@ -239,7 +241,10 @@ def canaries():
     ),
 )
 @click.pass_context
-def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str):
+def resmoke_test(ctx: click.Context,
+                 suites: str,
+                 create_new_actor_test_suite: bool,
+                 mongo_dir: str):
     from tasks import run_tests
 
     run_tests.resmoke_test(
@@ -260,7 +265,7 @@ def resmoke_test(ctx, suites, create_new_actor_test_suite: bool, mongo_dir: str)
 )
 @click.argument("actor_name")
 @click.pass_context
-def create_new_actor(ctx, actor_name):
+def create_new_actor(ctx: click.Context, actor_name: str):
     path = os.path.join(
         ctx.obj["GENNY_REPO_ROOT"], "src", "lamplib", "tasks", "create-new-actor.sh"
     )
@@ -287,7 +292,6 @@ def self_test():
 
 
 @cli.command(name="lint-yaml", help="Run pylint on all workload and phase yamls")
-@click.pass_context
 def lint_yaml():
     from tasks import yaml_linter
 
@@ -306,7 +310,7 @@ def lint_yaml():
 @click.option(
     "--tasks", required=True, type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks"]),
 )
-def auto_tasks(tasks):
+def auto_tasks(tasks: str):
     from tasks import auto_tasks
 
     auto_tasks.main(tasks)
