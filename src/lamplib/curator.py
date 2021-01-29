@@ -65,9 +65,8 @@ def poplar_grpc(cleanup_metrics: bool):
     if cleanup_metrics:
         _cleanup_metrics()
 
-    SLOG.info("Running poplar", command=args, cwd=os.getcwd())
+    SLOG.info("Starting poplar grpc in the background.", command=args, cwd=os.getcwd())
     poplar = subprocess.Popen(args)
-    # stdout=subprocess.PIPE, stderr=subprocess.PIPE
     if poplar.poll() is not None:
         raise OSError("Failed to start Poplar.")
     try:

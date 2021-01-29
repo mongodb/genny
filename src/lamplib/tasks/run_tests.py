@@ -8,6 +8,8 @@ import cmd_runner
 from cmd_runner import run_command
 from typing import Callable, TypeVar, List, Any, Tuple, Optional
 
+from toolchain import toolchain_info
+
 SLOG = structlog.get_logger(__name__)
 
 # We rely on catch2 to report test failures, but it doesn't always do so.
@@ -62,12 +64,10 @@ def _run_command_with_sentinel_report(
         )
 
 
-def cmake_test(
-    genny_repo_root: str, env: dict,
-):
+def cmake_test(genny_repo_root: str):
+    info = toolchain_info(genny_repo_root=genny_repo_root)
     workdir = os.path.join(genny_repo_root, "build")
 
-    # TODO: this needs the toolchain env
     ctest_cmd = [
         "ctest",
         "--verbose",
@@ -77,22 +77,20 @@ def cmake_test(
 
     def cmd_func() -> None:
         cmd_runner.CmdOutput = run_command(
-            cmd=ctest_cmd, cwd=workdir, env=env, capture=False, check=True
+            cmd=ctest_cmd, cwd=workdir, env=info.toolchain_env, capture=False, check=True
         )
 
     _run_command_with_sentinel_report(cmd_func=cmd_func,)
 
 
-def benchmark_test(
-    genny_repo_root: str, env: dict,
-):
+def benchmark_test(genny_repo_root: str):
+    info = toolchain_info(genny_repo_root=genny_repo_root)
     workdir = os.path.join(genny_repo_root, "build")
 
-    # TODO: this needs the toolchain env
     ctest_cmd = ["ctest", "--label-regex", "(benchmark)"]
 
     def cmd_func():
-        run_command(cmd=ctest_cmd, cwd=workdir, env=env, capture=False, check=True)
+        run_command(cmd=ctest_cmd, cwd=workdir, env=info.toolchain_env, capture=False, check=True)
 
     _run_command_with_sentinel_report(cmd_func=cmd_func)
 

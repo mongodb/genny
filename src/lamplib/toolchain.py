@@ -1,3 +1,6 @@
+from typing import Optional, NamedTuple
+
+import json
 import structlog
 import os
 
@@ -6,16 +9,19 @@ from download import Downloader
 
 SLOG = structlog.get_logger(__name__)
 
-
 # Map of platform.system() to vcpkg's OS names.
 _triplet_os_map = {"Darwin": "osx", "Linux": "linux", "NT": "windows"}
 
 
 # Define complex operations as private methods on the module to keep the
 # public Context object clean.
-def _create_compile_environment(triplet_os, toolchain_dir):
-    env = os.environ.copy()
-    paths = [env["PATH"]]
+def _create_compile_environment(
+    triplet_os: str, toolchain_dir: str, system_env: Optional[dict] = None
+) -> dict:
+    system_env = system_env if system_env else os.environ.copy()
+
+    out = dict()
+    paths = [system_env["PATH"]]
 
     # For mongodbtoolchain compiler (if there).
     paths.insert(0, "/opt/mongodbtoolchain/v3/bin")
@@ -33,23 +39,79 @@ def _create_compile_environment(triplet_os, toolchain_dir):
     )
     paths.insert(0, ninja_bin_dir)
 
-    env["PATH"] = ":".join(paths)
-    env["NINJA_STATUS"] = "[%f/%t (%p) %es] "  # make the ninja output even nicer
-    return env
+    out["PATH"] = ":".join(paths)
+    out["NINJA_STATUS"] = "[%f/%t (%p) %es] "  # make the ninja output even nicer
+    return out
 
 
-def toolchain_info(os_family: str, linux_distro: str, ignore_toolchain_version: bool):
+class ToolchainInfo(NamedTuple):
+    toolchain_dir: str
+    triplet_os: str
+    toolchain_env: dict
+
+    @property
+    def is_darwin(self) -> bool:
+        return self.triplet_os == "osx"
+
+    def to_dict(self):
+        return {
+            "toolchain_dir": self.toolchain_dir,
+            "triplet_os": self.triplet_os,
+            "toolchain_env": self.toolchain_env,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        return ToolchainInfo(
+            toolchain_dir=data["toolchain_dir"],
+            triplet_os=data["triplet_os"],
+            toolchain_env=data["toolchain_env"],
+        )
+
+
+def _compute_toolchain_info(
+    os_family: str, linux_distro: str, ignore_toolchain_version: bool
+) -> ToolchainInfo:
     triplet_os = _triplet_os_map[os_family]
     toolchain_downloader = ToolchainDownloader(os_family, linux_distro, ignore_toolchain_version)
     toolchain_dir = toolchain_downloader.result_dir
     toolchain_env = _create_compile_environment(triplet_os, toolchain_dir)
     if not toolchain_downloader.fetch_and_install():
         raise Exception("Could not fetch and install")
-    return {
-        "toolchain_dir": toolchain_dir,
-        "triplet_os": triplet_os,
-        "toolchain_env": toolchain_env,
-    }
+    return ToolchainInfo(
+        toolchain_dir=toolchain_dir, triplet_os=triplet_os, toolchain_env=toolchain_env
+    )
+
+
+def toolchain_info(
+    genny_repo_root: str,
+    os_family: Optional[str] = None,
+    linux_distro: Optional[str] = None,
+    ignore_toolchain_version: Optional[bool] = None,
+) -> ToolchainInfo:
+    passed_any = any(x for x in [os_family, linux_distro, ignore_toolchain_version])
+
+    save_path = os.path.join(genny_repo_root, "build", "ToolchainInfo.json")
+    has_save = os.path.exists(save_path)
+
+    if not passed_any and not has_save:
+        msg = (
+            f"You need to 'run-genny install' before running this command. "
+            f"No toolchain info saved at {save_path}."
+        )
+        raise Exception(msg)
+    if passed_any or not has_save:
+        info: ToolchainInfo = _compute_toolchain_info(
+            os_family=os_family,
+            linux_distro=linux_distro,
+            ignore_toolchain_version=ignore_toolchain_version,
+        )
+        with open(save_path, "w") as handle:
+            json.dump(info.to_dict(), handle)
+        SLOG.debug("Wrote toolchain info.", to_path=save_path)
+    with open(save_path, "r") as handle:
+        SLOG.debug("Loaded existing toolchain info", from_path=save_path)
+        return ToolchainInfo.from_dict(json.load(handle))
 
 
 class ToolchainDownloader(Downloader):

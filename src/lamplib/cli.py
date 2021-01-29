@@ -95,6 +95,7 @@ def cmake_compile_install(
     from tasks import compile
 
     compile.compile_and_install(
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         build_system=build_system,
         os_family=os_family,
         linux_distro=linux_distro,
@@ -106,7 +107,6 @@ def cmake_compile_install(
     curator.ensure_curator_installed(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], os_family=os_family, linux_distro=linux_distro
     )
-    # TODO: write installation file
 
 
 @cli.command(
@@ -123,9 +123,7 @@ def clean() -> None:
 def cmake_test(ctx: click.Context) -> None:
     from tasks import run_tests
 
-    # TODO:
-    env = dict()
-    run_tests.cmake_test(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], env=env)
+    run_tests.cmake_test(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
 
 
 @cli.command(
@@ -136,9 +134,7 @@ def cmake_test(ctx: click.Context) -> None:
 def benchmark_test(ctx: click.Context) -> None:
     from tasks import run_tests
 
-    # TODO:
-    env = dict()
-    run_tests.benchmark_test(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], env=env)
+    run_tests.benchmark_test(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
 
 
 # TODO: Modify this to match usage in DSI
@@ -180,9 +176,7 @@ def workload(ctx: click.Context, genny_args: List[str]):
 def dry_run_workloads(ctx: click.Context):
     from tasks import dry_run
 
-    # TODO: figure out is_darwin here
-    is_darwin = True
-    dry_run.dry_run_workloads(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], is_darwin=is_darwin)
+    dry_run.dry_run_workloads(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
 
 
 @cli.command(

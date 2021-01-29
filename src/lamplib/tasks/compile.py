@@ -25,6 +25,7 @@ def _sanitizer_flags(sanitizer: str = None):
 
 
 def cmake(
+    genny_repo_root,
     build_system: str,
     os_family: str,
     linux_distro: str,
@@ -32,7 +33,12 @@ def cmake(
     sanitizer: str,
     cmake_args: List[str],
 ):
-    toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
+    toolchain_info = toolchain.toolchain_info(
+        genny_repo_root=genny_repo_root,
+        os_family=os_family,
+        linux_distro=linux_distro,
+        ignore_toolchain_version=ignore_toolchain_version,
+    )
 
     generators = {"make": "Unix Makefiles", "ninja": "Ninja"}
     cmake_cmd = ["cmake", "-B", "build", "-G", generators[build_system]]
@@ -40,17 +46,16 @@ def cmake(
     # to find both shared and static libraries. vcpkg doesn't natively support a project
     # using both.
     cmake_prefix_path = os.path.join(
-        toolchain_info["toolchain_dir"],
-        "installed/x64-{}-shared".format(toolchain_info["triplet_os"]),
+        toolchain_info.toolchain_dir, f"installed/x64-{toolchain_info.triplet_os}-shared",
     )
     cmake_toolchain_file = os.path.join(
-        toolchain_info["toolchain_dir"], "scripts/buildsystems/vcpkg.cmake"
+        toolchain_info.toolchain_dir, "scripts/buildsystems/vcpkg.cmake"
     )
 
     cmake_cmd += [
         "-DCMAKE_PREFIX_PATH={}".format(cmake_prefix_path),
         "-DCMAKE_TOOLCHAIN_FILE={}".format(cmake_toolchain_file),
-        "-DVCPKG_TARGET_TRIPLET=x64-{}-static".format(toolchain_info["triplet_os"]),
+        f"-DVCPKG_TARGET_TRIPLET=x64-{toolchain_info.triplet_os}-static",
     ]
 
     cmake_cmd += _sanitizer_flags(sanitizer)
@@ -58,22 +63,42 @@ def cmake(
     cmake_cmd += cmake_args
 
     run_command(
-        cmd=cmake_cmd, env=toolchain_info["toolchain_env"], capture=False, check=True,
+        cmd=cmake_cmd, env=toolchain_info.toolchain_env, capture=False, check=True,
     )
 
 
 def compile_all(
-    build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool
+    genny_repo_root,
+    build_system: str,
+    os_family: str,
+    linux_distro: str,
+    ignore_toolchain_version: bool,
 ):
-    toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
+    toolchain_info = toolchain.toolchain_info(
+        genny_repo_root=genny_repo_root,
+        os_family=os_family,
+        linux_distro=linux_distro,
+        ignore_toolchain_version=ignore_toolchain_version,
+    )
     compile_cmd = [build_system, "-C", "build"]
-    run_command(cmd=compile_cmd, env=toolchain_info["toolchain_env"], capture=False, check=True)
+    run_command(cmd=compile_cmd, env=toolchain_info.toolchain_env, capture=False, check=True)
 
 
-def install(build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool):
-    toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
+def install(
+    genny_repo_root,
+    build_system: str,
+    os_family: str,
+    linux_distro: str,
+    ignore_toolchain_version: bool,
+):
+    toolchain_info = toolchain.toolchain_info(
+        genny_repo_root=genny_repo_root,
+        os_family=os_family,
+        linux_distro=linux_distro,
+        ignore_toolchain_version=ignore_toolchain_version,
+    )
     install_cmd = [build_system, "-C", "build", "install"]
-    run_command(cmd=install_cmd, env=toolchain_info["toolchain_env"], capture=False, check=True)
+    run_command(cmd=install_cmd, env=toolchain_info.toolchain_env, capture=False, check=True)
 
 
 def clean_build_dir():
@@ -93,6 +118,7 @@ def clean():
 
 
 def compile_and_install(
+    genny_repo_root: str,
     build_system: str,
     os_family: str,
     linux_distro: str,
@@ -101,6 +127,7 @@ def compile_and_install(
     cmake_args: List[str],
 ):
     cmake(
+        genny_repo_root=genny_repo_root,
         build_system=build_system,
         os_family=os_family,
         linux_distro=linux_distro,
@@ -109,12 +136,14 @@ def compile_and_install(
         cmake_args=cmake_args,
     )
     compile_all(
+        genny_repo_root=genny_repo_root,
         build_system=build_system,
         os_family=os_family,
         linux_distro=linux_distro,
         ignore_toolchain_version=ignore_toolchain_version,
     )
     install(
+        genny_repo_root=genny_repo_root,
         build_system=build_system,
         os_family=os_family,
         linux_distro=linux_distro,

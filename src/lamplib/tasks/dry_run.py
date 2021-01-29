@@ -3,6 +3,7 @@ import os
 import structlog
 
 from tasks import genny_runner
+from toolchain import toolchain_info
 
 SLOG = structlog.get_logger(__name__)
 
@@ -21,13 +22,15 @@ def dry_run_workload(yaml_file_path: str, is_darwin: bool, genny_repo_root):
     )
 
 
-def dry_run_workloads(genny_repo_root: str, is_darwin: bool):
+def dry_run_workloads(genny_repo_root: str):
+    info = toolchain_info(genny_repo_root=genny_repo_root)
+
     glob_pattern = os.path.join(genny_repo_root, "src", "workloads", "*", "*.yml")
     workloads = glob.glob(glob_pattern)
     curr = 0
     for workload in workloads:
         SLOG.info("Checking workload", workload=workload, index=curr, of_how_many=len(workloads))
         dry_run_workload(
-            yaml_file_path=workload, is_darwin=is_darwin, genny_repo_root=genny_repo_root
+            yaml_file_path=workload, is_darwin=info.is_darwin, genny_repo_root=genny_repo_root
         )
         curr += 1
