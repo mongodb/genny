@@ -9,4 +9,4 @@ def main_canaries_runner(cleanup_metrics: bool, workspace_root: str, genny_repo_
     with poplar_grpc(
         cleanup_metrics, workspace_root=workspace_root, genny_repo_root=genny_repo_root
     ):
-        run_command(cmd=["genny-canaries"], capture=False, check=True)
+        run_command(cmd=["genny-canaries"], capture=False, check=True, cwd=workspace_root)

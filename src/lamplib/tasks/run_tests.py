@@ -152,14 +152,13 @@ def _setup_resmoke(
     if mongo_dir is not None:
         mongo_repo_path = mongo_dir
     else:
-        evergreen_mongo_repo = os.path.join(genny_repo_root, "..", "mongo")
-        run_from_evergreen_workspace = workspace_root != genny_repo_root
-
-        if os.path.exists(evergreen_mongo_repo) and run_from_evergreen_workspace:
+        evergreen_mongo_repo = os.path.join(workspace_root, "src", "mongo")
+        if os.path.exists(evergreen_mongo_repo):
             mongo_repo_path = evergreen_mongo_repo
         else:
             mongo_repo_path = os.path.join(genny_repo_root, "build", "resmoke-mongo")
 
+    # TODO: venv can be in workspace_root/build
     resmoke_venv: str = os.path.join(mongo_repo_path, "resmoke_venv")
     resmoke_python: str = os.path.join(resmoke_venv, "bin", "python3")
 
@@ -168,6 +167,7 @@ def _setup_resmoke(
         SLOG.info("Mongo repo doesn't exist. Checking it out.", mongo_repo_path=mongo_repo_path)
         run_command(
             cmd=["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path],
+            cwd=workspace_root,
             check=True,
             capture=False,
         )

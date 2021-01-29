@@ -116,10 +116,11 @@ def cmake_compile_install(
 @cli.command(
     name="clean", help="Resets output and venv directories to clean checkout state.",
 )
-def clean() -> None:
+@click.pass_context
+def clean(ctx: click.Context) -> None:
     from tasks import compile
 
-    compile.clean()
+    compile.clean(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
 
 
 @cli.command(name="cmake-test", help="Run genny's C++ unit tests.")

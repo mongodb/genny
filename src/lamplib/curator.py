@@ -67,23 +67,30 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
     if cleanup_metrics:
         _cleanup_metrics()
 
-    SLOG.info("Starting poplar grpc in the background.", command=args, cwd=os.getcwd())
-    poplar = subprocess.Popen(args)
-    if poplar.poll() is not None:
-        raise OSError("Failed to start Poplar.")
+    SLOG.info("Starting poplar grpc in the background.", command=args, cwd=workspace_root)
+
+    prior_cwd = os.getcwd()
     try:
-        yield poplar
-    finally:
+        os.chdir(workspace_root)
+        poplar = subprocess.Popen(args)
+        if poplar.poll() is not None:
+            raise OSError("Failed to start Poplar.")
         try:
-            poplar.terminate()
-            exit_code = poplar.wait(timeout=10)
-            if exit_code not in (0, -15):  # Termination or exit.
-                raise OSError(f"Poplar exited with code: {exit_code}.")
-        except:
-            # If Poplar doesn't die then future runs can be broken.
-            if poplar.poll() is None:
-                poplar.kill()
-            raise
+            os.chdir(prior_cwd)
+            yield poplar
+        finally:
+            try:
+                poplar.terminate()
+                exit_code = poplar.wait(timeout=10)
+                if exit_code not in (0, -15):  # Termination or exit.
+                    raise OSError(f"Poplar exited with code: {exit_code}.")
+            except:
+                # If Poplar doesn't die then future runs can be broken.
+                if poplar.poll() is None:
+                    poplar.kill()
+                raise
+    finally:
+        os.chdir(prior_cwd)
 
 
 # For now we put curator in ./src/genny/build/curator, but ideally it would be in ./bin
@@ -151,7 +158,7 @@ class CuratorDownloader(Downloader):
         if curator is None:
             return False
         res: RunCommandOutput = run_command(
-            cmd=[curator, "-v"], check=True,
+            cmd=[curator, "-v"], check=True, cwd=self._workspace_root,
         )
         installed_version = "".join(res.stdout).strip()
         wanted_version = f"curator version {CuratorDownloader.CURATOR_VERSION}"

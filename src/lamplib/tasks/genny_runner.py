@@ -16,7 +16,11 @@ def main_genny_runner(
     """
     Intended to be the main entry point for running Genny.
     """
-    with poplar_grpc(cleanup_metrics=cleanup_metrics, workspace_root=workspace_root):
+    with poplar_grpc(
+        cleanup_metrics=cleanup_metrics,
+        workspace_root=workspace_root,
+        genny_repo_root=genny_repo_root,
+    ):
         path = os.path.join(genny_repo_root, "dist", "bin", "genny_core")
         if not os.path.exists(path):
             SLOG.error("genny_core not found. Run install first.", path=path)
@@ -25,5 +29,5 @@ def main_genny_runner(
         SLOG.info("Running genny", command=" ".join(shlex.quote(x) for x in cmd))
 
         run_command(
-            cmd=cmd, capture=False, check=True,
+            cmd=cmd, capture=False, check=True, cwd=workspace_root,
         )

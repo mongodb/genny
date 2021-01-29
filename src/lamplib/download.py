@@ -108,7 +108,13 @@ class Downloader:
         shutil.rmtree(self.result_dir, ignore_errors=True)
         os.makedirs(self.result_dir, exist_ok=True)
         # use tar(1) because python's TarFile was inexplicably truncating the tarball
-        run_command(cmd=["tar", "-xzf", tarball, "-C", self.result_dir], capture=False, check=True)
+        run_command(
+            cmd=["tar", "-xzf", tarball, "-C", self.result_dir],
+            capture=False,
+            check=True,
+            # The cwd doesn't actually matter here since we do 'tar -C'
+            cwd=self._workspace_root,
+        )
         SLOG.info("Downloaded and installed.", name=self._name, into=self.result_dir)
 
         # Get space back.

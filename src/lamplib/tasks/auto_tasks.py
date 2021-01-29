@@ -31,22 +31,26 @@ class YamlReader:
     # You could argue that YamlReader, WorkloadLister, and maybe even Repo
     # should be the same class - perhaps renamed to System or something?
     # Maybe make these methods static to avoid having to pass an instance around.
-    def load(self, path: str) -> dict:
+    def load(self, workspace_root: str, path: str) -> dict:
         """
-        :param path: path relative to cwd
+        :param workspace_root: effective cwd
+        :param path: path relative to workspace_root
         :return: deserialized yaml file
         """
-        if not os.path.exists(path):
-            raise Exception(f"No {path} in cwd={os.getcwd()}")
-        with open(path) as exp:
-            return yaml.safe_load(exp)
+        joined = os.path.join(workspace_root, path)
+        if not os.path.exists(joined):
+            raise Exception(f"File {joined} not found.")
+        with open(joined) as handle:
+            return yaml.safe_load(handle)
 
     # Really just here for easy mocking.
     def exists(self, path: str) -> bool:
         return os.path.exists(path)
 
-    def load_set(self, files: List[str]) -> dict:
+    def load_set(self, workspace_root: str, files: List[str]) -> dict:
         """
+        :param workspace_root:
+            effective cwd
         :param files:
             files to load relative to cwd
         :return:
@@ -56,7 +60,7 @@ class YamlReader:
         out = dict()
         for to_load in [f for f in files if self.exists(f)]:
             basename = str(os.path.basename(to_load).split(".yml")[0])
-            out[basename] = self.load(to_load)
+            out[basename] = self.load(workspace_root=workspace_root, path=to_load)
         return out
 
 
@@ -66,13 +70,13 @@ class WorkloadLister:
     Separate from the Repo class for easier testing.
     """
 
-    def __init__(self, repo_root: str, reader: YamlReader):
-        self.repo_root = repo_root
+    def __init__(self, genny_repo_root: str, reader: YamlReader):
+        self.genny_repo_root = genny_repo_root
         self._expansions = None
         self.reader = reader
 
     def all_workload_files(self) -> Set[str]:
-        pattern = os.path.join(self.repo_root, "src", "workloads", "**", "*.yml")
+        pattern = os.path.join(self.genny_repo_root, "src", "workloads", "**", "*.yml")
         return {*glob.glob(pattern)}
 
     def modified_workload_files(self) -> Set[str]:
@@ -81,8 +85,8 @@ class WorkloadLister:
             "git diff --name-only --diff-filter=AMR "
             "$(git merge-base HEAD origin/master) -- src/workloads/"
         )
-        lines = run_command(cmd=[command], cwd=self.repo_root, shell=True, check=True)
-        return {os.path.join(self.repo_root, line) for line in lines if line.endswith(".yml")}
+        lines = run_command(cmd=[command], cwd=self.genny_repo_root, shell=True, check=True).stdout
+        return {os.path.join(self.genny_repo_root, line) for line in lines if line.endswith(".yml")}
 
 
 class OpName(enum.Enum):
@@ -121,18 +125,18 @@ class CLIOperation(NamedTuple):
             mode = OpName.ALL_TASKS
         if mode_name == "patch_tasks":
             mode = OpName.PATCH_TASKS
-            variant = reader.load(expansions_path)["build_variant"]
+            variant = reader.load(workspace_root, expansions_path)["build_variant"]
         if mode_name == "variant_tasks":
             mode = OpName.VARIANT_TASKS
-            variant = reader.load(expansions_path)["build_variant"]
+            variant = reader.load(workspace_root, expansions_path)["build_variant"]
         return CLIOperation(
             mode, variant, genny_repo_root=genny_repo_root, workspace_root=workspace_root
         )
 
 
 class CurrentBuildInfo:
-    def __init__(self, reader: YamlReader):
-        self.conts = reader.load("expansions.yml")
+    def __init__(self, reader: YamlReader, workspace_root: str):
+        self.conts = reader.load(workspace_root, "expansions.yml")
 
     def has(self, key: str, acceptable_values: List[str]) -> bool:
         """
@@ -169,11 +173,11 @@ class Workload:
     setups: Optional[List[str]] = None
     """The PrepareEnvironmentWith:mongodb_setup block, if any"""
 
-    def __init__(self, file_path: str, is_modified: bool, reader: YamlReader):
+    def __init__(self, workspace_root: str, file_path: str, is_modified: bool, reader: YamlReader):
         self.file_path = file_path
         self.is_modified = is_modified
 
-        conts = reader.load(self.file_path)
+        conts = reader.load(workspace_root, self.file_path)
 
         if "AutoRun" not in conts:
             return
@@ -243,15 +247,24 @@ class Repo:
     Represents the git checkout.
     """
 
-    def __init__(self, lister: WorkloadLister, reader: YamlReader):
+    def __init__(self, lister: WorkloadLister, reader: YamlReader, workspace_root: str):
         self._modified_repo_files = None
+        self.workspace_root = workspace_root
         self.lister = lister
         self.reader = reader
 
     def all_workloads(self) -> List[Workload]:
         all_files = self.lister.all_workload_files()
         modified = self.lister.modified_workload_files()
-        return [Workload(fpath, fpath in modified, self.reader) for fpath in all_files]
+        return [
+            Workload(
+                workspace_root=self.workspace_root,
+                file_path=fpath,
+                is_modified=fpath in modified,
+                reader=self.reader,
+            )
+            for fpath in all_files
+        ]
 
     def modified_workloads(self) -> List[Workload]:
         return [workload for workload in self.all_workloads() if workload.is_modified]
@@ -368,12 +381,15 @@ class ConfigWriter:
 
 def main(mode_name: str, genny_repo_root: str, workspace_root: str) -> None:
     reader = YamlReader()
-    build = CurrentBuildInfo(reader=reader)
+    build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
     op = CLIOperation.create(
-        mode_name=mode_name, reader=reader, repo_root=genny_repo_root, workspace_root=workspace_root
+        mode_name=mode_name,
+        reader=reader,
+        genny_repo_root=genny_repo_root,
+        workspace_root=workspace_root,
     )
-    lister = WorkloadLister(repo_root=genny_repo_root, reader=reader)
-    repo = Repo(lister=lister, reader=reader)
+    lister = WorkloadLister(genny_repo_root=genny_repo_root, reader=reader)
+    repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
     tasks = repo.tasks(op=op, build=build)
 
     writer = ConfigWriter(op)

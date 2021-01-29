@@ -25,7 +25,7 @@ class RunCommandOutput(NamedTuple):
 def run_command(
     cmd: List[str],
     check: bool,
-    cwd: str = None,
+    cwd: str,
     shell: bool = False,
     env: dict = None,
     capture: bool = True,
