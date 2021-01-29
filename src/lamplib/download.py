@@ -16,13 +16,13 @@ class Downloader:
     :return: The directory the target was installed to.
     """
 
-    def __init__(self, os_family: str, distro: str, install_dir: str, name: str):
+    def __init__(self, os_family: str, linux_distro: str, install_dir: str, name: str):
         """
         :param install_dir: the directory the target will be installed to
         :param name: name of the target being downloaded
         """
         self._os_family = os_family
-        self._distro = distro
+        self._linux_distro = linux_distro
         self._name = name
 
         # Install dir is the directory we create the actual result in.

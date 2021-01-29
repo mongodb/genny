@@ -92,41 +92,19 @@ def cmake_compile_install(
 ):
     ctx.ensure_object(dict)
 
-    # TODO: move to tasks
-    ctx.obj["LINUX_DISTRO"] = linux_distro
-    ctx.obj["IGNORE_TOOLCHAIN_VERSION"] = ignore_toolchain_version
-    ctx.obj["BUILD_SYSTEM"] = build_system
-    ctx.obj["SANITIZER"] = sanitizer
-    ctx.obj["OS_FAMILY"] = os_family
-    ctx.obj["CMAKE_ARGS"] = cmake_args
     from tasks import compile
 
-    compile.cmake(
-        ctx.obj["BUILD_SYSTEM"],
-        ctx.obj["OS_FAMILY"],
-        ctx.obj["LINUX_DISTRO"],
-        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-        ctx.obj["SANITIZER"],
-        ctx.obj["CMAKE_ARGS"],
-    )
-
-    compile.compile_all(
-        ctx.obj["BUILD_SYSTEM"],
-        ctx.obj["OS_FAMILY"],
-        ctx.obj["LINUX_DISTRO"],
-        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
-    )
-    compile.install(
-        ctx.obj["BUILD_SYSTEM"],
-        ctx.obj["OS_FAMILY"],
-        ctx.obj["LINUX_DISTRO"],
-        ctx.obj["IGNORE_TOOLCHAIN_VERSION"],
+    compile.compile_and_install(
+        build_system=build_system,
+        os_family=os_family,
+        linux_distro=linux_distro,
+        ignore_toolchain_version=ignore_toolchain_version,
+        sanitizer=sanitizer,
+        cmake_args=cmake_args,
     )
 
     curator.ensure_curator_installed(
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
-        os_family=ctx.obj["OS_FAMILY"],
-        distro=ctx.obj["LINUX_DISTRO"],
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], os_family=os_family, linux_distro=linux_distro
     )
     # TODO: write installation file
 

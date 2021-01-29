@@ -90,3 +90,33 @@ def clean():
     clean_build_dir()
     run_command(cmd=["rm", "-rf", "genny_venv"], env=os.environ.copy(), capture=False, check=True)
     run_command(cmd=["rm", "-rf", "dist"], env=os.environ.copy(), capture=False, check=True)
+
+
+def compile_and_install(
+    build_system: str,
+    os_family: str,
+    linux_distro: str,
+    ignore_toolchain_version: bool,
+    sanitizer: str,
+    cmake_args: List[str],
+):
+    cmake(
+        build_system=build_system,
+        os_family=os_family,
+        linux_distro=linux_distro,
+        ignore_toolchain_version=ignore_toolchain_version,
+        sanitizer=sanitizer,
+        cmake_args=cmake_args,
+    )
+    compile_all(
+        build_system=build_system,
+        os_family=os_family,
+        linux_distro=linux_distro,
+        ignore_toolchain_version=ignore_toolchain_version,
+    )
+    install(
+        build_system=build_system,
+        os_family=os_family,
+        linux_distro=linux_distro,
+        ignore_toolchain_version=ignore_toolchain_version,
+    )

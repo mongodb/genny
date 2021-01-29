@@ -87,10 +87,12 @@ def poplar_grpc(cleanup_metrics: bool):
 
 # For now we put curator in ./src/genny/build/curator, but ideally it would be in ./bin
 # or in the python venv (if we make 'pip install curator' a thing).
-def ensure_curator_installed(genny_repo_root: str, os_family: str, distro: str):
+def ensure_curator_installed(genny_repo_root: str, os_family: str, linux_distro: str):
     install_dir = os.path.join(genny_repo_root, "build")
     os.makedirs(install_dir, exist_ok=True)
-    downloader = CuratorDownloader(os_family=os_family, distro=distro, install_dir=install_dir)
+    downloader = CuratorDownloader(
+        os_family=os_family, linux_distro=linux_distro, install_dir=install_dir
+    )
     downloader.fetch_and_install()
 
 
@@ -102,9 +104,9 @@ class CuratorDownloader(Downloader):
     # Please try to keep the two versions consistent.
     CURATOR_VERSION = "d3da25b63141aa192c5ef51b7d4f34e2f3fc3880"
 
-    def __init__(self, os_family: str, distro: str, install_dir: str):
+    def __init__(self, os_family: str, linux_distro: str, install_dir: str):
         super().__init__(
-            os_family=os_family, distro=distro, install_dir=install_dir, name="curator"
+            os_family=os_family, linux_distro=linux_distro, install_dir=install_dir, name="curator"
         )
         if self._os_family == "Darwin":
             self._distro = "macos"

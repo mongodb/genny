@@ -60,8 +60,10 @@ class ToolchainDownloader(Downloader):
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
     TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
-    def __init__(self, os_family, distro, ignore_toolchain_version: bool):
-        super().__init__(os_family, distro, ToolchainDownloader.TOOLCHAIN_ROOT, "gennytoolchain")
+    def __init__(self, os_family, linux_distro, ignore_toolchain_version: bool):
+        super().__init__(
+            os_family, linux_distro, ToolchainDownloader.TOOLCHAIN_ROOT, "gennytoolchain"
+        )
         self.ignore_toolchain_version = ignore_toolchain_version
 
     def _get_url(self):

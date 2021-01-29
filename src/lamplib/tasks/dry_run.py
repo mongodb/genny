@@ -11,6 +11,7 @@ def dry_run_workload(yaml_file_path: str, is_darwin: bool, genny_repo_root):
     if is_darwin and os.path.basename(yaml_file_path) in [
         "AuthNInsert.yml",
         "ParallelInsert.yml",
+        "LoggingActorExample.yml",
     ]:
         SLOG.info("TIG-1435 skipping dry run on macOS", file=yaml_file_path)
         return
