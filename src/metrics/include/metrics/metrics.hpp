@@ -166,6 +166,7 @@ public:
                        bool assertMetricsBuffer = true)
         : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
         if (_format.useGrpc()) {
+            boost::filesystem::remove_all(_pathPrefix);
             boost::filesystem::create_directories(_pathPrefix);
 
             boost::filesystem::path startTimeFilePath = _pathPrefix / "start_time.txt";
