@@ -1,6 +1,6 @@
 import subprocess
 import structlog
-from typing import List
+from typing import List, Tuple, NamedTuple
 import os
 from uuid import uuid4
 
@@ -16,13 +16,22 @@ def _short_path(path):
     return ":".join(bits[:4]) + "..."
 
 
+class CmdOutput(NamedTuple):
+    returncode: int
+    stdout: List[str]
+    stderr: List[str]
+
+
 def run_command(
-    cmd: List[str], cwd: str = None, shell: bool = False, env: dict = None, capture: bool = True,
-) -> List[str]:
+    cmd: List[str],
+    cwd: str = None,
+    shell: bool = False,
+    env: dict = None,
+    capture: bool = True,
+    check: bool = True,
+) -> CmdOutput:
     cwd = os.getcwd() if cwd is None else cwd
     env = os.environ.copy() if env is None else env
-
-    kwargs = dict(env=env, shell=shell, text=capture, check=True, capture_output=capture)
 
     uuid = str(uuid4())[:8]
     SLOG.debug(
@@ -36,11 +45,21 @@ def run_command(
         if not os.path.exists(cwd):
             raise Exception(f"Cannot chdir to {cwd} from cwd={os.getcwd()}")
         os.chdir(cwd)
-        result: subprocess.CompletedProcess = subprocess.run(cmd, **kwargs)
-        success = True
-        if not capture or result.stdout == "":
-            return []
-        return result.stdout.strip().split("\n")
+        result: subprocess.CompletedProcess = subprocess.run(
+            cmd,
+            env=env,
+            shell=shell,
+            check=check,
+            text=capture,  # capture implies text. No binary output from genny.
+            capture_output=capture,
+        )
+
+        return CmdOutput(
+            returncode=result.returncode,
+            stdout=[] if not capture else result.stdout.strip().split("\n"),
+            stderr=[] if not capture else result.stderr.strip().split("\n"),
+        )
+
     except subprocess.CalledProcessError as e:
         SLOG.error(
             "Error in command",

@@ -6,6 +6,7 @@ import shutil
 
 import cmd_runner
 from cmd_runner import run_command
+from typing import Callable, TypeVar, List, Any, Tuple
 
 SLOG = structlog.get_logger(__name__)
 
@@ -28,7 +29,13 @@ _sentinel_report = """
 """.strip()
 
 
-def _run_command_with_sentinel_report(cmd_func, checker_func=None):
+T = TypeVar("T")
+A = TypeVar("A")
+
+
+def _run_command_with_sentinel_report(
+    cmd_func: Callable[..., T], cmd_func_args: List[Any], checker_func: Callable[[T], bool] = None
+) -> Tuple[T, bool]:
     # This can only be imported after the setup script has installed gennylib.
     from curator import poplar_grpc
 
@@ -39,12 +46,9 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
         f.write(_sentinel_report)
 
     with poplar_grpc(cleanup_metrics=True):
-        res = cmd_func()
+        cmd_output = cmd_func(*cmd_func_args)
 
-    if checker_func:
-        success = checker_func()
-    else:
-        success = res.returncode == 0
+    success = True if checker_func is None else checker_func(cmd_output)
 
     if success:
         SLOG.debug(
@@ -57,6 +61,8 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
             sentinel_file=sentinel_file,
             cwd=os.getcwd(),
         )
+
+    return cmd_output, success
 
 
 def cmake_test(
@@ -72,7 +78,7 @@ def cmake_test(
     ]
 
     _run_command_with_sentinel_report(
-        lambda: run_command(cmd=ctest_cmd, cwd=workdir, env=env, capture=False)
+        cmd_func=lambda: run_command(cmd=ctest_cmd, cwd=workdir, env=env, capture=False)
     )
 
 
@@ -88,7 +94,7 @@ def benchmark_test(
     )
 
 
-def _check_create_new_actor_test_report():
+def _check_create_new_actor_test_report() -> bool:
     passed = False
 
     report_file = os.path.join(os.getcwd(), "build", "XUnitXML", "create_new_actor_test.junit.xml")
@@ -214,7 +220,7 @@ def resmoke_test(
 
     if is_cnats:
         suites = os.path.join(genny_repo_root, "src", "resmokeconfig", "genny_create_new_actor.yml")
-        checker_func = lambda: _check_create_new_actor_test_report(genny_repo_root)
+        checker_func = _check_create_new_actor_test_report
     else:
         checker_func = None
 
@@ -240,9 +246,15 @@ def resmoke_test(
         mongos,
     ]
 
+    # We *expect* the resmoke invocation to fail
+
+    def run_resmoke() -> bool:
+        outcome = run_command(cmd=cmd, cwd=genny_repo_root, env=env, capture=False, check=False)
+        if is_cnats:
+            return
+
     _run_command_with_sentinel_report(
-        cmd_func=lambda: run_command(cmd=cmd, cwd=genny_repo_root, env=env, capture=False),
-        checker_func=checker_func,
+        cmd_func=run_resmoke, checker_func=checker_func,
     )
 
 
