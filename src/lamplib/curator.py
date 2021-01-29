@@ -8,34 +8,36 @@ from typing import Optional
 import structlog
 from contextlib import contextmanager
 
-from cmd_runner import run_command, CmdOutput
+from cmd_runner import run_command, RunCommandOutput
 from download import Downloader
 
 SLOG = structlog.get_logger(__name__)
 
 
-def _find_curator() -> Optional[str]:
-    in_bin = os.path.join("bin", "curator")
+def _find_curator(workspace_root: str, genny_repo_root: str) -> Optional[str]:
+    in_bin = os.path.join(workspace_root, "bin", "curator")
     if os.path.exists(in_bin):
         return in_bin
 
-    in_build = os.path.join("build", "curator", "curator")
+    in_build = os.path.join(genny_repo_root, "build", "curator", "curator")
     if os.path.exists(in_build):
         return in_build
 
     return None
 
 
-def _get_poplar_args():
+def _get_poplar_args(genny_repo_root: str, workspace_root: str):
     """
     Returns the argument list used to create the Poplar gRPC process.
 
     If we are in the root of the genny repo, use the local executable.
     Otherwise we search the PATH.
     """
-    curator = _find_curator()
+    curator = _find_curator(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     if curator is None:
-        raise Exception(f"Curator not found in cwd {os.getcwd()}")
+        raise Exception(
+            f"Curator not found in genny_repo_root={genny_repo_root}, workspace_root={workspace_root}"
+        )
     return [curator, "poplar", "grpc"]
 
 
@@ -59,8 +61,8 @@ def _cleanup_metrics():
 
 
 @contextmanager
-def poplar_grpc(cleanup_metrics: bool):
-    args = _get_poplar_args()
+def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str):
+    args = _get_poplar_args(workspace_root=workspace_root, genny_repo_root=genny_repo_root)
 
     if cleanup_metrics:
         _cleanup_metrics()
@@ -86,11 +88,17 @@ def poplar_grpc(cleanup_metrics: bool):
 
 # For now we put curator in ./src/genny/build/curator, but ideally it would be in ./bin
 # or in the python venv (if we make 'pip install curator' a thing).
-def ensure_curator_installed(genny_repo_root: str, os_family: str, linux_distro: str):
+def ensure_curator_installed(
+    genny_repo_root: str, workspace_root: str, os_family: str, linux_distro: str
+):
     install_dir = os.path.join(genny_repo_root, "build")
     os.makedirs(install_dir, exist_ok=True)
     downloader = CuratorDownloader(
-        os_family=os_family, linux_distro=linux_distro, install_dir=install_dir
+        workspace_root=workspace_root,
+        genny_repo_root=genny_repo_root,
+        os_family=os_family,
+        linux_distro=linux_distro,
+        install_dir=install_dir,
     )
     downloader.fetch_and_install()
 
@@ -103,9 +111,21 @@ class CuratorDownloader(Downloader):
     # Please try to keep the two versions consistent.
     CURATOR_VERSION = "d3da25b63141aa192c5ef51b7d4f34e2f3fc3880"
 
-    def __init__(self, os_family: str, linux_distro: str, install_dir: str):
+    def __init__(
+        self,
+        genny_repo_root: str,
+        workspace_root: str,
+        os_family: str,
+        linux_distro: str,
+        install_dir: str,
+    ):
         super().__init__(
-            os_family=os_family, linux_distro=linux_distro, install_dir=install_dir, name="curator"
+            genny_repo_root=genny_repo_root,
+            workspace_root=workspace_root,
+            os_family=os_family,
+            linux_distro=linux_distro,
+            install_dir=install_dir,
+            name="curator",
         )
         if self._os_family == "Darwin":
             self._linux_distro = "macos"
@@ -125,10 +145,12 @@ class CuratorDownloader(Downloader):
         )
 
     def _can_ignore(self):
-        curator = _find_curator()
+        curator = _find_curator(
+            workspace_root=self._workspace_root, genny_repo_root=self._genny_repo_root
+        )
         if curator is None:
             return False
-        res: CmdOutput = run_command(
+        res: RunCommandOutput = run_command(
             cmd=[curator, "-v"], check=True,
         )
         installed_version = "".join(res.stdout).strip()

@@ -25,7 +25,8 @@ def _sanitizer_flags(sanitizer: str = None):
 
 
 def cmake(
-    genny_repo_root,
+    genny_repo_root: str,
+    workspace_root: str,
     build_system: str,
     os_family: str,
     linux_distro: str,
@@ -34,6 +35,7 @@ def cmake(
     cmake_args: List[str],
 ):
     toolchain_info = toolchain.toolchain_info(
+        workspace_root=workspace_root,
         genny_repo_root=genny_repo_root,
         os_family=os_family,
         linux_distro=linux_distro,
@@ -68,7 +70,8 @@ def cmake(
 
 
 def compile_all(
-    genny_repo_root,
+    genny_repo_root: str,
+    workspace_root: str,
     build_system: str,
     os_family: str,
     linux_distro: str,
@@ -76,6 +79,7 @@ def compile_all(
 ):
     toolchain_info = toolchain.toolchain_info(
         genny_repo_root=genny_repo_root,
+        workspace_root=workspace_root,
         os_family=os_family,
         linux_distro=linux_distro,
         ignore_toolchain_version=ignore_toolchain_version,
@@ -85,7 +89,8 @@ def compile_all(
 
 
 def install(
-    genny_repo_root,
+    genny_repo_root: str,
+    workspace_root: str,
     build_system: str,
     os_family: str,
     linux_distro: str,
@@ -93,6 +98,7 @@ def install(
 ):
     toolchain_info = toolchain.toolchain_info(
         genny_repo_root=genny_repo_root,
+        workspace_root=workspace_root,
         os_family=os_family,
         linux_distro=linux_distro,
         ignore_toolchain_version=ignore_toolchain_version,
@@ -119,6 +125,7 @@ def clean():
 
 def compile_and_install(
     genny_repo_root: str,
+    workspace_root: str,
     build_system: str,
     os_family: str,
     linux_distro: str,
@@ -128,6 +135,7 @@ def compile_and_install(
 ):
     cmake(
         genny_repo_root=genny_repo_root,
+        workspace_root=workspace_root,
         build_system=build_system,
         os_family=os_family,
         linux_distro=linux_distro,
@@ -137,6 +145,7 @@ def compile_and_install(
     )
     compile_all(
         genny_repo_root=genny_repo_root,
+        workspace_root=workspace_root,
         build_system=build_system,
         os_family=os_family,
         linux_distro=linux_distro,
@@ -144,6 +153,7 @@ def compile_and_install(
     )
     install(
         genny_repo_root=genny_repo_root,
+        workspace_root=workspace_root,
         build_system=build_system,
         os_family=os_family,
         linux_distro=linux_distro,

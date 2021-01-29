@@ -6,7 +6,7 @@ import shutil
 
 import cmd_runner
 from cmd_runner import run_command
-from typing import Callable, TypeVar, List, Any, Tuple, Optional
+from typing import Callable, TypeVar, Tuple, Optional
 
 from toolchain import toolchain_info
 
@@ -35,12 +35,15 @@ T = TypeVar("T")
 
 
 def _run_command_with_sentinel_report(
-    cmd_func: Callable[..., T], checker_func: Callable[[T], bool] = None
+    genny_repo_root: str,
+    workspace_root: str,
+    cmd_func: Callable[..., T],
+    checker_func: Callable[[T], bool] = None,
 ) -> Tuple[T, bool]:
     # This can only be imported after the setup script has installed gennylib.
     from curator import poplar_grpc
 
-    sentinel_file = os.path.join(os.getcwd(), "build", "XUnitXML", "sentinel.junit.xml")
+    sentinel_file = os.path.join(workspace_root, "build", "XUnitXML", "sentinel.junit.xml")
     os.makedirs(name=os.path.dirname(sentinel_file), exist_ok=True)
 
     success = False
@@ -48,7 +51,9 @@ def _run_command_with_sentinel_report(
         with open(sentinel_file, "w") as f:
             f.write(_sentinel_report)
 
-        with poplar_grpc(cleanup_metrics=True):
+        with poplar_grpc(
+            cleanup_metrics=True, workspace_root=workspace_root, genny_repo_root=genny_repo_root
+        ):
             cmd_output = cmd_func()
 
         success = True if checker_func is None else checker_func(cmd_output)
@@ -60,12 +65,11 @@ def _run_command_with_sentinel_report(
             "Command finished. Left sentinel_file in place unless success.",
             success=success,
             sentinel_file=sentinel_file,
-            cwd=os.getcwd(),
         )
 
 
-def cmake_test(genny_repo_root: str):
-    info = toolchain_info(genny_repo_root=genny_repo_root)
+def cmake_test(genny_repo_root: str, workspace_root: str):
+    info = toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     workdir = os.path.join(genny_repo_root, "build")
 
     ctest_cmd = [
@@ -76,15 +80,17 @@ def cmake_test(genny_repo_root: str):
     ]
 
     def cmd_func() -> None:
-        cmd_runner.CmdOutput = run_command(
+        cmd_runner.RunCommandOutput = run_command(
             cmd=ctest_cmd, cwd=workdir, env=info.toolchain_env, capture=False, check=True
         )
 
-    _run_command_with_sentinel_report(cmd_func=cmd_func,)
+    _run_command_with_sentinel_report(
+        cmd_func=cmd_func, workspace_root=workspace_root, genny_repo_root=genny_repo_root
+    )
 
 
-def benchmark_test(genny_repo_root: str):
-    info = toolchain_info(genny_repo_root=genny_repo_root)
+def benchmark_test(genny_repo_root: str, workspace_root: str):
+    info = toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     workdir = os.path.join(genny_repo_root, "build")
 
     ctest_cmd = ["ctest", "--label-regex", "(benchmark)"]
@@ -92,13 +98,17 @@ def benchmark_test(genny_repo_root: str):
     def cmd_func():
         run_command(cmd=ctest_cmd, cwd=workdir, env=info.toolchain_env, capture=False, check=True)
 
-    _run_command_with_sentinel_report(cmd_func=cmd_func)
+    _run_command_with_sentinel_report(
+        cmd_func=cmd_func, workspace_root=workspace_root, genny_repo_root=genny_repo_root
+    )
 
 
-def _check_create_new_actor_test_report() -> bool:
+def _check_create_new_actor_test_report(workspace_root: str) -> bool:
     passed = False
 
-    report_file = os.path.join(os.getcwd(), "build", "XUnitXML", "create_new_actor_test.junit.xml")
+    report_file = os.path.join(
+        workspace_root, "build", "XUnitXML", "create_new_actor_test.junit.xml"
+    )
 
     if not os.path.isfile(report_file):
         SLOG.error("Failed to find report file", report_file=report_file)
@@ -134,13 +144,16 @@ _canned_artifacts = {
 
 
 def _setup_resmoke(
-    genny_repo_root: str, mongo_dir: Optional[str], mongodb_archive_url: Optional[str]
+    workspace_root: str,
+    genny_repo_root: str,
+    mongo_dir: Optional[str],
+    mongodb_archive_url: Optional[str],
 ):
     if mongo_dir is not None:
         mongo_repo_path = mongo_dir
     else:
         evergreen_mongo_repo = os.path.join(genny_repo_root, "..", "mongo")
-        run_from_evergreen_workspace = os.getcwd() != genny_repo_root
+        run_from_evergreen_workspace = workspace_root != genny_repo_root
 
         if os.path.exists(evergreen_mongo_repo) and run_from_evergreen_workspace:
             mongo_repo_path = evergreen_mongo_repo
@@ -202,7 +215,7 @@ def _setup_resmoke(
             fetching=mongodb_archive_url,
         )
         if mongodb_archive_url is None:
-            info = toolchain_info(genny_repo_root)
+            info = toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
 
             if info.is_darwin:
                 artifact_key = "osx"
@@ -254,6 +267,7 @@ def _setup_resmoke(
 
 def resmoke_test(
     genny_repo_root: str,
+    workspace_root: str,
     suites: str,
     is_cnats: bool,
     mongo_dir: Optional[str],
@@ -270,7 +284,10 @@ def resmoke_test(
         checker_func = None
 
     resmoke_python, mongo_repo_path, bin_dir = _setup_resmoke(
-        genny_repo_root, mongo_dir, mongodb_archive_url
+        workspace_root=workspace_root,
+        genny_repo_root=genny_repo_root,
+        mongo_dir=mongo_dir,
+        mongodb_archive_url=mongodb_archive_url,
     )
 
     mongod = os.path.join(bin_dir, "mongod")
@@ -305,7 +322,10 @@ def resmoke_test(
         )
 
     _run_command_with_sentinel_report(
-        cmd_func=run_resmoke, checker_func=checker_func,
+        workspace_root=workspace_root,
+        genny_repo_root=genny_repo_root,
+        cmd_func=run_resmoke,
+        checker_func=checker_func,
     )
 
 
@@ -315,20 +335,26 @@ def _check_venv():
         raise Exception(f"Tried to execute without active virtualenv in cwd={os.getcwd()}")
 
 
-def run_self_test():
+def run_self_test(genny_repo_root: str, workspace_root: str):
     _check_venv()
-    _validate_environment()
+    _validate_python_installation()
 
     import pytest
 
-    pytest.main([])
+    path = os.path.join(workspace_root, "build", "XUnitXML", "PyTest.xml")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    args = ["--junit-xml", path, genny_repo_root]
+
+    SLOG.info("Running pytest.", args=args)
+    pytest.main(args)
 
 
 def _python_version_string():
     return ".".join(map(str, sys.version_info))[0:5]
 
 
-def _validate_environment():
+def _validate_python_installation():
     # Check Python version
     if not sys.version_info >= (3, 7):
         raise OSError(

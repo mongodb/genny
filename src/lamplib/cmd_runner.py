@@ -1,6 +1,6 @@
 import subprocess
 import structlog
-from typing import List, Tuple, NamedTuple
+from typing import List, NamedTuple
 import os
 from uuid import uuid4
 
@@ -16,7 +16,7 @@ def _short_path(path):
     return ":".join(bits[:4]) + "..."
 
 
-class CmdOutput(NamedTuple):
+class RunCommandOutput(NamedTuple):
     returncode: int
     stdout: List[str]
     stderr: List[str]
@@ -29,8 +29,7 @@ def run_command(
     shell: bool = False,
     env: dict = None,
     capture: bool = True,
-) -> CmdOutput:
-    cwd = os.getcwd() if cwd is None else cwd
+) -> RunCommandOutput:
     env = os.environ.copy() if env is None else env
 
     uuid = str(uuid4())[:8]
@@ -54,7 +53,7 @@ def run_command(
             capture_output=capture,
         )
         success = result.returncode == 0
-        return CmdOutput(
+        return RunCommandOutput(
             returncode=result.returncode,
             stdout=[] if not capture else result.stdout.strip().split("\n"),
             stderr=[] if not capture else result.stderr.strip().split("\n"),
@@ -66,7 +65,7 @@ def run_command(
             uuid=uuid,
             cmd=cmd,
             env=env,
-            cwd=os.getcwd(),
+            cwd=cwd,
             returncode=e.returncode,
             output=e.output,
         )

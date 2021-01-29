@@ -73,10 +73,20 @@ class ToolchainInfo(NamedTuple):
 
 
 def _compute_toolchain_info(
-    os_family: str, linux_distro: str, ignore_toolchain_version: bool
+    genny_repo_root: str,
+    workspace_root: str,
+    os_family: str,
+    linux_distro: str,
+    ignore_toolchain_version: bool,
 ) -> ToolchainInfo:
     triplet_os = _triplet_os_map[os_family]
-    toolchain_downloader = ToolchainDownloader(os_family, linux_distro, ignore_toolchain_version)
+    toolchain_downloader = ToolchainDownloader(
+        genny_repo_root=genny_repo_root,
+        workspace_root=workspace_root,
+        os_family=os_family,
+        linux_distro=linux_distro,
+        ignore_toolchain_version=ignore_toolchain_version,
+    )
     toolchain_dir = toolchain_downloader.result_dir
     toolchain_env = _create_compile_environment(triplet_os, toolchain_dir)
     if not toolchain_downloader.fetch_and_install():
@@ -91,6 +101,7 @@ def _compute_toolchain_info(
 
 def toolchain_info(
     genny_repo_root: str,
+    workspace_root: str,
     os_family: Optional[str] = None,
     linux_distro: Optional[str] = None,
     ignore_toolchain_version: Optional[bool] = None,
@@ -108,6 +119,8 @@ def toolchain_info(
         raise Exception(msg)
     if passed_any or not has_save:
         info: ToolchainInfo = _compute_toolchain_info(
+            genny_repo_root=genny_repo_root,
+            workspace_root=workspace_root,
             os_family=os_family,
             linux_distro=linux_distro,
             ignore_toolchain_version=ignore_toolchain_version,
@@ -128,9 +141,21 @@ class ToolchainDownloader(Downloader):
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
     TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
-    def __init__(self, os_family, linux_distro, ignore_toolchain_version: bool):
+    def __init__(
+        self,
+        genny_repo_root: str,
+        workspace_root: str,
+        os_family: str,
+        linux_distro: str,
+        ignore_toolchain_version: bool,
+    ):
         super().__init__(
-            os_family, linux_distro, ToolchainDownloader.TOOLCHAIN_ROOT, "gennytoolchain"
+            genny_repo_root=genny_repo_root,
+            workspace_root=workspace_root,
+            os_family=os_family,
+            linux_distro=linux_distro,
+            install_dir=ToolchainDownloader.TOOLCHAIN_ROOT,
+            name="gennytoolchain",
         )
         self.ignore_toolchain_version = ignore_toolchain_version
 

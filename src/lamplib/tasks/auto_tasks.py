@@ -81,7 +81,7 @@ class WorkloadLister:
             "git diff --name-only --diff-filter=AMR "
             "$(git merge-base HEAD origin/master) -- src/workloads/"
         )
-        lines = run_command(cmd=[command], cwd=self.repo_root, shell=True)
+        lines = run_command(cmd=[command], cwd=self.repo_root, shell=True, check=True)
         return {os.path.join(self.repo_root, line) for line in lines if line.endswith(".yml")}
 
 
@@ -95,6 +95,9 @@ class OpName(enum.Enum):
     PATCH_TASKS = object()
 
 
+#         output_file = "./build/TaskJSON/Tasks.json"
+
+
 class CLIOperation(NamedTuple):
     """
     Represents the "input" to what we're doing"
@@ -102,34 +105,29 @@ class CLIOperation(NamedTuple):
 
     mode: OpName
     variant: Optional[str]
-    output_file_suffix: str
-
-    @property
-    def repo_root(self) -> str:
-        out = "./src/genny"
-        if not os.path.exists(out):
-            SLOG.info("Genny repo root does not exist", tried=out, cwd=os.getcwd())
-        return out
-
-    @property
-    def output_file(self) -> str:
-        return self.output_file_suffix
+    genny_repo_root: str
+    workspace_root: str
 
     @staticmethod
-    def parse(mode_name: str, reader: YamlReader) -> "CLIOperation":
+    def create(
+        mode_name: str, reader: YamlReader, genny_repo_root: str, workspace_root: str
+    ) -> "CLIOperation":
         mode = OpName.ALL_TASKS
         variant = None
 
-        output_file = "./build/TaskJSON/Tasks.json"
+        expansions_path = os.path.join(workspace_root, "expansions.yml")
+
         if mode_name == "all_tasks":
             mode = OpName.ALL_TASKS
         if mode_name == "patch_tasks":
             mode = OpName.PATCH_TASKS
-            variant = reader.load("expansions.yml")["build_variant"]
+            variant = reader.load(expansions_path)["build_variant"]
         if mode_name == "variant_tasks":
             mode = OpName.VARIANT_TASKS
-            variant = reader.load("expansions.yml")["build_variant"]
-        return CLIOperation(mode, variant, output_file)
+            variant = reader.load(expansions_path)["build_variant"]
+        return CLIOperation(
+            mode, variant, genny_repo_root=genny_repo_root, workspace_root=workspace_root
+        )
 
 
 class CurrentBuildInfo:
@@ -312,26 +310,27 @@ class ConfigWriter:
             config: Configuration = self.variant_tasks(tasks, self.op.variant)
         else:
             config = self.all_tasks_modern(tasks)
+
+        output_file = os.path.join(self.op.workspace_root, "build", "TaskJSON", "Tasks.json")
+
         success = False
         raised = None
         if write:
             try:
                 out_text = config.to_json()
-                os.makedirs(os.path.dirname(self.op.output_file), exist_ok=True)
-                if os.path.exists(self.op.output_file):
-                    os.unlink(self.op.output_file)
-                with open(self.op.output_file, "w") as output:
+                os.makedirs(os.path.dirname(output_file), exist_ok=True)
+                if os.path.exists(output_file):
+                    os.unlink(output_file)
+                with open(output_file, "w") as output:
                     output.write(out_text)
-                    SLOG.debug(
-                        "Wrote task json", output_file=self.op.output_file, contents=out_text
-                    )
+                    SLOG.debug("Wrote task json", output_file=output_file, contents=out_text)
                 success = True
             except Exception as e:
                 raised = e
                 raise e
             finally:
                 SLOG.info(
-                    f"{'Succeeded' if success else 'Failed'} to write to {self.op.output_file} from cwd={os.getcwd()}."
+                    f"{'Succeeded' if success else 'Failed'} to write to {output_file} from cwd={os.getcwd()}."
                     f"{raised if raised else ''}"
                 )
         return config
@@ -367,13 +366,15 @@ class ConfigWriter:
         return c
 
 
-def main(mode_name) -> None:
+def main(mode_name: str, genny_repo_root: str, workspace_root: str) -> None:
     reader = YamlReader()
-    build = CurrentBuildInfo(reader)
-    op = CLIOperation.parse(mode_name, reader)
-    lister = WorkloadLister(op.repo_root, reader)
-    repo = Repo(lister, reader)
-    tasks = repo.tasks(op, build)
+    build = CurrentBuildInfo(reader=reader)
+    op = CLIOperation.create(
+        mode_name=mode_name, reader=reader, repo_root=genny_repo_root, workspace_root=workspace_root
+    )
+    lister = WorkloadLister(repo_root=genny_repo_root, reader=reader)
+    repo = Repo(lister=lister, reader=reader)
+    tasks = repo.tasks(op=op, build=build)
 
     writer = ConfigWriter(op)
     writer.write(tasks)

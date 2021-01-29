@@ -28,7 +28,7 @@ def cli(ctx: click.Context, verbose: bool) -> None:
         raise Exception(f"GENNY_REPO_ROOT env var {found} either not set or does not exist.")
     ctx.obj["GENNY_REPO_ROOT"] = found
 
-    os.chdir(ctx.obj["GENNY_REPO_ROOT"])
+    ctx.obj["WORKSPACE_ROOT"] = os.getcwd()
 
 
 @cli.command("install", help="Compile and install. This is required for most other commands.")
@@ -96,6 +96,7 @@ def cmake_compile_install(
 
     compile.compile_and_install(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
         build_system=build_system,
         os_family=os_family,
         linux_distro=linux_distro,
@@ -105,7 +106,10 @@ def cmake_compile_install(
     )
 
     curator.ensure_curator_installed(
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], os_family=os_family, linux_distro=linux_distro
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        os_family=os_family,
+        linux_distro=linux_distro,
     )
 
 
@@ -123,7 +127,9 @@ def clean() -> None:
 def cmake_test(ctx: click.Context) -> None:
     from tasks import run_tests
 
-    run_tests.cmake_test(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
+    run_tests.cmake_test(
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
+    )
 
 
 @cli.command(
@@ -134,7 +140,9 @@ def cmake_test(ctx: click.Context) -> None:
 def benchmark_test(ctx: click.Context) -> None:
     from tasks import run_tests
 
-    run_tests.benchmark_test(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
+    run_tests.benchmark_test(
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
+    )
 
 
 # TODO: Modify this to match usage in DSI
@@ -159,6 +167,7 @@ def workload(ctx: click.Context, genny_args: List[str]):
     genny_runner.main_genny_runner(
         genny_args=ctx.obj["GENNY_ARGS"],
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
         cleanup_metrics=True,
     )
 
@@ -176,7 +185,9 @@ def workload(ctx: click.Context, genny_args: List[str]):
 def dry_run_workloads(ctx: click.Context):
     from tasks import dry_run
 
-    dry_run.dry_run_workloads(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
+    dry_run.dry_run_workloads(
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
+    )
 
 
 @cli.command(
@@ -192,10 +203,15 @@ def dry_run_workloads(ctx: click.Context):
 # f"{prefix} ./src/genny/run-genny canaries nop",
 # TODO: canaries to assume -i 10000 and output files
 # f"{prefix} ./src/genny/run-genny canaries ping -u '{db_url}'"
-def canaries():
+@click.pass_context
+def canaries(ctx):
     from tasks import canaries_runner
 
-    canaries_runner.main_canaries_runner(cleanup_metrics=True)
+    canaries_runner.main_canaries_runner(
+        cleanup_metrics=True,
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+    )
 
 
 # noinspection PyArgumentEqualDefault
@@ -244,6 +260,7 @@ def resmoke_test(
 
     run_tests.resmoke_test(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
         suites=suites,
         is_cnats=create_new_actor_test_suite,
         mongo_dir=mongo_dir,
@@ -284,17 +301,21 @@ def lint_python(ctx: click.Context, fix: bool):
 
 
 @cli.command(name="self-test", help="Run the pytest tests of genny's internal python.")
-def self_test():
+@click.pass_context
+def self_test(ctx: click.Context):
     from tasks import run_tests
 
-    run_tests.run_self_test()
+    run_tests.run_self_test(
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
+    )
 
 
 @cli.command(name="lint-yaml", help="Run pylint on all workload and phase yamls")
-def lint_yaml():
+@click.pass_context
+def lint_yaml(ctx: click.Context):
     from tasks import yaml_linter
 
-    yaml_linter.main()
+    yaml_linter.main(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
 
 
 @cli.command(
@@ -309,10 +330,15 @@ def lint_yaml():
 @click.option(
     "--tasks", required=True, type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks"]),
 )
-def auto_tasks(tasks: str):
+@click.pass_context
+def auto_tasks(ctx: click.Context, tasks: str):
     from tasks import auto_tasks
 
-    auto_tasks.main(tasks)
+    auto_tasks.main(
+        mode_name=tasks,
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+    )
 
 
 if __name__ == "__main__":

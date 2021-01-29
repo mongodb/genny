@@ -8,16 +8,11 @@ import yamllint.cli
 SLOG = structlog.get_logger(__name__)
 
 
-def main():
-
-    if not path.exists(".genny-root"):
-        SLOG.error("Please run this script from the root of the Genny repository", cwd=os.getcwd())
-        raise Exception(f"Not run from genny repo root. cwd={os.getcwd()}")
-
+def main(genny_repo_root: str):
     yaml_dirs = [
-        path.join(os.getcwd(), "src", "workloads"),
-        path.join(os.getcwd(), "src", "phases"),
-        path.join(os.getcwd(), "src", "resmokeconfig"),
+        path.join(genny_repo_root, "src", "workloads"),
+        path.join(genny_repo_root, "src", "phases"),
+        path.join(genny_repo_root, "src", "resmokeconfig"),
     ]
 
     yaml_files = [path.join(os.getcwd(), "evergreen.yml")]
