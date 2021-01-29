@@ -72,6 +72,7 @@ def cmake_test(genny_repo_root: str, workspace_root: str):
     info = toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     workdir = os.path.join(genny_repo_root, "build")
 
+    # TODO: don't put in
     ctest_cmd = [
         "ctest",
         "--verbose",

@@ -124,15 +124,14 @@ def install(
 
 
 def clean(genny_repo_root: str):
-    # Physically remove all built files.
-    SLOG.debug("Erasing build, genny_venv, and dist", cwd=os.getcwd())
-
     def _run_command(cmd):
         run_command(cmd=cmd, cwd=genny_repo_root, capture=False, check=True)
 
+    # Physically remove all built files.
     _run_command(cmd=["rm", "-rf", "build"])
     _run_command(cmd=["rm", "-rf", "genny_venv"])
     _run_command(cmd=["rm", "-rf", "dist"])
+
     # Put back build/.gitinore
     _run_command(cmd=["git", "checkout", "--", "build"])
 
