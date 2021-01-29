@@ -6,7 +6,7 @@ import shutil
 
 import cmd_runner
 from cmd_runner import run_command
-from typing import Callable, TypeVar, List, Any, Tuple
+from typing import Callable, TypeVar, List, Any, Tuple, Optional
 
 SLOG = structlog.get_logger(__name__)
 
@@ -125,7 +125,7 @@ def _check_create_new_actor_test_report() -> bool:
     return passed
 
 
-def _setup_resmoke(genny_repo_root: str, mongo_dir: str):
+def _setup_resmoke(genny_repo_root: str, mongo_dir: Optional[str]):
     if mongo_dir is not None:
         mongo_repo_path = mongo_dir
     else:
@@ -226,7 +226,7 @@ def _setup_resmoke(genny_repo_root: str, mongo_dir: str):
 
 
 def resmoke_test(
-    genny_repo_root: str, suites: str, is_cnats: bool, mongo_dir: str, env: dict,
+    genny_repo_root: str, suites: str, is_cnats: bool, mongo_dir: Optional[str], env: dict,
 ):
     if (not suites) and (not is_cnats):
         raise ValueError('Must specify either "--suites" or "--create-new-actor-test-suite"')

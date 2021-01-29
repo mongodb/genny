@@ -12,5 +12,17 @@ def lint_python(genny_repo_root: str, fix: bool = False):
     else:
         cmd = []
     cmd.append(path)
-    SLOG.info("Running black", black_args=cmd)
-    black.main(cmd)
+    SLOG.debug("Running black", black_args=cmd)
+
+    try:
+        black.main(cmd)
+    except SystemExit as e:
+        if e.code == 0:
+            return
+        msg = "There were python formatting errors."
+        if not fix:
+            msg += "  Run the command with the --fix option to fix."
+        else:
+            msg += "  Some errors may have been fixed. Re-run to verify."
+        SLOG.critical(msg)
+        raise

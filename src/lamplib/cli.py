@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import click
 from click_option_group import optgroup, RequiredMutuallyExclusiveOptionGroup
@@ -204,13 +204,16 @@ def canaries():
     canaries_runner.main_canaries_runner(cleanup_metrics=True)
 
 
+# noinspection PyArgumentEqualDefault
 @cli.command(
     name="resmoke-test",
     help="Runs genny's C++-based integration tests under resmoke (lives in the mongo repo)",
 )
 @click.option(
     "--mongo-dir",
-    type=click.Path(),
+    type=click.Path(
+        exists=False, file_okay=False, dir_okay=True, writable=True, resolve_path=True,
+    ),
     required=False,
     default=None,
     help="Path to the mongo repo, which contains buildscripts/resmoke.py",
@@ -227,7 +230,7 @@ def canaries():
 )
 @click.pass_context
 def resmoke_test(
-    ctx: click.Context, suites: str, create_new_actor_test_suite: bool, mongo_dir: str
+    ctx: click.Context, suites: str, create_new_actor_test_suite: bool, mongo_dir: Optional[str]
 ):
     from tasks import run_tests
 
