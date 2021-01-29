@@ -9,11 +9,8 @@ import os
 
 import loggers
 import curator
-from cmd_runner import run_command
 
 SLOG = structlog.get_logger(__name__)
-# If ctx.obj interactions become any more complicated, please refactor to a Context objects
-# that can be constructed from kwargs and can handle its own saving/cleaning, etc.
 
 
 @click.group(name="Genny", context_settings=dict(help_option_names=["-h", "--help"]))
@@ -24,10 +21,13 @@ def cli(ctx: click.Context, verbose: bool) -> None:
     ctx.ensure_object(dict)
 
     ctx.obj["VERBOSE"] = verbose
-    loggers.setup_logging(verbose)
+    loggers.setup_logging(verbose=verbose)
 
-    # TODO: barf if not set or not exists.
-    ctx.obj["GENNY_REPO_ROOT"] = os.environ["GENNY_REPO_ROOT"]
+    found = os.environ.get("GENNY_REPO_ROOT", None)
+    if not found or not os.path.exists(found):
+        raise Exception(f"GENNY_REPO_ROOT env var {found} either not set or does not exist.")
+    ctx.obj["GENNY_REPO_ROOT"] = found
+
     os.chdir(ctx.obj["GENNY_REPO_ROOT"])
 
 
@@ -125,7 +125,7 @@ def cmake_test(ctx: click.Context) -> None:
 
     # TODO:
     env = dict()
-    run_tests.cmake_test(ctx.obj["GENNY_REPO_ROOT"], env)
+    run_tests.cmake_test(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], env=env)
 
 
 @cli.command(
@@ -138,7 +138,7 @@ def benchmark_test(ctx: click.Context) -> None:
 
     # TODO:
     env = dict()
-    run_tests.benchmark_test(ctx.obj["GENNY_REPO_ROOT"], env)
+    run_tests.benchmark_test(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], env=env)
 
 
 # TODO: Modify this to match usage in DSI
@@ -250,12 +250,10 @@ def resmoke_test(
 @click.argument("actor_name")
 @click.pass_context
 def create_new_actor(ctx: click.Context, actor_name: str):
-    # TODO: move to tasks
-    path = os.path.join(
-        ctx.obj["GENNY_REPO_ROOT"], "src", "lamplib", "tasks", "create-new-actor.sh"
-    )
-    run_command(
-        cmd=[path, actor_name], cwd=ctx.obj["GENNY_REPO_ROOT"], capture=False, check=True,
+    from tasks import create_new_actor
+
+    create_new_actor.run_create_new_actor(
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], actor_name=actor_name,
     )
 
 
@@ -263,12 +261,14 @@ def create_new_actor(ctx: click.Context, actor_name: str):
     name="lint-python",
     help="Run the 'black' python format checker to ensure genny's internal python is 💅.",
 )
-def lint_python():
+@click.option(
+    "--fix", default=False, is_flag=True, help="Fix formatting in-place rather than erroring."
+)
+@click.pass_context
+def lint_python(ctx: click.Context, fix: bool):
     from tasks import lint_python
 
-    # TODO: add --fix option
-    genny_repo_root = os.environ.get("GENNY_REPO_ROOT")
-    lint_python.lint_python(genny_repo_root)
+    lint_python.lint_python(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], fix=fix)
 
 
 @cli.command(name="self-test", help="Run the pytest tests of genny's internal python.")
