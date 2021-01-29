@@ -42,27 +42,25 @@ def _run_command_with_sentinel_report(
     sentinel_file = os.path.join(os.getcwd(), "build", "XUnitXML", "sentinel.junit.xml")
     os.makedirs(name=os.path.dirname(sentinel_file), exist_ok=True)
 
-    with open(sentinel_file, "w") as f:
-        f.write(_sentinel_report)
+    success = False
+    try:
+        with open(sentinel_file, "w") as f:
+            f.write(_sentinel_report)
 
-    with poplar_grpc(cleanup_metrics=True):
-        cmd_output = cmd_func(*cmd_func_args)
+        with poplar_grpc(cleanup_metrics=True):
+            cmd_output = cmd_func(*cmd_func_args)
 
-    success = True if checker_func is None else checker_func(cmd_output)
-
-    if success:
+        success = True if checker_func is None else checker_func(cmd_output)
+        return cmd_output, success
+    finally:
+        if success and os.path.exists(sentinel_file):
+            os.remove(sentinel_file)
         SLOG.debug(
-            "Test succeeded, removing sentinel report", sentinel_file=sentinel_file, cwd=os.getcwd()
-        )
-        os.remove(sentinel_file)
-    else:
-        SLOG.debug(
-            "Test failed, leaving sentinel report in place",
+            "Command finished. Left sentinel_file in place unless success.",
+            success=success,
             sentinel_file=sentinel_file,
             cwd=os.getcwd(),
         )
-
-    return cmd_output, success
 
 
 def cmake_test(
@@ -77,8 +75,12 @@ def cmake_test(
         "(standalone|sharded|single_node_replset|three_node_replset|benchmark)",
     ]
 
+    def cmd_func():
+        output: cmd_runner.CmdOutput = run_command(cmd=ctest_cmd, cwd=workdir, env=env, capture=False)
+
+
     _run_command_with_sentinel_report(
-        cmd_func=lambda: run_command(cmd=ctest_cmd, cwd=workdir, env=env, capture=False)
+        cmd_func=lambda:
     )
 
 
