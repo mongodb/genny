@@ -67,6 +67,7 @@ def cmake_test(
 ):
     workdir = os.path.join(genny_repo_root, "build")
 
+    # TODO: this needs the toolchain env
     ctest_cmd = [
         "ctest",
         "--verbose",
@@ -87,6 +88,7 @@ def benchmark_test(
 ):
     workdir = os.path.join(genny_repo_root, "build")
 
+    # TODO: this needs the toolchain env
     ctest_cmd = ["ctest", "--label-regex", "(benchmark)"]
 
     def cmd_func():

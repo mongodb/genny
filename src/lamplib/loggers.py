@@ -28,7 +28,7 @@ def setup_logging(verbose: bool = False) -> None:
     logging.getLogger("botocore").setLevel(logging.WARNING)
     logging.getLogger("error_only").setLevel(logging.ERROR)
     logging.getLogger("asyncio").setLevel(logging.INFO)
-    logging.getLogger("blib2to3").setLevel(logging.INFO)
+    logging.getLogger("blib2to3").setLevel(logging.WARN)
 
     structlog.configure_once(
         processors=[

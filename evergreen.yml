@@ -334,6 +334,7 @@ functions:
       binary: ./src/genny/run-genny
       args:
       - -v
+      # TODO: rename to pytest
       - self-test
 
   ##
@@ -345,6 +346,7 @@ functions:
       binary: ./src/genny/run-genny
       args:
       - -v
+      # TODO: this fails right now - should show up in patch-build; need to remove this task and TODO as a ticket
       - lint-yaml
 
   ##

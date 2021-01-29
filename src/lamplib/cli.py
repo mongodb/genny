@@ -163,6 +163,8 @@ def benchmark_test(ctx: click.Context) -> None:
     run_tests.benchmark_test(ctx.obj["GENNY_REPO_ROOT"], env)
 
 
+# TODO: Modify this to match usage in DSI
+# f'{prefix} ./src/genny/run-genny run --mongo-uri "{db_url}" --workload-file {cfg}'
 @cli.command(
     name="workload",
     help=(
@@ -214,6 +216,10 @@ def dry_run_workloads(ctx: click.Context):
         "run-over-run it is indicative of a change in the underlying system."
     ),
 )
+# TODO: match usage in DSI
+# f"{prefix} ./src/genny/run-genny canaries nop",
+# TODO: canaries to assume -i 10000 and output files
+# f"{prefix} ./src/genny/run-genny canaries ping -u '{db_url}'"
 def canaries():
     from tasks import canaries_runner
 
