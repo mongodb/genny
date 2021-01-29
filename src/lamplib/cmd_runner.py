@@ -2,18 +2,10 @@ import subprocess
 import structlog
 from typing import List, NamedTuple
 import os
+import shlex
 from uuid import uuid4
 
 SLOG = structlog.get_logger(__name__)
-
-
-def _short_path(path):
-    if path is None:
-        return None
-    bits = path.split(":")
-    if len(bits) <= 3:
-        return path
-    return ":".join(bits[:4]) + "..."
 
 
 class RunCommandOutput(NamedTuple):
@@ -33,9 +25,7 @@ def run_command(
     env = os.environ.copy() if env is None else env
 
     uuid = str(uuid4())[:8]
-    SLOG.debug(
-        "Running command", uuid=uuid, cmd=cmd, PATH=_short_path(env.get("PATH", None)), cwd=cwd
-    )
+    SLOG.debug("Running command", uuid=uuid, cwd=cwd, command=" ".join(shlex.quote(x) for x in cmd))
 
     success = False
 

@@ -1,7 +1,6 @@
 from typing import List
 
 import structlog
-import shlex
 import os
 
 from cmd_runner import run_command
@@ -26,7 +25,6 @@ def main_genny_runner(
             SLOG.error("genny_core not found. Run install first.", path=path)
             raise Exception(f"genny_core not found at {path}.")
         cmd = [path, *genny_args]
-        SLOG.info("Running genny", command=" ".join(shlex.quote(x) for x in cmd))
 
         run_command(
             cmd=cmd, capture=False, check=True, cwd=workspace_root,
