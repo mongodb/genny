@@ -33,6 +33,8 @@ namespace genny {
 
 const int DROPPED_COLLECTION_RETRIES = 1000;
 
+namespace {
+
 bool waitOplog(Topology& topology) {
     class WaitOplogVisitor : public TopologyVisitor {
     public:
@@ -123,6 +125,8 @@ bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client, std::string
     }
     return true;
 }
+
+} // anonymous namespace
 
 // Only one thread needs to actually do the quiesce.
 bool quiesce(mongocxx::pool::entry& client, std::string dbName) {
