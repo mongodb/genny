@@ -57,7 +57,9 @@ def cmake(
 
     cmake_cmd += cmake_args
 
-    run_command(cmd=cmake_cmd, env=toolchain_info["toolchain_env"], capture=False)
+    run_command(
+        cmd=cmake_cmd, env=toolchain_info["toolchain_env"], capture=False, check=True,
+    )
 
 
 def compile_all(
@@ -65,24 +67,26 @@ def compile_all(
 ):
     toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
     compile_cmd = [build_system, "-C", "build"]
-    run_command(cmd=compile_cmd, env=toolchain_info["toolchain_env"], capture=False)
+    run_command(cmd=compile_cmd, env=toolchain_info["toolchain_env"], capture=False, check=True)
 
 
 def install(build_system: str, os_family: str, linux_distro: str, ignore_toolchain_version: bool):
     toolchain_info = toolchain.toolchain_info(os_family, linux_distro, ignore_toolchain_version)
     install_cmd = [build_system, "-C", "build", "install"]
-    run_command(cmd=install_cmd, env=toolchain_info["toolchain_env"], capture=False)
+    run_command(cmd=install_cmd, env=toolchain_info["toolchain_env"], capture=False, check=True)
 
 
 def clean_build_dir():
-    run_command(cmd=["rm", "-rf", "build"], capture=False)
+    run_command(
+        cmd=["rm", "-rf", "build"], capture=False, check=True,
+    )
     # Put back build/.gitinore
-    run_command(cmd=["git", "checkout", "--", "build"], capture=False)
+    run_command(cmd=["git", "checkout", "--", "build"], capture=False, check=True)
 
 
 def clean():
     # Physically remove all built files.
     SLOG.debug("Erasing build, genny_venv, and dist", cwd=os.getcwd())
     clean_build_dir()
-    run_command(cmd=["rm", "-rf", "genny_venv"], env=os.environ.copy(), capture=False)
-    run_command(cmd=["rm", "-rf", "dist"], env=os.environ.copy(), capture=False)
+    run_command(cmd=["rm", "-rf", "genny_venv"], env=os.environ.copy(), capture=False, check=True)
+    run_command(cmd=["rm", "-rf", "dist"], env=os.environ.copy(), capture=False, check=True)

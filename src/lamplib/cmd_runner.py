@@ -53,7 +53,7 @@ def run_command(
             text=capture,  # capture implies text. No binary output from genny.
             capture_output=capture,
         )
-
+        success = result.returncode == 0
         return CmdOutput(
             returncode=result.returncode,
             stdout=[] if not capture else result.stdout.strip().split("\n"),

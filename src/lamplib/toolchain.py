@@ -82,5 +82,7 @@ class ToolchainDownloader(Downloader):
         )
 
     def _check_toolchain_githash(self):
-        res = "".join(run_command(cmd=["git", "rev-parse", "HEAD"], cwd=self.result_dir))
+        res = "".join(
+            run_command(cmd=["git", "rev-parse", "HEAD"], cwd=self.result_dir, check=True).stdout
+        )
         return res.strip() == ToolchainDownloader.TOOLCHAIN_GIT_HASH

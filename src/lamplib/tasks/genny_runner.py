@@ -22,4 +22,6 @@ def main_genny_runner(genny_args: List[str], genny_repo_root: str, cleanup_metri
         cmd = [path, *genny_args]
         SLOG.info("Running genny", command=" ".join(shlex.quote(x) for x in cmd))
 
-        run_command(cmd=cmd, capture=False)
+        run_command(
+            cmd=cmd, capture=False, check=True,
+        )

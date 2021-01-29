@@ -3,14 +3,27 @@ import shutil
 import subprocess
 import datetime
 from uuid import uuid4
+from typing import Optional
 
 import structlog
 from contextlib import contextmanager
 
-from cmd_runner import run_command
+from cmd_runner import run_command, CmdOutput
 from download import Downloader
 
 SLOG = structlog.get_logger(__name__)
+
+
+def _find_curator() -> Optional[str]:
+    in_bin = os.path.join("bin", "curator")
+    if os.path.exists(in_bin):
+        return in_bin
+
+    in_build = os.path.join("build", "curator", "curator")
+    if os.path.exists(in_build):
+        return in_build
+
+    return None
 
 
 def _get_poplar_args():
@@ -20,12 +33,9 @@ def _get_poplar_args():
     If we are in the root of the genny repo, use the local executable.
     Otherwise we search the PATH.
     """
-    curator = "./build/curator/curator"
-    if not os.path.exists(curator):
-        SLOG.critical(
-            "Curator not found. Ensure you've run install.", looked_for=curator, in_cwd=os.getcwd()
-        )
-        raise Exception("Curator not found.")
+    curator = _find_curator()
+    if curator is None:
+        raise Exception(f"Curator not found in cwd {os.getcwd()}")
     return [curator, "poplar", "grpc"]
 
 
@@ -57,9 +67,9 @@ def poplar_grpc(cleanup_metrics: bool):
 
     SLOG.info("Running poplar", command=args, cwd=os.getcwd())
     poplar = subprocess.Popen(args)
+    # stdout=subprocess.PIPE, stderr=subprocess.PIPE
     if poplar.poll() is not None:
         raise OSError("Failed to start Poplar.")
-
     try:
         yield poplar
     finally:
@@ -67,8 +77,7 @@ def poplar_grpc(cleanup_metrics: bool):
             poplar.terminate()
             exit_code = poplar.wait(timeout=10)
             if exit_code not in (0, -15):  # Termination or exit.
-                raise OSError("Poplar exited with code: {code}.".format(code=(exit_code)))
-
+                raise OSError(f"Poplar exited with code: {exit_code}.")
         except:
             # If Poplar doesn't die then future runs can be broken.
             if poplar.poll() is None:
@@ -115,10 +124,13 @@ class CuratorDownloader(Downloader):
         )
 
     def _can_ignore(self):
-        return os.path.exists(self.result_dir) and self._check_curator_version()
-
-    def _check_curator_version(self):
-        res = run_command(cmd=["./curator", "-v"], cwd=self.result_dir)
-        installed_version = res[0].strip()
-        wanted_version = CuratorDownloader.CURATOR_VERSION
+        curator = _find_curator()
+        if curator is None:
+            return False
+        res: CmdOutput = run_command(
+            cmd=[curator, "-v"], check=True,
+        )
+        installed_version = "".join(res.stdout).strip()
+        wanted_version = f"curator version {CuratorDownloader.CURATOR_VERSION}"
+        SLOG.debug("Comparing curator versions", wanted=wanted_version, installed=installed_version)
         return installed_version == wanted_version
