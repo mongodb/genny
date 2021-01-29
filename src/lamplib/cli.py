@@ -304,9 +304,9 @@ def lint_python(ctx: click.Context, fix: bool):
 @cli.command(name="self-test", help="Run the pytest tests of genny's internal python.")
 @click.pass_context
 def self_test(ctx: click.Context):
-    from tasks import run_tests
+    from tasks import pytest
 
-    run_tests.run_self_test(
+    pytest.run_self_test(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
     )
 
