@@ -24,11 +24,11 @@ class CmdOutput(NamedTuple):
 
 def run_command(
     cmd: List[str],
+    check: bool,
     cwd: str = None,
     shell: bool = False,
     env: dict = None,
     capture: bool = True,
-    check: bool = True,
 ) -> CmdOutput:
     cwd = os.getcwd() if cwd is None else cwd
     env = os.environ.copy() if env is None else env

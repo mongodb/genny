@@ -30,11 +30,10 @@ _sentinel_report = """
 
 
 T = TypeVar("T")
-A = TypeVar("A")
 
 
 def _run_command_with_sentinel_report(
-    cmd_func: Callable[..., T], cmd_func_args: List[Any], checker_func: Callable[[T], bool] = None
+    cmd_func: Callable[..., T], checker_func: Callable[[T], bool] = None
 ) -> Tuple[T, bool]:
     # This can only be imported after the setup script has installed gennylib.
     from curator import poplar_grpc
@@ -48,7 +47,7 @@ def _run_command_with_sentinel_report(
             f.write(_sentinel_report)
 
         with poplar_grpc(cleanup_metrics=True):
-            cmd_output = cmd_func(*cmd_func_args)
+            cmd_output = cmd_func()
 
         success = True if checker_func is None else checker_func(cmd_output)
         return cmd_output, success
@@ -75,13 +74,12 @@ def cmake_test(
         "(standalone|sharded|single_node_replset|three_node_replset|benchmark)",
     ]
 
-    def cmd_func():
-        output: cmd_runner.CmdOutput = run_command(cmd=ctest_cmd, cwd=workdir, env=env, capture=False)
+    def cmd_func() -> None:
+        cmd_runner.CmdOutput = run_command(
+            cmd=ctest_cmd, cwd=workdir, env=env, capture=False, check=True
+        )
 
-
-    _run_command_with_sentinel_report(
-        cmd_func=lambda:
-    )
+    _run_command_with_sentinel_report(cmd_func=cmd_func,)
 
 
 def benchmark_test(
@@ -91,9 +89,10 @@ def benchmark_test(
 
     ctest_cmd = ["ctest", "--label-regex", "(benchmark)"]
 
-    _run_command_with_sentinel_report(
-        lambda: run_command(cmd=ctest_cmd, cwd=workdir, env=env, capture=False)
-    )
+    def cmd_func():
+        run_command(cmd=ctest_cmd, cwd=workdir, env=env, capture=False, check=True)
+
+    _run_command_with_sentinel_report(cmd_func=cmd_func)
 
 
 def _check_create_new_actor_test_report() -> bool:
@@ -143,22 +142,26 @@ def _setup_resmoke(genny_repo_root: str, mongo_dir: str):
     if not os.path.exists(mongo_repo_path):
         SLOG.info("Mongo repo doesn't exist. Checking it out.", mongo_repo_path=mongo_repo_path)
         run_command(
-            cmd=["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path], capture=False
+            cmd=["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path],
+            check=True,
+            capture=False,
         )
         run_command(
             cmd=["git", "checkout", "298d4d6bbb9980b74bded06241067fe6771bef68"],
             cwd=mongo_repo_path,
+            check=True,
             capture=False,
         )
     else:
         SLOG.info("Using existing mongo repo checkout", mongo_repo_path=mongo_repo_path)
         run_command(
-            cmd=["git", "rev-parse", "HEAD"], cwd=mongo_repo_path, capture=False,
+            cmd=["git", "rev-parse", "HEAD"], check=False, cwd=mongo_repo_path, capture=False,
         )
 
     # Look for mongod in
     # build/opt/mongo/db/mongod
     # build/install/bin/mongod
+    # bin/
     opt = os.path.join(mongo_repo_path, "build", "opt", "mongo", "db", "mongod")
     install = os.path.join(mongo_repo_path, "build", "install", "bin", "mongod")
     from_tarball = os.path.join(mongo_repo_path, "bin", "mongod")
@@ -189,11 +192,13 @@ def _setup_resmoke(genny_repo_root: str, mongo_dir: str):
             cmd=["curl", "-LSs", mongodb_archive_url, "-o", "mongodb.tgz"],
             cwd=mongo_repo_path,
             capture=False,
+            check=True,
         )
         cmd_runner.run_command(
             cmd=["tar", "--strip-components=1", "-zxf", "mongodb.tgz"],
             cwd=mongo_repo_path,
             capture=False,
+            check=True,
         )
         mongod = from_tarball
     bin_dir = os.path.dirname(mongod)
@@ -207,8 +212,12 @@ def _setup_resmoke(genny_repo_root: str, mongo_dir: str):
 
         venv.create(env_dir=resmoke_venv, with_pip=True, symlinks=True)
         reqs_file = os.path.join(mongo_repo_path, "etc", "pip", "evgtest-requirements.txt")
+
         cmd = [resmoke_python, "-mpip", "install", "-r", reqs_file]
-        run_command(cmd=cmd, capture=False)
+        run_command(
+            cmd=cmd, capture=False, check=True,
+        )
+
         open(resmoke_setup_sentinel, "w")
 
     return resmoke_python, mongo_repo_path, bin_dir
@@ -250,10 +259,16 @@ def resmoke_test(
 
     # We *expect* the resmoke invocation to fail
 
-    def run_resmoke() -> bool:
-        outcome = run_command(cmd=cmd, cwd=genny_repo_root, env=env, capture=False, check=False)
-        if is_cnats:
-            return
+    def run_resmoke() -> None:
+        run_command(
+            cmd=cmd,
+            cwd=genny_repo_root,
+            env=env,
+            capture=False,
+            # If we're create_new_actor_test we don't want
+            # to barf when resmoke fails. We expect it to fail.
+            check=False if is_cnats else True,  # `not is_cnats` was hard to read.
+        )
 
     _run_command_with_sentinel_report(
         cmd_func=run_resmoke, checker_func=checker_func,

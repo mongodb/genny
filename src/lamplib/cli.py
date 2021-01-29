@@ -92,6 +92,7 @@ def cmake_compile_install(
 ):
     ctx.ensure_object(dict)
 
+    # TODO: move to tasks
     ctx.obj["LINUX_DISTRO"] = linux_distro
     ctx.obj["IGNORE_TOOLCHAIN_VERSION"] = ignore_toolchain_version
     ctx.obj["BUILD_SYSTEM"] = build_system
@@ -241,10 +242,9 @@ def canaries():
     ),
 )
 @click.pass_context
-def resmoke_test(ctx: click.Context,
-                 suites: str,
-                 create_new_actor_test_suite: bool,
-                 mongo_dir: str):
+def resmoke_test(
+    ctx: click.Context, suites: str, create_new_actor_test_suite: bool, mongo_dir: str
+):
     from tasks import run_tests
 
     run_tests.resmoke_test(
@@ -266,10 +266,13 @@ def resmoke_test(ctx: click.Context,
 @click.argument("actor_name")
 @click.pass_context
 def create_new_actor(ctx: click.Context, actor_name: str):
+    # TODO: move to tasks
     path = os.path.join(
         ctx.obj["GENNY_REPO_ROOT"], "src", "lamplib", "tasks", "create-new-actor.sh"
     )
-    run_command(cmd=[path, actor_name], cwd=ctx.obj["GENNY_REPO_ROOT"], capture=False)
+    run_command(
+        cmd=[path, actor_name], cwd=ctx.obj["GENNY_REPO_ROOT"], capture=False, check=True,
+    )
 
 
 @cli.command(
