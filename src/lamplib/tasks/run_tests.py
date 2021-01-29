@@ -258,7 +258,7 @@ def _setup_resmoke(
 
         cmd = [resmoke_python, "-mpip", "install", "-r", reqs_file]
         run_command(
-            cmd=cmd, capture=False, check=True,
+            cmd=cmd, cwd=workspace_root, capture=False, check=True,
         )
 
         open(resmoke_setup_sentinel, "w")
@@ -345,6 +345,7 @@ def run_self_test(genny_repo_root: str, workspace_root: str):
     path = os.path.join(workspace_root, "build", "XUnitXML", "PyTest.xml")
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
+    # TODO: https://docs.pytest.org/en/stable/deprecations.html#junit-family-default-value-change-to-xunit2
     args = ["--junit-xml", path, genny_repo_root]
 
     SLOG.info("Running pytest.", args=args)
