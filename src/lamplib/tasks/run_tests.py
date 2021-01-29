@@ -123,7 +123,19 @@ def _check_create_new_actor_test_report() -> bool:
     return passed
 
 
-def _setup_resmoke(genny_repo_root: str, mongo_dir: Optional[str]):
+# See the logic in _setup_resmoke.
+# These are the "Binaries" evergreen artifact URLs for mongodb-mongo compile tasks.
+# The binaries must be compatible with the version of the mongo repo checked out in use for resmoke,
+# which is the sha "298d4d6bbb9980b74bded06241067fe6771bef68" mentioned below.
+_canned_artifacts = {
+    "osx": "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/macos/298d4d6bbb9980b74bded06241067fe6771bef68/binaries/mongo-mongodb_mongo_master_macos_298d4d6bbb9980b74bded06241067fe6771bef68_20_10_22_00_55_19.tgz",
+    "amazon2": "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/amazon2/298d4d6bbb9980b74bded06241067fe6771bef68/binaries/mongo-mongodb_mongo_master_amazon2_298d4d6bbb9980b74bded06241067fe6771bef68_20_10_22_00_55_19.tgz",
+}
+
+
+def _setup_resmoke(
+    genny_repo_root: str, mongo_dir: Optional[str], mongodb_archive_url: Optional[str]
+):
     if mongo_dir is not None:
         mongo_repo_path = mongo_dir
     else:
@@ -147,6 +159,8 @@ def _setup_resmoke(genny_repo_root: str, mongo_dir: Optional[str]):
             capture=False,
         )
         run_command(
+            # If changing this sha, you may need to use later binaries
+            # in the _canned_artifacts dict.
             cmd=["git", "checkout", "298d4d6bbb9980b74bded06241067fe6771bef68"],
             cwd=mongo_repo_path,
             check=True,
@@ -174,33 +188,48 @@ def _setup_resmoke(genny_repo_root: str, mongo_dir: Optional[str]):
     else:
         mongod = None
 
-    # TODO: assert distro is amazon2
+    if mongod is not None and mongodb_archive_url is not None:
+        SLOG.info(
+            "Found exisitng mongod so will not download artifacts.",
+            existing_mongod=mongod,
+            wont_download_artifacts_from=mongodb_archive_url,
+        )
 
-    # Latest successful build from master as of 2020-10-01 on "Amazon Linux 2" compile task "Binaries" file
-    # Should match the same "git checkout" rev above.
-    # TODO: amazon2
-    # mongodb_archive_url = "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/amazon2/298d4d6bbb9980b74bded06241067fe6771bef68/binaries/mongo-mongodb_mongo_master_amazon2_298d4d6bbb9980b74bded06241067fe6771bef68_20_10_22_00_55_19.tgz"
-    # Darwin:
-    mongodb_archive_url = "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/macos/298d4d6bbb9980b74bded06241067fe6771bef68/binaries/mongo-mongodb_mongo_master_macos_298d4d6bbb9980b74bded06241067fe6771bef68_20_10_22_00_55_19.tgz"
     if mongod is None:
         SLOG.info(
             "Couldn't find pre-build monogod. Fetching and installing.",
             looked_at=(opt, install, from_tarball),
             fetching=mongodb_archive_url,
         )
-        cmd_runner.run_command(
-            cmd=["curl", "-LSs", mongodb_archive_url, "-o", "mongodb.tgz"],
-            cwd=mongo_repo_path,
-            capture=False,
-            check=True,
-        )
-        cmd_runner.run_command(
-            cmd=["tar", "--strip-components=1", "-zxf", "mongodb.tgz"],
-            cwd=mongo_repo_path,
-            capture=False,
-            check=True,
-        )
-        mongod = from_tarball
+        if mongodb_archive_url is None:
+            info = toolchain_info(genny_repo_root)
+
+            if info.is_darwin:
+                artifact_key = "osx"
+            elif info.linux_distro == "amazon2":
+                artifact_key = "amazon2"
+            else:
+                raise Exception(
+                    f"No pre-built artifacts for distro {info.linux_distro}. You can either:"
+                    f"1. compile/install a local mongo checkout in ./src/mongo."
+                    f"2. Modify the _canned_artifacts dict in the genny python to include an artifact from a waterfall build."
+                    f"3. Pass in the --mongodb-archive-url parameter to force a canned artifact."
+                )
+            mongodb_archive_url = _canned_artifacts[artifact_key]
+
+            cmd_runner.run_command(
+                cmd=["curl", "-LSs", mongodb_archive_url, "-o", "mongodb.tgz"],
+                cwd=mongo_repo_path,
+                capture=False,
+                check=True,
+            )
+            cmd_runner.run_command(
+                cmd=["tar", "--strip-components=1", "-zxf", "mongodb.tgz"],
+                cwd=mongo_repo_path,
+                capture=False,
+                check=True,
+            )
+            mongod = from_tarball
     bin_dir = os.path.dirname(mongod)
 
     # Setup resmoke venv unless exists
@@ -224,7 +253,12 @@ def _setup_resmoke(genny_repo_root: str, mongo_dir: Optional[str]):
 
 
 def resmoke_test(
-    genny_repo_root: str, suites: str, is_cnats: bool, mongo_dir: Optional[str], env: dict,
+    genny_repo_root: str,
+    suites: str,
+    is_cnats: bool,
+    mongo_dir: Optional[str],
+    env: dict,
+    mongodb_archive_url: Optional[str],
 ):
     if (not suites) and (not is_cnats):
         raise ValueError('Must specify either "--suites" or "--create-new-actor-test-suite"')
@@ -235,7 +269,9 @@ def resmoke_test(
     else:
         checker_func = None
 
-    resmoke_python, mongo_repo_path, bin_dir = _setup_resmoke(genny_repo_root, mongo_dir)
+    resmoke_python, mongo_repo_path, bin_dir = _setup_resmoke(
+        genny_repo_root, mongo_dir, mongodb_archive_url
+    )
 
     mongod = os.path.join(bin_dir, "mongod")
     mongo = os.path.join(bin_dir, "mongo")
@@ -256,8 +292,6 @@ def resmoke_test(
         "--mongos",
         mongos,
     ]
-
-    # We *expect* the resmoke invocation to fail
 
     def run_resmoke() -> None:
         run_command(

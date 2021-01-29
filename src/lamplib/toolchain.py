@@ -48,6 +48,7 @@ class ToolchainInfo(NamedTuple):
     toolchain_dir: str
     triplet_os: str
     toolchain_env: dict
+    linux_distro: str
 
     @property
     def is_darwin(self) -> bool:
@@ -58,6 +59,7 @@ class ToolchainInfo(NamedTuple):
             "toolchain_dir": self.toolchain_dir,
             "triplet_os": self.triplet_os,
             "toolchain_env": self.toolchain_env,
+            "linux_distro": self.linux_distro,
         }
 
     @staticmethod
@@ -66,6 +68,7 @@ class ToolchainInfo(NamedTuple):
             toolchain_dir=data["toolchain_dir"],
             triplet_os=data["triplet_os"],
             toolchain_env=data["toolchain_env"],
+            linux_distro=data["linux_distro"],
         )
 
 
@@ -79,7 +82,10 @@ def _compute_toolchain_info(
     if not toolchain_downloader.fetch_and_install():
         raise Exception("Could not fetch and install")
     return ToolchainInfo(
-        toolchain_dir=toolchain_dir, triplet_os=triplet_os, toolchain_env=toolchain_env
+        toolchain_dir=toolchain_dir,
+        triplet_os=triplet_os,
+        toolchain_env=toolchain_env,
+        linux_distro=linux_distro,
     )
 
 

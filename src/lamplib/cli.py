@@ -212,6 +212,16 @@ def canaries():
     default=None,
     help="Path to the mongo repo, which contains buildscripts/resmoke.py",
 )
+@click.option(
+    "--mongodb-archive-url",
+    type=str,
+    required=False,
+    default=None,
+    help=(
+        "The URL of a 'Binaries' artifact containing mongod, mongos, mongo. "
+        "Not needed if you have built/installed these tools in hte --mongo-dir."
+    ),
+)
 @optgroup.group("Type of resmoke task to run", cls=RequiredMutuallyExclusiveOptionGroup)
 @optgroup.option("--suites", help='equivalent to resmoke.py\'s "--suites" option')
 @optgroup.option(
@@ -224,7 +234,11 @@ def canaries():
 )
 @click.pass_context
 def resmoke_test(
-    ctx: click.Context, suites: str, create_new_actor_test_suite: bool, mongo_dir: Optional[str]
+    ctx: click.Context,
+    suites: str,
+    create_new_actor_test_suite: bool,
+    mongo_dir: Optional[str],
+    mongodb_archive_url: Optional[str],
 ):
     from tasks import run_tests
 
@@ -234,6 +248,7 @@ def resmoke_test(
         is_cnats=create_new_actor_test_suite,
         mongo_dir=mongo_dir,
         env=os.environ.copy(),
+        mongodb_archive_url=mongodb_archive_url,
     )
 
 
