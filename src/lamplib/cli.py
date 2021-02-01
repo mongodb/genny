@@ -195,15 +195,14 @@ def dry_run_workloads(ctx: click.Context):
     name="canaries",
     help=(
         "Run genny's canaries that exercise workload primitives but don't interact with "
-        "external systems like databases. We expect these canaries to have very little "
-        "'noise' over time such that if the canaries' performance changes significantly "
+        "noisy systems like storage. We expect these canaries to have very little "
+        "'noise' over time, such that if the canaries' performance changes significantly "
         "run-over-run it is indicative of a change in the underlying system."
     ),
 )
 # TODO: match usage in DSI
 # f"{prefix} ./src/genny/run-genny canaries nop",
-# TODO: canaries to assume -i 10000 and output files
-# f"{prefix} ./src/genny/run-genny canaries ping -u '{db_url}'"
+# f"{prefix} ./src/genny/run-genny canaries ping --mongo-uri '{db_url}'"
 @click.pass_context
 def canaries(ctx):
     from tasks import canaries_runner
