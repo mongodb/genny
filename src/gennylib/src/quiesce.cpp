@@ -27,7 +27,7 @@
 
 #include <boost/log/trivial.hpp>
 
-#include <gennylib/topology.hpp>
+#include <gennylib/v1/Topology.hpp>
 
 namespace genny {
 
@@ -35,10 +35,10 @@ const int DROPPED_COLLECTION_RETRIES = 1000;
 
 namespace {
 
-bool waitOplog(Topology& topology) {
-    class WaitOplogVisitor : public TopologyVisitor {
+bool waitOplog(v1::Topology& topology) {
+    class WaitOplogVisitor : public v1::TopologyVisitor {
     public:
-        void onBeforeReplSet(const ReplSetDescription& desc) {
+        void onBeforeReplSet(const v1::ReplSetDescription& desc) {
             using bsoncxx::builder::basic::kvp;
             using bsoncxx::builder::basic::make_document;
             mongocxx::client client(mongocxx::uri(desc.primaryUri));
@@ -86,9 +86,9 @@ bool waitOplog(Topology& topology) {
     return waitVisitor.success();
 }
 
-void doFsync(Topology& topology) {
-    class DoFsyncVisitor : public TopologyVisitor {
-        void visitMongodDescription(const MongodDescription& desc) {
+void doFsync(v1::Topology& topology) {
+    class DoFsyncVisitor : public v1::TopologyVisitor {
+        void visitMongodDescription(const v1::MongodDescription& desc) {
             using bsoncxx::builder::basic::kvp;
             using bsoncxx::builder::basic::make_document;
 
@@ -139,7 +139,7 @@ bool quiesce(mongocxx::pool::entry& client, std::string dbName) {
     static std::atomic_bool success;
 
     if (quiesceLock.try_lock()) {
-        Topology topology(*client);
+        v1::Topology topology(*client);
         bool waitOplogSuccess = waitOplog(topology);
         doFsync(topology);
         bool checkDroppedCollectionSuccess = checkForDroppedCollectionsTestDB(client, dbName);

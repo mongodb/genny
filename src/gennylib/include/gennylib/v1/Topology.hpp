@@ -21,10 +21,10 @@
 #include <mutex>
 #include <sstream>
 
+#include <mongocxx/client.hpp>
 #include <gennylib/v1/PoolFactory.hpp>
-#include <gennylib/Connection.hpp>
 
-namespace genny {
+namespace genny::v1 {
 
 class TopologyDescription;
 class MongodDescription;
@@ -106,6 +106,37 @@ struct ShardedDescription : public TopologyDescription {
     std::vector<MongosDescription> mongoses;
 
     void accept(TopologyVisitor& v);
+};
+
+using ConnectionUri = std::string;
+
+/**
+ * Abstraction over DB client access.
+ */
+class DBConnection{
+public:
+    virtual ConnectionUri uri() = 0;
+
+    virtual bsoncxx::document::value runAdminCommand(std::string command) = 0;
+
+    /**
+     * Factory method that returns a peer service of the same concrete type
+     * connected to the given uri.
+     */
+    virtual std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) = 0;
+
+    virtual ~DBConnection() = 0;
+};
+
+class MongoConnection : public DBConnection {
+public:
+    MongoConnection(ConnectionUri uri);
+    ConnectionUri uri();
+    bsoncxx::document::value runAdminCommand(std::string command);
+    std::unique_ptr<DBConnection> makePeer(ConnectionUri uri);
+
+private:
+    mongocxx::client _client;
 };
 
 /**

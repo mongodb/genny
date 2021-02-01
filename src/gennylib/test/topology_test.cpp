@@ -19,10 +19,11 @@
 #include <bsoncxx/builder/stream/helpers.hpp>
 #include <boost/log/trivial.hpp>
 
-#include <gennylib/topology.hpp>
+#include <gennylib/v1/Topology.hpp>
 #include <testlib/helpers.hpp>
 
 using namespace genny;
+using namespace genny::v1;
 using namespace std;
 
 

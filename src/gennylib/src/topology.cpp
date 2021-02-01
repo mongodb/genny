@@ -14,13 +14,15 @@
 
 #include <string>
 #include <optional>
+#include <memory>
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/types.hpp>
 #include <boost/log/trivial.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
 
-#include <gennylib/topology.hpp>
+#include <gennylib/v1/Topology.hpp>
 
-namespace genny {
+namespace genny::v1 {
 
 TopologyVisitor::~TopologyVisitor() {}
 
@@ -63,6 +65,24 @@ void ShardedDescription::accept(TopologyVisitor& v) {
     v.onAfterMongoses(*this);
 
     v.onAfterSharded(*this); 
+}
+
+DBConnection::~DBConnection() {}
+
+MongoConnection::MongoConnection(ConnectionUri uri) : _client(mongocxx::uri(uri)) {}
+
+ConnectionUri MongoConnection::uri() { return _client.uri().to_string(); }
+
+bsoncxx::document::value MongoConnection::runAdminCommand(std::string command) { 
+    using bsoncxx::builder::basic::kvp;
+    using bsoncxx::builder::basic::make_document;
+
+    auto admin = _client.database("admin");
+    return admin.run_command(make_document(kvp(command, 1)));
+}
+
+std::unique_ptr<DBConnection> MongoConnection::makePeer(ConnectionUri uri) {
+    return std::make_unique<MongoConnection>(uri);
 }
 
 std::string Topology::nameToUri(const std::string& name) {
