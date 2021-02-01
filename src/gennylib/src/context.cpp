@@ -180,7 +180,7 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
 
 // The SleepContext class is basically an actor-friendly adapter
 // for the Sleeper.
-void SleepContext::sleep_for(Duration duration) {
+void SleepContext::sleep_for(Duration duration) const {
     // We don't care about the before/after op distinction here.
     v1::Sleeper sleeper(duration, Duration::zero());
     sleeper.before(_orchestrator, _phase);

@@ -33,7 +33,7 @@
 namespace genny::actor {
 
 struct QuiesceActor::PhaseConfig {
-    PhaseConfig(PhaseContext& context) : dbName{context.actor()["Database"].to<std::string>()} {
+    PhaseConfig(PhaseContext& context) : dbName{context.actor()["Database"].to<std::string>()}, sleepContext{context.getSleepContext()} {
         auto threads = context.actor()["Threads"].to<int>();
         if (threads > 1) {
             std::stringstream ss;
@@ -42,6 +42,7 @@ struct QuiesceActor::PhaseConfig {
         }
     }
     std::string dbName;
+    SleepContext sleepContext;
 };
 
 void QuiesceActor::run() {
@@ -49,7 +50,7 @@ void QuiesceActor::run() {
         for (const auto&& _ : config) {
             auto quiesceContext = _totalQuiesces.start();
             BOOST_LOG_TRIVIAL(debug) << "QuiesceActor quiescing cluster.";
-            if (quiesce(_client, config->dbName)) {
+            if (quiesce(_client, config->dbName, config->sleepContext)) {
                 quiesceContext.success();
             } else {
                 quiesceContext.failure();

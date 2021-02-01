@@ -27,6 +27,7 @@
 
 #include <boost/log/trivial.hpp>
 
+#include <gennylib/quiesce.hpp>
 #include <gennylib/v1/Topology.hpp>
 
 // Logic in this file is based on the following two js implementations:
@@ -115,13 +116,14 @@ bool checkForDroppedCollections(mongocxx::database db) {
     return idents.get_int64() != 0;
 }
 
-bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client, std::string dbName) {
+bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client, const std::string& dbName, 
+        const SleepContext& sleepContext) {
     auto db = client->database(dbName);
     int retries = 0;
     while (checkForDroppedCollections(db) && retries < DROPPED_COLLECTION_RETRIES) {
         BOOST_LOG_TRIVIAL(debug) << "Sleeping 1 second while waiting for collection to finish dropping.";
         retries++;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        sleepContext.sleep_for(std::chrono::seconds(1));
     }
     if (retries >= DROPPED_COLLECTION_RETRIES) {
         BOOST_LOG_TRIVIAL(error) << "Timeout on waiting for collections to drop. "
@@ -133,7 +135,7 @@ bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client, std::string
 
 } // anonymous namespace
 
-bool quiesce(mongocxx::pool::entry& client, std::string dbName) {
+bool quiesce(mongocxx::pool::entry& client, const std::string& dbName, const SleepContext& sleepContext) {
     /* Only one thread needs to actually do the quiesce. If 
      * another thread enters the function while a quiesce
      * is happening, it waits until the quiesce finishes
@@ -148,7 +150,7 @@ bool quiesce(mongocxx::pool::entry& client, std::string dbName) {
         v1::Topology topology(*client);
         bool waitOplogSuccess = waitOplog(topology);
         doFsync(topology);
-        bool checkDroppedCollectionSuccess = checkForDroppedCollectionsTestDB(client, dbName);
+        bool checkDroppedCollectionSuccess = checkForDroppedCollectionsTestDB(client, dbName, sleepContext);
         success = waitOplogSuccess && checkDroppedCollectionSuccess;
     } else {
         // We are waiting for another thread to do the quiesce.

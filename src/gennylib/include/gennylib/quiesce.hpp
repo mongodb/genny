@@ -15,6 +15,8 @@
 #include <string>
 #include <mongocxx/pool.hpp>
 
+#include <gennylib/context.hpp>
+
 namespace genny {
 
 /**
@@ -22,6 +24,6 @@ namespace genny {
  * The appropriate actions will be taken whether the target
  * is a standalone, replica set, or sharded cluster.
  */
-bool quiesce(mongocxx::pool::entry& client, std::string dbName);
+bool quiesce(mongocxx::pool::entry& client, const std::string& dbName, const SleepContext& sleepContext);
 
 } // namespace genny

@@ -437,13 +437,13 @@ private:
  */
 class SleepContext {
 public:
-    SleepContext(PhaseNumber phase, Orchestrator& orchestrator) : _phase{phase}, _orchestrator{orchestrator} {}
+    SleepContext(PhaseNumber phase, const Orchestrator& orchestrator) : _phase{phase}, _orchestrator{orchestrator} {}
 
-    void sleep_for(const Duration sleep_duration);
+    void sleep_for(Duration sleep_duration) const;
     
 private:
     PhaseNumber _phase;
-    Orchestrator& _orchestrator;
+    const Orchestrator& _orchestrator;
 };
 
 /**
