@@ -259,7 +259,7 @@ functions:
     params:
       directory: src/genny
       revisions:
-        mongo: ${mongo_rev}
+        mongo: 298d4d6bbb9980b74bded06241067fe6771bef68
 
   ##
   # Compile the project in src/build.
