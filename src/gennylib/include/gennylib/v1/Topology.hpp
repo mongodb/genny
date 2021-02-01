@@ -83,13 +83,13 @@ struct TopologyDescription {
 struct MongodDescription : public TopologyDescription {
     std::string mongodUri;
 
-    void accept(TopologyVisitor& v);
+    void accept(TopologyVisitor& v) override;
 };
 
 struct MongosDescription : public TopologyDescription {
     std::string mongosUri;
 
-    void accept(TopologyVisitor& v);
+    void accept(TopologyVisitor& v) override;
 };
 
 struct ReplSetDescription : public TopologyDescription {
@@ -97,7 +97,7 @@ struct ReplSetDescription : public TopologyDescription {
     bool configsvr = false;
     std::vector<MongodDescription> nodes;
 
-    void accept(TopologyVisitor& v);
+    void accept(TopologyVisitor& v) override;
 };
 
 struct ShardedDescription : public TopologyDescription {
@@ -105,7 +105,7 @@ struct ShardedDescription : public TopologyDescription {
     std::vector<ReplSetDescription> shards;
     std::vector<MongosDescription> mongoses;
 
-    void accept(TopologyVisitor& v);
+    void accept(TopologyVisitor& v) override;
 };
 
 using ConnectionUri = std::string;
@@ -115,7 +115,7 @@ using ConnectionUri = std::string;
  */
 class DBConnection{
 public:
-    virtual ConnectionUri uri() = 0;
+    virtual ConnectionUri uri() const = 0;
 
     virtual bsoncxx::document::value runAdminCommand(std::string command) = 0;
 
@@ -131,9 +131,9 @@ public:
 class MongoConnection : public DBConnection {
 public:
     MongoConnection(ConnectionUri uri);
-    ConnectionUri uri();
-    bsoncxx::document::value runAdminCommand(std::string command);
-    std::unique_ptr<DBConnection> makePeer(ConnectionUri uri);
+    ConnectionUri uri() const override;
+    bsoncxx::document::value runAdminCommand(std::string command) override;
+    std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) override;
 
 private:
     mongocxx::client _client;
@@ -173,27 +173,26 @@ private:
 
 class ToJsonVisitor : public TopologyVisitor {
 public:
-    void onBeforeTopology(const TopologyDescription&);
+    void onBeforeTopology(const TopologyDescription&) override;
 
-    void onMongod(const MongodDescription& desc);
-    void onBetweenMongods(const ReplSetDescription& desc);
+    void onMongod(const MongodDescription& desc) override;
+    void onBetweenMongods(const ReplSetDescription& desc) override;
 
-    void onMongos(const MongosDescription& desc);
-    void onBetweenMongoses(const ReplSetDescription& desc);
+    void onMongos(const MongosDescription& desc) override;
 
-    void onBeforeReplSet(const ReplSetDescription& desc);
-    void onAfterReplSet(const ReplSetDescription& desc);
+    void onBeforeReplSet(const ReplSetDescription& desc) override;
+    void onAfterReplSet(const ReplSetDescription& desc) override;
 
-    void onBeforeSharded(const ShardedDescription&);
-    void onAfterSharded(const ShardedDescription&);
+    void onBeforeSharded(const ShardedDescription&) override;
+    void onAfterSharded(const ShardedDescription&) override;
 
-    void onBeforeShards(const ShardedDescription&);
-    void onBetweenShards(const ShardedDescription&);
-    void onAfterShards(const ShardedDescription&);
+    void onBeforeShards(const ShardedDescription&) override;
+    void onBetweenShards(const ShardedDescription&) override;
+    void onAfterShards(const ShardedDescription&) override;
 
-    void onBeforeMongoses(const ShardedDescription&);
-    void onBetweenMongoses(const ShardedDescription&);
-    void onAfterMongoses(const ShardedDescription&);
+    void onBeforeMongoses(const ShardedDescription&) override;
+    void onBetweenMongoses(const ShardedDescription&) override;
+    void onAfterMongoses(const ShardedDescription&) override;
 
     std::string str();
 

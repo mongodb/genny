@@ -71,7 +71,7 @@ DBConnection::~DBConnection() {}
 
 MongoConnection::MongoConnection(ConnectionUri uri) : _client(mongocxx::uri(uri)) {}
 
-ConnectionUri MongoConnection::uri() { return _client.uri().to_string(); }
+ConnectionUri MongoConnection::uri() const { return _client.uri().to_string(); }
 
 bsoncxx::document::value MongoConnection::runAdminCommand(std::string command) { 
     using bsoncxx::builder::basic::kvp;
@@ -144,7 +144,7 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
 void Topology::findConnectedNodesViaMongos(DBConnection& connection) {
     class ReplSetRetriever : public TopologyVisitor {
     public:
-        void onBeforeReplSet(const ReplSetDescription& desc) {
+        void onBeforeReplSet(const ReplSetDescription& desc) override {
             replSet = desc; 
         }
         ReplSetDescription replSet;
@@ -209,10 +209,10 @@ void ToJsonVisitor::onBeforeTopology(const TopologyDescription&) {
 }
 
 void ToJsonVisitor::onMongod(const MongodDescription& desc) { _result << "{mongodUri: " << desc.mongodUri << "}"; }
-void ToJsonVisitor::onBetweenMongods(const ReplSetDescription& desc) { _result << ", "; }
+void ToJsonVisitor::onBetweenMongods(const ReplSetDescription&) { _result << ", "; }
 
 void ToJsonVisitor::onMongos(const MongosDescription& desc) { _result << "{mongosUri: " << desc.mongosUri << "}"; }
-void ToJsonVisitor::onBetweenMongoses(const ReplSetDescription& desc) { _result << ", "; }
+void ToJsonVisitor::onBetweenMongoses(const ShardedDescription&) { _result << ", "; }
 
 void ToJsonVisitor::onBeforeReplSet(const ReplSetDescription& desc) {
     if (desc.configsvr) {
@@ -220,7 +220,7 @@ void ToJsonVisitor::onBeforeReplSet(const ReplSetDescription& desc) {
     }
     _result << "{primaryUri: " << desc.primaryUri << ", nodes: [";
 }
-void ToJsonVisitor::onAfterReplSet(const ReplSetDescription& desc) { _result << "]}"; }
+void ToJsonVisitor::onAfterReplSet(const ReplSetDescription&) { _result << "]}"; }
 
 void ToJsonVisitor::onBeforeSharded(const ShardedDescription&) { _result << "{"; }
 void ToJsonVisitor::onAfterSharded(const ShardedDescription&) { _result << "}"; }
@@ -230,7 +230,6 @@ void ToJsonVisitor::onBetweenShards(const ShardedDescription&) { _result << ", "
 void ToJsonVisitor::onAfterShards(const ShardedDescription&) { _result << "], "; }
 
 void ToJsonVisitor::onBeforeMongoses(const ShardedDescription&) { _result << " mongoses: ["; }
-void ToJsonVisitor::onBetweenMongoses(const ShardedDescription&) { _result << ", "; }
 void ToJsonVisitor::onAfterMongoses(const ShardedDescription&) { _result << "]"; }
 
 std::string ToJsonVisitor::str() { return _result.str(); }

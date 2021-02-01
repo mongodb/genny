@@ -38,7 +38,7 @@ namespace {
 bool waitOplog(v1::Topology& topology) {
     class WaitOplogVisitor : public v1::TopologyVisitor {
     public:
-        void onBeforeReplSet(const v1::ReplSetDescription& desc) {
+        void onBeforeReplSet(const v1::ReplSetDescription& desc) override {
             using bsoncxx::builder::basic::kvp;
             using bsoncxx::builder::basic::make_document;
             mongocxx::client client(mongocxx::uri(desc.primaryUri));
@@ -88,7 +88,7 @@ bool waitOplog(v1::Topology& topology) {
 
 void doFsync(v1::Topology& topology) {
     class DoFsyncVisitor : public v1::TopologyVisitor {
-        void visitMongodDescription(const v1::MongodDescription& desc) {
+        void onMongod(const v1::MongodDescription& desc) override {
             using bsoncxx::builder::basic::kvp;
             using bsoncxx::builder::basic::make_document;
 

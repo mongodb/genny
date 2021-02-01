@@ -31,12 +31,12 @@ TEST_CASE("Topology visitor traverses nodes correctly") {
 
     class TestVisitor : public TopologyVisitor {
     public:
-        virtual void onMongod(const MongodDescription& desc) { names.push_back(desc.mongodUri); }
+        virtual void onMongod(const MongodDescription& desc) override { names.push_back(desc.mongodUri); }
         // Mongos falls back to default nop-visit.
         //virtual void onBeforeMongos(const MongosDescription& desc) {}
         // Same with replset
         //virtual void onBeforeReplSet(const ReplSetDescription& desc) { names.push_back("visitedPrimary"); }
-        virtual void onBeforeSharded(const ShardedDescription& desc) { names.push_back("visitedShard"); }
+        virtual void onBeforeSharded(const ShardedDescription& desc) override { names.push_back("visitedShard"); }
         std::vector<std::string> names;
     };
 
@@ -85,9 +85,9 @@ TEST_CASE("Topology maps the cluster correctly") {
     SECTION("Topology correctly maps a standalone") {
         class MockStandaloneConnection : public DBConnection {
 
-            ConnectionUri uri() { return "testUri"; }
+            ConnectionUri uri() const override { return "testUri"; }
 
-            bsoncxx::document::value runAdminCommand(std::string command) {
+            bsoncxx::document::value runAdminCommand(std::string command) override {
                 if (command == "isMaster") {
                     auto doc = document{};
                     return doc << "junkKey" << "junkValue" << finalize;
@@ -95,7 +95,7 @@ TEST_CASE("Topology maps the cluster correctly") {
                 return document{} << "unplannedKey" << "unplannedValue" << finalize;
             }
 
-            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) {
+            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) override {
                 return std::make_unique<MockStandaloneConnection>();
             }
         };
@@ -111,9 +111,9 @@ TEST_CASE("Topology maps the cluster correctly") {
     SECTION("Topology correctly maps a replica set") {
         class MockReplConnection : public DBConnection {
 
-            ConnectionUri uri() { return "testPrimaryUriNeverUsedHere"; }
+            ConnectionUri uri() const override { return "testPrimaryUriNeverUsedHere"; }
 
-            bsoncxx::document::value runAdminCommand(std::string command) {
+            bsoncxx::document::value runAdminCommand(std::string command) override {
                 if (command == "isMaster") {
                     auto doc = document{};
                     doc << "setName" << "testSetName";
@@ -127,7 +127,7 @@ TEST_CASE("Topology maps the cluster correctly") {
                 return document{} << "unplannedKey" << "unplannedValue" << finalize;
             }
 
-            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) {
+            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) override {
                 return std::make_unique<MockReplConnection>();
             }
         };
@@ -149,9 +149,9 @@ TEST_CASE("Topology maps the cluster correctly") {
     SECTION("Topology correctly maps a sharded cluster") {
         class MockConfigConnection : public DBConnection {
 
-            ConnectionUri uri() { return "testConfigUriNeverUsedHere"; }
+            ConnectionUri uri() const override { return "testConfigUriNeverUsedHere"; }
 
-            bsoncxx::document::value runAdminCommand(std::string command) {
+            bsoncxx::document::value runAdminCommand(std::string command) override {
                 if (command == "isMaster") {
                     auto doc = document{};
                     doc << "setName" << "configSet";
@@ -164,15 +164,15 @@ TEST_CASE("Topology maps the cluster correctly") {
                 return document{} << "unplannedKey" << "unplannedValue" << finalize;
             }
 
-            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) {
+            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) override {
                 return std::make_unique<MockConfigConnection>();
             }
         };
         class MockShardConnection : public DBConnection {
 
-            ConnectionUri uri() { return "testShardUriNeverUsedHere"; }
+            ConnectionUri uri() const override { return "testShardUriNeverUsedHere"; }
 
-            bsoncxx::document::value runAdminCommand(std::string command) {
+            bsoncxx::document::value runAdminCommand(std::string command) override {
                 if (command == "isMaster") {
                     auto doc = document{};
                     doc << "setName" << "shard1";
@@ -185,16 +185,16 @@ TEST_CASE("Topology maps the cluster correctly") {
                 return document{} << "unplannedKey" << "unplannedValue" << finalize;
             }
 
-            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) {
+            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) override {
                 return std::make_unique<MockConfigConnection>();
             }
         };
 
         class MockShardedClusterConnection : public DBConnection {
 
-            ConnectionUri uri() { return "mongodb://testMongosUri:11111/?appName=Genny"; }
+            ConnectionUri uri() const override { return "mongodb://testMongosUri:11111/?appName=Genny"; }
 
-            bsoncxx::document::value runAdminCommand(std::string command) {
+            bsoncxx::document::value runAdminCommand(std::string command) override {
 
                 if (command == "isMaster") {
                     return document{} << "msg" << "isdbgrid" << finalize;
@@ -218,7 +218,7 @@ TEST_CASE("Topology maps the cluster correctly") {
                 return document{} << "unplannedKey" << "unplannedValue" << finalize;
             }
 
-            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) {
+            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) override {
                 if (uri == "mongodb://configHost:configPort/?appName=Genny") {
                     return std::make_unique<MockConfigConnection>();
                 }
