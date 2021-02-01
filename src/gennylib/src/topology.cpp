@@ -45,7 +45,7 @@ void ReplSetDescription::accept(TopologyVisitor& v) {
 }
 
 void ShardedDescription::accept(TopologyVisitor& v) { 
-    v.onBeforeSharded(*this); 
+    v.onBeforeShardedCluster(*this); 
     configsvr.accept(v);
 
     v.onBeforeShards(*this); 
@@ -64,7 +64,7 @@ void ShardedDescription::accept(TopologyVisitor& v) {
     mongoses[mongoses.size() - 1].accept(v);
     v.onAfterMongoses(*this);
 
-    v.onAfterSharded(*this); 
+    v.onAfterShardedCluster(*this); 
 }
 
 DBConnection::~DBConnection() {}
@@ -88,7 +88,11 @@ std::unique_ptr<DBConnection> MongoConnection::makePeer(ConnectionUri uri) {
 std::string Topology::nameToUri(const std::string& name) {
     std::set<std::string> nameSet;
     // Hostnames returned from some commands have the form configRepl/hostname:port
-    auto strippedName = name.substr(name.find('/') + 1, std::string::npos);
+
+    auto strippedName = name;
+    if (name.find('/') != std::string::npos) {
+        strippedName = name.substr(name.find('/') + 1, std::string::npos);
+    }
     nameSet.insert(strippedName);
     _factory.overrideHosts(nameSet);
     return _factory.makeUri();
@@ -222,8 +226,8 @@ void ToJsonVisitor::onBeforeReplSet(const ReplSetDescription& desc) {
 }
 void ToJsonVisitor::onAfterReplSet(const ReplSetDescription&) { _result << "]}"; }
 
-void ToJsonVisitor::onBeforeSharded(const ShardedDescription&) { _result << "{"; }
-void ToJsonVisitor::onAfterSharded(const ShardedDescription&) { _result << "}"; }
+void ToJsonVisitor::onBeforeShardedCluster(const ShardedDescription&) { _result << "{"; }
+void ToJsonVisitor::onAfterShardedCluster(const ShardedDescription&) { _result << "}"; }
 
 void ToJsonVisitor::onBeforeShards(const ShardedDescription&) { _result << " shards: ["; }
 void ToJsonVisitor::onBetweenShards(const ShardedDescription&) { _result << ", "; }

@@ -17,7 +17,7 @@
 
 namespace genny {
 
-/*
+/**
  * Helper function to quiesce the system and reduce noise.
  * The appropriate actions will be taken whether the target
  * is a standalone, replica set, or sharded cluster.

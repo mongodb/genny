@@ -52,8 +52,8 @@ public:
     virtual void onBeforeReplSet(const ReplSetDescription&) {}
     virtual void onAfterReplSet(const ReplSetDescription&) {}
 
-    virtual void onBeforeSharded(const ShardedDescription&) {}
-    virtual void onAfterSharded(const ShardedDescription&) {}
+    virtual void onBeforeShardedCluster(const ShardedDescription&) {}
+    virtual void onAfterShardedCluster(const ShardedDescription&) {}
 
 
     /** Misc hooks that most visitors won't need. **/
@@ -183,8 +183,8 @@ public:
     void onBeforeReplSet(const ReplSetDescription& desc) override;
     void onAfterReplSet(const ReplSetDescription& desc) override;
 
-    void onBeforeSharded(const ShardedDescription&) override;
-    void onAfterSharded(const ShardedDescription&) override;
+    void onBeforeShardedCluster(const ShardedDescription&) override;
+    void onAfterShardedCluster(const ShardedDescription&) override;
 
     void onBeforeShards(const ShardedDescription&) override;
     void onBetweenShards(const ShardedDescription&) override;
@@ -200,6 +200,10 @@ private:
     std::stringstream _result;
 };
 
+class TopologyError : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+};
 
 } // namespace genny
 

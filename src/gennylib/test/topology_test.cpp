@@ -36,7 +36,7 @@ TEST_CASE("Topology visitor traverses nodes correctly") {
         //virtual void onBeforeMongos(const MongosDescription& desc) {}
         // Same with replset
         //virtual void onBeforeReplSet(const ReplSetDescription& desc) { names.push_back("visitedPrimary"); }
-        virtual void onBeforeSharded(const ShardedDescription& desc) override { names.push_back("visitedShard"); }
+        virtual void onBeforeShardedCluster(const ShardedDescription& desc) override { names.push_back("visitedShard"); }
         std::vector<std::string> names;
     };
 
