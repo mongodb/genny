@@ -83,8 +83,8 @@ public:
             for (const auto&& nextValue : this->_thenReturns) {
                 auto expected = testing::toDocumentBson(nextValue);
                 auto actual = docGen();
-                // After implementing TIG-2839 uncomment the line below and remove the two lines underneath it
-                // as it is a workaround suggested in HELP-21664
+                // After implementing TIG-2839 uncomment the line below and remove the two lines
+                // underneath it as it is a workaround suggested in HELP-21664
                 // REQUIRE(toString(expected.view()) == toString(actual.view()));
                 auto expectedFix = bsoncxx::from_json(toString(expected.view()));
                 REQUIRE(toString(expectedFix.view()) == toString(actual.view()));

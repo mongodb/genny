@@ -743,8 +743,10 @@ private:
 class IncGenerator : public Generator<int64_t> {
 public:
     IncGenerator(const Node& node, GeneratorArgs generatorArgs)
-        : _step{node["step"].maybe<int64_t>().value_or(1)} 
-        {_counter = node["start"].maybe<int64_t>().value_or(1) + generatorArgs.actorId * node["multiplier"].maybe<int64_t>().value_or(1);}
+        : _step{node["step"].maybe<int64_t>().value_or(1)} {
+        _counter = node["start"].maybe<int64_t>().value_or(1) +
+            generatorArgs.actorId * node["multiplier"].maybe<int64_t>().value_or(1);
+    }
 
     int64_t evaluate() override {
         auto inc_value = _counter;
