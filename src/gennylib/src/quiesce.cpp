@@ -53,7 +53,7 @@ bool waitOplog(v1::Topology& topology) {
                     std::string state(member["stateStr"].get_utf8().value);
                     if (state != "PRIMARY" && state != "SECONDARY" && state != "ARBITER") {
                         std::string name(member["name"].get_utf8().value);
-                        BOOST_LOG_TRIVIAL(error) << "Cannot wait oplog, replset member "
+                        BOOST_LOG_TRIVIAL(warning) << "Cannot wait oplog, replset member "
                             << name << " is " << state;
                         _successAcc = false;
                         return;
