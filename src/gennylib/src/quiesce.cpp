@@ -29,6 +29,10 @@
 
 #include <gennylib/v1/Topology.hpp>
 
+// Logic in this file is based on the following two js implementations:
+// https://github.com/10gen/workloads/blob/aeaf42b86bb8f1af9bc6ac90198ac0b4ff32bd14/utils/mongoshell.js#L481
+// https://github.com/mongodb/mongo-perf/blob/bd8901a2e76d2fb13d2a6a313f7a9e1bf6be9c04/util/utils.js#L384-L387
+
 namespace genny {
 
 const int DROPPED_COLLECTION_RETRIES = 1000;
@@ -138,14 +142,16 @@ bool quiesce(mongocxx::pool::entry& client, std::string dbName) {
     static std::mutex quiesceLock;
     static std::atomic_bool success;
 
-    if (quiesceLock.try_lock()) {
+    if (quiesceLock.try_lock()) { 
+        // We are the thread actually quiescing.
+        const std::lock_guard<std::mutex> lock(quiesceLock, std::adopt_lock);
         v1::Topology topology(*client);
         bool waitOplogSuccess = waitOplog(topology);
         doFsync(topology);
         bool checkDroppedCollectionSuccess = checkForDroppedCollectionsTestDB(client, dbName);
         success = waitOplogSuccess && checkDroppedCollectionSuccess;
-        quiesceLock.unlock();
     } else {
+        // We are waiting for another thread to do the quiesce.
         quiesceLock.lock();
         quiesceLock.unlock();
     }

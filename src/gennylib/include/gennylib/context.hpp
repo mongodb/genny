@@ -433,6 +433,20 @@ private:
 };
 
 /**
+ * Helper class that provides functions needed to sleep in the current phase.
+ */
+class SleepContext {
+public:
+    SleepContext(PhaseNumber phase, Orchestrator& orchestrator) : _phase{phase}, _orchestrator{orchestrator} {}
+
+    void sleep_for(const Duration sleep_duration);
+    
+private:
+    PhaseNumber _phase;
+    Orchestrator& _orchestrator;
+};
+
+/**
  * Represents each `Phase:` block in the YAML configuration.
  */
 class PhaseContext final : public v1::HasNode {
@@ -464,6 +478,10 @@ public:
 
     ActorContext& actor() const {
         return *_actor;
+    }
+
+    SleepContext getSleepContext() const {
+        return SleepContext(_phaseNumber, this->actor().orchestrator());
     }
 
     /**

@@ -22,6 +22,9 @@
 
 #include <gennylib/v1/Topology.hpp>
 
+// Logic in this file is based on the js topology discovery:
+// https://github.com/mongodb/mongo/blob/r4.1.4/jstests/libs/discover_topology.js
+
 namespace genny::v1 {
 
 TopologyVisitor::~TopologyVisitor() {}
