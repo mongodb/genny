@@ -164,7 +164,6 @@ def _setup_resmoke(
         else:
             mongo_repo_path = os.path.join(genny_repo_root, "build", "resmoke-mongo")
 
-    # TODO: venv can be in workspace_root/build
     resmoke_venv: str = os.path.join(mongo_repo_path, "resmoke_venv")
     resmoke_python: str = os.path.join(resmoke_venv, "bin", "python3")
 
