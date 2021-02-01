@@ -1,41 +1,38 @@
 import os
 import tempfile
+import shutil
 import unittest
 from unittest.mock import patch
 
-from tasks.run_tests import cmake_test
-
-CMAKE_ARGS = dict(
-    build_system="nop",
-    os_family="Linux",
-    linux_distro="the-one-true-distro",
-    ignore_toolchain_version="doesnt-matter",
-    genny_repo_root="/not/a/real/path",
-)
+from tasks import run_tests
+import cmd_runner
+import toolchain
+import curator
 
 
 class TestRunTests(unittest.TestCase):
-    @patch("subprocess.run")
-    def test_cmake_test(self, mock_subprocess_run):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            expected_file = os.path.join(temp_dir, "build", "sentinel.junit.xml")
-            os.chdir(temp_dir)
-            os.mkdir("build")  # Simulate build dir in the genny repo.
+    def setUp(self):
+        self.workspace_root = tempfile.mkdtemp()
 
-            def fail(*args, **kwargs):
-                res = unittest.mock.Mock()
-                res.returncode = 1
-                return res
+    def cleanUp(self):
+        shutil.rmtree(self.workspace_root)
 
-            mock_subprocess_run.side_effect = fail
-            cmake_test(**CMAKE_ARGS)
-            self.assertTrue(os.path.isfile(expected_file))
+    @patch.object(curator, "poplar_grpc", spec=curator.poplar_grpc, name="poplar")
+    @patch.object(toolchain, "toolchain_info", spec=toolchain.toolchain_info, name="toolchain")
+    @patch.object(cmd_runner, "run_command", spec=cmd_runner.run_command, name="cmd_runner")
+    def test_cmake_test(self, mock_run_command, mock_toolchain, mock_poplar_grpc):
+        expected_file = os.path.join(self.workspace_root, "build", "XUnitXML", "sentinel.junit.xml")
 
-            def succeed(*args, **kwargs):
-                res = unittest.mock.Mock()
-                res.returncode = 0
-                return res
+        def fail(cmd, cwd, env, capture, check):
+            return cmd_runner.RunCommandOutput(returncode=1, stdout=[], stderr=[])
 
-            mock_subprocess_run.side_effect = succeed
-            cmake_test(**CMAKE_ARGS)
-            self.assertFalse(os.path.isfile(expected_file))
+        def succeed(cmd, cwd, env, capture, check):
+            return cmd_runner.RunCommandOutput(returncode=0, stdout=[], stderr=[])
+
+        mock_run_command.side_effect = fail
+        run_tests.cmake_test(genny_repo_root=".", workspace_root=self.workspace_root)
+        assert os.path.isfile(expected_file), f"{expected_file} must exist"
+
+        mock_run_command.side_effect = succeed
+        run_tests.cmake_test(genny_repo_root=".", workspace_root=self.workspace_root)
+        self.assertFalse(os.path.isfile(expected_file))

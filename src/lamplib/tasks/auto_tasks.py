@@ -119,16 +119,14 @@ class CLIOperation(NamedTuple):
         mode = OpName.ALL_TASKS
         variant = None
 
-        expansions_path = os.path.join(workspace_root, "expansions.yml")
-
         if mode_name == "all_tasks":
             mode = OpName.ALL_TASKS
         if mode_name == "patch_tasks":
             mode = OpName.PATCH_TASKS
-            variant = reader.load(workspace_root, expansions_path)["build_variant"]
+            variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
         if mode_name == "variant_tasks":
             mode = OpName.VARIANT_TASKS
-            variant = reader.load(workspace_root, expansions_path)["build_variant"]
+            variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
         return CLIOperation(
             mode, variant, genny_repo_root=genny_repo_root, workspace_root=workspace_root
         )

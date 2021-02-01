@@ -1,14 +1,12 @@
-import platform
-import sys
 import structlog
 import os
 import shutil
 
-import cmd_runner
-from cmd_runner import run_command
 from typing import Callable, TypeVar, Tuple, Optional
 
-from toolchain import toolchain_info
+import cmd_runner
+import curator
+import toolchain
 
 SLOG = structlog.get_logger(__name__)
 
@@ -34,14 +32,18 @@ _sentinel_report = """
 T = TypeVar("T")
 
 
+def _outcome_was_true(outcome: bool) -> bool:
+    return outcome
+
+
 def _run_command_with_sentinel_report(
     genny_repo_root: str,
     workspace_root: str,
     cmd_func: Callable[..., T],
     checker_func: Callable[[T], bool] = None,
 ) -> Tuple[T, bool]:
-    # This can only be imported after the setup script has installed gennylib.
-    from curator import poplar_grpc
+    if checker_func is None:
+        checker_func = _outcome_was_true
 
     sentinel_file = os.path.join(workspace_root, "build", "XUnitXML", "sentinel.junit.xml")
     os.makedirs(name=os.path.dirname(sentinel_file), exist_ok=True)
@@ -50,13 +52,14 @@ def _run_command_with_sentinel_report(
     try:
         with open(sentinel_file, "w") as f:
             f.write(_sentinel_report)
+            SLOG.debug("Created sentinel file", sentinel_file=sentinel_file)
 
-        with poplar_grpc(
+        with curator.poplar_grpc(
             cleanup_metrics=True, workspace_root=workspace_root, genny_repo_root=genny_repo_root
         ):
             cmd_output = cmd_func()
 
-        success = True if checker_func is None else checker_func(cmd_output)
+        success = checker_func(cmd_output)
         return cmd_output, success
     finally:
         if success and os.path.exists(sentinel_file):
@@ -69,10 +72,9 @@ def _run_command_with_sentinel_report(
 
 
 def cmake_test(genny_repo_root: str, workspace_root: str):
-    info = toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
+    info = toolchain.toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     workdir = os.path.join(genny_repo_root, "build")
 
-    # TODO: don't put in
     ctest_cmd = [
         "ctest",
         "--verbose",
@@ -80,10 +82,11 @@ def cmake_test(genny_repo_root: str, workspace_root: str):
         "(standalone|sharded|single_node_replset|three_node_replset|benchmark)",
     ]
 
-    def cmd_func() -> None:
-        cmd_runner.RunCommandOutput = run_command(
+    def cmd_func() -> bool:
+        output: cmd_runner.RunCommandOutput = cmd_runner.run_command(
             cmd=ctest_cmd, cwd=workdir, env=info.toolchain_env, capture=False, check=True
         )
+        return output.returncode == 0
 
     _run_command_with_sentinel_report(
         cmd_func=cmd_func, workspace_root=workspace_root, genny_repo_root=genny_repo_root
@@ -91,13 +94,15 @@ def cmake_test(genny_repo_root: str, workspace_root: str):
 
 
 def benchmark_test(genny_repo_root: str, workspace_root: str):
-    info = toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
+    info = toolchain.toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     workdir = os.path.join(genny_repo_root, "build")
 
     ctest_cmd = ["ctest", "--label-regex", "(benchmark)"]
 
     def cmd_func():
-        run_command(cmd=ctest_cmd, cwd=workdir, env=info.toolchain_env, capture=False, check=True)
+        cmd_runner.run_command(
+            cmd=ctest_cmd, cwd=workdir, env=info.toolchain_env, capture=False, check=True
+        )
 
     _run_command_with_sentinel_report(
         cmd_func=cmd_func, workspace_root=workspace_root, genny_repo_root=genny_repo_root
@@ -166,13 +171,13 @@ def _setup_resmoke(
     # Clone repo unless exists
     if not os.path.exists(mongo_repo_path):
         SLOG.info("Mongo repo doesn't exist. Checking it out.", mongo_repo_path=mongo_repo_path)
-        run_command(
+        cmd_runner.run_command(
             cmd=["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path],
             cwd=workspace_root,
             check=True,
             capture=False,
         )
-        run_command(
+        cmd_runner.run_command(
             # If changing this sha, you may need to use later binaries
             # in the _canned_artifacts dict.
             cmd=["git", "checkout", "298d4d6bbb9980b74bded06241067fe6771bef68"],
@@ -182,7 +187,7 @@ def _setup_resmoke(
         )
     else:
         SLOG.info("Using existing mongo repo checkout", mongo_repo_path=mongo_repo_path)
-        run_command(
+        cmd_runner.run_command(
             cmd=["git", "rev-parse", "HEAD"], check=False, cwd=mongo_repo_path, capture=False,
         )
 
@@ -216,7 +221,9 @@ def _setup_resmoke(
             fetching=mongodb_archive_url,
         )
         if mongodb_archive_url is None:
-            info = toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
+            info = toolchain.toolchain_info(
+                genny_repo_root=genny_repo_root, workspace_root=workspace_root
+            )
 
             if info.is_darwin:
                 artifact_key = "osx"
@@ -257,7 +264,7 @@ def _setup_resmoke(
         reqs_file = os.path.join(mongo_repo_path, "etc", "pip", "evgtest-requirements.txt")
 
         cmd = [resmoke_python, "-mpip", "install", "-r", reqs_file]
-        run_command(
+        cmd_runner.run_command(
             cmd=cmd, cwd=workspace_root, capture=False, check=True,
         )
 
@@ -312,7 +319,7 @@ def resmoke_test(
     ]
 
     def run_resmoke() -> None:
-        run_command(
+        cmd_runner.run_command(
             cmd=cmd,
             cwd=genny_repo_root,
             env=env,
