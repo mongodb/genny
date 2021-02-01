@@ -230,6 +230,9 @@ static const char nstr[] = "n";
 static const char sstr[] = "s";
 static const char minstr[] = "min";
 static const char maxstr[] = "max";
+static const char stepstr[] = "step";
+static const char startstr[] = "start";
+static const char multiplierstr[] = "multiplier";
 static const char alphastr[] = "alpha";
 static const char betastr[] = "beta";
 static const char lambdastr[] = "lambda";
@@ -736,6 +739,27 @@ private:
     const std::chrono::milliseconds _max;
 };
 
+
+class IncGenerator : public Generator<int64_t> {
+public:
+    IncGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _step{node["step"].maybe<int64_t>().value_or(1)} {
+        _counter = node["start"].maybe<int64_t>().value_or(1) +
+            generatorArgs.actorId * node["multiplier"].maybe<int64_t>().value_or(1);
+    }
+
+    int64_t evaluate() override {
+        auto inc_value = _counter;
+        _counter += _step;
+        return inc_value;
+    }
+
+private:
+    int64_t _step;
+    int64_t _counter;
+};
+
+
 /** `{a: [...]}` */
 class ArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
@@ -889,6 +913,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^Verbatim",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return valueGenerator<true, UniqueAppendable>(node, generatorArgs, allParsers);
+     }},
+    {"^Inc",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<IncGenerator>(node, generatorArgs);
      }},
 };
 
