@@ -23,6 +23,10 @@ namespace genny {
  * Helper function to quiesce the system and reduce noise.
  * The appropriate actions will be taken whether the target
  * is a standalone, replica set, or sharded cluster.
+ *
+ * Note: This function is effectively in beta mode. We expect it to work, but
+ * it hasn't been used extensively in production. Please let STM know of any
+ * use so we can help monitor its effectiveness.
  */
 bool quiesce(mongocxx::pool::entry& client, const std::string& dbName, const SleepContext& sleepContext);
 

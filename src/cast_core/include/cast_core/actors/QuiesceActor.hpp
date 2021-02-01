@@ -30,8 +30,12 @@ namespace genny::actor {
 /**
  * This performs a "whole-cluster" quiesce operation to prevent noise.
  *
- * Examples can be found in the workloads/docs/QuiesceActor.yml file.
+ * Examples of use can be found in the workloads/docs/QuiesceActor.yml file.
  *
+ * Note: This actor is effectively in beta mode. We expect it to work, but
+ * it hasn't been used extensively in production. Please let STM know of any
+ * use so we can help monitor its effectiveness.
+*
  * Owner: @mongodb/stm
  */
 class QuiesceActor : public Actor {
