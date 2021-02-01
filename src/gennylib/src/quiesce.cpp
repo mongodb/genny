@@ -120,7 +120,8 @@ bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client, std::string
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     if (retries >= DROPPED_COLLECTION_RETRIES) {
-        BOOST_LOG_TRIVIAL(error) << "Timeout on waiting for collections to drop.";
+        BOOST_LOG_TRIVIAL(error) << "Timeout on waiting for collections to drop. "
+            << "Tried " << retries << " >= " << DROPPED_COLLECTION_RETRIES << " max.";
         return false;
     }
     return true;
@@ -128,8 +129,8 @@ bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client, std::string
 
 } // anonymous namespace
 
-// Only one thread needs to actually do the quiesce.
 bool quiesce(mongocxx::pool::entry& client, std::string dbName) {
+    // Only one thread needs to actually do the quiesce.
     static std::mutex quiesceLock;
     static std::atomic_bool success;
 
