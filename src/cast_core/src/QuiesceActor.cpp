@@ -33,7 +33,14 @@
 namespace genny::actor {
 
 struct QuiesceActor::PhaseConfig {
-    PhaseConfig(PhaseContext& context) : dbName{context.actor()["Database"].to<std::string>()} {}
+    PhaseConfig(PhaseContext& context) : dbName{context.actor()["Database"].to<std::string>()} {
+        auto threads = context.actor()["Threads"].to<int>();
+        if (threads > 1) {
+            std::stringstream ss;
+            ss << "QuiesceActor only allows 1 thread, but found " << threads << " threads.";
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(ss.str()));
+        }
+    }
     std::string dbName;
 };
 

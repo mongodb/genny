@@ -4,8 +4,8 @@ Owner: "@mongodb/stm"
 Actors:
 - Name: QuiesceActor
   Type: QuiesceActor
-  # Even with multiple threads, only one does the quiesce.
-  Threads: 3
+  # Using multiple threads will result in an error.
+  Threads: 1
   Database: test
   Phases:
   - Phase: 0
