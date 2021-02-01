@@ -130,7 +130,11 @@ bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client, std::string
 } // anonymous namespace
 
 bool quiesce(mongocxx::pool::entry& client, std::string dbName) {
-    // Only one thread needs to actually do the quiesce.
+    /* Only one thread needs to actually do the quiesce. If 
+     * another thread enters the function while a quiesce
+     * is happening, it waits until the quiesce finishes
+     * and exits.
+     */
     static std::mutex quiesceLock;
     static std::atomic_bool success;
 
