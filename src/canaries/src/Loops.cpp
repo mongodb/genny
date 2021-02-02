@@ -19,9 +19,7 @@
 
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/PhaseLoop.hpp>
-#include <gennylib/context.hpp>
 
-#include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
 
 #if defined(__APPLE__)
@@ -142,7 +140,6 @@ Nanosecond Loops<Task, Args...>::metricsPhaseLoop(Args&&... args) {
     auto task = Task(std::forward<Args>(args)...);
 
     auto metrics = genny::metrics::Registry{};
-    metrics::Reporter{metrics};
 
     auto dummyOp = metrics.operation("metricsLoop", "dummyOp", 0u);
 

@@ -17,11 +17,11 @@
 #include <string>
 #include <vector>
 
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <canaries/Loops.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
-#include <gennylib/context.hpp>
 
 using namespace genny;
 
