@@ -9,8 +9,8 @@ SLOG = structlog.get_logger(__name__)
 
 
 def main_canaries_runner(
-    canary_args: List[str],
-        cleanup_metrics: bool, workspace_root: str, genny_repo_root: str):
+    canary_args: List[str], cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
+):
     """
     Intended to be the main entry point for running canaries.
     """

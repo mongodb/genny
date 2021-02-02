@@ -161,8 +161,7 @@ public:
 
     explicit RegistryT() = default;
 
-    explicit RegistryT(bool assertMetricsBuffer)
-    : RegistryT({}, {}, assertMetricsBuffer) {}
+    explicit RegistryT(bool assertMetricsBuffer) : RegistryT({}, {}, assertMetricsBuffer) {}
 
     explicit RegistryT(MetricsFormat format,
                        boost::filesystem::path pathPrefix,
@@ -186,7 +185,7 @@ public:
                                       ActorId actorId,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
         StreamPtr stream = nullptr;
-        
+
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
