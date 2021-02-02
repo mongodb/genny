@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import datetime
+import time
 from uuid import uuid4
 from typing import Optional
 
@@ -77,6 +78,7 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
             raise OSError("Failed to start Poplar.")
         try:
             os.chdir(prior_cwd)
+            time.sleep(0.5)  # sleep to let curator get started. This is a heuristic.
             yield poplar
         finally:
             try:

@@ -25,6 +25,16 @@
 
 using namespace genny;
 
+namespace {
+void createDirectory(const std::string& filePath) {
+    auto asPath = boost::filesystem::path{filePath};
+    auto dirname = asPath.parent_path();
+    if (!boost::filesystem::exists(dirname)) {
+        boost::filesystem::create_directories(dirname);
+    }
+}
+}  // namespace
+
 struct ProgramOptions {
 
     std::vector<std::string> _loopNames;
@@ -48,9 +58,9 @@ struct ProgramOptions {
         progDesc << "                 by running low-level tasks in Genny loops\n\n";
         progDesc << "Usage:\n";
         progDesc << "    " << argv[0] << " <task-name> [loop-type [loop-type] ..]\n\n";
-        progDesc << "Types of task:‍";
+        progDesc << "Types of task:";
         progDesc << R"(
-    nop     Trivial task that reads a value from a register; intended for
+    nop      Trivial task that reads a value from a register; intended for
              testing loops with the minimum amount of unrelated code
     sleep    Sleep for 1ms
     cpu      Multiply a large number 10000 times to stress the CPU's ALU.
@@ -61,14 +71,14 @@ struct ProgramOptions {
     )"
                  << "\n\n";
 
-        progDesc << "Types of loops:‍";
+        progDesc << "Types of loops:";
         progDesc << R"(
-    simple   Run native for-loop; used as the control group with no Genny code
-    phase    Run just the PhaseLoop
-    metrics  Run native for-loop and record one timer metric per iteration
+    simple        Run native for-loop; used as the control group with no Genny code
+    phase         Run just the PhaseLoop
+    metrics       Run native for-loop and record one timer metric per iteration
     metrics-ftdc  Run native for-loop and record one timer metric per iteration, uses FTDC metrics
     real-ftdc     Run PhaseLoop and record one timer metric per iteration; resembles
-             how a real actor runs, uses FTDC metrics
+                  how a real actor runs, uses FTDC metrics
     )"
                  << "\n";
 
@@ -88,7 +98,7 @@ struct ProgramOptions {
                 po::value<std::string>(),
                 "What type of task to do within each iteration of the loop")
         ("iterations,i",
-                po::value<int64_t>()->default_value(1e6),
+                po::value<int64_t>()->default_value(10000),
                 "Number of iterations to run the tests")
         ("mongo-uri,u",
                 po::value<std::string>()->default_value("mongodb://localhost:27017"))
@@ -124,6 +134,8 @@ struct ProgramOptions {
 
         if (vm.count("metrics-output-file") >= 1) {
             _metricsFileName = vm["metrics-output-file"].as<std::string>();
+        } else if (!_isHelp) {
+            _metricsFileName = "build/WorkloadOutput/" + _task + ".csv";
         }
 
         if (vm.count("loop-type") >= 1)
@@ -171,11 +183,15 @@ int main(int argc, char** argv) {
 
     if (!opts._metricsFileName.empty()) {
         std::ofstream metrics;
+        createDirectory(opts._metricsFileName);
         metrics.open(opts._metricsFileName, std::ofstream::out | std::ofstream::trunc);
         for (int i = 0; i < results.size(); i++) {
             metrics << opts._task << "_" << opts._loopNames[i] << "," << (results[i] * 1000 / opts._iterations);
             metrics << std::endl;
         }
+        BOOST_LOG_TRIVIAL(info) << "Wrote metrics to " << opts._metricsFileName;
+    } else {
+        BOOST_LOG_TRIVIAL(info) << "No metrics-output-file specified. Not writing results to file.";
     }
 
     return 0;

@@ -200,14 +200,15 @@ def dry_run_workloads(ctx: click.Context):
         "run-over-run it is indicative of a change in the underlying system."
     ),
 )
-# TODO: match usage in DSI
 # f"{prefix} ./src/genny/run-genny canaries nop",
-# f"{prefix} ./src/genny/run-genny canaries ping --mongo-uri '{db_url}'"
+# f"{prefix} ./src/genny/run-genny canaries ping -- --mongo-uri '{db_url}'"
+@click.argument("canary_args", nargs=-1)
 @click.pass_context
-def canaries(ctx):
+def canaries(ctx: click.Context, canary_args: List[str]):
     from tasks import canaries_runner
 
     canaries_runner.main_canaries_runner(
+        canary_args=canary_args,
         cleanup_metrics=True,
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
