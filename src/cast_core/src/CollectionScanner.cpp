@@ -183,7 +183,8 @@ struct CollectionScanner::PhaseConfig {
 
 void collectionScan(CollectionScanner::PhaseConfig* config,
                     std::vector<mongocxx::collection>& collections,
-                    GlobalRateLimiter* rateLimiter) {
+                    GlobalRateLimiter* rateLimiter,
+                    const mongocxx::client_session& session) {
     /*
      * Here we are either doing a snapshot collection scan
      * or just a normal scan?
@@ -196,7 +197,7 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
     for (auto& collection : collections) {
         auto filter = config->filterExpr ? config->filterExpr->evaluate()
                                          : bsoncxx::document::view_or_value{};
-        auto docs = collection.find(filter);
+        auto docs = collection.find(session, filter);
         /*
          * Try-catch this as the collection may have been deleted.
          * You can still do a find but it'll throw an exception when we iterate.
@@ -396,7 +397,7 @@ void CollectionScanner::run() {
             } else if (config->scanType == ScanType::kSnapshot) {
                 mongocxx::client_session session = _client->start_session({});
                 session.start_transaction(*config->transactionOptions);
-                collectionScan(config, collections, _rateLimiter);
+                collectionScan(config, collections, _rateLimiter, session);
                 // If a scan duration was specified, we must make the scan
                 // last at least that long.  We'll do this within any
                 // running transaction, so we keep the "long running
@@ -420,7 +421,8 @@ void CollectionScanner::run() {
             } else if (config->scanType == ScanType::kPointInTime) {
                 pointInTimeScan(_client, config, readClusterTime);
             } else {
-                collectionScan(config, collections, _rateLimiter);
+                const mongocxx::client_session session = _client->start_session({});
+                collectionScan(config, collections, _rateLimiter, session);
             }
 
             _runningActorCounter--;
