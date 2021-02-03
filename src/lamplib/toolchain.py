@@ -131,6 +131,7 @@ def toolchain_info(
             linux_distro=linux_distro,
             ignore_toolchain_version=ignore_toolchain_version,
         )
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
         with open(save_path, "w") as handle:
             json.dump(info.to_dict(), handle)
             SLOG.debug("Wrote toolchain info.", to_path=save_path)
