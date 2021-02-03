@@ -1,0 +1,55 @@
+[resmoke] 2021-02-03T10:37:54.563-0500 verbatim resmoke.py invocation: /Users/carlworley/mongodb/genny/build/mongo/buildscripts/resmoke.py run --suite src/resmokeconfig/genny_standalone.yml --configDir /Users/carlworley/mongodb/genny/build/mongo/buildscripts/resmokeconfig --mongod mongod --mongo mongo --mongos mongos --log=file
+[resmoke] 2021-02-03T10:37:54.568-0500 YAML configuration of suite src/resmokeconfig/genny_standalone.yml
+test_kind: gennylib_test
+
+selector: {}
+
+executor:
+  config:
+    program_executable: build/src/cast_core/cast_core_test
+    verbatim_arguments:
+    - --durations
+    - 'yes'
+    - --rng-seed
+    - '12345'
+    - '[standalone]'
+    - CrudActor YAML Tests
+  fixture:
+    class: MongoDFixture
+    mongod_options:
+      set_parameters:
+        enableTestCommands: 1
+
+logging:
+  executor:
+    format: '[%(name)s] %(asctime)s %(message)s'
+    handlers:
+    - class: logging.FileHandler
+      filename: executor.log
+      mode: w
+  fixture:
+    format: '[%(name)s] %(message)s'
+    handlers:
+    - class: logging.FileHandler
+      filename: fixture.log
+      mode: w
+  tests:
+    format: '[%(name)s] %(asctime)s %(message)s'
+    handlers:
+    - class: logging.FileHandler
+      filename: tests.log
+      mode: w
+[executor] 2021-02-03T10:37:54.568-0500 Starting execution of gennylib_tests...
+[executor:gennylib_test:job0] 2021-02-03T10:37:54.569-0500 Running job0_fixture_setup_0...
+[executor:gennylib_test:job0] 2021-02-03T10:37:55.414-0500 job0_fixture_setup_0 ran in 0.85 seconds: no failures detected.
+[executor:gennylib_test:job0] 2021-02-03T10:37:55.414-0500 Running cast_core_test...
+PATH=/Users/carlworley/mongodb/genny:/data/multiversion:/Users/carlworley/mongodb/genny/scripts/venv/bin:/Users/carlworley/mongodb/genny/build/mongo/bin:/Users/carlworley/mongodb/genny/build/mongo:/data/mci/gennytoolchain/downloads/tools/ninja-1.8.2-osx::/data/mci/gennytoolchain/downloads/tools/cmake-3.13.3-osx/cmake-3.13.3-Darwin-x86_64/CMake.app/Contents/bin:/opt/mongodbtoolchain/v3/bin:/Users/carlworley/mongodb/genny/scripts/venv/bin:/opt/mongodbtoolchain/v3/bin:/Users/carlworley/mongodb/mongo:/Users/carlworley/mongodb/genny/scripts/venv/bin:/Users/carlworley/.pyenv/shims:/Users/carlworley/.nvm/versions/node/v8.11.3/bin:/usr/local/opt/llvm/bin:/Users/carlworley/mongodb/genny/build/src/driver:/Users/carlworley/go/src/github.com/mongodb/curator:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/carlworley/bin:/Users/carlworley/.nvm/versions/node/v8.11.3/bin:~/mongodb/mongo MONGO_CONNECTION_STRING=mongodb://localhost:20000 build/src/cast_core/cast_core_test --durations yes --rng-seed 12345 [standalone] CrudActor YAML Tests
+[executor:gennylib_test:job0] 2021-02-03T10:37:56.181-0500 cast_core_test ran in 0.77 seconds: no failures detected.
+[executor:gennylib_test:job0] 2021-02-03T10:37:56.182-0500 Running job0_fixture_teardown...
+[executor] 2021-02-03T10:37:56.182-0500 Waiting for threads to complete
+[executor:gennylib_test:job0] 2021-02-03T10:37:56.289-0500 job0_fixture_teardown ran in 0.11 seconds: no failures detected.
+[executor] 2021-02-03T10:37:56.289-0500 Threads are completed!
+[executor] 2021-02-03T10:37:56.289-0500 Summary of latest execution: All 3 test(s) passed in 1.72 seconds.
+[resmoke] 2021-02-03T10:37:56.289-0500 ================================================================================
+[resmoke] 2021-02-03T10:37:56.289-0500 Summary of src/resmokeconfig/genny_standalone.yml suite: All 3 test(s) passed in 1.72 seconds.
+[resmoke] 2021-02-03T10:37:56.289-0500 Exiting with code: 0
