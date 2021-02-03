@@ -106,10 +106,14 @@ def toolchain_info(
     linux_distro: Optional[str] = None,
     ignore_toolchain_version: Optional[bool] = None,
 ) -> ToolchainInfo:
-    passed_any = any(x for x in [os_family, linux_distro, ignore_toolchain_version])
+    passed_args = [os_family, linux_distro, ignore_toolchain_version]
+    passed_any = any(x for x in passed_args)
 
     save_path = os.path.join(genny_repo_root, "build", "ToolchainInfo.json")
     has_save = os.path.exists(save_path)
+
+    SLOG.debug("Evaluating if need to recompute toolchain info", save_path=save_path,
+               save_exists=has_save, passed_args=passed_args)
 
     if not passed_any and not has_save:
         msg = (
