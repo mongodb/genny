@@ -83,6 +83,7 @@ def main():
         sys.exit(1)
     curator_path = curator_downloader.result_dir
 
+    exit_code = 0
     if not args.subcommand:
         logging.info("No subcommand specified; running cmake, compile and install")
         tasks.cmake(
@@ -101,14 +102,18 @@ def main():
         elif args.subcommand == "benchmark-test":
             tasks.run_tests.benchmark_test(compile_env)
         elif args.subcommand == "resmoke-test":
-            tasks.run_tests.resmoke_test(
+            success = tasks.run_tests.resmoke_test(
                 compile_env,
                 suites=args.resmoke_suites,
                 mongo_dir=args.resmoke_mongo_dir,
                 is_cnats=args.resmoke_cnats,
             )
+            if not success:
+                exit_code = 1
         else:
             raise ValueError("Unknown subcommand: ", args.subcommand)
+
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":

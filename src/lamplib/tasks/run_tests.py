@@ -44,6 +44,7 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
     else:
         logging.debug("Test failed, leaving sentinel report in place")
 
+    return success
 
 def cmake_test(env):
     workdir = os.path.join(os.getcwd(), "build")
@@ -137,7 +138,7 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
         )
     )
 
-    _run_command_with_sentinel_report(
+    return _run_command_with_sentinel_report(
         lambda: subprocess.run(
             ";".join(cmds), cwd=workdir, env=env, shell=True, executable="/bin/bash"
         ),
