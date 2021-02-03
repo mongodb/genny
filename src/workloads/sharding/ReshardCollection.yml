@@ -161,4 +161,4 @@ Actors:
 AutoRun:
   Requires:
     mongodb_setup:
-    - shard-lite
+    - shard-lite-all-feature-flags
