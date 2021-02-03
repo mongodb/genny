@@ -163,12 +163,6 @@ tasks:
   commands:
   - func: f_benchmark_test
 
-- name: t_integration_test_standalone
-  commands:
-  - func: f_resmoke_test
-    vars:
-      resmoke_test_args: "--suites src/resmokeconfig/genny_standalone.yml"
-
 - name: t_integration_test_single_node_replset
   commands:
   - func: f_resmoke_test
@@ -241,7 +235,6 @@ task_groups:
   - t_python_test
   - t_lint_python
   - t_cmake_test
-  - t_integration_test_standalone
   - t_integration_test_single_node_replset
   - t_integration_test_three_node_replset
   - t_integration_test_sharded
