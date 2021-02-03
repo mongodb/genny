@@ -43,7 +43,7 @@ def _get_poplar_args(genny_repo_root: str, workspace_root: str):
 
 
 _DATE_FORMAT = "%Y-%m-%dT%H%M%SZ"
-_METRICS_PATH = "build/CedarMetrics"
+_METRICS_PATH = "build/WorkloadOutput/CedarMetrics"
 
 
 def _cleanup_metrics():

@@ -62,7 +62,7 @@ WorkloadContext::WorkloadContext(const Node& node,
     }
 
     auto metricsPath =
-        ((*this)["Metrics"]["Path"]).maybe<std::string>().value_or("build/CedarMetrics");
+        ((*this)["Metrics"]["Path"]).maybe<std::string>().value_or("build/WorkloadOutput/CedarMetrics");
     _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
 
 
