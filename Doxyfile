@@ -6,7 +6,7 @@
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = "Genny"
 PROJECT_NUMBER         =
-PROJECT_BRIEF          = "Genny is a MongoDB workload-generator library and tool"
+PROJECT_BRIEF          = "Genny is a MongoDB workload-generator"
 PROJECT_LOGO           =
 OUTPUT_DIRECTORY       = build/docs
 CREATE_SUBDIRS         = YES
