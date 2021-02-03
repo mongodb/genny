@@ -95,6 +95,8 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScanner", "[standalone][Collection
           ScanType: snapshot
           GlobalRate: 1 per 3 seconds
           Documents: 20
+      Metrics:
+        Format: csv
       )",
                                  "");
 
@@ -144,6 +146,8 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerAll", "[standalone][Collect
           CollectionSortOrder: forward
           GlobalRate: 1 per 3 seconds
           Documents: 350
+      Metrics:
+        Format: csv
       )",
                                   "");
 

@@ -155,6 +155,8 @@ NodeSource createConfigurationYaml(YAML::Node operations) {
             Type: CrudActor
             Phases:
             - Repeat: 1
+          Metrics:
+            Format: csv
           )");
     config["Actors"][0]["Database"] = DEFAULT_DB;
     config["Actors"][0]["Phases"][0]["Collection"] = DEFAULT_COLLECTION;

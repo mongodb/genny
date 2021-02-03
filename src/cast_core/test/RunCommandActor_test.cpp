@@ -68,6 +68,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             Operation:
               OperationName: RunCommand
               OperationCommand: {someKey: 1}
+        Metrics:
+          Format: csv
     )",
                       "");
 
