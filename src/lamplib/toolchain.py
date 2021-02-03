@@ -113,7 +113,7 @@ def toolchain_info(
     has_save = os.path.exists(save_path)
 
     SLOG.debug("Evaluating if need to recompute toolchain info", save_path=save_path,
-               save_exists=has_save, passed_args=passed_args)
+               save_exists=has_save, passed_args=passed_args, passed_any=passed_any)
 
     if not passed_any and not has_save:
         msg = (
@@ -122,6 +122,8 @@ def toolchain_info(
         )
         raise Exception(msg)
     if passed_any or not has_save:
+        SLOG.debug("Passed build args or no saved toolchain info",
+                   passed_any=passed_any, has_save=has_save, save_path=save_path)
         info: ToolchainInfo = _compute_toolchain_info(
             genny_repo_root=genny_repo_root,
             workspace_root=workspace_root,
@@ -131,7 +133,9 @@ def toolchain_info(
         )
         with open(save_path, "w") as handle:
             json.dump(info.to_dict(), handle)
-        SLOG.debug("Wrote toolchain info.", to_path=save_path)
+            SLOG.debug("Wrote toolchain info.", to_path=save_path)
+    if not os.path.exists(save_path):
+        raise Exception(f"Saved toolchain path {save_path} does not exist.")
     with open(save_path, "r") as handle:
         SLOG.debug("Loaded existing toolchain info", from_path=save_path)
         return ToolchainInfo.from_dict(json.load(handle))
