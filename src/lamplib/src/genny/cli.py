@@ -1,13 +1,11 @@
-from typing import List, Optional
-
-import click
-from click_option_group import optgroup, RequiredMutuallyExclusiveOptionGroup
 import platform
 import structlog
 import sys
 import os
 
-from genny import curator, loggers
+from typing import List, Optional
+import click
+from click_option_group import optgroup, RequiredMutuallyExclusiveOptionGroup
 
 SLOG = structlog.get_logger(__name__)
 
@@ -16,6 +14,8 @@ SLOG = structlog.get_logger(__name__)
 @click.option("-v", "--verbose", default=False, is_flag=True, help="Enable verbose output/logging.")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool) -> None:
+    from genny import loggers
+
     # Ensure that ctx.obj exists and is a dict.
     ctx.ensure_object(dict)
 
@@ -92,6 +92,7 @@ def cmake_compile_install(
     ctx.ensure_object(dict)
 
     from genny.tasks import compile
+    from genny import curator
 
     compile.compile_and_install(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],

@@ -5,7 +5,7 @@ import tempfile
 from typing import NamedTuple, List, Optional
 from unittest.mock import MagicMock
 
-from genny.tasks import (
+from genny.tasks.auto_tasks import (
     CurrentBuildInfo,
     CLIOperation,
     WorkloadLister,

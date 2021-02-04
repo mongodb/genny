@@ -1,14 +1,13 @@
-import logging
+import sys
+
 import structlog
 import colorama as c
-from io import StringIO
-
 from typing import Any
-
-import sys
 
 
 def setup_logging(verbose: bool = False) -> None:
+    import logging
+
     """Configure logging verbosity and destination."""
 
     loglevel = logging.DEBUG if verbose else logging.INFO
@@ -74,6 +73,8 @@ def _tweak_structlog_log_line() -> None:
 
     :return: None
     """
+
+    from io import StringIO
 
     def _override_call(
         self: structlog.dev.ConsoleRenderer, _: Any, __: Any, event_dict: dict

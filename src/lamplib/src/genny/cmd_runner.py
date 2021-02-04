@@ -1,9 +1,10 @@
 import subprocess
-import structlog
-from typing import List, NamedTuple
 import os
 import shlex
 from uuid import uuid4
+
+import structlog
+from typing import List, NamedTuple
 
 SLOG = structlog.get_logger(__name__)
 

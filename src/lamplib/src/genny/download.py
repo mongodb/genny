@@ -4,7 +4,7 @@ import shutil
 import platform
 import urllib.request
 
-from cmd_runner import run_command
+from genny.cmd_runner import run_command
 
 SLOG = structlog.get_logger(__name__)
 

@@ -9,8 +9,8 @@ from typing import Optional
 import structlog
 from contextlib import contextmanager
 
-from cmd_runner import run_command, RunCommandOutput
-from download import Downloader
+from genny.cmd_runner import run_command, RunCommandOutput
+from genny.download import Downloader
 
 SLOG = structlog.get_logger(__name__)
 

@@ -1,8 +1,8 @@
-import structlog
 import os
 import os.path as path
 import sys
 
+import structlog
 import yamllint.cli
 
 SLOG = structlog.get_logger(__name__)

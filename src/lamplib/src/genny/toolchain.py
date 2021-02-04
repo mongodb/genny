@@ -1,8 +1,8 @@
-from typing import Optional, NamedTuple
-
 import json
-import structlog
 import os
+
+from typing import Optional, NamedTuple
+import structlog
 
 from genny.cmd_runner import run_command
 from genny.download import Downloader
