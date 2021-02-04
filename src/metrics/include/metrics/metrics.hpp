@@ -183,7 +183,7 @@ public:
                                       ActorId actorId,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
         StreamPtr stream = nullptr;
-        
+
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
