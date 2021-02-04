@@ -4,8 +4,8 @@ import json
 import structlog
 import os
 
-from cmd_runner import run_command
-from download import Downloader
+from genny.cmd_runner import run_command
+from genny.download import Downloader
 
 SLOG = structlog.get_logger(__name__)
 

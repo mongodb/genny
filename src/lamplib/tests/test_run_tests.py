@@ -4,10 +4,8 @@ import shutil
 import unittest
 from unittest.mock import patch
 
-from tasks import run_tests
-import cmd_runner
-import toolchain
-import curator
+from genny.tasks import run_tests
+from genny import curator, cmd_runner, toolchain
 
 
 class TestRunTests(unittest.TestCase):

@@ -7,8 +7,7 @@ import structlog
 import sys
 import os
 
-import loggers
-import curator
+from genny import curator, loggers
 
 SLOG = structlog.get_logger(__name__)
 
@@ -92,7 +91,7 @@ def cmake_compile_install(
 ):
     ctx.ensure_object(dict)
 
-    from tasks import compile
+    from genny.tasks import compile
 
     compile.compile_and_install(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
@@ -118,7 +117,7 @@ def cmake_compile_install(
 )
 @click.pass_context
 def clean(ctx: click.Context) -> None:
-    from tasks import compile
+    from genny.tasks import compile
 
     compile.clean(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
 
@@ -126,7 +125,7 @@ def clean(ctx: click.Context) -> None:
 @cli.command(name="cmake-test", help="Run genny's C++ unit tests.")
 @click.pass_context
 def cmake_test(ctx: click.Context) -> None:
-    from tasks import run_tests
+    from genny.tasks import run_tests
 
     run_tests.cmake_test(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
@@ -139,7 +138,7 @@ def cmake_test(ctx: click.Context) -> None:
 )
 @click.pass_context
 def benchmark_test(ctx: click.Context) -> None:
-    from tasks import run_tests
+    from genny.tasks import run_tests
 
     run_tests.benchmark_test(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
@@ -160,7 +159,7 @@ def benchmark_test(ctx: click.Context) -> None:
 @click.argument("genny_args", nargs=-1)
 @click.pass_context
 def workload(ctx: click.Context, genny_args: List[str]):
-    from tasks import genny_runner
+    from genny.tasks import genny_runner
 
     ctx.ensure_object(dict)
     ctx.obj["GENNY_ARGS"] = genny_args
@@ -184,7 +183,7 @@ def workload(ctx: click.Context, genny_args: List[str]):
 )
 @click.pass_context
 def dry_run_workloads(ctx: click.Context):
-    from tasks import dry_run
+    from genny.tasks import dry_run
 
     dry_run.dry_run_workloads(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
@@ -205,7 +204,7 @@ def dry_run_workloads(ctx: click.Context):
 @click.argument("canary_args", nargs=-1)
 @click.pass_context
 def canaries(ctx: click.Context, canary_args: List[str]):
-    from tasks import canaries_runner
+    from genny.tasks import canaries_runner
 
     canaries_runner.main_canaries_runner(
         canary_args=canary_args,
@@ -257,7 +256,7 @@ def resmoke_test(
     mongo_dir: Optional[str],
     mongodb_archive_url: Optional[str],
 ):
-    from tasks import run_tests
+    from genny.tasks import run_tests
 
     run_tests.resmoke_test(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
@@ -280,7 +279,7 @@ def resmoke_test(
 @click.argument("actor_name")
 @click.pass_context
 def create_new_actor(ctx: click.Context, actor_name: str):
-    from tasks import create_new_actor
+    from genny.tasks import create_new_actor
 
     create_new_actor.run_create_new_actor(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], actor_name=actor_name,
@@ -296,7 +295,7 @@ def create_new_actor(ctx: click.Context, actor_name: str):
 )
 @click.pass_context
 def lint_python(ctx: click.Context, fix: bool):
-    from tasks import lint_python
+    from genny.tasks import lint_python
 
     lint_python.lint_python(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], fix=fix)
 
@@ -304,7 +303,7 @@ def lint_python(ctx: click.Context, fix: bool):
 @cli.command(name="self-test", help="Run the pytest tests of genny's internal python.")
 @click.pass_context
 def self_test(ctx: click.Context):
-    from tasks import pytest
+    from genny.tasks import pytest
 
     pytest.run_self_test(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
@@ -314,7 +313,7 @@ def self_test(ctx: click.Context):
 @cli.command(name="lint-yaml", help="Run pylint on all workload and phase yamls")
 @click.pass_context
 def lint_yaml(ctx: click.Context):
-    from tasks import yaml_linter
+    from genny.tasks import yaml_linter
 
     yaml_linter.main(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
 
@@ -333,7 +332,7 @@ def lint_yaml(ctx: click.Context):
 )
 @click.pass_context
 def auto_tasks(ctx: click.Context, tasks: str):
-    from tasks import auto_tasks
+    from genny.tasks import auto_tasks
 
     auto_tasks.main(
         mode_name=tasks,

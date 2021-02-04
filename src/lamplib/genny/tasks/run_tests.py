@@ -4,9 +4,7 @@ import shutil
 
 from typing import Callable, TypeVar, Tuple, Optional
 
-import cmd_runner
-import curator
-import toolchain
+from genny import curator, cmd_runner, toolchain
 
 SLOG = structlog.get_logger(__name__)
 

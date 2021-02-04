@@ -2,8 +2,8 @@ import glob
 import os
 import structlog
 
-from tasks import genny_runner
-from toolchain import toolchain_info
+from genny.tasks import genny_runner
+from genny.toolchain import toolchain_info
 
 SLOG = structlog.get_logger(__name__)
 

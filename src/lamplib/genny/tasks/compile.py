@@ -2,9 +2,9 @@ from typing import List
 
 import structlog
 import os
-from cmd_runner import run_command
+from genny.cmd_runner import run_command
 
-import toolchain
+from genny import toolchain
 
 SLOG = structlog.get_logger(__name__)
 

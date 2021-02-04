@@ -1,5 +1,5 @@
 import os
-import cmd_runner
+from genny import cmd_runner
 
 
 def run_create_new_actor(genny_repo_root: str, actor_name: str):

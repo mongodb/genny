@@ -2,8 +2,8 @@ import os
 import structlog
 from typing import List
 
-from cmd_runner import run_command
-from curator import poplar_grpc
+from genny.cmd_runner import run_command
+from genny.curator import poplar_grpc
 
 SLOG = structlog.get_logger(__name__)
 
