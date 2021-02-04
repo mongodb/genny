@@ -1,0 +1,17 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/stm"
+
+# Note: This actor is effectively in beta mode. We expect it to work, but 
+# it hasn't been used extensively in production. Please let STM know of any
+# use so we can help monitor its effectiveness.
+Actors:
+- Name: QuiesceActor
+  Type: QuiesceActor
+  # Using multiple threads will result in an error.
+  Threads: 1
+  Database: test
+  Phases:
+  - Phase: 0
+    Repeat: 1
+  - Phase: 1
+    Repeat: 1

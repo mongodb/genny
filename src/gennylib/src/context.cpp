@@ -23,6 +23,7 @@
 #include <mongocxx/uri.hpp>
 
 #include <gennylib/Cast.hpp>
+#include <gennylib/v1/Sleeper.hpp>
 #include <metrics/metrics.hpp>
 
 namespace genny {
@@ -175,6 +176,14 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
     }
     actorContext->orchestrator().phasesAtLeastTo(out.size() - 1);
     return out;
+}
+
+// The SleepContext class is basically an actor-friendly adapter
+// for the Sleeper.
+void SleepContext::sleep_for(Duration duration) const {
+    // We don't care about the before/after op distinction here.
+    v1::Sleeper sleeper(duration, Duration::zero());
+    sleeper.before(_orchestrator, _phase);
 }
 
 bool PhaseContext::isNop() const {

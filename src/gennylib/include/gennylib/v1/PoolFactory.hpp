@@ -32,7 +32,7 @@ namespace genny::v1 {
 /**
  * A pool factory takes in a MongoURI, modifies its components, and makes a pool from it
  *
- * This class allows for programically modifying all non-host components of the MongoURI.
+ * This class allows for programically modifying all components of the MongoURI.
  * Any query parameter can be set via `setStringOption()`, `setIntOption()`, or `setFlag()`.
  * It also allows for setting the protocol, username, password, and database via the options
  * "Protocol", "Username", "Password", and "Database" in the same manner as query parameters would
@@ -65,6 +65,11 @@ public:
      *  socketTimeoutMS
      */
     void setOption(OptionType type, const std::string& option, std::string value);
+
+    /**
+     * Replace the host(s) with a given vector of host(s).
+     */
+    void overrideHosts(const std::set<std::string>& hosts);
 
     template <typename ContainerT = std::map<std::string, std::string>>
     void setOptions(OptionType type, ContainerT list) {

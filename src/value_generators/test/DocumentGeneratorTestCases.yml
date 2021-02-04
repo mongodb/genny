@@ -488,15 +488,17 @@ Tests:
     - a: "64.83.195.254"
     - a: "12.171.202.78"
 
-  # The commented portions of this test should work, but do not. This appears to be due to a bson or
-  # testlib error in formatting of bson. One case will have an extra whitespace than the other.
   - Name: Actor ID
     GivenTemplate:
-      # int: {^ActorId: {}}
       string: {^ActorIdString: {}}
     ThenReturns:
-    #    - { "int" : { "$numberLong" : "2000000000"}, "string" : "2000000000" }
     - "string": "2"
+
+  - Name: Actor ID
+    GivenTemplate:
+      int: {^ActorId: {}}
+    ThenReturns:
+    - { "int" : { "$numberLong" : "2000000000"}}
 
   # Now moves with time so would always fail until PERF-2086 is available.
   - Name: Now
@@ -592,3 +594,34 @@ Tests:
     ThenReturns:
     - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
 
+  - Name: SimpleIncrement
+    GivenTemplate:
+      int: {^Inc: {start: 1, multiplier: 100, step: 1}}
+    ThenReturns:
+    - "int": { "$numberLong" : "201"}
+    - "int": { "$numberLong" : "202"}
+    - "int": { "$numberLong" : "203"}
+
+  - Name: IncrementWithStep
+    GivenTemplate:
+      int: {^Inc: {start: 100, multiplier: 200, step: 2}}
+    ThenReturns:
+    - "int" : { "$numberLong" :"500"}
+    - "int" : { "$numberLong" :"502"}
+    - "int" : { "$numberLong" :"504"}
+
+  - Name: IncrementWithDefaultStart
+    GivenTemplate:
+      int: {^Inc: {multiplier: 200, step: 2}}
+    ThenReturns:
+    - "int" : { "$numberLong" :"401"}
+    - "int" : { "$numberLong" :"403"}
+    - "int" : { "$numberLong" :"405"}
+
+  - Name: IncrementAllDeafults
+    GivenTemplate:
+      int: {^Inc: {}}
+    ThenReturns:
+    - "int" : { "$numberLong" :"3"}
+    - "int" : { "$numberLong" :"4"}
+    - "int" : { "$numberLong" :"5"}
