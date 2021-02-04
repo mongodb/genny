@@ -82,15 +82,17 @@ buildvariants:
   tasks:
   - name: tg_compile
 
-- name: ubuntu1804
-  display_name: Ubuntu 18.04
-  modules: [mongo]
-  expansions:
-    distro: ubuntu1804
-  run_on:
-  - ubuntu1804-build
-  tasks:
-  - name: tg_compile
+# TODO: TIG-2819
+#- name: ubuntu1804
+#  display_name: Ubuntu 18.04
+#  modules: [mongo]
+#  expansions:
+#    distro: ubuntu1804
+#  run_on:
+#  - ubuntu1804-build
+#  tasks:
+#  - name: tg_compile
+#  - name: t_push
 
 - name: macos-1014
   display_name: macOS Mojave
@@ -140,17 +142,11 @@ tasks:
   commands:
   - func: f_benchmark_test
 
-- name: t_integration_test_standalone
-  commands:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - resmoke-test
-      - --suites
-      - src/resmokeconfig/genny_standalone.yml
-
+  # It's not possible to do a standalone version due to
+  # some tests' reliance on an apm callback that doesn't
+  # work on standalone. (Specifically, since read concern
+  # is irrelevant on a standalone, recent driver versions
+  # simply omit it.)
 - name: t_integration_test_single_node_replset
   commands:
   - command: subprocess.exec
@@ -237,7 +233,6 @@ task_groups:
   - t_python_test
   - t_lint_python
   - t_cmake_test
-  - t_integration_test_standalone
   - t_integration_test_single_node_replset
   - t_integration_test_three_node_replset
   - t_integration_test_sharded
@@ -388,5 +383,5 @@ modules:
   repo: git@github.com:mongodb/mongo.git
   # This prefix is relative to the path in git.get_project
   # I.e., src/genny/../../src = ./src
-  prefix: ../../src 
+  prefix: ../../src
   branch: master
