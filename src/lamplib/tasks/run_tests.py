@@ -56,7 +56,7 @@ def cmake_test(env):
         "(standalone|sharded|single_node_replset|three_node_replset|benchmark)",
     ]
 
-    _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
+    return _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
 
 
 def benchmark_test(env):
@@ -64,7 +64,7 @@ def benchmark_test(env):
 
     ctest_cmd = ["ctest", "--label-regex", "(benchmark)"]
 
-    _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
+    return _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
 
 
 def _check_create_new_actor_test_report(workdir):
