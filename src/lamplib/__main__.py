@@ -83,25 +83,27 @@ def main():
         sys.exit(1)
     curator_path = curator_downloader.result_dir
 
+    exit_code = 0
+    success = True
     if not args.subcommand:
         logging.info("No subcommand specified; running cmake, compile and install")
         tasks.cmake(
             context, toolchain_dir=toolchain_dir, env=compile_env, cmdline_cmake_args=cmake_args
         )
         tasks.compile_all(context, compile_env)
-        tasks.install(context, compile_env)
+        success = tasks.install(context, compile_env)
     elif args.subcommand == "clean":
-        tasks.clean(context, compile_env)
+        success = tasks.clean(context, compile_env)
     else:
         tasks.compile_all(context, compile_env)
         if args.subcommand == "install":
-            tasks.install(context, compile_env)
+            success = tasks.install(context, compile_env)
         elif args.subcommand == "cmake-test":
-            tasks.run_tests.cmake_test(compile_env)
+            success = tasks.run_tests.cmake_test(compile_env)
         elif args.subcommand == "benchmark-test":
-            tasks.run_tests.benchmark_test(compile_env)
+            success = tasks.run_tests.benchmark_test(compile_env)
         elif args.subcommand == "resmoke-test":
-            tasks.run_tests.resmoke_test(
+            success = tasks.run_tests.resmoke_test(
                 compile_env,
                 suites=args.resmoke_suites,
                 mongo_dir=args.resmoke_mongo_dir,
@@ -109,6 +111,10 @@ def main():
             )
         else:
             raise ValueError("Unknown subcommand: ", args.subcommand)
+    if not success:
+        exit_code = 1
+
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":

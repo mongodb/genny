@@ -85,16 +85,17 @@ buildvariants:
   - name: tg_compile
   - name: t_push
 
-- name: ubuntu1804
-  display_name: Ubuntu 18.04
-  modules: ~
-  expansions:
-    distro: ubuntu1804
-  run_on:
-  - ubuntu1804-build
-  tasks:
-  - name: tg_compile
-  - name: t_push
+# TODO: TIG-2819
+#- name: ubuntu1804
+#  display_name: Ubuntu 18.04
+#  modules: ~
+#  expansions:
+#    distro: ubuntu1804
+#  run_on:
+#  - ubuntu1804-build
+#  tasks:
+#  - name: tg_compile
+#  - name: t_push
 
 - name: macos-1014
   display_name: macOS Mojave
@@ -163,12 +164,11 @@ tasks:
   commands:
   - func: f_benchmark_test
 
-- name: t_integration_test_standalone
-  commands:
-  - func: f_resmoke_test
-    vars:
-      resmoke_test_args: "--suites src/resmokeconfig/genny_standalone.yml"
-
+  # It's not possible to do a standalone version due to
+  # some tests' reliance on an apm callback that doesn't
+  # work on standalone. (Specifically, since read concern
+  # is irrelevant on a standalone, recent driver versions
+  # simply omit it.)
 - name: t_integration_test_single_node_replset
   commands:
   - func: f_resmoke_test
@@ -241,7 +241,6 @@ task_groups:
   - t_python_test
   - t_lint_python
   - t_cmake_test
-  - t_integration_test_standalone
   - t_integration_test_single_node_replset
   - t_integration_test_three_node_replset
   - t_integration_test_sharded

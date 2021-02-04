@@ -44,6 +44,7 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
     else:
         logging.debug("Test failed, leaving sentinel report in place")
 
+    return success
 
 def cmake_test(env):
     workdir = os.path.join(os.getcwd(), "build")
@@ -55,7 +56,7 @@ def cmake_test(env):
         "(standalone|sharded|single_node_replset|three_node_replset|benchmark)",
     ]
 
-    _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
+    return _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
 
 
 def benchmark_test(env):
@@ -63,7 +64,7 @@ def benchmark_test(env):
 
     ctest_cmd = ["ctest", "--label-regex", "(benchmark)"]
 
-    _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
+    return _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
 
 
 def _check_create_new_actor_test_report(workdir):
@@ -137,7 +138,7 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
         )
     )
 
-    _run_command_with_sentinel_report(
+    return _run_command_with_sentinel_report(
         lambda: subprocess.run(
             ";".join(cmds), cwd=workdir, env=env, shell=True, executable="/bin/bash"
         ),
