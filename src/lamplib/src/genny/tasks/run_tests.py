@@ -165,6 +165,8 @@ def _setup_resmoke(
         else:
             mongo_repo_path = os.path.join(genny_repo_root, "build", "resmoke-mongo")
 
+    os.makedirs(os.path.join(workspace_root, "build", "XUnitXML"), exist_ok=True)
+
     resmoke_venv: str = os.path.join(mongo_repo_path, "resmoke_venv")
     resmoke_python: str = os.path.join(resmoke_venv, "bin", "python3")
 
