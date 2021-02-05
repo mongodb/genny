@@ -37,7 +37,9 @@ def _get_poplar_args(genny_repo_root: str, workspace_root: str):
     curator = _find_curator(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     if curator is None:
         raise Exception(
-            f"Curator not found in genny_repo_root={genny_repo_root}, workspace_root={workspace_root}"
+            f"Curator not found in genny_repo_root={genny_repo_root}, "
+            f"workspace_root={workspace_root}. "
+            f"Ensure you have run install."
         )
     return [curator, "poplar", "grpc"]
 

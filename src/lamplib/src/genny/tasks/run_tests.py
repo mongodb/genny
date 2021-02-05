@@ -107,34 +107,37 @@ def benchmark_test(genny_repo_root: str, workspace_root: str):
     )
 
 
-def _check_create_new_actor_test_report(workspace_root: str) -> bool:
-    passed = False
+def _check_create_new_actor_test_report(workspace_root: str) -> Callable[[str], bool]:
+    def out(cmd_output: str) -> bool:
+        passed = False
 
-    report_file = os.path.join(
-        workspace_root, "build", "XUnitXML", "create_new_actor_test.junit.xml"
-    )
-
-    if not os.path.isfile(report_file):
-        SLOG.error("Failed to find report file", report_file=report_file)
-        return passed
-
-    expected_error = 'failure message="100 == 101"'
-
-    with open(report_file) as f:
-        report = f.read()
-        passed = expected_error in report
-
-    if passed:
-        SLOG.debug("Test passed. Removing report file.", report_file=report_file)
-        os.remove(report_file)  # Remove the report file for the expected failure.
-    else:
-        SLOG.error(
-            "test for create-new-actor script did not succeed. Failed to find expected "
-            "error message in report file",
-            expected_to_find=expected_error,
+        report_file = os.path.join(
+            workspace_root, "build", "XUnitXML", "create_new_actor_test.junit.xml"
         )
 
-    return passed
+        if not os.path.isfile(report_file):
+            SLOG.error("Failed to find report file", report_file=report_file)
+            return passed
+
+        expected_to_find = {"100 == 101", "1 failed"}
+
+        with open(report_file) as f:
+            report = f.read()
+            passed = all(ex in report for ex in expected_to_find)
+
+        if passed:
+            SLOG.debug("Test passed. Removing report file.", report_file=report_file)
+            os.remove(report_file)  # Remove the report file for the expected failure.
+        else:
+            SLOG.error(
+                "test for create-new-actor script did not succeed. Failed to find expected "
+                "messages in report file",
+                expected_to_find=expected_to_find,
+            )
+
+        return passed
+
+    return out
 
 
 # See the logic in _setup_resmoke.
@@ -284,7 +287,7 @@ def resmoke_test(
 
     if is_cnats:
         suites = os.path.join(genny_repo_root, "src", "resmokeconfig", "genny_create_new_actor.yml")
-        checker_func = _check_create_new_actor_test_report
+        checker_func = _check_create_new_actor_test_report(workspace_root=workspace_root)
     else:
         checker_func = None
 

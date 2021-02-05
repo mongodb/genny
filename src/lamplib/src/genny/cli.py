@@ -24,7 +24,10 @@ def cli(ctx: click.Context, verbose: bool) -> None:
 
     found = os.environ.get("GENNY_REPO_ROOT", None)
     if not found or not os.path.exists(found):
-        raise Exception(f"GENNY_REPO_ROOT env var {found} either not set or does not exist.")
+        raise Exception(
+            f"GENNY_REPO_ROOT env var {found} either not set or does not exist. "
+            f"This is set when you run through the 'run-genny' wrapper."
+        )
     ctx.obj["GENNY_REPO_ROOT"] = found
 
     ctx.obj["WORKSPACE_ROOT"] = os.getcwd()

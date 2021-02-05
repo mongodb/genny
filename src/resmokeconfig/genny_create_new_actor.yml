@@ -16,7 +16,7 @@ executor:
     - "12345"
     - "--success"
     - "--out"
-    - "build/create_new_actor_test.junit.xml"
+    - "build/XUnitXML/create_new_actor_test.junit.xml"
     - "[SelfTestActor]"
   fixture:
     class: MongoDFixture
