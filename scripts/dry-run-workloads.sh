@@ -27,7 +27,7 @@ fi
 
 GENNY_EXECUTABLE="${GENNY:-genny}"
 
-if [[ -d $OUTPUT_DIR ]]; then
+if [[ -d $OUTPUT_DIR && -e $OUTPUT_DIR/start_time.txt ]]; then
     echo "Clearing previous results in ${OUTPUT_DIR}"
     rm $OUTPUT_DIR/*
 fi

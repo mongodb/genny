@@ -33,6 +33,7 @@ def cmake(context, toolchain_dir, env, cmdline_cmake_args):
     cmake_cmd += [
         "-DCMAKE_PREFIX_PATH={}".format(cmake_prefix_path),
         "-DCMAKE_TOOLCHAIN_FILE={}".format(cmake_toolchain_file),
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
         "-DVCPKG_TARGET_TRIPLET=x64-{}-static".format(context.TRIPLET_OS),
     ]
 
@@ -47,13 +48,13 @@ def cmake(context, toolchain_dir, env, cmdline_cmake_args):
 def compile_all(context, env):
     compile_cmd = [context.BUILD_SYSTEM, "-C", "build"]
     logging.debug("Compiling: %s", " ".join(compile_cmd))
-    subprocess.run(compile_cmd, env=env)
+    return subprocess.run(compile_cmd, env=env).returncode == 0
 
 
 def install(context, env):
     install_cmd = [context.BUILD_SYSTEM, "-C", "build", "install"]
     logging.debug("Running install: %s", " ".join(install_cmd))
-    subprocess.run(install_cmd, env=env)
+    return subprocess.run(install_cmd, env=env).returncode == 0
 
 
 def clean(context, env):
@@ -67,4 +68,4 @@ def clean(context, env):
     subprocess.run(["rm", "-rf", "dist"], env=env)
 
     # Put back build/.gitinore
-    subprocess.run(["git", "checkout", "--", "build"], env=env)
+    return subprocess.run(["git", "checkout", "--", "build"], env=env).returncode == 0

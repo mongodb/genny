@@ -64,6 +64,8 @@ TEST_CASE_METHOD(MongoTestFixture,
                ReadMode: primary
              Collection: *Collection
              Transaction: True         # Implies Session
+        Metrics:
+          Format: csv
 
     )",
                              "");

@@ -48,6 +48,8 @@ TEST_CASE_METHOD(MongoTestFixture, "MultiCollectionQuery", "[standalone][MultiCo
           Sort: {a: 1}
           ReadConcern:
             Level: local
+      Metrics:
+        Format: csv
       )",
                                  "");
 
