@@ -325,7 +325,7 @@ def resmoke_test(
     def run_resmoke() -> None:
         cmd_runner.run_command(
             cmd=cmd,
-            cwd=genny_repo_root,
+            cwd=workspace_root,
             env=env,
             capture=False,
             # If we're create_new_actor_test we don't want
