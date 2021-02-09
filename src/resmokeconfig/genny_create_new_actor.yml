@@ -6,7 +6,7 @@ test_kind: gennylib_test
 
 executor:
   config:
-    program_executable: build/src/cast_core/cast_core_test
+    program_executable: ./src/genny/build/src/cast_core/cast_core_test
     verbatim_arguments:
     - "--reporter"
     - "junit"
@@ -16,7 +16,7 @@ executor:
     - "12345"
     - "--success"
     - "--out"
-    - "build/XUnitXML/create_new_actor_test.junit.xml"
+    - "./build/XUnitXML/create_new_actor_test.junit.xml"
     - "[SelfTestActor]"
   fixture:
     class: MongoDFixture
