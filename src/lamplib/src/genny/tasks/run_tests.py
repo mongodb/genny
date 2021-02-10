@@ -73,6 +73,9 @@ def cmake_test(genny_repo_root: str, workspace_root: str):
     info = toolchain.toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     workdir = os.path.join(genny_repo_root, "build")
 
+    xunit_dir = os.path.join(workspace_root, "build", "XUnitXML")
+    os.makedirs(xunit_dir, exist_ok=True)
+
     ctest_cmd = [
         "ctest",
         "--verbose",

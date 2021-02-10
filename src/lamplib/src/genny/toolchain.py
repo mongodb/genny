@@ -79,6 +79,8 @@ def _compute_toolchain_info(
     linux_distro: str,
     ignore_toolchain_version: bool,
 ) -> ToolchainInfo:
+    if os_family not in _triplet_os_map:
+        raise Exception(f"os_family {os_family} is unknown. Pass the --linux-distro option.")
     triplet_os = _triplet_os_map[os_family]
     toolchain_downloader = ToolchainDownloader(
         genny_repo_root=genny_repo_root,
