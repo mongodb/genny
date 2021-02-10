@@ -361,19 +361,8 @@ functions:
   f_report_test_results:
   - command: attach.xunit_results
     params:
-      # TODO: is this right?
       optional: true
-      file: src/genny/build/src/*/*.junit.xml
-  - command: attach.xunit_results
-    params:
-      # TODO: is this right?
-      optional: true
-      file: src/genny/build/*.junit.xml
-  - command: attach.xunit_results
-    params:
-      # TODO: is this right?
-      optional: true
-      file: src/genny/src/lamplib/nosetests.xml
+      file: build/XUnitXML/*/*.xml
 
 
 ##                ⚡️ Modules ⚡️
