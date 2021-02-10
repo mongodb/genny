@@ -35,6 +35,8 @@ std::string findRepoRoot() {
     // NB for below:
     // canonical resolves foo/../bar to bar; it requires an absolute path.
 
+
+    // Check for the GENNY_REPO_ROOT var set by the 'run-genny' wrapper.
     if (const auto rootEnvVar = getenv("GENNY_REPO_ROOT")) {
         if (!exists(path(rootEnvVar) / ROOT_FILE)) {
             std::stringstream msg;
@@ -45,6 +47,18 @@ std::string findRepoRoot() {
         return rootEnvVar;
     }
 
+
+    {
+        // Check for conventional workspace which has cwd=. and ./src/{repo} for all repos.
+        auto conventionalPath = path("./src/genny/");
+        if (exists(conventionalPath / ROOT_FILE)) {
+            return conventionalPath.string();
+        }
+    }
+
+
+    // Otherwise assume we're somewhere in ....../genny/some/subdir/of/the/genny/repo
+    // and look up the directory tree for the .genny-repo-root file.
     const auto fileSystemRoot = canonical(absolute(path("/")));
 
     auto curr = current_path();
