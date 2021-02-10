@@ -324,7 +324,7 @@ def resmoke_test(
 
     def run_resmoke() -> None:
         # See if we can put this in the resmoke suite def or something?
-        env["CTEST_OUTPUT_ON_FAILURE"] = 1
+        env["CTEST_OUTPUT_ON_FAILURE"] = "1"
         cmd_runner.run_command(
             cmd=cmd,
             cwd=workspace_root,

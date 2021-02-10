@@ -1,5 +1,10 @@
 test_kind: gennylib_test
 
+##
+# When debugging resmoke test failures, comment out the --reporter and --out params
+# to see the raw stdout output which has helpful error messaging from catch2.
+##
+
 executor:
   config:
     program_executable: ./src/genny/build/src/cast_core/cast_core_test
