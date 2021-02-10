@@ -1,3 +1,11 @@
+#
+# This file was copied from:
+#
+#    https://github.com/catchorg/Catch2/blob/3eade52fc0338b2aa81d23cf0cd191f455477746/extras/ParseAndAddCatchTests.cmake
+#
+# Modifications to the base file have "GENNY CHANGE" comments.
+#
+
 #==================================================================================================#
 #  supported macros                                                                                #
 #    - TEST_CASE,                                                                                  #
@@ -215,12 +223,18 @@ function(ParseAndAddCatchTests_ParseFile SourceFile TestTarget)
                 set(Name "${Name} - *")
             endif()
 
+            # Escape double-quoting in CTestName due to above cmp0110
+            string(REPLACE "\"" "" CTestReportBaseName ${CTestName})
+            # GENNY CHANGE: added this REPLACE statement
+
             # Add the test and set its properties
             add_test(
                 NAME "${CTestName}"
                 COMMAND ${OptionalCatchTestLauncher} $<TARGET_FILE:${TestTarget}> ${Name} ${AdditionalCatchParameters}
-                    --reporter junit --out "${GENNY_WORKSPACE_ROOT}/${CTestName}.junit.xml"
+                    --reporter junit --out "${GENNY_WORKSPACE_ROOT}/build/XUnitXML/${CTestReportBaseName}.junit.xml"
             )
+            # GENNY CHANGE: ADDED THE --reporter LINE
+
             # Old CMake versions do not document VERSION_GREATER_EQUAL, so we use VERSION_GREATER with 3.8 instead
             if(PARSE_CATCH_TESTS_NO_HIDDEN_TESTS AND ${HiddenTagFound} AND ${CMAKE_VERSION} VERSION_GREATER "3.8")
                 ParseAndAddCatchTests_PrintDebugMessage("Setting DISABLED test property")

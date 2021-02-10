@@ -151,7 +151,7 @@ function(CreateGennyTargets)
             "${CGT_NAME}"
             ${CGT_TEST_DEPENDS}
         )
-        ParseAndAddCatchTests("${CGT_NAME}_test")
+        ParseAndAddCatchTests(${CGT_NAME}_test)
     endif()
 
     ## benchmark test
@@ -164,7 +164,7 @@ function(CreateGennyTargets)
             "${CGT_NAME}"
             ${CGT_TEST_DEPENDS}
         )
-        ParseAndAddCatchTests("${CGT_NAME}_benchmark")
+        ParseAndAddCatchTests(${CGT_NAME}_benchmark)
     endif()
 
 endfunction(CreateGennyTargets)
