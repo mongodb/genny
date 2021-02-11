@@ -230,11 +230,9 @@ ThrowMode decodeThrowMode(const Node& operation, PhaseContext& phaseContext) {
     // TODO: TIG-2805 Remove this mode once the underlying drivers issue is addressed.
     static const char* ignoreKey = "RecordFailure";
 
-    bool throwOnFailure = operation[throwKey] ? operation[throwKey].to<bool>()
-                                              : phaseContext[throwKey].maybe<bool>().value_or(true);
-    bool ignoreFailure = operation[ignoreKey]
-        ? operation[ignoreKey].to<bool>()
-        : phaseContext[ignoreKey].maybe<bool>().value_or(false);
+    bool throwOnFailure =
+        operation[throwKey] ? operation[throwKey].to<bool>() : phaseContext[throwKey].maybe<bool>().value_or(true);
+    bool ignoreFailure = operation[ignoreKey] ? true: false;
     if (ignoreFailure) {
         return ThrowMode::kSwallowAndRecord;
     }
