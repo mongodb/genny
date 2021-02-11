@@ -123,7 +123,7 @@ def _check_create_new_actor_test_report(workspace_root: str) -> Callable[[str], 
             SLOG.error("Failed to find report file", report_file=report_file)
             return passed
 
-        expected_to_find = {"100 == 101", "1 failed"}
+        expected_to_find = {"100 == 101", 'failures="1"'}
 
         with open(report_file) as f:
             report = f.read()
