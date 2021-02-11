@@ -362,7 +362,7 @@ functions:
   - command: attach.xunit_results
     params:
       optional: true
-      file: build/XUnitXML/*/*.xml
+      file: build/XUnitXML/*.xml
 
 
 ##                ⚡️ Modules ⚡️
