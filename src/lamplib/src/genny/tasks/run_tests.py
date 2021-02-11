@@ -281,7 +281,7 @@ def _setup_resmoke(
     return resmoke_python, mongo_repo_path, bin_dir
 
 
-def _nop_true() -> bool:
+def _nop_true(cmd_output: str) -> bool:
     return True
 
 
