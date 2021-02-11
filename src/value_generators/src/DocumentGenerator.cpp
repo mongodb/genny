@@ -153,6 +153,8 @@ using Parser = std::function<O(const Node&, GeneratorArgs)>;
 
 // Pre-declaring all at once
 // Documentation is at the implementations-site.
+const static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
+const static boost::posix_time::ptime max_date(boost::gregorian::date(2030, 1, 1));
 
 UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
@@ -161,6 +163,9 @@ UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generato
 UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
                                                            GeneratorArgs generatorArgs);
 UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs generatorArgs);
+UniqueGenerator<int64_t> dateGenerator(const Node& node,
+                                       GeneratorArgs generatorArgs,
+                                       const boost::posix_time::ptime& default_time = epoch);
 template <bool Verbatim, typename Out>
 Out valueGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
@@ -672,71 +677,33 @@ const static auto formats = {
     std::locale(std::locale::classic(),
                 new boost::local_time::local_time_input_facet("%Y-%m-%d %H:%M:%s%ZP")),
 };
-const static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
-const static boost::posix_time::ptime max_date(boost::gregorian::date(2030, 1, 1));
-
-static std::chrono::milliseconds parseDateAsMillis(
-    const std::string& datetime, const boost::posix_time::ptime& default_time = epoch) {
-    boost::posix_time::ptime utc_time{boost::posix_time::not_a_date_time};
-    auto millis = 0LL;
-
-    // Empty datetime is 0.
-    if (!datetime.empty()) {
-        for (const auto& format : formats) {
-            std::istringstream date_stream{datetime};
-            date_stream.imbue(format);
-            boost::local_time::local_date_time local_date{boost::local_time::not_a_date_time};
-            if (date_stream >> local_date) {
-                utc_time = local_date.utc_time();
-
-                millis = (utc_time - epoch).total_milliseconds();
-                break;
-            }
-        }
-
-        if (utc_time == boost::posix_time::not_a_date_time) {
-            try {
-                // Last gasp try to interpret unsigned long long.
-                millis = std::stoull(datetime);
-            } catch (const std::invalid_argument& _) {
-                auto msg = "^RandomDate: Invalid Dateformat '" + datetime + "'";
-                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax{msg});
-            }
-        }
-
-    } else {
-        millis = (default_time - epoch).total_milliseconds();
-    }
-    return std::chrono::milliseconds{millis};
-}
 
 /** `{^RandomDate: {min: "2015-01-01", max: "2015-01-01T23:59:59.999Z"}}` */
 class RandomDateGenerator : public Generator<bsoncxx::types::b_date> {
 public:
     RandomDateGenerator(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng},
-          _min{parseDateAsMillis(node["min"].maybe<std::string>().value_or(""))},
-          _max{parseDateAsMillis(node["max"].maybe<std::string>().value_or(""), max_date)} {
-
-        if (_max <= _min) {
-            auto max = node["max"].maybe<std::string>().value_or("");
-            auto min = node["min"].maybe<std::string>().value_or("");
-
-            std::string msg = "^RandomDate: max('" + max + " / " + std::to_string(_max.count()) +
-                "') must be greater than min('" + min + " / " + std::to_string(_min.count()) + "')";
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax{msg});
-        }
-    }
+          _minGen{dateGenerator(node["min"], generatorArgs)},
+          _maxGen{dateGenerator(node["max"], generatorArgs, max_date)} {}
 
     bsoncxx::types::b_date evaluate() override {
-        boost::random::uniform_int_distribution<long long> dist{_min.count(), _max.count() - 1};
+        auto minValue = _minGen->evaluate();
+        auto maxValue = _maxGen->evaluate();
+        if (maxValue <= minValue) {
+            std::stringstream ex;
+            ex << "^RandomDate: max('" << maxValue << "') must be greater than min('" << minValue
+               << "')";
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax{ex.str()});
+        }
+
+        boost::random::uniform_int_distribution<long long> dist{minValue, maxValue - 1};
         return bsoncxx::types::b_date{std::chrono::milliseconds{dist(_rng)}};
     }
 
 private:
     DefaultRandom& _rng;
-    const std::chrono::milliseconds _min;
-    const std::chrono::milliseconds _max;
+    UniqueGenerator<int64_t> _minGen;
+    UniqueGenerator<int64_t> _maxGen;
 };
 
 
@@ -1171,6 +1138,150 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         // If not passed in, give each choice equal weight
         _weights.assign(_choices.size(), 1);
     }
+}
+
+/**
+ * @private
+ * @param exception exception received from mongocxx::database::run_command()
+ * @return if the exception is a result of a connection error or timeout
+ */
+bool isUnknownParser(const InvalidValueGeneratorSyntax& exception) {
+    auto what = std::string{exception.what()};
+    return what.find("Unknown parser") != std::string::npos;
+}
+
+/**
+ * @private
+ * @param datetime
+ *   a datetime string in a known format or unsigned long long string.
+ * @return
+ *   The datetime as millis.
+ */
+static auto parseStringToMillis(const std::string& datetime) {
+    boost::posix_time::ptime utc_time{boost::posix_time::not_a_date_time};
+
+    auto millis = 0LL;
+    if (!datetime.empty()) {
+        for (const auto& format : formats) {
+            std::istringstream date_stream{datetime};
+            date_stream.imbue(format);
+            boost::local_time::local_date_time local_date{boost::local_time::not_a_date_time};
+            if (date_stream >> local_date) {
+                utc_time = local_date.utc_time();
+
+                millis = (utc_time - epoch).total_milliseconds();
+                break;
+            }
+        }
+    }
+    if (utc_time == boost::posix_time::not_a_date_time) {
+        try {
+            // Last gasp try to interpret unsigned long long.
+            millis = std::stoull(datetime);
+        } catch (const std::invalid_argument& _) {
+            auto msg = "^RandomDate: Invalid Dateformat '" + datetime + "'";
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax{msg});
+        }
+    }
+    return millis;
+};
+
+/**
+ * @private
+ * @param node
+ *   a node string value i.e. either a scalar or a `^String` value
+ * @return
+ *   a constant generator if given a constant/scalar.
+ */
+UniqueGenerator<int64_t> dateStringParserGenerator(const Node& node, GeneratorArgs generatorArgs) {
+    auto generator = stringGenerator(node, generatorArgs);
+    auto datetime = generator->evaluate();
+    auto millis = parseStringToMillis(datetime);
+    return std::make_unique<ConstantAppender<int64_t>>(millis);
+}
+
+/**
+ * @private
+ * @param node
+ *   a node containing a date generator
+ * @return
+ *   a constant generator if given a constant/scalar.
+ */
+UniqueGenerator<int64_t> dateTimeGenerator(const Node& node, GeneratorArgs generatorArgs) {
+    // Set of parsers to look when we request an int parser
+    // see int64Generator
+    const static std::map<std::string, Parser<UniqueGenerator<bsoncxx::types::b_date>>> dateParsers{
+        {"^Now",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NowGenerator>(node, generatorArgs);
+         }},
+        {"^RandomDate",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<RandomDateGenerator>(node, generatorArgs);
+         }},
+    };
+
+    if (auto parserPair = extractKnownParser(node, generatorArgs, dateParsers)) {
+        // known parser type
+        auto generator = parserPair->first(node[parserPair->second], generatorArgs);
+        auto datetime = generator->evaluate();
+        auto millis = datetime.to_int64();
+        return std::make_unique<ConstantAppender<int64_t>>(millis);
+    }
+    std::stringstream msg;
+    msg << "Malformed node for date. Not a datetime generator " << node;
+    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+}
+
+/**
+ * @param node
+ *   a node containing a date generator.
+ * generator
+ * @return
+ *   a constant generator if given a constant/scalar.
+ */
+UniqueGenerator<int64_t> dateGenerator(const Node& node,
+                                       GeneratorArgs generatorArgs,
+                                       const boost::posix_time::ptime& default_time) {
+    if (node) {
+        try {
+            auto generator = intGenerator(node, generatorArgs);
+            return generator;
+        } catch (const InvalidValueGeneratorSyntax& e) {
+            if (!isUnknownParser(e)) {
+                throw e;
+            }
+        } catch (const InvalidConversionException& e) {
+            BOOST_LOG_TRIVIAL(warning) << " InvalidConversionException: int";
+        }
+
+        try {
+            auto generator = doubleGenerator(node, generatorArgs);
+            return std::make_unique<ConstantAppender<int64_t>>((long long)generator->evaluate());
+        } catch (const InvalidValueGeneratorSyntax& e) {
+            if (!isUnknownParser(e)) {
+                throw e;
+            }
+        } catch (const InvalidConversionException& e) {
+        }
+
+        try {
+            auto generator = dateStringParserGenerator(node, generatorArgs);
+            return std::make_unique<ConstantAppender<int64_t>>((long long)generator->evaluate());
+        } catch (const InvalidValueGeneratorSyntax& e) {
+            if (!isUnknownParser(e)) {
+                throw e;
+            }
+        } catch (const InvalidConversionException& e) {
+        }
+
+        auto generator = dateTimeGenerator(node, generatorArgs);
+        return std::make_unique<ConstantAppender<int64_t>>((long long)generator->evaluate());
+    }
+
+    // No value, get the appropriate default.
+    auto millis = (default_time - epoch).total_milliseconds();
+    return std::make_unique<ConstantAppender<int64_t>>(millis);
 }
 
 }  // namespace

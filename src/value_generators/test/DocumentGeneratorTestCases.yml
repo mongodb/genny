@@ -594,6 +594,55 @@ Tests:
     ThenReturns:
     - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
 
+  # Date: Random Dates from RandomInt.
+  - Name: RandomWithInt
+    GivenTemplate:
+      date: {^RandomDate: {min: {^RandomInt: {min: 1369875424299, max: 1369875424299}}, max: {^RandomInt: {min: 1369875424300, max: 1369875424300}}}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
+
+  # Date: Random Dates From RandomDouble.
+  - Name: RandomFromRandomhDouble
+    GivenTemplate:
+      date: {^RandomDate: {min: {^RandomDouble: {min: 1369875424299, max: 1369875424300}}, max: {^RandomDouble: {min: 1369875424300, max: 1369875424301}}}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
+
+  # Date: Random Dates from FastRandomStrings.
+  - Name: RandomDateFromFastRandomString
+    GivenTemplate:
+      date: {^RandomDate: {min: {^FastRandomString: {length: 1, alphabet: "0"}}, max: {^FastRandomString: {length: 1, alphabet: "1"}}}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "0" } } }
+
+  # Date: Random Dates From RandomStrings.
+  - Name: RandomDateFromRandomString
+    GivenTemplate:
+      date: {^RandomDate: {min: {^RandomString: {length: 1, alphabet: "0"}}, max: {^RandomString: {length: 1, alphabet: "1"}}}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "0" } } }
+
+  # Date: Random Dates from Join.
+  - Name: RandomDateFromJoin
+    GivenTemplate:
+      date: {^RandomDate: {min: {^Join: {array: ["2013","05","30T07:27:04.299+06:30"], sep: "-"}}, max: {^Join: {array: ["2013","05","30 06:27:04.300+05:30"], sep: "-"}}}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
+
+  # Date: Random Dates from Choose.
+  - Name: RandomDateFromChoose
+    GivenTemplate:
+      date: {^RandomDate: {min: {^Choose: {from: ["2013-05-30T07:27:04.299+06:30"]}}, max: {^Choose: {from: ["2013-05-30 06:27:04.300+05:30"]}}}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
+
+  # Date: RandomDates with invalid generator.
+  # Test that the correct exception type is raised.
+  - Name: RandomDateException
+    GivenTemplate:
+      date: {^RandomDate: {min: {^RandomString: {len: 1, alphabet: "0"}}}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
   - Name: SimpleIncrement
     GivenTemplate:
       int: {^Inc: {start: 1, multiplier: 100, step: 1}}
