@@ -359,9 +359,15 @@ functions:
   # Reports test results to evergreen API.
   ##
   f_report_test_results:
+  - command: shell.exec
+    params:
+      script: |
+        pwd
+        find . -iname '*.xml'
+        ls build/XUnitXML/*.xml
+        cat build/XUnitXML/*.xml
   - command: attach.xunit_results
     params:
-      optional: true
       file: build/XUnitXML/*.xml
 
 
