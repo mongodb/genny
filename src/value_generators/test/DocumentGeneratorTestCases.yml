@@ -448,11 +448,11 @@ Tests:
       normal: {^RandomDouble: {distribution: normal, mean: 50, sigma: 10.0}}
       lognormal: {^RandomDouble: {distribution: lognormal, m: 1.0, s: 2.0}}
       chisquared: {^RandomDouble: {distribution: chi_squared, n: 10}}
-      noncentralchi: {^RandomDouble: {distribution: non_central_chi_squared, k: 7, lambda: 2}}
       cauchy: {^RandomDouble: {distribution: cauchy, median: 17.2, sigma: 2.3}}
-# The fisherf distribution gives different results on different platforms.
+# The fisherf, studentt, and noncentralchi distributions give different results on different platforms.
 #      fisherf: {^RandomDouble: {distribution: fisher_f, m: 12, n: 7}}
-      studentt: {^RandomDouble: {distribution: student_t, n: 17}}
+#      studentt: {^RandomDouble: {distribution: student_t, n: 17}}
+#      noncentralchi: {^RandomDouble: {distribution: non_central_chi_squared, k: 7, lambda: 2}}
     ThenReturns:
     -  "a" : { "$numberDouble" : "3.952394090941460103" }
        "uniform" : { "$numberDouble" : "3.0360695791166998347" }
@@ -465,10 +465,10 @@ Tests:
        "normal" : { "$numberDouble" : "56.862224120853824161" }
        "lognormal" : { "$numberDouble" : "3.3101941543832040793" }
        "chisquared" : { "$numberDouble" : "8.4397336386305426004" }
-       "noncentralchi" : { "$numberDouble" : "3.4312021039705653536" }
        "cauchy" : { "$numberDouble" : "15.807845411145144965" }
 #       "fisherf" : { "$numberDouble" : "-36.841317455674790438" }
-       "studentt" : { "$numberDouble" : "0.038230102370708597681" }
+#       "studentt" : { "$numberDouble" : "0.038230102370708597681" }
+#       "noncentralchi" : { "$numberDouble" : "3.4312021039705653536" }
     - "a": { "$numberDouble": "2.1100850020004755514" }
       "uniform": { "$numberDouble": "18.226218200947592152" }
       "exponential": { "$numberDouble": "1.2947931222199158263" }
@@ -480,10 +480,10 @@ Tests:
       "normal": { "$numberDouble": "56.187440660465746589" }
       "lognormal": { "$numberDouble": "2.047961210280694111" }
       "chisquared": { "$numberDouble": "8.6938536441653102571" }
-      "noncentralchi": { "$numberDouble": "13.356763702336033717" }
       "cauchy": { "$numberDouble": "-55.362133778926803984" }
 #      "fisherf": { "$numberDouble": "-14.948314077879224726" }
-      "studentt": { "$numberDouble": "-0.14294359511856821743" }
+#      "studentt": { "$numberDouble": "-0.14294359511856821743" }
+#      "noncentralchi": { "$numberDouble": "13.356763702336033717" }
 
   - Name: IP Generator
     GivenTemplate:

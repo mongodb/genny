@@ -293,15 +293,19 @@ using LognormalDoubleGenerator =
                               sstr>;
 using ChiSquaredDoubleGenerator =
     DoubleGenerator1Parameter<boost::random::chi_squared_distribution<double>, chisquaredstr, nstr>;
+using CauchyDoubleGenerator = DoubleGenerator2Parameter<boost::random::cauchy_distribution<double>,
+                                                        cauchystr,
+                                                        medianstr,
+                                                        sigmastr>;
+
+// The NonCentralChiSquaredDoubleGenerator, FisherF, and StudentT distributions
+// behave differently on different platforms.
+// As such there is no automated testing of them.
 using NonCentralChiSquaredDoubleGenerator =
     DoubleGenerator2Parameter<boost::random::non_central_chi_squared_distribution<double>,
                               noncentralchisquaredstr,
                               kstr,
                               lambdastr>;
-using CauchyDoubleGenerator = DoubleGenerator2Parameter<boost::random::cauchy_distribution<double>,
-                                                        cauchystr,
-                                                        medianstr,
-                                                        sigmastr>;
 using FisherFDoubleGenerator =
     DoubleGenerator2Parameter<boost::random::cauchy_distribution<double>, fisherfstr, mstr, nstr>;
 using StudentTDoubleGenerator =
