@@ -465,22 +465,22 @@ Tests:
        "normal" : { "$numberDouble" : "56.862224120853824161" }
        "lognormal" : { "$numberDouble" : "3.3101941543832040793" }
        "chisquared" : { "$numberDouble" : "8.4397336386305426004" }
-       "cauchy" : { "$numberDouble" : "15.807845411145144965" }
+       "cauchy" : { "$numberDouble" : "17.921856487345845466" }
 #       "fisherf" : { "$numberDouble" : "-36.841317455674790438" }
 #       "studentt" : { "$numberDouble" : "0.038230102370708597681" }
 #       "noncentralchi" : { "$numberDouble" : "3.4312021039705653536" }
-    - "a": { "$numberDouble": "2.1100850020004755514" }
-      "uniform": { "$numberDouble": "18.226218200947592152" }
-      "exponential": { "$numberDouble": "1.2947931222199158263" }
-      "gamma": { "$numberDouble": "0.017365531057170525281" }
-      "weibull": { "$numberDouble": "4.947093458225713114" }
-      "extremeValue": { "$numberDouble": "1.0868433795224208271" }
-      "beta": { "$numberDouble": "0.84348981160519898026" }
-      "laplace": { "$numberDouble": "11.771741995342829057" }
-      "normal": { "$numberDouble": "56.187440660465746589" }
-      "lognormal": { "$numberDouble": "2.047961210280694111" }
-      "chisquared": { "$numberDouble": "8.6938536441653102571" }
-      "cauchy": { "$numberDouble": "-55.362133778926803984" }
+    -  "a" : { "$numberDouble" : "13.904678399652809162" }
+       "uniform" : { "$numberDouble" : "8.5867517588073649648" }
+       "exponential" : { "$numberDouble" : "0.28141743293595811171" }
+       "gamma" : { "$numberDouble" : "2.3605635416844354957" }
+       "weibull" : { "$numberDouble" : "3.295743805625172218" }
+       "extremeValue" : { "$numberDouble" : "2.1015762758649403352" }
+       "beta" : { "$numberDouble" : "0.44276477004055364572" }
+       "laplace" : { "$numberDouble" : "9.2638579646169727511" }
+       "normal" : { "$numberDouble" : "42.833886919235141022" }
+       "lognormal" : { "$numberDouble" : "48.802737274357745889" }
+       "chisquared" : { "$numberDouble" : "15.57650159382534838" }
+       "cauchy" : { "$numberDouble" : "24.815926471674302434" }
 #      "fisherf": { "$numberDouble": "-14.948314077879224726" }
 #      "studentt": { "$numberDouble": "-0.14294359511856821743" }
 #      "noncentralchi": { "$numberDouble": "13.356763702336033717" }
