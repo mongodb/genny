@@ -16,13 +16,13 @@
 #ifndef HEADER_6D7AD2AF_7CD1_49E4_9712_741ABD354DFC_INCLUDED
 #define HEADER_6D7AD2AF_7CD1_49E4_9712_741ABD354DFC_INCLUDED
 
-#include <vector>
-#include <variant>
 #include <mutex>
 #include <sstream>
+#include <variant>
+#include <vector>
 
-#include <mongocxx/client.hpp>
 #include <gennylib/v1/PoolFactory.hpp>
+#include <mongocxx/client.hpp>
 
 namespace genny::v1 {
 
@@ -113,7 +113,7 @@ using ConnectionUri = std::string;
 /**
  * Abstraction over DB client access.
  */
-class DBConnection{
+class DBConnection {
 public:
     virtual ConnectionUri uri() const = 0;
 
@@ -205,6 +205,6 @@ public:
     using std::runtime_error::runtime_error;
 };
 
-} // namespace genny
+}  // namespace genny::v1
 
 #endif  // HEADER_6D7AD2AF_7CD1_49E4_9712_741ABD354DFC_INCLUDED

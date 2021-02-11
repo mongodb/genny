@@ -80,8 +80,9 @@ public:
                 // underneath it as it is a workaround suggested in HELP-21664
                 // REQUIRE(toString(expected.view()) == toString(actual.view()));
                 auto expectedFix = bsoncxx::from_json(toString(expected.view()));
-                INFO("Expected = \n" << toString(expectedFix.view()) <<
-                     "\nActual = \n" << toString(actual.view()));
+                INFO("Expected = \n"
+                     << toString(expectedFix.view()) << "\nActual = \n"
+                     << toString(actual.view()));
                 REQUIRE(toString(expectedFix.view()) == toString(actual.view()));
             }
         }

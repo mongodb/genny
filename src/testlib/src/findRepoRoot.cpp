@@ -15,8 +15,8 @@
 #include <testlib/findRepoRoot.hpp>
 
 #include <boost/filesystem.hpp>
-#include <sstream>
 #include <cstdlib>
+#include <sstream>
 
 namespace genny {
 

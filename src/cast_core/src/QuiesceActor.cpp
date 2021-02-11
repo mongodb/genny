@@ -33,7 +33,9 @@
 namespace genny::actor {
 
 struct QuiesceActor::PhaseConfig {
-    PhaseConfig(PhaseContext& context) : dbName{context.actor()["Database"].to<std::string>()}, sleepContext{context.getSleepContext()} {
+    PhaseConfig(PhaseContext& context)
+        : dbName{context.actor()["Database"].to<std::string>()},
+          sleepContext{context.getSleepContext()} {
         auto threads = context.actor()["Threads"].to<int>();
         if (threads > 1) {
             std::stringstream ss;

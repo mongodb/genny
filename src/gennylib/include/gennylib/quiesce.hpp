@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <string>
 #include <mongocxx/pool.hpp>
+#include <string>
 
 #include <gennylib/context.hpp>
 
@@ -28,6 +28,8 @@ namespace genny {
  * it hasn't been used extensively in production. Please let STM know of any
  * use so we can help monitor its effectiveness.
  */
-bool quiesce(mongocxx::pool::entry& client, const std::string& dbName, const SleepContext& sleepContext);
+bool quiesce(mongocxx::pool::entry& client,
+             const std::string& dbName,
+             const SleepContext& sleepContext);
 
-} // namespace genny
+}  // namespace genny
