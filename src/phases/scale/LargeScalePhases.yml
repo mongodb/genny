@@ -14,7 +14,7 @@ GlobalDefaults:
   Random30String: &rand_30b_string {^RandomString: {length: 30}}
   Random130String: &rand_100b_string {^RandomString: {length: 100}}
 
-  Duration: &Duration 12 hours
+  Duration: &Duration 2 hours
 
   # We want about 200 bytes, 9 fields (they will all be indexed).
   RollingDocument: &RollingDocument
