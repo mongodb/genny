@@ -337,8 +337,3 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: OplogTrailerCmd
-
-AutoRun:
-  Requires:
-    mongodb_setup:
-    - standalone
