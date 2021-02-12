@@ -88,4 +88,5 @@ Actors:
 AutoRun:
   Requires:
     mongodb_setup:
-    - standalone
+    - single-replica
+    - replica-noflowcontrol
