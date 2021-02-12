@@ -510,6 +510,18 @@ Tests:
     # Check with linux command line `date --utc -d@$((1453689676330 / 1000.0))  +"%Y-%m-%dT%H:%M:%S.%3N"`
     - { "date" : { "$date" : { "$numberLong" : "1453689676330" } } }
 
+  # Date: min equal max is invalid.
+  - Name: RandomDateMinEqualMax
+    GivenTemplate:
+      date: {^RandomDate: {min: "2020-01-01", max: "2020-01-01"}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  # Date: min must be less than max.
+  - Name: RandomDateInvalidMinMax
+    GivenTemplate:
+      date: {^RandomDate: {min: "2021-01-01", max: "2020-01-01"}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
   # Date: Half Open interval: ["2020-01-01", "2021-01-01").
   - Name: RandomDateMinMax
     GivenTemplate:
@@ -527,8 +539,8 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "1778468968160" } } }
-    - { "date" : { "$date" : { "$numberLong" : "1871664110292" } } }
+    - { "date" : { "$date" : { "$numberLong" : "2179678398958" } } }
+    - { "date" : { "$date" : { "$numberLong" : "2459238321326" } } }
 
   # Date: Half Open interval: ["1970-01-01", "2021-01-01"). 1970-01-01 is the default min date.
   - Name: RandomDateMax
@@ -564,7 +576,7 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "1454812640684" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1939750253947" } } }
 
   # Date: Half Open interval: ["2030-01-01", "2040-01-01").
   - Name: RandomDateFuture
@@ -602,7 +614,7 @@ Tests:
     - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
 
   # Date: Random Dates From RandomDouble.
-  - Name: RandomFromRandomhDouble
+  - Name: RandomFromRandomDouble
     GivenTemplate:
       date: {^RandomDate: {min: {^RandomDouble: {min: 1369875424299, max: 1369875424300}}, max: {^RandomDouble: {min: 1369875424300, max: 1369875424301}}}}
     ThenReturns:
@@ -636,12 +648,33 @@ Tests:
     ThenReturns:
     - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
 
+  # Date: Random Dates from Mixed Generators.
+  - Name: RandomDateMixed
+    GivenTemplate:
+      date: {^RandomDate: {min: {^Join: {array: ["2013","05","30T07:27:04.299+06:30"], sep: "-"}}, max: {^Choose: {from: ["2013-05-30 06:27:04.300+05:30"]}}}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
+
   # Date: RandomDates with invalid generator.
   # Test that the correct exception type is raised.
   - Name: RandomDateException
     GivenTemplate:
       date: {^RandomDate: {min: {^RandomString: {len: 1, alphabet: "0"}}}}
     ThenThrows: InvalidValueGeneratorSyntax
+
+  # Date: RandomDates with invalid min / max.
+  # Test that the correct exception type is raised.
+  - Name: RandomDateException
+    GivenTemplate:
+      date: {
+        ^RandomDate: {
+          min: {^Choose: {from: ["2013-05-31T07:27:04.299+06:30", "2013-05-31 06:27:04.300+05:30"]}},
+          max: {^Choose: {from: ["2013-05-30 06:27:04.300+05:30", "2013-05-30T07:27:04.299+06:30"]}}
+        }
+      }
+    ThenThrows: InvalidValueGeneratorSyntax
+
+
 
   - Name: SimpleIncrement
     GivenTemplate:
