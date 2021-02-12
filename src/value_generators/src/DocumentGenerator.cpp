@@ -154,7 +154,7 @@ using Parser = std::function<O(const Node&, GeneratorArgs)>;
 // Pre-declaring all at once
 // Documentation is at the implementations-site.
 const static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
-const static boost::posix_time::ptime max_date(boost::gregorian::date(2050, 1, 1));
+const static boost::posix_time::ptime max_date(boost::gregorian::date(2150, 1, 1));
 
 UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
