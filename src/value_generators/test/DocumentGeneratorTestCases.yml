@@ -539,8 +539,8 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "2179678398958" } } }
-    - { "date" : { "$date" : { "$numberLong" : "2459238321326" } } }
+    - { "date" : { "$date" : { "$numberLong" : "4185670857742" } } }
+    - { "date" : { "$date" : { "$numberLong" : "5397029274960" } } }
 
   # Date: Half Open interval: ["1970-01-01", "2021-01-01"). 1970-01-01 is the default min date.
   - Name: RandomDateMax
@@ -576,7 +576,7 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "1939750253947" } } }
+    - { "date" : { "$date" : { "$numberLong" : "4364371621225" } } }
 
   # Date: Half Open interval: ["2030-01-01", "2040-01-01").
   - Name: RandomDateFuture
@@ -656,7 +656,7 @@ Tests:
     - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
 
   # Date: RandomDates with invalid generator.
-  # Test that the correct exception type is raised.
+  # Test that the correct exception type is raised (in this case RandomString does not have a len attribute).
   - Name: RandomDateException
     GivenTemplate:
       date: {^RandomDate: {min: {^RandomString: {len: 1, alphabet: "0"}}}}
