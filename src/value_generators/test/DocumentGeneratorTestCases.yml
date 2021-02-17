@@ -550,6 +550,7 @@ Tests:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
     - { "date" : { "$date" : { "$numberLong" : "183360228161" } } }
+    - { "date" : { "$date" : { "$numberLong" : "120037897059" } } }
 
   # Date: 2020-01-01T00:00:00.000 (only one possible value here).
   - Name: RandomDateSingle
@@ -558,6 +559,8 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
+    # Note: this generator can only return a single value.
+    - { "date" : { "$date" : { "$numberLong" : "1577836800000" } } }
     - { "date" : { "$date" : { "$numberLong" : "1577836800000" } } }
 
   # Date: Half Open interval: ["2020-01-01 00:00:00", "2020-06-01T12:00:00").
@@ -567,7 +570,8 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "1578819502267" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1587960410217" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1578875595873" } } }
 
   # Date: Half Open interval: ["1970-01-01", "2030-01-01").
   - Name: RandomDateFull
@@ -576,7 +580,8 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "4364371621225" } } }
+    - { "date" : { "$date" : { "$numberLong" : "4331882451667" } } }
+    - { "date" : { "$date" : { "$numberLong" : "3407482044257" } } }
 
   # Date: Half Open interval: ["2030-01-01", "2040-01-01").
   - Name: RandomDateFuture
@@ -585,7 +590,8 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "1918332607011" } } }
+    - { "date" : { "$date" : { "$numberLong" : "2190504376964" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1945898374006" } } }
 
   # Date: Half Open interval: ["2020-01-01", "2020-01-01").
   - Name: RandomDateULL
@@ -613,12 +619,30 @@ Tests:
     ThenReturns:
     - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
 
+  # Date: Random Dates from RandomInt Range (note the maximum min value is always less than the minimum max value).
+  - Name: RandomWithIntRange
+    GivenTemplate:
+      date: {^RandomDate: {min: {^RandomInt: {min: 0, max: 1369875424299}}, max: {^RandomInt: {min: 1369875424300, max: 1569875424300}}}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "1329214233880" } } }
+    - { "date" : { "$date" : { "$numberLong" : "929477800105" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1110305120066" } } }
+
   # Date: Random Dates From RandomDouble.
   - Name: RandomFromRandomDouble
     GivenTemplate:
       date: {^RandomDate: {min: {^RandomDouble: {min: 1369875424299, max: 1369875424300}}, max: {^RandomDouble: {min: 1369875424300, max: 1369875424301}}}}
     ThenReturns:
     - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
+
+  # Date: Random Dates from RandomDouble Range (note the maximum min value is always less than the minimum max value).
+  - Name: RandomWithDoubleRange
+    GivenTemplate:
+      date: {^RandomDate: {min: {^RandomDouble: {min: 0, max: 1369875424299}}, max: {^RandomDouble: {min: 1369875424300, max: 1569875424300}}}}
+    ThenReturns:
+      - { "date" : { "$date" : { "$numberLong" : "740112225988" } } }
+      - { "date" : { "$date" : { "$numberLong" : "1385668773851" } } }
+      - { "date" : { "$date" : { "$numberLong" : "891111511599" } } }
 
   # Date: Random Dates from FastRandomStrings.
   - Name: RandomDateFromFastRandomString
@@ -627,12 +651,28 @@ Tests:
     ThenReturns:
     - { "date" : { "$date" : { "$numberLong" : "0" } } }
 
+  # Date: Random Dates from FastRandomStrings.
+  - Name: RandomDateFromFastRandomStringRange
+    GivenTemplate:
+      date: {^RandomDate: {min: {^FastRandomString: {length: 13, alphabet: "0123456789"}}, max: {^FastRandomString: {length: 14, alphabet: "123456789"}}}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "58178820845576" } } }
+    - { "date" : { "$date" : { "$numberLong" : "54692158564694" } } }
+
   # Date: Random Dates From RandomStrings.
   - Name: RandomDateFromRandomString
     GivenTemplate:
       date: {^RandomDate: {min: {^RandomString: {length: 1, alphabet: "0"}}, max: {^RandomString: {length: 1, alphabet: "1"}}}}
     ThenReturns:
     - { "date" : { "$date" : { "$numberLong" : "0" } } }
+
+  # Date: Random Dates From RandomStrings.
+  - Name: RandomDateFromRandomStringRange
+    GivenTemplate:
+      date: {^RandomDate: {min: {^RandomString: {length: 13, alphabet: "0123456789"}}, max: {^RandomString: {length: 14, alphabet: "123456789"}}}}
+    ThenReturns:
+    - { "date" : { "$date" : { "$numberLong" : "15634284905399" } } }
+    - { "date" : { "$date" : { "$numberLong" : "48656235710126" } } }
 
   # Date: Random Dates from Join.
   - Name: RandomDateFromJoin
@@ -644,9 +684,10 @@ Tests:
   # Date: Random Dates from Choose.
   - Name: RandomDateFromChoose
     GivenTemplate:
-      date: {^RandomDate: {min: {^Choose: {from: ["2013-05-30T07:27:04.299+06:30"]}}, max: {^Choose: {from: ["2013-05-30 06:27:04.300+05:30"]}}}}
+      date: {^RandomDate: {min: {^Choose: {from: ["2013-05-30T07:27:04.299+06:30", "1970-01-01"]}}, max: {^Choose: {from: ["2023-05-30 06:27:04.300+05:30"]}}}}
     ThenReturns:
-    - { "date" : { "$date" : { "$numberLong" : "1369875424299" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1396475999152" } } } # 2014-04-02 must be due to min choice 1
+    - { "date" : { "$date" : { "$numberLong" : "196060573322" } } }  # 1976-03-19 must be due to min choice 2
 
   # Date: Random Dates from Mixed Generators.
   - Name: RandomDateMixed
@@ -673,8 +714,6 @@ Tests:
         }
       }
     ThenThrows: InvalidValueGeneratorSyntax
-
-
 
   - Name: SimpleIncrement
     GivenTemplate:

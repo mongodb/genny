@@ -151,12 +151,12 @@ static const std::string kDefaultAlphabet = std::string{
 template <typename O>
 using Parser = std::function<O(const Node&, GeneratorArgs)>;
 
+const static boost::posix_time::ptime epoch{boost::gregorian::date(1970, 1, 1)};
+const static boost::posix_time::ptime max_date{boost::gregorian::date(2150, 1, 1)};
+
 // Pre-declaring all at once
 // Documentation is at the implementations-site.
-const static int64_t parseStringToMillis(const std::string& datetime);
-const static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
-const static boost::posix_time::ptime max_date(boost::gregorian::date(2150, 1, 1));
-
+int64_t parseStringToMillis(const std::string& datetime);
 UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
                                                            GeneratorArgs generatorArgs);
@@ -166,7 +166,7 @@ UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
 UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<int64_t> dateGenerator(const Node& node,
                                        GeneratorArgs generatorArgs,
-                                       const boost::posix_time::ptime& default_time = epoch);
+                                       const boost::posix_time::ptime& defaultTime = epoch);
 template <bool Verbatim, typename Out>
 Out valueGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
@@ -681,49 +681,40 @@ const static auto formats = {
 
 class DateToIntGenerator : public Generator<int64_t> {
 public:
-    explicit DateToIntGenerator(UniqueGenerator<bsoncxx::types::b_date>& generator) {
-        std::swap(_generator, generator);
-    }
+    explicit DateToIntGenerator(UniqueGenerator<bsoncxx::types::b_date>& generator)
+        : _generator{std::move(generator)} {}
     int64_t evaluate() override {
         auto date = _generator->evaluate();
-        auto millis = date.to_int64();
-        // BOOST_LOG_TRIVIAL(warning) << " DateToIntGenerator " << millis;
-        return millis;
+        return date.to_int64();
     }
 
-protected:
-    UniqueGenerator<bsoncxx::types::b_date> _generator;
+private:
+    const UniqueGenerator<bsoncxx::types::b_date> _generator;
 };
 
-class DoubleToIntGenerator : public Generator<int64_t> {
+class CastDoubleToInt64Generator : public Generator<int64_t> {
 public:
-    explicit DoubleToIntGenerator(UniqueGenerator<double>& generator) {
-        std::swap(_generator, generator);
-    }
+    explicit CastDoubleToInt64Generator(UniqueGenerator<double>& generator)
+        : _generator{std::move(generator)} {}
     int64_t evaluate() override {
-        auto millis = (long long)_generator->evaluate();
-        // BOOST_LOG_TRIVIAL(warning) << " DoubleToIntGenerator " << millis;
-        return millis;
+        return (int64_t)_generator->evaluate();
     }
 
-protected:
-    UniqueGenerator<double> _generator;
+private:
+    const UniqueGenerator<double> _generator;
 };
 
 class DateStringParserGenerator : public Generator<int64_t> {
 public:
-    explicit DateStringParserGenerator(UniqueGenerator<std::string>& generator) {
-        std::swap(_generator, generator);
-    }
+    explicit DateStringParserGenerator(UniqueGenerator<std::string>& generator)
+        : _generator{std::move(generator)} {}
     int64_t evaluate() override {
         auto datetime = _generator->evaluate();
-        auto millis = parseStringToMillis(datetime);
-        // BOOST_LOG_TRIVIAL(warning) << " DateStringParserGenerator " << millis;
-        return millis;
+        return parseStringToMillis(datetime);
     }
 
-protected:
-    UniqueGenerator<std::string> _generator;
+private:
+    const UniqueGenerator<std::string> _generator;
 };
 
 /** `{^RandomDate: {min: "2015-01-01", max: "2015-01-01T23:59:59.999Z"}}` */
@@ -828,7 +819,7 @@ std::optional<std::pair<Parser<O>, std::string>> extractKnownParser(
 
     std::stringstream msg;
     msg << "Unknown parser '" << *metaKey << "' in node '" << node << "'";
-    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+    BOOST_THROW_EXCEPTION(UnknownParserException(msg.str()));
 }
 
 /**
@@ -1192,59 +1183,30 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
 
 /**
  * @private
- * @param exception exception received from Generator factory (e.g. ::intGenerator()) invocation.
- * @return if the exception is a result of the generator being unknown to the factory. For
- * example, a ^RandomDate node being passed to the intGenerator().
- */
-bool isUnknownParser(const InvalidValueGeneratorSyntax& exception) {
-    auto what = std::string{exception.what()};
-    return what.find("Unknown parser") != std::string::npos;
-}
-
-/**
- * @private
- * @param exception exception received from Generator factory (e.g. ::intGenerator()) invocation.
- * @return if the exception is an unknown date format.
- */
-bool isUnknownDateFormat(const InvalidValueGeneratorSyntax& exception) {
-    auto what = std::string{exception.what()};
-    return what.find("Unknown date format") != std::string::npos;
-}
-
-/**
- * @private
  * @param datetime
  *   a datetime string in a known format or unsigned long long string.
  * @return
  *   The datetime as millis.
  */
-const static int64_t parseStringToMillis(const std::string& datetime) {
-    boost::posix_time::ptime utc_time{boost::posix_time::not_a_date_time};
-
-    auto millis = 0LL;
+int64_t parseStringToMillis(const std::string& datetime) {
     if (!datetime.empty()) {
+        // TODO: PERF-2153 needs some investigation.
         for (const auto& format : formats) {
             std::istringstream date_stream{datetime};
             date_stream.imbue(format);
             boost::local_time::local_date_time local_date{boost::local_time::not_a_date_time};
             if (date_stream >> local_date) {
-                utc_time = local_date.utc_time();
-
-                millis = (utc_time - epoch).total_milliseconds();
-                break;
+                return (local_date.utc_time() - epoch).total_milliseconds();
             }
         }
     }
-    if (utc_time == boost::posix_time::not_a_date_time) {
-        try {
-            // Last gasp try to interpret unsigned long long.
-            millis = std::stoull(datetime);
-        } catch (const std::invalid_argument& _) {
-            auto msg = "^RandomDate: Invalid Dateformat '" + datetime + "'";
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax{msg});
-        }
+    try {
+        // Last gasp try to interpret unsigned long long.
+        return std::stoull(datetime);
+    } catch (const std::invalid_argument& _) {
+        auto msg = "^RandomDate: Invalid Dateformat '" + datetime + "'";
+        BOOST_THROW_EXCEPTION(InvalidDateFormat{msg});
     }
-    return millis;
 };
 
 /**
@@ -1268,7 +1230,7 @@ UniqueGenerator<int64_t> dateStringTimeGenerator(const Node& node, GeneratorArgs
  */
 UniqueGenerator<int64_t> doubleTimeGenerator(const Node& node, GeneratorArgs generatorArgs) {
     auto generator = doubleGenerator(node, generatorArgs);
-    return std::make_unique<DoubleToIntGenerator>(generator);
+    return std::make_unique<CastDoubleToInt64Generator>(generator);
 }
 
 /**
@@ -1302,7 +1264,7 @@ UniqueGenerator<int64_t> dateTimeGenerator(const Node& node, GeneratorArgs gener
     // so throw an exception.
     std::stringstream msg;
     msg << "Unknown parser: not an expected type " << node;
-    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+    BOOST_THROW_EXCEPTION(UnknownParserException(msg.str()));
 }
 
 /**
@@ -1314,27 +1276,27 @@ UniqueGenerator<int64_t> dateTimeGenerator(const Node& node, GeneratorArgs gener
  */
 UniqueGenerator<int64_t> dateGenerator(const Node& node,
                                        GeneratorArgs generatorArgs,
-                                       const boost::posix_time::ptime& default_time) {
+                                       const boost::posix_time::ptime& defaultTime) {
     const static auto timeGenerators = {
         dateTimeGenerator, dateStringTimeGenerator, intGenerator, doubleTimeGenerator};
     if (node) {
         for (auto&& generator : timeGenerators) {
             try {
+                // InvalidValueGeneratorSyntax means that we found a parser but there was something
+                // wrong, so this exception gets passed up.
                 return generator(node, generatorArgs);
-            } catch (const InvalidValueGeneratorSyntax& e) {
-                if (!isUnknownParser(e) && !isUnknownDateFormat(e)) {
-                    throw e;
-                }
+            } catch (const UnknownParserException& e) {
+            } catch (const InvalidDateFormat& e) {
             } catch (const InvalidConversionException& e) {
             }
         }
         std::stringstream msg;
         msg << "Unknown parser: not an expected type " << node;
-        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        BOOST_THROW_EXCEPTION(UnknownParserException(msg.str()));
     }
 
     // No value, get the appropriate default.
-    auto millis = (default_time - epoch).total_milliseconds();
+    auto millis = (defaultTime - epoch).total_milliseconds();
     return std::make_unique<ConstantAppender<int64_t>>(millis);
 }
 

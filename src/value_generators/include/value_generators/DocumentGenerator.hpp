@@ -36,6 +36,22 @@ public:
     using std::invalid_argument::invalid_argument;
 };
 
+/**
+ * Throw this to indicate a bad date format is received.
+ */
+class InvalidDateFormat : public InvalidValueGeneratorSyntax {
+public:
+    using InvalidValueGeneratorSyntax::InvalidValueGeneratorSyntax;
+};
+
+/**
+ * Throw this to indicate no parser can be found for a generator.
+ */
+class UnknownParserException : public InvalidValueGeneratorSyntax {
+public:
+    using InvalidValueGeneratorSyntax::InvalidValueGeneratorSyntax;
+};
+
 struct GeneratorArgs {
     DefaultRandom& rng;
     ActorId actorId;
