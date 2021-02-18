@@ -681,7 +681,7 @@ const static auto formats = {
 
 class DateToIntGenerator : public Generator<int64_t> {
 public:
-    explicit DateToIntGenerator(UniqueGenerator<bsoncxx::types::b_date>& generator)
+    explicit DateToIntGenerator(UniqueGenerator<bsoncxx::types::b_date>&& generator)
         : _generator{std::move(generator)} {}
     int64_t evaluate() override {
         auto date = _generator->evaluate();
@@ -694,7 +694,7 @@ private:
 
 class CastDoubleToInt64Generator : public Generator<int64_t> {
 public:
-    explicit CastDoubleToInt64Generator(UniqueGenerator<double>& generator)
+    explicit CastDoubleToInt64Generator(UniqueGenerator<double>&& generator)
         : _generator{std::move(generator)} {}
     int64_t evaluate() override {
         return (int64_t)_generator->evaluate();
@@ -706,7 +706,7 @@ private:
 
 class DateStringParserGenerator : public Generator<int64_t> {
 public:
-    explicit DateStringParserGenerator(UniqueGenerator<std::string>& generator)
+    explicit DateStringParserGenerator(UniqueGenerator<std::string>&& generator)
         : _generator{std::move(generator)} {}
     int64_t evaluate() override {
         auto datetime = _generator->evaluate();
@@ -1218,7 +1218,7 @@ int64_t parseStringToMillis(const std::string& datetime) {
  */
 UniqueGenerator<int64_t> dateStringTimeGenerator(const Node& node, GeneratorArgs generatorArgs) {
     auto generator = stringGenerator(node, generatorArgs);
-    return std::make_unique<DateStringParserGenerator>(generator);
+    return std::make_unique<DateStringParserGenerator>(std::move(generator));
 }
 
 /**
@@ -1230,7 +1230,7 @@ UniqueGenerator<int64_t> dateStringTimeGenerator(const Node& node, GeneratorArgs
  */
 UniqueGenerator<int64_t> doubleTimeGenerator(const Node& node, GeneratorArgs generatorArgs) {
     auto generator = doubleGenerator(node, generatorArgs);
-    return std::make_unique<CastDoubleToInt64Generator>(generator);
+    return std::make_unique<CastDoubleToInt64Generator>(std::move(generator));
 }
 
 /**
@@ -1258,7 +1258,7 @@ UniqueGenerator<int64_t> dateTimeGenerator(const Node& node, GeneratorArgs gener
     if (auto parserPair = extractKnownParser(node, generatorArgs, dateParsers)) {
         // known parser type
         auto generator = parserPair->first(node[parserPair->second], generatorArgs);
-        return std::make_unique<DateToIntGenerator>(generator);
+        return std::make_unique<DateToIntGenerator>(std::move(generator));
     }
     // This is an internal private function, we have no sane way to interpret a scalar here,
     // so throw an exception.
