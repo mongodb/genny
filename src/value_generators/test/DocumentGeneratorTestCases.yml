@@ -545,10 +545,10 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "1626880603851" } } }
-    - { "date" : { "$date" : { "$numberLong" : "1611659045266" } } }
-    - { "date" : { "$date" : { "$numberLong" : "4185670857742" } } }
-    - { "date" : { "$date" : { "$numberLong" : "5397029274960" } } }
+    - { "date" : { "$date" : { "$numberLong" : "2215312351294" } } }
+    - { "date" : { "$date" : { "$numberLong" : "2017461232728" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1668763329631" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1877688312659" } } }
 
   # Date: Half Open interval: ["1970-01-01", "2021-01-01"). 1970-01-01 is the default min date.
   - Name: RandomDateMax
@@ -558,7 +558,7 @@ Tests:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
     - { "date" : { "$date" : { "$numberLong" : "250092537631" } } }
-    - { "date" : { "$date" : { "$numberLong" : "120037897059" } } }
+    - { "date" : { "$date" : { "$numberLong" : "172472167383" } } }
 
   # Date: 2020-01-01T00:00:00.000 (only one possible value here).
   - Name: RandomDateSingle
@@ -579,8 +579,8 @@ Tests:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
     - { "date" : { "$date" : { "$numberLong" : "1579884207608" } } }
-    - { "date" : { "$date" : { "$numberLong" : "1587960410217" } } }
-    - { "date" : { "$date" : { "$numberLong" : "1578875595873" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1579248760673" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1578128832640" } } }
 
   # Date: Half Open interval: ["1970-01-01", "2030-01-01").
   - Name: RandomDateFull
@@ -589,9 +589,9 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "294222555545" } } }
-    - { "date" : { "$date" : { "$numberLong" : "4331882451667" } } }
-    - { "date" : { "$date" : { "$numberLong" : "3407482044257" } } }
+    - { "date" : { "$date" : { "$numberLong" : "882654257901" } } }
+    - { "date" : { "$date" : { "$numberLong" : "608707858109" } } }
+    - { "date" : { "$date" : { "$numberLong" : "125897673052" } } }
 
   # Date: Half Open interval: ["2030-01-01", "2040-01-01").
   - Name: RandomDateFuture
@@ -600,8 +600,8 @@ Tests:
     ThenReturns:
     # The $date notation is extended json
     # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-    - { "date" : { "$date" : { "$numberLong" : "2190504376964" } } }
-    - { "date" : { "$date" : { "$numberLong" : "1945898374006" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1942486378134" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1927268986443" } } }
 
   # Date: Half Open interval: ["2020-01-01", "2020-01-01").
   - Name: RandomDateULL
@@ -634,9 +634,9 @@ Tests:
     GivenTemplate:
       date: {^RandomDate: {min: {^RandomInt: {min: 0, max: 1369875424299}}, max: {^RandomInt: {min: 1369875424300, max: 1569875424300}}}}
     ThenReturns:
-    - { "date" : { "$date" : { "$numberLong" : "1329214233880" } } }
-    - { "date" : { "$date" : { "$numberLong" : "929477800105" } } }
-    - { "date" : { "$date" : { "$numberLong" : "1110305120066" } } }
+    - { "date" : { "$date" : { "$numberLong" : "238982809626" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1206547850279" } } }
+    - { "date" : { "$date" : { "$numberLong" : "1228629964909" } } }
 
   # Date: Random Dates From RandomDouble.
   - Name: RandomFromRandomDouble
@@ -650,9 +650,9 @@ Tests:
     GivenTemplate:
       date: {^RandomDate: {min: {^RandomDouble: {min: 0, max: 1369875424299}}, max: {^RandomDouble: {min: 1369875424300, max: 1569875424300}}}}
     ThenReturns:
-      - { "date" : { "$date" : { "$numberLong" : "740112225988" } } }
-      - { "date" : { "$date" : { "$numberLong" : "1385668773851" } } }
-      - { "date" : { "$date" : { "$numberLong" : "891111511599" } } }
+      - { "date" : { "$date" : { "$numberLong" : "238982806854" } } }
+      - { "date" : { "$date" : { "$numberLong" : "1206547848975" } } }
+      - { "date" : { "$date" : { "$numberLong" : "1228629955049" } } }
 
   # Date: Random Dates from FastRandomStrings.
   - Name: RandomDateFromFastRandomString
@@ -666,8 +666,8 @@ Tests:
     GivenTemplate:
       date: {^RandomDate: {min: {^FastRandomString: {length: 13, alphabet: "0123456789"}}, max: {^FastRandomString: {length: 14, alphabet: "123456789"}}}}
     ThenReturns:
-    - { "date" : { "$date" : { "$numberLong" : "58178820845576" } } }
-    - { "date" : { "$date" : { "$numberLong" : "54692158564694" } } }
+    - { "date" : { "$date" : { "$numberLong" : "37861946836783" } } }
+    - { "date" : { "$date" : { "$numberLong" : "10867012567549" } } }
 
   # Date: Random Dates From RandomStrings.
   - Name: RandomDateFromRandomString
@@ -681,8 +681,8 @@ Tests:
     GivenTemplate:
       date: {^RandomDate: {min: {^RandomString: {length: 13, alphabet: "0123456789"}}, max: {^RandomString: {length: 14, alphabet: "123456789"}}}}
     ThenReturns:
-    - { "date" : { "$date" : { "$numberLong" : "15634284905399" } } }
-    - { "date" : { "$date" : { "$numberLong" : "48656235710126" } } }
+    - { "date" : { "$date" : { "$numberLong" : "4456941826710" } } }
+    - { "date" : { "$date" : { "$numberLong" : "58739068492151" } } }
 
   # Date: Random Dates from Join.
   - Name: RandomDateFromJoin
@@ -694,10 +694,14 @@ Tests:
   # Date: Random Dates from Choose.
   - Name: RandomDateFromChoose
     GivenTemplate:
-      date: {^RandomDate: {min: {^Choose: {from: ["2013-05-30T07:27:04.299+06:30", "1970-01-01"]}}, max: {^Choose: {from: ["2023-05-30 06:27:04.300+05:30"]}}}}
+      date: {^RandomDate: {min: {^Choose: {from: ["2013-05-30T07:27:04.299+06:30", "1970-01-01"]}},
+                           max: {^Choose: {from: ["2023-05-30 06:27:04.300+05:30"]}}}}
     ThenReturns:
-    - { "date" : { "$date" : { "$numberLong" : "1396475999152" } } } # 2014-04-02 must be due to min choice 1
-    - { "date" : { "$date" : { "$numberLong" : "196060573322" } } }  # 1976-03-19 must be due to min choice 2
+    - { "date" : { "$date" : { "$numberLong" : "1392938007672" } } }  # Thu Feb 20 2014 23:13:27 GMT+0000 must be due to min choice 1
+    - { "date" : { "$date" : { "$numberLong" : "1451947229287" } } }  # Mon Jan 04 2016 22:40:29 GMT+0000 must be due to min choice 1
+    - { "date" : { "$date" : { "$numberLong" : "1434975126427" } } }  # Mon Jun 22 2015 12:12:06 GMT+0000 must be due to min choice 1
+    - { "date" : { "$date" : { "$numberLong" : "1377223224111" } } }  # Fri Aug 23 2013 02:00:24 GMT+0000 must be due to min choice 1
+    - { "date" : { "$date" : { "$numberLong" : "672988154402"  } } }  # Tue Apr 30 1991 05:09:14 GMT+0000 must be due to min choice 2
 
   # Date: Random Dates from Mixed Generators.
   - Name: RandomDateMixed
