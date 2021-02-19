@@ -217,7 +217,7 @@ def _setup_resmoke(
 
     if mongod is not None and mongodb_archive_url is not None:
         SLOG.info(
-            "Found exisitng mongod so will not download artifacts.",
+            "Found existing mongod so will not download artifacts.",
             existing_mongod=mongod,
             wont_download_artifacts_from=mongodb_archive_url,
         )
