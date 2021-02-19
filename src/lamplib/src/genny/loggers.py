@@ -86,15 +86,16 @@ def _tweak_structlog_log_line() -> None:
         try:
             sio = StringIO()
 
-            ts = event_dict.pop("timestamp", None)
-            if ts is not None:
-                sio.write(
-                    # can be a number if timestamp is UNIXy
-                    self._styles.timestamp
-                    + str(ts)
-                    + self._styles.reset
-                    + " "
-                )
+            # Genny logging is nearly always wrapped by other logging (e.g. dsi logging) so no need for additional timestamp info
+            # ts = event_dict.pop("timestamp", None)
+            # if ts is not None:
+            #     sio.write(
+            #         # can be a number if timestamp is UNIXy
+            #         self._styles.timestamp
+            #         + str(ts)
+            #         + self._styles.reset
+            #         + " "
+            #     )
 
             level = event_dict.pop("level", None)
             if level is not None:
