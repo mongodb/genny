@@ -799,7 +799,11 @@ struct FindOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {}
+          _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {
+        if (opNode["Options"]) {
+            _options = opNode["Options"].to<mongocxx::options::find>();
+        }
+    }
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filter();
@@ -834,7 +838,11 @@ struct FindOneOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {}
+          _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {
+        if (opNode["Options"]) {
+            _options = opNode["Options"].to<mongocxx::options::find>();
+        }
+    }
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filter();
