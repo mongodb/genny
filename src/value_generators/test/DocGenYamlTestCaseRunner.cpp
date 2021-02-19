@@ -60,7 +60,8 @@ public:
                     NodeSource ns = toNode(this->_givenTemplate);
                     genny::DefaultRandom rng;
 
-                    genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 1});
+                    auto docGen = genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 1});
+                    docGen();
                     FAIL("Expected exception " << this->_expectedExceptionMessage.as<std::string>()
                                                << " but none occurred");
                 } catch (const std::exception& x) {
