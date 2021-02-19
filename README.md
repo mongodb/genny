@@ -189,6 +189,8 @@ And then run a workload:
     --workload-file       ./src/workloads/scale/InsertRemove.yml    \
     --mongo-uri           'mongodb://localhost:27017'
 ```
+If you see errors like the following, try reducing the number of threads and duration in ./src/workloads/scale/InsertRemove.yml
+```E0218 17:46:13.640106000 123145604628480 wakeup_fd_pipe.cc:40]         pipe creation failed (24): Too many open files```
 
 Logging currently goes to stdout, and in this example, metrics data is
 written to `./build/genny-metrics.csv`.
