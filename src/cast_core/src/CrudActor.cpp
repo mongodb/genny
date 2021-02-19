@@ -141,6 +141,39 @@ struct convert<mongocxx::options::count> {
 };
 
 template <>
+struct convert<mongocxx::options::find> {
+    using FindOptions = mongocxx::options::find;
+    static Node encode(const FindOptions& rhs) {
+        return {};
+    }
+
+    static bool decode(const Node& node, FindOptions& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        if (node["Hint"]) {
+            auto h = node["Hint"].as<std::string>();
+            auto hint = mongocxx::hint(h);
+            rhs.hint(hint);
+        }
+        if (node["Limit"]) {
+            auto limit = node["Limit"].as<int>();
+            rhs.limit(limit);
+        }
+        if (node["MaxTime"]) {
+            auto maxTime = node["MaxTime"].as<genny::TimeSpec>();
+            rhs.max_time(std::chrono::milliseconds{maxTime});
+        }
+        if (node["ReadPreference"]) {
+            auto readPref = node["ReadPreference"].as<mongocxx::read_preference>();
+            rhs.read_preference(readPref);
+        }
+        return true;
+    }
+};
+
+
+template <>
 struct convert<mongocxx::options::estimated_document_count> {
     using CountOptions = mongocxx::options::estimated_document_count;
     static Node encode(const CountOptions& rhs) {
