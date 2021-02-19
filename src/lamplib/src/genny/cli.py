@@ -97,6 +97,13 @@ def cmake_compile_install(
     from genny.tasks import compile
     from genny import curator
 
+    curator.ensure_curator_installed(
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        os_family=os_family,
+        linux_distro=linux_distro,
+    )
+
     compile.compile_and_install(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
@@ -106,13 +113,6 @@ def cmake_compile_install(
         ignore_toolchain_version=ignore_toolchain_version,
         sanitizer=sanitizer,
         cmake_args=cmake_args,
-    )
-
-    curator.ensure_curator_installed(
-        workspace_root=ctx.obj["WORKSPACE_ROOT"],
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
-        os_family=os_family,
-        linux_distro=linux_distro,
     )
 
 
