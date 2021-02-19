@@ -149,8 +149,6 @@ def benchmark_test(ctx: click.Context) -> None:
     )
 
 
-# TODO: Modify this to match usage in DSI
-# f'{prefix} ./src/genny/run-genny run --mongo-uri "{db_url}" --workload-file {cfg}'
 @cli.command(
     name="workload",
     help=(
