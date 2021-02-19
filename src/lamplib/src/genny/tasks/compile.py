@@ -56,7 +56,7 @@ def cmake(
 
     cmake_cmd += [
         "-DGENNY_WORKSPACE_ROOT={}".format(workspace_root),
-        "-DGENNY_REPO_ROOT={}".format(genny_repo_root),
+        # "-DGENNY_REPO_ROOT={}".format(genny_repo_root),  # Not needed (yet).
         "-DCMAKE_PREFIX_PATH={}".format(cmake_prefix_path),
         "-DCMAKE_TOOLCHAIN_FILE={}".format(cmake_toolchain_file),
         f"-DVCPKG_TARGET_TRIPLET=x64-{toolchain_info.triplet_os}-static",
