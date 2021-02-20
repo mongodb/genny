@@ -113,7 +113,7 @@ def _tweak_structlog_log_line() -> None:
                     "["
                     + self._styles.logger_name
                     + self._styles.bright
-                    + structlog.dev._pad(logger_name, 27)
+                    + structlog.dev._pad(logger_name, 20)
                     + self._styles.reset
                     + "] "
                 )
