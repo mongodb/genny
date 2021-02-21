@@ -83,7 +83,10 @@ void reportMetrics(genny::metrics::Registry& metrics,
 //
 // The 'unused' param is pass by value because we need to modify it via remove_if.
 UnusedNodes removeFalsePositives(UnusedNodes unused) {
-    static const std::vector<std::string> ignored{".yml/Description", ".yml/Owner", ".yml/AutoRun"};
+    // The "Clients" key being looks bad but is actually okay for dry-run workloads since
+    // connection pools are lazily constructed on first access.
+
+    static const std::vector<std::string> ignored{".yml/Description", ".yml/Owner", ".yml/AutoRun", ".yml/Clients"};
     UnusedNodes out{};
     std::copy_if(
         unused.begin(), unused.end(), std::back_inserter(out), [&](const std::string& path) {
@@ -99,19 +102,18 @@ void reportUnused(const NodeSource& nodeSource) {
     auto raw = nodeSource.unused();
 
     auto unused = removeFalsePositives(raw);
-    if (unused.empty()) {
-        return;
-    }
     auto many = std::distance(unused.begin(), unused.end());
     auto verb = many == 1 ? "was" : "were";
     auto plural = many == 1 ? "" : "s";
     BOOST_LOG_TRIVIAL(info) << "<BETA FEATURE>";
     BOOST_LOG_TRIVIAL(info) << "There " << verb << " " << many << " YAML structure" << plural
-                            << " not used when constructing the workload:";
-    BOOST_LOG_TRIVIAL(info) << "\n\t" << boost::algorithm::join(unused, "\n\t");
-    // The "Clients" key being looks bad but is actually okay for dry-run workloads since
-    // connection pools are lazily constructed on first access.
-    BOOST_LOG_TRIVIAL(info) << "We know of some false-positives including the last line.";
+                            << " not used when constructing the workload.";
+    if (!unused.empty()) {
+        BOOST_LOG_TRIVIAL(info) << "\n\t" << boost::algorithm::join(unused, "\n\t");
+        BOOST_LOG_TRIVIAL(info) << "False-positives are possible. "
+                                   "Please let us know in #workload-generation slack "
+                                   "if this looks wrong.";
+    }
     BOOST_LOG_TRIVIAL(info) << "</BETA FEATURE>";
 }
 

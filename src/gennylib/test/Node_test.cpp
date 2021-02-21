@@ -47,19 +47,8 @@ t: { value: 11 }
     const auto& r = n.root();
 
     const auto noneUsed = UnusedNodes{// We do depth-first.
-                                      "/a/0",
-                                      "/a/1",
-                                      "/a/2",
-                                      "/a",
-                                      "/b",
-                                      "/c",
-                                      "/n/ested/0",
-                                      "/n/ested/1",
-                                      "/n/ested",
-                                      "/n",
-                                      "/t/value",
-                                      "/t",
-                                      ""};
+        "/a/0", "/a/1", "/a/2", "/b", "/c", "/n/ested/0", "/n/ested/1", "/t/value"
+    };
 
     const auto onlyUsed = [=](std::initializer_list<std::string> ks) -> UnusedNodes {
         auto out = noneUsed;

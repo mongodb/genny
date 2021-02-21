@@ -170,20 +170,26 @@ public:
     }
 
     UnusedNodes unused() const {
-        UnusedNodes out{};
+        // Ignore cases where we did something like node["does not exist"].maybe<int>()
+        // since technically there is a "zombie" node that the yaml-cpp internals creates.
         if (_self->_impl->_yaml == _zombie) {
-            // Empty/zombie nodes don't count
-            return out;
+            return {};
         }
+
+        // Depth-first.
+        UnusedNodes out{};
         for (auto&& [_, child] : this->_children) {
             const auto childUnused = child->unused();
             for (auto&& u : childUnused) {
                 out.push_back(u);
             }
         }
-        if (!this->_used && (this->_children.empty() || !out.empty())) {
+
+        // Base-case: no children and unused.
+        if (this->_children.empty() && !this->_used) {
             out.push_back(this->path());
         }
+
         return out;
     }
 
