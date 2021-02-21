@@ -34,183 +34,153 @@
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
 
-namespace YAML {
+namespace genny {
 
 template <>
-struct convert<mongocxx::options::aggregate> {
-    using AggregateOptions = mongocxx::options::aggregate;
-    static Node encode(const AggregateOptions& rhs) {
-        return {};
-    }
+struct NodeConvert<mongocxx::options::aggregate> {
+    using type = mongocxx::options::aggregate;
 
-    static bool decode(const Node& node, AggregateOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-        rhs = mongocxx::options::aggregate{};
+    static type convert(const Node& node) {
+        type rhs {};
         if (node["AllowDiskUse"]) {
-            auto allowDiskUse = node["AllowDiskUse"].as<bool>();
+            auto allowDiskUse = node["AllowDiskUse"].to<bool>();
             rhs.allow_disk_use(allowDiskUse);
         }
         if (node["BatchSize"]) {
-            auto batchSize = node["BatchSize"].as<int>();
+            auto batchSize = node["BatchSize"].to<int>();
             rhs.batch_size(batchSize);
         }
         if (node["MaxTime"]) {
-            auto maxTime = node["MaxTime"].as<genny::TimeSpec>();
+            auto maxTime = node["MaxTime"].to<genny::TimeSpec>();
             rhs.max_time(std::chrono::milliseconds(maxTime));
         }
         if (node["ReadPreference"]) {
-            auto readPreference = node["ReadPreference"].as<mongocxx::read_preference>();
+            auto readPreference = node["ReadPreference"].to<mongocxx::read_preference>();
             rhs.read_preference(readPreference);
         }
         if (node["BypassDocumentValidation"]) {
-            auto bypassValidation = node["BypassDocumentValidation"].as<bool>();
+            auto bypassValidation = node["BypassDocumentValidation"].to<bool>();
             rhs.bypass_document_validation(bypassValidation);
         }
         if (node["Hint"]) {
-            auto h = node["Hint"].as<std::string>();
+            auto h = node["Hint"].to<std::string>();
             auto hint = mongocxx::hint(h);
             rhs.hint(hint);
         }
         if (node["WriteConcern"]) {
-            auto wc = node["WriteConcern"].as<mongocxx::write_concern>();
+            auto wc = node["WriteConcern"].to<mongocxx::write_concern>();
             rhs.write_concern(wc);
         }
-        return true;
+        return rhs;
     }
 };
 
 template <>
-struct convert<mongocxx::options::bulk_write> {
-    using BulkWriteOptions = mongocxx::options::bulk_write;
-    static Node encode(const BulkWriteOptions& rhs) {
-        return {};
-    }
+struct NodeConvert<mongocxx::options::bulk_write> {
+    using type = mongocxx::options::bulk_write;
 
-    static bool decode(const Node& node, BulkWriteOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
+    static type convert(const Node& node) {
+        type rhs {};
         if (node["BypassDocumentValidation"]) {
-            auto bypassDocValidation = node["BypassDocumentValidation"].as<bool>();
+            auto bypassDocValidation = node["BypassDocumentValidation"].to<bool>();
             rhs.bypass_document_validation(bypassDocValidation);
         }
         if (node["Ordered"]) {
-            auto isOrdered = node["Ordered"].as<bool>();
+            auto isOrdered = node["Ordered"].to<bool>();
             rhs.ordered(isOrdered);
         }
         if (node["WriteConcern"]) {
-            auto wc = node["WriteConcern"].as<mongocxx::write_concern>();
+            auto wc = node["WriteConcern"].to<mongocxx::write_concern>();
             rhs.write_concern(wc);
         }
-        return true;
+        return rhs;
     }
 };
 
 template <>
-struct convert<mongocxx::options::count> {
-    using CountOptions = mongocxx::options::count;
-    static Node encode(const CountOptions& rhs) {
-        return {};
-    }
+struct NodeConvert<mongocxx::options::count> {
+    using type = mongocxx::options::count;
 
-    static bool decode(const Node& node, CountOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
+    static type convert(const Node& node) {
+        type rhs {};
         if (node["Hint"]) {
-            auto h = node["Hint"].as<std::string>();
+            auto h = node["Hint"].to<std::string>();
             auto hint = mongocxx::hint(h);
             rhs.hint(hint);
         }
         if (node["Limit"]) {
-            auto limit = node["Limit"].as<int>();
+            auto limit = node["Limit"].to<int>();
             rhs.limit(limit);
         }
         if (node["MaxTime"]) {
-            auto maxTime = node["MaxTime"].as<genny::TimeSpec>();
+            auto maxTime = node["MaxTime"].to<genny::TimeSpec>();
             rhs.max_time(std::chrono::milliseconds{maxTime});
         }
         if (node["ReadPreference"]) {
-            auto readPref = node["ReadPreference"].as<mongocxx::read_preference>();
+            auto readPref = node["ReadPreference"].to<mongocxx::read_preference>();
             rhs.read_preference(readPref);
         }
-        return true;
+        return rhs;
     }
 };
 
 template <>
-struct convert<mongocxx::options::estimated_document_count> {
-    using CountOptions = mongocxx::options::estimated_document_count;
-    static Node encode(const CountOptions& rhs) {
-        return {};
-    }
+struct NodeConvert<mongocxx::options::estimated_document_count> {
+    using type = mongocxx::options::estimated_document_count;
 
-    static bool decode(const Node& node, CountOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
+    static type convert(const Node& node) {
+        type rhs {};
         if (node["MaxTime"]) {
-            auto maxTime = node["MaxTime"].as<genny::TimeSpec>();
+            auto maxTime = node["MaxTime"].to<genny::TimeSpec>();
             rhs.max_time(std::chrono::milliseconds{maxTime});
         }
         if (node["ReadPreference"]) {
-            auto readPref = node["ReadPreference"].as<mongocxx::read_preference>();
+            auto readPref = node["ReadPreference"].to<mongocxx::read_preference>();
             rhs.read_preference(readPref);
         }
-        return true;
+        return rhs;
     }
 };
 
 
 template <>
-struct convert<mongocxx::options::insert> {
-    static Node encode(const mongocxx::options::insert& rhs) {
-        return {};
-    }
-    static bool decode(const Node& node, mongocxx::options::insert& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
+struct NodeConvert<mongocxx::options::insert> {
+    using type = mongocxx::options::insert;
+
+    static type convert(const Node& node) {
+        type rhs {};
         if (node["Ordered"]) {
-            rhs.ordered(node["Ordered"].as<bool>());
+            rhs.ordered(node["Ordered"].to<bool>());
         }
         if (node["BypassDocumentValidation"]) {
-            rhs.bypass_document_validation(node["BypassDocumentValidation"].as<bool>());
+            rhs.bypass_document_validation(node["BypassDocumentValidation"].to<bool>());
         }
         if (node["WriteConcern"]) {
-            rhs.write_concern(node["WriteConcern"].as<mongocxx::write_concern>());
+            rhs.write_concern(node["WriteConcern"].to<mongocxx::write_concern>());
         }
-
-        return true;
+        return rhs;
     }
 };
 
 template <>
-struct convert<mongocxx::options::transaction> {
-    using TransactionOptions = mongocxx::options::transaction;
-    static Node encode(const TransactionOptions& rhs) {
-        return {};
-    }
+struct NodeConvert<mongocxx::options::transaction> {
+    using type = mongocxx::options::transaction;
 
-    static bool decode(const Node& node, TransactionOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
+    static type convert(const Node& node) {
+        type rhs {};
         if (node["WriteConcern"]) {
-            auto wc = node["WriteConcern"].as<mongocxx::write_concern>();
+            auto wc = node["WriteConcern"].to<mongocxx::write_concern>();
             rhs.write_concern(wc);
         }
         if (node["ReadConcern"]) {
-            auto rc = node["ReadConcern"].as<mongocxx::read_concern>();
+            auto rc = node["ReadConcern"].to<mongocxx::read_concern>();
             rhs.read_concern(rc);
         }
         if (node["ReadPreference"]) {
-            auto rp = node["ReadPreference"].as<mongocxx::read_preference>();
+            auto rp = node["ReadPreference"].to<mongocxx::read_preference>();
             rhs.read_preference(rp);
         }
-        return true;
+        return rhs;
     }
 };
 }  // namespace YAML
