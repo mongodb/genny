@@ -177,7 +177,7 @@ public:
                 continue;
             }
             const auto childUnused = child->unused();
-            for(auto&& u : childUnused) {
+            for (auto&& u : childUnused) {
                 out.push_back(u);
             }
         }

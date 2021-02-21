@@ -44,27 +44,33 @@ c: []
 n: { ested: [v, alue] }
 t: { value: 11 }
 "
-    )", ""};
+    )",
+                       ""};
     const auto& r = n.root();
 
-    const auto noneUsed = UnusedNodes {
-        // We do depth-first.
-        // TODO: why do we have a '/ ' and '' node?
-        "/ ",
-        "/a/0", "/a/1", "/a/2", "/a",
-        "/b",
-        "/c",
-        "/n/ested/0", "/n/ested/1", "/n/ested", "/n",
-        "/t/value",
-        "/t",
-        ""
-    };
+    const auto noneUsed = UnusedNodes{// We do depth-first.
+                                      // TODO: why do we have a '/ ' and '' node?
+                                      "/ ",
+                                      "/a/0",
+                                      "/a/1",
+                                      "/a/2",
+                                      "/a",
+                                      "/b",
+                                      "/c",
+                                      "/n/ested/0",
+                                      "/n/ested/1",
+                                      "/n/ested",
+                                      "/n",
+                                      "/t/value",
+                                      "/t",
+                                      ""};
 
     const auto onlyUsed = [=](std::initializer_list<std::string> ks) -> UnusedNodes {
         auto out = noneUsed;
-        for(auto&& k : ks) {
-            out.erase(std::remove_if(out.begin(), out.end(),
-                                   [&](const std::string& c) { return c == k; }), out.end());
+        for (auto&& k : ks) {
+            out.erase(std::remove_if(
+                          out.begin(), out.end(), [&](const std::string& c) { return c == k; }),
+                      out.end());
         }
         return out;
     };
@@ -81,7 +87,7 @@ t: { value: 11 }
         //
         // In the case of .to<X>, yaml-cpp's built-in conversions
         // for std containers doesn't consult with genny::Node.
-        REQUIRE(r["a"].to<std::vector<int>>() == std::vector<int>{1,2,3});
+        REQUIRE(r["a"].to<std::vector<int>>() == std::vector<int>{1, 2, 3});
         // We'd really like this to be the same REQUIRE as in the "All items in a list used" case.
         REQUIRE(n.unused() == onlyUsed({"/a"}));
     }
@@ -143,30 +149,30 @@ t: { value: 11 }
     }
     struct MyType {
         int value;
-        explicit MyType(const Node& n, int mult=1)
-        : value{(n["value"].maybe<int>().value_or(93) + 7)*mult} {}
+        explicit MyType(const Node& n, int mult = 1)
+            : value{(n["value"].maybe<int>().value_or(93) + 7) * mult} {}
     };
     SECTION("Using custom conversion counts as being used") {
         auto t = r["t"].to<MyType>(3);
-        REQUIRE(t.value == 54); // (11 + 7) * 3
+        REQUIRE(t.value == 54);  // (11 + 7) * 3
         REQUIRE(n.unused() == onlyUsed({"/t/value", "/t"}));
     }
     SECTION("Maybes also work") {
         auto t = r["t"].maybe<MyType>(3);
-        REQUIRE(t->value == 54); // (11 + 7) * 3
+        REQUIRE(t->value == 54);  // (11 + 7) * 3
         REQUIRE(n.unused() == onlyUsed({"/t/value", "/t"}));
     }
 
     SECTION("Maybes also work pt2") {
         auto t = r["t"].maybe<MyType>();
-        REQUIRE(t->value == 18); // (11 + 7) * (mult=1)
+        REQUIRE(t->value == 18);  // (11 + 7) * (mult=1)
         REQUIRE(n.unused() == onlyUsed({"/t/value", "/t"}));
     }
     SECTION("Maybes that fail to use the value don't use the value") {
         // Use the 'n' structure (n:{ested:[v,alue]}) which doesn't have
         // the "value" key that MyStruct wants to see.
         auto t = r["n"].maybe<MyType>(5);
-        REQUIRE(t->value == 500); // (93 + 7) * (mult=5)
+        REQUIRE(t->value == 500);  // (93 + 7) * (mult=5)
         REQUIRE(n.unused() == noneUsed);
     }
 }
