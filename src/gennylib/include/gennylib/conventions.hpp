@@ -90,8 +90,7 @@ public:  // Operators
         return value;
     }
 
-    [[nodiscard]]
-    constexpr auto count() const {
+    [[nodiscard]] constexpr auto count() const {
         return value.count();
     }
 
@@ -164,8 +163,7 @@ public:
 
     RateSpec(PercentileRateSpec s) : _spec{s} {}
 
-    [[nodiscard]]
-    std::optional<BaseRateSpec> getBaseSpec() const {
+    [[nodiscard]] std::optional<BaseRateSpec> getBaseSpec() const {
         if (auto pval = std::get_if<BaseRateSpec>(&_spec)) {
             return *pval;
         } else {
@@ -173,8 +171,7 @@ public:
         }
     }
 
-    [[nodiscard]]
-    std::optional<PercentileRateSpec> getPercentileSpec() const {
+    [[nodiscard]] std::optional<PercentileRateSpec> getPercentileSpec() const {
         if (auto pval = std::get_if<PercentileRateSpec>(&_spec)) {
             return *pval;
         } else {
@@ -226,7 +223,7 @@ struct NodeConvert<mongocxx::read_preference> {
     using ReadMode = mongocxx::read_preference::read_mode;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         auto readMode = node["ReadMode"].to<std::string>();
         if (readMode == "primary") {
             rhs.mode(ReadMode::k_primary);
@@ -256,7 +253,7 @@ struct NodeConvert<mongocxx::write_concern> {
     using type = mongocxx::write_concern;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         try {
             auto level = node["Level"].to<int>();
             rhs.nodes(level);
@@ -292,7 +289,7 @@ struct NodeConvert<mongocxx::read_concern> {
     }
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         auto level = node["Level"].to<std::string>();
         if (!isValidReadConcernString(level)) {
             std::stringstream msg;
@@ -315,7 +312,7 @@ struct NodeConvert<genny::PhaseRangeSpec> {
     using type = genny::PhaseRangeSpec;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         auto strRepr = node.to<std::string>();
 
         // use '..' as delimiter.
@@ -337,8 +334,8 @@ struct NodeConvert<genny::PhaseRangeSpec> {
             }
         }
 
-        genny::IntegerSpec start {};
-        genny::IntegerSpec end {};
+        genny::IntegerSpec start{};
+        genny::IntegerSpec end{};
 
         auto startYaml = NodeSource(strRepr.substr(0, delimPos), node.path());
         auto endYaml = NodeSource(strRepr.substr(delimPos + delimiter.size()), node.path());
@@ -376,7 +373,7 @@ struct NodeConvert<genny::BaseRateSpec> {
     using type = genny::BaseRateSpec;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         auto strRepr = node.to<std::string>();
 
         // Use space as the delimiter.
@@ -415,7 +412,7 @@ struct NodeConvert<genny::PercentileRateSpec> {
     using type = genny::PercentileRateSpec;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         auto strRepr = node.to<std::string>();
 
         // Use percent as the delimiter.
@@ -462,7 +459,7 @@ struct NodeConvert<genny::RateSpec> {
     using type = genny::RateSpec;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         auto strRepr = node.to<std::string>();
         auto nodeYaml = NodeSource(strRepr, node.path());
 
@@ -499,7 +496,7 @@ struct NodeConvert<genny::IntegerSpec> {
     using type = genny::IntegerSpec;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
 
         auto strRepr = node.to<std::string>();
         size_t pos = 0;
@@ -528,7 +525,6 @@ struct NodeConvert<genny::IntegerSpec> {
 };
 
 
-
 /**
  * Convert between YAML and genny::Time.
  *
@@ -539,7 +535,7 @@ struct NodeConvert<genny::TimeSpec> {
     using type = genny::TimeSpec;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         auto strRepr = node.to<std::string>();
 
         // Use space as the delimiter.
@@ -554,7 +550,7 @@ struct NodeConvert<genny::TimeSpec> {
             BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException(msg.str()));
         }
 
-        NodeSource timeCountYaml {strRepr.substr(0, spacePos), node.path()};
+        NodeSource timeCountYaml{strRepr.substr(0, spacePos), node.path()};
         auto timeCount = timeCountYaml.root().to<genny::IntegerSpec>().value;
 
         auto timeUnit = strRepr.substr(spacePos + 1);
@@ -583,7 +579,7 @@ struct NodeConvert<genny::TimeSpec> {
     }
 };
 
-}  // namespace YAML
+}  // namespace genny
 
 
 #endif  // HEADER_CC9B7EF0_9FB9_4AD4_B64C_DC7AE48F72A6_INCLUDED

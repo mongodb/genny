@@ -41,7 +41,7 @@ struct NodeConvert<mongocxx::options::aggregate> {
     using type = mongocxx::options::aggregate;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         if (node["AllowDiskUse"]) {
             auto allowDiskUse = node["AllowDiskUse"].to<bool>();
             rhs.allow_disk_use(allowDiskUse);
@@ -80,7 +80,7 @@ struct NodeConvert<mongocxx::options::bulk_write> {
     using type = mongocxx::options::bulk_write;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         if (node["BypassDocumentValidation"]) {
             auto bypassDocValidation = node["BypassDocumentValidation"].to<bool>();
             rhs.bypass_document_validation(bypassDocValidation);
@@ -102,7 +102,7 @@ struct NodeConvert<mongocxx::options::count> {
     using type = mongocxx::options::count;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         if (node["Hint"]) {
             auto h = node["Hint"].to<std::string>();
             auto hint = mongocxx::hint(h);
@@ -129,7 +129,7 @@ struct NodeConvert<mongocxx::options::estimated_document_count> {
     using type = mongocxx::options::estimated_document_count;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         if (node["MaxTime"]) {
             auto maxTime = node["MaxTime"].to<genny::TimeSpec>();
             rhs.max_time(std::chrono::milliseconds{maxTime});
@@ -148,7 +148,7 @@ struct NodeConvert<mongocxx::options::insert> {
     using type = mongocxx::options::insert;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         if (node["Ordered"]) {
             rhs.ordered(node["Ordered"].to<bool>());
         }
@@ -167,7 +167,7 @@ struct NodeConvert<mongocxx::options::transaction> {
     using type = mongocxx::options::transaction;
 
     static type convert(const Node& node) {
-        type rhs {};
+        type rhs{};
         if (node["WriteConcern"]) {
             auto wc = node["WriteConcern"].to<mongocxx::write_concern>();
             rhs.write_concern(wc);
@@ -183,7 +183,7 @@ struct NodeConvert<mongocxx::options::transaction> {
         return rhs;
     }
 };
-}  // namespace YAML
+}  // namespace genny
 
 namespace {
 

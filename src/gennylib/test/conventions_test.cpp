@@ -177,10 +177,9 @@ TEST_CASE("genny::RateSpec conversions") {
                           .to<RateSpec>()
                           .getPercentileSpec());
 
-        REQUIRE(fromYaml("GlobalRate: 30%")["GlobalRate"]
-                    .to<RateSpec>()
-                    .getPercentileSpec()
-                    ->percent == 30);
+        REQUIRE(
+            fromYaml("GlobalRate: 30%")["GlobalRate"].to<RateSpec>().getPercentileSpec()->percent ==
+            30);
         REQUIRE_FALSE(fromYaml("GlobalRate: 30%")["GlobalRate"].to<RateSpec>().getBaseSpec());
     }
 
