@@ -36,6 +36,65 @@ struct HasConversionSpecialization {
 
 // namespace genny {
 
+TEST_CASE("Unused Values for strict mode") {
+    NodeSource n{R"(
+a: [1, 2, 3]
+b: false
+c: []
+n: { ested: [v, alue] }
+"
+    )", ""};
+
+    const auto noneUsed = UnusedNodes{
+        "", "/ ", "/a", "/a/0", "/a/1", "/a/2", "/b", "/c", "/n",
+        "/n/ested", "/n/ested/0", "/n/ested/1"
+    };
+
+    const auto onlyUsed = [=](std::initializer_list<std::string> ks) -> UnusedNodes {
+        auto out = noneUsed;
+        for(auto&& k : ks) {
+            out.erase(std::remove_if(out.begin(), out.end(),
+                                   [&](const std::string& c) { return c == k; }), out.end());
+        }
+        return out;
+    };
+
+    SECTION("None Used") {
+        REQUIRE(n.unused() == noneUsed);
+    }
+    SECTION("Only Root Used") {
+        const auto& r = n.root();
+        REQUIRE(n.unused() == noneUsed);
+    }
+    SECTION("Non-existent key used") {
+        const auto& r = n.root();
+        auto m = r["does not exist"].maybe<int>();
+        REQUIRE(!m);
+        REQUIRE(n.unused() == noneUsed);
+    }
+    SECTION("List used but no items used") {
+        const auto& r = n.root();
+        REQUIRE(r["a"]);
+        REQUIRE(n.unused() == noneUsed);
+    }
+    SECTION("List of ints used via convert structs only uses the list not the items") {
+        // This is arguably a bug, but working around it is tedious.
+        //
+        // In the case of .to<X>, yaml-cpp's built-in conversions
+        // for std containers doesn't consult with genny::Node.
+        const auto& r = n.root();
+        REQUIRE(r["a"].to<std::vector<int>>() == std::vector<int>{1,2,3});
+        REQUIRE(n.unused() == onlyUsed({"/a"}));
+    }
+    SECTION("Multiple items in a list used") {
+        const auto& r = n.root();
+        REQUIRE(r["a"][0].to<int>() == 1);
+        REQUIRE(r["a"][1].to<int>() == 2);
+        // Note we still didn't use "/a" despite using its children
+        REQUIRE(n.unused() == onlyUsed({"/a/0", "/a/1"}));
+    }
+}
+
 TEST_CASE("Nested sequence like map") {
     NodeSource nodeSource("a: []", "");
     const auto& yaml = nodeSource.root();

@@ -65,6 +65,9 @@ NodeSource::NodeSource(std::string yaml, std::string path)
 
 NodeSource::~NodeSource() = default;
 
+UnusedNodes NodeSource::unused() const {
+    return this->_root->unused();
+}
 
 //
 // v1::NodeKey
@@ -147,6 +150,7 @@ public:
         : _self{self},
           _keyOrder{},
           _children{constructChildren(path, _keyOrder, yaml)},
+          _used{false},
           _yaml{yaml},
           _path{path} {}
 
@@ -161,7 +165,26 @@ public:
     }
 
     const YAML::Node yaml() const {
+        this->_used = true;
         return _yaml;
+    }
+
+    UnusedNodes unused() const {
+        UnusedNodes out{};
+        if (!this->_used) {
+            out.push_back(this->path());
+        }
+        for (auto&& [_, child] : this->_children) {
+            if (child->_impl->_yaml == _zombie) {
+                // Empty/zombie children
+                continue;
+            }
+            const auto childUnused = child->unused();
+            for(auto&& u : childUnused) {
+                out.push_back(u);
+            }
+        }
+        return out;
     }
 
     Node::Type type() const {
@@ -252,6 +275,7 @@ private:
     // these 2 need to be mutable to generate placeholder nodes for non-existent keys.
     mutable ChildKeys _keyOrder;  // maintain insertion-order
     mutable Children _children;
+    mutable bool _used;
     const YAML::Node _yaml;
     const v1::NodeKey::Path _path;
 };
@@ -310,6 +334,10 @@ size_t Node::size() const {
 
 const YAML::Node Node::yaml() const {
     return _impl->yaml();
+}
+
+UnusedNodes Node::unused() const {
+    return _impl->unused();
 }
 
 Node::operator bool() const {
