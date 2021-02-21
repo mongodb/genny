@@ -43,14 +43,10 @@ b: false
 c: []
 n: { ested: [v, alue] }
 t: { value: 11 }
-"
-    )",
-                       ""};
+)", ""};
     const auto& r = n.root();
 
     const auto noneUsed = UnusedNodes{// We do depth-first.
-                                      // TODO: why do we have a '/ ' and '' node?
-                                      "/ ",
                                       "/a/0",
                                       "/a/1",
                                       "/a/2",
@@ -130,7 +126,7 @@ t: { value: 11 }
         REQUIRE(r["n"]["ested"][0].to<std::string>() == "v");
         REQUIRE(r["n"]["ested"][1].to<std::string>() == "alue");
         REQUIRE(r["t"]["value"].to<int>() == 11);
-        REQUIRE(r.unused() == UnusedNodes{"/ ", ""});
+        REQUIRE(r.unused().empty());
     }
     SECTION("Non-existent key used") {
         auto m = r["does not exist"].maybe<int>();

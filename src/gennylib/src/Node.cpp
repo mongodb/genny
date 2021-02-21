@@ -171,11 +171,11 @@ public:
 
     UnusedNodes unused() const {
         UnusedNodes out{};
+        if (_self->_impl->_yaml == _zombie) {
+            // Empty/zombie nodes don't count
+            return out;
+        }
         for (auto&& [_, child] : this->_children) {
-            if (child->_impl->_yaml == _zombie) {
-                // Empty/zombie children
-                continue;
-            }
             const auto childUnused = child->unused();
             for (auto&& u : childUnused) {
                 out.push_back(u);
