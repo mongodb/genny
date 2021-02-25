@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <string>
-#include <optional>
-#include <memory>
-#include <bsoncxx/json.hpp>
-#include <bsoncxx/types.hpp>
 #include <boost/log/trivial.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/json.hpp>
+#include <bsoncxx/types.hpp>
+#include <memory>
+#include <optional>
+#include <string>
 
 #include <gennylib/v1/Topology.hpp>
 
@@ -31,33 +31,35 @@ TopologyVisitor::~TopologyVisitor() {}
 
 TopologyDescription::~TopologyDescription() {}
 
-void MongodDescription::accept(TopologyVisitor& v) { 
+void MongodDescription::accept(TopologyVisitor& v) {
     v.onMongod(*this);
 }
 
-void MongosDescription::accept(TopologyVisitor& v) { v.onMongos(*this); }
+void MongosDescription::accept(TopologyVisitor& v) {
+    v.onMongos(*this);
+}
 
-void ReplSetDescription::accept(TopologyVisitor& v) { 
-    v.onBeforeReplSet(*this); 
+void ReplSetDescription::accept(TopologyVisitor& v) {
+    v.onBeforeReplSet(*this);
     for (int i = 0; i < nodes.size() - 1; i++) {
         nodes[i].accept(v);
         v.onBetweenMongods(*this);
     }
     nodes[nodes.size() - 1].accept(v);
-    v.onAfterReplSet(*this); 
+    v.onAfterReplSet(*this);
 }
 
-void ShardedDescription::accept(TopologyVisitor& v) { 
-    v.onBeforeShardedCluster(*this); 
+void ShardedDescription::accept(TopologyVisitor& v) {
+    v.onBeforeShardedCluster(*this);
     configsvr.accept(v);
 
-    v.onBeforeShards(*this); 
+    v.onBeforeShards(*this);
     for (int i = 0; i < shards.size() - 1; i++) {
         shards[i].accept(v);
         v.onBetweenShards(*this);
     }
     shards[shards.size() - 1].accept(v);
-    v.onAfterShards(*this); 
+    v.onAfterShards(*this);
 
     v.onBeforeMongoses(*this);
     for (int i = 0; i < mongoses.size() - 1; i++) {
@@ -67,16 +69,18 @@ void ShardedDescription::accept(TopologyVisitor& v) {
     mongoses[mongoses.size() - 1].accept(v);
     v.onAfterMongoses(*this);
 
-    v.onAfterShardedCluster(*this); 
+    v.onAfterShardedCluster(*this);
 }
 
 DBConnection::~DBConnection() {}
 
 MongoConnection::MongoConnection(ConnectionUri uri) : _client(mongocxx::uri(uri)) {}
 
-ConnectionUri MongoConnection::uri() const { return _client.uri().to_string(); }
+ConnectionUri MongoConnection::uri() const {
+    return _client.uri().to_string();
+}
 
-bsoncxx::document::value MongoConnection::runAdminCommand(std::string command) { 
+bsoncxx::document::value MongoConnection::runAdminCommand(std::string command) {
     using bsoncxx::builder::basic::kvp;
     using bsoncxx::builder::basic::make_document;
 
@@ -101,13 +105,13 @@ std::string Topology::nameToUri(const std::string& name) {
     return _factory.makeUri();
 }
 
-void Topology::accept(TopologyVisitor& v) { 
-        if (_topologyDesc) {
-            v.onBeforeTopology(*_topologyDesc);
-            _topologyDesc->accept(v); 
-            v.onAfterTopology(*_topologyDesc);
-        }
+void Topology::accept(TopologyVisitor& v) {
+    if (_topologyDesc) {
+        v.onBeforeTopology(*_topologyDesc);
+        _topologyDesc->accept(v);
+        v.onAfterTopology(*_topologyDesc);
     }
+}
 
 void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
     auto res = connection.runAdminCommand("isMaster");
@@ -152,7 +156,7 @@ void Topology::findConnectedNodesViaMongos(DBConnection& connection) {
     class ReplSetRetriever : public TopologyVisitor {
     public:
         void onBeforeReplSet(const ReplSetDescription& desc) override {
-            replSet = desc; 
+            replSet = desc;
         }
         ReplSetDescription replSet;
     };
@@ -207,7 +211,6 @@ void Topology::update(DBConnection& connection) {
     } else {
         computeDataMemberConnectionStrings(connection);
     }
-
 }
 
 void ToJsonVisitor::onBeforeTopology(const TopologyDescription&) {
@@ -215,11 +218,19 @@ void ToJsonVisitor::onBeforeTopology(const TopologyDescription&) {
     _result.clear();
 }
 
-void ToJsonVisitor::onMongod(const MongodDescription& desc) { _result << "{mongodUri: " << desc.mongodUri << "}"; }
-void ToJsonVisitor::onBetweenMongods(const ReplSetDescription&) { _result << ", "; }
+void ToJsonVisitor::onMongod(const MongodDescription& desc) {
+    _result << "{mongodUri: " << desc.mongodUri << "}";
+}
+void ToJsonVisitor::onBetweenMongods(const ReplSetDescription&) {
+    _result << ", ";
+}
 
-void ToJsonVisitor::onMongos(const MongosDescription& desc) { _result << "{mongosUri: " << desc.mongosUri << "}"; }
-void ToJsonVisitor::onBetweenMongoses(const ShardedDescription&) { _result << ", "; }
+void ToJsonVisitor::onMongos(const MongosDescription& desc) {
+    _result << "{mongosUri: " << desc.mongosUri << "}";
+}
+void ToJsonVisitor::onBetweenMongoses(const ShardedDescription&) {
+    _result << ", ";
+}
 
 void ToJsonVisitor::onBeforeReplSet(const ReplSetDescription& desc) {
     if (desc.configsvr) {
@@ -227,19 +238,37 @@ void ToJsonVisitor::onBeforeReplSet(const ReplSetDescription& desc) {
     }
     _result << "{primaryUri: " << desc.primaryUri << ", nodes: [";
 }
-void ToJsonVisitor::onAfterReplSet(const ReplSetDescription&) { _result << "]}"; }
+void ToJsonVisitor::onAfterReplSet(const ReplSetDescription&) {
+    _result << "]}";
+}
 
-void ToJsonVisitor::onBeforeShardedCluster(const ShardedDescription&) { _result << "{"; }
-void ToJsonVisitor::onAfterShardedCluster(const ShardedDescription&) { _result << "}"; }
+void ToJsonVisitor::onBeforeShardedCluster(const ShardedDescription&) {
+    _result << "{";
+}
+void ToJsonVisitor::onAfterShardedCluster(const ShardedDescription&) {
+    _result << "}";
+}
 
-void ToJsonVisitor::onBeforeShards(const ShardedDescription&) { _result << " shards: ["; }
-void ToJsonVisitor::onBetweenShards(const ShardedDescription&) { _result << ", "; }
-void ToJsonVisitor::onAfterShards(const ShardedDescription&) { _result << "], "; }
+void ToJsonVisitor::onBeforeShards(const ShardedDescription&) {
+    _result << " shards: [";
+}
+void ToJsonVisitor::onBetweenShards(const ShardedDescription&) {
+    _result << ", ";
+}
+void ToJsonVisitor::onAfterShards(const ShardedDescription&) {
+    _result << "], ";
+}
 
-void ToJsonVisitor::onBeforeMongoses(const ShardedDescription&) { _result << " mongoses: ["; }
-void ToJsonVisitor::onAfterMongoses(const ShardedDescription&) { _result << "]"; }
+void ToJsonVisitor::onBeforeMongoses(const ShardedDescription&) {
+    _result << " mongoses: [";
+}
+void ToJsonVisitor::onAfterMongoses(const ShardedDescription&) {
+    _result << "]";
+}
 
-std::string ToJsonVisitor::str() { return _result.str(); }
+std::string ToJsonVisitor::str() {
+    return _result.str();
+}
 
 
-}  // namespace genny
+}  // namespace genny::v1

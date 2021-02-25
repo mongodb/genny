@@ -1,9 +1,11 @@
 import json
+import shutil
 import unittest
+import tempfile
 from typing import NamedTuple, List, Optional
 from unittest.mock import MagicMock
 
-from gennylib.auto_tasks import (
+from genny.tasks.auto_tasks import (
     CurrentBuildInfo,
     CLIOperation,
     WorkloadLister,
@@ -23,7 +25,9 @@ class MockReader(YamlReader):
     def __init__(self, files: List[MockFile]):
         self.files = files
 
-    def load(self, path: str):
+    def load(self, workspace_root: str, path: str):
+        if not self.exists(path):
+            raise Exception(f"Yaml file {path} not configured.")
         return self._find_file(path).yaml_conts
 
     def exists(self, path: str) -> bool:
@@ -38,8 +42,14 @@ class MockReader(YamlReader):
 
 
 class BaseTestClass(unittest.TestCase):
+    def setUp(self):
+        self.workspace_root = tempfile.mkdtemp()
+
+    def cleanUp(self):
+        shutil.rmtree(self.workspace_root)
+
     def assert_result(
-        self, given_files: List[MockFile], and_args: List[str], then_writes: dict, to_file: str
+        self, given_files: List[MockFile], and_mode: str, then_writes: dict, to_file: str
     ):
         # Create "dumb" mocks.
         lister: WorkloadLister = MagicMock(name="lister", spec=WorkloadLister, instance=True)
@@ -58,13 +68,12 @@ class BaseTestClass(unittest.TestCase):
             v.base_name for v in given_files if v.modified and "/" in v.base_name
         ]
 
-        # Put a dummy argv[0] as test sugar
-        and_args.insert(0, "dummy.py")
-
         # And send them off into the world.
-        build = CurrentBuildInfo(reader)
-        op = CLIOperation.parse(and_args, reader)
-        repo = Repo(lister, reader)
+        build = CurrentBuildInfo(reader, workspace_root=".")
+        op = CLIOperation.create(
+            and_mode, reader, genny_repo_root=".", workspace_root=self.workspace_root
+        )
+        repo = Repo(lister, reader, workspace_root=self.workspace_root)
         tasks = repo.tasks(op, build)
         writer = ConfigWriter(op)
 
@@ -75,7 +84,6 @@ class BaseTestClass(unittest.TestCase):
         except AssertionError:
             print(parsed)
             raise
-        self.assertEqual(op.output_file, to_file)
 
 
 TIMEOUT_COMMAND = {
@@ -88,7 +96,7 @@ class AutoTasksTests(BaseTestClass):
     def test_all_tasks(self):
         self.assert_result(
             given_files=[EMPTY_UNMODIFIED, MULTI_MODIFIED, EXPANSIONS],
-            and_args=["all_tasks"],
+            and_mode="all_tasks",
             then_writes={
                 "tasks": [
                     {
@@ -144,7 +152,7 @@ class AutoTasksTests(BaseTestClass):
     def test_variant_tasks(self):
         self.assert_result(
             given_files=[EXPANSIONS, MULTI_UNMODIFIED, MATCHES_UNMODIFIED],
-            and_args=["variant_tasks"],
+            and_mode="variant_tasks",
             then_writes={
                 "buildvariants": [
                     {
@@ -171,7 +179,7 @@ class AutoTasksTests(BaseTestClass):
                 NOT_MATCHES_MODIFIED,
                 NOT_MATCHES_UNMODIFIED,
             ],
-            and_args=["patch_tasks"],
+            and_mode="patch_tasks",
             then_writes={
                 "buildvariants": [
                     {

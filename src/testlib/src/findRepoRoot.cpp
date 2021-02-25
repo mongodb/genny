@@ -15,6 +15,7 @@
 #include <testlib/findRepoRoot.hpp>
 
 #include <boost/filesystem.hpp>
+#include <cstdlib>
 #include <sstream>
 
 namespace genny {
@@ -31,14 +32,40 @@ constexpr auto ROOT_FILE = ".genny-root";
 //
 std::string findRepoRoot() {
     using namespace boost::filesystem;
+    // NB for below:
+    // canonical resolves foo/../bar to bar; it requires an absolute path.
 
-    auto fileSystemRoot = path("/");
+
+    // Check for the GENNY_REPO_ROOT var set by the 'run-genny' wrapper.
+    if (const auto rootEnvVar = getenv("GENNY_REPO_ROOT")) {
+        if (!exists(path(rootEnvVar) / ROOT_FILE)) {
+            std::stringstream msg;
+            msg << "Cannot find '" << ROOT_FILE << "' in path from  GENNY_REPO_ROOT env var '"
+                << rootEnvVar << "'";
+            throw std::invalid_argument(msg.str());
+        }
+        return rootEnvVar;
+    }
+
+
+    {
+        // Check for conventional workspace which has cwd=. and ./src/{repo} for all repos.
+        auto conventionalPath = path("./src/genny/");
+        if (exists(conventionalPath / ROOT_FILE)) {
+            return conventionalPath.string();
+        }
+    }
+
+
+    // Otherwise assume we're somewhere in ....../genny/some/subdir/of/the/genny/repo
+    // and look up the directory tree for the .genny-repo-root file.
+    const auto fileSystemRoot = canonical(absolute(path("/")));
 
     auto curr = current_path();
     const auto start = curr;
 
     while (!exists(curr / ROOT_FILE)) {
-        curr = curr / "..";
+        curr = canonical(absolute(curr / "..", fileSystemRoot));
         if (curr == fileSystemRoot) {
             std::stringstream msg;
             msg << "Cannot find '" << ROOT_FILE << "' in '" << start << "'";

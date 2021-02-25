@@ -6,14 +6,18 @@ import enum
 import glob
 import os
 import re
-import subprocess
-import sys
 from typing import NamedTuple, List, Optional, Set
-
 import yaml
+import structlog
+
 from shrub.command import CommandDefinition
 from shrub.config import Configuration
 from shrub.variant import TaskSpec
+
+from genny.cmd_runner import run_command
+
+SLOG = structlog.get_logger(__name__)
+
 
 #
 # The classes are listed here in dependency order to avoid having to quote typenames.
@@ -27,22 +31,26 @@ class YamlReader:
     # You could argue that YamlReader, WorkloadLister, and maybe even Repo
     # should be the same class - perhaps renamed to System or something?
     # Maybe make these methods static to avoid having to pass an instance around.
-    def load(self, path: str) -> dict:
+    def load(self, workspace_root: str, path: str) -> dict:
         """
-        :param path: path relative to cwd
+        :param workspace_root: effective cwd
+        :param path: path relative to workspace_root
         :return: deserialized yaml file
         """
-        if not os.path.exists(path):
-            raise Exception(f"No {path} in cwd={os.getcwd()}")
-        with open(path) as exp:
-            return yaml.safe_load(exp)
+        joined = os.path.join(workspace_root, path)
+        if not os.path.exists(joined):
+            raise Exception(f"File {joined} not found.")
+        with open(joined) as handle:
+            return yaml.safe_load(handle)
 
     # Really just here for easy mocking.
     def exists(self, path: str) -> bool:
         return os.path.exists(path)
 
-    def load_set(self, files: List[str]) -> dict:
+    def load_set(self, workspace_root: str, files: List[str]) -> dict:
         """
+        :param workspace_root:
+            effective cwd
         :param files:
             files to load relative to cwd
         :return:
@@ -52,7 +60,7 @@ class YamlReader:
         out = dict()
         for to_load in [f for f in files if self.exists(f)]:
             basename = str(os.path.basename(to_load).split(".yml")[0])
-            out[basename] = self.load(to_load)
+            out[basename] = self.load(workspace_root=workspace_root, path=to_load)
         return out
 
 
@@ -62,13 +70,13 @@ class WorkloadLister:
     Separate from the Repo class for easier testing.
     """
 
-    def __init__(self, repo_root: str, reader: YamlReader):
-        self.repo_root = repo_root
+    def __init__(self, genny_repo_root: str, reader: YamlReader):
+        self.genny_repo_root = genny_repo_root
         self._expansions = None
         self.reader = reader
 
     def all_workload_files(self) -> Set[str]:
-        pattern = os.path.join(self.repo_root, "src", "workloads", "**", "*.yml")
+        pattern = os.path.join(self.genny_repo_root, "src", "workloads", "**", "*.yml")
         return {*glob.glob(pattern)}
 
     def modified_workload_files(self) -> Set[str]:
@@ -77,8 +85,8 @@ class WorkloadLister:
             "git diff --name-only --diff-filter=AMR "
             "$(git merge-base HEAD origin/master) -- src/workloads/"
         )
-        lines = _check_output(self.repo_root, command, shell=True)
-        return {os.path.join(self.repo_root, line) for line in lines if line.endswith(".yml")}
+        lines = run_command(cmd=[command], cwd=self.genny_repo_root, shell=True, check=True).stdout
+        return {os.path.join(self.genny_repo_root, line) for line in lines if line.endswith(".yml")}
 
 
 class OpName(enum.Enum):
@@ -91,6 +99,9 @@ class OpName(enum.Enum):
     PATCH_TASKS = object()
 
 
+#         output_file = "./build/TaskJSON/Tasks.json"
+
+
 class CLIOperation(NamedTuple):
     """
     Represents the "input" to what we're doing"
@@ -98,36 +109,32 @@ class CLIOperation(NamedTuple):
 
     mode: OpName
     variant: Optional[str]
-    output_file_suffix: str
-
-    @property
-    def repo_root(self) -> str:
-        return "./src/genny"
-
-    @property
-    def output_file(self) -> str:
-        return self.output_file_suffix
+    genny_repo_root: str
+    workspace_root: str
 
     @staticmethod
-    def parse(argv: List[str], reader: YamlReader) -> "CLIOperation":
+    def create(
+        mode_name: str, reader: YamlReader, genny_repo_root: str, workspace_root: str
+    ) -> "CLIOperation":
         mode = OpName.ALL_TASKS
         variant = None
 
-        output_file = "./build/TaskJSON/Tasks.json"
-        if argv[1] == "all_tasks":
+        if mode_name == "all_tasks":
             mode = OpName.ALL_TASKS
-        if argv[1] == "patch_tasks":
+        if mode_name == "patch_tasks":
             mode = OpName.PATCH_TASKS
-            variant = reader.load("expansions.yml")["build_variant"]
-        if argv[1] == "variant_tasks":
+            variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
+        if mode_name == "variant_tasks":
             mode = OpName.VARIANT_TASKS
-            variant = reader.load("expansions.yml")["build_variant"]
-        return CLIOperation(mode, variant, output_file)
+            variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
+        return CLIOperation(
+            mode, variant, genny_repo_root=genny_repo_root, workspace_root=workspace_root
+        )
 
 
 class CurrentBuildInfo:
-    def __init__(self, reader: YamlReader):
-        self.conts = reader.load("expansions.yml")
+    def __init__(self, reader: YamlReader, workspace_root: str):
+        self.conts = reader.load(workspace_root, "expansions.yml")
 
     def has(self, key: str, acceptable_values: List[str]) -> bool:
         """
@@ -164,11 +171,11 @@ class Workload:
     setups: Optional[List[str]] = None
     """The PrepareEnvironmentWith:mongodb_setup block, if any"""
 
-    def __init__(self, file_path: str, is_modified: bool, reader: YamlReader):
+    def __init__(self, workspace_root: str, file_path: str, is_modified: bool, reader: YamlReader):
         self.file_path = file_path
         self.is_modified = is_modified
 
-        conts = reader.load(self.file_path)
+        conts = reader.load(workspace_root, self.file_path)
 
         if "AutoRun" not in conts:
             return
@@ -238,15 +245,24 @@ class Repo:
     Represents the git checkout.
     """
 
-    def __init__(self, lister: WorkloadLister, reader: YamlReader):
+    def __init__(self, lister: WorkloadLister, reader: YamlReader, workspace_root: str):
         self._modified_repo_files = None
+        self.workspace_root = workspace_root
         self.lister = lister
         self.reader = reader
 
     def all_workloads(self) -> List[Workload]:
         all_files = self.lister.all_workload_files()
         modified = self.lister.modified_workload_files()
-        return [Workload(fpath, fpath in modified, self.reader) for fpath in all_files]
+        return [
+            Workload(
+                workspace_root=self.workspace_root,
+                file_path=fpath,
+                is_modified=fpath in modified,
+                reader=self.reader,
+            )
+            for fpath in all_files
+        ]
 
     def modified_workloads(self) -> List[Workload]:
         return [workload for workload in self.all_workloads() if workload.is_modified]
@@ -305,22 +321,27 @@ class ConfigWriter:
             config: Configuration = self.variant_tasks(tasks, self.op.variant)
         else:
             config = self.all_tasks_modern(tasks)
+
+        output_file = os.path.join(self.op.workspace_root, "build", "TaskJSON", "Tasks.json")
+
         success = False
         raised = None
         if write:
             try:
-                os.makedirs(os.path.dirname(self.op.output_file), exist_ok=True)
-                if os.path.exists(self.op.output_file):
-                    os.unlink(self.op.output_file)
-                with open(self.op.output_file, "w") as output:
-                    output.write(config.to_json())
+                out_text = config.to_json()
+                os.makedirs(os.path.dirname(output_file), exist_ok=True)
+                if os.path.exists(output_file):
+                    os.unlink(output_file)
+                with open(output_file, "w") as output:
+                    output.write(out_text)
+                    SLOG.debug("Wrote task json", output_file=output_file, contents=out_text)
                 success = True
             except Exception as e:
                 raised = e
                 raise e
             finally:
-                print(
-                    f"{'Succeeded' if success else 'Failed'} to write to {self.op.output_file} from cwd={os.getcwd()}."
+                SLOG.info(
+                    f"{'Succeeded' if success else 'Failed'} to write to {output_file} from cwd={os.getcwd()}."
                     f"{raised if raised else ''}"
                 )
         return config
@@ -356,36 +377,18 @@ class ConfigWriter:
         return c
 
 
-def _check_output(cwd, *args, **kwargs):
-    old_cwd = os.getcwd()
-    try:
-        if not os.path.exists(cwd):
-            raise Exception(f"Cannot chdir to {cwd} from cwd={os.getcwd()}")
-        os.chdir(cwd)
-        out = subprocess.check_output(*args, **kwargs)
-    except subprocess.CalledProcessError as e:
-        print(e.output, file=sys.stderr)
-        raise e
-    finally:
-        os.chdir(old_cwd)
-
-    if out.decode() == "":
-        return []
-    return out.decode().strip().split("\n")
-
-
-def main() -> None:
-    argv = sys.argv
+def main(mode_name: str, genny_repo_root: str, workspace_root: str) -> None:
     reader = YamlReader()
-    build = CurrentBuildInfo(reader)
-    op = CLIOperation.parse(argv, reader)
-    lister = WorkloadLister(op.repo_root, reader)
-    repo = Repo(lister, reader)
-    tasks = repo.tasks(op, build)
+    build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
+    op = CLIOperation.create(
+        mode_name=mode_name,
+        reader=reader,
+        genny_repo_root=genny_repo_root,
+        workspace_root=workspace_root,
+    )
+    lister = WorkloadLister(genny_repo_root=genny_repo_root, reader=reader)
+    repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
+    tasks = repo.tasks(op=op, build=build)
 
     writer = ConfigWriter(op)
     writer.write(tasks)
-
-
-if __name__ == "__main__":
-    main()

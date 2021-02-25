@@ -62,8 +62,9 @@ WorkloadContext::WorkloadContext(const Node& node,
                                 << " is deprecated in favor of ftdc.";
     }
 
-    auto metricsPath =
-        ((*this)["Metrics"]["Path"]).maybe<std::string>().value_or("build/genny-metrics");
+    auto metricsPath = ((*this)["Metrics"]["Path"])
+                           .maybe<std::string>()
+                           .value_or("build/WorkloadOutput/CedarMetrics");
     _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
 
 

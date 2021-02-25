@@ -2,7 +2,7 @@ test_kind: gennylib_test
 
 executor:
   config:
-    program_executable: build/src/cast_core/cast_core_test
+    program_executable: ./src/genny/build/src/cast_core/cast_core_test
     verbatim_arguments:
     - "--reporter"
     - "junit"
@@ -12,7 +12,7 @@ executor:
     - "12345"
     - "--success"
     - "--out"
-    - "build/cast_core_test.junit.xml"
+    - "./build/XUnitXML/cast_core_test.junit.xml"
     - "[sharded]"
   fixture:
     class: ShardedClusterFixture

@@ -13,12 +13,6 @@ include(GetGRpc)
 
 add_subdirectory(poplar)
 
-# <Jasper>
-if(ENABLE_JASPER)
-    add_subdirectory(jasper)
-endif()
-# </Jasper>
-
 # <Catch2>
 add_subdirectory(catch2)
 # </Catch2>

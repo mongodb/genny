@@ -444,7 +444,7 @@ create_header() {
     uuid_tag="$1"
     actor_name="$2"
 
-    create_header_text "$@" > "$(dirname "$0")/../src/cast_core/include/cast_core/actors/${actor_name}.hpp"
+    create_header_text "$@" > "$GENNY_REPO_ROOT/src/cast_core/include/cast_core/actors/${actor_name}.hpp"
 }
 
 create_impl() {
@@ -453,13 +453,13 @@ create_impl() {
     uuid_tag="$1"
     actor_name="$2"
 
-    create_impl_text "$@" > "$(dirname "$0")/../src/cast_core/src/${actor_name}.cpp"
+    create_impl_text "$@" > "$GENNY_REPO_ROOT/src/cast_core/src/${actor_name}.cpp"
 }
 
 create_workload_yml() {
     local actor_name
     actor_name="$1"
-cat << EOF > "$(dirname "$0")/../src/workloads/docs/${actor_name}.yml"
+cat << EOF > "$GENNY_REPO_ROOT/src/workloads/docs/${actor_name}.yml"
 SchemaVersion: 2018-07-01
 Owner: TODO put your github team name here e.g. @mongodb/stm
 
@@ -492,7 +492,7 @@ create_test() {
     local actor_name
     actor_name="$1"
 
-    cat << EOF > "$(dirname "$0")/../src/cast_core/test/${actor_name}_test.cpp"
+    cat << EOF > "$GENNY_REPO_ROOT/src/cast_core/test/${actor_name}_test.cpp"
 // Copyright ${year}-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -589,6 +589,12 @@ if [ -z "$actor_name" ]; then
     exit 2
 fi
 
+if [ -z "${GENNY_REPO_ROOT:-}" ]; then
+    echo "Must have GENNY_REPO_ROOT set. Ensure you're running via run-genny" > /dev/stderr
+    exit 3
+fi
+
+
 uuid_tag="$("$(dirname "$0")/generate-uuid-tag.sh")"
 
 create_header                "$uuid_tag" "$actor_name"
@@ -609,6 +615,7 @@ cat << EOF
 
 Build and test ${actor_name} with the following command:
 
+    # TODO: these paths aren't right any more
     ./scripts/lamp
     ./scripts/lamp cmake-test
     ./scripts/get-mongo-source.sh

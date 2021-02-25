@@ -161,6 +161,8 @@ public:
 
     explicit RegistryT() = default;
 
+    explicit RegistryT(bool assertMetricsBuffer) : RegistryT({}, {}, assertMetricsBuffer) {}
+
     explicit RegistryT(MetricsFormat format,
                        boost::filesystem::path pathPrefix,
                        bool assertMetricsBuffer = true)

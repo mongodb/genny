@@ -19,9 +19,7 @@
 
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/PhaseLoop.hpp>
-#include <gennylib/context.hpp>
 
-#include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
 
 #if defined(__APPLE__)
@@ -91,8 +89,7 @@ Nanosecond Loops<Task, Args...>::phaseLoop(Args&&... args) {
 template <class Task, class... Args>
 Nanosecond Loops<Task, Args...>::metricsLoop(Args&&... args) {
 
-    auto metrics = genny::metrics::Registry{};
-    metrics::Reporter reporter(metrics);
+    auto metrics = genny::metrics::Registry{false};
 
     auto dummyOp = metrics.operation("metricsLoop", "dummyOp", 0u);
     auto task = Task(std::forward<Args>(args)...);
@@ -110,15 +107,9 @@ Nanosecond Loops<Task, Args...>::metricsLoop(Args&&... args) {
 
 template <class Task, class... Args>
 Nanosecond Loops<Task, Args...>::metricsFtdcLoop(Args&&... args) {
-    boost::filesystem::path ph =
-        boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
-    auto metricsPath = (ph / "genny-metrics").string();
-    auto format = genny::metrics::MetricsFormat("ftdc");
-
-    auto metrics = genny::metrics::Registry{format, metricsPath, false};
-    metrics::Reporter reporter(metrics);
-
+    auto metrics = genny::metrics::Registry{false};
     auto dummyOp = metrics.operation("metricsFtdcLoop", "dummyOp", 0u);
+
     auto task = Task(std::forward<Args>(args)...);
 
     int64_t before = now();
@@ -128,8 +119,6 @@ Nanosecond Loops<Task, Args...>::metricsFtdcLoop(Args&&... args) {
         ctx.success();
     }
     int64_t after = now();
-
-    boost::filesystem::remove_all(metricsPath);
     return after - before;
 }
 
@@ -151,7 +140,6 @@ Nanosecond Loops<Task, Args...>::metricsPhaseLoop(Args&&... args) {
     auto task = Task(std::forward<Args>(args)...);
 
     auto metrics = genny::metrics::Registry{};
-    metrics::Reporter{metrics};
 
     auto dummyOp = metrics.operation("metricsLoop", "dummyOp", 0u);
 
@@ -182,13 +170,7 @@ Nanosecond Loops<Task, Args...>::metricsFtdcPhaseLoop(Args&&... args) {
         1};
     auto task = Task(std::forward<Args>(args)...);
 
-    boost::filesystem::path ph =
-        boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
-    auto metricsPath = (ph / "genny-metrics").string();
-    auto format = genny::metrics::MetricsFormat("ftdc");
-
-    auto metrics = genny::metrics::Registry{format, metricsPath, false};
-    metrics::Reporter{metrics};
+    auto metrics = genny::metrics::Registry{false};
 
     auto dummyOp = metrics.operation("metricsLoop", "dummyOp", 0u);
 
@@ -199,7 +181,6 @@ Nanosecond Loops<Task, Args...>::metricsFtdcPhaseLoop(Args&&... args) {
         ctx.success();
     }
     int64_t after = now();
-    boost::filesystem::remove_all(metricsPath);
 
     return after - before;
 }

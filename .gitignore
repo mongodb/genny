@@ -15,10 +15,13 @@ tags
 # generated
 build
 dist
+expansions.yml
 
 # python
 __pycache__
 venv
+genny_venv
+pip-requirements.txt
 .eggs/
 genny.egg-info
 
