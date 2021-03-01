@@ -187,7 +187,7 @@ struct Setup : public RunOperation {
         }
     }
 
-    ~Setup() override = default; 
+    ~Setup() override = default;
 
     void run() override {
         BOOST_LOG_TRIVIAL(info) << "Creating " << _collectionWindowSize << " initial collections.";
