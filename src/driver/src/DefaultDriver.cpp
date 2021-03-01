@@ -70,7 +70,7 @@ void reportMetrics(genny::metrics::Registry& metrics,
                    bool success,
                    metrics::clock::time_point startTime) {
     auto finishTime = metrics::clock::now();
-    auto actorSetup = metrics.operation(workloadName, "Setup", 0u);
+    auto actorSetup = metrics.operation("canary_" + workloadName, "Setup", 0u);
     auto outcome = success ? metrics::OutcomeType::kSuccess : metrics::OutcomeType::kFailure;
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finishTime - startTime);
     actorSetup.report(std::move(finishTime), std::move(duration), std::move(outcome));
@@ -153,8 +153,8 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     reportMetrics(metrics, workloadName, true, startTime);
 
-    auto startedActors = metrics.operation(workloadName, "ActorStarted", 0u);
-    auto finishedActors = metrics.operation(workloadName, "ActorFinished", 0u);
+    auto startedActors = metrics.operation("canary_" + workloadName, "ActorStarted", 0u);
+    auto finishedActors = metrics.operation("canary_" + workloadName, "ActorFinished", 0u);
 
     std::atomic<DefaultDriver::OutcomeCode> outcomeCode = DefaultDriver::OutcomeCode::kSuccess;
 
