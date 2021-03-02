@@ -187,7 +187,7 @@ And then run a workload:
 ```
 
 Logging currently goes to stdout and metrics data (ftdc) is written to
-`./build/WorkloadOutput/CedarMetrics`.
+`./build/CedarMetrics`.
 
 ## Creating New Actors
 
