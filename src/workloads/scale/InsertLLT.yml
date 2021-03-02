@@ -1,0 +1,54 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  Workload to Benchmark the effect of LongLivedTransactions on an Insert workload.
+
+GlobalDefaults:
+  # These two values should match those are the top of LLTPhases.yml
+  dbname: &dbname llt
+  DocumentCount: &NumDocs 10000000
+
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 500
+
+ActorTemplates:
+  - TemplateName: LoaderTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "InitialLoad"}}
+      Type: Loader
+      Database: *dbname
+      ClientName: Loader
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 10
+          PhaseConfig:
+            ExternalPhaseConfig:
+              Path: ../../phases/scale/LLTPhases.yml
+              Key: LoaderPhase
+
+Actors:
+# Setup
+- ActorFromTemplate:
+    TemplateName: LoaderTemplate
+    TemplateParameters:
+      Name: InitialLoad
+      Threads: 4
+- ActorFromTemplate:
+    TemplateName: LoaderTemplate
+    TemplateParameters:
+      Name: InitialLoadWithIndexes
+      Threads: 4
+      OnlyActiveInPhase: 2
+      Indexes: {}
+
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+    - replica
+    - single-replica
