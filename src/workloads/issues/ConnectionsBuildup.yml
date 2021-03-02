@@ -1,0 +1,101 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+# this workload created to reproduce SERVER-53853
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 1000
+
+Actors:
+- Name: EnableSharding
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: &db test
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+
+- Name: ShardCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0 # Collection0 is the default collection populated by the Loader.
+        key:
+          _id: 1
+  - *Nop
+  - *Nop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Threads: 1
+    Database: *db
+    CollectionCount: 1
+    DocumentCount: 50000
+    BatchSize: 10000
+    Document:
+      _id: {^Inc: {start: 1000}}
+      date: &date {^RandomDate: {min: "2020-01-01", max: {^Now: {}}}}
+      ticker: &ticker {^RandomString: {length: 3}}
+      price: &price {^RandomInt: {min: 1, max: 1000}}
+      quantity: &quantity {^RandomInt: {min: 1, max: 1000}}
+      fee: &fee {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+
+- Name: ConnectionsBuildup
+  Type: CrudActor
+  ClientName: Default
+  Database: *db
+  Threads: 500
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 30000
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter: {_id: {^RandomInt: {min: 1000, max: 50000}}}
+        Options:
+          ReadPreference:
+            ReadMode: secondaryPreferred
+
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1 # must be 1
+  Phases:
+  - LogEvery: 10 second # TimeSpec
+    Blocking: None # must be Blocking:None
+  - LogEvery: 10 second # TimeSpec
+    Blocking: None # must be Blocking:None
+  - LogEvery: 10 second # TimeSpec
+    Blocking: None # must be Blocking:None
+  - LogEvery: 1 minute # TimeSpec
+    Blocking: None # must be Blocking:None
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+    - shard
+    - shard-lite
+    - shard-single
