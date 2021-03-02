@@ -72,8 +72,7 @@ void reportMetrics(genny::metrics::Registry& metrics,
     auto finishTime = metrics::clock::now();
     // The "Setup" operation is a genny internal operation. We want the trend graph to be hidden by
     // default to not confuse users, so we prefix it with "canary_" to hit the
-    // CANARY_EXCLUSION_REGEX in
-    // https://github.com/evergreen-ci/evergreen/blob/9cb08ad5091b0c4d24d50d1c2f325ea42282eb3d/public/static/app/common/constants.js#L144
+    // CANARY_EXCLUSION_REGEX in https://git.io/Jtjdr
     auto actorSetup = metrics.operation("canary_" + workloadName, "Setup", 0u);
     auto outcome = success ? metrics::OutcomeType::kSuccess : metrics::OutcomeType::kFailure;
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finishTime - startTime);
@@ -159,8 +158,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     // The "ActorStarted" and "ActorFinished" operations are genny internal operations. We want the
     // trend graph to be hidden by default to not confuse users, so we prefix them with "canary_"
-    // to hit the CANARY_EXCLUSION_REGEX in
-    // https://github.com/evergreen-ci/evergreen/blob/9cb08ad5091b0c4d24d50d1c2f325ea42282eb3d/public/static/app/common/constants.js#L144
+    // to hit the CANARY_EXCLUSION_REGEX in https://git.io/Jtjdr
     auto startedActors = metrics.operation("canary_" + workloadName, "ActorStarted", 0u);
     auto finishedActors = metrics.operation("canary_" + workloadName, "ActorFinished", 0u);
 
