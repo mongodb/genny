@@ -54,7 +54,7 @@ Actors:
     BatchSize: 10000
     Document:
       _id: {^Inc: {start: 1000}}
-      date: &date {^RandomDate: {min: "2019-01-01", max: "2020-01-01"}
+      date: &date {^RandomDate: {min: "2019-01-01", max: "2020-01-01"}}
       ticker: &ticker {^RandomString: {length: 3}}
       price: &price {^RandomInt: {min: 1, max: 1000}}
       quantity: &quantity {^RandomInt: {min: 1, max: 1000}}
