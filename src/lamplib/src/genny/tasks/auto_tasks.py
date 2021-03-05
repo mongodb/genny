@@ -223,18 +223,16 @@ class Workload:
                 if not build.has(key, acceptable_values):
                     msg = "Not scheduling workload"
                     okay = False
-                SLOG.info(msg,
-                          workload_base_name=self.file_base_name,
-                          key=key,
-                          acceptable_values=acceptable_values,
-                          build_variant=build.conts.get("build_variant", "unknown"))
+                SLOG.info(
+                    msg,
+                    workload_base_name=self.file_base_name,
+                    key=key,
+                    acceptable_values=acceptable_values,
+                    build_variant=build.conts.get("build_variant", "unknown"),
+                )
             return okay
 
-        return [
-            task
-            for task in self.all_tasks()
-            if meets_criteria()
-        ]
+        return [task for task in self.all_tasks() if meets_criteria()]
 
     # noinspection RegExpAnonymousGroup
     @staticmethod
