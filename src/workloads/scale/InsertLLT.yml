@@ -4,10 +4,10 @@ Description: |
   Workload to Benchmark the effect of LongLivedTransactions on an Insert workload.
 
 GlobalDefaults:
-  # These two values should match those are the top of LLTPhases.yml
+  # These values should match those are the top of LLTPhases.yml
   dbname: &dbname llt
-  DocumentCount: &NumDocs 10000000
-
+  InitialDocumentCount: &InitialNumDocs 10000000
+  SecondaryDocumentCount: &SecondaryNumDocs 10000000
 
 Clients:
   Default:
@@ -43,6 +43,7 @@ Actors:
     TemplateParameters:
       Name: InitialLoadWithIndexes
       Threads: 4
+      DocumentCount: *SecondaryNumDocs
       OnlyActiveInPhase: 2
       Indexes: {}
 
