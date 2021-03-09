@@ -8,6 +8,7 @@ GlobalDefaults:
   dbname: &dbname llt
   InitialDocumentCount: &InitialNumDocs 10000000
   SecondaryDocumentCount: &SecondaryNumDocs 10000000
+  InsertPhaseDocumentCount: &InsertPhaseNumDocs 250000
 
   Document: &Doc
     ts: {^Now: {}}
@@ -22,12 +23,75 @@ GlobalDefaults:
     - keys: {caid: 1, prid: 1, cuid: 1}
     - keys: {prid: 1, ts: 1, cuid: 1}
 
+  FiftyDocumentsList: &50DocumentList
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+    - *Doc
+
 LoaderPhase:
-    Repeat: 1
-    BatchSize: 100
-    Threads: 4
-    DocumentCount: { ^Parameter: { Name: "DocumentCount", Default: *InitialNumDocs } }
-    Database: *dbname
-    CollectionCount: 4
-    Document: *Doc
-    Indexes: { ^Parameter: { Name: "Indexes", Default: *LLTIndexes } }
+  Repeat: 1
+  BatchSize: 100
+  Database: *dbname
+  CollectionCount: 4
+  Threads: 4
+  DocumentCount: { ^Parameter: { Name: "DocumentCount", Default: *InitialNumDocs } }
+  Indexes: { ^Parameter: { Name: "Indexes", Default: *LLTIndexes } }
+  Document: *Doc
+
+InsertPhase.50:
+  DocumentCount: { ^Parameter: { Name: "DocumentCount", Default: *InsertPhaseNumDocs } }
+  Duration: 1 minutes
+  RecordFailure: true
+  Collection: { ^Parameter: { Name: "Collection", Default: "Collection0" } }
+  GlobalRate: { ^Parameter: { Name: "GlobalRate", Default: "400 per 1 second" } }
+  Operations:
+    - OperationName: insertMany
+      OperationCommand:
+        Documents: *50DocumentList

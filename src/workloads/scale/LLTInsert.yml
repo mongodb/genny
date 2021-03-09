@@ -1,0 +1,248 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  Workload to Benchmark the effect of LongLivedTransactions on an Insert workload.
+
+GlobalDefaults:
+  # These values should match those are the top of LLTPhases.yml
+  dbname: &dbname llt
+  SecondaryDocumentCount: &SecondaryNumDocs 10000000
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 500
+
+ActorTemplates:
+  - TemplateName: LoaderTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "InitialLoad"}}
+      Type: Loader
+      Database: *dbname
+      ClientName: Loader
+      Threads: 4
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 10
+          PhaseConfig:
+            ExternalPhaseConfig:
+              Path: ../../phases/scale/LLTPhases.yml
+              Key: LoaderPhase
+
+  - TemplateName: InsertTemplate.100.50
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "InsertBaseline.100"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Update
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 3}}]
+          NopInPhasesUpTo: 10
+          PhaseConfig:
+            ExternalPhaseConfig:
+              Path: ../../phases/scale/LLTPhases.yml
+              Key: InsertPhase.50
+
+  - TemplateName: InsertTemplate.800.50
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "InsertBaseline.100"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Update
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 5}}]
+          GlobalRate: 3200 per second
+          NopInPhasesUpTo: 10
+          PhaseConfig:
+            ExternalPhaseConfig:
+              Path: ../../phases/scale/LLTPhases.yml
+              Key: InsertPhase.50
+
+  # Rotate the mongo logs.
+  - TemplateName: LogRotateTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "LogRotate"}}
+      Type: AdminCommand
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 10
+          PhaseConfig:
+            Repeat: 1
+            Operations:
+              - OperationName: AdminCommand
+                OperationIsQuiet: true
+                OperationCommand:
+                  logRotate: 1
+
+  # SetProfiling level to 0, -1, this will log all operations.
+  # Set back to 0, 100 for default.
+  - TemplateName: SetProfilingLevelTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "EnableProfiling"}}
+      Type: RunCommand
+      Database: test
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 10
+          PhaseConfig:
+            Repeat: 1
+            Operations:
+              - OperationName: RunCommand
+                OperationIsQuiet: true
+                OperationCommand:
+                  profile: {^Parameter: {Name: "Name", Default: 0}}
+                  slowms: {^Parameter: {Name: "Name", Default: -1}}
+
+Actors:
+#  # Rotate logs and set the profiling level for debugging.
+#  - ActorFromTemplate:
+#      TemplateName: LogRotateTemplate
+#      TemplateParameters: {}
+#
+#  - ActorFromTemplate:
+#      TemplateName: SetProfilingLevelTemplate
+#      TemplateParameters: {}
+
+  - ActorFromTemplate:
+      TemplateName: LoaderTemplate
+      TemplateParameters:
+        Name: InitialLoad
+
+  - ActorFromTemplate:
+      TemplateName: LoaderTemplate
+      TemplateParameters:
+        Name: InitialLoadWithIndexes
+        DocumentCount: *SecondaryNumDocs
+        OnlyActiveInPhase: 2
+        Indexes: {}
+
+  # <-----  4 threads @ 100 ops / second in batches of 50
+  # <-----  Baseline: Phase 3
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.100.50
+      TemplateParameters:
+        Name: InsertBaseline.100.50.0
+        Collection: Collection0
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.100.50
+      TemplateParameters:
+        Name: InsertBaseline.100.50.1
+        Collection: Collection1
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.100.50
+      TemplateParameters:
+        Name: InsertBaseline.100.50.2
+        Collection: Collection2
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.100.50
+      TemplateParameters:
+        Name: InsertBaseline.100.50.3
+        Collection: Collection3
+
+  # <-----  Benchmark
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.100.50
+      TemplateParameters:
+        Name: InsertBenchmark.100.50.0
+        Collection: Collection0
+        OnlyActiveInPhase: 4
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.100.50
+      TemplateParameters:
+        Name: InsertBenchmark.100.50.1
+        Collection: Collection1
+        OnlyActiveInPhase: 4
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.100.50
+      TemplateParameters:
+        Name: InsertBenchmark.100.50.2
+        Collection: Collection2
+        OnlyActiveInPhase: 4
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.100.50
+      TemplateParameters:
+        Name: InsertBenchmark.100.50.3
+        Collection: Collection3
+        OnlyActiveInPhase: 4
+
+  # <-----  TODO: add LLT Benchmark Workload PERF-2177
+  # <-----  LLT Benchmark: Phase 4
+
+  # <-----  4 threads @ 800 ops / second in batches of 50
+  # <-----  Baseline: Phase 4
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.800.50
+      TemplateParameters:
+        Name: InsertBaseline.800.50.0
+        Collection: Collection0
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.800.50
+      TemplateParameters:
+        Name: InsertBaseline.800.50.1
+        Collection: Collection1
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.800.50
+      TemplateParameters:
+        Name: InsertBaseline.800.50.2
+        Collection: Collection2
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.800.50
+      TemplateParameters:
+        Name: InsertBaseline.800.50.3
+        Collection: Collection3
+
+  # <-----  Benchmark
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.800.50
+      TemplateParameters:
+        Name: InsertBenchmark.800.50.0
+        Collection: Collection0
+        OnlyActiveInPhase: 6
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.800.50
+      TemplateParameters:
+        Name: InsertBenchmark.800.50.1
+        Collection: Collection1
+        OnlyActiveInPhase: 6
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.800.50
+      TemplateParameters:
+        Name: InsertBenchmark.800.50.2
+        Collection: Collection2
+        OnlyActiveInPhase: 6
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate.800.50
+      TemplateParameters:
+        Name: InsertBenchmark.800.50.3
+        Collection: Collection3
+        OnlyActiveInPhase: 6
+
+  # <-----  TODO: add LLT Benchmark Workload PERF-2177
+  # <-----  LLT Benchmark: Phase 6
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+    - replica
+    - single-replica
