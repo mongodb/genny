@@ -53,3 +53,4 @@ AutoRun:
     mongodb_setup:
     - replica
     - single-replica
+    - replica-all-feature-flags

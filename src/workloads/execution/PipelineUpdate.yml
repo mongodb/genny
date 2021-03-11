@@ -240,3 +240,4 @@ AutoRun:
     mongodb_setup:
     - standalone
     - replica
+    - replica-all-feature-flags

@@ -125,3 +125,4 @@ AutoRun:
     - standalone
     - replica-noflowcontrol
     - replica-1dayhistory-15gbwtcache
+    - replica-all-feature-flags
