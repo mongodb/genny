@@ -23,75 +23,82 @@ GlobalDefaults:
     - keys: {caid: 1, prid: 1, cuid: 1}
     - keys: {prid: 1, ts: 1, cuid: 1}
 
-  FiftyDocumentsList: &50DocumentList
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
-    - *Doc
+  InsertWriteCommand:  &InsertCommand
+    WriteCommand: insertOne
+    Document: *Doc
 
 LoaderPhase:
-  Repeat: 1
   BatchSize: 100
-  Database: *dbname
   CollectionCount: 4
-  Threads: 4
+  Database: *dbname
+  Document: *Doc
   DocumentCount: { ^Parameter: { Name: "DocumentCount", Default: *InitialNumDocs } }
   Indexes: { ^Parameter: { Name: "Indexes", Default: *LLTIndexes } }
-  Document: *Doc
+  Repeat: 1
+  Threads: 4
 
 InsertPhase.50:
   DocumentCount: { ^Parameter: { Name: "DocumentCount", Default: *InsertPhaseNumDocs } }
-  Duration: 1 minutes
-  RecordFailure: true
   Collection: { ^Parameter: { Name: "Collection", Default: "Collection0" } }
   GlobalRate: { ^Parameter: { Name: "GlobalRate", Default: "400 per 1 second" } }
+  Database: *dbname
+  Duration: 5 minutes
+  RecordFailure: true
+  Threads: { ^Parameter: { Name: "Threads", Default: 4 } }
   Operations:
-    - OperationName: insertMany
+    - OperationName: bulkWrite
       OperationCommand:
-        Documents: *50DocumentList
+        WriteOperations:
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+          - *InsertCommand
+        Options:
+          WriteConcern:
+            Level: majority
