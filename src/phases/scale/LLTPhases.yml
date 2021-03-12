@@ -9,6 +9,7 @@ GlobalDefaults:
   InitialDocumentCount: &InitialNumDocs 10000000
   SecondaryDocumentCount: &SecondaryNumDocs 10000000
   InsertPhaseDocumentCount: &InsertPhaseNumDocs 250000
+  CollectionCount: &InsertCollectionCount 4
 
   Document: &Doc
     ts: {^Now: {}}
@@ -29,22 +30,18 @@ GlobalDefaults:
 
 LoaderPhase:
   BatchSize: 100
-  CollectionCount: 4
+  CollectionCount: *InsertCollectionCount
   Database: *dbname
   Document: *Doc
   DocumentCount: { ^Parameter: { Name: "DocumentCount", Default: *InitialNumDocs } }
   Indexes: { ^Parameter: { Name: "Indexes", Default: *LLTIndexes } }
   Repeat: 1
-  Threads: 4
+  Threads: *InsertCollectionCount
 
-InsertPhase.50:
-  DocumentCount: { ^Parameter: { Name: "DocumentCount", Default: *InsertPhaseNumDocs } }
-  Collection: { ^Parameter: { Name: "Collection", Default: "Collection0" } }
-  GlobalRate: { ^Parameter: { Name: "GlobalRate", Default: "400 per 1 second" } }
-  Database: *dbname
-  Duration: 5 minutes
+InsertPhase:
+  Duration: 1 minutes
   RecordFailure: true
-  Threads: { ^Parameter: { Name: "Threads", Default: 4 } }
+  Collection: {^Parameter: {Name: "Collection", Default: "Collection0"}}
   Operations:
     - OperationName: bulkWrite
       OperationCommand:
