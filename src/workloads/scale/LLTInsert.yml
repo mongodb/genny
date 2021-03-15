@@ -375,12 +375,12 @@ Actors:
         GlobalRate: 1600 per 1 second
         Operations: *InsertOperations
 
-# <-----  1 threads @ 1600 per 1 second in batches of 50
+# <-----  8 threads @ 1600 per 1 second in batches of 50
 # <-----  Benchmark: Phase 10
 - Name: InsertBenchmark.High.50
   Type: CrudActor
   Database: *dbname
-  Threads: 1
+  Threads: 8
   Phases:
     OnlyActiveInPhases:
       Active: [10]
@@ -392,12 +392,12 @@ Actors:
         GlobalRate: 1600 per 1 second
         Operations: *InsertOperations
 
-# <-----  1 threads @ 1600 per 1 second in batches of 50
+# <-----  8 threads @ 1600 per 1 second in batches of 50
 # <-----  Benchmark: Phase 10
 - Name: InsertBenchmark.High.50
   Type: CrudActor
   Database: *dbname
-  Threads: 1
+  Threads: 8
   Phases:
     OnlyActiveInPhases:
       Active: [10]
