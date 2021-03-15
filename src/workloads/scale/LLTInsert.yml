@@ -8,220 +8,340 @@ GlobalDefaults:
   dbname: &dbname llt
   SecondaryDocumentCount: &SecondaryNumDocs 10000000
   CollectionCount: &InsertCollectionCount 4
+  InitialDocumentCount: &InitialNumDocs 10000000
+
+  Document: &Doc
+    ts: {^Now: {}}
+    caid: {^RandomInt: {min: 0, max: 1000}}
+    cuid: {^RandomInt: {min: 0, max: 100000}}
+    prod: {^RandomInt: {min: 0, max: 10000}}
+    prid: {^RandomDouble: {min: 0.0, max: 1000.0}}
+    data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
+
+  LLTIndexes: &LLTIndexes
+    - keys: {cuid: 1, data: 1}
+    - keys: {caid: 1, prid: 1, cuid: 1}
+    - keys: {prid: 1, ts: 1, cuid: 1}
+
+  InsertWriteCommand:  &InsertCommand
+    WriteCommand: insertOne
+    Document: *Doc
+
+  Operations: &InsertOperations
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+         - *InsertCommand
+
+        Options:
+          WriteConcern:
+            Level: majority
 
 Clients:
   Default:
     QueryOptions:
       maxPoolSize: 500
 
-ActorTemplates:
-  - TemplateName: LoaderTemplate
-    Config:
-      Name: {^Parameter: {Name: "Name", Default: "InitialLoad"}}
-      Type: Loader
-      Database: *dbname
-      ClientName: Loader
-      Threads: 4
-      Phases:
-        OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 11
-          PhaseConfig:
-            ExternalPhaseConfig:
-              Path: ../../phases/scale/LLTPhases.yml
-              Key: LoaderPhase
-
-  - TemplateName: QuiesceTemplate
-    Config:
-      Name: QuiescePhase
-      Type: QuiesceActor
-      Database: *dbname
-      ClientName: Quiesce
-      Threads: 1
-      Phases:
-        OnlyActiveInPhases:
-          Active: [3, 5, 7, 9, 11]
-          NopInPhasesUpTo: 11
-
-  - TemplateName: InsertTemplate.100.50
-    Config:
-      Name: {^Parameter: {Name: "Name", Default: "InsertBaseline.100"}}
-      Type: CrudActor
-      Database: *dbname
-      ClientName: Insert
-      Threads: 1
-      GlobalRate: 400 per 1 second
-      Phases:
-        OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 4}}]
-          NopInPhasesUpTo: 11
-          PhaseConfig:
-            ExternalPhaseConfig:
-              Path: ../../phases/scale/LLTPhases.yml
-              Key: InsertPhase
-
-  - TemplateName: InsertTemplate.800.50
-    Config:
-      Name: {^Parameter: {Name: "Name", Default: "InsertBaseline.800"}}
-      Type: CrudActor
-      Database: *dbname
-      ClientName: Insert
-      Threads: 8
-      GlobalRate: 6400 per 1 second
-      Phases:
-        OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 8}}]
-          NopInPhasesUpTo: 11
-          PhaseConfig:
-            ExternalPhaseConfig:
-              Path: ../../phases/scale/LLTPhases.yml
-              Key: InsertPhase
-
-
 Actors:
-  - ActorFromTemplate:
-      TemplateName: LoaderTemplate
-      TemplateParameters:
-        Name: InitialLoad
+- Name: InitialLoad
+  Type: Loader
+  ClientName: Loader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
+        Threads: 4
+        CollectionCount: 4
+        Database: *dbname
+        Repeat: 1
+        Document: *Doc
+        DocumentCount: *InitialNumDocs
+        Indexes: *LLTIndexes
+        BatchSize: 100
 
-  - ActorFromTemplate:
-      TemplateName: LoaderTemplate
-      TemplateParameters:
-        Name: InitialLoadWithIndexes
+- Name: SecondLoadAfterIndexes
+  Type: Loader
+  ClientName: Loader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
+        Threads: 4
+        CollectionCount: 4
+        Database: *dbname
+        Repeat: 1
+        Document: *Doc
         DocumentCount: *SecondaryNumDocs
-        OnlyActiveInPhase: 2
-        Indexes: {}
+        BatchSize: 100
 
-  - Name: QuiescePhase
-    Type: QuiesceActor
-    Threads: 1
-    Database: test
-    Phases:
-      OnlyActiveInPhases:
-        Active: [3, 5, 7, 9]
-        NopInPhasesUpTo: 11
-        PhaseConfig:
-          Repeat: 1
+- Name: QuiescePhase
+  Type: QuiesceActor
+  Threads: 1
+  Database: test
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3, 5, 7, 9]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
+        Repeat: 1
 
-  - ActorFromTemplate:
-      TemplateName: QuiesceTemplate
-      TemplateParameters: {}
-
-  # <-----  4 threads @ 100 ops / second in batches of 50
-  # <-----  Baseline: Phase 3
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.100.50
-      TemplateParameters:
-        Name: InsertBaseline.100.50
+# <-----  1 threads @ 400 per 1 second in batches of 50
+# <-----  Baseline: Phase 4
+- Name: InsertBaseline.100.50
+  Type: CrudActor
+  Database: *dbname
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
         Collection: Collection0
+        Duration: 1 minutes
+        RecordFailure: true
+        GlobalRate: 400 per 1 second
+        Operations: *InsertOperations
 
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.100.50
-      TemplateParameters:
-        Name: InsertBaseline.100.50
+# <-----  1 threads @ 400 per 1 second in batches of 50
+# <-----  Baseline: Phase 4
+- Name: InsertBaseline.100.50
+  Type: CrudActor
+  Database: *dbname
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
         Collection: Collection1
+        Duration: 1 minutes
+        RecordFailure: true
+        GlobalRate: 400 per 1 second
+        Operations: *InsertOperations
 
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.100.50
-      TemplateParameters:
-        Name: InsertBaseline.100.50
+# <-----  1 threads @ 400 per 1 second in batches of 50
+# <-----  Baseline: Phase 4
+- Name: InsertBaseline.100.50
+  Type: CrudActor
+  Database: *dbname
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
         Collection: Collection2
+        Duration: 1 minutes
+        RecordFailure: true
+        GlobalRate: 400 per 1 second
+        Operations: *InsertOperations
 
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.100.50
-      TemplateParameters:
-        Name: InsertBaseline.100.50
+# <-----  1 threads @ 400 per 1 second in batches of 50
+# <-----  Baseline: Phase 4
+- Name: InsertBaseline.100.50
+  Type: CrudActor
+  Database: *dbname
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
         Collection: Collection3
+        Duration: 1 minutes
+        RecordFailure: true
+        GlobalRate: 400 per 1 second
+        Operations: *InsertOperations
 
-  # <-----  Benchmark
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.100.50
-      TemplateParameters:
-        Name: InsertBenchmark.100.50
+# <-----  8 threads @ 3200 per 1 second in batches of 50
+# <-----  Benchmark: Phase 10
+- Name: InsertBenchmark.800.50
+  Type: CrudActor
+  Database: *dbname
+  Threads: 8
+  Phases:
+    OnlyActiveInPhases:
+      Active: [10]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
         Collection: Collection0
-        OnlyActiveInPhase: 6
+        Duration: 1 minutes
+        RecordFailure: true
+        GlobalRate: 3200 per 1 second
+        Operations: *InsertOperations
 
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.100.50
-      TemplateParameters:
-        Name: InsertBenchmark.100.50
+# <-----  8 threads @ 3200 per 1 second in batches of 50
+# <-----  Benchmark: Phase 10
+- Name: InsertBenchmark.800.50
+  Type: CrudActor
+  Database: *dbname
+  Threads: 8
+  Phases:
+    OnlyActiveInPhases:
+      Active: [10]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
         Collection: Collection1
-        OnlyActiveInPhase: 6
+        Duration: 1 minutes
+        RecordFailure: true
+        GlobalRate: 3200 per 1 second
+        Operations: *InsertOperations
 
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.100.50
-      TemplateParameters:
-        Name: InsertBenchmark.100.50
+# <-----  8 threads @ 3200 per 1 second in batches of 50
+# <-----  Benchmark: Phase 10
+- Name: InsertBenchmark.800.50
+  Type: CrudActor
+  Database: *dbname
+  Threads: 8
+  Phases:
+    OnlyActiveInPhases:
+      Active: [10]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
         Collection: Collection2
-        OnlyActiveInPhase: 6
+        Duration: 1 minutes
+        RecordFailure: true
+        GlobalRate: 3200 per 1 second
+        Operations: *InsertOperations
 
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.100.50
-      TemplateParameters:
-        Name: InsertBenchmark.100.50
+# <-----  8 threads @ 3200 per 1 second in batches of 50
+# <-----  Benchmark: Phase 10
+- Name: InsertBenchmark.3200.50
+  Type: CrudActor
+  Database: *dbname
+  Threads: 8
+  Phases:
+    OnlyActiveInPhases:
+      Active: [10]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
         Collection: Collection3
-        OnlyActiveInPhase: 6
+        Duration: 1 minutes
+        RecordFailure: true
+        GlobalRate: 3200 per 1 second
+        Operations: *InsertOperations
 
-  # <-----  TODO: add LLT Benchmark Workload PERF-2177
-  # <-----  LLT Benchmark: Phase 8
-
-  # <-----  4 threads @ 800 ops / second in batches of 50
-  # <-----  Baseline: Phase 8
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.800.50
-      TemplateParameters:
-        Name: InsertBaseline.800.50
+# <-----  8 threads @ 3200 per 1 second in batches of 50
+# <-----  Baseline: Phase 8
+- Name: InsertBaseline.800.50
+  Type: CrudActor
+  Database: *dbname
+  Threads: 8
+  Phases:
+    OnlyActiveInPhases:
+      Active: [8]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
         Collection: Collection0
+        Duration: 1 minutes
+        RecordFailure: true
+        GlobalRate: 3200 per 1 second
+        Operations: *InsertOperations
 
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.800.50
-      TemplateParameters:
-        Name: InsertBaseline.800.50
+# <-----  8 threads @ 3200 per 1 second in batches of 50
+# <-----  Baseline: Phase 8
+- Name: InsertBaseline.800.50
+  Type: CrudActor
+  Database: *dbname
+  Threads: 8
+  Phases:
+    OnlyActiveInPhases:
+      Active: [8]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
         Collection: Collection1
+        Duration: 1 minutes
+        RecordFailure: true
+        GlobalRate: 3200 per 1 second
+        Operations: *InsertOperations
 
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.800.50
-      TemplateParameters:
-        Name: InsertBaseline.800.50
+# <-----  8 threads @ 3200 per 1 second in batches of 50
+# <-----  Baseline: Phase 8
+- Name: InsertBaseline.800.50
+  Type: CrudActor
+  Database: *dbname
+  Threads: 8
+  Phases:
+    OnlyActiveInPhases:
+      Active: [8]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
         Collection: Collection2
+        Duration: 1 minutes
+        RecordFailure: true
+        GlobalRate: 3200 per 1 second
+        Operations: *InsertOperations
 
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.800.50
-      TemplateParameters:
-        Name: InsertBaseline.800.50
+# <-----  8 threads @ 3200 per 1 second in batches of 50
+# <-----  Baseline: Phase 6
+- Name: InsertBaseline.800.50
+  Type: CrudActor
+  Database: *dbname
+  Threads: 8
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: 11
+      PhaseConfig:
         Collection: Collection3
+        Duration: 1 minutes
+        RecordFailure: true
+        GlobalRate: 3200 per 1 second
+        Operations: *InsertOperations
 
-  #  # <-----  Benchmark
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.800.50
-      TemplateParameters:
-        Name: InsertBenchmark.800.50
-        Collection: Collection0
-        OnlyActiveInPhase: 10
-
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.800.50
-      TemplateParameters:
-        Name: InsertBenchmark.800.50
-        Collection: Collection1
-        OnlyActiveInPhase: 10
-
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.800.50
-      TemplateParameters:
-        Name: InsertBenchmark.800.50
-        Collection: Collection2
-        OnlyActiveInPhase: 10
-
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate.800.50
-      TemplateParameters:
-        Name: InsertBenchmark.800.50
-        Collection: Collection3
-        OnlyActiveInPhase: 10
-
-  # <-----  TODO: add LLT Benchmark Workload PERF-2177
-  # <-----  LLT Benchmark: Phase 10
 
 AutoRun:
   Requires:
