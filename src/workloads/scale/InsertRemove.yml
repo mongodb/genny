@@ -16,9 +16,10 @@ Actors:
 
 AutoRun:
   Requires:
-    mongodb_setup: 
+    mongodb_setup:
     - replica
     - single-replica
     - standalone
     - shard
     - replica-1dayhistory-15gbwtcache
+    - replica-all-feature-flags

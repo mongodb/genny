@@ -87,3 +87,4 @@ AutoRun:
     - shard
     - single-replica
     - single-replica-15gbwtcache
+    - replica-all-feature-flags
