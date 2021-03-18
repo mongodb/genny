@@ -57,9 +57,9 @@ Actors:
   Type: MultiCollectionQuery
   Threads: 100
   Phases:
-    GlobalRate: 5000 per 1 second
   - {Nop: true}
   - Duration: 10 minutes
+    GlobalRate: 5000 per 1 second
     Database: *DB
     CollectionCount: *CollectionCount
     DocumentCount: *DocumentCount

@@ -93,9 +93,9 @@ Actors:
 - Name: LongLivedReader
   Type: MultiCollectionQuery
   Threads: 10
+  GlobalRate: *LongLivedReads
   TrackProportion: *TrackProportion
   Phases:
-    GlobalRate: *LongLivedReads
   - {Nop: true}
   - {Nop: true}
   - ExternalPhaseConfig:
