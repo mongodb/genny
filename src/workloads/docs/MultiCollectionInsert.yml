@@ -5,13 +5,14 @@ Actors:
 - Name: MultiCollectionInsert
   Type: MultiCollectionInsert
   Threads: 100
-  Database: test
   Phases:
   - Phase: 0 # Insert in batches of 1
-    Repeat: 1e
+    Database: test
+    Repeat: 100
     CollectionCount: &CollectionCount 10
     Document: {foo: {^RandomInt: {min: 0, max: 100}}}
   - Phase: 1  # Insert in batches of 1
+    Database: test
     Duration: 5 seconds
     CollectionCount: *CollectionCount
     Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
