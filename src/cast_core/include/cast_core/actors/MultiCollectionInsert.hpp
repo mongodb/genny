@@ -28,24 +28,13 @@
 namespace genny::actor {
 
 /**
- * Indicate what the Actor does and give an example yaml configuration.
- * Markdown is supported in all docstrings so you could list an example here:
+ * MultiCollectionInsert is an actor that performs updates across parameterizable number of
+ * collections. Inserts are performed in a loop using `PhaseLoop` and each iteration picks a
+ * random collection to insert. The actor records the latency of each update, and the total number
+ * of documents updated.
  *
- * ```yaml
- * SchemaVersion: 2017-07-01
- * Actors:
- * - Name: MultiCollectionInsert
- *   Type: MultiCollectionInsert
- *   Phases:
- *   - Document: foo
- * ```
- *
- * Or you can fill out the generated workloads/docs/MultiCollectionInsert.yml
- * file with extended documentation. If you do this, please mention
- * that extended documentation can be found in the docs/MultiCollectionInsert.yml
- * file.
- *
- * Owner: TODO (which github team owns this Actor?)
+ * See  src/workloads/docs/MultiCollectionInsert.yml for some examples.
+ * Owner: product-perf
  */
 class MultiCollectionInsert : public Actor {
 public:

@@ -1,12 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: TODO put your github team name here e.g. @mongodb/stm
-
-# TODO: delete this file or add a meaningful workload using or
-#       demonstrating your Actor
-#
-# For more information on how to configure Repeat/Duration/*
-# see extended example file
-# `src/workloads/docs/HelloWorld-MultiplePhases.yml`
+Owner: @mongodb/product-perf
 
 Actors:
 - Name: MultiCollectionInsert
@@ -14,12 +7,12 @@ Actors:
   Threads: 100
   Database: test
   Phases:
-  - Phase: 0
-    Repeat: 1e3 # used by PhaesLoop
-    # below used by PhaseConfig in MultiCollectionInsert.cpp
+  - Phase: 0 # Insert in batches of 1
+    Repeat: 1e
     CollectionCount: &CollectionCount 10
-    Insert: {foo: {^RandomInt: {min: 0, max: 100}}}
-  - Phase: 1
+    Document: {foo: {^RandomInt: {min: 0, max: 100}}}
+  - Phase: 1  # Insert in batches of 1
     Duration: 5 seconds
     CollectionCount: *CollectionCount
-    Insert: {bar: {^RandomInt: {min: 500, max: 10000}}}
+    Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
+    BatchSize: 40
