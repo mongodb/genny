@@ -70,18 +70,20 @@ void MultiCollectionInsert::run() {
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
             auto collection = config->database[collectionName];
 
-            int64_t numberToInsert = config->batchSize;
             auto docs = std::vector<bsoncxx::document::view_or_value>{};
-            docs.reserve(numberToInsert);
+            docs.reserve(config->batchSize);
 
-            auto opCtx = config->insertOperation.start();
-            for (uint j = 0; j < numberToInsert; j++) {
+            size_t bytes = 0;
+            for (uint j = 0; j < config->batchSize; j++) {
                 auto newDoc = config->docExpr();
+                bytes += newDoc.view().length();
                 docs.push_back(std::move(newDoc));
             }
             {
+                auto opCtx = config->insertOperation.start();
                 auto result = collection.insert_many(std::move(docs), config->_options);
                 opCtx.addDocuments(result->inserted_count());
+                opCtx.addBytes(bytes);
                 opCtx.success();
             }
         }

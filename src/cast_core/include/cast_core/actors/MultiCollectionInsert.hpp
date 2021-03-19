@@ -28,10 +28,10 @@
 namespace genny::actor {
 
 /**
- * MultiCollectionInsert is an actor that performs updates across parameterizable number of
+ * MultiCollectionInsert is an actor that performs inserts across parameterizable number of
  * collections. Inserts are performed in a loop using `PhaseLoop` and each iteration picks a
- * random collection to insert. The actor records the latency of each update, and the total number
- * of documents updated.
+ * random collection to insert. The actor records the latency of each insert, and the total number
+ * of documents inserted.
  *
  * See  src/workloads/docs/MultiCollectionInsert.yml for some examples.
  * Owner: product-perf
