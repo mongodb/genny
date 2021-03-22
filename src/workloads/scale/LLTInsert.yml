@@ -50,7 +50,7 @@ GlobalDefaults:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 2000
+      maxPoolSize: 200
 
 # Odd phases do operations, even phases quiesce.
 Actors:
