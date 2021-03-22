@@ -44,10 +44,10 @@ Actors:
 - Name: LongLivedIndexReader
   Type: MultiCollectionQuery
   Threads: 100
-  GlobalRate: 10 per 1 second
   Phases:
   - {Nop: true}
   - Duration: 3 minutes
+    GlobalRate: 10 per 1 second
     Database: *DB
     CollectionCount: *CollectionCount
     DocumentCount: *DocumentCount
