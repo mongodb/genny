@@ -42,4 +42,3 @@ AutoRun:
     mongodb_setup:
     - replica-delay-mixed
     - replica
-    - replica-all-feature-flags
