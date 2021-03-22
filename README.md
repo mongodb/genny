@@ -74,11 +74,11 @@ See the following images:
 
 ### CLion ToolChain Settings
 
-![toolchain](images/toolchains.png?raw=true "Toolchains Settings")
+![toolchain](https://user-images.githubusercontent.com/22506/112030965-b9659500-8b32-11eb-9fa4-523640f4c95a.png?raw=true "Toolchains Settings")
 
 ### CLion CMake Settings
 
-![CMake](images/cmake.png?raw=true "Cmake Settings")
+![CMake](https://user-images.githubusercontent.com/22506/112030931-ac48a600-8b32-11eb-9a09-0f3fd9138c8e.png?raw=true "Cmake Settings")
 
 If you run `./run-genny install -b make` it should set up everything for you.
 You just need to set the "Generation Path" to your `build` directory.
@@ -102,13 +102,13 @@ sleep 1
 
 Next create an external tool for poplar in CLion:
 
-![poplar](images/poplar.png?raw=true "Poplar External tool")
+![poplar](https://user-images.githubusercontent.com/22506/112030958-b66aa480-8b32-11eb-9857-593adb3e9832.png?raw=true "Poplar External tool")
 
 *Note*: the Working directory value is required. 
 
 Finally the external poplar tool to the CLion 'Before Launch' list:
 
-![Debug](images/debug.png?raw=true "Debug Before Launch.")
+![Debug](https://user-images.githubusercontent.com/22506/112030946-b23e8700-8b32-11eb-9c40-a455355969bd.png?raw=true "Debug Before Launch.")
 
 ## Running Genny Self-Tests
 

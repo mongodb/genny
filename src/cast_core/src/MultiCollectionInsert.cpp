@@ -45,15 +45,14 @@ struct MultiCollectionInsert::PhaseConfig {
           docExpr{context["Document"].to<DocumentGenerator>(context, id)},
           uniformDistribution{0, numCollections - 1},
           insertOperation{context.operation("Insert", id)},
-          _options{context["OperationOptions"].maybe<mongocxx::options::insert>().value_or(
+          insertOptions{context["OperationOptions"].maybe<mongocxx::options::insert>().value_or(
               mongocxx::options::insert{})} {}
 
     mongocxx::database database;
     int64_t numCollections;
     int64_t batchSize;
-    // DocumentGenerator queryExpr;
     DocumentGenerator docExpr;
-    mongocxx::options::insert _options;
+    mongocxx::options::insert insertOptions;
 
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<int64_t> uniformDistribution;
@@ -81,8 +80,10 @@ void MultiCollectionInsert::run() {
             }
             {
                 auto opCtx = config->insertOperation.start();
-                auto result = collection.insert_many(std::move(docs), config->_options);
-                opCtx.addDocuments(result->inserted_count());
+                auto result = collection.insert_many(std::move(docs), config->insertOptions);
+                if (result) {
+                    opCtx.addDocuments(result->inserted_count());
+                }
                 opCtx.addBytes(bytes);
                 opCtx.success();
             }

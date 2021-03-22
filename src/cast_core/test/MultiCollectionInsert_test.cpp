@@ -44,7 +44,8 @@ TEST_CASE_METHOD(
           Database: mydb
           Phases:
           - Repeat: 100
-            Collection: mycoll
+            Threads: 1
+            CollectionCount: 1
             Document: {foo: {^RandomInt: {min: 0, max: 100}}}
     )",
                                   __FILE__);
@@ -59,9 +60,8 @@ TEST_CASE_METHOD(
             builder << "foo" << bson_stream::open_document << "$gte"
                     << "0" << bson_stream::close_document << bson_stream::finalize;
 
-            auto count = db.collection("mycoll").count_documents(builder.view());
-            // TODO: fixme
-            REQUIRE(count == 101);
+            auto count = db.collection("Collection0").count_documents(builder.view());
+            REQUIRE(count == 100);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
             INFO("CAUGHT " << diagInfo);
