@@ -20,13 +20,15 @@ Actors:
         Level: majority
   - Phase: 1
     # 10 collections and 20 threads => 2 threads per collection.
-    # insert_many in batches of 50, 1 iteration (default repeat).
+    # insert_many in batches of 50 for 2 minutes.
     Threads: 20
     CollectionCount: *CollectionCount
     Database: *Database
     Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
     BatchSize: *BatchSize
+    Duration: 2 minutes
     OperationOptions:
       WriteConcern:
         Level: 1
-        Timeout: 500
+        Timeout: 500 milliseconds
+
