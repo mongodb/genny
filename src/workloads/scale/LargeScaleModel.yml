@@ -77,6 +77,7 @@ Actors:
 - Name: LongLivedIndexReader
   Type: MultiCollectionQuery
   Threads: 10
+  GlobalRate: *LongLivedIndexReads
   TrackProportion: *TrackProportion
   Phases:
   - {Nop: true}
@@ -88,11 +89,11 @@ Actors:
         Database: *LongLivedDB
         CollectionCount: *LongLivedCollectionCount
         DocumentCount: *LongLivedDocumentCount
-    GlobalRate: *LongLivedIndexReads
 
 - Name: LongLivedReader
   Type: MultiCollectionQuery
   Threads: 10
+  GlobalRate: *LongLivedReads
   TrackProportion: *TrackProportion
   Phases:
   - {Nop: true}
@@ -104,11 +105,11 @@ Actors:
         Database: *LongLivedDB
         CollectionCount: *LongLivedCollectionCount
         DocumentCount: *LongLivedDocumentCount
-      GlobalRate: *LongLivedReads
 
 - Name: LongLivedWriter
   Type: MultiCollectionUpdate
   Threads: 5
+  GlobalRate: *LongLivedWrites
   TrackProportion: *TrackProportion
   Phases:
   - {Nop: true}
@@ -120,7 +121,6 @@ Actors:
         Database: *LongLivedDB
         CollectionCount: *LongLivedCollectionCount
         DocumentCount: *LongLivedDocumentCount
-      GlobalRate: *LongLivedWrites
 
 - Name: RollingSetup
   Type: RollingCollections
