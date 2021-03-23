@@ -68,10 +68,10 @@ Actors:
 - Name: LongLivedWriter
   Type: MultiCollectionUpdate
   Threads: 5
+  GlobalRate: 500 in 1 second
   Phases:
   - {Nop: true}
   - Duration: 10 minutes
-    GlobalRate: 500 in 1 second
     MetricsName: Update
     Database: *DB
     CollectionCount: *CollectionCount
