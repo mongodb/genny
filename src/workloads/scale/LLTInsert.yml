@@ -6,10 +6,9 @@ Description: |
 GlobalDefaults:
   # These values should match those are the top of LLTPhases.yml
   dbname: &dbname llt
-  SecondaryDocumentCount: &SecondaryNumDocs 10000000
-  CollectionCount: &InsertCollectionCount 4
-  InitialDocumentCount: &InitialNumDocs 10000000
+  MaxPhases: &MaxPhases 20
 
+  # The Sample Document Shape.
   Document: &Doc
     ts: {^Now: {}}
     caid: {^RandomInt: {min: 0, max: 1000}}
@@ -23,392 +22,159 @@ GlobalDefaults:
     - keys: {caid: 1, prid: 1, cuid: 1}
     - keys: {prid: 1, ts: 1, cuid: 1}
 
-  InsertWriteCommand:  &InsertCommand
-    WriteCommand: insertOne
-    Document: *Doc
+  # Loader Config.
+  LoadThreads: &LoadThreads 4
+  LoadBatchSize: &LoadBatchSize 1000
+  SecondaryDocumentCount: &SecondaryNumDocs 10000000
+  CollectionCount: &CollectionCount 4
+  InitialDocumentCount: &InitialNumDocs 10000000
 
-  Operations: &InsertOperations
-    - OperationName: bulkWrite
-      OperationCommand:
-        WriteOperations:
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-          - *InsertCommand
-        Options:
-          WriteConcern:
-            Level: majority
+  # Common Baseline / Benchmark
+  InsertBatchSize: &InsertBatchSize 50
+
+  # Low Baseline / Benchmark
+  LowGlobalRate: &LowGlobalRate 10% # percentage gives a smoother rate. 400 per 1 second was the other option.
+  LowThreads: &LowThreads 4
+  LowDuration: &LowDuration 1 minutes
+
+  # Low Baseline / Benchmark
+  HighGlobalRate: &HighGlobalRate 50% # percentage gives a smoother rate. 3200 per 1 second was the other option.
+  HighThreads: &HighThreads 8
+  HighDuration: &HighDuration 1 minutes
+
+  # The write concern. The intent is to use what is chosen as the default in 5.0.
+  OperationOptions: &OperationOptions
+    WriteConcern:
+      Level: majority
 
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 500
+      maxPoolSize: 200
 
+# Odd phases do operations, even phases quiesce.
 Actors:
 - Name: InitialLoad
   Type: Loader
   ClientName: Loader
-  Threads: 4
+  Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
       Active: [1]
-      NopInPhasesUpTo: 11
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Threads: 4
-        CollectionCount: 4
+        Threads: *LoadThreads
+        CollectionCount: *CollectionCount
         Database: *dbname
         Repeat: 1
         Document: *Doc
         DocumentCount: *InitialNumDocs
         Indexes: *LLTIndexes
-        BatchSize: 100
+        BatchSize: *LoadBatchSize
 
 - Name: SecondLoadAfterIndexes
   Type: Loader
   ClientName: Loader
-  Threads: 4
+  Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: 11
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Threads: 4
-        CollectionCount: 4
+        Threads: *LoadThreads
+        CollectionCount: *CollectionCount
         Database: *dbname
         Repeat: 1
         Document: *Doc
         DocumentCount: *SecondaryNumDocs
-        BatchSize: 100
+        BatchSize: *LoadBatchSize
 
 - Name: QuiescePhase
   Type: QuiesceActor
   Threads: 1
-  Database: test
+  Database: *dbname
   Phases:
     OnlyActiveInPhases:
-      Active: [3, 5, 7, 9]
-      NopInPhasesUpTo: 11
+      Active: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+      NopInPhasesUpTo: 20
       PhaseConfig:
         Repeat: 1
 
-# <-----  1 threads @ 400 per 1 second in batches of 50
-# <-----  Baseline: Phase 4
+# <-----  4 threads @ 25% in batches of 50
 - Name: InsertBaseline.Low.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 1
+  Type: MultiCollectionInsert
+  ClientName: LowPool
+  Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: 11
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Collection: Collection0
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 400 per 1 second
-        Operations: *InsertOperations
+        GlobalRate: *LowGlobalRate
+        Threads: *LowThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *LowDuration
+        Document: *Doc
+        BatchSize: *InsertBatchSize
+        OperationOptions: *OperationOptions
 
-# <-----  1 threads @ 400 per 1 second in batches of 50
-# <-----  Baseline: Phase 4
-- Name: InsertBaseline.Low.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: 11
-      PhaseConfig:
-        Collection: Collection1
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 400 per 1 second
-        Operations: *InsertOperations
-
-# <-----  1 threads @ 400 per 1 second in batches of 50
-# <-----  Baseline: Phase 4
-- Name: InsertBaseline.Low.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: 11
-      PhaseConfig:
-        Collection: Collection2
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 400 per 1 second
-        Operations: *InsertOperations
-
-# <-----  1 threads @ 400 per 1 second in batches of 50
-# <-----  Baseline: Phase 4
-- Name: InsertBaseline.Low.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: 11
-      PhaseConfig:
-        Collection: Collection3
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 400 per 1 second
-        Operations: *InsertOperations
-
-# <-----  1 threads @ 400 per 1 second in batches of 50
-# <-----  Benchmark: Phase 6
+# <-----  4 threads @ 25% in batches of 50
 - Name: InsertBenchmark.Low.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 1
+  Type: MultiCollectionInsert
+  ClientName: LowPool
+  Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: 11
+      Active: [7, 9, 11]
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Collection: Collection0
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 400 per 1 second
-        Operations: *InsertOperations
+        Threads: *LowThreads
+        GlobalRate: *LowGlobalRate
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *LowDuration
+        Document: *Doc
+        BatchSize: *InsertBatchSize
+        OperationOptions: *OperationOptions
 
-# <-----  1 threads @ 400 per 1 second in batches of 50
-# <-----  Benchmark: Phase 6
-- Name: InsertBenchmark.Low.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: 11
-      PhaseConfig:
-        Collection: Collection1
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 400 per 1 second
-        Operations: *InsertOperations
-
-# <-----  1 threads @ 400 per 1 second in batches of 50
-# <-----  Benchmark: Phase 6
-- Name: InsertBenchmark.Low.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: 11
-      PhaseConfig:
-        Collection: Collection2
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 400 per 1 second
-        Operations: *InsertOperations
-
-# <-----  1 threads @ 400 per 1 second in batches of 50
-# <-----  Benchmark: Phase 6
-- Name: InsertBenchmark.Low.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: 11
-      PhaseConfig:
-        Collection: Collection3
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 400 per 1 second
-        Operations: *InsertOperations
-
-# <-----  8 threads @ 1600 per 1 second in batches of 50
-# <-----  Baseline: Phase 8
+# <-----  8 threads @ 50% in batches of 50
 - Name: InsertBaseline.High.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 8
+  Type: MultiCollectionInsert
+  ClientName: HighPool
+  Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: 11
+      Active: [13]
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Collection: Collection0
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 1600 per 1 second
-        Operations: *InsertOperations
+        Threads: *HighThreads
+        GlobalRate: *HighGlobalRate
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *HighDuration
+        Document: *Doc
+        BatchSize: *InsertBatchSize
+        OperationOptions: *OperationOptions
 
-# <-----  8 threads @ 1600 per 1 second in batches of 50
-# <-----  Baseline: Phase 8
-- Name: InsertBaseline.High.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 8
-  Phases:
-    OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: 11
-      PhaseConfig:
-        Collection: Collection1
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 1600 per 1 second
-        Operations: *InsertOperations
-
-# <-----  8 threads @ 1600 per 1 second in batches of 50
-# <-----  Baseline: Phase 8
-- Name: InsertBaseline.High.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 8
-  Phases:
-    OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: 11
-      PhaseConfig:
-        Collection: Collection2
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 1600 per 1 second
-        Operations: *InsertOperations
-
-# <-----  8 threads @ 1600 per 1 second in batches of 50
-# <-----  Baseline: Phase 8
-- Name: InsertBaseline.High.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 8
-  Phases:
-    OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: 11
-      PhaseConfig:
-        Collection: Collection3
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 1600 per 1 second
-        Operations: *InsertOperations
-
-# <-----  8 threads @ 1600 per 1 second in batches of 50
-# <-----  Benchmark: Phase 10
+# <-----  8 threads @ 50% in batches of 50
 - Name: InsertBenchmark.High.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 8
+  Type: MultiCollectionInsert
+  ClientName: HighPool
+  Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [10]
-      NopInPhasesUpTo: 11
+      Active: [15, 17, 19]
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Collection: Collection0
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 1600 per 1 second
-        Operations: *InsertOperations
-
-# <-----  8 threads @ 1600 per 1 second in batches of 50
-# <-----  Benchmark: Phase 10
-- Name: InsertBenchmark.High.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 8
-  Phases:
-    OnlyActiveInPhases:
-      Active: [10]
-      NopInPhasesUpTo: 11
-      PhaseConfig:
-        Collection: Collection1
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 1600 per 1 second
-        Operations: *InsertOperations
-
-# <-----  8 threads @ 1600 per 1 second in batches of 50
-# <-----  Benchmark: Phase 10
-- Name: InsertBenchmark.High.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 8
-  Phases:
-    OnlyActiveInPhases:
-      Active: [10]
-      NopInPhasesUpTo: 11
-      PhaseConfig:
-        Collection: Collection2
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 1600 per 1 second
-        Operations: *InsertOperations
-
-# <-----  8 threads @ 1600 per 1 second in batches of 50
-# <-----  Benchmark: Phase 10
-- Name: InsertBenchmark.High.50
-  Type: CrudActor
-  Database: *dbname
-  Threads: 8
-  Phases:
-    OnlyActiveInPhases:
-      Active: [10]
-      NopInPhasesUpTo: 11
-      PhaseConfig:
-        Collection: Collection3
-        Duration: 1 minutes
-        RecordFailure: true
-        GlobalRate: 1600 per 1 second
-        Operations: *InsertOperations
-
+        Threads: *HighThreads
+        GlobalRate: *HighGlobalRate
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *HighDuration
+        Document: *Doc
+        BatchSize: *InsertBatchSize
+        OperationOptions: *OperationOptions
 
 AutoRun:
   Requires:

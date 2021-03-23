@@ -1,0 +1,19 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+
+Actors:
+- Name: MultiCollectionInsert
+  Type: MultiCollectionInsert
+  Threads: 100
+  Phases:
+  - Phase: 0 # Insert in batches of 1
+    Database: test
+    Repeat: 100
+    CollectionCount: &CollectionCount 10
+    Document: {foo: {^RandomInt: {min: 0, max: 100}}}
+  - Phase: 1  # Insert in batches of 1
+    Database: test
+    Duration: 5 seconds
+    CollectionCount: *CollectionCount
+    Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
+    BatchSize: 40
