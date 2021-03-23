@@ -59,8 +59,8 @@ Actors:
   Phases:
   - {Nop: true}
   - Duration: 10 minutes
-    Database: *DB
     GlobalRate: 5000 per 1 second
+    Database: *DB
     CollectionCount: *CollectionCount
     DocumentCount: *DocumentCount
     Filter: {_id: *rand_10k_int}
@@ -71,9 +71,9 @@ Actors:
   Phases:
   - {Nop: true}
   - Duration: 10 minutes
+    GlobalRate: 500 in 1 second
     MetricsName: Update
     Database: *DB
-    GlobalRate: 500 in 1 second
     CollectionCount: *CollectionCount
     DocumentCount: *DocumentCount
     UpdateFilter: {_id: *rand_10k_int}
