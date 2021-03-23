@@ -145,12 +145,20 @@ struct convert<mongocxx::options::find> {
         }
         if (node["Hint"]) {
             auto h = node["Hint"].as<std::string>();
-            auto hint = mongocxx::hint(h);
-            rhs.hint(hint);
+            auto hint = mongocxx::hint(std::move(h));
+            rhs.hint(mongocxx::hint(hint));
+        }
+        if (node["Comment"]) {
+            auto c = node["Comment"].as<std::string>();
+            rhs.comment(std::move(c));
         }
         if (node["Limit"]) {
             auto limit = node["Limit"].as<int>();
             rhs.limit(limit);
+        }
+        if (node["BatchSize"]) {
+            auto batchSize = node["BatchSize"].as<int>();
+            rhs.batch_size(batchSize);
         }
         if (node["MaxTime"]) {
             auto maxTime = node["MaxTime"].as<genny::TimeSpec>();
@@ -230,6 +238,10 @@ struct convert<mongocxx::options::transaction> {
         if (node["ReadConcern"]) {
             auto rc = node["ReadConcern"].as<mongocxx::read_concern>();
             rhs.read_concern(rc);
+        }
+        if (node["MaxCommitTimeMs"]) {
+            auto maxCommitTime = node["MaxCommitTimeMs"].as<genny::TimeSpec>();
+            rhs.max_commit_time_ms(std::chrono::milliseconds(maxCommitTime));
         }
         if (node["ReadPreference"]) {
             auto rp = node["ReadPreference"].as<mongocxx::read_preference>();

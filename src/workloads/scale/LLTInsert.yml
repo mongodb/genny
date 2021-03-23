@@ -25,22 +25,31 @@ GlobalDefaults:
   # Loader Config.
   LoadThreads: &LoadThreads 4
   LoadBatchSize: &LoadBatchSize 1000
-  SecondaryDocumentCount: &SecondaryNumDocs 10000000
-  CollectionCount: &CollectionCount 4
+
+  # In-memory
   InitialDocumentCount: &InitialNumDocs 10000000
+  SecondaryDocumentCount: &SecondaryNumDocs 10000000
+
+  # Not In-memory
+  #InitialDocumentCount: &InitialNumDocs 49000000
+  #SecondaryDocumentCount: &SecondaryNumDocs 1000000
+  CollectionCount: &CollectionCount 4
 
   # Common Baseline / Benchmark
   InsertBatchSize: &InsertBatchSize 50
 
   # Low Baseline / Benchmark
-  LowGlobalRate: &LowGlobalRate 10% # percentage gives a smoother rate. 400 per 1 second was the other option.
+  LowGlobalRate: &LowGlobalRate 400 per 1 second
   LowThreads: &LowThreads 4
-  LowDuration: &LowDuration 1 minutes
 
   # Low Baseline / Benchmark
-  HighGlobalRate: &HighGlobalRate 50% # percentage gives a smoother rate. 3200 per 1 second was the other option.
+  HighGlobalRate: &HighGlobalRate 800 per 1 second
   HighThreads: &HighThreads 8
-  HighDuration: &HighDuration 1 minutes
+
+  # Scanner
+  SnapshotScanner2MinutesDuration: &SnapshotScanner2MinutesDuration 2 minutes
+  SnapshotScanner10MinutesDuration: &SnapshotScanner10MinutesDuration 10 minutes
+  SnapshotScanner30MinutesDuration: &SnapshotScanner30MinutesDuration 30 minutes
 
   # The write concern. The intent is to use what is chosen as the default in 5.0.
   OperationOptions: &OperationOptions
@@ -50,6 +59,7 @@ GlobalDefaults:
 Clients:
   Default:
     QueryOptions:
+      socketTimeoutMS: -1
       maxPoolSize: 200
 
 # Odd phases do operations, even phases quiesce.
@@ -114,7 +124,7 @@ Actors:
         Threads: *LowThreads
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *LowDuration
+        Duration: *SnapshotScanner2MinutesDuration
         Document: *Doc
         BatchSize: *InsertBatchSize
         OperationOptions: *OperationOptions
@@ -126,19 +136,124 @@ Actors:
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [7, 9, 11]
+      Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Threads: *LowThreads
         GlobalRate: *LowGlobalRate
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *LowDuration
+        Duration: *SnapshotScanner2MinutesDuration
         Document: *Doc
         BatchSize: *InsertBatchSize
         OperationOptions: *OperationOptions
 
-# <-----  8 threads @ 50% in batches of 50
+## A thread per collection doing a scan.
+## Threads + CollectionCount + GenerateCollectionNames => a collection scanner per thread.
+- Name: SnapshotScanner2Minutes
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *SnapshotScanner2MinutesDuration
+        ScanType: snapshot
+        GenerateCollectionNames: true
+        CollectionSortOrder: forward
+        FindOptions:
+          # Limit: 1000
+          BatchSzie: 1000
+          Hint: _id_ # Currently only support the index name.
+          Comment: SnapshotScanner2Minutes
+
+  # <-----  4 threads @ 25% in batches of 50
+- Name: InsertBenchmark.Low.50
+  Type: MultiCollectionInsert
+  ClientName: LowPool
+  Threads: *LowThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Threads: *LowThreads
+        GlobalRate: *LowGlobalRate
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScanner10MinutesDuration
+        Blocking: none
+        Document: *Doc
+        BatchSize: *InsertBatchSize
+        OperationOptions: *OperationOptions
+
+- Name: SnapshotScanner10Minutes
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *SnapshotScanner10MinutesDuration
+        ScanType: snapshot
+        GenerateCollectionNames: true
+        CollectionSortOrder: forward
+        FindOptions:
+          # Limit: 1000
+          BatchSzie: 1000
+          Hint: _id_
+          Comment: SnapshotScanner10Minutes
+
+  # <-----  4 threads @ 25% in batches of 50
+- Name: InsertBenchmark.Low.50
+  Type: MultiCollectionInsert
+  ClientName: LowPool
+  Threads: *LowThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [11]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Threads: *LowThreads
+        GlobalRate: *LowGlobalRate
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScanner30MinutesDuration
+        Blocking: none
+        Document: *Doc
+        BatchSize: *InsertBatchSize
+        OperationOptions: *OperationOptions
+
+- Name: SnapshotScanner30Minutes
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [11]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *SnapshotScanner30MinutesDuration
+        ScanType: snapshot
+        GenerateCollectionNames: true
+        CollectionSortOrder: forward
+        FindOptions:
+          # Limit: 1000
+          BatchSize: 1000
+          Hint: _id_
+          Comment: SnapshotScanner30Minutes
+
+  # <-----  8 threads @ 50% in batches of 50
 - Name: InsertBaseline.High.50
   Type: MultiCollectionInsert
   ClientName: HighPool
@@ -152,7 +267,7 @@ Actors:
         GlobalRate: *HighGlobalRate
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *HighDuration
+        Duration: *SnapshotScanner2MinutesDuration
         Document: *Doc
         BatchSize: *InsertBatchSize
         OperationOptions: *OperationOptions
@@ -164,17 +279,123 @@ Actors:
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [15, 17, 19]
+      Active: [15]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Threads: *HighThreads
         GlobalRate: *HighGlobalRate
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *HighDuration
+        Duration: *SnapshotScanner2MinutesDuration
+        Blocking: none
         Document: *Doc
         BatchSize: *InsertBatchSize
         OperationOptions: *OperationOptions
+
+## A thread per collection doing a scan.
+## Threads + CollectionCount + GenerateCollectionNames => a collection scanner per thread.
+- Name: SnapshotScanner2Minutes
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [15]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *SnapshotScanner2MinutesDuration
+        ScanType: snapshot
+        GenerateCollectionNames: true
+        CollectionSortOrder: forward
+        FindOptions:
+          # Limit: 1000
+          BatchSzie: 1000
+          Hint: _id_
+          Comment: SnapshotScanner2Minutes
+
+# <-----  8 threads @ 50% in batches of 50
+- Name: InsertBenchmark.High.50
+  Type: MultiCollectionInsert
+  ClientName: HighPool
+  Threads: *HighThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [17]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Threads: *HighThreads
+        GlobalRate: *HighGlobalRate
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScanner10MinutesDuration
+        Blocking: none
+        Document: *Doc
+        BatchSize: *InsertBatchSize
+        OperationOptions: *OperationOptions
+
+- Name: SnapshotScanner10Minutes
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [17]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *SnapshotScanner10MinutesDuration
+        ScanType: snapshot
+        GenerateCollectionNames: true
+        CollectionSortOrder: forward
+        FindOptions:
+          # Limit: 1000
+          BatchSzie: 1000
+          Hint: _id_
+          Comment: SnapshotScanner10Minutes
+
+  # <-----  8 threads @ 50% in batches of 50
+- Name: InsertBenchmark.High.50
+  Type: MultiCollectionInsert
+  ClientName: HighPool
+  Threads: *HighThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [19]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Threads: *HighThreads
+        GlobalRate: *HighGlobalRate
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScanner30MinutesDuration
+        Blocking: none
+        Document: *Doc
+        BatchSize: *InsertBatchSize
+        OperationOptions: *OperationOptions
+
+- Name: SnapshotScanner30Minutes
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [19]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *SnapshotScanner30MinutesDuration
+        ScanType: snapshot
+        GenerateCollectionNames: true
+        CollectionSortOrder: forward
+        FindOptions:
+          # Limit: 1000
+          BatchSzie: 1000
+          Hint: _id_
+          Comment: SnapshotScanner30Minutes
 
 AutoRun:
   Requires:
