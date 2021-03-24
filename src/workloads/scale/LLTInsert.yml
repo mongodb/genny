@@ -26,11 +26,13 @@ GlobalDefaults:
   LoadThreads: &LoadThreads 4
   LoadBatchSize: &LoadBatchSize 1000
 
-  # In-memory
+  # In-memory: Database size works out about 12GB.
   InitialDocumentCount: &InitialNumDocs 10000000
   SecondaryDocumentCount: &SecondaryNumDocs 10000000
 
-  # Not In-memory
+  # WIP make a copy of the workload once these values are tuned correctly and
+  # the workload runs consistently.
+  # Not In-memory: Database size works out about 30GB.
   #InitialDocumentCount: &InitialNumDocs 49000000
   #SecondaryDocumentCount: &SecondaryNumDocs 1000000
   CollectionCount: &CollectionCount 4
@@ -47,9 +49,9 @@ GlobalDefaults:
   HighThreads: &HighThreads 8
 
   # Scanner
-  SnapshotScanner2MinutesDuration: &SnapshotScanner2MinutesDuration 2 minutes
-  SnapshotScanner10MinutesDuration: &SnapshotScanner10MinutesDuration 10 minutes
-  SnapshotScanner30MinutesDuration: &SnapshotScanner30MinutesDuration 30 minutes
+  SnapshotScannerShortDuration: &SnapshotScannerShortDuration 2 minutes
+  SnapshotScannerMediumDuration: &SnapshotScannerMediumDuration 10 minutes
+  SnapshotScannerLongDuration: &SnapshotScannerLongDuration 30 minutes
 
   # The write concern. The intent is to use what is chosen as the default in 5.0.
   OperationOptions: &OperationOptions
@@ -124,7 +126,7 @@ Actors:
         Threads: *LowThreads
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScanner2MinutesDuration
+        Duration: *SnapshotScannerShortDuration
         Document: *Doc
         BatchSize: *InsertBatchSize
         OperationOptions: *OperationOptions
@@ -143,14 +145,13 @@ Actors:
         GlobalRate: *LowGlobalRate
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScanner2MinutesDuration
+        Duration: *SnapshotScannerShortDuration
         Document: *Doc
         BatchSize: *InsertBatchSize
         OperationOptions: *OperationOptions
 
 ## A thread per collection doing a scan.
-## Threads + CollectionCount + GenerateCollectionNames => a collection scanner per thread.
-- Name: SnapshotScanner2Minutes
+- Name: SnapshotScannerShort
   Type: CollectionScanner
   Threads: *CollectionCount
   CollectionCount: *CollectionCount
@@ -161,15 +162,14 @@ Actors:
       Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Duration: *SnapshotScanner2MinutesDuration
+        Duration: *SnapshotScannerShortDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
-          # Limit: 1000
           BatchSzie: 1000
           Hint: _id_ # Currently only support the index name.
-          Comment: SnapshotScanner2Minutes
+          Comment: SnapshotScannerShort
 
   # <-----  4 threads @ 25% in batches of 50
 - Name: InsertBenchmark.Low.50
@@ -185,13 +185,13 @@ Actors:
         GlobalRate: *LowGlobalRate
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScanner10MinutesDuration
+        Duration: *SnapshotScannerMediumDuration
         Blocking: none
         Document: *Doc
         BatchSize: *InsertBatchSize
         OperationOptions: *OperationOptions
 
-- Name: SnapshotScanner10Minutes
+- Name: SnapshotScannerMedium
   Type: CollectionScanner
   Threads: *CollectionCount
   CollectionCount: *CollectionCount
@@ -202,15 +202,14 @@ Actors:
       Active: [9]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Duration: *SnapshotScanner10MinutesDuration
+        Duration: *SnapshotScannerMediumDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
-          # Limit: 1000
           BatchSzie: 1000
           Hint: _id_
-          Comment: SnapshotScanner10Minutes
+          Comment: SnapshotScannerMedium
 
   # <-----  4 threads @ 25% in batches of 50
 - Name: InsertBenchmark.Low.50
@@ -226,13 +225,13 @@ Actors:
         GlobalRate: *LowGlobalRate
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScanner30MinutesDuration
+        Duration: *SnapshotScannerLongDuration
         Blocking: none
         Document: *Doc
         BatchSize: *InsertBatchSize
         OperationOptions: *OperationOptions
 
-- Name: SnapshotScanner30Minutes
+- Name: SnapshotScannerLong
   Type: CollectionScanner
   Threads: *CollectionCount
   CollectionCount: *CollectionCount
@@ -243,15 +242,14 @@ Actors:
       Active: [11]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Duration: *SnapshotScanner30MinutesDuration
+        Duration: *SnapshotScannerLongDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
-          # Limit: 1000
           BatchSize: 1000
           Hint: _id_
-          Comment: SnapshotScanner30Minutes
+          Comment: SnapshotScannerLong
 
   # <-----  8 threads @ 50% in batches of 50
 - Name: InsertBaseline.High.50
@@ -267,7 +265,7 @@ Actors:
         GlobalRate: *HighGlobalRate
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScanner2MinutesDuration
+        Duration: *SnapshotScannerShortDuration
         Document: *Doc
         BatchSize: *InsertBatchSize
         OperationOptions: *OperationOptions
@@ -286,7 +284,7 @@ Actors:
         GlobalRate: *HighGlobalRate
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScanner2MinutesDuration
+        Duration: *SnapshotScannerShortDuration
         Blocking: none
         Document: *Doc
         BatchSize: *InsertBatchSize
@@ -294,7 +292,7 @@ Actors:
 
 ## A thread per collection doing a scan.
 ## Threads + CollectionCount + GenerateCollectionNames => a collection scanner per thread.
-- Name: SnapshotScanner2Minutes
+- Name: SnapshotScannerShort
   Type: CollectionScanner
   Threads: *CollectionCount
   CollectionCount: *CollectionCount
@@ -305,15 +303,14 @@ Actors:
       Active: [15]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Duration: *SnapshotScanner2MinutesDuration
+        Duration: *SnapshotScannerShortDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
-          # Limit: 1000
           BatchSzie: 1000
           Hint: _id_
-          Comment: SnapshotScanner2Minutes
+          Comment: SnapshotScannerShort
 
 # <-----  8 threads @ 50% in batches of 50
 - Name: InsertBenchmark.High.50
@@ -329,13 +326,13 @@ Actors:
         GlobalRate: *HighGlobalRate
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScanner10MinutesDuration
+        Duration: *SnapshotScannerMediumDuration
         Blocking: none
         Document: *Doc
         BatchSize: *InsertBatchSize
         OperationOptions: *OperationOptions
 
-- Name: SnapshotScanner10Minutes
+- Name: SnapshotScannerMedium
   Type: CollectionScanner
   Threads: *CollectionCount
   CollectionCount: *CollectionCount
@@ -346,15 +343,14 @@ Actors:
       Active: [17]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Duration: *SnapshotScanner10MinutesDuration
+        Duration: *SnapshotScannerMediumDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
-          # Limit: 1000
           BatchSzie: 1000
           Hint: _id_
-          Comment: SnapshotScanner10Minutes
+          Comment: SnapshotScannerMedium
 
   # <-----  8 threads @ 50% in batches of 50
 - Name: InsertBenchmark.High.50
@@ -370,13 +366,13 @@ Actors:
         GlobalRate: *HighGlobalRate
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScanner30MinutesDuration
+        Duration: *SnapshotScannerLongDuration
         Blocking: none
         Document: *Doc
         BatchSize: *InsertBatchSize
         OperationOptions: *OperationOptions
 
-- Name: SnapshotScanner30Minutes
+- Name: SnapshotScannerLong
   Type: CollectionScanner
   Threads: *CollectionCount
   CollectionCount: *CollectionCount
@@ -387,15 +383,14 @@ Actors:
       Active: [19]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Duration: *SnapshotScanner30MinutesDuration
+        Duration: *SnapshotScannerLongDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
-          # Limit: 1000
           BatchSzie: 1000
           Hint: _id_
-          Comment: SnapshotScanner30Minutes
+          Comment: SnapshotScannerLong
 
 AutoRun:
   Requires:

@@ -388,8 +388,8 @@ void CollectionScanner::run() {
                     config->collectionsFromNameList(database, config->collectionNames, collections);
                 }
             }
-            // BOOST_LOG_TRIVIAL(info) << "Starting collection scanner databases: \"" << _databaseNames
-            //                         << "\", id: " << this->_index << " " << config->collectionNames.size();
+            BOOST_LOG_TRIVIAL(debug) << "Starting collection scanner databases: \"" << _databaseNames
+                                     << "\", id: " << this->_index << " " << config->collectionNames.size();
 
 
             const SteadyClock::time_point started = SteadyClock::now();
@@ -429,7 +429,7 @@ void CollectionScanner::run() {
             }
 
             _runningActorCounter--;
-            // BOOST_LOG_TRIVIAL(info) << "Finished collection scanner id: " << this->_index;
+            BOOST_LOG_TRIVIAL(debug) << "Finished collection scanner id: " << this->_index;
         }
     }
 }
@@ -462,10 +462,9 @@ std::vector<std::string> distributeCollectionNames(size_t collectionCount,
                                                    ActorId actorId) {
     // We always want a fair division of collections to actors
     std::vector<std::string> collectionNames{};
-    auto remainder = threadCount > collectionCount ? threadCount % collectionCount :  collectionCount % threadCount;
-    if (remainder != 0) {
-        throw std::invalid_argument("Thread count must be multiple of database collection count "
-                                     "or database collection count must be multiple of Thread count");
+    if ((threadCount > collectionCount && threadCount % collectionCount != 0) ||
+        collectionCount % threadCount != 0) {
+        throw std::invalid_argument("Thread count must be mutliple of database collection count");
     }
     int collectionsPerActor = threadCount > collectionCount ? 1 : collectionCount / threadCount;
     int collectionIndexStart = (actorId % collectionCount) * collectionsPerActor;

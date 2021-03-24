@@ -211,8 +211,8 @@ struct NodeConvert<mongocxx::options::transaction> {
             auto rc = node["ReadConcern"].to<mongocxx::read_concern>();
             rhs.read_concern(rc);
         }
-        if (node["MaxCommitTimeMs"]) {
-            auto maxCommitTime = node["MaxCommitTimeMs"].to<genny::TimeSpec>();
+        if (node["MaxCommitTime"]) {
+            auto maxCommitTime = node["MaxCommitTime"].to<genny::TimeSpec>();
             rhs.max_commit_time_ms(std::chrono::milliseconds(maxCommitTime));
         }
         if (node["ReadPreference"]) {
