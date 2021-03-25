@@ -113,6 +113,7 @@ Finally the external poplar tool to the CLion 'Before Launch' list:
 ## Running Genny Self-Tests
 
 These self-tests are exercised in CI. For the exact invocations that the CI tests use, see evergreen.yml.
+All genny commands now use `./run-genny`. For a full list run `./run-genny --help`.
 
 ### Linters
 
@@ -131,8 +132,13 @@ Lint Workload and other YAML:
 
 ### C++ Unit-Tests
 
+```sh
+./run-genny cmake-test
 ```
-./scripts/lamp self-test
+
+### Python Unit-Tests
+```sh
+./run-genny self-test
 ```
 
 For more fine-tuned testing (eg. running a single test or excluding some) you
