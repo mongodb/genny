@@ -6,14 +6,29 @@ Actors:
   Type: MultiCollectionInsert
   Threads: 100
   Phases:
-  - Phase: 0 # Insert in batches of 1
-    Database: test
+  - Phase: 0
+    # 10 collections and 100 threads => 10 threads per collection.
+    # insert_many in batches of 50, 100 iterations (repeat).
+    Database: &Database test
     Repeat: 100
     CollectionCount: &CollectionCount 10
     Document: {foo: {^RandomInt: {min: 0, max: 100}}}
-  - Phase: 1  # Insert in batches of 1
-    Database: test
-    Duration: 5 seconds
+    BatchSize: &BatchSize 50
+    OperationOptions:
+      Ordered: true
+      WriteConcern:
+        Level: majority
+  - Phase: 1
+    # 10 collections and 20 threads => 2 threads per collection.
+    # insert_many in batches of 50 for 2 minutes.
+    Threads: 20
     CollectionCount: *CollectionCount
+    Database: *Database
     Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
-    BatchSize: 40
+    BatchSize: *BatchSize
+    Duration: 2 minutes
+    OperationOptions:
+      WriteConcern:
+        Level: 1
+        Timeout: 500 milliseconds
+

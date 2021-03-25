@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #include <cast_core/actors/CollectionScanner.hpp>
+#include <cast_core/actors/OptionsConversion.hpp>
 
 #include <chrono>
 #include <memory>
@@ -69,6 +70,7 @@ struct CollectionScanner::PhaseConfig {
     bool selectClusterTimeOnly = false;
     bool queryCollectionList;
     std::optional<mongocxx::options::transaction> transactionOptions;
+    mongocxx::options::find findOptions;
 
     PhaseConfig(PhaseContext& context,
                 const CollectionScanner* actor,
@@ -85,7 +87,8 @@ struct CollectionScanner::PhaseConfig {
           scanSizeBytes{context["ScanSizeBytes"].maybe<IntegerSpec>().value_or(0)},
           collectionSkip{context["CollectionSkip"].maybe<IntegerSpec>().value_or(0)},
           scanDuration{context["ScanDuration"].maybe<TimeSpec>()},
-          selectClusterTimeOnly{context["SelectClusterTimeOnly"].maybe<bool>().value_or(false)} {
+          selectClusterTimeOnly{context["SelectClusterTimeOnly"].maybe<bool>().value_or(false)},
+          findOptions{context["FindOptions"].maybe<mongocxx::options::find>().value_or(mongocxx::options::find{})} {
         // The list of databases is comma separated.
         std::vector<std::string> dbnames;
         boost::split(dbnames, databaseNames, [](char c) { return (c == ','); });
@@ -197,7 +200,7 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
     for (auto& collection : collections) {
         auto filter = config->filterExpr ? config->filterExpr->evaluate()
                                          : bsoncxx::document::view_or_value{};
-        auto docs = collection.find(session, filter);
+        auto docs = collection.find(session, filter, config->findOptions);
         /*
          * Try-catch this as the collection may have been deleted.
          * You can still do a find but it'll throw an exception when we iterate.
@@ -375,9 +378,6 @@ void CollectionScanner::run() {
                 continue;
             }
             _runningActorCounter++;
-            BOOST_LOG_TRIVIAL(info) << "Starting collection scanner databases: \"" << _databaseNames
-                                    << "\", id: " << this->_index;
-
             // Populate collection names if need be.
             std::vector<mongocxx::collection> collections;
             for (auto database : config->databases) {
@@ -388,6 +388,9 @@ void CollectionScanner::run() {
                     config->collectionsFromNameList(database, config->collectionNames, collections);
                 }
             }
+            BOOST_LOG_TRIVIAL(debug) << "Starting collection scanner databases: \"" << _databaseNames
+                                     << "\", id: " << this->_index << " " << config->collectionNames.size();
+
 
             const SteadyClock::time_point started = SteadyClock::now();
 
@@ -426,7 +429,7 @@ void CollectionScanner::run() {
             }
 
             _runningActorCounter--;
-            BOOST_LOG_TRIVIAL(info) << "Finished collection scanner id: " << this->_index;
+            BOOST_LOG_TRIVIAL(debug) << "Finished collection scanner id: " << this->_index;
         }
     }
 }
