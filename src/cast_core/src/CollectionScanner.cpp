@@ -398,29 +398,36 @@ void CollectionScanner::run() {
             if (config->scanType == ScanType::kCount) {
                 countScan(config, collections);
             } else if (config->scanType == ScanType::kSnapshot) {
-                mongocxx::client_session session = _client->start_session({});
-                session.start_transaction(*config->transactionOptions);
-                collectionScan(config, collections, _rateLimiter, session);
-                // If a scan duration was specified, we must make the scan
-                // last at least that long.  We'll do this within any
-                // running transaction, so we keep the "long running
-                // transaction" active as long as we've been asked to.
-                // However, honor the phase's duration if specified.
-                if (config->scanDuration) {
-                    const SteadyClock::time_point now = SteadyClock::now();
-                    auto stop = started + (*config->scanDuration).value;
-                    if (config->stopPhase && *config->stopPhase < stop) {
-                        stop = *config->stopPhase;
+                try {
+                    mongocxx::client_session session = _client->start_session({});
+                    session.start_transaction(*config->transactionOptions);
+                    collectionScan(config, collections, _rateLimiter, session);
+                    // If a scan duration was specified, we must make the scan
+                    // last at least that long.  We'll do this within any
+                    // running transaction, so we keep the "long running
+                    // transaction" active as long as we've been asked to.
+                    // However, honor the phase's duration if specified.
+                    if (config->scanDuration) {
+                        const SteadyClock::time_point now = SteadyClock::now();
+                        auto stop = started + (*config->scanDuration).value;
+                        if (config->stopPhase && *config->stopPhase < stop) {
+                            stop = *config->stopPhase;
+                        }
+                        if (stop > now) {
+                            auto sleepDuration = stop - now;
+                            auto secs = sleepDuration.count() / (1000 * 1000 * 1000);
+                            BOOST_LOG_TRIVIAL(info)
+                                << "Scanner id: " << this->_index << " sleeping " << secs;
+                            std::this_thread::sleep_for(sleepDuration);
+                        }
                     }
-                    if (stop > now) {
-                        auto sleepDuration = stop - now;
-                        auto secs = sleepDuration.count() / (1000 * 1000 * 1000);
-                        BOOST_LOG_TRIVIAL(info)
-                            << "Scanner id: " << this->_index << " sleeping " << secs;
-                        std::this_thread::sleep_for(sleepDuration);
-                    }
+                    session.commit_transaction();
+                } catch (const mongocxx::operation_exception& e) {
+                    BOOST_LOG_TRIVIAL(debug) << "Snapshot Scanner operation exception: " << e.what();
+                    auto exceptionsCaught = config->exceptionsCaught.start();
+                    exceptionsCaught.addDocuments(1);
+                    exceptionsCaught.success();
                 }
-                session.commit_transaction();
             } else if (config->scanType == ScanType::kPointInTime) {
                 pointInTimeScan(_client, config, readClusterTime);
             } else {
