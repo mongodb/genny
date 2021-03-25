@@ -35,7 +35,7 @@ namespace genny::actor {
  * Note: This actor is effectively in beta mode. We expect it to work, but
  * it hasn't been used extensively in production. Please let STM know of any
  * use so we can help monitor its effectiveness.
-*
+ *
  * Owner: @mongodb/stm
  */
 class QuiesceActor : public Actor {
@@ -51,7 +51,6 @@ public:
     }
 
 private:
-
     mongocxx::pool::entry _client;
 
     genny::metrics::Operation _totalQuiesces;

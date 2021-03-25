@@ -184,7 +184,6 @@ AutoRun:
   Requires:
     mongodb_setup:
     - replica
-    - replica-noflowcontrol
   PrepareEnvironmentWith:
     mongodb_setup:
     - replica-delay-mixed

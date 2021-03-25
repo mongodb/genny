@@ -288,6 +288,30 @@ Tests:
       $readPreference:
         mode: secondaryPreferred
 
+  - Description: Read preference is 'secondaryPreferred' in find.
+    Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: { a : 1 }
+          Options:
+            ReadPreference:
+              ReadMode: secondaryPreferred
+    ExpectAllEvents:
+      $readPreference:
+        mode: secondaryPreferred
+
+  - Description: Read preference is 'secondaryPreferred' in findOne.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a : 1 }
+          Options:
+            ReadPreference:
+              ReadMode: secondaryPreferred
+    ExpectAllEvents:
+      $readPreference:
+        mode: secondaryPreferred
+
   - Description: Read preference is 'nearest' with MaxStaleness set.
     Operations:
       - OperationName: countDocuments

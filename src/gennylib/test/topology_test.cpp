@@ -14,10 +14,10 @@
 
 #include <algorithm>
 
+#include <boost/log/trivial.hpp>
 #include <bsoncxx/builder/stream/array.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/builder/stream/helpers.hpp>
-#include <boost/log/trivial.hpp>
 
 #include <gennylib/v1/Topology.hpp>
 #include <testlib/helpers.hpp>
@@ -31,12 +31,17 @@ TEST_CASE("Topology visitor traverses nodes correctly") {
 
     class TestVisitor : public TopologyVisitor {
     public:
-        virtual void onMongod(const MongodDescription& desc) override { names.push_back(desc.mongodUri); }
+        virtual void onMongod(const MongodDescription& desc) override {
+            names.push_back(desc.mongodUri);
+        }
         // Mongos falls back to default nop-visit.
-        //virtual void onBeforeMongos(const MongosDescription& desc) {}
+        // virtual void onBeforeMongos(const MongosDescription& desc) {}
         // Same with replset
-        //virtual void onBeforeReplSet(const ReplSetDescription& desc) { names.push_back("visitedPrimary"); }
-        virtual void onBeforeShardedCluster(const ShardedDescription& desc) override { names.push_back("visitedShard"); }
+        // virtual void onBeforeReplSet(const ReplSetDescription& desc) {
+        // names.push_back("visitedPrimary"); }
+        virtual void onBeforeShardedCluster(const ShardedDescription& desc) override {
+            names.push_back("visitedShard");
+        }
         std::vector<std::string> names;
     };
 
@@ -64,7 +69,12 @@ TEST_CASE("Topology visitor traverses nodes correctly") {
     mongosDesc.mongosUri = "testMongos";
     shardedCluster.mongoses.push_back(mongosDesc);
 
-    std::vector<std::string> expected{"testConfigPrimaryUri", "testSet0node0", "testSet0node1", "testSet1node0", "testSet1node1", "visitedShard"};
+    std::vector<std::string> expected{"testConfigPrimaryUri",
+                                      "testSet0node0",
+                                      "testSet0node1",
+                                      "testSet1node0",
+                                      "testSet1node1",
+                                      "visitedShard"};
     TestVisitor visitor;
     shardedCluster.accept(visitor);
     REQUIRE(visitor.names.size() == expected.size());
@@ -75,24 +85,28 @@ TEST_CASE("Topology visitor traverses nodes correctly") {
 
 TEST_CASE("Topology maps the cluster correctly") {
     using bsoncxx::builder::stream::array;
+    using bsoncxx::builder::stream::close_array;
+    using bsoncxx::builder::stream::close_document;
     using bsoncxx::builder::stream::document;
     using bsoncxx::builder::stream::finalize;
     using bsoncxx::builder::stream::open_array;
-    using bsoncxx::builder::stream::close_array;
-    using bsoncxx::builder::stream::close_document;
     using bsoncxx::builder::stream::open_document;
 
     SECTION("Topology correctly maps a standalone") {
         class MockStandaloneConnection : public DBConnection {
 
-            ConnectionUri uri() const override { return "testUri"; }
+            ConnectionUri uri() const override {
+                return "testUri";
+            }
 
             bsoncxx::document::value runAdminCommand(std::string command) override {
                 if (command == "isMaster") {
                     auto doc = document{};
-                    return doc << "junkKey" << "junkValue" << finalize;
+                    return doc << "junkKey"
+                               << "junkValue" << finalize;
                 }
-                return document{} << "unplannedKey" << "unplannedValue" << finalize;
+                return document{} << "unplannedKey"
+                                  << "unplannedValue" << finalize;
             }
 
             std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) override {
@@ -111,20 +125,24 @@ TEST_CASE("Topology maps the cluster correctly") {
     SECTION("Topology correctly maps a replica set") {
         class MockReplConnection : public DBConnection {
 
-            ConnectionUri uri() const override { return "testPrimaryUriNeverUsedHere"; }
+            ConnectionUri uri() const override {
+                return "testPrimaryUriNeverUsedHere";
+            }
 
             bsoncxx::document::value runAdminCommand(std::string command) override {
                 if (command == "isMaster") {
                     auto doc = document{};
-                    doc << "setName" << "testSetName";
-                    doc << "primary" << "testPrimaryHost:testPrimaryPort";
-                    doc << "hosts"
-                        << open_array << "testPrimaryHost:testPrimaryPort" << "host2:port2"
+                    doc << "setName"
+                        << "testSetName";
+                    doc << "primary"
+                        << "testPrimaryHost:testPrimaryPort";
+                    doc << "hosts" << open_array << "testPrimaryHost:testPrimaryPort"
+                        << "host2:port2"
                         << "host3:port3" << close_array;
                     return doc << finalize;
-
                 }
-                return document{} << "unplannedKey" << "unplannedValue" << finalize;
+                return document{} << "unplannedKey"
+                                  << "unplannedValue" << finalize;
             }
 
             std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) override {
@@ -138,10 +156,11 @@ TEST_CASE("Topology maps the cluster correctly") {
         topology.accept(visitor);
 
         stringstream expected;
-        expected << "{primaryUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny, "
+        expected
+            << "{primaryUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny, "
             << "nodes: [{mongodUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny}, "
-                    << "{mongodUri: mongodb://host2:port2/?appName=Genny}, "
-                    << "{mongodUri: mongodb://host3:port3/?appName=Genny}]}";
+            << "{mongodUri: mongodb://host2:port2/?appName=Genny}, "
+            << "{mongodUri: mongodb://host3:port3/?appName=Genny}]}";
 
         REQUIRE(expected.str() == visitor.str());
     }
@@ -149,19 +168,22 @@ TEST_CASE("Topology maps the cluster correctly") {
     SECTION("Topology correctly maps a sharded cluster") {
         class MockConfigConnection : public DBConnection {
 
-            ConnectionUri uri() const override { return "testConfigUriNeverUsedHere"; }
+            ConnectionUri uri() const override {
+                return "testConfigUriNeverUsedHere";
+            }
 
             bsoncxx::document::value runAdminCommand(std::string command) override {
                 if (command == "isMaster") {
                     auto doc = document{};
-                    doc << "setName" << "configSet";
-                    doc << "primary" << "testConfigHost:testConfigPort";
-                    doc << "hosts"
-                        << open_array << "testConfigHost:testConfigPort" << close_array;
+                    doc << "setName"
+                        << "configSet";
+                    doc << "primary"
+                        << "testConfigHost:testConfigPort";
+                    doc << "hosts" << open_array << "testConfigHost:testConfigPort" << close_array;
                     return doc << finalize;
-
                 }
-                return document{} << "unplannedKey" << "unplannedValue" << finalize;
+                return document{} << "unplannedKey"
+                                  << "unplannedValue" << finalize;
             }
 
             std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) override {
@@ -170,19 +192,23 @@ TEST_CASE("Topology maps the cluster correctly") {
         };
         class MockShardConnection : public DBConnection {
 
-            ConnectionUri uri() const override { return "testShardUriNeverUsedHere"; }
+            ConnectionUri uri() const override {
+                return "testShardUriNeverUsedHere";
+            }
 
             bsoncxx::document::value runAdminCommand(std::string command) override {
                 if (command == "isMaster") {
                     auto doc = document{};
-                    doc << "setName" << "shard1";
-                    doc << "primary" << "shardNode1:shardPort1";
-                    doc << "hosts"
-                        << open_array << "shardNode1:shardPort1" << "shardNode2:shardPort2" << close_array;
+                    doc << "setName"
+                        << "shard1";
+                    doc << "primary"
+                        << "shardNode1:shardPort1";
+                    doc << "hosts" << open_array << "shardNode1:shardPort1"
+                        << "shardNode2:shardPort2" << close_array;
                     return doc << finalize;
-
                 }
-                return document{} << "unplannedKey" << "unplannedValue" << finalize;
+                return document{} << "unplannedKey"
+                                  << "unplannedValue" << finalize;
             }
 
             std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) override {
@@ -192,30 +218,31 @@ TEST_CASE("Topology maps the cluster correctly") {
 
         class MockShardedClusterConnection : public DBConnection {
 
-            ConnectionUri uri() const override { return "mongodb://testMongosUri:11111/?appName=Genny"; }
+            ConnectionUri uri() const override {
+                return "mongodb://testMongosUri:11111/?appName=Genny";
+            }
 
             bsoncxx::document::value runAdminCommand(std::string command) override {
 
                 if (command == "isMaster") {
-                    return document{} << "msg" << "isdbgrid" << finalize;
-
+                    return document{} << "msg"
+                                      << "isdbgrid" << finalize;
                 }
                 if (command == "getShardMap") {
                     auto doc = document{};
-                    doc << "map" << open_document
-                        << "config" << "configSvr/configHost:configPort"
-                        << close_document;
+                    doc << "map" << open_document << "config"
+                        << "configSvr/configHost:configPort" << close_document;
                     return doc << finalize;
                 }
                 if (command == "listShards") {
                     auto doc = document{};
-                    doc << "shards" << open_array
-                        << open_document << "host"
+                    doc << "shards" << open_array << open_document << "host"
                         << "shard1/shardNode1:shardPort1,shardNode2:shardPort2" << close_document
                         << close_array;
                     return doc << finalize;
                 }
-                return document{} << "unplannedKey" << "unplannedValue" << finalize;
+                return document{} << "unplannedKey"
+                                  << "unplannedValue" << finalize;
             }
 
             std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) override {
@@ -235,14 +262,14 @@ TEST_CASE("Topology maps the cluster correctly") {
         topology.accept(visitor);
 
         stringstream expected;
-        expected << "{configsvr: {primaryUri: mongodb://testConfigHost:testConfigPort/?appName=Genny, "
-                      << "nodes: [{mongodUri: mongodb://testConfigHost:testConfigPort/?appName=Genny}]} "
-                 << "shards: [{primaryUri: mongodb://shardNode1:shardPort1/?appName=Genny, "
-                            << "nodes: [{mongodUri: mongodb://shardNode1:shardPort1/?appName=Genny}, "
-                            << "{mongodUri: mongodb://shardNode2:shardPort2/?appName=Genny}]}],  "
-                 << "mongoses: [{mongosUri: mongodb://testmongosuri:11111/?appName=Genny}]}";
+        expected
+            << "{configsvr: {primaryUri: mongodb://testConfigHost:testConfigPort/?appName=Genny, "
+            << "nodes: [{mongodUri: mongodb://testConfigHost:testConfigPort/?appName=Genny}]} "
+            << "shards: [{primaryUri: mongodb://shardNode1:shardPort1/?appName=Genny, "
+            << "nodes: [{mongodUri: mongodb://shardNode1:shardPort1/?appName=Genny}, "
+            << "{mongodUri: mongodb://shardNode2:shardPort2/?appName=Genny}]}],  "
+            << "mongoses: [{mongosUri: mongodb://testmongosuri:11111/?appName=Genny}]}";
 
         REQUIRE(expected.str() == visitor.str());
     }
-
 };

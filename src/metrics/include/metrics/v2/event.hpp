@@ -287,6 +287,10 @@ public:
 
 
 private:
+    // context.cpp:
+    //     auto metricsPath =
+    //        ((*this)["Metrics"]["Path"]).maybe<std::string>().value_or("build/genny-metrics");
+    //    _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
     static auto createPath(const std::string& name, const boost::filesystem::path& pathPrefix) {
         std::stringstream str;
         str << name << ".ftdc";

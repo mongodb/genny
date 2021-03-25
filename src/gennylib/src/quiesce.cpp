@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <atomic>
+#include <mutex>
 #include <string_view>
 #include <thread>
-#include <mutex>
-#include <atomic>
 
-#include <mongocxx/uri.hpp>
-#include <mongocxx/client.hpp>
-#include <mongocxx/database.hpp>
-#include <bsoncxx/types.hpp>
 #include <bsoncxx/array/view.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
+#include <bsoncxx/types.hpp>
+#include <mongocxx/client.hpp>
+#include <mongocxx/database.hpp>
+#include <mongocxx/uri.hpp>
 
 #include <boost/log/trivial.hpp>
 
@@ -58,8 +58,8 @@ bool waitOplog(v1::Topology& topology) {
                     std::string state(member["stateStr"].get_utf8().value);
                     if (state != "PRIMARY" && state != "SECONDARY" && state != "ARBITER") {
                         std::string name(member["name"].get_utf8().value);
-                        BOOST_LOG_TRIVIAL(warning) << "Cannot wait oplog, replset member "
-                            << name << " is " << state;
+                        BOOST_LOG_TRIVIAL(warning)
+                            << "Cannot wait oplog, replset member " << name << " is " << state;
                         _successAcc = false;
                         return;
                     }
@@ -67,7 +67,7 @@ bool waitOplog(v1::Topology& topology) {
             }
 
             // Do flush. We do a write concern of "all" and journaling
-            // enabled, so when the write returns we know everything 
+            // enabled, so when the write returns we know everything
             // before it is replicated.
             auto collection = admin["wait_oplog"];
             mongocxx::write_concern wc;
@@ -76,11 +76,14 @@ bool waitOplog(v1::Topology& topology) {
             mongocxx::options::insert opts;
             opts.write_concern(wc);
             auto insertRes = collection.insert_one(make_document(kvp("x", "flush")), opts);
-        
+
             _successAcc = _successAcc && insertRes && insertRes->result().inserted_count() == 1;
         }
 
-        bool success() { return _successAcc; }
+        bool success() {
+            return _successAcc;
+        }
+
     private:
         bool _successAcc = true;
     };
@@ -116,27 +119,32 @@ bool checkForDroppedCollections(mongocxx::database db) {
     return idents.get_int64() != 0;
 }
 
-bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client, const std::string& dbName, 
-        const SleepContext& sleepContext) {
+bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client,
+                                      const std::string& dbName,
+                                      const SleepContext& sleepContext) {
     auto db = client->database(dbName);
     int retries = 0;
     while (checkForDroppedCollections(db) && retries < DROPPED_COLLECTION_RETRIES) {
-        BOOST_LOG_TRIVIAL(debug) << "Sleeping 1 second while waiting for collection to finish dropping.";
+        BOOST_LOG_TRIVIAL(debug)
+            << "Sleeping 1 second while waiting for collection to finish dropping.";
         retries++;
         sleepContext.sleep_for(std::chrono::seconds(1));
     }
     if (retries >= DROPPED_COLLECTION_RETRIES) {
         BOOST_LOG_TRIVIAL(error) << "Timeout on waiting for collections to drop. "
-            << "Tried " << retries << " >= " << DROPPED_COLLECTION_RETRIES << " max.";
+                                 << "Tried " << retries << " >= " << DROPPED_COLLECTION_RETRIES
+                                 << " max.";
         return false;
     }
     return true;
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
-bool quiesce(mongocxx::pool::entry& client, const std::string& dbName, const SleepContext& sleepContext) {
-    /* Only one thread needs to actually do the quiesce. If 
+bool quiesce(mongocxx::pool::entry& client,
+             const std::string& dbName,
+             const SleepContext& sleepContext) {
+    /* Only one thread needs to actually do the quiesce. If
      * another thread enters the function while a quiesce
      * is happening, it waits until the quiesce finishes
      * and exits.
@@ -144,13 +152,14 @@ bool quiesce(mongocxx::pool::entry& client, const std::string& dbName, const Sle
     static std::mutex quiesceLock;
     static std::atomic_bool success;
 
-    if (quiesceLock.try_lock()) { 
+    if (quiesceLock.try_lock()) {
         // We are the thread actually quiescing.
         const std::lock_guard<std::mutex> lock(quiesceLock, std::adopt_lock);
         v1::Topology topology(*client);
         bool waitOplogSuccess = waitOplog(topology);
         doFsync(topology);
-        bool checkDroppedCollectionSuccess = checkForDroppedCollectionsTestDB(client, dbName, sleepContext);
+        bool checkDroppedCollectionSuccess =
+            checkForDroppedCollectionsTestDB(client, dbName, sleepContext);
         success = waitOplogSuccess && checkDroppedCollectionSuccess;
     } else {
         // We are waiting for another thread to do the quiesce.
@@ -161,4 +170,4 @@ bool quiesce(mongocxx::pool::entry& client, const std::string& dbName, const Sle
     return success;
 }
 
-} // namespace genny
+}  // namespace genny

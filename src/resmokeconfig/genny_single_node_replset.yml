@@ -1,8 +1,13 @@
 test_kind: gennylib_test
 
+##
+# When debugging resmoke test failures, comment out the --reporter and --out params
+# to see the raw stdout output which has helpful error messaging from catch2.
+##
+
 executor:
   config:
-    program_executable: build/src/cast_core/cast_core_test
+    program_executable: ./src/genny/build/src/cast_core/cast_core_test
     verbatim_arguments:
     - "--reporter"
     - "junit"
@@ -12,7 +17,7 @@ executor:
     - "12345"
     - "--success"
     - "--out"
-    - "build/cast_core_test.junit.xml"
+    - "./build/XUnitXML/cast_core_test.junit.xml"
     - "[single_node_replset]"
   fixture:
     class: ReplicaSetFixture

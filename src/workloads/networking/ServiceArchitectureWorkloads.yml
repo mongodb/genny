@@ -74,3 +74,4 @@ AutoRun:
     mongodb_setup: 
     - replica
     - replica-noflowcontrol
+    - replica-all-feature-flags

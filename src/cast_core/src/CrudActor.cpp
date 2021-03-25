@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <cast_core/actors/CrudActor.hpp>
+#include <cast_core/actors/OptionsConversion.hpp>
 
 #include <chrono>
 #include <memory>
@@ -33,157 +34,6 @@
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
-
-namespace genny {
-
-template <>
-struct NodeConvert<mongocxx::options::aggregate> {
-    using type = mongocxx::options::aggregate;
-
-    static type convert(const Node& node) {
-        type rhs{};
-        if (node["AllowDiskUse"]) {
-            auto allowDiskUse = node["AllowDiskUse"].to<bool>();
-            rhs.allow_disk_use(allowDiskUse);
-        }
-        if (node["BatchSize"]) {
-            auto batchSize = node["BatchSize"].to<int>();
-            rhs.batch_size(batchSize);
-        }
-        if (node["MaxTime"]) {
-            auto maxTime = node["MaxTime"].to<genny::TimeSpec>();
-            rhs.max_time(std::chrono::milliseconds(maxTime));
-        }
-        if (node["ReadPreference"]) {
-            auto readPreference = node["ReadPreference"].to<mongocxx::read_preference>();
-            rhs.read_preference(readPreference);
-        }
-        if (node["BypassDocumentValidation"]) {
-            auto bypassValidation = node["BypassDocumentValidation"].to<bool>();
-            rhs.bypass_document_validation(bypassValidation);
-        }
-        if (node["Hint"]) {
-            auto h = node["Hint"].to<std::string>();
-            auto hint = mongocxx::hint(h);
-            rhs.hint(hint);
-        }
-        if (node["WriteConcern"]) {
-            auto wc = node["WriteConcern"].to<mongocxx::write_concern>();
-            rhs.write_concern(wc);
-        }
-        return rhs;
-    }
-};
-
-template <>
-struct NodeConvert<mongocxx::options::bulk_write> {
-    using type = mongocxx::options::bulk_write;
-
-    static type convert(const Node& node) {
-        type rhs{};
-        if (node["BypassDocumentValidation"]) {
-            auto bypassDocValidation = node["BypassDocumentValidation"].to<bool>();
-            rhs.bypass_document_validation(bypassDocValidation);
-        }
-        if (node["Ordered"]) {
-            auto isOrdered = node["Ordered"].to<bool>();
-            rhs.ordered(isOrdered);
-        }
-        if (node["WriteConcern"]) {
-            auto wc = node["WriteConcern"].to<mongocxx::write_concern>();
-            rhs.write_concern(wc);
-        }
-        return rhs;
-    }
-};
-
-template <>
-struct NodeConvert<mongocxx::options::count> {
-    using type = mongocxx::options::count;
-
-    static type convert(const Node& node) {
-        type rhs{};
-        if (node["Hint"]) {
-            auto h = node["Hint"].to<std::string>();
-            auto hint = mongocxx::hint(h);
-            rhs.hint(hint);
-        }
-        if (node["Limit"]) {
-            auto limit = node["Limit"].to<int>();
-            rhs.limit(limit);
-        }
-        if (node["MaxTime"]) {
-            auto maxTime = node["MaxTime"].to<genny::TimeSpec>();
-            rhs.max_time(std::chrono::milliseconds{maxTime});
-        }
-        if (node["ReadPreference"]) {
-            auto readPref = node["ReadPreference"].to<mongocxx::read_preference>();
-            rhs.read_preference(readPref);
-        }
-        return rhs;
-    }
-};
-
-template <>
-struct NodeConvert<mongocxx::options::estimated_document_count> {
-    using type = mongocxx::options::estimated_document_count;
-
-    static type convert(const Node& node) {
-        type rhs{};
-        if (node["MaxTime"]) {
-            auto maxTime = node["MaxTime"].to<genny::TimeSpec>();
-            rhs.max_time(std::chrono::milliseconds{maxTime});
-        }
-        if (node["ReadPreference"]) {
-            auto readPref = node["ReadPreference"].to<mongocxx::read_preference>();
-            rhs.read_preference(readPref);
-        }
-        return rhs;
-    }
-};
-
-
-template <>
-struct NodeConvert<mongocxx::options::insert> {
-    using type = mongocxx::options::insert;
-
-    static type convert(const Node& node) {
-        type rhs{};
-        if (node["Ordered"]) {
-            rhs.ordered(node["Ordered"].to<bool>());
-        }
-        if (node["BypassDocumentValidation"]) {
-            rhs.bypass_document_validation(node["BypassDocumentValidation"].to<bool>());
-        }
-        if (node["WriteConcern"]) {
-            rhs.write_concern(node["WriteConcern"].to<mongocxx::write_concern>());
-        }
-        return rhs;
-    }
-};
-
-template <>
-struct NodeConvert<mongocxx::options::transaction> {
-    using type = mongocxx::options::transaction;
-
-    static type convert(const Node& node) {
-        type rhs{};
-        if (node["WriteConcern"]) {
-            auto wc = node["WriteConcern"].to<mongocxx::write_concern>();
-            rhs.write_concern(wc);
-        }
-        if (node["ReadConcern"]) {
-            auto rc = node["ReadConcern"].to<mongocxx::read_concern>();
-            rhs.read_concern(rc);
-        }
-        if (node["ReadPreference"]) {
-            auto rp = node["ReadPreference"].to<mongocxx::read_preference>();
-            rhs.read_preference(rp);
-        }
-        return rhs;
-    }
-};
-}  // namespace genny
 
 namespace {
 
@@ -769,7 +619,11 @@ struct FindOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {}
+          _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {
+        if (opNode["Options"]) {
+            _options = opNode["Options"].to<mongocxx::options::find>();
+        }
+    }
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filter();
@@ -804,7 +658,11 @@ struct FindOneOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {}
+          _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {
+        if (opNode["Options"]) {
+            _options = opNode["Options"].to<mongocxx::options::find>();
+        }
+    }
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filter();

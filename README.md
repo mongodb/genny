@@ -3,8 +3,8 @@
 Genny
 =====
 
-Genny is a workload-generator library and tool. It is implemented using
-C++17.
+Genny is a workload-generator with first-class support for
+time-series data-collection of operations running against MongoDB.
 
 Genny uses the [Evergreen Commit-Queue][cq]. When you have received approval
 for your PR, simply comment `evergreen merge` and your PR will automatically
@@ -29,36 +29,26 @@ Here're the steps to get Genny up and running locally:
     The ones from mongodbtoolchain v3 are safe bets if you're
     unsure. (mongodbtoolchain is internal to MongoDB).
 
-3.  `./scripts/lamp [--linux-distro ubuntu1804/rhel7/amazon2/arch]` once
-    you have Python 3.7+ installed.
+3.  `./run-genny install [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
 
     This command downloads Genny's toolchain, compiles Genny, creates its
-    virtualenv, and
-    installs Genny to `dist/`. You can rerun this command at any time to
-    rebuild Genny. If your OS isn't the supported, please let us know in
+    virtualenv, and installs Genny to `dist/`. You can rerun this command
+    at any time to rebuild Genny. If your OS isn't the supported, please let us know in
     `#workload-generation` slack or on GitHub.
 
     Note that the `--linux-distro` argument is not needed on macOS.
-
-    To avoid polluting your system with python changes, lamp creates a 
-    virtualenv. Installing globally is not recommended, but may be done
-    with the `-g` or `--run-global` option.
 
     You can also specify `--build-system make` if you prefer to build
     using `make` rather than `ninja`. Building using `make` may make
     some IDEs happier.
 
-    If you get python errors from `lamp` such as this:
-
-    > `TypeError: __init__() got an unexpected keyword argument 'capture_output'`
-
-    ensure you have a modern version of python3. On a Mac, run
-    `brew install python3` (assuming you have [homebrew
-    installed](https://brew.sh/)) and then restart your shell.
+    If you get python errors, ensure you have a modern version of python3.
+    On a Mac, run `brew install python3` (assuming you have [homebrew installed](https://brew.sh/))
+    and then restart your shell.
 
 ## IDEs and Whatnot
 
-We follow CMake and C++17 best-practices so anything that doesn't work
+We follow CMake and C++17 best-practices, so anything that doesn't work
 via "normal means" is probably a bug.
 
 We support using CLion and any conventional editors or IDEs (VSCode,
@@ -69,7 +59,7 @@ it's not going to make common editing environments go wonky.
 If you're using CLion, make sure to set `CMake options`
 (in settings/preferences) so it can find the toolchain.
 
-The cmake command is printed when `lamp` runs, you can
+The cmake command is printed when `run-genny install` runs, you can
 copy and paste the options into Clion. The options
 should look something like this:
 
@@ -80,30 +70,75 @@ should look something like this:
 -DVCPKG_TARGET_TRIPLET=x64-osx-static
 ```
 
-If you run `./scripts/lamp -b make` it should set up everything for you.
+See the following images:
+
+### CLion ToolChain Settings
+
+![toolchain](https://user-images.githubusercontent.com/22506/112030965-b9659500-8b32-11eb-9fa4-523640f4c95a.png?raw=true "Toolchains Settings")
+
+### CLion CMake Settings
+
+![CMake](https://user-images.githubusercontent.com/22506/112030931-ac48a600-8b32-11eb-9a09-0f3fd9138c8e.png?raw=true "Cmake Settings")
+
+If you run `./run-genny install -b make` it should set up everything for you.
 You just need to set the "Generation Path" to your `build` directory.
 
+### Automatically Running Poplar before genny_core launch in CLion
 
-## Lint Workload YAML Files and Generate Test Reports
+Create a file called poplar.sh with the following contents:
 
-Please refer to `src/lamplib/README.md` for more information on how to
-lint YAML files and generating test reports.
+```bash
+#!/bin/bash
+pkill -9 curator # Be careful if there are more curator processes that should be kept. 
+DATE_SUFFIX=$(date +%s)
+mv  build/CedarMetrics  build/CedarMetrics-${DATE_SUFFIX} 2>/dev/null
+mv build/WorkloadOutput-${DATE_SUFFIX} 2>/dev/null
 
+# curator is installed by cmake.
+build/curator/curator poplar grpc &
+
+sleep 1
+```
+
+Next create an external tool for poplar in CLion:
+
+![poplar](https://user-images.githubusercontent.com/22506/112030958-b66aa480-8b32-11eb-9857-593adb3e9832.png?raw=true "Poplar External tool")
+
+*Note*: the Working directory value is required. 
+
+Finally the external poplar tool to the CLion 'Before Launch' list:
+
+![Debug](https://user-images.githubusercontent.com/22506/112030946-b23e8700-8b32-11eb-9c40-a455355969bd.png?raw=true "Debug Before Launch.")
 
 ## Running Genny Self-Tests
 
-Genny has self-tests using Catch2. You can run them with the following command:
+These self-tests are exercised in CI. For the exact invocations that the CI tests use, see evergreen.yml.
+
+### Linters
+
+
+Lint Python:
 
 ```sh
-# Build Genny first: `./scripts/lamp [...]`
-./scripts/lamp cmake-test
+./run-genny lint-python # add --fix to fix any errors.
+```
+
+Lint Workload and other YAML:
+
+```sh
+./run-genny lint-yaml
+```
+
+### C++ Unit-Tests
+
+```
+./scripts/lamp self-test
 ```
 
 For more fine-tuned testing (eg. running a single test or excluding some) you
 can manually invoke the test binaries:
 
 ```sh
-# Build Genny first: `./scripts/lamp [...]`
 ./build/src/gennylib/gennylib_test "My testcase"
 ```
 
@@ -114,7 +149,7 @@ Read more about what parameters you can pass [here][catch2].
 
 ### Benchmark Tests
 
-The above `cmake-test` line also runs so-called "benchmark" tests. They
+The above `self-test` line also runs so-called "benchmark" tests. They
 can take a while to run and may fail occasionally on local developer
 machines, especially if you have an IDE or web browser open while the
 test runs.
@@ -134,19 +169,16 @@ The Actor tests use resmoke to set up a real MongoDB cluster and execute
 the test binary. The resmoke yaml config files that define the different
 cluster configurations are defined in `src/resmokeconfig`.
 
-resmoke.py can be run locally as follows:
-
 ```sh
-# Set up virtualenv and install resmoke requirements if needed.
-# From Genny's top-level directory.
-python /path/to/resmoke.py run --suite src/resmokeconfig/genny_standalone.yml
+# Example:
+./run-genny resmoke-test --suite src/resmokeconfig/genny_standalone.yml
 ```
 
 Each yaml configuration file will only run tests that are associated
 with their specific tags. (Eg. `genny_standalone.yml` will only run
-tests that have been tagged with the "[standalone]" tag.)
+tests that have been tagged with the `[standalone]` tag.)
 
-When creating a new Actor, `create-new-actor.sh` will generate a new test case
+When creating a new Actor, `./run-genny create-new-actor` will generate a new test case
 template to ensure the new Actor can run against different MongoDB topologies,
 please update the template as needed so it uses the newly-created Actor.
 
@@ -167,7 +199,7 @@ if you are writing a workload or making changes to more than just this repo.
 IDEs can debug Genny if it is built with the `Debug` build type:
 
 ```sh
-./scripts/lamp -DCMAKE_BUILD_TYPE=Debug
+./run-genny install -- -DCMAKE_BUILD_TYPE=Debug
 ```
 
 
@@ -185,25 +217,23 @@ Then build Genny (see [above](#build-and-install) for details):
 And then run a workload:
 
 ```sh
-./scripts/genny run                                                 \
+./run-genny workload -- run                                         \
     --workload-file       ./src/workloads/scale/InsertRemove.yml    \
     --mongo-uri           'mongodb://localhost:27017'
 ```
 
-Logging currently goes to stdout, and in this example, metrics data is
-written to `./build/genny-metrics.csv`.
-
-Post-processing of metrics data is done by Python scripts in the
-`src/lamplib` directory. See [the README there](./src/lamplib/README.md).
-
+Logging currently goes to stdout and metrics data (ftdc) is written to
+`./build/CedarMetrics`.
 
 ## Creating New Actors
 
 To create a new Actor, run the following:
 
 ```sh
-./scripts/create-new-actor.sh NameOfYourNewActor
+./run-genny create-new-actor NameOfYourNewActor
 ```
+
+TODO: the docs output by create-new-actor are out of date.
 
 
 ## Workload YAMLs
@@ -238,7 +268,7 @@ A couple of tips on defining external phase configs:
     instead. The notable exceptions are `Name`, `Type`, and `Threads`,
     which must be defined on `Actor`.
 
-2.  `genny evaluate /path/to/your/workload` is your friend. `evaluate` prints out
+2.  `./run-genny workload -- evaluate ./src/workloads/docs/HelloWorld.yml` is your friend. `evaluate` prints out
     the final YAML workload with all external phase definitions inlined.
 
 
@@ -345,15 +375,15 @@ errors. These are not currently run in a CI job. If you are adding
 complicated code and are afraid of undefined behavior or data-races
 etc, you can run the clang sanitizers yourself easily.
 
-Run `./scripts/lamp --help` for information on what sanitizers there are.
+Run `./run-genny install --help` for information on what sanitizers there are.
 
 To run with ASAN:
 
 ```sh
-./scripts/lamp -b make -s asan
-./scripts/lamp cmake-test
+./run-genny install --build-system make --sanitizer asan
+./run-genny self-test
 # Pick a workload YAML that uses your Actor below
-ASAN_OPTIONS="detect_container_overflow=0" ./build/src/driver/genny run ./src/workloads/docs/HelloWorld.yml
+ASAN_OPTIONS="detect_container_overflow=0" ./run-genny workload -- run ./src/workloads/docs/HelloWorld.yml
 ```
 
 The toolchain isn't instrumented with sanitizers, so you may get

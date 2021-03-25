@@ -1,0 +1,184 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  Workload to Benchmark the effect of LongLivedTransactions on an Insert workload.
+
+GlobalDefaults:
+  # These values should match those are the top of LLTPhases.yml
+  dbname: &dbname llt
+  MaxPhases: &MaxPhases 20
+
+  # The Sample Document Shape.
+  Document: &Doc
+    ts: {^Now: {}}
+    caid: {^RandomInt: {min: 0, max: 1000}}
+    cuid: {^RandomInt: {min: 0, max: 100000}}
+    prod: {^RandomInt: {min: 0, max: 10000}}
+    prid: {^RandomDouble: {min: 0.0, max: 1000.0}}
+    data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
+
+  LLTIndexes: &LLTIndexes
+    - keys: {cuid: 1, data: 1}
+    - keys: {caid: 1, prid: 1, cuid: 1}
+    - keys: {prid: 1, ts: 1, cuid: 1}
+
+  # Loader Config.
+  LoadThreads: &LoadThreads 4
+  LoadBatchSize: &LoadBatchSize 1000
+  SecondaryDocumentCount: &SecondaryNumDocs 10000000
+  CollectionCount: &CollectionCount 4
+  InitialDocumentCount: &InitialNumDocs 10000000
+
+  # Common Baseline / Benchmark
+  InsertBatchSize: &InsertBatchSize 50
+
+  # Low Baseline / Benchmark
+  LowGlobalRate: &LowGlobalRate 10% # percentage gives a smoother rate. 400 per 1 second was the other option.
+  LowThreads: &LowThreads 4
+  LowDuration: &LowDuration 1 minutes
+
+  # Low Baseline / Benchmark
+  HighGlobalRate: &HighGlobalRate 50% # percentage gives a smoother rate. 3200 per 1 second was the other option.
+  HighThreads: &HighThreads 8
+  HighDuration: &HighDuration 1 minutes
+
+  # The write concern. The intent is to use what is chosen as the default in 5.0.
+  OperationOptions: &OperationOptions
+    WriteConcern:
+      Level: majority
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 200
+
+# Odd phases do operations, even phases quiesce.
+Actors:
+- Name: InitialLoad
+  Type: Loader
+  ClientName: Loader
+  Threads: *LoadThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Threads: *LoadThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Repeat: 1
+        Document: *Doc
+        DocumentCount: *InitialNumDocs
+        Indexes: *LLTIndexes
+        BatchSize: *LoadBatchSize
+
+- Name: SecondLoadAfterIndexes
+  Type: Loader
+  ClientName: Loader
+  Threads: *LoadThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Threads: *LoadThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Repeat: 1
+        Document: *Doc
+        DocumentCount: *SecondaryNumDocs
+        BatchSize: *LoadBatchSize
+
+- Name: QuiescePhase
+  Type: QuiesceActor
+  Threads: 1
+  Database: *dbname
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+      NopInPhasesUpTo: 20
+      PhaseConfig:
+        Repeat: 1
+
+# <-----  4 threads @ 25% in batches of 50
+- Name: InsertBaseline.Low.50
+  Type: MultiCollectionInsert
+  ClientName: LowPool
+  Threads: *LoadThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *LowGlobalRate
+        Threads: *LowThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *LowDuration
+        Document: *Doc
+        BatchSize: *InsertBatchSize
+        OperationOptions: *OperationOptions
+
+# <-----  4 threads @ 25% in batches of 50
+- Name: InsertBenchmark.Low.50
+  Type: MultiCollectionInsert
+  ClientName: LowPool
+  Threads: *LowThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7, 9, 11]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Threads: *LowThreads
+        GlobalRate: *LowGlobalRate
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *LowDuration
+        Document: *Doc
+        BatchSize: *InsertBatchSize
+        OperationOptions: *OperationOptions
+
+# <-----  8 threads @ 50% in batches of 50
+- Name: InsertBaseline.High.50
+  Type: MultiCollectionInsert
+  ClientName: HighPool
+  Threads: *HighThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [13]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Threads: *HighThreads
+        GlobalRate: *HighGlobalRate
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *HighDuration
+        Document: *Doc
+        BatchSize: *InsertBatchSize
+        OperationOptions: *OperationOptions
+
+# <-----  8 threads @ 50% in batches of 50
+- Name: InsertBenchmark.High.50
+  Type: MultiCollectionInsert
+  ClientName: HighPool
+  Threads: *HighThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [15, 17, 19]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Threads: *HighThreads
+        GlobalRate: *HighGlobalRate
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *HighDuration
+        Document: *Doc
+        BatchSize: *InsertBatchSize
+        OperationOptions: *OperationOptions
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+      - replica
+      - single-replica
+      - replica-all-feature-flags

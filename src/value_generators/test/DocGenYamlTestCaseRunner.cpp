@@ -1,15 +1,9 @@
-#include <algorithm>
-#include <iosfwd>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <vector>
 
-#include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/json.hpp>
-#include <bsoncxx/types/value.hpp>
 
-#include <testlib/ActorHelper.hpp>
 #include <testlib/yamlTest.hpp>
 #include <testlib/yamlToBson.hpp>
 
@@ -17,10 +11,6 @@
 #include <value_generators/DocumentGenerator.hpp>
 
 namespace genny {
-
-namespace {
-genny::DefaultRandom rng;
-}  // namespace
 
 class ValGenTestCase {
 public:
@@ -68,6 +58,8 @@ public:
             if (_runMode == RunMode::kExpectException) {
                 try {
                     NodeSource ns = toNode(this->_givenTemplate);
+                    genny::DefaultRandom rng;
+
                     auto docGen = genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 1});
                     docGen();
                     FAIL("Expected exception " << this->_expectedExceptionMessage.as<std::string>()
@@ -80,6 +72,7 @@ public:
             }
 
             NodeSource ns = toNode(this->_givenTemplate);
+            genny::DefaultRandom rng;
             auto docGen = genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 2});
             for (const auto&& nextValue : this->_thenReturns) {
                 auto expected = testing::toDocumentBson(nextValue);
@@ -88,17 +81,16 @@ public:
                 // underneath it as it is a workaround suggested in HELP-21664
                 // REQUIRE(toString(expected.view()) == toString(actual.view()));
                 auto expectedFix = bsoncxx::from_json(toString(expected.view()));
+                INFO("Expected = \n"
+                     << toString(expectedFix.view()) << "\nActual = \n"
+                     << toString(actual.view()));
                 REQUIRE(toString(expectedFix.view()) == toString(actual.view()));
             }
         }
     }
 
-    const std::string name() const {
+    [[nodiscard]] std::string name() const {
         return _name;
-    }
-
-    const YAML::Node givenTemplate() const {
-        return _givenTemplate;
     }
 
 private:
