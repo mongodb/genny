@@ -41,6 +41,8 @@
 #include <value_generators/DocumentGenerator.hpp>
 
 namespace genny::actor {
+static const char* const transientTransactionLabel = "TransientTransactionError";
+
 enum class ScanType { kCount, kSnapshot, kStandard, kPointInTime };
 enum class SortOrderType { kSortNone, kSortForward, kSortReverse };
 // We don't need a metrics clock, as we're using this for measuring
@@ -423,10 +425,14 @@ void CollectionScanner::run() {
                     }
                     session.commit_transaction();
                 } catch (const mongocxx::operation_exception& e) {
-                    BOOST_LOG_TRIVIAL(debug) << "Snapshot Scanner operation exception: " << e.what();
-                    auto exceptionsCaught = config->exceptionsCaught.start();
-                    exceptionsCaught.addDocuments(1);
-                    exceptionsCaught.success();
+                    if(e.has_error_label(transientTransactionLabel) ) {
+                        BOOST_LOG_TRIVIAL(debug) << "Snapshot Scanner operation exception: " << e.what();
+                        auto exceptionsCaught = config->exceptionsCaught.start();
+                        exceptionsCaught.addDocuments(1);
+                        exceptionsCaught.success();
+                    } else {
+                        throw e;
+                    }
                 }
             } else if (config->scanType == ScanType::kPointInTime) {
                 pointInTimeScan(_client, config, readClusterTime);
