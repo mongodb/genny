@@ -3,7 +3,7 @@ click==7.1.2
 click-option-group==0.5.2
 colorama==0.4.3
 structlog==20.1.0
-PyYAML==5.1
+PyYAML==5.4
 requests==2.21.0
 yamllint==1.15.0
 shrub.py==1.1.0
