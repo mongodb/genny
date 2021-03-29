@@ -63,6 +63,7 @@ struct CollectionScanner::PhaseConfig {
     bool skipFirstLoop = false;
     metrics::Operation scanOperation;
     metrics::Operation exceptionsCaught;
+    metrics::Operation transientExceptions;
     int64_t documents;
     int64_t scanSizeBytes;
     ScanType scanType;
@@ -85,6 +86,7 @@ struct CollectionScanner::PhaseConfig {
           filterExpr{context["Filter"].maybe<DocumentGenerator>(context, actor->id())},
           scanOperation{context.operation("Scan", actor->id())},
           exceptionsCaught{context.operation("ExceptionsCaught", actor->id())},
+          transientExceptions{context.operation("TransientExceptionsCaught", actor->id())},
           documents{context["Documents"].maybe<IntegerSpec>().value_or(0)},
           scanSizeBytes{context["ScanSizeBytes"].maybe<IntegerSpec>().value_or(0)},
           collectionSkip{context["CollectionSkip"].maybe<IntegerSpec>().value_or(0)},
@@ -427,11 +429,11 @@ void CollectionScanner::run() {
                 } catch (const mongocxx::operation_exception& e) {
                     if(e.has_error_label(transientTransactionLabel) ) {
                         BOOST_LOG_TRIVIAL(debug) << "Snapshot Scanner operation exception: " << e.what();
-                        auto exceptionsCaught = config->exceptionsCaught.start();
-                        exceptionsCaught.addDocuments(1);
-                        exceptionsCaught.success();
+                        auto transientExceptions = config->transientExceptions.start();
+                        transientExceptions.addDocuments(1);
+                        transientExceptions.success();
                     } else {
-                        throw e;
+                        throw;
                     }
                 }
             } else if (config->scanType == ScanType::kPointInTime) {
