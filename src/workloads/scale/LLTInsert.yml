@@ -117,7 +117,6 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-# <-----  4 threads @ 25% in batches of 50
 - Name: InsertBaseline.Low.50
   Type: CrudActor
   ClientName: LowPool
@@ -158,7 +157,6 @@ Actors:
           - *InsertOperation
           - *InsertOperation
 
-# <-----  4 threads @ 25% in batches of 50
 - Name: InsertBenchmark.Low.50
   Type: CrudActor
   ClientName: LowPool
@@ -194,10 +192,9 @@ Actors:
         CollectionSortOrder: forward
         FindOptions:
           BatchSize: 1000
-          Hint: _id_ # Currently only support the index name.
+          Hint: _id_
           Comment: SnapshotScannerShort
 
-# <-----  4 threads @ 25% in batches of 50
 - Name: InsertBenchmark.Low.50
   Type: CrudActor
   ClientName: LowPool
@@ -235,7 +232,6 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerMedium
 
-# <-----  4 threads @ 25% in batches of 50
 - Name: InsertBenchmark.Low.50
   Type: CrudActor
   ClientName: LowPool
@@ -273,7 +269,6 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerLong
 
-# <-----  8 threads @ 50% in batches of 50
 - Name: InsertBaseline.High.50
   Type: CrudActor
   ClientName: HighPool
@@ -290,7 +285,6 @@ Actors:
         Duration: *SnapshotScannerShortDuration
         Operations: *Operations
 
-# <-----  8 threads @ 50% in batches of 50
 - Name: InsertBenchmark.High.50
   Type: CrudActor
   ClientName: HighPool
@@ -328,8 +322,7 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerShort
 
-# <-----  8 threads @ 50% in batches of 50
-- Name: InsertBaseline.High.50
+- Name: InsertBenchmark.High.50
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -366,8 +359,7 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerMedium
 
-# <-----  8 threads @ 50% in batches of 50
-- Name: InsertBaseline.High.50
+- Name: InsertBenchmark.High.50
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
