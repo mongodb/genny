@@ -1047,23 +1047,40 @@ std::string getDbName(const PhaseContext& phaseContext) {
 
 namespace genny::actor {
 
-struct CrudActor::PhaseConfig {
-    std::vector<std::unique_ptr<BaseOperation>> operations;
-    metrics::Operation metrics;
+struct CrudActor::CollectionName {
     std::optional<std::string> collectionName;
     std::optional<int64_t> numCollections;
-    std::string dbName;
-
-    PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id)
-        : dbName{getDbName(phaseContext)},
-          collectionName{phaseContext["Collection"].maybe<std::string>()},
-          numCollections{phaseContext["CollectionCount"].maybe<IntegerSpec>()},
-          metrics{phaseContext.actor().operation("Crud", id)} {
+    CollectionName(PhaseContext& phaseContext) :
+        collectionName{phaseContext["Collection"].maybe<std::string>()},
+        numCollections{phaseContext["CollectionCount"].maybe<IntegerSpec>()}
+    {
         if (collectionName && numCollections) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                                       "Collection or CollectionCount, not both in Crud Actor."));
         }
-        auto name = generateCollectionName(id);
+    }
+    // Get the assigned collection name or generate a name based on collectionCount and the
+    // the actorId.
+    std::string generateName(ActorId id) {
+        if (collectionName) {
+            return collectionName.value();
+        }
+        auto collectionNumber = id % numCollections.value();
+        return "Collection" + std::to_string(collectionNumber);
+    }
+};
+
+struct CrudActor::PhaseConfig {
+    std::vector<std::unique_ptr<BaseOperation>> operations;
+    metrics::Operation metrics;
+    std::string dbName;
+    CrudActor::CollectionName collectionName;
+
+    PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id)
+        : dbName{getDbName(phaseContext)},
+          metrics{phaseContext.actor().operation("Crud", id)},
+          collectionName{phaseContext} {
+        auto name = collectionName.generateName(id);
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
             auto collection = (*client)[dbName][name];
             auto& yamlCommand = node["OperationCommand"];
@@ -1100,15 +1117,6 @@ struct CrudActor::PhaseConfig {
             "Operation", "Operations", addOperation);
     }
 
-    // Get the assigned collection name or generate a name based on collectionCount and the
-    // the actorId.
-    std::string generateCollectionName(ActorId id) {
-        if (collectionName) {
-            return collectionName.value();
-        }
-        auto collectionNumber = id % numCollections.value();
-        return "Collection" + std::to_string(collectionNumber);
-    }
 };
 
 void CrudActor::run() {

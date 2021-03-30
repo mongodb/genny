@@ -49,11 +49,7 @@ Actors:
   - Repeat: 10
     Threads: 8
     # Generate names from Collection0 to Collection<CollectionCount -1>.
-    # The collection names are generated from the current actor id mod CollectionCount. So
-    # for at least one thread per collection the number of Threads must be greater than or equal to CollectionCount.
-    # If Threads < CollectionCount then the names generated will be based on the ActorIds so not all
-    # Collections will be used and it is difficult to predict which collection names will be generated. In this case,
-    # you may want to stick with Collection and explicitly pick the collection that you want.
+    # The collection names are generated from the current actor id mod CollectionCount.
     CollectionCount: 4
     Operations:
       - OperationName: bulkWrite

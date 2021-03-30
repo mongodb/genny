@@ -230,19 +230,17 @@ struct NodeConvert<mongocxx::options::update> {
     static type convert(const Node& node) {
         type rhs{};
 
-        if (node["BypassDocumentValidation"]) {
-            rhs.bypass_document_validation(node["BypassDocumentValidation"].to<bool>());
+        if (const auto& bypass = node["Bypass"]; bypass) {
+            rhs.bypass_document_validation(bypass.to<bool>());
         }
-        if (node["Hint"]) {
-            auto h = node["Hint"].to<std::string>();
-            auto hint = mongocxx::hint(std::move(h));
-            rhs.hint(mongocxx::hint(hint));
+        if (const auto& hint = node["Hint"]; hint) {
+            rhs.hint(mongocxx::hint(std::move(hint.to<std::string>())));
         }
-        if (node["Upsert"]) {
-            rhs.upsert(node["Upsert"].to<bool>());
+        if (const auto& upsert = node["Upsert"]; upsert) {
+            rhs.upsert(upsert.to<bool>());
         }
-        if (node["WriteConcern"]) {
-            rhs.write_concern(node["WriteConcern"].to<mongocxx::write_concern>());
+        if (const auto& wc = node["WriteConcern"]; wc) {
+            rhs.write_concern(wc.to<mongocxx::write_concern>());
         }
 
         return rhs;
