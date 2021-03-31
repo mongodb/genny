@@ -112,6 +112,18 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
+# Guard Against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0, 4, 9, 14, 19]
+      NopInPhasesUpTo: 20
+      PhaseConfig:
+        LogEvery: 15 minutes
+        Blocking: None
+
 # <-----  4 threads @ 25% in batches of 50
 - Name: InsertBaseline.Low.50
   Type: MultiCollectionInsert
