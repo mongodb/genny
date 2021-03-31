@@ -1085,7 +1085,7 @@ private:
     mongocxx::write_concern _wc;
 };
 
-//// Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
+// Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
 std::unordered_map<std::string, OpCallback&> allConstructors = {
     {"bulkWrite", baseCallback<BaseOperation, OpCallback, BulkWriteOperation>},
     {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
