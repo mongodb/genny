@@ -216,7 +216,7 @@ struct UpdateOneOperation : public WriteOperation {
           _filter{opNode["Filter"].to<DocumentGenerator>(context, id)},
           _update{opNode["Update"].to<DocumentGenerator>(context, id)},
           _options{opNode["OperationOptions"].maybe<mongocxx::options::update>().value_or(
-            mongocxx::options::update{})} {}
+              mongocxx::options::update{})} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filter();
@@ -1050,13 +1050,16 @@ namespace genny::actor {
 struct CrudActor::CollectionName {
     std::optional<std::string> collectionName;
     std::optional<int64_t> numCollections;
-    CollectionName(PhaseContext& phaseContext) :
-        collectionName{phaseContext["Collection"].maybe<std::string>()},
-        numCollections{phaseContext["CollectionCount"].maybe<IntegerSpec>()}
-    {
+    explicit CollectionName(PhaseContext& phaseContext)
+        : collectionName{phaseContext["Collection"].maybe<std::string>()},
+          numCollections{phaseContext["CollectionCount"].maybe<IntegerSpec>()} {
         if (collectionName && numCollections) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                                      "Collection or CollectionCount, not both in Crud Actor."));
+                "Collection or CollectionCount, not both in Crud Actor."));
+        }
+        if (!collectionName && !numCollections) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "One of Collection or CollectionCount must be provided in Crud Actor."));
         }
     }
     // Get the assigned collection name or generate a name based on collectionCount and the
@@ -1116,7 +1119,6 @@ struct CrudActor::PhaseConfig {
         operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
             "Operation", "Operations", addOperation);
     }
-
 };
 
 void CrudActor::run() {
