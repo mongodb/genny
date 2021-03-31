@@ -109,6 +109,8 @@ using OpCallback = std::function<std::unique_ptr<BaseOperation>(const Node&,
                                                                 PhaseContext& context,
                                                                 ActorId id)>;
 
+std::unordered_map<std::string, OpCallback&> getOpConstructors(std::string);
+
 struct WriteOperation : public BaseOperation {
     WriteOperation(PhaseContext& phaseContext, const Node& operation)
         : BaseOperation(phaseContext, operation) {}
@@ -931,6 +933,85 @@ private:
 /**
  * Example usage:
  *    Operations:
+ *    - OperationName: withTransaction
+ *      OperationCommand:
+ *        OperationsInTransaction:
+ *          - OperationName: insertOne
+ *            OperationCommand:
+ *              Document: {a: 100}
+ *          - OperationName: findOneAndReplace
+ *            OperationCommand:
+ *              Filter: {a: 100}
+ *              Replacement: {a: 30}
+ */
+
+struct WithTransactionOperation : public BaseOperation {
+    WithTransactionOperation(const Node& opNode,
+                             bool onSession,
+                             mongocxx::collection collection,
+                             metrics::Operation operation,
+                             PhaseContext& context,
+                             ActorId id)
+            : BaseOperation(context, opNode),
+              _onSession{onSession},
+              _collection{std::move(collection)},
+              _operation{operation} {
+        auto& opsInTxn = opNode["OperationsInTransaction"];
+        if (!opsInTxn.isSequence()) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                                          "'WithTransaction' requires an 'OperationsInTransaction' node of sequence type."));
+        }
+        for (const auto& [k, txnOp] : opsInTxn) {
+            createTxnOps(txnOp, context, id);
+        }
+        if (opNode["Options"]) {
+            _options = opNode["Options"].to<mongocxx::options::transaction>();
+        }
+    }
+
+    void createTxnOps(const Node& txnOp, PhaseContext& context, ActorId id) {
+        auto opName = txnOp["OperationName"].to<std::string>();
+        auto inTxnOpConstructors = getOpConstructors("withTransaction");
+        auto opConstructor = inTxnOpConstructors.find(opName);
+        if (opConstructor == inTxnOpConstructors.end()) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                                          "Operation '" + opName + "' not supported inside a 'with_transaction' operation."));
+        }
+        auto createOp = opConstructor->second;
+        auto& yamlCommand = txnOp["OperationCommand"];
+        _txnOps.push_back(createOp(yamlCommand, _onSession, _collection, _operation, context, id));
+    }
+
+    void run(mongocxx::client_session& session) override {
+        auto run_txn_ops([&](mongocxx::client_session* session) {
+            for (auto&& op : _txnOps) {
+                op->run(*session);
+            }
+        });
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            try {
+                session.with_transaction(run_txn_ops, _options);
+            } catch (const mongocxx::exception& e) {
+                // Capture failure but don't throw.
+                ctx.failure();
+                return std::nullopt;
+            }
+            ctx.success();
+            return std::nullopt;
+        });
+    }
+
+private:
+    mongocxx::collection _collection;
+    bool _onSession;
+    metrics::Operation _operation;
+    mongocxx::options::transaction _options;
+    std::vector<std::unique_ptr<BaseOperation>> _txnOps;
+};
+
+/**
+ * Example usage:
+ *    Operations:
  *    - OperationName: setReadConcern
  *      OperationCommand:
  *        ReadConcern:
@@ -1004,96 +1085,8 @@ private:
     mongocxx::write_concern _wc;
 };
 
-// Maps the yaml 'OperationName' string to the constructor of the designated Operation struct.
-// This is a subset of operations that can be performed during a 'with_transaction' operation.
-std::unordered_map<std::string, OpCallback&> inTxnOpConstructors = {
-    {"bulkWrite", baseCallback<BaseOperation, OpCallback, BulkWriteOperation>},
-    {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
-    {"estimatedDocumentCount",
-    baseCallback<BaseOperation, OpCallback, EstimatedDocumentCountOperation>},
-    {"createIndex", baseCallback<BaseOperation, OpCallback, CreateIndexOperation>},
-    {"find", baseCallback<BaseOperation, OpCallback, FindOperation>},
-    {"findOne", baseCallback<BaseOperation, OpCallback, FindOneOperation>},
-    {"findOneAndUpdate", baseCallback<BaseOperation, OpCallback, FindOneAndUpdateOperation>},
-    {"findOneAndDelete", baseCallback<BaseOperation, OpCallback, FindOneAndDeleteOperation>},
-    {"findOneAndReplace", baseCallback<BaseOperation, OpCallback, FindOneAndReplaceOperation>},
-    {"insertMany", baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
-    {"setReadConcern", baseCallback<BaseOperation, OpCallback, SetReadConcernOperation>},
-    {"drop", baseCallback<BaseOperation, OpCallback, DropOperation>},
-    {"insertOne", baseCallback<BaseOperation, OpCallback, InsertOneOperation>},
-    {"deleteOne", baseCallback<BaseOperation, OpCallback, DeleteOneOperation>},
-    {"deleteMany", baseCallback<BaseOperation, OpCallback, DeleteManyOperation>},
-    {"updateOne", baseCallback<BaseOperation, OpCallback, UpdateOneOperation>},
-    {"updateMany", baseCallback<BaseOperation, OpCallback, UpdateManyOperation>},
-    {"replaceOne", baseCallback<BaseOperation, OpCallback, ReplaceOneOperation>}};
-
-
-struct WithTransactionOperation : public BaseOperation {
-    WithTransactionOperation(const Node& opNode,
-                             bool onSession,
-                             mongocxx::collection collection,
-                             metrics::Operation operation,
-                             PhaseContext& context,
-                             ActorId id)
-            : BaseOperation(context, opNode),
-              _onSession{onSession},
-              _collection{std::move(collection)},
-              _operation{operation} {
-        auto& opsInTxn = opNode["OperationsInTransaction"];
-        if (!opsInTxn.isSequence()) {
-            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "'WithTransaction' requires an 'OperationsInTransaction' node of sequence type."));
-        }
-        for (const auto& [k, txnOp] : opsInTxn) {
-            createTxnOps(txnOp, context, id);
-        }
-        if (opNode["Options"]) {
-            _options = opNode["Options"].to<mongocxx::options::transaction>();
-        }
-    }
-
-    void createTxnOps(const Node& txnOp, PhaseContext& context, ActorId id) {
-        auto opName = txnOp["OperationName"].to<std::string>();
-        auto opConstructor = inTxnOpConstructors.find(opName);
-        if (opConstructor == inTxnOpConstructors.end()) {
-            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "Operation '" + opName + "' not supported inside a 'with_transaction' operation."));
-        }
-        auto createOp = opConstructor->second;
-        auto& yamlCommand = txnOp["OperationCommand"];
-        _txnOps.push_back(createOp(yamlCommand, _onSession, _collection, _operation, context, id));
-    }
-
-    void run(mongocxx::client_session& session) override {
-        auto run_txn_ops([&](mongocxx::client_session* session) {
-            for (auto&& op : _txnOps) {
-                op->run(*session);
-            }
-        });
-        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
-            try {
-                session.with_transaction(run_txn_ops, _options);
-            } catch (const mongocxx::exception& e) {
-                // Capture failure but don't throw.
-                ctx.failure();
-                return std::nullopt;
-            }
-            ctx.success();
-            return std::nullopt;
-        });
-    }
-
-private:
-    mongocxx::collection _collection;
-    bool _onSession;
-    metrics::Operation _operation;
-    mongocxx::options::transaction _options;
-    std::vector<std::unique_ptr<BaseOperation>> _txnOps;
-};
-
-
-// Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
-std::unordered_map<std::string, OpCallback&> opConstructors = {
+//// Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
+std::unordered_map<std::string, OpCallback&> allConstructors = {
     {"bulkWrite", baseCallback<BaseOperation, OpCallback, BulkWriteOperation>},
     {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
     {"estimatedDocumentCount",
@@ -1116,6 +1109,21 @@ std::unordered_map<std::string, OpCallback&> opConstructors = {
     {"updateOne", baseCallback<BaseOperation, OpCallback, UpdateOneOperation>},
     {"updateMany", baseCallback<BaseOperation, OpCallback, UpdateManyOperation>},
     {"replaceOne", baseCallback<BaseOperation, OpCallback, ReplaceOneOperation>}};
+
+std::unordered_map<std::string, OpCallback&> getOpConstructors(std::string mode) {
+    if (mode == "all") {
+        return allConstructors;
+    } else if (mode == "withTransaction") {
+        auto allConstructorsCopy = allConstructors;
+        allConstructors.erase("startTransaction");
+        allConstructors.erase("commitTransaction");
+        allConstructors.erase("withTransaction");
+
+        return allConstructorsCopy;
+    }
+
+    BOOST_THROW_EXCEPTION(InvalidConfigurationException("Mode '" + mode + "' is invalid."));
+}
 
 // Equivalent to `nvl(phase[Database], actor[Database])`.
 std::string getDbName(const PhaseContext& phaseContext) {
@@ -1146,6 +1154,7 @@ struct CrudActor::PhaseConfig {
             auto opName = node["OperationName"].to<std::string>();
             auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
 
+            auto opConstructors = getOpConstructors("all");
             // Grab the appropriate Operation struct defined by 'OperationName'.
             auto op = opConstructors.find(opName);
             if (op == opConstructors.end()) {
