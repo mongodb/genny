@@ -9,7 +9,7 @@ Actors:
   - Repeat: 1
     Collection: test
     Operations:
-    - OperationName: startTransaction
+    - OperationName: withTransaction
       OperationCommand:
         Options:
           # Use a non-default TransactionOption MaxCommitTimeMs.
@@ -22,20 +22,20 @@ Actors:
           ReadPreference:
             ReadMode: primaryPreferred
             MaxStaleness: 1000 seconds
-    - OperationName: bulkWrite
-      OperationCommand:
-        WriteOperations:
-        - WriteCommand: insertOne
-          Document: {a: 1}
-        - WriteCommand: updateOne
-          Filter: {a: 1}
-          Update: {$set: {a: 5}}
-        Options:
-          Ordered: true
-        # The OnSession: true flag tells the driver to use a logical session. The actor will use the
-        # same session for the duration of a phase.
-        OnSession: true
-    - OperationName: commitTransaction
+        OperationsInTransaction:
+        - OperationName: bulkWrite
+          OperationCommand:
+            WriteOperations:
+            - WriteCommand: insertOne
+              Document: {a: 1}
+            - WriteCommand: updateOne
+              Filter: {a: 1}
+              Update: {$set: {a: 5}}
+            Options:
+              Ordered: true
+            # The OnSession: true flag tells the driver to use a logical session. The actor will use the
+            # same session for the duration of a phase.
+            OnSession: true
   - Repeat: 1
     Collection: test
     Operation:

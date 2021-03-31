@@ -50,7 +50,7 @@ Actors:
     Repeat: 5
     Collection: &Coll Collection0 # This is the default collection populated by the Loader.
     Operations:
-    - OperationName: startTransaction
+    - OperationName: withTransaction
       OperationCommand:
         Options:
           WriteConcern:
@@ -61,17 +61,17 @@ Actors:
           ReadPreference:
             ReadMode: primaryPreferred
             MaxStaleness: 1000 seconds
-    - OperationName: bulkWrite
-      OperationCommand:
-        WriteOperations:
-        - WriteCommand: updateMany
-          Filter: {x: { $exists: true }} # This will match all documents in the collection.
-          Update: {$inc: {x: 1}}
-        Options:
-          Ordered: true
-          MaxTime: 0
-        OnSession: true
-    - OperationName: commitTransaction
+        OperationsInTransaction:
+        - OperationName: bulkWrite
+          OperationCommand:
+            WriteOperations:
+            - WriteCommand: updateMany
+              Filter: {x: { $exists: true }} # This will match all documents in the collection.
+              Update: {$inc: {x: 1}}
+            Options:
+              Ordered: true
+              MaxTime: 0
+            OnSession: true
   - Repeat: 1
     Collection: *Coll
     Operation:
