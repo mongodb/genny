@@ -1114,12 +1114,12 @@ std::unordered_map<std::string, OpCallback&> getOpConstructors(std::string mode)
     if (mode == "all") {
         return allConstructors;
     } else if (mode == "withTransaction") {
-        auto allConstructorsCopy = allConstructors;
-        allConstructorsCopy.erase("startTransaction");
-        allConstructorsCopy.erase("commitTransaction");
-        allConstructorsCopy.erase("withTransaction");
+        auto allCnstrCopy = allConstructors;
+        allCnstrCopy.erase("startTransaction");
+        allCnstrCopy.erase("commitTransaction");
+        allCnstrCopy.erase("withTransaction");
 
-        return allConstructorsCopy;
+        return allCnstrCopy;
     }
 
     BOOST_THROW_EXCEPTION(InvalidConfigurationException("Mode '" + mode + "' is invalid."));
