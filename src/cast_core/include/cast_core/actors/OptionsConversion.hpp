@@ -247,5 +247,23 @@ struct NodeConvert<mongocxx::options::update> {
     }
 };
 
-}
+template <>
+struct NodeConvert<mongocxx::options::delete_options> {
+    using type = mongocxx::options::delete_options;
+
+    static type convert(const Node& node) {
+        type rhs{};
+
+        if (const auto& hint = node["Hint"]; hint) {
+            rhs.hint(mongocxx::hint(std::move(hint.to<std::string>())));
+        }
+        if (const auto& wc = node["WriteConcern"]; wc) {
+            rhs.write_concern(wc.to<mongocxx::write_concern>());
+        }
+
+        return rhs;
+    }
+};
+
+}  // namespace genny
 #endif  // HEADER_1AFC7FF3_F491_452B_9805_18CAEDE4663D_INCLUDED

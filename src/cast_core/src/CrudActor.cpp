@@ -303,7 +303,9 @@ struct DeleteOneOperation : public WriteOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filter(opNode["Filter"].to<DocumentGenerator>(context, id)) {}
+          _filter(opNode["Filter"].to<DocumentGenerator>(context, id)),
+          _options{opNode["OperationOptions"].maybe<mongocxx::options::delete_options>().value_or(
+              mongocxx::options::delete_options{})} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filter();
