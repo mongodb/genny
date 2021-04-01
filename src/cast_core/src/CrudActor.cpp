@@ -1115,9 +1115,9 @@ std::unordered_map<std::string, OpCallback&> getOpConstructors(std::string mode)
         return allConstructors;
     } else if (mode == "withTransaction") {
         auto allConstructorsCopy = allConstructors;
-        allConstructors.erase("startTransaction");
-        allConstructors.erase("commitTransaction");
-        allConstructors.erase("withTransaction");
+        allConstructorsCopy.erase("startTransaction");
+        allConstructorsCopy.erase("commitTransaction");
+        allConstructorsCopy.erase("withTransaction");
 
         return allConstructorsCopy;
     }
