@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  Workload to Benchmark the effect of LongLivedTransactions on an Update workload.
+  Workload to Benchmark the effect of LongLivedTransactions on a Query workload.
 
 GlobalDefaults:
   # These values should match those are the top of LLTPhases.yml
@@ -18,17 +18,17 @@ GlobalDefaults:
     data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
 
   LLTIndexes: &LLTIndexes
-    - keys: {price: 1, ts: 1, cuid: 1}     # PDC
-    - keys: {price: 1, cuid: 1}            # Market
-    - keys: {caid: 1, price: 1, cuid: 1}   # Register
+    - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
+    - keys: {price: 1, cuid: 1}            # Pc
+    - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
 
   # Loader Config.
   LoadThreads: &LoadThreads 4
   LoadBatchSize: &LoadBatchSize 1000
 
   # In-memory: Database size works out about 12GB.
-  InitialDocumentCount: &InitialNumDocs 100
-  SecondaryDocumentCount: &SecondaryNumDocs 100
+  InitialDocumentCount: &InitialNumDocs 10000000
+  SecondaryDocumentCount: &SecondaryNumDocs 10000000
 
   # WIP make a copy of the workload once these values are tuned correctly and
   # the workload runs consistently.
@@ -37,29 +37,33 @@ GlobalDefaults:
   # SecondaryDocumentCount: &SecondaryNumDocs 1000000
   CollectionCount: &CollectionCount 4
 
-  PdcQueryOperation: &PdcQueryOperation
+  # The query operation name indicates the index in use (see LLTIndexes) :
+  #  * Ptc => price_1_ts_1_cuid_1
+  #  * Pc  => price_1_cuid_1
+  #  * Cpc => caid_1_price_1_cuid_1
+  PtcQueryOperation: &PtcQueryOperation
     OperationName: findOne
     OperationCommand:
-      Filter: &PdcFilter {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      Options: &PdcQueryOperationOptions
+      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Options:
         Hint: price_1_ts_1_cuid_1
-        Comment: PdcQueryOperation
+        Comment: PtcQueryOperation
 
-  MarketQueryOperation: &MarketQueryOperation
+  PcQueryOperation: &PcQueryOperation
     OperationName: findOne
     OperationCommand:
-      Filter: &MarketFilter {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      Options: &MarketQueryOperationOptions
+      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Options:
         Hint: price_1_cuid_1
-        Comment: MarketQueryOperation
+        Comment: PcQueryOperation
 
-  RegisterQueryOperation: &RegisterQueryOperation
+  CpcQueryOperation: &CpcQueryOperation
     OperationName: findOne
     OperationCommand:
-      Filter: &RegisterFilter {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
-      Options: &RegisterQueryOperationOptions
+      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Options:
         Hint: caid_1_price_1_cuid_1
-        Comment: RegisterQueryOperation
+        Comment: CpcQueryOperation
 
   # Low Baseline / Benchmark
   LowGlobalRate: &LowGlobalRate 400 per 1 second
@@ -132,7 +136,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: UpdateBaseline.Low.50
+- Name: QueryBaseline.Low.50
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -147,32 +151,32 @@ Actors:
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
         Operations: &Operations
-          - *PdcQueryOperation
-          - *MarketQueryOperation
-          - *RegisterQueryOperation
-          - *PdcQueryOperation
-          - *MarketQueryOperation
-          - *RegisterQueryOperation
-          - *PdcQueryOperation
-          - *MarketQueryOperation
-          - *RegisterQueryOperation
-          - *PdcQueryOperation
-          - *MarketQueryOperation
-          - *RegisterQueryOperation
-          - *PdcQueryOperation
-          - *MarketQueryOperation
-          - *RegisterQueryOperation
-          - *PdcQueryOperation
-          - *MarketQueryOperation
-          - *RegisterQueryOperation
-          - *PdcQueryOperation
-          - *MarketQueryOperation
-          - *RegisterQueryOperation
-          - *PdcQueryOperation
-          - *MarketQueryOperation
-          - *RegisterQueryOperation
+          - *PtcQueryOperation
+          - *PcQueryOperation
+          - *CpcQueryOperation
+          - *PtcQueryOperation
+          - *PcQueryOperation
+          - *CpcQueryOperation
+          - *PtcQueryOperation
+          - *PcQueryOperation
+          - *CpcQueryOperation
+          - *PtcQueryOperation
+          - *PcQueryOperation
+          - *CpcQueryOperation
+          - *PtcQueryOperation
+          - *PcQueryOperation
+          - *CpcQueryOperation
+          - *PtcQueryOperation
+          - *PcQueryOperation
+          - *CpcQueryOperation
+          - *PtcQueryOperation
+          - *PcQueryOperation
+          - *CpcQueryOperation
+          - *PtcQueryOperation
+          - *PcQueryOperation
+          - *CpcQueryOperation
 
-- Name: UpdateBenchmark.Low.50
+- Name: QueryBenchmark.Low.50
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -211,7 +215,7 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerShort
 
-- Name: UpdateBenchmark.Low.50
+- Name: QueryBenchmark.Low.50
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -248,7 +252,7 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerMedium
 
-- Name: UpdateBenchmark.Low.50
+- Name: QueryBenchmark.Low.50
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -285,7 +289,7 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerLong
 
-- Name: UpdateBaseline.High.50
+- Name: QueryBaseline.High.50
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -301,7 +305,7 @@ Actors:
         Duration: *SnapshotScannerShortDuration
         Operations: *Operations
 
-- Name: UpdateBenchmark.High.50
+- Name: QueryBenchmark.High.50
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -339,7 +343,7 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerShort
 
-- Name: UpdateBenchmark.High.50
+- Name: QueryBenchmark.High.50
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -376,7 +380,7 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerMedium
 
-- Name: UpdateBenchmark.High.50
+- Name: QueryBenchmark.High.50
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads

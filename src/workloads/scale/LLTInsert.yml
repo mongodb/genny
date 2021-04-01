@@ -18,9 +18,9 @@ GlobalDefaults:
     data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
 
   LLTIndexes: &LLTIndexes
-    - keys: {price: 1, ts: 1, cuid: 1}     # PDC
-    - keys: {price: 1, cuid: 1}            # Market
-    - keys: {caid: 1, price: 1, cuid: 1}   # Register
+    - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
+    - keys: {price: 1, cuid: 1}            # Pc
+    - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
 
   # Loader Config.
   LoadThreads: &LoadThreads 4
