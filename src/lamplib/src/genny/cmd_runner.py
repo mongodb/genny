@@ -42,6 +42,7 @@ def run_command(
             check=check,
             text=capture,  # capture implies text. No binary output from genny.
             capture_output=capture,
+            bufsize=0,
         )
         success = result.returncode == 0
         return RunCommandOutput(
