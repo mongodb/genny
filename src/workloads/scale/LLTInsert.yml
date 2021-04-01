@@ -117,6 +117,18 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
+# Guard Against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0, 4, 9, 14, 19]
+      NopInPhasesUpTo: 20
+      PhaseConfig:
+        LogEvery: 15 minutes
+        Blocking: None
+
 - Name: InsertBaseline.Low.50
   Type: CrudActor
   ClientName: LowPool

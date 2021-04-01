@@ -837,6 +837,6 @@ Tests:
     GivenTemplate:
       int: {^Inc: {}}
     ThenReturns:
+    - "int" : { "$numberLong" :"1"}
+    - "int" : { "$numberLong" :"2"}
     - "int" : { "$numberLong" :"3"}
-    - "int" : { "$numberLong" :"4"}
-    - "int" : { "$numberLong" :"5"}
