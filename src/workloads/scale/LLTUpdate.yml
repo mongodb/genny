@@ -18,9 +18,9 @@ GlobalDefaults:
     data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
 
   LLTIndexes: &LLTIndexes
-    - keys: {price: 1, ts: 1, cuid: 1}     # PDC
-    - keys: {price: 1, cuid: 1}            # Market
-    - keys: {caid: 1, price: 1, cuid: 1}   # Register
+    - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
+    - keys: {price: 1, cuid: 1}            # Pc
+    - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
 
   # Loader Config.
   LoadThreads: &LoadThreads 4
@@ -37,43 +37,47 @@ GlobalDefaults:
   # SecondaryDocumentCount: &SecondaryNumDocs 1000000
   CollectionCount: &CollectionCount 4
 
-  PdcUpdatOperation: &PdcUpdatOperation
+  # The query operation name indicates the index in use:
+  #  * Ptc => price_1_ts_1_cuid_1
+  #  * Pc  => price_1_cuid_1
+  #  * Cpc => caid_1_price_1_cuid_1
+  PtcUpdateOperation: &PtcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: &PdcFilter {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      Update: &PdcUpdate
+      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Update:
         $set:
           ts: {^Now: {}}
           data: {^Join: {array: ["bbbbbbbbbb", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
-      OperationOptions: &PdcUpdatOperationOptions
+      OperationOptions:
         Upsert: false
         WriteConcern:
           Level: majority
         Hint: price_1_ts_1_cuid_1
 
-  MarketUpdateOperation: &MarketUpdateOperation
+  PcUpdateOperation: &PcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: &MarketFilter {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      Update: &MarketUpdate
+      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Update:
         $set:
           ts: {^Now: {}}
           prod: {^RandomInt: {min: 0, max: 10000}}
-      OperationOptions: &MarketUpdateOperationOptions
+      OperationOptions:
         Upsert: false
         WriteConcern:
           Level: majority
         Hint: price_1_cuid_1
 
-  RegisterUpdateOperation: &RegisterUpdateOperation
+  CpcUpdateOperation: &CpcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: &RegisterFilter {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
-      Update: &RegisterUpdate
+      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Update:
         $set:
           ts: {^Now: {}}
           cuid: {^RandomInt: {min: 0, max: 100000}}
-      OperationOptions: &RegisterUpdateOperationOptions
+      OperationOptions:
         Upsert: false
         WriteConcern:
           Level: majority
@@ -165,30 +169,30 @@ Actors:
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
         Operations: &Operations
-          - *PdcUpdatOperation
-          - *MarketUpdateOperation
-          - *RegisterUpdateOperation
-          - *PdcUpdatOperation
-          - *MarketUpdateOperation
-          - *RegisterUpdateOperation
-          - *PdcUpdatOperation
-          - *MarketUpdateOperation
-          - *RegisterUpdateOperation
-          - *PdcUpdatOperation
-          - *MarketUpdateOperation
-          - *RegisterUpdateOperation
-          - *PdcUpdatOperation
-          - *MarketUpdateOperation
-          - *RegisterUpdateOperation
-          - *PdcUpdatOperation
-          - *MarketUpdateOperation
-          - *RegisterUpdateOperation
-          - *PdcUpdatOperation
-          - *MarketUpdateOperation
-          - *RegisterUpdateOperation
-          - *PdcUpdatOperation
-          - *MarketUpdateOperation
-          - *RegisterUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
 
 - Name: UpdateBenchmark.Low.50
   Type: CrudActor
