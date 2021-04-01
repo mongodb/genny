@@ -26,6 +26,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <bsoncxx/json.hpp>
+#include <bsoncxx/string/to_string.hpp>
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
@@ -34,6 +35,7 @@
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
+using bsoncxx::type;
 
 namespace {
 
@@ -212,7 +214,9 @@ struct UpdateOneOperation : public WriteOperation {
           _collection{std::move(collection)},
           _operation{operation},
           _filter{opNode["Filter"].to<DocumentGenerator>(context, id)},
-          _update{opNode["Update"].to<DocumentGenerator>(context, id)} {}
+          _update{opNode["Update"].to<DocumentGenerator>(context, id)},
+          _options{opNode["OperationOptions"].maybe<mongocxx::options::update>().value_or(
+              mongocxx::options::update{})} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filter();
@@ -1043,16 +1047,45 @@ std::string getDbName(const PhaseContext& phaseContext) {
 
 namespace genny::actor {
 
+struct CrudActor::CollectionName {
+    std::optional<std::string> collectionName;
+    std::optional<int64_t> numCollections;
+    explicit CollectionName(PhaseContext& phaseContext)
+        : collectionName{phaseContext["Collection"].maybe<std::string>()},
+          numCollections{phaseContext["CollectionCount"].maybe<IntegerSpec>()} {
+        if (collectionName && numCollections) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "Collection or CollectionCount, not both in Crud Actor."));
+        }
+        if (!collectionName && !numCollections) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "One of Collection or CollectionCount must be provided in Crud Actor."));
+        }
+    }
+    // Get the assigned collection name or generate a name based on collectionCount and the
+    // the actorId.
+    std::string generateName(ActorId id) {
+        if (collectionName) {
+            return collectionName.value();
+        }
+        auto collectionNumber = id % numCollections.value();
+        return "Collection" + std::to_string(collectionNumber);
+    }
+};
+
 struct CrudActor::PhaseConfig {
-    mongocxx::collection collection;
     std::vector<std::unique_ptr<BaseOperation>> operations;
     metrics::Operation metrics;
+    std::string dbName;
+    CrudActor::CollectionName collectionName;
 
     PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id)
-        : collection{(
-              *client)[getDbName(phaseContext)][phaseContext["Collection"].to<std::string>()]},
-          metrics{phaseContext.actor().operation("Crud", id)} {
+        : dbName{getDbName(phaseContext)},
+          metrics{phaseContext.actor().operation("Crud", id)},
+          collectionName{phaseContext} {
+        auto name = collectionName.generateName(id);
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
+            auto collection = (*client)[dbName][name];
             auto& yamlCommand = node["OperationCommand"];
             auto opName = node["OperationName"].to<std::string>();
             auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);

@@ -99,6 +99,7 @@ private:
 
     /** @private */
     struct PhaseConfig;
+    struct CollectionName;
     PhaseLoop<PhaseConfig> _loop;
 };
 

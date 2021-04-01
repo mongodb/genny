@@ -222,6 +222,30 @@ struct NodeConvert<mongocxx::options::transaction> {
         return rhs;
     }
 };
-}  // namespace YAML
 
+template <>
+struct NodeConvert<mongocxx::options::update> {
+    using type = mongocxx::options::update;
+
+    static type convert(const Node& node) {
+        type rhs{};
+
+        if (const auto& bypass = node["Bypass"]; bypass) {
+            rhs.bypass_document_validation(bypass.to<bool>());
+        }
+        if (const auto& hint = node["Hint"]; hint) {
+            rhs.hint(mongocxx::hint(std::move(hint.to<std::string>())));
+        }
+        if (const auto& upsert = node["Upsert"]; upsert) {
+            rhs.upsert(upsert.to<bool>());
+        }
+        if (const auto& wc = node["WriteConcern"]; wc) {
+            rhs.write_concern(wc.to<mongocxx::write_concern>());
+        }
+
+        return rhs;
+    }
+};
+
+}
 #endif  // HEADER_1AFC7FF3_F491_452B_9805_18CAEDE4663D_INCLUDED
