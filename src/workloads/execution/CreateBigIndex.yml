@@ -94,3 +94,4 @@ AutoRun:
     - standalone
     - single-replica
     - replica
+    - replica-all-feature-flags

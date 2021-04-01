@@ -46,3 +46,29 @@ Actors:
         Options:
           WriteConcern:
             Level: majority
+  - Repeat: 10
+    Threads: 8
+    # Generate names from Collection0 to Collection<CollectionCount -1>.
+    # The collection names are generated from the current actor id mod CollectionCount.
+    CollectionCount: 4
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: {a: 1}
+            - WriteCommand: updateOne
+              Filter: {a: 1}
+              Update: {$set: {a: {^RandomInt: {min: 5, max: 15}}}}
+              Options:
+                WriteConcern:
+                  Level: majority
+                  TimeoutMillis: 5000
+      - OperationName: insertMany
+        OperationCommand:
+          Documents:
+            - {a: 1}
+            - {a: {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}}
+            - {b: {^RandomInt: {min: 5, max: 15}}}
+        ThrowOnFailure: false  # Whether to throw an exception if an operation fails
+#      RecordFailure: true  # If ThrowOnFailure is false, whether the failed operations should be recorded.

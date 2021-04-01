@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <cast_core/actors/CrudActor.hpp>
+#include <cast_core/actors/OptionsConversion.hpp>
 
 #include <chrono>
 #include <memory>
@@ -25,6 +26,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <bsoncxx/json.hpp>
+#include <bsoncxx/string/to_string.hpp>
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
@@ -33,220 +35,7 @@
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
-
-namespace YAML {
-
-template <>
-struct convert<mongocxx::options::aggregate> {
-    using AggregateOptions = mongocxx::options::aggregate;
-    static Node encode(const AggregateOptions& rhs) {
-        return {};
-    }
-
-    static bool decode(const Node& node, AggregateOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-        rhs = mongocxx::options::aggregate{};
-        if (node["AllowDiskUse"]) {
-            auto allowDiskUse = node["AllowDiskUse"].as<bool>();
-            rhs.allow_disk_use(allowDiskUse);
-        }
-        if (node["BatchSize"]) {
-            auto batchSize = node["BatchSize"].as<int>();
-            rhs.batch_size(batchSize);
-        }
-        if (node["MaxTime"]) {
-            auto maxTime = node["MaxTime"].as<genny::TimeSpec>();
-            rhs.max_time(std::chrono::milliseconds(maxTime));
-        }
-        if (node["ReadPreference"]) {
-            auto readPreference = node["ReadPreference"].as<mongocxx::read_preference>();
-            rhs.read_preference(readPreference);
-        }
-        if (node["BypassDocumentValidation"]) {
-            auto bypassValidation = node["BypassDocumentValidation"].as<bool>();
-            rhs.bypass_document_validation(bypassValidation);
-        }
-        if (node["Hint"]) {
-            auto h = node["Hint"].as<std::string>();
-            auto hint = mongocxx::hint(h);
-            rhs.hint(hint);
-        }
-        if (node["WriteConcern"]) {
-            auto wc = node["WriteConcern"].as<mongocxx::write_concern>();
-            rhs.write_concern(wc);
-        }
-        return true;
-    }
-};
-
-template <>
-struct convert<mongocxx::options::bulk_write> {
-    using BulkWriteOptions = mongocxx::options::bulk_write;
-    static Node encode(const BulkWriteOptions& rhs) {
-        return {};
-    }
-
-    static bool decode(const Node& node, BulkWriteOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-        if (node["BypassDocumentValidation"]) {
-            auto bypassDocValidation = node["BypassDocumentValidation"].as<bool>();
-            rhs.bypass_document_validation(bypassDocValidation);
-        }
-        if (node["Ordered"]) {
-            auto isOrdered = node["Ordered"].as<bool>();
-            rhs.ordered(isOrdered);
-        }
-        if (node["WriteConcern"]) {
-            auto wc = node["WriteConcern"].as<mongocxx::write_concern>();
-            rhs.write_concern(wc);
-        }
-        return true;
-    }
-};
-
-template <>
-struct convert<mongocxx::options::count> {
-    using CountOptions = mongocxx::options::count;
-    static Node encode(const CountOptions& rhs) {
-        return {};
-    }
-
-    static bool decode(const Node& node, CountOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-        if (node["Hint"]) {
-            auto h = node["Hint"].as<std::string>();
-            auto hint = mongocxx::hint(h);
-            rhs.hint(hint);
-        }
-        if (node["Limit"]) {
-            auto limit = node["Limit"].as<int>();
-            rhs.limit(limit);
-        }
-        if (node["MaxTime"]) {
-            auto maxTime = node["MaxTime"].as<genny::TimeSpec>();
-            rhs.max_time(std::chrono::milliseconds{maxTime});
-        }
-        if (node["ReadPreference"]) {
-            auto readPref = node["ReadPreference"].as<mongocxx::read_preference>();
-            rhs.read_preference(readPref);
-        }
-        return true;
-    }
-};
-
-template <>
-struct convert<mongocxx::options::find> {
-    using FindOptions = mongocxx::options::find;
-    static Node encode(const FindOptions& rhs) {
-        return {};
-    }
-
-    static bool decode(const Node& node, FindOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-        if (node["Hint"]) {
-            auto h = node["Hint"].as<std::string>();
-            auto hint = mongocxx::hint(h);
-            rhs.hint(hint);
-        }
-        if (node["Limit"]) {
-            auto limit = node["Limit"].as<int>();
-            rhs.limit(limit);
-        }
-        if (node["MaxTime"]) {
-            auto maxTime = node["MaxTime"].as<genny::TimeSpec>();
-            rhs.max_time(std::chrono::milliseconds{maxTime});
-        }
-        if (node["ReadPreference"]) {
-            auto readPref = node["ReadPreference"].as<mongocxx::read_preference>();
-            rhs.read_preference(readPref);
-        }
-        return true;
-    }
-};
-
-
-template <>
-struct convert<mongocxx::options::estimated_document_count> {
-    using CountOptions = mongocxx::options::estimated_document_count;
-    static Node encode(const CountOptions& rhs) {
-        return {};
-    }
-
-    static bool decode(const Node& node, CountOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-        if (node["MaxTime"]) {
-            auto maxTime = node["MaxTime"].as<genny::TimeSpec>();
-            rhs.max_time(std::chrono::milliseconds{maxTime});
-        }
-        if (node["ReadPreference"]) {
-            auto readPref = node["ReadPreference"].as<mongocxx::read_preference>();
-            rhs.read_preference(readPref);
-        }
-        return true;
-    }
-};
-
-
-template <>
-struct convert<mongocxx::options::insert> {
-    static Node encode(const mongocxx::options::insert& rhs) {
-        return {};
-    }
-    static bool decode(const Node& node, mongocxx::options::insert& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-        if (node["Ordered"]) {
-            rhs.ordered(node["Ordered"].as<bool>());
-        }
-        if (node["BypassDocumentValidation"]) {
-            rhs.bypass_document_validation(node["BypassDocumentValidation"].as<bool>());
-        }
-        if (node["WriteConcern"]) {
-            rhs.write_concern(node["WriteConcern"].as<mongocxx::write_concern>());
-        }
-
-        return true;
-    }
-};
-
-template <>
-struct convert<mongocxx::options::transaction> {
-    using TransactionOptions = mongocxx::options::transaction;
-    static Node encode(const TransactionOptions& rhs) {
-        return {};
-    }
-
-    static bool decode(const Node& node, TransactionOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-        if (node["WriteConcern"]) {
-            auto wc = node["WriteConcern"].as<mongocxx::write_concern>();
-            rhs.write_concern(wc);
-        }
-        if (node["ReadConcern"]) {
-            auto rc = node["ReadConcern"].as<mongocxx::read_concern>();
-            rhs.read_concern(rc);
-        }
-        if (node["ReadPreference"]) {
-            auto rp = node["ReadPreference"].as<mongocxx::read_preference>();
-            rhs.read_preference(rp);
-        }
-        return true;
-    }
-};
-}  // namespace YAML
+using bsoncxx::type;
 
 namespace {
 
@@ -425,7 +214,9 @@ struct UpdateOneOperation : public WriteOperation {
           _collection{std::move(collection)},
           _operation{operation},
           _filter{opNode["Filter"].to<DocumentGenerator>(context, id)},
-          _update{opNode["Update"].to<DocumentGenerator>(context, id)} {}
+          _update{opNode["Update"].to<DocumentGenerator>(context, id)},
+          _options{opNode["OperationOptions"].maybe<mongocxx::options::update>().value_or(
+              mongocxx::options::update{})} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filter();
@@ -1256,16 +1047,45 @@ std::string getDbName(const PhaseContext& phaseContext) {
 
 namespace genny::actor {
 
+struct CrudActor::CollectionName {
+    std::optional<std::string> collectionName;
+    std::optional<int64_t> numCollections;
+    explicit CollectionName(PhaseContext& phaseContext)
+        : collectionName{phaseContext["Collection"].maybe<std::string>()},
+          numCollections{phaseContext["CollectionCount"].maybe<IntegerSpec>()} {
+        if (collectionName && numCollections) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "Collection or CollectionCount, not both in Crud Actor."));
+        }
+        if (!collectionName && !numCollections) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "One of Collection or CollectionCount must be provided in Crud Actor."));
+        }
+    }
+    // Get the assigned collection name or generate a name based on collectionCount and the
+    // the actorId.
+    std::string generateName(ActorId id) {
+        if (collectionName) {
+            return collectionName.value();
+        }
+        auto collectionNumber = id % numCollections.value();
+        return "Collection" + std::to_string(collectionNumber);
+    }
+};
+
 struct CrudActor::PhaseConfig {
-    mongocxx::collection collection;
     std::vector<std::unique_ptr<BaseOperation>> operations;
     metrics::Operation metrics;
+    std::string dbName;
+    CrudActor::CollectionName collectionName;
 
     PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id)
-        : collection{(
-              *client)[getDbName(phaseContext)][phaseContext["Collection"].to<std::string>()]},
-          metrics{phaseContext.actor().operation("Crud", id)} {
+        : dbName{getDbName(phaseContext)},
+          metrics{phaseContext.actor().operation("Crud", id)},
+          collectionName{phaseContext} {
+        auto name = collectionName.generateName(id);
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
+            auto collection = (*client)[dbName][name];
             auto& yamlCommand = node["OperationCommand"];
             auto opName = node["OperationName"].to<std::string>();
             auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);

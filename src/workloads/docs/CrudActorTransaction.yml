@@ -12,6 +12,8 @@ Actors:
     - OperationName: startTransaction
       OperationCommand:
         Options:
+          # Use a non-default TransactionOption MaxCommitTimeMs.
+          MaxCommitTime: 500 milliseconds
           WriteConcern:
             Level: majority
             Journal: true

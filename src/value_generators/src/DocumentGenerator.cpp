@@ -177,8 +177,8 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node,
                                                            GeneratorArgs generatorArgs);
 
 template <bool Verbatim>
-UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node,
-                                                      GeneratorArgs generatorArgs);
+UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
+                                                             GeneratorArgs generatorArgs);
 template <typename Distribution,
           const char* diststring,
           const char* parameter1name,
@@ -752,12 +752,43 @@ private:
 };
 
 
+/** `{^Array: {of: {a: b}, number: 2}` */
+class ArrayGenerator : public Generator<bsoncxx::array::value> {
+public:
+    ArrayGenerator(const Node& node,
+                      GeneratorArgs generatorArgs,
+                      std::map<std::string, Parser<UniqueAppendable>>
+                          parsers)
+        : _rng{generatorArgs.rng},
+          _node{node},
+          _generatorArgs{generatorArgs},
+          _valueGen{valueGenerator<false, UniqueAppendable>(node["of"], generatorArgs, parsers)},
+          _nTimesGen{intGenerator(extract(node, "number", "^Array"), generatorArgs)} {}
+
+    bsoncxx::array::value evaluate() override {
+        bsoncxx::builder::basic::array builder{};
+        auto times = _nTimesGen->evaluate();
+        for (int i = 0; i < times; ++i) {
+            _valueGen->append(builder);
+        }
+        return builder.extract();
+    }
+
+private:
+    DefaultRandom& _rng;
+    const Node& _node;
+    const GeneratorArgs& _generatorArgs;
+    const UniqueAppendable _valueGen;
+    const UniqueGenerator<int64_t> _nTimesGen;
+};
+
+
 class IncGenerator : public Generator<int64_t> {
 public:
     IncGenerator(const Node& node, GeneratorArgs generatorArgs)
         : _step{node["step"].maybe<int64_t>().value_or(1)} {
         _counter = node["start"].maybe<int64_t>().value_or(1) +
-            generatorArgs.actorId * node["multiplier"].maybe<int64_t>().value_or(1);
+            generatorArgs.actorId * node["multiplier"].maybe<int64_t>().value_or(0);
     }
 
     int64_t evaluate() override {
@@ -773,11 +804,11 @@ private:
 
 
 /** `{a: [...]}` */
-class ArrayGenerator : public Generator<bsoncxx::array::value> {
+class LiteralArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
     using ValueType = std::vector<UniqueAppendable>;
 
-    explicit ArrayGenerator(ValueType values) : _values{std::move(values)} {}
+    explicit LiteralArrayGenerator(ValueType values) : _values{std::move(values)} {}
 
     bsoncxx::array::value evaluate() override {
         bsoncxx::builder::basic::array builder{};
@@ -872,7 +903,7 @@ Out valueGenerator(const Node& node,
         return std::make_unique<ConstantAppender<std::string>>(node.to<std::string>());
     }
     if (node.isSequence()) {
-        return arrayGenerator<Verbatim>(node, generatorArgs);
+        return literalArrayGenerator<Verbatim>(node, generatorArgs);
     }
     if (node.isMap()) {
         return documentGenerator<Verbatim>(node, generatorArgs);
@@ -930,6 +961,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<IncGenerator>(node, generatorArgs);
      }},
+    {"^Array",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
+     }},
 };
 
 
@@ -970,18 +1005,18 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node,
 /**
  * @tparam Verbatim if we're in a `^Verbatim block`
  * @param node sequence node
- * @return array generator that has one valueGenerator (recursive type) for each element in
+ * @return literal array of generators that has one valueGenerator (recursive type) for each element in
  * the node
  */
 template <bool Verbatim>
-UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node,
+UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
                                                       GeneratorArgs generatorArgs) {
-    ArrayGenerator::ValueType entries;
+    LiteralArrayGenerator::ValueType entries;
     for (const auto&& [k, v] : node) {
         auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, generatorArgs, allParsers);
         entries.push_back(std::move(valgen));
     }
-    return std::make_unique<ArrayGenerator>(std::move(entries));
+    return std::make_unique<LiteralArrayGenerator>(std::move(entries));
 }
 
 /**

@@ -22,6 +22,9 @@ Actors:
     BatchSize: 100000
     Document:
       a: {^RandomString: { length: 100 }}
+    FindOptions:
+      Hint: a_1 # Currently only support the index name.
+      Comment: "Phase 1 loader"
   - {Nop: true}
   - {Nop: true}
 
