@@ -833,7 +833,7 @@ Tests:
     - "int" : { "$numberLong" :"403"}
     - "int" : { "$numberLong" :"405"}
 
-  - Name: IncrementAllDeafults
+  - Name: IncrementAllDefaults
     GivenTemplate:
       int: {^Inc: {}}
     ThenReturns:
