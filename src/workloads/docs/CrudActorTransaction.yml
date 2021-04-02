@@ -11,6 +11,8 @@ Actors:
     Operations:
     - OperationName: withTransaction
       OperationCommand:
+        ThrowOnFailure: false  # Transactions are allowed to fail.
+        RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
         Options:
           # Use a non-default TransactionOption MaxCommitTimeMs.
           MaxCommitTime: 500 milliseconds

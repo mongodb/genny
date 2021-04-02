@@ -134,6 +134,8 @@ Actors:
   - MetricsName: TotalModificationTime
     Repeat: 10000
     Collection: &Coll Collection0 # This is the default collection populated by the Loader.
+    ThrowOnFailure: false  # Transactions are allowed to fail.
+    RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
     Operations:
     - OperationName: withTransaction
       OperationCommand:
