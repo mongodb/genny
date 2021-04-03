@@ -15,8 +15,7 @@ Description: |
 
       {_id: 10, oldKey: 20, newKey: 30, counter: 0, padding: 'random string of bytes ...'}
 
-  The collection is initially sharded on {oldKey: 'hashed'} and then resharded on
-  {oldKey: 'hashed', newKey: 1}.
+  The collection is initially sharded on {oldKey: 'hashed'} and then resharded on {newKey: 1}.
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
@@ -129,11 +128,7 @@ Actors:
       OperationName: AdminCommand
       OperationCommand:
         reshardCollection: *Namespace
-        # There is a known bug where the config.chunks entries generated for the temporary
-        # resharding collection are identical to the config.chunks entries for the existing sharded
-        # collection. TODO: Use {newKey: 1} as the new shard key pattern after this issue has been
-        # addressed by SERVER-49526.
-        key: {oldKey: hashed, newKey: 1}
+        key: {newKey: 1}
   - *Nop
 
 - Name: ReadWriteCollectionBeingResharded
