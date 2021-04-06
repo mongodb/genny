@@ -55,6 +55,5 @@ Actors:
 
 AutoRun:
   Requires:
-    bootstrap:
-      mongodb_setup:
-        - replica
+    mongodb_setup:
+    - replica
