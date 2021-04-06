@@ -129,6 +129,8 @@ GlobalDefaults:
       OperationOptions: 
         Hint: price_1_ts_1_cuid_1
         Comment: PtcRemoveOperation
+        WriteConcern:
+          Level: majority
 
   PcRemoveOperation: &PcRemoveOperation
     OperationName: deleteOne
@@ -136,7 +138,8 @@ GlobalDefaults:
       Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       OperationOptions: 
         Hint: price_1_cuid_1
-        Comment: PcRemoveOperation
+        WriteConcern:
+          Level: majority
 
   CpcRemoveOperation: &CpcRemoveOperation
     OperationName: deleteOne
@@ -144,7 +147,8 @@ GlobalDefaults:
       Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
       OperationOptions: 
         Hint: caid_1_price_1_cuid_1
-        Comment: CpcRemoveOperation
+        WriteConcern:
+          Level: majority
 
   # Low Baseline / Benchmark
   LowGlobalRate: &LowGlobalRate 400 per 1 second
