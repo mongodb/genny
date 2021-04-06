@@ -113,7 +113,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-      NopInPhasesUpTo: 20
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
 
@@ -123,13 +123,13 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [0, 4, 9, 14, 19]
-      NopInPhasesUpTo: 20
+      Active: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         LogEvery: 15 minutes
         Blocking: None
 
-- Name: InsertBaseline.Low.50
+- Name: InsertBaseline.Low
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -169,7 +169,7 @@ Actors:
           - *InsertOperation
           - *InsertOperation
 
-- Name: InsertBenchmark.Low.50
+- Name: InsertBenchmark.Low.Short
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -207,7 +207,7 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerShort
 
-- Name: InsertBenchmark.Low.50
+- Name: InsertBenchmark.Low.Medium
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -244,7 +244,7 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerMedium
 
-- Name: InsertBenchmark.Low.50
+- Name: InsertBenchmark.Low.Long
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -281,7 +281,7 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerLong
 
-- Name: InsertBaseline.High.50
+- Name: InsertBaseline.High
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -297,7 +297,7 @@ Actors:
         Duration: *SnapshotScannerShortDuration
         Operations: *Operations
 
-- Name: InsertBenchmark.High.50
+- Name: InsertBenchmark.High.Short
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -334,7 +334,7 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerShort
 
-- Name: InsertBenchmark.High.50
+- Name: InsertBenchmark.High.Medium
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -371,7 +371,7 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerMedium
 
-- Name: InsertBenchmark.High.50
+- Name: InsertBenchmark.High.Long
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads

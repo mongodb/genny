@@ -129,6 +129,8 @@ GlobalDefaults:
       OperationOptions: 
         Hint: price_1_ts_1_cuid_1
         Comment: PtcRemoveOperation
+        WriteConcern:
+          Level: majority
 
   PcRemoveOperation: &PcRemoveOperation
     OperationName: deleteOne
@@ -136,7 +138,8 @@ GlobalDefaults:
       Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       OperationOptions: 
         Hint: price_1_cuid_1
-        Comment: PcRemoveOperation
+        WriteConcern:
+          Level: majority
 
   CpcRemoveOperation: &CpcRemoveOperation
     OperationName: deleteOne
@@ -144,7 +147,8 @@ GlobalDefaults:
       Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
       OperationOptions: 
         Hint: caid_1_price_1_cuid_1
-        Comment: CpcRemoveOperation
+        WriteConcern:
+          Level: majority
 
   # Low Baseline / Benchmark
   LowGlobalRate: &LowGlobalRate 400 per 1 second
@@ -213,7 +217,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-      NopInPhasesUpTo: 20
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
 
@@ -223,13 +227,13 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [1,3,5,7,9,11,13,15,17,19]
+      Active: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         LogEvery: 15 minutes
         Blocking: None
 
-- Name: UpdateBaseline.Low.50
+- Name: MixedBaseline.Low
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -273,7 +277,7 @@ Actors:
           - *PcRemoveOperation
           - *CpcRemoveOperation
 
-- Name: UpdateBenchmark.Low.50
+- Name: MixedBenchmark.Low.Short
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -312,7 +316,7 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerShort
 
-- Name: UpdateBenchmark.Low.50
+- Name: MixedBenchmark.Low.Medium
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -349,7 +353,7 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerMedium
 
-- Name: UpdateBenchmark.Low.50
+- Name: MixedBenchmark.Low.Long
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -386,7 +390,7 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerLong
 
-- Name: UpdateBaseline.High.50
+- Name: MixedBaseline.High
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -402,7 +406,7 @@ Actors:
         Duration: *SnapshotScannerShortDuration
         Operations: *Operations
 
-- Name: UpdateBenchmark.High.50
+- Name: MixedBenchmark.High.Short
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -440,7 +444,7 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerShort
 
-- Name: UpdateBenchmark.High.50
+- Name: MixedBenchmark.High.Medium
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -477,7 +481,7 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerMedium
 
-- Name: UpdateBenchmark.High.50
+- Name: MixedBenchmark.High.Long
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
