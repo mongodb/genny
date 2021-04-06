@@ -15,8 +15,7 @@ Description: |
 
       {_id: 10, oldKey: 20, newKey: 30, counter: 0, padding: 'random string of bytes ...'}
 
-  The collection is initially sharded on {oldKey: 'hashed'} and then resharded on
-  {oldKey: 'hashed', newKey: 1}.
+  The collection is initially sharded on {oldKey: 'hashed'} and then resharded on {newKey: 1}.
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
@@ -30,8 +29,10 @@ GlobalDefaults:
   # fields in the document.
   ApproxDocumentSize: &ApproxDocumentSize 10000  # = 10kB
   ApproxDocumentSize80Pct: &ApproxDocumentSize80Pct 8000  # = 8kB
-  # TODO: Increase DocumentCount to 4000000 so there will be ~20GB of data inserted on each shard.
+  # TODO: Increase DocumentCount to 4000000 so there will be ~20GB of data inserted on each shard
+  # and increase NumReshardedChunks to 400 so there continue to be ~50MB of data per chunk.
   DocumentCount: &DocumentCount 100000  # for an approximate total of 1GB
+  NumChunks: &NumChunks 20              # with approximately 50MB per chunk
 
   ShardKeyValueMin: &ShardKeyValueMin 1
   ShardKeyValueMax: &ShardKeyValueMax 100
@@ -77,7 +78,7 @@ Actors:
         # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
         # the shards.
         key: {oldKey: hashed}
-        numInitialChunks: 60
+        numInitialChunks: *NumChunks
   - *Nop
   - *Nop
   - *Nop
@@ -118,11 +119,7 @@ Actors:
       OperationName: AdminCommand
       OperationCommand:
         reshardCollection: *Namespace
-        # There is a known bug where the config.chunks entries generated for the temporary
-        # resharding collection are identical to the config.chunks entries for the existing sharded
-        # collection. TODO: Use {newKey: 1} as the new shard key pattern after this issue has been
-        # addressed by SERVER-49526.
-        key: {oldKey: hashed, newKey: 1}
+        key: {newKey: 1}
   - *Nop
 
 - Name: ReadWriteCollectionBeingResharded
