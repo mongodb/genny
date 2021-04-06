@@ -150,11 +150,23 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-      NopInPhasesUpTo: 20
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
 
-- Name: UpdateBaseline.Low.50
+# Guard Against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LogEvery: 15 minutes
+        Blocking: None
+
+- Name: UpdateBaseline.Low
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -194,7 +206,7 @@ Actors:
           - *PcUpdateOperation
           - *CpcUpdateOperation
 
-- Name: UpdateBenchmark.Low.50
+- Name: UpdateBenchmark.Low.Short
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -233,7 +245,7 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerShort
 
-- Name: UpdateBenchmark.Low.50
+- Name: UpdateBenchmark.Low.Medium
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -270,7 +282,7 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerMedium
 
-- Name: UpdateBenchmark.Low.50
+- Name: UpdateBenchmark.Low.Long
   Type: CrudActor
   ClientName: LowPool
   Threads: *LowThreads
@@ -307,7 +319,7 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerLong
 
-- Name: UpdateBaseline.High.50
+- Name: UpdateBaseline.High
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -323,7 +335,7 @@ Actors:
         Duration: *SnapshotScannerShortDuration
         Operations: *Operations
 
-- Name: UpdateBenchmark.High.50
+- Name: UpdateBenchmark.High.Short
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -361,7 +373,7 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerShort
 
-- Name: UpdateBenchmark.High.50
+- Name: UpdateBenchmark.High.Medium
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
@@ -398,7 +410,7 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerMedium
 
-- Name: UpdateBenchmark.High.50
+- Name: UpdateBenchmark.High.Long
   Type: CrudActor
   ClientName: HighPool
   Threads: *HighThreads
