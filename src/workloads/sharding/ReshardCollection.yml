@@ -46,7 +46,8 @@ GlobalDefaults:
       Update: {$inc: {counter: 1}}
       # Write operations can fail with a ShardInvalidatedForTargeting error response due to the
       # routing information for the temporary resharding collection not being available on the
-      # donor shard. TODO: Investigate why mongos isn't automatically retrying on it.
+      # donor shard. Mongos is expected to automatically retry on it. TODO: Use the default
+      # {ThrowOnFailure: true} behavior after this issue has been addressed by SERVER-54020.
       ThrowOnFailure: false
 
 Clients:
@@ -113,18 +114,6 @@ Actors:
   - Repeat: 1
     Database: admin
     Operations:
-    # Until SERVER-53373 is implemented, donor shards aren't guaranteed to preserve enough history
-    # on their own for the atClusterTime read by recipient shards to succeed. We enable the
-    # WTPreserveSnapshotHistoryIndefinitely failpoint in the meantime. The testing-only multicast
-    # command in mongos runs the specified command across all shard primaries and secondaries. This
-    # ensures all nodes in the replica set shards preserve enough history, regardless of which the
-    # "nearest" read preference for collection cloning ends up targeting. TODO: Stop enabling the
-    # WTPreserveSnapshotHistoryIndefinitely failpoint once SERVER-53373 is implemented.
-    - OperationName: AdminCommand
-      OperationCommand:
-        multicast:
-          configureFailPoint: WTPreserveSnapshotHistoryIndefinitely
-          mode: alwaysOn
     - OperationMetricsName: ReshardCollection
       OperationName: AdminCommand
       OperationCommand:
