@@ -37,16 +37,11 @@ GlobalDefaults:
   # SecondaryDocumentCount: &SecondaryNumDocs 1000000
   CollectionCount: &CollectionCount 4
 
-  # The query operation name indicates the index in use (see LLTIndexes) :
-  #  * Ptc => price_1_ts_1_cuid_1
-  #  * Pc  => price_1_cuid_1
-  #  * Cpc => caid_1_price_1_cuid_1
   PtcRemoveOperation: &PtcRemoveOperation
     OperationName: deleteOne
     OperationCommand:
       Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       OperationOptions:
-        Hint: price_1_ts_1_cuid_1
         WriteConcern:
           Level: majority
 
@@ -55,7 +50,6 @@ GlobalDefaults:
     OperationCommand:
       Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       OperationOptions:
-        Hint: price_1_cuid_1
         WriteConcern:
           Level: majority
 
@@ -64,7 +58,6 @@ GlobalDefaults:
     OperationCommand:
       Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
       OperationOptions:
-        Hint: caid_1_price_1_cuid_1
         WriteConcern:
           Level: majority
 

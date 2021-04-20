@@ -127,7 +127,6 @@ GlobalDefaults:
     OperationCommand:
       Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       OperationOptions: 
-        Hint: price_1_ts_1_cuid_1
         Comment: PtcRemoveOperation
         WriteConcern:
           Level: majority
@@ -137,7 +136,6 @@ GlobalDefaults:
     OperationCommand:
       Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       OperationOptions: 
-        Hint: price_1_cuid_1
         WriteConcern:
           Level: majority
 
@@ -146,7 +144,6 @@ GlobalDefaults:
     OperationCommand:
       Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
       OperationOptions: 
-        Hint: caid_1_price_1_cuid_1
         WriteConcern:
           Level: majority
 
