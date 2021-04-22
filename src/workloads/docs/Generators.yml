@@ -91,7 +91,7 @@ Actors:
             # likely. It matches the string generational algorithm in YCSB.
             string3: {^FastRandomString: {length: 10}}
 
-            # increment generatot ^Inc with parameters start (default 1), multiplier (default 0}, and step (default 1)
+            # increment generator ^Inc with parameters start (default 1), multiplier (default 0}, and step (default 1)
             # only non-default parameters should be specified
             # if you have multiple threads, you need to specify multiplier:
             # it would be calculated as start + ActorId * multiplier + i * step 
