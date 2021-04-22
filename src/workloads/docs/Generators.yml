@@ -16,7 +16,7 @@ Owner: "@mongodb/stm"
 # 	"string1" : "T336d",
 # 	"string2" : "B2A54",
 # 	"string3" : "LChkGtHKBI",
-#   "counter" : 1008,
+# 	"counter" : 1008,
 # 	"choose" : 12,
 # 	"join" : "This is a joined string",
 # 	"ip" : "77.220.130.163",
