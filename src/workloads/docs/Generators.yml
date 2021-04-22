@@ -16,6 +16,7 @@ Owner: "@mongodb/stm"
 # 	"string1" : "T336d",
 # 	"string2" : "B2A54",
 # 	"string3" : "LChkGtHKBI",
+# 	"counter" : 1008,
 # 	"choose" : 12,
 # 	"join" : "This is a joined string",
 # 	"ip" : "77.220.130.163",
@@ -89,6 +90,12 @@ Actors:
             # FastRandomString is computationally faster, but the letters are not all equally
             # likely. It matches the string generational algorithm in YCSB.
             string3: {^FastRandomString: {length: 10}}
+
+            # increment generator ^Inc with parameters start (default 1), multiplier (default 0}, and step (default 1)
+            # only non-default parameters should be specified
+            # if you have multiple threads, you need to specify multiplier:
+            # it would be calculated as start + ActorId * multiplier + i * step 
+            counter: {^Inc: {start: 1000}}
 
             # You can randomly choose objects. from is an array of values to pick from. Weigths is
             # optional and weights the probability of each option in the from array. If Weights is
