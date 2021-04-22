@@ -86,6 +86,23 @@ Clients:
 
 # Odd phases do operations, even phases quiesce.
 Actors:
+# Ensure that transactionLifetimeLimitSeconds supports all the possible ScanDurations.
+# i.e. greater than SnapshotScannerLongDuration.
+- Name: SetTransactionLifetimeLimit
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Operation:
+          OperationName: RunCommand
+          OperationCommand:
+            setParameter: 1
+            transactionLifetimeLimitSeconds: 3600
+
 - Name: InitialLoad
   Type: Loader
   ClientName: Loader
@@ -215,6 +232,7 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerShortDuration
+        ScanDuration: *SnapshotScannerShortDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
@@ -252,6 +270,7 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerMediumDuration
+        ScanDuration: *SnapshotScannerMediumDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
@@ -289,6 +308,7 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerLongDuration
+        ScanDuration: *SnapshotScannerLongDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
@@ -343,6 +363,7 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerShortDuration
+        ScanDuration: *SnapshotScannerShortDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
@@ -380,6 +401,7 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerMediumDuration
+        ScanDuration: *SnapshotScannerMediumDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
@@ -417,6 +439,7 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerLongDuration
+        ScanDuration: *SnapshotScannerLongDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
