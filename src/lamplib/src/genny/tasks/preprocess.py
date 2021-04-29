@@ -1,7 +1,83 @@
+from enum import Enum
+from collections import namedtuple
+
 import yaml
 import structlog
 
 SLOG = structlog.get_logger(__name__)
+
+
+class ParseException(Exception):
+    pass
+
+
+# TODO: Can do this better now in python
+class Type(Enum):
+    """
+    Values stored in a Context are tagged with a type to ensure
+    they aren't used incorrectly.
+
+    If updating, please add to typeNames in workload_parsers.cpp
+    Enums don't have good string-conversion or introspection :(
+    """
+    Parameter = 1,
+    ActorTemplate = 2,
+
+
+class Context(object):
+    """
+    Manages scoped context for stored values.
+
+    Contexts are helpers for the workload parser.
+    """
+    #using ContextValue = std::pair<YAML::Node, Type>;
+    #using Scope = std::map<std::string, std::pair<YAML::Node, Type>>;
+
+    ContextValue = namedtuple('ContextValue', ['node', 'type'])
+
+    def __init__(self):
+        self._scopes = []
+
+    def get(self, name: str, expected_type: Type):
+        for scope in self._scopes:
+            if name in scope:
+                stored_value = scope[name]
+                actual_type = stored_value.type
+                if actual_type != expected_type:
+                    msg = (f"Type mismatch for node named {name}. Expected {expected_type.name}"
+                           f" but received {stored_value.type.name}")
+                    raise ParseException(msg)
+                return stored_value.value
+        return None
+
+    #void insert(const std::string&, const YAML::Node&, const Type& type);
+
+    # Insert all the values of a node, assuming they are of a type.
+    #void insert(const YAML::Node&, const Type& type);
+
+    #/**
+    # * Opens a scope, closes it when exiting scope.
+    # */
+    #struct ScopeGuard {
+    #    ScopeGuard(Context& context) : _context{context} {
+    #        // Emplace (push) a new Context onto the stack.
+    #        _context._scopes.emplace_back();
+    #    }
+    #    ~ScopeGuard() {
+    #        _context._scopes.pop_back();
+    #    }
+
+    #private:
+    #    Context& _context;
+    #};
+    #ScopeGuard enter() {
+    #    return ScopeGuard(*this);
+    #}
+
+#private:
+    #// Use vector as a stack since std::stack isn't iterable.
+    #std::vector<Scope> _scopes;
+#};
 
 
 def evaluate(workload_path: str):
