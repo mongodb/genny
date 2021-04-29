@@ -1,5 +1,6 @@
 from enum import Enum
 from collections import namedtuple
+from contextlib import AbstractContextManager
 
 import yaml
 import structlog
@@ -59,6 +60,7 @@ class Context(object):
         self._scopes[-1][name] = ContextValue(val, val_type)
 
     def insert(self, node: dict, val_type: ContextType):
+        """Insert all the values of a node, assuming they are of a type."""
         if not isinstance(node, dict):
             msg = (f"Invalid context storage of node: {node}."
                    ". Please ensure this node is a map rather than a sequence.")
@@ -68,30 +70,25 @@ class Context(object):
         for key, val in node.items():
             self.insert(key, val, val_type)
 
-    #/**
-    # * Opens a scope, closes it when exiting scope.
-    # */
-    #struct ScopeGuard {
-    #    ScopeGuard(Context& context) : _context{context} {
-    #        // Emplace (push) a new Context onto the stack.
-    #        _context._scopes.emplace_back();
-    #    }
-    #    ~ScopeGuard() {
-    #        _context._scopes.pop_back();
-    #    }
+    # TODO: Use the contextlib decorator maybe?
+    def open():
+        """Open a new scope, for use in a context."""
+        return ScopeManager(self)
 
-    #private:
-    #    Context& _context;
-    #};
-    #ScopeGuard enter() {
-    #    return ScopeGuard(*this);
-    #}
+    class ScopeManager(AbstractContextManager):
+        """Class for managing a single scope."""
 
-#private:
-    #// Use vector as a stack since std::stack isn't iterable.
-    #std::vector<Scope> _scopes;
-#};
+        def __init__(self, context):
+            """Initialize ScopeManager with the context object it participates in."""
+            self._context = context
 
+        def __enter__(self):
+            scope = {}
+            self._context._scopes.append(scope)
+            return scope
+
+        def __exit__(self):
+            self._context._scopes.pop()
 
 def evaluate(workload_path: str):
     output_file = None
