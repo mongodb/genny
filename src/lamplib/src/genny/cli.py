@@ -117,6 +117,19 @@ def cmake_compile_install(
 
 
 @cli.command(
+    "evaluate",
+    help=(
+        "Print the evaluated YAML workload file with minimal validation."
+    ),
+)
+@click.argument("workload_path")
+@click.pass_context
+def create_new_actor(ctx: click.Context, workload_path: str):
+    from genny.tasks import preprocess
+
+    preprocess.evaluate(workload_path=workload_path)
+
+@cli.command(
     name="clean", help="Resets output and venv directories to clean checkout state.",
 )
 @click.pass_context
