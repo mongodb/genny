@@ -12,7 +12,7 @@ class ParseException(Exception):
 
 
 # TODO: Can do this better now in python
-class Type(Enum):
+class ContextType(Enum):
     """
     Values stored in a Context are tagged with a type to ensure
     they aren't used incorrectly.
@@ -24,24 +24,28 @@ class Type(Enum):
     ActorTemplate = 2,
 
 
+ContextValue = namedtuple('ContextValue', ['node', 'type'])
+
+
 class Context(object):
     """
     Manages scoped context for stored values.
 
     Contexts are helpers for the workload parser.
     """
-    #using ContextValue = std::pair<YAML::Node, Type>;
-    #using Scope = std::map<std::string, std::pair<YAML::Node, Type>>;
-
-    ContextValue = namedtuple('ContextValue', ['node', 'type'])
 
     def __init__(self):
+        """Initialize Context."""
+        # self._scopes is a list where each element is a level
+        # in the scope hierarchy. Each element is a map of names
+        # to stored ContextValues.
         self._scopes = []
 
-    def get(self, name: str, expected_type: Type):
+    def get(self, name: str, expected_type: ContextType):
+        """Retrieve a node with a given name and context type."""
         for scope in self._scopes:
             if name in scope:
-                stored_value = scope[name]
+                stored_value: ContextValue = scope[name]
                 actual_type = stored_value.type
                 if actual_type != expected_type:
                     msg = (f"Type mismatch for node named {name}. Expected {expected_type.name}"
@@ -50,10 +54,19 @@ class Context(object):
                 return stored_value.value
         return None
 
-    #void insert(const std::string&, const YAML::Node&, const Type& type);
+    def insert(self, name: str, val, val_type: ContextType):
+        """Insert a value with a name into the current scope."""
+        self._scopes[-1][name] = ContextValue(val, val_type)
 
-    # Insert all the values of a node, assuming they are of a type.
-    #void insert(const YAML::Node&, const Type& type);
+    def insert(self, node: dict, val_type: ContextType):
+        if not isinstance(node, dict):
+            msg = (f"Invalid context storage of node: {node}."
+                   ". Please ensure this node is a map rather than a sequence.")
+            raise ParseException(msg)
+        }
+
+        for key, val in node.items():
+            self.insert(key, val, val_type)
 
     #/**
     # * Opens a scope, closes it when exiting scope.
