@@ -82,10 +82,6 @@ Clients:
   Default:
     QueryOptions:
       socketTimeoutMS: -1
-      maxPoolSize: 200
-  HighPool:
-    QueryOptions:
-      socketTimeoutMS: -1
       maxPoolSize: 400
 
 # Odd phases do operations, even phases quiesce.
@@ -105,11 +101,10 @@ Actors:
           OperationName: RunCommand
           OperationCommand:
             setParameter: 1
-            transactionLifetimeLimitSeconds: 10800
+            transactionLifetimeLimitSeconds: 14400 # 4 Hours
 
 - Name: InitialLoad
   Type: Loader
-  ClientName: Default
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
@@ -127,7 +122,6 @@ Actors:
 
 - Name: SecondLoadAfterIndexes
   Type: Loader
-  ClientName: Default
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
@@ -167,7 +161,6 @@ Actors:
 
 - Name: QueryBaseline.Low
   Type: CrudActor
-  ClientName: Default
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -207,7 +200,6 @@ Actors:
 
 - Name: QueryBenchmark.Low.Short
   Type: CrudActor
-  ClientName: Default
   Threads: *LowThreads
   Database: *dbname
   Phases:
@@ -247,7 +239,6 @@ Actors:
 
 - Name: QueryBenchmark.Low.Medium
   Type: CrudActor
-  ClientName: Default
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -285,7 +276,6 @@ Actors:
 
 - Name: QueryBenchmark.Low.Long
   Type: CrudActor
-  ClientName: Default
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -323,7 +313,6 @@ Actors:
 
 - Name: QueryBaseline.High
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -339,7 +328,6 @@ Actors:
 
 - Name: QueryBenchmark.High.Short
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -378,7 +366,6 @@ Actors:
 
 - Name: QueryBenchmark.High.Medium
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -416,7 +403,6 @@ Actors:
 
 - Name: QueryBenchmark.High.Long
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:

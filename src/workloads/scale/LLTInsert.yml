@@ -63,10 +63,6 @@ Clients:
   Default:
     QueryOptions:
       socketTimeoutMS: -1
-      maxPoolSize: 200
-  HighPool:
-    QueryOptions:
-      socketTimeoutMS: -1
       maxPoolSize: 400
 
 # Odd phases do operations, even phases quiesce.
@@ -86,11 +82,10 @@ Actors:
           OperationName: RunCommand
           OperationCommand:
             setParameter: 1
-            transactionLifetimeLimitSeconds: 10800
+            transactionLifetimeLimitSeconds: 14400 # 4 Hours
 
 - Name: InitialLoad
   Type: Loader
-  ClientName: Default
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
@@ -108,7 +103,6 @@ Actors:
 
 - Name: SecondLoadAfterIndexes
   Type: Loader
-  ClientName: Default
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
@@ -148,7 +142,6 @@ Actors:
 
 - Name: InsertBaseline.Low
   Type: CrudActor
-  ClientName: Default
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -188,7 +181,6 @@ Actors:
 
 - Name: InsertBenchmark.Low.Short
   Type: CrudActor
-  ClientName: Default
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -227,7 +219,6 @@ Actors:
 
 - Name: InsertBenchmark.Low.Medium
   Type: CrudActor
-  ClientName: Default
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -265,7 +256,6 @@ Actors:
 
 - Name: InsertBenchmark.Low.Long
   Type: CrudActor
-  ClientName: Default
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -303,7 +293,6 @@ Actors:
 
 - Name: InsertBaseline.High
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -319,7 +308,6 @@ Actors:
 
 - Name: InsertBenchmark.High.Short
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -357,7 +345,6 @@ Actors:
 
 - Name: InsertBenchmark.High.Medium
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -395,7 +382,6 @@ Actors:
 
 - Name: InsertBenchmark.High.Long
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
