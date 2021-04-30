@@ -133,9 +133,7 @@ class WorkloadParser(object):
         if (key == "^Parameter"):
             out = self._replaceParam(value)
         elif (key == "ActorTemplates"):
-            out[key] = self._recursive_parse(value)
-            pass
-            #parseTemplates(value)
+            self._parse_templates(value)
         elif (key == "ActorFromTemplate"):
             out[key] = self._recursive_parse(value)
             pass
@@ -174,6 +172,11 @@ class WorkloadParser(object):
             return paramVal
         else:
             return defaultVal
+
+    def _parse_templates(self, templates):
+        for template_node in templates:
+            self._context.insert(template_node["TemplateName"], template_node["Config"],
+                                 ContextType.ActorTemplate)
 
 
     def _parse_only_in(self, onlyIn):
