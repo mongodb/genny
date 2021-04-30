@@ -447,6 +447,7 @@ void CollectionScanner::run() {
                                 BOOST_LOG_TRIVIAL(debug)
                                     << "Scanner id: " << this->_index << " sleeping " << secs;
                                 std::this_thread::sleep_for(sleepDuration);
+                                finished = true;
                             }
                         }
                     } while(!finished);
