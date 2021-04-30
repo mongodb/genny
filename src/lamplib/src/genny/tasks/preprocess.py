@@ -25,15 +25,14 @@ class ContextType(Enum):
     ActorTemplate = 2,
 
 
-ContextValue = namedtuple('ContextValue', ['node', 'type'])
-
-
 class Context(object):
     """
     Manages scoped context for stored values.
 
     Contexts are helpers for the workload parser.
     """
+
+    ContextValue = namedtuple('ContextValue', ['value', 'type'])
 
     def __init__(self):
         """Initialize Context."""
@@ -46,35 +45,30 @@ class Context(object):
         """Retrieve a node with a given name and context type."""
         for scope in self._scopes:
             if name in scope:
-                stored_value: ContextValue = scope[name]
+                stored_value: Context.ContextValue = scope[name]
                 actual_type = stored_value.type
                 if actual_type != expected_type:
                     msg = (f"Type mismatch for node named {name}. Expected {expected_type.name}"
                            f" but received {stored_value.type.name}")
                     raise ParseException(msg)
                 return stored_value.value
+        # TODO: Create special value?
         return None
 
     def insert(self, name: str, val, val_type: ContextType):
         """Insert a value with a name into the current scope."""
-        self._scopes[-1][name] = ContextValue(val, val_type)
+        self._scopes[-1][name] = Context.ContextValue(val, val_type)
 
-    def insert(self, node: dict, val_type: ContextType):
+    def insert_all(self, node: dict, val_type: ContextType):
         """Insert all the values of a node, assuming they are of a type."""
         if not isinstance(node, dict):
             msg = (f"Invalid context storage of node: {node}."
                    ". Please ensure this node is a map rather than a sequence.")
             raise ParseException(msg)
-        }
 
         for key, val in node.items():
             self.insert(key, val, val_type)
-
-    # TODO: Use the contextlib decorator maybe?
-    def open():
-        """Open a new scope, for use in a context."""
-        return ScopeManager(self)
-
+    
     class ScopeManager(AbstractContextManager):
         """Class for managing a single scope."""
 
@@ -87,8 +81,14 @@ class Context(object):
             self._context._scopes.append(scope)
             return scope
 
-        def __exit__(self):
+        def __exit__(self, exc_type, exc_value, exc_traceback):
             self._context._scopes.pop()
+
+    # TODO: Use the contextlib decorator maybe?
+    def enter(self):
+        """Enter a new scope, for use in a context manager."""
+        return Context.ScopeManager(self)
+
 
 def evaluate(workload_path: str):
     output_file = None
