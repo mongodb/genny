@@ -420,9 +420,10 @@ void CollectionScanner::run() {
                 try {
                     mongocxx::client_session session = _client->start_session({});
                     session.start_transaction(*config->transactionOptions);
+                    // This loop should run at least once.
                     auto finished = true;
                     do {
-                        BOOST_LOG_TRIVIAL(info)
+                        BOOST_LOG_TRIVIAL(debug)
                             << "Scanner id: " << this->_index << " scanning";
                         collectionScan(config, collections, _rateLimiter, session);
                         // If a scan duration was specified, we must make the scan
@@ -439,14 +440,13 @@ void CollectionScanner::run() {
                             if (config->stopPhase && *config->stopPhase < stop) {
                                 stop = *config->stopPhase;
                             }
-                            finished = stop > now;
-                            if (!finished && config->scanContinuous) {
+                            finished = now >= stop;
+                            if (!finished && !config->scanContinuous) {
                                 auto sleepDuration = stop - now;
                                 auto secs = sleepDuration.count() / (1000 * 1000 * 1000);
-                                BOOST_LOG_TRIVIAL(info)
+                                BOOST_LOG_TRIVIAL(debug)
                                     << "Scanner id: " << this->_index << " sleeping " << secs;
                                 std::this_thread::sleep_for(sleepDuration);
-                                finished = true;
                             }
                         }
                     } while(!finished);
