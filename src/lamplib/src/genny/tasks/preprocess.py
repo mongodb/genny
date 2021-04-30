@@ -135,9 +135,7 @@ class WorkloadParser(object):
         elif (key == "ActorTemplates"):
             self._parse_templates(value)
         elif (key == "ActorFromTemplate"):
-            out[key] = self._recursive_parse(value)
-            pass
-            #out = parseInstance(value)
+            out = self._parse_instance(value)
         elif (key == "OnlyActiveInPhases"):
             out = self._parse_only_in(value)
         elif (key == "ExternalPhaseConfig"):
@@ -177,6 +175,19 @@ class WorkloadParser(object):
         for template_node in templates:
             self._context.insert(template_node["TemplateName"], template_node["Config"],
                                  ContextType.ActorTemplate)
+
+    def _parse_instance(self, instance):
+        actor = {}
+
+        with self._context.enter():
+            templateNode = self._context.get(instance["TemplateName"], ContextType.ActorTemplate)
+            if templateNode is None:
+                name = instance["TemplateName"]
+                msg = f"Expected template named {name} but could not be found."
+                raise ParseException(msg)
+            self._context.insert_all(instance["TemplateParameters"], ContextType.Parameter)
+            actor = self._recursive_parse(templateNode)
+        return actor
 
 
     def _parse_only_in(self, onlyIn):
