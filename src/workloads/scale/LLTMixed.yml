@@ -156,9 +156,9 @@ GlobalDefaults:
   HighThreads: &HighThreads 16
 
   # Scanner
-  SnapshotScannerShortDuration: &SnapshotScannerShortDuration 2 minutes
+  SnapshotScannerShortDuration: &SnapshotScannerShortDuration 1 minutes
   SnapshotScannerMediumDuration: &SnapshotScannerMediumDuration 10 minutes
-  SnapshotScannerLongDuration: &SnapshotScannerLongDuration 30 minutes
+  SnapshotScannerLongDuration: &SnapshotScannerLongDuration 60 minutes
 
 Clients:
   Default:
@@ -187,11 +187,11 @@ Actors:
           OperationName: RunCommand
           OperationCommand:
             setParameter: 1
-            transactionLifetimeLimitSeconds: 3600
+            transactionLifetimeLimitSeconds: 10800
 
 - Name: InitialLoad
   Type: Loader
-  ClientName: Loader
+  ClientName: Default
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
@@ -209,7 +209,7 @@ Actors:
 
 - Name: SecondLoadAfterIndexes
   Type: Loader
-  ClientName: Loader
+  ClientName: Default
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
@@ -249,7 +249,7 @@ Actors:
 
 - Name: MixedBaseline.Low
   Type: CrudActor
-  ClientName: LowPool
+  ClientName: Default
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -293,7 +293,7 @@ Actors:
 
 - Name: MixedBenchmark.Low.Short
   Type: CrudActor
-  ClientName: LowPool
+  ClientName: Default
   Threads: *LowThreads
   Database: *dbname
   Phases:
@@ -333,7 +333,7 @@ Actors:
 
 - Name: MixedBenchmark.Low.Medium
   Type: CrudActor
-  ClientName: LowPool
+  ClientName: Default
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -371,7 +371,7 @@ Actors:
 
 - Name: MixedBenchmark.Low.Long
   Type: CrudActor
-  ClientName: LowPool
+  ClientName: Default
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
