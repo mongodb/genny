@@ -11,6 +11,13 @@ SLOG = structlog.get_logger(__name__)
 class ParseException(Exception):
     pass
 
+def evaluate(workload_path: str):
+    output_file = None
+    parser = WorkloadParser()
+    output = parser.parse(workload_path)
+    output_logger = structlog.PrintLogger(output_file)
+    output_logger.msg(output)
+
 
 # TODO: Can do this better now in python
 class ContextType(Enum):
@@ -68,7 +75,7 @@ class Context(object):
 
         for key, val in node.items():
             self.insert(key, val, val_type)
-    
+
     class ScopeManager(AbstractContextManager):
         """Class for managing a single scope."""
 
@@ -89,63 +96,98 @@ class Context(object):
         """Enter a new scope, for use in a context manager."""
         return Context.ScopeManager(self)
 
+class WorkloadParser(object):
 
-def evaluate(workload_path: str):
-    output_file = None
-    output = preprocess_file(workload_path)
-    output_logger = structlog.PrintLogger(output_file)
-    output_logger.msg(output)
+    def __init__(self):
+        #TODO: Calculate phase path, handle strings yamls?
+        self._phase_config_path = ""
+        self._context = Context()
+
+    # TODO: Add smoke mode and yaml source?
+    def parse(self, filename):
+        with self._context.enter():
+            workload = None
+            with open(filename) as file:
+                workload = yaml.full_load(file)
+
+            doc = self._recursive_parse(workload)
+            parsed = yaml.dump(doc, sort_keys=False)
+            return parsed
+
+    def _recursive_parse(self, node):
+        if isinstance(node, dict):
+            out = {}
+            for key, value in node.items():
+                out = self._preprocess(key, value, out)
+        elif isinstance(node, list):
+            out = []
+            for val in node:
+                out.append(self._recursive_parse(val))
+        else:
+            out = node
+
+        return out
 
 
-def preprocess_file(filename):
-    doc = None
-    with open(filename) as file:
-        doc = yaml.full_load(file)
+    def _preprocess(self, key, value, out):
+        if (key == "^Parameter"):
+            out = self._replaceParam(value)
+        elif (key == "ActorTemplates"):
+            out[key] = self._recursive_parse(value)
+            pass
+            #parseTemplates(value)
+        elif (key == "ActorFromTemplate"):
+            out[key] = self._recursive_parse(value)
+            pass
+            #out = parseInstance(value)
+        elif (key == "OnlyActiveInPhases"):
+            out = self._parse_only_in(value)
+        elif (key == "ExternalPhaseConfig"):
+            out[key] = self._recursive_parse(value)
+            pass
+            #external = parseExternal(value);
+            # Merge the external node with the any other parameters specified
+            # for this node like "Repeat" or "Duration".
 
-    doc = recursive_parse(doc)
-    output = yaml.dump(doc, sort_keys=False)
-    return output
+            #for (externalKvp : external) {
+            #    if (!out[externalKvp.first])
+            #        out[externalKvp.first] = externalKvp.second;
+            #}
+        else:
+            out[key] = self._recursive_parse(value)
+        return out
+
+    def _replaceParam(self, input):
+        #if (!input["Name"] || !input["Default"]) {
+        if "Name" not in input or "Default" not in input:
+            msg = ("Invalid keys for '^Parameter', please set 'Name' and 'Default'"
+                   f" in following node: {input}")
+            raise ParseException(msg)
+
+        name = input["Name"]
+        # The default value is mandatory.
+        defaultVal = input["Default"]
+
+        # Nested params are ignored for simplicity.
+        paramVal = self._context.get(name, ContextType.Parameter)
+        if (paramVal):
+            return paramVal
+        else:
+            return defaultVal
 
 
-def recursive_parse(node):
-    out = None
-
-    if isinstance(node, dict):
-        for key, value in node.items():
-            out = preprocess(key, value, out)
-    elif isinstance(node, list):
+    def _parse_only_in(self, onlyIn):
         out = []
-        for val in node:
-            out.append(recursive_parse(val))
-    else:
-        out = node
-
-    return out
-
-
-def preprocess(key, value, out):
-    if out is None:
-        out = {}
-
-    if (key == "OnlyActiveInPhases"):
-        out = parse_only_in(value)
-    else:
-        out[key] = recursive_parse(value)
-    return out
-
-
-def parse_only_in(onlyIn):
-    out = []
-    nop = {}
-    nop["Nop"] = True
-    max = recursive_parse(onlyIn["NopInPhasesUpTo"])
-    for i in range(max+1):
-        isActivePhase = False
-        for activePhase in recursive_parse(onlyIn["Active"]):
-            if (activePhase == i):
-                out.append(recursive_parse(onlyIn["PhaseConfig"]))
-                isActivePhase = True
-                break
-        if not isActivePhase:
-            out.append(nop)
-    return out
+        nop = {}
+        nop["Nop"] = True
+        max = self._recursive_parse(onlyIn["NopInPhasesUpTo"])
+        for i in range(max+1):
+            isActivePhase = False
+            for activePhase in self._recursive_parse(onlyIn["Active"]):
+                if (activePhase == i):
+                    out.append(self._recursive_parse(onlyIn["PhaseConfig"]))
+                    isActivePhase = True
+                    break
+            if not isActivePhase:
+                out.append(nop)
+        return out
