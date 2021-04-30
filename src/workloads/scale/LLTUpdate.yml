@@ -256,6 +256,7 @@ Actors:
         Duration: *SnapshotScannerShortDuration
         ScanDuration: *SnapshotScannerShortDuration
         ScanType: snapshot
+        ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
@@ -294,6 +295,7 @@ Actors:
         Duration: *SnapshotScannerMediumDuration
         ScanDuration: *SnapshotScannerMediumDuration
         ScanType: snapshot
+        ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
@@ -332,6 +334,7 @@ Actors:
         Duration: *SnapshotScannerLongDuration
         ScanDuration: *SnapshotScannerLongDuration
         ScanType: snapshot
+        ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
@@ -387,6 +390,7 @@ Actors:
         Duration: *SnapshotScannerShortDuration
         ScanDuration: *SnapshotScannerShortDuration
         ScanType: snapshot
+        ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
@@ -425,6 +429,7 @@ Actors:
         Duration: *SnapshotScannerMediumDuration
         ScanDuration: *SnapshotScannerMediumDuration
         ScanType: snapshot
+        ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
@@ -463,6 +468,7 @@ Actors:
         Duration: *SnapshotScannerLongDuration
         ScanDuration: *SnapshotScannerLongDuration
         ScanType: snapshot
+        ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
