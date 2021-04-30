@@ -1,4 +1,7 @@
+import os
+import sys
 from enum import Enum
+from pathlib import Path
 from collections import namedtuple
 from contextlib import AbstractContextManager
 
@@ -99,17 +102,16 @@ class Context(object):
 class WorkloadParser(object):
 
     def __init__(self):
-        #TODO: Calculate phase path, handle strings yamls?
+        #TODO: Handle strings yamls?
         self._phase_config_path = ""
         self._context = Context()
 
-    # TODO: Add smoke mode and yaml source?
+    # TODO: Add smoke mode and corresponding yaml source?
     def parse(self, filename):
+        path = Path(filename)
+        self._phase_config_path = path.parent.absolute()
         with self._context.enter():
-            workload = None
-            with open(filename) as file:
-                workload = yaml.full_load(file)
-
+            workload = _load_file(filename)
             doc = self._recursive_parse(workload)
             parsed = yaml.dump(doc, sort_keys=False)
             return parsed
@@ -139,22 +141,18 @@ class WorkloadParser(object):
         elif (key == "OnlyActiveInPhases"):
             out = self._parse_only_in(value)
         elif (key == "ExternalPhaseConfig"):
-            out[key] = self._recursive_parse(value)
-            pass
-            #external = parseExternal(value);
+            external = self._parse_external(value)
+
             # Merge the external node with the any other parameters specified
             # for this node like "Repeat" or "Duration".
-
-            #for (externalKvp : external) {
-            #    if (!out[externalKvp.first])
-            #        out[externalKvp.first] = externalKvp.second;
-            #}
+            for key in external:
+                if key not in out:
+                    out[key] = external[key]
         else:
             out[key] = self._recursive_parse(value)
         return out
 
     def _replaceParam(self, input):
-        #if (!input["Name"] || !input["Default"]) {
         if "Name" not in input or "Default" not in input:
             msg = ("Invalid keys for '^Parameter', please set 'Name' and 'Default'"
                    f" in following node: {input}")
@@ -205,3 +203,68 @@ class WorkloadParser(object):
             if not isActivePhase:
                 out.append(nop)
         return out
+
+    def _parse_external(self, external):
+        with self._context.enter():
+            keysSeen = 0
+
+            if ("Path" not in external):
+                msg = f"Missing the `Path` top-level key in your external phase configuration: {external}"
+                raise ParseException(msg)
+
+            path = external["Path"]
+            keysSeen += 1
+
+            path = os.path.join(self._phase_config_path, path)
+
+            if not os.path.isfile(path):
+                msg = (f"Invalid path to external PhaseConfig: {path}"
+                        ". Please ensure your workload file is placed in 'workloads/[subdirectory]/' and the "
+                        "'Path' parameter is relative to the 'phases/' directory")
+                raise ParseException(path)
+
+            replacement = _load_file(path)
+
+            if "PhaseSchemaVersion" not in replacement:
+                raise ParseException(
+                    "Missing the `PhaseSchemaVersion` top-level key in your external phase "
+                    "configuration")
+
+            # Python will parse the schema version as a datetime.
+            phase_schema_version = str(replacement["PhaseSchemaVersion"])
+            if phase_schema_version != "2018-07-01":
+                msg = (f"Invalid phase schema version: {phase_schema_version}"
+                       ". Please ensure the schema for your external phase config is valid and the "
+                       "`PhaseSchemaVersion` top-level key is set correctly")
+                raise ParseException(msg)
+
+            # Delete the schema version instead of adding it to `keysSeen`.
+            del replacement["PhaseSchemaVersion"]
+
+            if "Parameters" in external:
+                keysSeen += 1
+                self._context.insert(external["Parameters"], ContextType.Parameter)
+
+            if "Key" in external:
+                keysSeen += 1
+                key = external["Key"]
+                if key not in replacement:
+                    msg = f"Could not find top-level key: {key} in phase config YAML file: {path}"
+                    raise ParseException(msg)
+                replacement = replacement[key]
+
+            if (len(external) != keysSeen):
+                msg = ("Invalid keys for 'External'. Please set 'Path' and if any, 'Parameters' in the YAML "
+                       f"file: {path} with the following content: {external}")
+                raise ParseException(msg)
+
+            return self._recursive_parse(replacement)
+
+def _load_file(source):
+    try:
+        with open(source) as file:
+            workload = yaml.full_load(file)
+            return workload
+    except:
+        SLOG.error(f"Error loading yaml from {source}: {sys.exc_info()[0]}")
+        raise
