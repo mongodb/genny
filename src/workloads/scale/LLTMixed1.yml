@@ -149,11 +149,11 @@ GlobalDefaults:
 
   # Low Baseline / Benchmark
   LowGlobalRate: &LowGlobalRate 100 per 1 second
-  LowThreads: &LowThreads 2
+  LowThreads: &LowThreads 8
 
   # High Baseline / Benchmark
   HighGlobalRate: &HighGlobalRate 200 per 1 second
-  HighThreads: &HighThreads 4
+  HighThreads: &HighThreads 16
 
   # Scanner
   SnapshotScannerShortDuration: &SnapshotScannerShortDuration 2 minutes
