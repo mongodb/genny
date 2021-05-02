@@ -261,6 +261,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
+        Blocking: none
         Operations: &InsertOps
           # Create
           - *InsertOperation
@@ -284,6 +285,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
+        Blocking: none
         Operations: &QueryOps
           # Read
           - *PtcQueryOperation
@@ -307,6 +309,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
+        Blocking: none
         Operations: &UpdateOps
           # Update
           - *PtcUpdateOperation
@@ -330,6 +333,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
+        Blocking: none
         Operations: &DeleteOps
           # Delete
           - *PtcRemoveOperation
@@ -375,6 +379,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *InsertOps
 
 - Name: Low.Medium.Query
@@ -391,6 +396,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *QueryOps
 
 - Name: Low.Medium.Update
@@ -407,6 +413,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *UpdateOps
 
 - Name: Low.Medium.Delete
@@ -423,6 +430,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *DeleteOps
 
 # A thread per collection doing a scan.
@@ -461,6 +469,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerLongDuration
+        Blocking: none
         Operations: *InsertOps
 
 - Name: Low.Long.Query
@@ -477,6 +486,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerLongDuration
+        Blocking: none
         Operations: *QueryOps
 
 - Name: Low.Long.Update
@@ -493,6 +503,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerLongDuration
+        Blocking: none
         Operations: *UpdateOps
 
 - Name: Low.Long.Delete
@@ -509,6 +520,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerLongDuration
+        Blocking: none
         Operations: *DeleteOps
 
 # A thread per collection doing a scan.
@@ -547,6 +559,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
+        Blocking: none
         Operations: *InsertOps
 
 - Name: High.Short.Query
@@ -563,6 +576,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
+        Blocking: none
         Operations: *QueryOps
 
 - Name: High.Short.Update
@@ -579,6 +593,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *UpdateOps
 
 - Name: High.Short.Delete
@@ -595,6 +610,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *DeleteOps
 
 - Name: High.Medium.Insert
@@ -611,6 +627,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *InsertOps
 
 - Name: High.Medium.Query
@@ -627,6 +644,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *QueryOps
 
 - Name: High.Medium.Update
@@ -643,6 +661,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *UpdateOps
 
 - Name: High.Medium.Delete
@@ -659,6 +678,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *DeleteOps
 
 - Name: High.Long.Insert
@@ -675,6 +695,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *InsertOps
 
 - Name: High.Long.Query
@@ -691,6 +712,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *QueryOps
 
 - Name: High.Long.Update
@@ -707,6 +729,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *UpdateOps
 
 - Name: High.Long.Delete
@@ -723,6 +746,7 @@ Actors:
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
+        Blocking: none
         Operations: *DeleteOps
 
 
