@@ -1,0 +1,546 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  Workload to Benchmark the effect of LongLivedTransactions on a Remove workload.
+
+GlobalDefaults:
+  # These values should match those are the top of LLTPhases.yml
+  dbname: &dbname llt
+  MaxPhases: &MaxPhases 20
+
+  # The Sample Document Shape.
+  Document: &Doc
+    ts: {^Now: {}}
+    caid: {^RandomInt: {min: 0, max: 1000}}
+    cuid: {^RandomInt: {min: 0, max: 100000}}
+    prod: {^RandomInt: {min: 0, max: 10000}}
+    price: {^RandomDouble: {min: 0.0, max: 1000.0}}
+    data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
+
+  LLTIndexes: &LLTIndexes
+    - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
+    - keys: {price: 1, cuid: 1}            # Pc
+    - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
+
+  # Loader Config.
+  LoadThreads: &LoadThreads 4
+  LoadBatchSize: &LoadBatchSize 1000
+
+  # In-memory: Database size works out about 12GB.
+  InitialDocumentCount: &InitialNumDocs 10000000
+  SecondaryDocumentCount: &SecondaryNumDocs 10000000
+
+  # WIP make a copy of the workload once these values are tuned correctly and
+  # the workload runs consistently.
+  # Not In-memory: Database size works out about 30GB.
+  # InitialDocumentCount: &InitialNumDocs 49000000
+  # SecondaryDocumentCount: &SecondaryNumDocs 1000000
+  CollectionCount: &CollectionCount 4
+
+  # The write concern. The intent is to use what is chosen as the default in 5.0.
+  # The query operation name indicates the index in use (see LLTIndexes) :
+  #  * Ptc => price_1_ts_1_cuid_1
+  #  * Pc  => price_1_cuid_1
+  #  * Cpc => caid_1_price_1_cuid_1
+
+
+  # Create
+  InsertOperation: &InsertOperation
+    OperationName: insertOne
+    OperationCommand:
+      Document: *Doc
+      OperationOptions:
+        WriteConcern:
+          Level: majority
+
+  # Read
+  PtcQueryOperation: &PtcQueryOperation
+    OperationName: findOne
+    OperationCommand:
+      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Options: 
+        Hint: price_1_ts_1_cuid_1
+        Comment: PtcQueryOperation
+
+  PcQueryOperation: &PcQueryOperation
+    OperationName: findOne
+    OperationCommand:
+      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Options: 
+        Hint: price_1_cuid_1
+        Comment: PcQueryOperation
+
+  CpcQueryOperation: &CpcQueryOperation
+    OperationName: findOne
+    OperationCommand:
+      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Options: 
+        Hint: caid_1_price_1_cuid_1
+        Comment: CpcQueryOperation
+
+  # Update
+  PtcUpdateOperation: &PtcUpdateOperation
+    OperationName: updateOne
+    OperationCommand:
+      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Update: 
+        $set:
+          ts: {^Now: {}}
+          data: {^Join: {array: ["bbbbbbbbbb", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
+      OperationOptions:
+        Upsert: false
+        WriteConcern:
+          Level: majority
+        Hint: price_1_ts_1_cuid_1
+
+  PcUpdateOperation: &PcUpdateOperation
+    OperationName: updateOne
+    OperationCommand:
+      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Update:
+        $set:
+          ts: {^Now: {}}
+          prod: {^RandomInt: {min: 0, max: 10000}}
+      OperationOptions: 
+        Upsert: false
+        WriteConcern:
+          Level: majority
+        Hint: price_1_cuid_1
+
+  CpcUpdateOperation: &CpcUpdateOperation
+    OperationName: updateOne
+    OperationCommand:
+      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Update:
+        $set:
+          ts: {^Now: {}}
+          cuid: {^RandomInt: {min: 0, max: 100000}}
+      OperationOptions: 
+        Upsert: false
+        WriteConcern:
+          Level: majority
+        Hint: caid_1_price_1_cuid_1
+
+  # Delete
+  PtcRemoveOperation: &PtcRemoveOperation
+    OperationName: deleteOne
+    OperationCommand:
+      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      OperationOptions: 
+        Comment: PtcRemoveOperation
+        WriteConcern:
+          Level: majority
+
+  PcRemoveOperation: &PcRemoveOperation
+    OperationName: deleteOne
+    OperationCommand:
+      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      OperationOptions: 
+        WriteConcern:
+          Level: majority
+
+  CpcRemoveOperation: &CpcRemoveOperation
+    OperationName: deleteOne
+    OperationCommand:
+      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      OperationOptions: 
+        WriteConcern:
+          Level: majority
+
+  # Low Baseline / Benchmark
+  LowGlobalRate: &LowGlobalRate 400 per 1 second
+  LowThreads: &LowThreads 8
+
+  # Low Baseline / Benchmark
+  HighGlobalRate: &HighGlobalRate 800 per 1 second
+  HighThreads: &HighThreads 16
+
+  # Scanner
+  SnapshotScannerShortDuration: &SnapshotScannerShortDuration 2 minutes
+  SnapshotScannerMediumDuration: &SnapshotScannerMediumDuration 10 minutes
+  SnapshotScannerLongDuration: &SnapshotScannerLongDuration 30 minutes
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+      maxPoolSize: 200
+  HighPool:
+    QueryOptions:
+      socketTimeoutMS: -1
+      maxPoolSize: 400
+
+# Odd phases do operations, even phases quiesce.
+Actors:
+# Ensure that transactionLifetimeLimitSeconds supports all the possible ScanDurations.
+# i.e. greater than SnapshotScannerLongDuration.
+- Name: SetTransactionLifetimeLimit
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Operation:
+          OperationName: RunCommand
+          OperationCommand:
+            setParameter: 1
+            transactionLifetimeLimitSeconds: 3600
+
+- Name: InitialLoad
+  Type: Loader
+  ClientName: Loader
+  Threads: *LoadThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Threads: *LoadThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Repeat: 1
+        Document: *Doc
+        DocumentCount: *InitialNumDocs
+        Indexes: *LLTIndexes
+        BatchSize: *LoadBatchSize
+
+- Name: SecondLoadAfterIndexes
+  Type: Loader
+  ClientName: Loader
+  Threads: *LoadThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Threads: *LoadThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Repeat: 1
+        Document: *Doc
+        DocumentCount: *SecondaryNumDocs
+        BatchSize: *LoadBatchSize
+
+- Name: QuiescePhase
+  Type: QuiesceActor
+  Threads: 1
+  Database: *dbname
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+
+# Guard Against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LogEvery: 15 minutes
+        Blocking: None
+
+- Name: MixedBaseline.Low
+  Type: CrudActor
+  ClientName: LowPool
+  Threads: *LowThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *LowGlobalRate
+        Threads: *LowThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerShortDuration
+        Operations: &Operations
+          # Create
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          # Read
+          - *PtcQueryOperation
+          - *PcQueryOperation
+          - *CpcQueryOperation
+          - *PtcQueryOperation
+          - *PcQueryOperation
+          - *CpcQueryOperation
+          # Update
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          # Delete
+          - *PtcRemoveOperation
+          - *PcRemoveOperation
+          - *CpcRemoveOperation
+          - *PtcRemoveOperation
+          - *PcRemoveOperation
+          - *CpcRemoveOperation
+
+- Name: MixedBenchmark.Low.Short
+  Type: CrudActor
+  ClientName: LowPool
+  Threads: *LowThreads
+  Database: *dbname
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *LowGlobalRate
+        Threads: *LowThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerShortDuration
+        Blocking: none
+        Operations: *Operations
+
+## A thread per collection doing a scan.
+- Name: SnapshotScannerShort
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *SnapshotScannerShortDuration
+        ScanDuration: *SnapshotScannerShortDuration
+        ScanType: snapshot
+        GenerateCollectionNames: true
+        CollectionSortOrder: forward
+        FindOptions:
+          BatchSize: 1000
+          Hint: _id_ # Currently only support the index name.
+          Comment: SnapshotScannerShort
+
+- Name: MixedBenchmark.Low.Medium
+  Type: CrudActor
+  ClientName: LowPool
+  Threads: *LowThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *LowGlobalRate
+        Threads: *LowThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerMediumDuration
+        Blocking: none
+        Operations: *Operations
+
+- Name: SnapshotScannerMedium
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *SnapshotScannerMediumDuration
+        ScanDuration: *SnapshotScannerMediumDuration
+        ScanType: snapshot
+        GenerateCollectionNames: true
+        CollectionSortOrder: forward
+        FindOptions:
+          BatchSize: 1000
+          Hint: _id_ # Currently only support the index name.
+          Comment: SnapshotScannerMedium
+
+- Name: MixedBenchmark.Low.Long
+  Type: CrudActor
+  ClientName: LowPool
+  Threads: *LowThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [11]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *LowGlobalRate
+        Threads: *LowThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerLongDuration
+        Blocking: none
+        Operations: *Operations
+
+- Name: SnapshotScannerLong
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [11]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *SnapshotScannerLongDuration
+        ScanDuration: *SnapshotScannerLongDuration
+        ScanType: snapshot
+        GenerateCollectionNames: true
+        CollectionSortOrder: forward
+        FindOptions:
+          BatchSize: 1000
+          Hint: _id_ # Currently only support the index name.
+          Comment: SnapshotScannerLong
+
+- Name: MixedBaseline.High
+  Type: CrudActor
+  ClientName: HighPool
+  Threads: *HighThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [13]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *HighGlobalRate
+        Threads: *HighThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerShortDuration
+        Operations: *Operations
+
+- Name: MixedBenchmark.High.Short
+  Type: CrudActor
+  ClientName: HighPool
+  Threads: *HighThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [15]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *HighGlobalRate
+        Threads: *HighThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerShortDuration
+        Blocking: none
+        Operations: *Operations
+
+# A thread per collection doing a scan.
+- Name: SnapshotScannerShort
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [15]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *SnapshotScannerShortDuration
+        ScanDuration: *SnapshotScannerShortDuration
+        ScanType: snapshot
+        GenerateCollectionNames: true
+        CollectionSortOrder: forward
+        FindOptions:
+          BatchSize: 1000
+          Hint: _id_ # Currently only support the index name.
+          Comment: SnapshotScannerShort
+
+- Name: MixedBenchmark.High.Medium
+  Type: CrudActor
+  ClientName: HighPool
+  Threads: *HighThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [17]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *HighGlobalRate
+        Threads: *HighThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerMediumDuration
+        Blocking: none
+        Operations: *Operations
+
+- Name: SnapshotScannerMedium
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [17]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *SnapshotScannerMediumDuration
+        ScanDuration: *SnapshotScannerMediumDuration
+        ScanType: snapshot
+        GenerateCollectionNames: true
+        CollectionSortOrder: forward
+        FindOptions:
+          BatchSize: 1000
+          Hint: _id_
+          Comment: SnapshotScannerMedium
+
+- Name: MixedBenchmark.High.Long
+  Type: CrudActor
+  ClientName: HighPool
+  Threads: *HighThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [19]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *HighGlobalRate
+        Threads: *HighThreads
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerLongDuration
+        Blocking: none
+        Operations: *Operations
+
+- Name: SnapshotScannerLong
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [19]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *SnapshotScannerLongDuration
+        ScanDuration: *SnapshotScannerLongDuration
+        ScanType: snapshot
+        GenerateCollectionNames: true
+        CollectionSortOrder: forward
+        FindOptions:
+          BatchSize: 1000
+          Hint: _id_ # Currently only support the index name.
+          Comment: SnapshotScannerLong
+
+#AutoRun:
+#  Requires:
+#    mongodb_setup:
+#      - replica
+#      - single-replica
+#      - replica-all-feature-flags
