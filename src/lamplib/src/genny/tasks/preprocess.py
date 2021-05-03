@@ -14,16 +14,18 @@ SLOG = structlog.get_logger(__name__)
 class ParseException(Exception):
     pass
 
-def evaluate(workload_path: str, smoke: str, output_file=None):
-    mode = ParseMode.Smoke if smoke else ParseMode.Normal
 
-    parser = WorkloadParser()
+def evaluate(workload_path: str, smoke: str, output_file=None):
+    """Evaluate a workload and output it to a file (or stdout)."""
+    mode = _ParseMode.Smoke if smoke else _ParseMode.Normal
+
+    parser = _WorkloadParser()
     output = parser.parse(workload_path, parse_mode=mode)
     output_logger = structlog.PrintLogger(output_file)
     output_logger.msg(output)
 
 
-class ContextType(Enum):
+class _ContextType(Enum):
     """
     Values stored in a Context are tagged with a type to ensure
     they aren't used incorrectly.
@@ -32,12 +34,12 @@ class ContextType(Enum):
     ActorTemplate = 2,
 
 
-class ParseMode(Enum):
+class _ParseMode(Enum):
     Normal = 1,
     Smoke = 2,
 
 
-class Context(object):
+class _Context(object):
     """
     Manages scoped context for stored values.
 
@@ -53,11 +55,11 @@ class Context(object):
         # to stored ContextValues.
         self._scopes = []
 
-    def get(self, name: str, expected_type: ContextType):
+    def get(self, name: str, expected_type: _ContextType):
         """Retrieve a node with a given name and context type."""
         for scope in reversed(self._scopes):
             if name in scope:
-                stored_value: Context.ContextValue = scope[name]
+                stored_value: _Context.ContextValue = scope[name]
                 actual_type = stored_value.type
                 if actual_type != expected_type:
                     msg = (f"Type mismatch for node named {name}. Expected {expected_type.name}"
@@ -66,11 +68,11 @@ class Context(object):
                 return stored_value.value
         return None
 
-    def insert(self, name: str, val, val_type: ContextType):
+    def insert(self, name: str, val, val_type: _ContextType):
         """Insert a value with a name into the current scope."""
-        self._scopes[-1][name] = Context.ContextValue(val, val_type)
+        self._scopes[-1][name] = _Context.ContextValue(val, val_type)
 
-    def insert_all(self, node: dict, val_type: ContextType):
+    def insert_all(self, node: dict, val_type: _ContextType):
         """Insert all the values of a node, assuming they are of a type."""
         if not isinstance(node, dict):
             msg = (f"Invalid context storage of node: {node}."
@@ -97,28 +99,31 @@ class Context(object):
 
     def enter(self):
         """Enter a new scope, for use in a context manager."""
-        return Context.ScopeManager(self)
+        return _Context.ScopeManager(self)
 
 
-class WorkloadParser(object):
+class _WorkloadParser(object):
+    """Parses/preprocesses workloads, stores state while doing so."""
 
     class YamlSource(Enum):
+        """Where the yaml data is read from."""
         File = 1,
         String = 2
 
-
     def __init__(self):
+        """Initialize WorkloadParser."""
         self._phase_config_path = ""
-        self._context = Context()
+        self._context = _Context()
 
-    def parse(self, yaml_input, source=YamlSource.File, path="", parse_mode=ParseMode.Normal):
+    def parse(self, yaml_input, source=YamlSource.File, path="", parse_mode=_ParseMode.Normal):
+        """Parse the yaml input, assumed to be a file by default."""
         
         with self._context.enter():
-            if source == WorkloadParser.YamlSource.File:
+            if source == _WorkloadParser.YamlSource.File:
                 workload = _load_file(yaml_input)
                 path = Path(yaml_input)
                 self._phase_config_path = path.parent.absolute()
-            elif source == WorkloadParser.YamlSource.String:
+            elif source == _WorkloadParser.YamlSource.String:
                 workload = yaml.safe_load(yaml_input)
                 if path == "":
                     raise ParseException("Must specify path for string yaml sources.")
@@ -127,9 +132,9 @@ class WorkloadParser(object):
                 raise ParseException(f"Invalid yaml source type {source}.")
             doc = self._recursive_parse(workload)
 
-            if parse_mode == ParseMode.Normal:
+            if parse_mode == _ParseMode.Normal:
                 pass
-            elif parse_mode == ParseMode.Smoke:
+            elif parse_mode == _ParseMode.Smoke:
                 doc = _smoke_convert(doc)
 
             parsed = yaml.dump(doc, sort_keys=False)
@@ -183,7 +188,7 @@ class WorkloadParser(object):
         defaultVal = input["Default"]
 
         # Nested params are ignored for simplicity.
-        paramVal = self._context.get(name, ContextType.Parameter)
+        paramVal = self._context.get(name, _ContextType.Parameter)
         if paramVal is not None:
             return paramVal
         else:
@@ -192,18 +197,18 @@ class WorkloadParser(object):
     def _parse_templates(self, templates):
         for template_node in templates:
             self._context.insert(template_node["TemplateName"], template_node["Config"],
-                                 ContextType.ActorTemplate)
+                                 _ContextType.ActorTemplate)
 
     def _parse_instance(self, instance):
         actor = {}
 
         with self._context.enter():
-            templateNode = self._context.get(instance["TemplateName"], ContextType.ActorTemplate)
+            templateNode = self._context.get(instance["TemplateName"], _ContextType.ActorTemplate)
             if templateNode is None:
                 name = instance["TemplateName"]
                 msg = f"Expected template named {name} but could not be found."
                 raise ParseException(msg)
-            self._context.insert_all(instance["TemplateParameters"], ContextType.Parameter)
+            self._context.insert_all(instance["TemplateParameters"], _ContextType.Parameter)
             actor = self._recursive_parse(templateNode)
         return actor
 
@@ -263,7 +268,7 @@ class WorkloadParser(object):
 
             if "Parameters" in external:
                 keysSeen += 1
-                self._context.insert_all(external["Parameters"], ContextType.Parameter)
+                self._context.insert_all(external["Parameters"], _ContextType.Parameter)
 
             if "Key" in external:
                 keysSeen += 1

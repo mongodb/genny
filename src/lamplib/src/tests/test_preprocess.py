@@ -14,42 +14,42 @@ class TestPreprocess(unittest.TestCase):
         shutil.rmtree(self.workspace_root)
 
     def test_scoped_contest(self):
-        context = preprocess.Context()
+        context = preprocess._Context()
         with context.enter():
             outer = {}
             outer["outerKey"] = "outerVal"
-            context.insert("outerName", outer, preprocess.ContextType.Parameter)
+            context.insert("outerName", outer, preprocess._ContextType.Parameter)
 
             with context.enter():
                 inner = {}
                 inner["innerKey1"] = "innerVal1"
-                context.insert("innerName1", inner, preprocess.ContextType.Parameter)
+                context.insert("innerName1", inner, preprocess._ContextType.Parameter)
 
-                retrievedOuter = context.get("outerName", preprocess.ContextType.Parameter)
+                retrievedOuter = context.get("outerName", preprocess._ContextType.Parameter)
                 self.assertEqual(retrievedOuter, outer)
 
-                retrievedInner = context.get("innerName1", preprocess.ContextType.Parameter)
+                retrievedInner = context.get("innerName1", preprocess._ContextType.Parameter)
                 self.assertEqual(retrievedInner, inner)
 
             with context.enter():
                 inner = {}
                 inner["innerKey2"] = "innerVal2"
-                context.insert("innerName2", inner, preprocess.ContextType.Parameter)
+                context.insert("innerName2", inner, preprocess._ContextType.Parameter)
 
-                retrievedOuter = context.get("outerName", preprocess.ContextType.Parameter)
+                retrievedOuter = context.get("outerName", preprocess._ContextType.Parameter)
                 self.assertEqual(retrievedOuter, outer)
 
-                retrievedInner = context.get("innerName2", preprocess.ContextType.Parameter)
+                retrievedInner = context.get("innerName2", preprocess._ContextType.Parameter)
                 self.assertEqual(retrievedInner, inner)
 
-                retrievedOldInner = context.get("innerName1", preprocess.ContextType.Parameter)
+                retrievedOldInner = context.get("innerName1", preprocess._ContextType.Parameter)
                 self.assertNotEqual(retrievedOldInner, inner)
 
-            retrievedOuter = context.get("outerName", preprocess.ContextType.Parameter)
+            retrievedOuter = context.get("outerName", preprocess._ContextType.Parameter)
             self.assertEqual(retrievedOuter, outer)
 
             with self.assertRaises(preprocess.ParseException):
-                context.get("outerName", preprocess.ContextType.ActorTemplate)
+                context.get("outerName", preprocess._ContextType.ActorTemplate)
 
     def test_scoped_parameters(self):
 
@@ -133,9 +133,9 @@ Actors:
 
         cwd = os.getcwd()
 
-        p = preprocess.WorkloadParser()
+        p = preprocess._WorkloadParser()
         parsedConfig = p.parse(yaml_input=yaml_input,
-                               source=preprocess.WorkloadParser.YamlSource.String, path=cwd)
+                               source=preprocess._WorkloadParser.YamlSource.String, path=cwd)
 
         self.assertEqual(parsedConfig, expected)
 
@@ -185,8 +185,8 @@ Actors:
 
         cwd = os.getcwd()
 
-        p = preprocess.WorkloadParser()
+        p = preprocess._WorkloadParser()
         parsedConfig = p.parse(yaml_input=yaml_input,
-                               source=preprocess.WorkloadParser.YamlSource.String, path=cwd)
+                               source=preprocess._WorkloadParser.YamlSource.String, path=cwd)
 
         self.assertEqual(parsedConfig, expected)
