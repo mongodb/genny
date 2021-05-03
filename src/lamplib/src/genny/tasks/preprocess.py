@@ -23,14 +23,10 @@ def evaluate(workload_path: str, smoke: str, output_file=None):
     output_logger.msg(output)
 
 
-# TODO: Can do this better now in python
 class ContextType(Enum):
     """
     Values stored in a Context are tagged with a type to ensure
     they aren't used incorrectly.
-
-    If updating, please add to typeNames in workload_parsers.cpp
-    Enums don't have good string-conversion or introspection :(
     """
     Parameter = 1,
     ActorTemplate = 2,
@@ -99,7 +95,6 @@ class Context(object):
         def __exit__(self, exc_type, exc_value, exc_traceback):
             self._context._scopes.pop()
 
-    # TODO: Use the contextlib decorator maybe?
     def enter(self):
         """Enter a new scope, for use in a context manager."""
         return Context.ScopeManager(self)
