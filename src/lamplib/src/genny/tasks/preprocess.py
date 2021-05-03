@@ -35,6 +35,11 @@ class ContextType(Enum):
     ActorTemplate = 2,
 
 
+class ParseMode(Enum):
+    Normal = 1,
+    Smoke = 2,
+
+
 class Context(object):
     """
     Manages scoped context for stored values.
@@ -98,6 +103,7 @@ class Context(object):
         """Enter a new scope, for use in a context manager."""
         return Context.ScopeManager(self)
 
+
 class WorkloadParser(object):
 
     class YamlSource(Enum):
@@ -106,12 +112,10 @@ class WorkloadParser(object):
 
 
     def __init__(self):
-        #TODO: Handle strings yamls?
         self._phase_config_path = ""
         self._context = Context()
 
-    # TODO: Add smoke mode and corresponding yaml source?
-    def parse(self, yaml_input, source=YamlSource.File, path=""):
+    def parse(self, yaml_input, source=YamlSource.File, path="", parse_mode=ParseMode.Normal):
         
         with self._context.enter():
             if source == WorkloadParser.YamlSource.File:
@@ -127,6 +131,12 @@ class WorkloadParser(object):
                 raise ParseException(f"Invalid yaml source type {source}.")
             doc = self._recursive_parse(workload)
             parsed = yaml.dump(doc, sort_keys=False)
+
+            if parse_mode == ParseMode.Normal:
+                return parsed
+            elif parse_mode == ParseMode.Smoke:
+                return _smoke_convert(parsed)
+
             return parsed
 
     def _recursive_parse(self, node):
@@ -273,6 +283,45 @@ class WorkloadParser(object):
                 raise ParseException(msg)
 
             return self._recursive_parse(replacement)
+
+
+def _smoke_convert(workload_root):
+    """
+    Convert a workload YAML into a version for smoke test where every phase
+    of every actor runs with Repeat: 1
+    """
+
+    actors_out = []
+
+    # Convert keywords in the "Actors" block.
+    for actor in workload_root["Actors"]:
+        actor_out = _convert_obj_for_smoke(actor)
+        phases_out = []
+
+        # Convert keywords in the "Phases" block.
+        for phase in actor_out["Phases"]:
+            phases_out.push_back(_convert_obj_for_smoke(phase))
+
+        actor_out["Phases"] = phases_out
+        actors_out.push_back(actor_out)
+
+    workload_root["Actors"] = actors_out
+
+    return workload_root
+
+
+def _convert_obj_for_smoke(in_node):
+    out = {}
+    for key, value in in_node:
+        if key == "Duration" or key == "Repeat":
+            out["Repeat"] = 1
+        elif key == "GlobalRate" or key == "SleepBefore" or key == "SleepAfter":
+            # Ignore those keys in smoke tests.
+            pass
+        else:
+            out[key] = value
+    return out
+
 
 def _load_file(source):
     try:
