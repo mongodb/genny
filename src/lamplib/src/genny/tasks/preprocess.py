@@ -53,7 +53,7 @@ class Context(object):
 
     def get(self, name: str, expected_type: ContextType):
         """Retrieve a node with a given name and context type."""
-        for scope in self._scopes:
+        for scope in reversed(self._scopes):
             if name in scope:
                 stored_value: Context.ContextValue = scope[name]
                 actual_type = stored_value.type
@@ -62,7 +62,6 @@ class Context(object):
                            f" but received {stored_value.type.name}")
                     raise ParseException(msg)
                 return stored_value.value
-        # TODO: Create special value?
         return None
 
     def insert(self, name: str, val, val_type: ContextType):
@@ -101,17 +100,31 @@ class Context(object):
 
 class WorkloadParser(object):
 
+    class YamlSource(Enum):
+        File = 1,
+        String = 2
+
+
     def __init__(self):
         #TODO: Handle strings yamls?
         self._phase_config_path = ""
         self._context = Context()
 
     # TODO: Add smoke mode and corresponding yaml source?
-    def parse(self, filename):
-        path = Path(filename)
-        self._phase_config_path = path.parent.absolute()
+    def parse(self, yaml_input, source=YamlSource.File, path=""):
+        
         with self._context.enter():
-            workload = _load_file(filename)
+            if source == WorkloadParser.YamlSource.File:
+                workload = _load_file(yaml_input)
+                path = Path(yaml_input)
+                self._phase_config_path = path.parent.absolute()
+            elif source == WorkloadParser.YamlSource.String:
+                workload = yaml.safe_load(yaml_input)
+                if path == "":
+                    raise ParseException("Must specify path for string yaml sources.")
+                self._phase_config_path = path
+            else:
+                raise ParseException(f"Invalid yaml source type {source}.")
             doc = self._recursive_parse(workload)
             parsed = yaml.dump(doc, sort_keys=False)
             return parsed
@@ -133,7 +146,7 @@ class WorkloadParser(object):
 
     def _preprocess(self, key, value, out):
         if (key == "^Parameter"):
-            out = self._replaceParam(value)
+            out = self._replace_param(value)
         elif (key == "ActorTemplates"):
             self._parse_templates(value)
         elif (key == "ActorFromTemplate"):
@@ -152,19 +165,21 @@ class WorkloadParser(object):
             out[key] = self._recursive_parse(value)
         return out
 
-    def _replaceParam(self, input):
+    def _replace_param(self, input):
         if "Name" not in input or "Default" not in input:
             msg = ("Invalid keys for '^Parameter', please set 'Name' and 'Default'"
                    f" in following node: {input}")
             raise ParseException(msg)
 
         name = input["Name"]
+        
         # The default value is mandatory.
         defaultVal = input["Default"]
 
         # Nested params are ignored for simplicity.
         paramVal = self._context.get(name, ContextType.Parameter)
-        if (paramVal):
+        if paramVal is not None:
+            print("returning paramVal: ", paramVal)
             return paramVal
         else:
             return defaultVal
@@ -243,7 +258,7 @@ class WorkloadParser(object):
 
             if "Parameters" in external:
                 keysSeen += 1
-                self._context.insert(external["Parameters"], ContextType.Parameter)
+                self._context.insert_all(external["Parameters"], ContextType.Parameter)
 
             if "Key" in external:
                 keysSeen += 1
@@ -263,7 +278,7 @@ class WorkloadParser(object):
 def _load_file(source):
     try:
         with open(source) as file:
-            workload = yaml.full_load(file)
+            workload = yaml.safe_load(file)
             return workload
     except:
         SLOG.error(f"Error loading yaml from {source}: {sys.exc_info()[0]}")
