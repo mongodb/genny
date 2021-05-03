@@ -123,11 +123,17 @@ def cmake_compile_install(
     ),
 )
 @click.argument("workload_path")
+@click.option(
+    "-s",
+    "--smoke",
+    is_flag=True,
+    help="Smoke test, runs every actor phase once.",
+)
 @click.pass_context
-def create_new_actor(ctx: click.Context, workload_path: str):
+def create_new_actor(ctx: click.Context, workload_path: str, smoke: bool):
     from genny.tasks import preprocess
 
-    preprocess.evaluate(workload_path=workload_path)
+    preprocess.evaluate(workload_path=workload_path, smoke=smoke)
 
 @cli.command(
     name="clean", help="Resets output and venv directories to clean checkout state.",

@@ -14,10 +14,12 @@ SLOG = structlog.get_logger(__name__)
 class ParseException(Exception):
     pass
 
-def evaluate(workload_path: str):
+def evaluate(workload_path: str, smoke: str):
     output_file = None
+    mode = ParseMode.Smoke if smoke else ParseMode.Normal
+
     parser = WorkloadParser()
-    output = parser.parse(workload_path)
+    output = parser.parse(workload_path, parse_mode=mode)
     output_logger = structlog.PrintLogger(output_file)
     output_logger.msg(output)
 
@@ -130,13 +132,13 @@ class WorkloadParser(object):
             else:
                 raise ParseException(f"Invalid yaml source type {source}.")
             doc = self._recursive_parse(workload)
-            parsed = yaml.dump(doc, sort_keys=False)
 
             if parse_mode == ParseMode.Normal:
-                return parsed
+                pass
             elif parse_mode == ParseMode.Smoke:
-                return _smoke_convert(parsed)
+                doc = _smoke_convert(doc)
 
+            parsed = yaml.dump(doc, sort_keys=False)
             return parsed
 
     def _recursive_parse(self, node):
@@ -300,10 +302,10 @@ def _smoke_convert(workload_root):
 
         # Convert keywords in the "Phases" block.
         for phase in actor_out["Phases"]:
-            phases_out.push_back(_convert_obj_for_smoke(phase))
+            phases_out.append(_convert_obj_for_smoke(phase))
 
         actor_out["Phases"] = phases_out
-        actors_out.push_back(actor_out)
+        actors_out.append(actor_out)
 
     workload_root["Actors"] = actors_out
 
@@ -312,7 +314,7 @@ def _smoke_convert(workload_root):
 
 def _convert_obj_for_smoke(in_node):
     out = {}
-    for key, value in in_node:
+    for key, value in in_node.items():
         if key == "Duration" or key == "Repeat":
             out["Repeat"] = 1
         elif key == "GlobalRate" or key == "SleepBefore" or key == "SleepAfter":
