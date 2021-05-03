@@ -592,7 +592,7 @@ Actors:
         Threads: *HighThreads
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScannerMediumDuration
+        Duration: *SnapshotScannerShortDuration
         Blocking: none
         Operations: *UpdateOps
 
@@ -609,7 +609,7 @@ Actors:
         Threads: *HighThreads
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScannerMediumDuration
+        Duration: *SnapshotScannerShortDuration
         Blocking: none
         Operations: *DeleteOps
 
@@ -694,7 +694,7 @@ Actors:
         Threads: *HighThreads
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScannerMediumDuration
+        Duration: *SnapshotScannerLongDuration
         Blocking: none
         Operations: *InsertOps
 
@@ -711,7 +711,7 @@ Actors:
         Threads: *HighThreads
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScannerMediumDuration
+        Duration: *SnapshotScannerLongDuration
         Blocking: none
         Operations: *QueryOps
 
@@ -728,7 +728,7 @@ Actors:
         Threads: *HighThreads
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScannerMediumDuration
+        Duration: *SnapshotScannerLongDuration
         Blocking: none
         Operations: *UpdateOps
 
@@ -745,7 +745,7 @@ Actors:
         Threads: *HighThreads
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScannerMediumDuration
+        Duration: *SnapshotScannerLongDuration
         Blocking: none
         Operations: *DeleteOps
 
