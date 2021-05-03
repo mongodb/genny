@@ -40,7 +40,7 @@ def main_genny_runner(
                 smoke = "-s" in cmd or "--smoke-test" in cmd
 
                 temp_workload = os.path.join(tempdir, os.path.basename(workload_path))
-                with open(temp_workload, 'w') as f:
+                with open(temp_workload, "w") as f:
                     preprocess.evaluate(workload_path=workload_path, smoke=smoke, output_file=f)
                 cmd[index] = temp_workload
 

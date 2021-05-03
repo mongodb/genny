@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from genny.tasks import preprocess
 
+
 class TestPreprocess(unittest.TestCase):
     def setUp(self):
         self.workspace_root = tempfile.mkdtemp()
@@ -134,8 +135,9 @@ Actors:
         cwd = os.getcwd()
 
         p = preprocess._WorkloadParser()
-        parsedConfig = p.parse(yaml_input=yaml_input,
-                               source=preprocess._WorkloadParser.YamlSource.String, path=cwd)
+        parsedConfig = p.parse(
+            yaml_input=yaml_input, source=preprocess._WorkloadParser.YamlSource.String, path=cwd
+        )
 
         self.assertEqual(parsedConfig, expected)
 
@@ -186,7 +188,8 @@ Actors:
         cwd = os.getcwd()
 
         p = preprocess._WorkloadParser()
-        parsedConfig = p.parse(yaml_input=yaml_input,
-                               source=preprocess._WorkloadParser.YamlSource.String, path=cwd)
+        parsedConfig = p.parse(
+            yaml_input=yaml_input, source=preprocess._WorkloadParser.YamlSource.String, path=cwd
+        )
 
         self.assertEqual(parsedConfig, expected)

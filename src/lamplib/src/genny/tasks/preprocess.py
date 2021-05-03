@@ -30,13 +30,14 @@ class _ContextType(Enum):
     Values stored in a Context are tagged with a type to ensure
     they aren't used incorrectly.
     """
-    Parameter = 1,
-    ActorTemplate = 2,
+
+    Parameter = (1,)
+    ActorTemplate = (2,)
 
 
 class _ParseMode(Enum):
-    Normal = 1,
-    Smoke = 2,
+    Normal = (1,)
+    Smoke = (2,)
 
 
 class _Context(object):
@@ -46,7 +47,7 @@ class _Context(object):
     Contexts are helpers for the workload parser.
     """
 
-    ContextValue = namedtuple('ContextValue', ['value', 'type'])
+    ContextValue = namedtuple("ContextValue", ["value", "type"])
 
     def __init__(self):
         """Initialize Context."""
@@ -62,8 +63,10 @@ class _Context(object):
                 stored_value: _Context.ContextValue = scope[name]
                 actual_type = stored_value.type
                 if actual_type != expected_type:
-                    msg = (f"Type mismatch for node named {name}. Expected {expected_type.name}"
-                           f" but received {stored_value.type.name}")
+                    msg = (
+                        f"Type mismatch for node named {name}. Expected {expected_type.name}"
+                        f" but received {stored_value.type.name}"
+                    )
                     raise ParseException(msg)
                 return stored_value.value
         return None
@@ -75,8 +78,10 @@ class _Context(object):
     def insert_all(self, node: dict, val_type: _ContextType):
         """Insert all the values of a node, assuming they are of a type."""
         if not isinstance(node, dict):
-            msg = (f"Invalid context storage of node: {node}."
-                   ". Please ensure this node is a map rather than a sequence.")
+            msg = (
+                f"Invalid context storage of node: {node}."
+                ". Please ensure this node is a map rather than a sequence."
+            )
             raise ParseException(msg)
 
         for key, val in node.items():
@@ -107,7 +112,8 @@ class _WorkloadParser(object):
 
     class YamlSource(Enum):
         """Where the yaml data is read from."""
-        File = 1,
+
+        File = (1,)
         String = 2
 
     def __init__(self):
@@ -117,7 +123,7 @@ class _WorkloadParser(object):
 
     def parse(self, yaml_input, source=YamlSource.File, path="", parse_mode=_ParseMode.Normal):
         """Parse the yaml input, assumed to be a file by default."""
-        
+
         with self._context.enter():
             if source == _WorkloadParser.YamlSource.File:
                 workload = _load_file(yaml_input)
@@ -154,17 +160,16 @@ class _WorkloadParser(object):
 
         return out
 
-
     def _preprocess(self, key, value, out):
-        if (key == "^Parameter"):
+        if key == "^Parameter":
             out = self._replace_param(value)
-        elif (key == "ActorTemplates"):
+        elif key == "ActorTemplates":
             self._parse_templates(value)
-        elif (key == "ActorFromTemplate"):
+        elif key == "ActorFromTemplate":
             out = self._parse_instance(value)
-        elif (key == "OnlyActiveInPhases"):
+        elif key == "OnlyActiveInPhases":
             out = self._parse_only_in(value)
-        elif (key == "ExternalPhaseConfig"):
+        elif key == "ExternalPhaseConfig":
             external = self._parse_external(value)
 
             # Merge the external node with the any other parameters specified
@@ -178,12 +183,14 @@ class _WorkloadParser(object):
 
     def _replace_param(self, input):
         if "Name" not in input or "Default" not in input:
-            msg = ("Invalid keys for '^Parameter', please set 'Name' and 'Default'"
-                   f" in following node: {input}")
+            msg = (
+                "Invalid keys for '^Parameter', please set 'Name' and 'Default'"
+                f" in following node: {input}"
+            )
             raise ParseException(msg)
 
         name = input["Name"]
-        
+
         # The default value is mandatory.
         defaultVal = input["Default"]
 
@@ -196,8 +203,9 @@ class _WorkloadParser(object):
 
     def _parse_templates(self, templates):
         for template_node in templates:
-            self._context.insert(template_node["TemplateName"], template_node["Config"],
-                                 _ContextType.ActorTemplate)
+            self._context.insert(
+                template_node["TemplateName"], template_node["Config"], _ContextType.ActorTemplate
+            )
 
     def _parse_instance(self, instance):
         actor = {}
@@ -212,16 +220,15 @@ class _WorkloadParser(object):
             actor = self._recursive_parse(templateNode)
         return actor
 
-
     def _parse_only_in(self, onlyIn):
         out = []
         nop = {}
         nop["Nop"] = True
         max = self._recursive_parse(onlyIn["NopInPhasesUpTo"])
-        for i in range(max+1):
+        for i in range(max + 1):
             isActivePhase = False
             for activePhase in self._recursive_parse(onlyIn["Active"]):
-                if (activePhase == i):
+                if activePhase == i:
                     out.append(self._recursive_parse(onlyIn["PhaseConfig"]))
                     isActivePhase = True
                     break
@@ -233,7 +240,7 @@ class _WorkloadParser(object):
         with self._context.enter():
             keysSeen = 0
 
-            if ("Path" not in external):
+            if "Path" not in external:
                 msg = f"Missing the `Path` top-level key in your external phase configuration: {external}"
                 raise ParseException(msg)
 
@@ -243,9 +250,11 @@ class _WorkloadParser(object):
             path = os.path.join(self._phase_config_path, path)
 
             if not os.path.isfile(path):
-                msg = (f"Invalid path to external PhaseConfig: {path}"
-                        ". Please ensure your workload file is placed in 'workloads/[subdirectory]/' and the "
-                        "'Path' parameter is relative to the 'phases/' directory")
+                msg = (
+                    f"Invalid path to external PhaseConfig: {path}"
+                    ". Please ensure your workload file is placed in 'workloads/[subdirectory]/' and the "
+                    "'Path' parameter is relative to the 'phases/' directory"
+                )
                 raise ParseException(path)
 
             replacement = _load_file(path)
@@ -253,14 +262,17 @@ class _WorkloadParser(object):
             if "PhaseSchemaVersion" not in replacement:
                 raise ParseException(
                     "Missing the `PhaseSchemaVersion` top-level key in your external phase "
-                    "configuration")
+                    "configuration"
+                )
 
             # Python will parse the schema version as a datetime.
             phase_schema_version = str(replacement["PhaseSchemaVersion"])
             if phase_schema_version != "2018-07-01":
-                msg = (f"Invalid phase schema version: {phase_schema_version}"
-                       ". Please ensure the schema for your external phase config is valid and the "
-                       "`PhaseSchemaVersion` top-level key is set correctly")
+                msg = (
+                    f"Invalid phase schema version: {phase_schema_version}"
+                    ". Please ensure the schema for your external phase config is valid and the "
+                    "`PhaseSchemaVersion` top-level key is set correctly"
+                )
                 raise ParseException(msg)
 
             # Delete the schema version instead of adding it to `keysSeen`.
@@ -278,9 +290,11 @@ class _WorkloadParser(object):
                     raise ParseException(msg)
                 replacement = replacement[key]
 
-            if (len(external) != keysSeen):
-                msg = ("Invalid keys for 'External'. Please set 'Path' and if any, 'Parameters' in the YAML "
-                       f"file: {path} with the following content: {external}")
+            if len(external) != keysSeen:
+                msg = (
+                    "Invalid keys for 'External'. Please set 'Path' and if any, 'Parameters' in the YAML "
+                    f"file: {path} with the following content: {external}"
+                )
                 raise ParseException(msg)
 
             return self._recursive_parse(replacement)
