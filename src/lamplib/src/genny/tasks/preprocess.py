@@ -14,8 +14,7 @@ SLOG = structlog.get_logger(__name__)
 class ParseException(Exception):
     pass
 
-def evaluate(workload_path: str, smoke: str):
-    output_file = None
+def evaluate(workload_path: str, smoke: str, output_file=None):
     mode = ParseMode.Smoke if smoke else ParseMode.Normal
 
     parser = WorkloadParser()
