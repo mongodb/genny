@@ -179,7 +179,6 @@ class WorkloadParser(object):
         # Nested params are ignored for simplicity.
         paramVal = self._context.get(name, ContextType.Parameter)
         if paramVal is not None:
-            print("returning paramVal: ", paramVal)
             return paramVal
         else:
             return defaultVal

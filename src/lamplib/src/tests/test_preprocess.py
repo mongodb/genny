@@ -104,7 +104,7 @@ Actors:
       Repeat: GoodValue
 """
 
-        expected2 = """Actors:
+        expected = """Actors:
 - Name: ActorName1
   SomeKey: SomeValue
   Phases:
@@ -137,5 +137,56 @@ Actors:
         parsedConfig = p.parse(yaml_input=yaml_input,
                                source=preprocess.WorkloadParser.YamlSource.String, path=cwd)
 
-        self.maxDiff = None
-        self.assertEqual(parsedConfig, expected2)
+        self.assertEqual(parsedConfig, expected)
+
+    def test_preprocess_keywords(self):
+        yaml_input = """
+ActorTemplates:
+- TemplateName: TestTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "IncorrectDefault"}}
+    SomeKey: SomeValue
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "Phase", Default: 1}}]
+        NopInPhasesUpTo: 3
+        PhaseConfig:
+          Duration: {^Parameter: {Name: "Duration", Default: 3 minutes}}
+Actors:
+- ActorFromTemplate:
+    TemplateName: TestTemplate
+    TemplateParameters:
+      Name: ActorName1
+      Phase: 0
+      Duration: 5 minutes
+- ActorFromTemplate:
+    TemplateName: TestTemplate
+    TemplateParameters:
+      Phase: 1
+      Name: ActorName2"""
+
+        expected = """Actors:
+- Name: ActorName1
+  SomeKey: SomeValue
+  Phases:
+  - Duration: 5 minutes
+  - &id001
+    Nop: true
+  - *id001
+  - *id001
+- Name: ActorName2
+  SomeKey: SomeValue
+  Phases:
+  - &id002
+    Nop: true
+  - Duration: 3 minutes
+  - *id002
+  - *id002\n"""
+
+        cwd = os.getcwd()
+
+        p = preprocess.WorkloadParser()
+        parsedConfig = p.parse(yaml_input=yaml_input,
+                               source=preprocess.WorkloadParser.YamlSource.String, path=cwd)
+
+        self.assertEqual(parsedConfig, expected)
