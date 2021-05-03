@@ -104,33 +104,6 @@ Actors:
       Repeat: GoodValue
 """
 
-        expected = """Actors:
-  - Name: ActorName1
-    SomeKey: &1 SomeValue
-    Phases:
-      - Duration: 5 minutes
-      - &2
-        Nop: true
-      - *2
-      - *2
-  - Name: ActorName2
-    SomeKey: *1
-    Phases:
-      - &3
-        Nop: true
-      - Duration: 3 minutes
-      - *3
-      - *3
-  - Name: ActorName3
-    SomeKey: SomeValue
-    Phases:
-      - Nop: true
-      - Nop: true
-      - Repeat: 2
-        Mode: NoException
-      - Nop: true
-    AnotherValueFromRepeat: GoodValue"""
-
         expected2 = """Actors:
 - Name: ActorName1
   SomeKey: SomeValue
@@ -157,7 +130,6 @@ Actors:
     Mode: NoException
   - Nop: true
   AnotherValueFromRepeat: GoodValue\n"""
-
 
         cwd = os.getcwd()
 
