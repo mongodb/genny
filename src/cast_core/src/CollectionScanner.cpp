@@ -420,7 +420,9 @@ void CollectionScanner::run() {
                 try {
                     mongocxx::client_session session = _client->start_session({});
                     session.start_transaction(*config->transactionOptions);
-                    // This loop should run at least once.
+                    // Initialize 'finished' to true so that the loop will execute exactly once if
+                    // ScanContinuous is false. If ScanContinuous is true 'finished' is
+                    // re-evaluated within the loop.
                     auto finished = true;
                     do {
                         BOOST_LOG_TRIVIAL(debug)
