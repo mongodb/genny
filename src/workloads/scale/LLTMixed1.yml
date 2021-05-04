@@ -156,16 +156,12 @@ GlobalDefaults:
   HighThreads: &HighThreads 16
 
   # Scanner
-  SnapshotScannerShortDuration: &SnapshotScannerShortDuration 2 minutes
+  SnapshotScannerShortDuration: &SnapshotScannerShortDuration 1 minutes
   SnapshotScannerMediumDuration: &SnapshotScannerMediumDuration 10 minutes
-  SnapshotScannerLongDuration: &SnapshotScannerLongDuration 30 minutes
+  SnapshotScannerLongDuration: &SnapshotScannerLongDuration 60 minutes
 
 Clients:
   Default:
-    QueryOptions:
-      socketTimeoutMS: -1
-      maxPoolSize: 200
-  HighPool:
     QueryOptions:
       socketTimeoutMS: -1
       maxPoolSize: 400
@@ -187,11 +183,10 @@ Actors:
           OperationName: RunCommand
           OperationCommand:
             setParameter: 1
-            transactionLifetimeLimitSeconds: 3600
+            transactionLifetimeLimitSeconds: 14400 # 4 Hours
 
 - Name: InitialLoad
   Type: Loader
-  ClientName: Loader
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
@@ -209,7 +204,6 @@ Actors:
 
 - Name: SecondLoadAfterIndexes
   Type: Loader
-  ClientName: Loader
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
@@ -249,7 +243,6 @@ Actors:
 
 - Name: Low.Short.Insert
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -273,7 +266,6 @@ Actors:
 
 - Name: Low.Short.Query
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -297,7 +289,6 @@ Actors:
 
 - Name: Low.Short.Update
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -321,7 +312,6 @@ Actors:
 
 - Name: Low.Short.Delete
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -367,7 +357,6 @@ Actors:
 
 - Name: Low.Medium.Insert
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -384,7 +373,6 @@ Actors:
 
 - Name: Low.Medium.Query
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -401,7 +389,6 @@ Actors:
 
 - Name: Low.Medium.Update
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -418,7 +405,6 @@ Actors:
 
 - Name: Low.Medium.Delete
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -457,7 +443,6 @@ Actors:
 
 - Name: Low.Long.Insert
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -474,7 +459,6 @@ Actors:
 
 - Name: Low.Long.Query
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -491,7 +475,6 @@ Actors:
 
 - Name: Low.Long.Update
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -508,7 +491,6 @@ Actors:
 
 - Name: Low.Long.Delete
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -547,7 +529,6 @@ Actors:
 
 - Name: High.Short.Insert
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -564,7 +545,6 @@ Actors:
 
 - Name: High.Short.Query
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -581,7 +561,6 @@ Actors:
 
 - Name: High.Short.Update
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -598,7 +577,6 @@ Actors:
 
 - Name: High.Short.Delete
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -615,7 +593,6 @@ Actors:
 
 - Name: High.Medium.Insert
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -632,7 +609,6 @@ Actors:
 
 - Name: High.Medium.Query
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -649,7 +625,6 @@ Actors:
 
 - Name: High.Medium.Update
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -666,7 +641,6 @@ Actors:
 
 - Name: High.Medium.Delete
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -683,7 +657,6 @@ Actors:
 
 - Name: High.Long.Insert
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -700,7 +673,6 @@ Actors:
 
 - Name: High.Long.Query
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -717,7 +689,6 @@ Actors:
 
 - Name: High.Long.Update
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -734,7 +705,6 @@ Actors:
 
 - Name: High.Long.Delete
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
