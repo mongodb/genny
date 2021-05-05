@@ -574,7 +574,7 @@ Actors:
         Database: *dbname
         Duration: *SnapshotScannerLongDuration
         Blocking: none
-        Operations: *DeleteOps
+        Operations: *RemoveOps
 
 # A thread per collection doing a scan.
 - Name: SnapshotScannerLong
