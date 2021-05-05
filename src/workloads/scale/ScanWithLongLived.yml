@@ -31,6 +31,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [1, 2, 3]
+      NopInPhasesUpTo: 10
       PhaseConfig:
         LogEvery: 15 minutes
         Blocking: None
