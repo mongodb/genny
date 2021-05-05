@@ -164,7 +164,7 @@ Clients:
   Default:
     QueryOptions:
       socketTimeoutMS: -1
-      maxPoolSize: 400
+      maxPoolSize: 2000
 
 # Odd phases do operations, even phases quiesce.
 Actors:
@@ -244,7 +244,7 @@ Actors:
 # Naming Conventions:
 # Type_of_test.Thread_level.Duration
 # Type of test:  Insert/Query/Update/Remove Baseline/Benchmark
-# Baseline without scans, benchmark with scans 
+# Baseline without scans, benchmark with scans
 
 - Name: InsertBaseline.Low
   Type: CrudActor
