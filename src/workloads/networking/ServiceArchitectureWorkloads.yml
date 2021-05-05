@@ -71,7 +71,8 @@ Actors:
 
 AutoRun:
   Requires:
-    mongodb_setup: 
+    mongodb_setup:
+    - atlas
     - replica
     - replica-noflowcontrol
     - replica-all-feature-flags

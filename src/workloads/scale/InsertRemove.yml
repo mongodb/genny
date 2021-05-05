@@ -17,6 +17,7 @@ Actors:
 AutoRun:
   Requires:
     mongodb_setup:
+    - atlas
     - replica
     - single-replica
     - standalone

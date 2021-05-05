@@ -82,9 +82,10 @@ Actors:
 AutoRun:
   Requires:
     mongodb_setup:
+    - atlas
     - replica
-    - standalone
-    - shard
+    - replica-all-feature-flags
     - single-replica
     - single-replica-15gbwtcache
-    - replica-all-feature-flags
+    - shard
+    - standalone

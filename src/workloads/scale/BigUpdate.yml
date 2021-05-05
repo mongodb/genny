@@ -119,10 +119,11 @@ Actors:
 
 AutoRun:
   Requires:
-    mongodb_setup: 
+    mongodb_setup:
+    - atlas
     - replica
-    - single-replica
-    - standalone
     - replica-noflowcontrol
     - replica-1dayhistory-15gbwtcache
     - replica-all-feature-flags
+    - single-replica
+    - standalone

@@ -91,7 +91,8 @@ Actors:
 AutoRun:
   Requires:
     mongodb_setup:
-    - standalone
-    - single-replica
+    - atlas
     - replica
     - replica-all-feature-flags
+    - single-replica
+    - standalone
