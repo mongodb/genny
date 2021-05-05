@@ -148,11 +148,11 @@ GlobalDefaults:
           Level: majority
 
   # Low Baseline / Benchmark
-  LowGlobalRate: &LowGlobalRate 100 per 1 second
+  LowGlobalRate: &LowGlobalRate 200 per 1 second
   LowThreads: &LowThreads 8
 
   # High Baseline / Benchmark
-  HighGlobalRate: &HighGlobalRate 200 per 1 second
+  HighGlobalRate: &HighGlobalRate 400 per 1 second
   HighThreads: &HighThreads 16
 
   # Scanner
