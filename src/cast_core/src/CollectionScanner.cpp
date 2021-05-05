@@ -97,7 +97,8 @@ struct CollectionScanner::PhaseConfig {
           findOptions{context["FindOptions"].maybe<mongocxx::options::find>().value_or(mongocxx::options::find{})} {
         // The list of databases is comma separated.
         std::vector<std::string> dbnames;
-        boost::split(dbnames, databaseNames, [](char c) { return (c == ','); });
+        boost::split(dbnames, databaseNames,boost::is_any_of(","));
+
         for (const auto& dbname : dbnames) {
             databases.push_back((*actor->_client)[dbname]);
         }

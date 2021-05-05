@@ -24,6 +24,17 @@ Clients:
       maxPoolSize: 5000
 
 Actors:
+# Guard Against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1, 2, 3]
+      PhaseConfig:
+        LogEvery: 15 minutes
+        Blocking: None
+
 - Name: LongLivedCreator
   Type: MonotonicLoader
   Threads: 10
