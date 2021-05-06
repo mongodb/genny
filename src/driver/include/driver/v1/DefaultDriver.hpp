@@ -65,7 +65,6 @@ public:
 
         std::string mongoUri;
         std::string description;
-        bool isSmokeTest;
         DefaultDriver::RunMode runMode = RunMode::kNormal;
         boost::log::trivial::severity_level logVerbosity;
     };

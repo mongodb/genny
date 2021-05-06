@@ -132,7 +132,6 @@ DefaultDriver::ProgramOptions create(const std::string& yaml) {
     opts.mongoUri = "mongodb://localhost:27017";
     opts.workloadSourceType = DefaultDriver::ProgramOptions::YamlSource::kString;
     opts.workloadSource = yaml;
-    opts.isSmokeTest = false;
 
     return opts;
 }
