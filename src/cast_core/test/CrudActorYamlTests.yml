@@ -572,3 +572,21 @@ Tests:
     OutcomeCounts:
       - Filter: {a: 1}
         Count: 1
+
+  - Description: simple findOneAndReplace in a with_transaction
+    Operations:
+      - OperationName: withTransaction
+        OperationCommand:
+          OperationsInTransaction:
+            - OperationName: insertOne
+              OperationCommand:
+                Document: {a: 100}
+            - OperationName: findOneAndReplace
+              OperationCommand:
+                Filter: {a: 100}
+                Replacement: {a: 30}
+    OutcomeCounts:
+      - Filter: {a: 100}
+        Count: 0
+      - Filter: {a: 30}
+        Count: 1

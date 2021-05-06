@@ -99,9 +99,6 @@ class OpName(enum.Enum):
     PATCH_TASKS = object()
 
 
-#         output_file = "./build/TaskJSON/Tasks.json"
-
-
 class CLIOperation(NamedTuple):
     """
     Represents the "input" to what we're doing"
@@ -218,14 +215,24 @@ class Workload:
         """
         if not self.requires:
             return []
-        return [
-            task
-            for task in self.all_tasks()
-            if all(
-                build.has(key, acceptable_values)
-                for key, acceptable_values in self.requires.items()
-            )
-        ]
+
+        def meets_criteria() -> bool:
+            okay = True
+            for key, acceptable_values in self.requires.items():
+                msg = "Scheduling workload."
+                if not build.has(key, acceptable_values):
+                    msg = "Not scheduling workload"
+                    okay = False
+                SLOG.info(
+                    msg,
+                    workload_base_name=self.file_base_name,
+                    key=key,
+                    acceptable_values=acceptable_values,
+                    build_variant=build.conts.get("build_variant", "unknown"),
+                )
+            return okay
+
+        return [task for task in self.all_tasks() if meets_criteria()]
 
     # noinspection RegExpAnonymousGroup
     @staticmethod

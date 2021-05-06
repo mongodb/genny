@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  Workload to Benchmark the effect of LongLivedTransactions on an Insert workload.
+  Workload to Benchmark the effect of LongLivedTransactions on an Update workload.
 
 GlobalDefaults:
   # These values should match those are the top of LLTPhases.yml
@@ -33,9 +33,55 @@ GlobalDefaults:
   # WIP make a copy of the workload once these values are tuned correctly and
   # the workload runs consistently.
   # Not In-memory: Database size works out about 30GB.
-  #InitialDocumentCount: &InitialNumDocs 49000000
-  #SecondaryDocumentCount: &SecondaryNumDocs 1000000
+  # InitialDocumentCount: &InitialNumDocs 49000000
+  # SecondaryDocumentCount: &SecondaryNumDocs 1000000
   CollectionCount: &CollectionCount 4
+
+  # The query operation name indicates the index in use:
+  #  * Ptc => price_1_ts_1_cuid_1
+  #  * Pc  => price_1_cuid_1
+  #  * Cpc => caid_1_price_1_cuid_1
+  PtcUpdateOperation: &PtcUpdateOperation
+    OperationName: updateOne
+    OperationCommand:
+      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Update:
+        $set:
+          ts: {^Now: {}}
+          data: {^Join: {array: ["bbbbbbbbbb", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
+      OperationOptions:
+        Upsert: false
+        WriteConcern:
+          Level: majority
+        Hint: price_1_ts_1_cuid_1
+
+  PcUpdateOperation: &PcUpdateOperation
+    OperationName: updateOne
+    OperationCommand:
+      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Update:
+        $set:
+          ts: {^Now: {}}
+          prod: {^RandomInt: {min: 0, max: 10000}}
+      OperationOptions:
+        Upsert: false
+        WriteConcern:
+          Level: majority
+        Hint: price_1_cuid_1
+
+  CpcUpdateOperation: &CpcUpdateOperation
+    OperationName: updateOne
+    OperationCommand:
+      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Update:
+        $set:
+          ts: {^Now: {}}
+          cuid: {^RandomInt: {min: 0, max: 100000}}
+      OperationOptions:
+        Upsert: false
+        WriteConcern:
+          Level: majority
+        Hint: caid_1_price_1_cuid_1
 
   # Low Baseline / Benchmark
   LowGlobalRate: &LowGlobalRate 400 per 1 second
@@ -49,15 +95,6 @@ GlobalDefaults:
   SnapshotScannerShortDuration: &SnapshotScannerShortDuration 1 minutes
   SnapshotScannerMediumDuration: &SnapshotScannerMediumDuration 10 minutes
   SnapshotScannerLongDuration: &SnapshotScannerLongDuration 60 minutes
-
-  # The write concern. The intent is to use what is chosen as the default in 5.0.
-  InsertOperation: &InsertOperation
-    OperationName: insertOne
-    OperationCommand:
-      Document: *Doc
-      OperationOptions: &OperationOptions
-        WriteConcern:
-          Level: majority
 
 Clients:
   Default:
@@ -140,7 +177,7 @@ Actors:
         LogEvery: 15 minutes
         Blocking: None
 
-- Name: InsertBaseline.Low
+- Name: UpdateBaseline.Low
   Type: CrudActor
   Threads: *LowThreads
   Phases:
@@ -154,41 +191,42 @@ Actors:
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
         Operations: &Operations
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
+          - *PtcUpdateOperation
+          - *PcUpdateOperation
+          - *CpcUpdateOperation
 
-- Name: InsertBenchmark.Low.Short
+- Name: UpdateBenchmark.Low.Short
   Type: CrudActor
   Threads: *LowThreads
+  Database: *dbname
   Phases:
     OnlyActiveInPhases:
       Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Threads: *LowThreads
         GlobalRate: *LowGlobalRate
+        Threads: *LowThreads
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
@@ -214,10 +252,10 @@ Actors:
         CollectionSortOrder: forward
         FindOptions:
           BatchSize: 1000
-          Hint: _id_
+          Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerShort
 
-- Name: InsertBenchmark.Low.Medium
+- Name: UpdateBenchmark.Low.Medium
   Type: CrudActor
   Threads: *LowThreads
   Phases:
@@ -225,8 +263,8 @@ Actors:
       Active: [9]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Threads: *LowThreads
         GlobalRate: *LowGlobalRate
+        Threads: *LowThreads
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
@@ -251,10 +289,10 @@ Actors:
         CollectionSortOrder: forward
         FindOptions:
           BatchSize: 1000
-          Hint: _id_
+          Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerMedium
 
-- Name: InsertBenchmark.Low.Long
+- Name: UpdateBenchmark.Low.Long
   Type: CrudActor
   Threads: *LowThreads
   Phases:
@@ -262,8 +300,8 @@ Actors:
       Active: [11]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Threads: *LowThreads
         GlobalRate: *LowGlobalRate
+        Threads: *LowThreads
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerLongDuration
@@ -282,16 +320,16 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerLongDuration
-        ScanDuration: *SnapshotScannerMediumDuration
+        ScanDuration: *SnapshotScannerLongDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
           BatchSize: 1000
-          Hint: _id_
+          Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerLong
 
-- Name: InsertBaseline.High
+- Name: UpdateBaseline.High
   Type: CrudActor
   Threads: *HighThreads
   Phases:
@@ -299,14 +337,14 @@ Actors:
       Active: [13]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Threads: *HighThreads
         GlobalRate: *HighGlobalRate
+        Threads: *HighThreads
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
         Operations: *Operations
 
-- Name: InsertBenchmark.High.Short
+- Name: UpdateBenchmark.High.Short
   Type: CrudActor
   Threads: *HighThreads
   Phases:
@@ -314,14 +352,15 @@ Actors:
       Active: [15]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Threads: *HighThreads
         GlobalRate: *HighGlobalRate
+        Threads: *HighThreads
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
         Blocking: none
         Operations: *Operations
 
+# A thread per collection doing a scan.
 - Name: SnapshotScannerShort
   Type: CollectionScanner
   Threads: *CollectionCount
@@ -340,10 +379,10 @@ Actors:
         CollectionSortOrder: forward
         FindOptions:
           BatchSize: 1000
-          Hint: _id_
+          Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerShort
 
-- Name: InsertBenchmark.High.Medium
+- Name: UpdateBenchmark.High.Medium
   Type: CrudActor
   Threads: *HighThreads
   Phases:
@@ -351,8 +390,8 @@ Actors:
       Active: [17]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Threads: *HighThreads
         GlobalRate: *HighGlobalRate
+        Threads: *HighThreads
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
@@ -371,7 +410,7 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerMediumDuration
-        ScanDuration: *SnapshotScannerShortDuration
+        ScanDuration: *SnapshotScannerMediumDuration
         ScanType: snapshot
         GenerateCollectionNames: true
         CollectionSortOrder: forward
@@ -380,7 +419,7 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerMedium
 
-- Name: InsertBenchmark.High.Long
+- Name: UpdateBenchmark.High.Long
   Type: CrudActor
   Threads: *HighThreads
   Phases:
@@ -388,8 +427,8 @@ Actors:
       Active: [19]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Threads: *HighThreads
         GlobalRate: *HighGlobalRate
+        Threads: *HighThreads
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerLongDuration
@@ -414,12 +453,12 @@ Actors:
         CollectionSortOrder: forward
         FindOptions:
           BatchSize: 1000
-          Hint: _id_
+          Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerLong
 
-AutoRun:
-  Requires:
-    mongodb_setup:
-      - replica
-      - single-replica
-      - replica-all-feature-flags
+#AutoRun:
+#  Requires:
+#    mongodb_setup:
+#      - replica
+#      - single-replica
+#      - replica-all-feature-flags

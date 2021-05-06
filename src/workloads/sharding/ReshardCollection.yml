@@ -15,8 +15,7 @@ Description: |
 
       {_id: 10, oldKey: 20, newKey: 30, counter: 0, padding: 'random string of bytes ...'}
 
-  The collection is initially sharded on {oldKey: 'hashed'} and then resharded on
-  {oldKey: 'hashed', newKey: 1}.
+  The collection is initially sharded on {oldKey: 'hashed'} and then resharded on {newKey: 1}.
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
@@ -30,8 +29,10 @@ GlobalDefaults:
   # fields in the document.
   ApproxDocumentSize: &ApproxDocumentSize 10000  # = 10kB
   ApproxDocumentSize80Pct: &ApproxDocumentSize80Pct 8000  # = 8kB
-  # TODO: Increase DocumentCount to 4000000 so there will be ~20GB of data inserted on each shard.
+  # TODO: Increase DocumentCount to 4000000 so there will be ~20GB of data inserted on each shard
+  # and increase NumReshardedChunks to 400 so there continue to be ~50MB of data per chunk.
   DocumentCount: &DocumentCount 100000  # for an approximate total of 1GB
+  NumChunks: &NumChunks 20              # with approximately 50MB per chunk
 
   ShardKeyValueMin: &ShardKeyValueMin 1
   ShardKeyValueMax: &ShardKeyValueMax 100
@@ -46,7 +47,8 @@ GlobalDefaults:
       Update: {$inc: {counter: 1}}
       # Write operations can fail with a ShardInvalidatedForTargeting error response due to the
       # routing information for the temporary resharding collection not being available on the
-      # donor shard. TODO: Investigate why mongos isn't automatically retrying on it.
+      # donor shard. Mongos is expected to automatically retry on it. TODO: Use the default
+      # {ThrowOnFailure: true} behavior after this issue has been addressed by SERVER-54020.
       ThrowOnFailure: false
 
 Clients:
@@ -76,7 +78,7 @@ Actors:
         # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
         # the shards.
         key: {oldKey: hashed}
-        numInitialChunks: 60
+        numInitialChunks: *NumChunks
   - *Nop
   - *Nop
   - *Nop
@@ -113,27 +115,11 @@ Actors:
   - Repeat: 1
     Database: admin
     Operations:
-    # Until SERVER-53373 is implemented, donor shards aren't guaranteed to preserve enough history
-    # on their own for the atClusterTime read by recipient shards to succeed. We enable the
-    # WTPreserveSnapshotHistoryIndefinitely failpoint in the meantime. The testing-only multicast
-    # command in mongos runs the specified command across all shard primaries and secondaries. This
-    # ensures all nodes in the replica set shards preserve enough history, regardless of which the
-    # "nearest" read preference for collection cloning ends up targeting. TODO: Stop enabling the
-    # WTPreserveSnapshotHistoryIndefinitely failpoint once SERVER-53373 is implemented.
-    - OperationName: AdminCommand
-      OperationCommand:
-        multicast:
-          configureFailPoint: WTPreserveSnapshotHistoryIndefinitely
-          mode: alwaysOn
     - OperationMetricsName: ReshardCollection
       OperationName: AdminCommand
       OperationCommand:
         reshardCollection: *Namespace
-        # There is a known bug where the config.chunks entries generated for the temporary
-        # resharding collection are identical to the config.chunks entries for the existing sharded
-        # collection. TODO: Use {newKey: 1} as the new shard key pattern after this issue has been
-        # addressed by SERVER-49526.
-        key: {oldKey: hashed, newKey: 1}
+        key: {newKey: 1}
   - *Nop
 
 - Name: ReadWriteCollectionBeingResharded

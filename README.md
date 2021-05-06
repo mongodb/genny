@@ -113,6 +113,7 @@ Finally the external poplar tool to the CLion 'Before Launch' list:
 ## Running Genny Self-Tests
 
 These self-tests are exercised in CI. For the exact invocations that the CI tests use, see evergreen.yml.
+All genny commands now use `./run-genny`. For a full list run `./run-genny --help`.
 
 ### Linters
 
@@ -131,8 +132,13 @@ Lint Workload and other YAML:
 
 ### C++ Unit-Tests
 
+```sh
+./run-genny cmake-test
 ```
-./scripts/lamp self-test
+
+### Python Unit-Tests
+```sh
+./run-genny self-test
 ```
 
 For more fine-tuned testing (eg. running a single test or excluding some) you
@@ -221,6 +227,8 @@ And then run a workload:
     --workload-file       ./src/workloads/scale/InsertRemove.yml    \
     --mongo-uri           'mongodb://localhost:27017'
 ```
+If you see errors like the following, try reducing the number of threads and duration in ./src/workloads/scale/InsertRemove.yml
+```E0218 17:46:13.640106000 123145604628480 wakeup_fd_pipe.cc:40]         pipe creation failed (24): Too many open files```
 
 Logging currently goes to stdout and metrics data (ftdc) is written to
 `./build/CedarMetrics`.
@@ -342,6 +350,24 @@ NB:
     file for information on how to skip compile.
 3.  You can restart workloads from the Evergreen Web UI.
 
+## Viewing Metrics Data
+
+After running, Genny will export data to the `build/CedarMetrics` directory as `.ftdc` files corresponding to the
+actor and operation recorded.
+When executed in CI after submitting a patch, this data will be visible in the Evergreen perf UI.
+
+If running locally you can use the `curator` binary that Genny automatically downloads to export the
+metrics to various formats. You can view the export options like so:
+
+```sh
+./curator/curator ftdc export --help
+```
+
+For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
+
+```sh
+./curator/curator ftdc export csv --input build/CedarMetrics/InsertRemoveTest.Insert.ftdc --output insert.csv
+```
 
 ## Code Style and Limitations
 

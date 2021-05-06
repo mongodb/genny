@@ -1,0 +1,59 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  This workload is a repro of SERVER-48522, a regression in the document
+  remove rate. It loads, documents, removes them and then queries for
+  the removed documents. A bisect, build, test cycle was run as part of
+  PERF-2075 to find the cause of SERVER-48522
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: massdel
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: &docs 1000000
+    BatchSize: 1000
+    Document:
+      _id: {^Inc: {start: 0}}
+      f: {^RandomString: {length: 10 }}
+  - {Nop: true}
+  - {Nop: true}
+
+- Name: Delete
+  Type: CrudActor
+  Database: massdel
+  Phases:
+  - {Nop: true}
+  - Name: DeleteAllDocs
+    Repeat: 1
+    Collection: Collection0
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: deleteMany
+          Filter: {_id: {$lte: *docs}}
+  - {Nop: true}
+
+- Name: Find
+  Type: CrudActor
+  Database: massdel
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Name: FindNotThere
+    Repeat: 100
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter: {_id: {$lte: *docs}}
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+    - replica
