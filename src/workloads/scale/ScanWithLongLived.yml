@@ -30,8 +30,8 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [1, 2, 3]
-      NopInPhasesUpTo: 10
+      Active: [0, 1, 2]
+      NopInPhasesUpTo: 2
       PhaseConfig:
         LogEvery: 15 minutes
         Blocking: None

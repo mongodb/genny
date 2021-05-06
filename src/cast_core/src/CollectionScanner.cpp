@@ -99,7 +99,8 @@ struct CollectionScanner::PhaseConfig {
         std::vector<std::string> dbnames;
         boost::split(dbnames, databaseNames,boost::is_any_of(","));
 
-        for (const auto& dbname : dbnames) {
+        for (auto& dbname : dbnames) {
+            boost::trim(dbname);
             databases.push_back((*actor->_client)[dbname]);
         }
         const auto now = SteadyClock::now();
