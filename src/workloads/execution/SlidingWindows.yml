@@ -1,0 +1,138 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 100000
+    BatchSize: 10000
+    Document:
+      part: {^RandomInt: {min: 1, max: 10}}
+      time: {^RandomDate: {min: 1588626902000, max: 1620162902000}}
+      temp: {^RandomDouble: {distribution: normal, mean: 145, sigma: 30.0}}
+  - &Nop {Nop: true}
+  - *Nop
+
+- Name: Quiesce
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        fsync: 1
+  - *Nop
+
+- Name: SlidingWindows
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 10
+    Database: *db
+    Operations:
+    - OperationMetricsName: MovingAvgPositionBased
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{$setWindowFields: {
+                partitionBy: "$part",
+                sortBy: {time: 1},
+                output: {avg: {$avg: {input: "$temp", documents: [-2, 2]}}}}}]
+          cursor: {batchSize: 10000}
+          allowDiskUse: true
+    - OperationMetricsName: MovingAvgTimeBased
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{$setWindowFields: {
+                partitionBy: "$part",
+                sortBy: {time: 1},
+                output: {avg: {$avg: {input: "$temp", range: [-10, 0], unit: "second"}}}}}]
+          cursor: {batchSize: 10000}
+          allowDiskUse: true
+    - OperationMetricsName: MinPositionBased
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{$setWindowFields: {
+                partitionBy: "$part",
+                sortBy: {time: 1},
+                output: {min: {$min: {input: "$temp", documents: [-5, 5]}}}}}]
+          cursor: {batchSize: 10000}
+          allowDiskUse: true
+    - OperationMetricsName: MinTimeBased
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{$setWindowFields: {
+                partitionBy: "$part",
+                sortBy: {time: 1},
+                output: {min: {$min: {input: "$temp", range: [-20, 0], unit: "second"}}}}}]
+          cursor: {batchSize: 10000}
+          allowDiskUse: true
+    - OperationMetricsName: ExpMovingAvgSmallN
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{$setWindowFields: {
+                partitionBy: "$part",
+                sortBy: {time: 1},
+                output: {ema: {$expMovingAvg: {input: "$temp", N: 10}}}}}]
+          cursor: {batchSize: 10000}
+          allowDiskUse: true
+    - OperationMetricsName: ExpMovingAvgLargeN
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{$setWindowFields: {
+                partitionBy: "$part",
+                sortBy: {time: 1},
+                output: {ema: {$expMovingAvg: {input: "$temp", N: 500}}}}}]
+          cursor: {batchSize: 10000}
+          allowDiskUse: true
+    - OperationMetricsName: DerivativeSmallWindow
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{$setWindowFields: {
+                partitionBy: "$part",
+                sortBy: {time: 1},
+                output: {rate: {$derivative: {input: "$temp"}, window: {documents: [-10, 0]}}}}}]
+          cursor: {batchSize: 10000}
+          allowDiskUse: true
+    - OperationMetricsName: DerivativeLargeWindow
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{$setWindowFields: {
+                partitionBy: "$part",
+                sortBy: {time: 1},
+                output: {rate: {$derivative: {input: "$temp"}, window: {documents: [-500, 0]}}}}}]
+          cursor: {batchSize: 10000}
+          allowDiskUse: true
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+    - standalone
+    - replica
+    - replica-all-feature-flags
