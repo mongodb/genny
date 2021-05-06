@@ -121,10 +121,11 @@ def cmake_compile_install(
 )
 @click.argument("workload_path")
 @click.option(
-    "-s", "--smoke", is_flag=True, help="Smoke test, runs every actor phase once.",
+    "-s", "--smoke", is_flag=True, help=("Convert a workload YAML into a version for smoke test where every phase"
+                                         " of every actor runs with Repeat: 1.")
 )
 @click.pass_context
-def create_new_actor(ctx: click.Context, workload_path: str, smoke: bool):
+def evaluate(ctx: click.Context, workload_path: str, smoke: bool):
     from genny.tasks import preprocess
 
     preprocess.evaluate(workload_path=workload_path, smoke=smoke)
