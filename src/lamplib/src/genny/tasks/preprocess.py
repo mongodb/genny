@@ -16,6 +16,7 @@ class ParseException(Exception):
 
 
 def evaluate(workload_path: str, smoke: bool, output: str):
+    """CLI-friendly wrapper for preprocess."""
     if output is not None:
         with open(output, "w") as f:
             preprocess(workload_path=workload_path, smoke=smoke, output_file=f)
