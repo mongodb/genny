@@ -2,6 +2,7 @@ from typing import List
 
 import structlog
 import tempfile
+import shutil
 import os
 
 from genny.cmd_runner import run_command
@@ -28,25 +29,27 @@ def main_genny_runner(
             raise Exception(f"genny_core not found at {path}.")
         cmd = [path, *genny_args]
 
+        preprocessed_dir = os.path.join(workspace_root, "build/WorkloadOutput/workload")
+        os.makedirs(preprocessed_dir, exist_ok=True)
+
         # Intercept the workload given to the core binary.
-        with tempfile.TemporaryDirectory() as tempdir:
-            index = -1
-            if "-w" in cmd:
-                index = cmd.index("-w") + 1
-            elif "--workload-file" in cmd:
-                index = cmd.index("--workload-file") + 1
-            elif "dry-run" in cmd:
-                index = cmd.index("dry-run") + 1
+        index = -1
+        if "-w" in cmd:
+            index = cmd.index("-w") + 1
+        elif "--workload-file" in cmd:
+            index = cmd.index("--workload-file") + 1
+        elif "dry-run" in cmd:
+            index = cmd.index("dry-run") + 1
 
-            if index >= 0:
-                workload_path = cmd[index]
-                smoke = "-s" in cmd or "--smoke-test" in cmd
+        if index >= 0:
+            workload_path = cmd[index]
+            smoke = "-s" in cmd or "--smoke-test" in cmd
 
-                temp_workload = os.path.join(tempdir, os.path.basename(workload_path))
-                with open(temp_workload, "w") as f:
-                    preprocess.preprocess(workload_path=workload_path, smoke=smoke, output_file=f)
-                cmd[index] = temp_workload
+            temp_workload = os.path.join(preprocessed_dir, os.path.basename(workload_path))
+            with open(temp_workload, "w") as f:
+                preprocess.preprocess(workload_path=workload_path, smoke=smoke, output_file=f)
+            cmd[index] = temp_workload
 
-            run_command(
-                cmd=cmd, capture=False, check=True, cwd=workspace_root,
-            )
+        run_command(
+            cmd=cmd, capture=False, check=True, cwd=workspace_root,
+        )
