@@ -30,13 +30,16 @@ def main_genny_runner(
 
         # Intercept the workload given to the core binary.
         with tempfile.TemporaryDirectory() as tempdir:
-            if "-w" in cmd or "--workload-file" in cmd:
-                try:
-                    index = cmd.index("-w") + 1
-                except ValueError:
-                    index = cmd.index("-workload-file") + 1
-                workload_path = cmd[index]
+            index = -1
+            if "-w" in cmd:
+                index = cmd.index("-w") + 1
+            elif "--workload-file" in cmd:
+                index = cmd.index("--workload-file") + 1
+            elif "dry-run" in cmd:
+                index = cmd.index("dry-run") + 1
 
+            if index >= 0:
+                workload_path = cmd[index]
                 smoke = "-s" in cmd or "--smoke-test" in cmd
 
                 temp_workload = os.path.join(tempdir, os.path.basename(workload_path))
