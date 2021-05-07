@@ -132,7 +132,6 @@ DefaultDriver::ProgramOptions create(const std::string& yaml) {
     opts.mongoUri = "mongodb://localhost:27017";
     opts.workloadSourceType = DefaultDriver::ProgramOptions::YamlSource::kString;
     opts.workloadSource = yaml;
-    opts.isSmokeTest = false;
 
     return opts;
 }
@@ -344,7 +343,7 @@ TEST_CASE("Various Actor Behaviors") {
         REQUIRE(hasMetrics(opts));
     }
 
-    SECTION("Load External Config Default Parameter") {
+    /*SECTION("Load External Config Default Parameter") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
         Actors:
@@ -480,5 +479,5 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kInternalException);
         REQUIRE(!hasMetrics(opts));
-    }
+    }*/
 }
