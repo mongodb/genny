@@ -14,6 +14,23 @@ class TestPreprocess(unittest.TestCase):
     def cleanUp(self):
         shutil.rmtree(self.workspace_root)
 
+    def _runParse(self, yaml_input):
+        cwd = os.getcwd()
+
+        p = preprocess._WorkloadParser()
+        parsedConfig = p.parse(
+            yaml_input=yaml_input, source=preprocess._WorkloadParser.YamlSource.String, path=cwd
+        )
+
+        return parsedConfig
+
+    def _assertYaml(self, yaml_input, expected):
+        self.assertEqual(self._runParse(yaml_input), expected)
+
+    def _assertParseException(self, yaml_input):
+        self.assertRaises(preprocess.ParseException, self._runParse, yaml_input)
+
+
     def test_scoped_contest(self):
         context = preprocess._Context()
         with context.enter():
@@ -130,16 +147,10 @@ Actors:
   - Repeat: 2
     Mode: NoException
   - Nop: true
-  AnotherValueFromRepeat: GoodValue\n"""
+  AnotherValueFromRepeat: GoodValue
+"""
 
-        cwd = os.getcwd()
-
-        p = preprocess._WorkloadParser()
-        parsedConfig = p.parse(
-            yaml_input=yaml_input, source=preprocess._WorkloadParser.YamlSource.String, path=cwd
-        )
-
-        self.assertEqual(parsedConfig, expected)
+        self._assertYaml(yaml_input, expected)
 
     def test_preprocess_keywords(self):
         yaml_input = """
@@ -183,13 +194,160 @@ Actors:
     Nop: true
   - Duration: 3 minutes
   - *id002
-  - *id002\n"""
+  - *id002
+"""
 
-        cwd = os.getcwd()
+        self._assertYaml(yaml_input, expected)
 
-        p = preprocess._WorkloadParser()
-        parsedConfig = p.parse(
-            yaml_input=yaml_input, source=preprocess._WorkloadParser.YamlSource.String, path=cwd
-        )
+    def test_load_external_default_param(self):
+        
+        yaml_input = '''SchemaVersion: 2018-07-01
+Actors:
+  - Type: Fails
+    Name: Fails
+    Threads: 1
+    Phases:
+    - ExternalPhaseConfig:
+        Path: src/testlib/phases/Good.yml'''
 
-        self.assertEqual(parsedConfig, expected)
+        expected = '''SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Fails
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Mode: NoException
+'''
+
+        self._assertYaml(yaml_input, expected)
+
+
+    def test_load_external_default_param_inner_key(self):
+        yaml_input = '''SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Fails
+  Threads: 1
+  Phases:
+  - ExternalPhaseConfig:
+      Path: src/testlib/phases/GoodWithKey.yml
+      Key: ForSelfTest'''
+
+        expected = '''SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Fails
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Mode: NoException
+'''
+
+        self._assertYaml(yaml_input, expected)
+
+    def test_external_override_param(self):
+        yaml_input = '''SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Fails
+  Threads: 1
+  Phases:
+  - ExternalPhaseConfig:
+      Path: src/testlib/phases/Good.yml
+      Parameters:
+        Repeat: 2
+'''
+        expected = '''SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Fails
+  Threads: 1
+  Phases:
+  - Repeat: 2
+    Mode: NoException
+'''
+        self._assertYaml(yaml_input, expected)
+
+    #SECTION("With Inline Parameter") {
+    def test_external_inline_param(self):
+        yaml_input = '''SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Fails
+  Threads: 1
+  Phases:
+  - ExternalPhaseConfig:
+      Path: "src/testlib/phases/GoodNoRepeat.yml"
+    Repeat: 3
+'''
+        expected = '''SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Fails
+  Threads: 1
+  Phases:
+  - Mode: NoException
+    Repeat: 3
+'''
+        self._assertYaml(yaml_input, expected)
+
+
+    #SECTION("Load Bad External State 1") {
+    def test_bad_external_state_1(self):
+        yaml_input = '''SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Fails
+  Threads: 1
+  Phases:
+  - ExternalPhaseConfig:
+      Path: src/testlib/phases/MissingAllFields.yml
+      Parameters:
+        Repeat: 2
+'''
+
+        self._assertParseException(yaml_input)
+
+
+    def test_bad_external_state_2(self):
+        yaml_input = '''SchemaVersion: 2018-07-01
+Actors:
+  - Type: Fails
+    Name: Fails
+    Threads: 1
+    Phases:
+    - ExternalPhaseConfig:
+        Path: src/testlib/phases/MissingDefault.yml
+        Parameters:
+          Repeat: 2
+'''
+        self._assertParseException(yaml_input)
+
+
+    def test_bad_external_state_3(self):
+        yaml_input = '''SchemaVersion: 2018-07-01
+Actors:
+  - Type: Fails
+    Name: Fails
+    Threads: 1
+    Phases:
+    - ExternalPhaseConfig:
+        Path: src/testlib/phases/MissingName.yml
+        Parameters:
+          Repeat: 2
+'''
+        self._assertParseException(yaml_input)
+
+
+    def test_bad_external_state_4(self):
+        yaml_input = '''SchemaVersion: 2018-07-01
+Actors:
+  - Type: Fails
+    Name: Fails
+    Threads: 1
+    Phases:
+    - ExternalPhaseConfig:
+        Path: "src/testlib/phases/MissingSchemaVersion.yml"
+'''
+        self._assertParseException(yaml_input)
