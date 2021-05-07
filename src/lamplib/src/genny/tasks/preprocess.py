@@ -15,7 +15,15 @@ class ParseException(Exception):
     pass
 
 
-def evaluate(workload_path: str, smoke: str, output_file=None):
+def evaluate(workload_path: str, smoke: bool, output: str):
+    if output is not None:
+        with open(output, "w") as f:
+            preprocess(workload_path=workload_path, smoke=smoke, output_file=f)
+    else:
+        preprocess(workload_path=workload_path, smoke=smoke)
+
+
+def preprocess(workload_path: str, smoke: bool, output_file=None):
     """Evaluate a workload and output it to a file (or stdout)."""
     mode = _ParseMode.Smoke if smoke else _ParseMode.Normal
 

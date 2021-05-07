@@ -117,9 +117,18 @@ def cmake_compile_install(
 
 
 @cli.command(
-    "evaluate", help=("Print the evaluated YAML workload file with minimal validation."),
+    "evaluate", help=("Evaluate the YAML workload file with minimal validation."),
 )
 @click.argument("workload_path")
+@click.option(
+    "-o",
+    "--output",
+    required=False,
+    default=None,
+    help=(
+        "Filepath where the output of the evaluation will be written. Will write to stdout by default."
+    ),
+)
 @click.option(
     "-s",
     "--smoke",
@@ -130,10 +139,10 @@ def cmake_compile_install(
     ),
 )
 @click.pass_context
-def evaluate(ctx: click.Context, workload_path: str, smoke: bool):
+def evaluate(ctx: click.Context, workload_path: str, output: str, smoke: bool):
     from genny.tasks import preprocess
 
-    preprocess.evaluate(workload_path=workload_path, smoke=smoke)
+    preprocess.evaluate(workload_path=workload_path, smoke=smoke, output=output)
 
 
 @cli.command(
