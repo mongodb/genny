@@ -35,7 +35,6 @@ public:
     enum class RunMode {
         kNormal,
         kDryRun,
-        kEvaluate,
         kListActors,
         kHelp,
     };

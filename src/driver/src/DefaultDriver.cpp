@@ -136,13 +136,6 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     auto orchestrator = Orchestrator{};
 
-    if (options.runMode == DefaultDriver::RunMode::kEvaluate) {
-        std::cout << YAML::Dump(yaml) << std::endl;
-        genny::metrics::Registry metrics;
-        reportMetrics(metrics, workloadName, true, startTime);
-        return DefaultDriver::OutcomeCode::kSuccess;
-    }
-
     NodeSource nodeSource{YAML::Dump(yaml),
                           options.workloadSourceType ==
                                   DefaultDriver::ProgramOptions::YamlSource::kFile
@@ -295,7 +288,6 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     run          Run the workload normally
     dry-run      Exit before the run step -- this may still make network
                  connections during workload initialization
-    evaluate     Print the evaluated YAML workload file with minimal validation
     list-actors  List all actors available for use
     )" << "\n";
 
@@ -351,8 +343,6 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
         this->runMode = RunMode::kListActors;
     else if (subcommand == "dry-run")
         this->runMode = RunMode::kDryRun;
-    else if (subcommand == "evaluate")
-        this->runMode = RunMode::kEvaluate;
     else if (subcommand == "run")
         this->runMode = RunMode::kNormal;
     else if (subcommand == "help")
