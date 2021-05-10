@@ -106,3 +106,20 @@ Actors:
     ScanType: snapshot
     ScanDuration: 2 minutes    # the duration of each scan, transactions held open this long.
     GlobalRate: 1 per 4 minutes
+
+# Each time this snapshot scanner runs, two databases are fully scanned.
+# This is done within a snapshot transaction, which is specified to be
+# held open for a full 2 minutes. If it completes before 2 minutes,
+# the scan will repeat until the duration is reached.
+- Name: ContinousScanner
+  Type: CollectionScanner
+  Threads: 10
+  Database: hot
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 10 minutes       # the duration of this phase
+    ScanType: snapshot
+    ScanDuration: 2 minutes    # the duration of each scan, transactions held open this long.
+    ScanContinuous: true   # the snapshot scan will repeat rather than sleep to honor the scan duration.

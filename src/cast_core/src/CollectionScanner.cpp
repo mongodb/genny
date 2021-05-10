@@ -70,6 +70,7 @@ struct CollectionScanner::PhaseConfig {
     SortOrderType sortOrder;
     int64_t collectionSkip;
     std::optional<TimeSpec> scanDuration;
+    bool scanContinuous = false;
     bool selectClusterTimeOnly = false;
     bool queryCollectionList;
     std::optional<mongocxx::options::transaction> transactionOptions;
@@ -91,12 +92,15 @@ struct CollectionScanner::PhaseConfig {
           scanSizeBytes{context["ScanSizeBytes"].maybe<IntegerSpec>().value_or(0)},
           collectionSkip{context["CollectionSkip"].maybe<IntegerSpec>().value_or(0)},
           scanDuration{context["ScanDuration"].maybe<TimeSpec>()},
+          scanContinuous{context["ScanContinuous"].maybe<bool>().value_or(false)},
           selectClusterTimeOnly{context["SelectClusterTimeOnly"].maybe<bool>().value_or(false)},
           findOptions{context["FindOptions"].maybe<mongocxx::options::find>().value_or(mongocxx::options::find{})} {
         // The list of databases is comma separated.
         std::vector<std::string> dbnames;
-        boost::split(dbnames, databaseNames, [](char c) { return (c == ','); });
-        for (const auto& dbname : dbnames) {
+        boost::split(dbnames, databaseNames,boost::is_any_of(","));
+
+        for (auto& dbname : dbnames) {
+            boost::trim(dbname);
             databases.push_back((*actor->_client)[dbname]);
         }
         const auto now = SteadyClock::now();
@@ -134,6 +138,19 @@ struct CollectionScanner::PhaseConfig {
             if (scanType != ScanType::kSnapshot) {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                     "ScanDuration must be used with snapshot scans."));
+            }
+        }
+        if (scanContinuous) {
+            auto os = std::ostringstream();
+            if (scanType != ScanType::kSnapshot) {
+                os << "ScanContinuous is only valid with snapshot scans.";
+            }
+            if (!scanDuration) {
+                os <<  "ScanContinuous is only valid with a scan duration.";
+            }
+            auto err = os.str();
+            if (!err.empty()) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(err));
             }
         }
         auto sortOrderString = context["CollectionSortOrder"].maybe<std::string>().value_or("none");
@@ -405,26 +422,39 @@ void CollectionScanner::run() {
                 try {
                     mongocxx::client_session session = _client->start_session({});
                     session.start_transaction(*config->transactionOptions);
-                    collectionScan(config, collections, _rateLimiter, session);
-                    // If a scan duration was specified, we must make the scan
-                    // last at least that long.  We'll do this within any
-                    // running transaction, so we keep the "long running
-                    // transaction" active as long as we've been asked to.
-                    // However, honor the phase's duration if specified.
-                    if (config->scanDuration) {
-                        const SteadyClock::time_point now = SteadyClock::now();
-                        auto stop = started + (*config->scanDuration).value;
-                        if (config->stopPhase && *config->stopPhase < stop) {
-                            stop = *config->stopPhase;
+                    // Initialize 'finished' to true so that the loop will execute exactly once if
+                    // ScanContinuous is false. If ScanContinuous is true 'finished' is
+                    // re-evaluated within the loop.
+                    auto finished = true;
+                    do {
+                        BOOST_LOG_TRIVIAL(debug)
+                            << "Scanner id: " << this->_index << " scanning";
+                        collectionScan(config, collections, _rateLimiter, session);
+                        // If a scan duration was specified, we must make the scan
+                        // last at least that long.
+                        // For non-continuous scans (default behaviour) we'll do this within any
+                        // running transaction by keeping the "long running transaction" active
+                        // as long as we've been asked to.
+                        // For continuous scans we repeat the collectionScan
+                        // within the transaction until we have reached the scan duration.
+                        // However, honor the phase's duration if specified.
+                        if (config->scanDuration) {
+                            const SteadyClock::time_point now = SteadyClock::now();
+                            auto stop = started + (*config->scanDuration).value;
+                            if (config->stopPhase && *config->stopPhase < stop) {
+                                stop = *config->stopPhase;
+                            }
+                            finished = now >= stop;
+                            if (!finished && !config->scanContinuous) {
+                                auto sleepDuration = stop - now;
+                                auto secs = sleepDuration.count() / (1000 * 1000 * 1000);
+                                BOOST_LOG_TRIVIAL(debug)
+                                    << "Scanner id: " << this->_index << " sleeping " << secs;
+                                std::this_thread::sleep_for(sleepDuration);
+                                finished = true;
+                            }
                         }
-                        if (stop > now) {
-                            auto sleepDuration = stop - now;
-                            auto secs = sleepDuration.count() / (1000 * 1000 * 1000);
-                            BOOST_LOG_TRIVIAL(info)
-                                << "Scanner id: " << this->_index << " sleeping " << secs;
-                            std::this_thread::sleep_for(sleepDuration);
-                        }
-                    }
+                    } while(!finished);
                     session.commit_transaction();
                 } catch (const mongocxx::operation_exception& e) {
                     if(e.has_error_label(transientTransactionLabel) ) {

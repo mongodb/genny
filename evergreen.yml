@@ -94,13 +94,14 @@ buildvariants:
 #  - name: tg_compile
 #  - name: t_push
 
-- name: macos-1014
-  display_name: macOS Mojave
-  modules: [mongo]
-  run_on:
-  - macos-1014
-  tasks:
-  - name: tg_compile
+# TODO: Re-enable after TIG-2819
+#- name: macos-1014
+#  display_name: macOS Mojave
+#  modules: [mongo]
+#  run_on:
+#  - macos-1014
+#  tasks:
+#  - name: tg_compile
 
 - name: centos6-perf
   display_name: CentOS 6 for Performance
