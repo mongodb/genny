@@ -1,0 +1,184 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of $setWindowFields with an [unbounded, unbounded] window.
+  This case is interesting because it requires two passes over the documents (within each
+  partition): one pass to compute the window function, and one pass to write the new field to
+  each document.  If any partition is too large, it has to spill.  Also, internally we $sort by the
+  partition key, so that can also spill, depending on the collection size and available indexes.
+
+  We can divide this up into 4 cases:
+    1. Nothing spills.
+    2. Only the $sort spills.
+    3. Only the $_internalSetWindowFields spills.
+    4. Both the $sort and the $_internalSetWindowFields spill.
+
+  - To control whether the $sort spills, we can use an index, or not.
+  - To control whether the $_internalSetWindowFields spills, we can change the cardinality of
+    the partition key.
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    # Through trial and error, it seems 60k documents, when divided into 12 partitions, does not spill,
+    # but divided into fewer partitions (10 partitions), fits in the memory limit.
+    DocumentCount: 60000
+    BatchSize: &batchSize 1000
+    Document:
+      # Each document has a unique _id. In phase 2 we use this to create evenly distributed
+      # partition keys.
+      _id: {^Inc: {}}
+      # This int field is what we sum. Its value shouldn't matter for this test.
+      int: &int {^RandomInt: {min: 1, max: 10000}}
+      # This string pads the doc size out to around 10KB.
+      string: &string {^RandomString: {length: 10000}}
+  - Nop: true
+  - Nop: true
+
+- Name: FixupDataAndCreateIndexes
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        update: Collection0
+        updates: [
+          {
+            q: {},
+            u: [
+              {$set: {
+                ten_indexed: {$mod: ["$_id", 10]},
+                ten_unindexed: {$mod: ["$_id", 10]},
+                twelve_indexed: {$mod: ["$_id", 12]},
+                twelve_unindexed: {$mod: ["$_id", 12]},
+              }},
+            ],
+            multi: true,
+            upsert: false,
+          }
+        ]
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes: [
+          {key: {ten_indexed: 1}, name: "ten_indexed_1"},
+          {key: {twelve_indexed: 1}, name: "twelve_indexed_1"},
+        ]
+  - Nop: true
+
+- Name: SetWindowFieldsUnbounded
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
+
+    # Nothing spills:
+    # - $sort is indexed
+    # - partitions are small enough to fit in memory
+    - OperationMetricsName: NothingSpills
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [
+          {$setWindowFields: {
+            partitionBy: "$twelve_indexed",
+            output: {
+              total: {$sum: "$int"}
+            }
+          }},
+          {$project: {
+            partitionKey: 1,
+            percentage: {$divide: ["$int", "$total"]},
+            keepString: {$type: "$string"},
+          }}
+        ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+
+    # Only the sort spills:
+    # - $sort is not indexed
+    # - partitions are small enough to fit in memory
+    - OperationMetricsName: SortSpills
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [
+          {$setWindowFields: {
+            partitionBy: "$twelve_unindexed",
+            output: {
+              total: {$sum: "$int"}
+            }
+          }},
+          {$project: {
+            partitionKey: 1,
+            percentage: {$divide: ["$int", "$total"]},
+            keepString: {$type: "$string"},
+          }}
+        ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+
+    # Only the partitioning spills:
+    # - $sort is indexed
+    # - partitions are too big to fit in memory
+    - OperationMetricsName: PartitionSpills
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [
+          {$setWindowFields: {
+            partitionBy: "$ten_indexed",
+            output: {
+              total: {$sum: "$int"}
+            }
+          }},
+          {$project: {
+            partitionKey: 1,
+            percentage: {$divide: ["$int", "$total"]},
+            keepString: {$type: "$string"},
+          }}
+        ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+
+    # Both operations spill:
+    # - $sort is not indexed
+    # - partitions are too big to fit in memory
+    - OperationMetricsName: BothSpill
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [
+          {$setWindowFields: {
+            partitionBy: "$ten_unindexed",
+            output: {
+              total: {$sum: "$int"}
+            }
+          }},
+          {$project: {
+            partitionKey: 1,
+            percentage: {$divide: ["$int", "$total"]},
+            keepString: {$type: "$string"},
+          }}
+        ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+    - standalone
