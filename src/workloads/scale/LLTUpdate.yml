@@ -92,16 +92,12 @@ GlobalDefaults:
   HighThreads: &HighThreads 16
 
   # Scanner
-  SnapshotScannerShortDuration: &SnapshotScannerShortDuration 2 minutes
+  SnapshotScannerShortDuration: &SnapshotScannerShortDuration 1 minutes
   SnapshotScannerMediumDuration: &SnapshotScannerMediumDuration 10 minutes
-  SnapshotScannerLongDuration: &SnapshotScannerLongDuration 30 minutes
+  SnapshotScannerLongDuration: &SnapshotScannerLongDuration 60 minutes
 
 Clients:
   Default:
-    QueryOptions:
-      socketTimeoutMS: -1
-      maxPoolSize: 200
-  HighPool:
     QueryOptions:
       socketTimeoutMS: -1
       maxPoolSize: 400
@@ -123,11 +119,10 @@ Actors:
           OperationName: RunCommand
           OperationCommand:
             setParameter: 1
-            transactionLifetimeLimitSeconds: 3600
+            transactionLifetimeLimitSeconds: 14400 # 4 Hours
 
 - Name: InitialLoad
   Type: Loader
-  ClientName: Loader
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
@@ -145,7 +140,6 @@ Actors:
 
 - Name: SecondLoadAfterIndexes
   Type: Loader
-  ClientName: Loader
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
@@ -185,7 +179,6 @@ Actors:
 
 - Name: UpdateBaseline.Low
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -225,7 +218,6 @@ Actors:
 
 - Name: UpdateBenchmark.Low.Short
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Database: *dbname
   Phases:
@@ -256,6 +248,7 @@ Actors:
         Duration: *SnapshotScannerShortDuration
         ScanDuration: *SnapshotScannerShortDuration
         ScanType: snapshot
+        ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
@@ -265,7 +258,6 @@ Actors:
 
 - Name: UpdateBenchmark.Low.Medium
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -294,6 +286,7 @@ Actors:
         Duration: *SnapshotScannerMediumDuration
         ScanDuration: *SnapshotScannerMediumDuration
         ScanType: snapshot
+        ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
@@ -303,7 +296,6 @@ Actors:
 
 - Name: UpdateBenchmark.Low.Long
   Type: CrudActor
-  ClientName: LowPool
   Threads: *LowThreads
   Phases:
     OnlyActiveInPhases:
@@ -332,6 +324,7 @@ Actors:
         Duration: *SnapshotScannerLongDuration
         ScanDuration: *SnapshotScannerLongDuration
         ScanType: snapshot
+        ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
@@ -341,7 +334,6 @@ Actors:
 
 - Name: UpdateBaseline.High
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -357,7 +349,6 @@ Actors:
 
 - Name: UpdateBenchmark.High.Short
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -387,6 +378,7 @@ Actors:
         Duration: *SnapshotScannerShortDuration
         ScanDuration: *SnapshotScannerShortDuration
         ScanType: snapshot
+        ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
@@ -396,7 +388,6 @@ Actors:
 
 - Name: UpdateBenchmark.High.Medium
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -425,6 +416,7 @@ Actors:
         Duration: *SnapshotScannerMediumDuration
         ScanDuration: *SnapshotScannerMediumDuration
         ScanType: snapshot
+        ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
@@ -434,7 +426,6 @@ Actors:
 
 - Name: UpdateBenchmark.High.Long
   Type: CrudActor
-  ClientName: HighPool
   Threads: *HighThreads
   Phases:
     OnlyActiveInPhases:
@@ -463,6 +454,7 @@ Actors:
         Duration: *SnapshotScannerLongDuration
         ScanDuration: *SnapshotScannerLongDuration
         ScanType: snapshot
+        ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
