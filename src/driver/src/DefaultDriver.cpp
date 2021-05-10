@@ -36,10 +36,19 @@
 #include <metrics/metrics.hpp>
 
 #include <driver/v1/DefaultDriver.hpp>
-#include <driver/workload_parsers.hpp>
 
 namespace genny::driver {
 namespace {
+
+
+YAML::Node loadFile(const std::string& source) {
+    try {
+        return YAML::LoadFile(source);
+    } catch (const std::exception& ex) {
+        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << source << ": " << ex.what();
+        throw;
+    }
+}
 
 namespace fs = boost::filesystem;
 
@@ -116,22 +125,16 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         phaseConfigSource = fs::path(options.workloadSource).parent_path();
     }
 
-    v1::WorkloadParser parser{phaseConfigSource};
-
-    // Consider passing in whole options struct if we pass in more than 2-3 fields.
-    auto yaml = parser.parse(options.workloadSource,
-                             options.workloadSourceType,
-                             options.isSmokeTest ? v1::WorkloadParser::Mode::kSmokeTest
-                                                 : v1::WorkloadParser::Mode::kNormal);
+    YAML::Node yaml;
+    if (options.workloadSourceType == DefaultDriver::ProgramOptions::YamlSource::kFile) {
+        yaml = loadFile(options.workloadSource);
+    } else if (options.workloadSourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
+        yaml = YAML::Load(options.workloadSource);
+    } else {
+        throw std::invalid_argument("Unrecognized workload source type.");
+    }
 
     auto orchestrator = Orchestrator{};
-
-    if (options.runMode == DefaultDriver::RunMode::kEvaluate) {
-        std::cout << YAML::Dump(yaml) << std::endl;
-        genny::metrics::Registry metrics;
-        reportMetrics(metrics, workloadName, true, startTime);
-        return DefaultDriver::OutcomeCode::kSuccess;
-    }
 
     NodeSource nodeSource{YAML::Dump(yaml),
                           options.workloadSourceType ==
@@ -285,7 +288,6 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     run          Run the workload normally
     dry-run      Exit before the run step -- this may still make network
                  connections during workload initialization
-    evaluate     Print the evaluated YAML workload file with minimal validation
     list-actors  List all actors available for use
     )" << "\n";
 
@@ -309,10 +311,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
              "Mongo URI to use for the default connection-pool.")
             ("verbosity,v",
               po::value<std::string>()->default_value("info"),
-              "Log severity for boost logging. Valid values are trace/debug/info/warning/error/fatal.")
-            ("smoke-test,s",
-             po::value<bool>()->default_value(false),
-             "Run a workload in smoke test mode where all phases are set to Repeat=1");
+              "Log severity for boost logging. Valid values are trace/debug/info/warning/error/fatal.");
 
     positional.add("subcommand", 1);
     positional.add("workload-file", -1);
@@ -344,8 +343,6 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
         this->runMode = RunMode::kListActors;
     else if (subcommand == "dry-run")
         this->runMode = RunMode::kDryRun;
-    else if (subcommand == "evaluate")
-        this->runMode = RunMode::kEvaluate;
     else if (subcommand == "run")
         this->runMode = RunMode::kNormal;
     else if (subcommand == "help")
@@ -360,7 +357,6 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
         this->runMode = RunMode::kHelp;
 
     this->logVerbosity = parseVerbosity(vm["verbosity"].as<std::string>());
-    this->isSmokeTest = vm["smoke-test"].as<bool>();
     this->mongoUri = vm["mongo-uri"].as<std::string>();
 
     if (vm.count("workload-file") > 0) {
