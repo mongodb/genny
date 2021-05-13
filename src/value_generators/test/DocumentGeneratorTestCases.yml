@@ -606,7 +606,6 @@ Tests:
     ThenReturns:
     - { "int" : { "$numberLong" : "2000000000"}}
 
-  # Now moves with time so would always fail until PERF-2086 is available.
   - Name: Now
     GivenTemplate:
       date: {^Now: {}}
