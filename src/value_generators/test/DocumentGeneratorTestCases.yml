@@ -607,14 +607,10 @@ Tests:
     - { "int" : { "$numberLong" : "2000000000"}}
 
   # Now moves with time so would always fail until PERF-2086 is available.
-#  - Name: Now
-#    GivenTemplate:
-#      date: {^Now: {}}
-#    ThenReturns:
-#    # The $date notation is extended json
-#    # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-#    # Check with linux command line `date --utc -d@$((1453689676330 / 1000.0))  +"%Y-%m-%dT%H:%M:%S.%3N"`
-#    - { "date" : { "$date" : { "$numberLong" : "1453689676330" } } }
+  - Name: Now
+    GivenTemplate:
+      date: {^Now: {}}
+    ThenExecuteAndIgnore: true
 
   # Date: min equal max is invalid.
   - Name: RandomDateMinEqualMax

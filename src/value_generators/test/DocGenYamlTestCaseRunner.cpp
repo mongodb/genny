@@ -21,6 +21,7 @@ public:
           _name{node["Name"].as<std::string>("No Name")},
           _givenTemplate{node["GivenTemplate"]},
           _thenReturns{node["ThenReturns"]},
+          _thenExecuteAndIgnore{node["ThenExecuteAndIgnore"]},
           _expectedExceptionMessage{node["ThenThrows"]} {
         if (!_givenTemplate) {
             std::stringstream msg;
@@ -32,6 +33,12 @@ public:
             msg << "Can't have ThenReturns and ThenThrows in '" << toString(node) << "'";
             throw std::invalid_argument(msg.str());
         }
+        if (_thenExecuteAndIgnore && _expectedExceptionMessage) {
+            std::stringstream msg;
+            msg << "Can't have ThenExecuteAndIgnore and ThenThrows in '" << toString(node) << "'";
+            throw std::invalid_argument(msg.str());
+        }
+
         if (_thenReturns) {
             if (!_thenReturns.IsSequence()) {
                 std::stringstream msg;
@@ -39,14 +46,20 @@ public:
                 throw std::invalid_argument(msg.str());
             }
             _runMode = RunMode::kExpectReturn;
-        } else {
-            if (!_expectedExceptionMessage) {
-                std::stringstream msg;
-                msg << "Need ThenThrows if no ThenReturns in '" << toString(node) << "'";
-                throw std::invalid_argument(msg.str());
-            }
-            _runMode = RunMode::kExpectException;
+            return;
         }
+        if (_thenExecuteAndIgnore) {
+            _runMode = RunMode::kIgnoreReturn;
+            return;
+        }
+        if (_expectedExceptionMessage) {
+            _runMode = RunMode::kExpectException;
+            return;
+        }
+
+        std::stringstream msg;
+        msg << "Need one of ThenReturns, ThenExecuteAndIgnore or ThenThrows'" << toString(node) << "'";
+        throw std::invalid_argument(msg.str());
     }
 
     static NodeSource toNode(YAML::Node node) {
@@ -70,10 +83,10 @@ public:
                 }
                 return;
             }
-
             NodeSource ns = toNode(this->_givenTemplate);
             genny::DefaultRandom rng;
             auto docGen = genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 2});
+            if (_runMode == RunMode::kIgnoreReturn) return;
             for (const auto&& nextValue : this->_thenReturns) {
                 auto expected = testing::toDocumentBson(nextValue);
                 auto actual = docGen();
@@ -97,6 +110,7 @@ private:
     enum class RunMode {
         kExpectException,
         kExpectReturn,
+        kIgnoreReturn,
     };
 
     RunMode _runMode = RunMode::kExpectException;
@@ -106,6 +120,7 @@ private:
     YAML::Node _wholeTest;
     YAML::Node _givenTemplate;
     YAML::Node _thenReturns;
+    YAML::Node _thenExecuteAndIgnore;
     YAML::Node _expectedExceptionMessage;
 };
 
