@@ -45,6 +45,17 @@ Here're the steps to get Genny up and running locally:
     If you get python errors, ensure you have a modern version of python3.
     On a Mac, run `brew install python3` (assuming you have [homebrew installed](https://brew.sh/))
     and then restart your shell.
+    
+### Errors Mentioning zstd and libmongocrypt
+There is currently a leak in Genny's toolchain requiring zstd and libmongocrypt to be installed.
+If the `./run-genny install` phase above errors mentioning these, you may need to install them separately.
+
+On macOS, you can `brew install zstd` and `brew install mongodb/brew/libmongocrypt`. On Ubuntu, you
+can apt-install zstd, but will need to manually install libmongocrypt using the instructions in its
+[source repo](https://github.com/mongodb/libmongocrypt). If choosing to build from source, make sure
+you run `make install` to install globally after cmaking the project.
+
+After installing these dependencies, re-running the `./run-genny install` phase above should work.
 
 ## IDEs and Whatnot
 
