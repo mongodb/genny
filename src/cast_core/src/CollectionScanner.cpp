@@ -238,7 +238,8 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
     bool scanFinished = false;
     auto statTracker = config->scanOperation.start();
     for (auto& collection : collections) {
-        auto docs = [&]() {
+        // Use a lambda to hide calling the correct operation.
+        auto cursor = [&]() {
           if (config->aggregate) {
               return collection.aggregate(session, evaluatePipeline(config), config->aggregateOptions);
           } else {
@@ -253,7 +254,8 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
          * You can still do a find but it'll throw an exception when we iterate.
          */
         try {
-            for (auto& doc : docs()) {
+            // Execute the lambda, iterate over all the docs in the cursor.
+            for (auto& doc : cursor()) {
                 docCount += 1;
                 scanSize += doc.length();
                 if (config->documents != 0 && config->documents == docCount) {
