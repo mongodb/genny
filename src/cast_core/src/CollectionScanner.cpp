@@ -184,6 +184,10 @@ struct CollectionScanner::PhaseConfig {
         } else {
             queryCollectionList = true;
         }
+        if (aggregate && filterExpr) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                                      "Only one of filterExpr and AggregatePipeline can be set."));
+        }
     }
 
     void collectionsFromNameList(const mongocxx::database& db,
