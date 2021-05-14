@@ -28,7 +28,6 @@
 #include <bsoncxx/types.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/collection.hpp>
-#include <mongocxx/cursor.hpp>
 #include <mongocxx/database.hpp>
 
 #include <boost/algorithm/string.hpp>
