@@ -55,8 +55,7 @@ private:
     genny::metrics::Operation _phaseOp;
 
     /** @private */
-    struct PhaseConfig;
-    PhaseLoop<PhaseConfig> _loop;
+    Orchestrator& _orchestrator;
     void reportPhase(metrics::clock::time_point finishTime, metrics::clock::time_point startTime);
 
 };

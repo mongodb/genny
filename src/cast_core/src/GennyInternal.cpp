@@ -33,28 +33,23 @@
 
 #include <value_generators/DocumentGenerator.hpp>
 
-
 namespace genny::actor {
-
-struct GennyInternal::PhaseConfig {
-    // Nothing to really configure right now.
-    // If we ever add more internal metrics maybe we could turn them off and on here.
-    PhaseConfig(PhaseContext& phaseContext, ActorId id) {}
-};
-
 
 void GennyInternal::run() {
 
     std::optional<metrics::clock::time_point> startTime;
     metrics::clock::time_point finishTime;
 
-    for (auto&& config : _loop) {
+    // We don't use PhaseLoop because we want this actor to be usable
+    // in any workload regardless of number of phases defined.
+    while (_orchestrator.morePhases()) {
+        _orchestrator.awaitPhaseStart();
         if (startTime) { // If this isn't the first loop.
             reportPhase(*startTime, finishTime);
         }
         startTime = metrics::clock::now();
+        _orchestrator.awaitPhaseEnd();
 
-        for (const auto&& _ : config) { /* Do nothing for now. */ }
     }
     reportPhase(*startTime, finishTime);
 }
@@ -62,7 +57,7 @@ void GennyInternal::run() {
 GennyInternal::GennyInternal(genny::ActorContext& context)
     : Actor{context},
       _phaseOp{context.operation("Phase", GennyInternal::id())},
-      _loop{context, GennyInternal::id()} {}
+      _orchestrator{context.orchestrator()} {}
 
 void GennyInternal::reportPhase(metrics::clock::time_point startTime, metrics::clock::time_point finishTime) {
     finishTime = metrics::clock::now();
