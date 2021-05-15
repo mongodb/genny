@@ -227,7 +227,8 @@ class _WorkloadParser(object):
 
     def _parse_actors(self, actors):
         actor_list = actors
-        if len([actor["Name"] for actor in actors if actor["Name"] == "GennyInternal"]) == 0:
+        names = [actor["Name"] for actor in actors]
+        if "GennyInternal" not in names:
             actor_list.append(GENNY_INTERNAL)
         return self._recursive_parse(actor_list)
 
