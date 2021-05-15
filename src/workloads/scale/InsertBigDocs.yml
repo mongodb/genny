@@ -21,7 +21,8 @@ Actors:
 
 AutoRun:
   Requires:
-    mongodb_setup: 
+    mongodb_setup:
+    - atlas
     - replica
-    - single-replica
     - replica-all-feature-flags
+    - single-replica

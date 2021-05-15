@@ -116,6 +116,26 @@ Tests:
       - {a: [ { "a": 1 }, 1, { "a": 1 } ] }
       - {a: [ 1, 1, { "a": 1 }, 1, "abc" ] }
 
+  - Name: ArrayChooseNestedGenerator
+    GivenTemplate:
+      a: {^Array: {number: 4, of: {^Choose: {from: [
+        {b: {^RandomInt: {min: 200, max: 500}}},
+        {c: {^RandomInt: {min: -500, max: -200}}}
+      ]}}}}
+    ThenReturns:
+      - { "a" : [ { "b" : { "$numberLong" : "206"} },
+        { "b" : { "$numberLong" : "448"} },
+        { "c" : { "$numberLong" : "-380"} },
+        { "b" : { "$numberLong" : "262"} } ] }
+      - { "a" : [ { "b" : { "$numberLong" : "358"} },
+        { "b" : { "$numberLong" : "379"} },
+        { "c" : { "$numberLong" : "-433"} },
+        { "b" : { "$numberLong" : "369"} } ] }
+      - { "a" : [ { "c" : { "$numberLong" : "-402"} },
+        { "b" : { "$numberLong" : "493"} },
+        { "b" : { "$numberLong" : "472"} },
+        { "c" : { "$numberLong" : "-225"} } ] }
+
   - Name: Array Complex Docs
     GivenTemplate:
       a: {^Array: {of: { ts: {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}},

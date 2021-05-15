@@ -1208,7 +1208,7 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
     }
     for (const auto&& [k, v] : node["from"]) {
-        _choices.push_back(valueGenerator<true, UniqueAppendable>(v, generatorArgs, allParsers));
+        _choices.push_back(valueGenerator<false, UniqueAppendable>(v, generatorArgs, allParsers));
     }
     if (node["weights"]) {
         for (const auto&& [k, v] : node["weights"]) {
