@@ -9,6 +9,9 @@ import yaml
 import structlog
 
 SLOG = structlog.get_logger(__name__)
+GENNY_INTERNAL = {"Name": "GennyInternal",
+                  "Type": "GennyInternal",
+                  "Threads": 1}
 
 
 class ParseException(Exception):
@@ -180,6 +183,8 @@ class _WorkloadParser(object):
             self._parse_templates(value)
         elif key == "ActorFromTemplate":
             out = self._parse_instance(value)
+        elif key == "Actors":
+            out["Actors"] = self._parse_actors(value)
         elif key == "OnlyActiveInPhases":
             out = self._parse_only_in(value)
         elif key == "ExternalPhaseConfig":
@@ -219,6 +224,12 @@ class _WorkloadParser(object):
             self._context.insert(
                 template_node["TemplateName"], template_node["Config"], _ContextType.ActorTemplate
             )
+
+    def _parse_actors(self, actors):
+        actor_list = actors
+        if len([actor["Name"] for actor in actors if actor["Name"] == "GennyInternal"]) == 0:
+            actor_list.append(GENNY_INTERNAL)
+        return self._recursive_parse(actor_list)
 
     def _parse_instance(self, instance):
         actor = {}
