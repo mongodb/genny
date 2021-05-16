@@ -109,14 +109,39 @@ class OperationImpl;
 class MetricsClockSource {
 private:
     using clock_type = std::chrono::steady_clock;
+    using report_clock_type = std::chrono::system_clock;
+    
 
 public:
     using duration = clock_type::duration;
     using time_point = std::chrono::time_point<clock_type>;
+    using report_time_point = std::chrono::time_point<report_clock_type>;
 
     static time_point now() {
         return clock_type::now();
     }
+
+    /**
+     * Should be called once when the metrics system is initialized.
+     */
+    static void initialize() {
+        _timeStarted = now();
+        _reportTimeStarted = report_clock_type::now();
+    }
+
+    /**
+     * Translate a given time point to a one suitable for
+     * external reporting.
+     */
+    static report_time_point translateTime(time_point givenTime) {
+        auto timeSinceStarted = givenTime - _timeStarted;
+        auto reportDur = std::chrono::duration_cast<report_clock_type::duration>(timeSinceStarted);
+        return _reportTimeStarted + reportDur;
+    }
+
+private:
+    static time_point _timeStarted;
+    static report_time_point _reportTimeStarted;
 };
 
 /**
@@ -167,16 +192,18 @@ public:
                        boost::filesystem::path pathPrefix,
                        bool assertMetricsBuffer = true)
         : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
-        if (_format.useGrpc()) {
-            boost::filesystem::create_directories(_pathPrefix);
+            ClockSource::initialize();
 
-            boost::filesystem::path startTimeFilePath = _pathPrefix / "start_time.txt";
-            std::ofstream startTimeFile(startTimeFilePath.string());
-            startTimeFile << "This file only exists to mark execution start time.";
-            startTimeFile.close();
+            if (_format.useGrpc()) {
+                boost::filesystem::create_directories(_pathPrefix);
 
-            _grpcClient = std::make_unique<GrpcClient>(assertMetricsBuffer, _pathPrefix);
-        }
+                boost::filesystem::path startTimeFilePath = _pathPrefix / "start_time.txt";
+                std::ofstream startTimeFile(startTimeFilePath.string());
+                startTimeFile << "This file only exists to mark execution start time.";
+                startTimeFile.close();
+
+                _grpcClient = std::make_unique<GrpcClient>(assertMetricsBuffer, _pathPrefix);
+            }
     }
 
 
