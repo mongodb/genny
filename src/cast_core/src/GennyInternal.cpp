@@ -44,14 +44,11 @@ void GennyInternal::run() {
     // in any workload regardless of number of phases defined.
     while (_orchestrator.morePhases()) {
         _orchestrator.awaitPhaseStart();
-        if (startTime) { // If this isn't the first loop.
-            reportPhase(*startTime, finishTime);
-        }
-        startTime = metrics::clock::now();
-        _orchestrator.awaitPhaseEnd();
+        auto phaseCtx = _phaseOp.start();
 
+        _orchestrator.awaitPhaseEnd();
+        phaseCtx.success();
     }
-    reportPhase(*startTime, finishTime);
 }
 
 GennyInternal::GennyInternal(genny::ActorContext& context)
@@ -59,17 +56,8 @@ GennyInternal::GennyInternal(genny::ActorContext& context)
       _phaseOp{context.operation("Phase", GennyInternal::id())},
       _orchestrator{context.orchestrator()} {}
 
-void GennyInternal::reportPhase(metrics::clock::time_point startTime, metrics::clock::time_point finishTime) {
-    finishTime = metrics::clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finishTime - startTime);
-    _phaseOp.report(std::move(finishTime), std::move(duration), metrics::OutcomeType::kSuccess);
-}
-
 namespace {
-//
-// This tells the "global" cast about our actor using the defaultName() method
-// in the header file.
-//
+
 auto registerGennyInternal = Cast::registerDefault<GennyInternal>();
 }  // namespace
 }  // namespace genny::actor
