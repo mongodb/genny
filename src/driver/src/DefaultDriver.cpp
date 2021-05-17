@@ -78,12 +78,13 @@ void reportMetrics(genny::metrics::Registry& metrics,
                    const std::string& workloadName,
                    const std::string& operationName,
                    bool success,
-                   metrics::clock::time_point startTime) {
+                   metrics::clock::time_point startTime,
+                   bool canary=true) {
     auto finishTime = metrics::clock::now();
     // The "Setup" operation is a genny internal operation. We want the trend graph to be hidden by
     // default to not confuse users, so we prefix it with "canary_" to hit the
     // CANARY_EXCLUSION_REGEX in https://git.io/Jtjdr
-    auto actorSetup = metrics.operation("canary_" + workloadName, operationName, 0u);
+    auto actorSetup = metrics.operation(canary ? "canary_" : "" + workloadName, operationName, 0u);
     auto outcome = success ? metrics::OutcomeType::kSuccess : metrics::OutcomeType::kFailure;
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finishTime - startTime);
     actorSetup.report(std::move(finishTime), std::move(duration), std::move(outcome));
@@ -209,7 +210,8 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         }
     }
 
-    reportMetrics(metrics, workloadName, "Workload", true, startTime);
+    // We use the "GennyInternal" name to match the corresponding actor.
+    reportMetrics(metrics, "GennyInternal", "Workload", true, startTime, false);
 
     return outcomeCode;
 }
