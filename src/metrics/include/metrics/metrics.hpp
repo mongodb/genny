@@ -187,7 +187,6 @@ public:
         : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
         if (_format.useGrpc()) {
             boost::filesystem::create_directories(_pathPrefix);
-
             _grpcClient = std::make_unique<GrpcClient>(assertMetricsBuffer, _pathPrefix);
         }
     }
