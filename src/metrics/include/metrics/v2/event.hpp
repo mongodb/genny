@@ -540,10 +540,14 @@ public:
             return false;
         auto metricsArgs = *metricsArgsOptional;
 
+        // We only actually convert to report-able system time here because
+        // the stead_clock finish time is used to calculate the total field
+        // further below.
+        auto reportFinish = ClockSource::toReportTime(metricsArgs.finish);
         _metrics.mutable_time()->set_seconds(
-            Period<ClockSource>(metricsArgs.finish.time_since_epoch()).getSecondsCount());
+            Period<ClockSource>(reportFinish.time_since_epoch()).getSecondsCount());
         _metrics.mutable_time()->set_nanos(
-            Period<ClockSource>(metricsArgs.finish.time_since_epoch()).getNanosecondsCount());
+            Period<ClockSource>(reportFinish.time_since_epoch()).getNanosecondsCount());
 
         _metrics.mutable_timers()->mutable_duration()->set_seconds(
             metricsArgs.event.duration.getSecondsCount());
