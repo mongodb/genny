@@ -31,8 +31,7 @@ namespace genny::actor {
  * Actor for tracking and reporting Genny internal state.
  *
  * Currently intended to be run in a single-threaded manner. This actor
- * is automatically instantiated by Genny core by default. Its current
- * form expects to be run exactly once per phase.
+ * is automatically instantiated by Genny's preprocessor by default.
  *
  * Reports:
  *   GennyInternal.Phase - Records an event at the end of each phase, with a duration the length of the phase.
