@@ -30,6 +30,9 @@
 
 namespace genny::metrics {
 
+// The directory to use for internal operations.
+const std::string INTERNAL_DIR = "internal";
+
 /**
  * Class wrapping the logic involving metrics formats.
  */
@@ -184,10 +187,12 @@ public:
     explicit RegistryT(MetricsFormat format,
                        boost::filesystem::path pathPrefix,
                        bool assertMetricsBuffer = true)
-        : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
+        : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)},
+        _internalPathPrefix{_pathPrefix / INTERNAL_DIR} {
         if (_format.useGrpc()) {
             boost::filesystem::create_directories(_pathPrefix);
-            _grpcClient = std::make_unique<GrpcClient>(assertMetricsBuffer, _pathPrefix);
+            boost::filesystem::create_directories(_internalPathPrefix);
+            _grpcClient = std::make_unique<GrpcClient>(assertMetricsBuffer);
         }
     }
 
@@ -195,14 +200,16 @@ public:
     OperationT<ClockSource> operation(std::string actorName,
                                       std::string opName,
                                       ActorId actorId,
-                                      std::optional<genny::PhaseNumber> phase = std::nullopt) {
+                                      std::optional<genny::PhaseNumber> phase = std::nullopt,
+                                      bool internal = false) {
         StreamPtr stream = nullptr;
 
+        auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
             auto name = createName(actorName, opName, phase);
-            stream = _grpcClient->createStream(actorId, name, phase);
+            stream = _grpcClient->createStream(actorId, name, phase, pathPrefix);
         }
         auto opIt =
             opsByThread.try_emplace(actorId, std::move(actorName), *this, std::move(opName), stream)
@@ -215,13 +222,15 @@ public:
                                       ActorId actorId,
                                       genny::TimeSpec threshold,
                                       double_t percentage,
-                                      std::optional<genny::PhaseNumber> phase = std::nullopt) {
+                                      std::optional<genny::PhaseNumber> phase = std::nullopt,
+                                      bool internal = false) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
+        auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
         StreamPtr stream = nullptr;
         if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
             auto name = createName(actorName, opName, phase);
-            stream = _grpcClient->createStream(actorId, name, phase);
+            stream = _grpcClient->createStream(actorId, name, phase, pathPrefix);
         }
         auto opIt =
             opsByThread
@@ -278,6 +287,7 @@ private:
     OperationsMap _ops;
     MetricsFormat _format;
     boost::filesystem::path _pathPrefix;
+    boost::filesystem::path _internalPathPrefix;
 };
 
 }  // namespace internals

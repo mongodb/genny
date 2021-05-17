@@ -393,13 +393,14 @@ public:
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
     typedef EventStream<ClockSource, StreamInterface> Stream;
 
-    GrpcClient(bool assertMetricsBuffer, const boost::filesystem::path& pathPrefix)
-        : _pathPrefix{pathPrefix}, _assertMetricsBuffer{assertMetricsBuffer} {}
+    GrpcClient(bool assertMetricsBuffer)
+        : _assertMetricsBuffer{assertMetricsBuffer} {}
 
     Stream* createStream(const ActorId& actorId,
                          const std::string& name,
-                         const OptionalPhaseNumber& phase) {
-        _collectors.try_emplace(name, name, _pathPrefix);
+                         const OptionalPhaseNumber& phase,
+                         const boost::filesystem::path pathPrefix) {
+        _collectors.try_emplace(name, name, pathPrefix);
         _collectors.at(name).incStreams();
         _streams.emplace_back(actorId, name, phase);
         _threads.emplace_back(_assertMetricsBuffer, _streams.back());
@@ -413,7 +414,6 @@ public:
     }
 
 private:
-    const boost::filesystem::path _pathPrefix;
     const bool _assertMetricsBuffer;
     CollectorsMap _collectors;
     // deque avoid copy-constructor calls
