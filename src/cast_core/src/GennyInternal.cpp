@@ -53,7 +53,7 @@ void GennyInternal::run() {
 
 GennyInternal::GennyInternal(genny::ActorContext& context)
     : Actor{context},
-      _phaseOp{context.operation("Phase", GennyInternal::id())},
+      _phaseOp{context.operation("Phase", GennyInternal::id(), true)},
       _orchestrator{context.orchestrator()} {}
 
 namespace {
