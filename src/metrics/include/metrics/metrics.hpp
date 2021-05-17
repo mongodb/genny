@@ -132,6 +132,7 @@ public:
     }
 
 private:
+    // Inlining lets us initialize these in the header.
     inline static time_point _timeStarted = now();
     inline static report_time_point _reportTimeStarted = report_clock_type::now();
 };
@@ -186,11 +187,6 @@ public:
         : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
         if (_format.useGrpc()) {
             boost::filesystem::create_directories(_pathPrefix);
-
-            boost::filesystem::path startTimeFilePath = _pathPrefix / "start_time.txt";
-            std::ofstream startTimeFile(startTimeFilePath.string());
-            startTimeFile << "This file only exists to mark execution start time.";
-            startTimeFile.close();
 
             _grpcClient = std::make_unique<GrpcClient>(assertMetricsBuffer, _pathPrefix);
         }
