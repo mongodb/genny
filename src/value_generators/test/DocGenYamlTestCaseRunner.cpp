@@ -38,6 +38,12 @@ public:
             msg << "Can't have ThenExecuteAndIgnore and ThenThrows in '" << toString(node) << "'";
             throw std::invalid_argument(msg.str());
         }
+        if (_thenReturns && _thenExecuteAndIgnore) {
+            std::stringstream msg;
+            msg << "Can't have ThenReturns and ThenExecuteAndIgnore in '" << toString(node) << "'";
+            throw std::invalid_argument(msg.str());
+        }
+
 
         if (_thenReturns) {
             if (!_thenReturns.IsSequence()) {
