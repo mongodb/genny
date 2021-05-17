@@ -75,6 +75,9 @@ struct CollectionScanner::PhaseConfig {
     bool queryCollectionList;
     std::optional<mongocxx::options::transaction> transactionOptions;
     mongocxx::options::find findOptions;
+    bool aggregate = false;
+    std::optional<DocumentGenerator> aggregatePipelineExpr;
+    mongocxx::options::aggregate aggregateOptions;
 
     PhaseConfig(PhaseContext& context,
                 const CollectionScanner* actor,
@@ -94,7 +97,10 @@ struct CollectionScanner::PhaseConfig {
           scanDuration{context["ScanDuration"].maybe<TimeSpec>()},
           scanContinuous{context["ScanContinuous"].maybe<bool>().value_or(false)},
           selectClusterTimeOnly{context["SelectClusterTimeOnly"].maybe<bool>().value_or(false)},
-          findOptions{context["FindOptions"].maybe<mongocxx::options::find>().value_or(mongocxx::options::find{})} {
+          findOptions{context["FindOptions"].maybe<mongocxx::options::find>().value_or(mongocxx::options::find{})},
+          aggregate{context["AggregatePipeline"]},
+          aggregatePipelineExpr{context["AggregatePipeline"].maybe<DocumentGenerator>(context, actor->id())},
+          aggregateOptions{context["AggregateOptions"].maybe<mongocxx::options::aggregate>().value_or(mongocxx::options::aggregate{})} {
         // The list of databases is comma separated.
         std::vector<std::string> dbnames;
         boost::split(dbnames, databaseNames,boost::is_any_of(","));
@@ -178,6 +184,10 @@ struct CollectionScanner::PhaseConfig {
         } else {
             queryCollectionList = true;
         }
+        if (aggregate && filterExpr) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                                      "Only one of filterExpr and AggregatePipeline can be set."));
+        }
     }
 
     void collectionsFromNameList(const mongocxx::database& db,
@@ -205,6 +215,15 @@ struct CollectionScanner::PhaseConfig {
     }
 };
 
+// Evaluate the Aggregation Pipeline Expression to create a mongocxx::pipeline.
+auto evaluatePipeline(CollectionScanner::PhaseConfig* config) {
+    auto expr = config->aggregatePipelineExpr->evaluate();
+    bsoncxx::array::view pipeline{expr.view()["array"].get_array().value};
+    mongocxx::pipeline pl{};
+    pl.append_stages(std::move(pipeline));
+    return pl;
+}
+
 void collectionScan(CollectionScanner::PhaseConfig* config,
                     std::vector<mongocxx::collection>& collections,
                     GlobalRateLimiter* rateLimiter,
@@ -219,15 +238,24 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
     bool scanFinished = false;
     auto statTracker = config->scanOperation.start();
     for (auto& collection : collections) {
-        auto filter = config->filterExpr ? config->filterExpr->evaluate()
-                                         : bsoncxx::document::view_or_value{};
-        auto docs = collection.find(session, filter, config->findOptions);
+        // Use a lambda to hide calling the correct operation.
+        auto cursor = [&]() {
+          if (config->aggregate) {
+              return collection.aggregate(session, evaluatePipeline(config), config->aggregateOptions);
+          } else {
+              auto filter = config->filterExpr ? config->filterExpr->evaluate()
+                                               : bsoncxx::document::view_or_value{};
+              return collection.find(session, filter, config->findOptions);
+          }
+        };
+
         /*
          * Try-catch this as the collection may have been deleted.
          * You can still do a find but it'll throw an exception when we iterate.
          */
         try {
-            for (auto& doc : docs) {
+            // Execute the lambda, iterate over all the docs in the cursor.
+            for (auto& doc : cursor()) {
                 docCount += 1;
                 scanSize += doc.length();
                 if (config->documents != 0 && config->documents == docCount) {
