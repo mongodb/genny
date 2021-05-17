@@ -9,9 +9,7 @@ import yaml
 import structlog
 
 SLOG = structlog.get_logger(__name__)
-GENNY_INTERNAL = {"Name": "GennyInternal",
-                  "Type": "GennyInternal",
-                  "Threads": 1}
+GENNY_INTERNAL = {"Name": "GennyInternal", "Type": "GennyInternal", "Threads": 1}
 
 
 class ParseException(Exception):
