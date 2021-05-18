@@ -14,7 +14,9 @@ Actors:
 
 - Name: InsertData
   Type: Loader
-  Threads: 1 # Loader doesn't support multiple threads for a single collection.
+  # Loader doesn't support multiple threads for a single collection.
+  # TODO: TIG-2938 Use multiple threads to speedup insertion.
+  Threads: 1
   Phases:
   - Repeat: 1
     Database: &DB test
@@ -122,6 +124,7 @@ Actors:
   - *Nop
   - *Nop
 
+# TODO: TIG-3050 Switch to CrudActor once projection argument is supported for find operation.
 - Name: RunQueries
   Type: RunCommand
   Threads: 1
@@ -140,6 +143,7 @@ Actors:
           gender: "Female",
           dob: {
             # Currently, using generator is the only way to generate date value with the appropriate BSON type.
+            # TODO: PERF-2084 Use ^Date instead.
             $gte: {^RandomDate: {min: "1990-01-01", max: "1990-01-01T00:00:00.001"}},
             $lte: {^RandomDate: {min: "1990-12-31", max: "1990-12-31T00:00:00.001"}}
           },
