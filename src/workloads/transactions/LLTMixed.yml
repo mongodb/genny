@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  Workload to Benchmark the effect of LongLivedTransactions on a Remove workload.
+  Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload.
 
 GlobalDefaults:
   # These values should match those are the top of LLTPhases.yml
