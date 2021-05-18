@@ -58,7 +58,7 @@ GlobalDefaults:
     OperationName: findOne
     OperationCommand:
       Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      Options: 
+      Options:
         Hint: price_1_ts_1_cuid_1
         Comment: PtcQueryOperation
 
@@ -66,7 +66,7 @@ GlobalDefaults:
     OperationName: findOne
     OperationCommand:
       Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      Options: 
+      Options:
         Hint: price_1_cuid_1
         Comment: PcQueryOperation
 
@@ -74,7 +74,7 @@ GlobalDefaults:
     OperationName: findOne
     OperationCommand:
       Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
-      Options: 
+      Options:
         Hint: caid_1_price_1_cuid_1
         Comment: CpcQueryOperation
 
@@ -83,7 +83,7 @@ GlobalDefaults:
     OperationName: updateOne
     OperationCommand:
       Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      Update: 
+      Update:
         $set:
           ts: {^Now: {}}
           data: {^Join: {array: ["bbbbbbbbbb", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
@@ -101,7 +101,7 @@ GlobalDefaults:
         $set:
           ts: {^Now: {}}
           prod: {^RandomInt: {min: 0, max: 10000}}
-      OperationOptions: 
+      OperationOptions:
         Upsert: false
         WriteConcern:
           Level: majority
@@ -115,7 +115,7 @@ GlobalDefaults:
         $set:
           ts: {^Now: {}}
           cuid: {^RandomInt: {min: 0, max: 100000}}
-      OperationOptions: 
+      OperationOptions:
         Upsert: false
         WriteConcern:
           Level: majority
@@ -126,7 +126,7 @@ GlobalDefaults:
     OperationName: deleteOne
     OperationCommand:
       Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      OperationOptions: 
+      OperationOptions:
         Comment: PtcRemoveOperation
         WriteConcern:
           Level: majority
@@ -135,7 +135,7 @@ GlobalDefaults:
     OperationName: deleteOne
     OperationCommand:
       Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      OperationOptions: 
+      OperationOptions:
         WriteConcern:
           Level: majority
 
@@ -143,17 +143,16 @@ GlobalDefaults:
     OperationName: deleteOne
     OperationCommand:
       Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
-      OperationOptions: 
+      OperationOptions:
         WriteConcern:
           Level: majority
 
-  # Low Baseline / Benchmark
-  LowGlobalRate: &LowGlobalRate 200 per 1 second
-  LowThreads: &LowThreads 8
+  GlobalRateValue: &GlobalRateValue 1 per 2500 microsecond
+  ThreadsValue: &ThreadsValue 8
 
-  # High Baseline / Benchmark
-  HighGlobalRate: &HighGlobalRate 400 per 1 second
-  HighThreads: &HighThreads 16
+#  # High Baseline / Benchmark
+#  GlobalRateValue: &GlobalRateValue 400 per 1 second
+#  ThreadsValue: &ThreadsValue 16
 
   # Scanner
   SnapshotScannerShortDuration: &SnapshotScannerShortDuration 1 minutes
@@ -224,7 +223,7 @@ Actors:
   Database: *dbname
   Phases:
     OnlyActiveInPhases:
-      Active: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+      Active: [0, 2, 4, 6, 8, 10, 12, 14, 16]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -235,27 +234,29 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+      Active: [1, 3, 5, 7, 9, 11, 13, 15]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         LogEvery: 15 minutes
         Blocking: None
 
 # Naming Conventions:
-# Type_of_test.Thread_level.Duration
-# Type of test:  Insert/Query/Update/Remove Baseline/Benchmark
+# Operation.Duration.Load_level.Operation.Type_of_test
+# Operation:     Insert|Query|Update|Remove|Mixed
+# Duration:      Short|Medium|Long
+# Type of test:  Baseline|Benchmark
+#
 # Baseline without scans, benchmark with scans
-
-- Name: InsertBaseline.Low
+- Name: Short.Insert.Baseline
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [5]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
@@ -269,16 +270,16 @@ Actors:
           - *InsertOperation
           - *InsertOperation
 
-- Name: QueryBaseline.Low
+- Name: Short.Query.Baseline
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [5]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
@@ -292,16 +293,16 @@ Actors:
           - *PcQueryOperation
           - *CpcQueryOperation
 
-- Name: UpdateBaseline.Low
+- Name: Short.Update.Baseline
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [5]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
@@ -315,16 +316,16 @@ Actors:
           - *PcUpdateOperation
           - *CpcUpdateOperation
 
-- Name: RemoveBaseline.Low
+- Name: Short.Remove.Baseline
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [5]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
@@ -338,64 +339,64 @@ Actors:
           - *PcRemoveOperation
           - *CpcRemoveOperation
 
-- Name: InsertBenchmark.Low.Short
+- Name: Short.Insert.Benchmark
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
         Blocking: none
         Operations: *InsertOps
 
-- Name: QueryBenchmark.Low.Short
+- Name: Short.Query.Benchmark
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
         Blocking: none
         Operations: *QueryOps
 
-- Name: UpdateBenchmark.Low.Short
+- Name: Short.Update.Benchmark
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
         Blocking: none
         Operations: *UpdateOps
 
-- Name: RemoveBenchmark.Low.Short
+- Name: Short.Remove.Benchmark
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
@@ -403,7 +404,7 @@ Actors:
         Operations: *RemoveOps
 
 ## A thread per collection doing a scan.
-- Name: SnapshotScannerShort
+- Name: Short.Scan.Snapshot
   Type: CollectionScanner
   Threads: *CollectionCount
   CollectionCount: *CollectionCount
@@ -411,7 +412,7 @@ Actors:
   GenerateCollectionNames: true
   Phases:
     OnlyActiveInPhases:
-      Active: [7,15]
+      Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerShortDuration
@@ -425,64 +426,124 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerShort
 
-- Name: InsertBenchmark.Low.Medium
+- Name: Medium.Insert.Baseline
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [9]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerMediumDuration
+        Operations: *InsertOps
+
+- Name: Medium.Query.Baseline
+  Type: CrudActor
+  Threads: *ThreadsValue
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerMediumDuration
+        Operations: *QueryOps
+
+- Name: Medium.Update.Baseline
+  Type: CrudActor
+  Threads: *ThreadsValue
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerMediumDuration
+        Operations: *UpdateOps
+
+- Name: Medium.Remove.Baseline
+  Type: CrudActor
+  Threads: *ThreadsValue
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerMediumDuration
+        Operations: *RemoveOps
+
+- Name: Medium.Insert.Benchmark
+  Type: CrudActor
+  Threads: *ThreadsValue
+  Phases:
+    OnlyActiveInPhases:
+      Active: [11]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
         Blocking: none
         Operations: *InsertOps
 
-- Name: QueryBenchmark.Low.Medium
+- Name: Medium.Query.Benchmark
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
-      Active: [9]
+      Active: [11]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
         Blocking: none
         Operations: *QueryOps
 
-- Name: UpdateBenchmark.Low.Medium
+- Name: Medium.Update.Benchmark
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
-      Active: [9]
+      Active: [11]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
         Blocking: none
         Operations: *UpdateOps
 
-- Name: RemoveBenchmark.Low.Medium
+- Name: Medium.Remove.Benchmark
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
-      Active: [9]
+      Active: [11]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
@@ -490,7 +551,7 @@ Actors:
         Operations: *RemoveOps
 
 # A thread per collection doing a scan.
-- Name: SnapshotScannerMedium
+- Name: Medium.Scan.Snapshot
   Type: CollectionScanner
   Threads: *CollectionCount
   CollectionCount: *CollectionCount
@@ -498,7 +559,7 @@ Actors:
   GenerateCollectionNames: true
   Phases:
     OnlyActiveInPhases:
-      Active: [9,17]
+      Active: [11]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerMediumDuration
@@ -512,64 +573,124 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerMedium
 
-- Name: InsertBenchmark.Low.Long
+- Name: Long.Insert.Baseline
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
-      Active: [11]
+      Active: [13]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerLongDuration
+        Operations: *InsertOps
+
+- Name: Long.Query.Baseline
+  Type: CrudActor
+  Threads: *ThreadsValue
+  Phases:
+    OnlyActiveInPhases:
+      Active: [13]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerLongDuration
+        Operations: *QueryOps
+
+- Name: Long.Update.Baseline
+  Type: CrudActor
+  Threads: *ThreadsValue
+  Phases:
+    OnlyActiveInPhases:
+      Active: [13]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerLongDuration
+        Operations: *UpdateOps
+
+- Name: Long.Remove.Baseline
+  Type: CrudActor
+  Threads: *ThreadsValue
+  Phases:
+    OnlyActiveInPhases:
+      Active: [13]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerLongDuration
+        Operations: *RemoveOps
+
+- Name: Long.Insert.Benchmark
+  Type: CrudActor
+  Threads: *ThreadsValue
+  Phases:
+    OnlyActiveInPhases:
+      Active: [15]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerLongDuration
         Blocking: none
         Operations: *InsertOps
 
-- Name: QueryBenchmark.Low.Long
+- Name: Long.Query.Benchmark
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
-      Active: [11]
+      Active: [15]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerLongDuration
         Blocking: none
         Operations: *QueryOps
 
-- Name: UpdateBenchmark.Low.Long
+- Name: Long.Update.Benchmark
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
-      Active: [11]
+      Active: [15]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerLongDuration
         Blocking: none
         Operations: *UpdateOps
 
-- Name: RemoveBenchmark.Low.Long
+- Name: Long.Remove.Benchmark
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
-      Active: [11]
+      Active: [15]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerLongDuration
@@ -577,7 +698,7 @@ Actors:
         Operations: *RemoveOps
 
 # A thread per collection doing a scan.
-- Name: SnapshotScannerLong
+- Name: Long.Scan.Snapshot
   Type: CollectionScanner
   Threads: *CollectionCount
   CollectionCount: *CollectionCount
@@ -585,7 +706,7 @@ Actors:
   GenerateCollectionNames: true
   Phases:
     OnlyActiveInPhases:
-      Active: [11,19]
+      Active: [15]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerLongDuration
@@ -599,266 +720,10 @@ Actors:
           Hint: _id_ # Currently only support the index name.
           Comment: SnapshotScannerLong
 
-- Name: InsertBaseline.High
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [13]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerShortDuration
-        Blocking: none
-        Operations: *InsertOps
-
-- Name: QueryBaseline.High
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [13]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerShortDuration
-        Blocking: none
-        Operations: *QueryOps
-
-- Name: UpdateBaseline.High
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [13]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerShortDuration
-        Blocking: none
-        Operations: *UpdateOps
-
-- Name: RemoveBaseline.High
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [13]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerShortDuration
-        Blocking: none
-        Operations: *RemoveOps
-
-- Name: InsertBenchmark.High.Short
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [15]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerShortDuration
-        Blocking: none
-        Operations: *InsertOps
-
-- Name: QueryBenchmark.High.Short
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [15]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerShortDuration
-        Blocking: none
-        Operations: *QueryOps
-
-- Name: UpdateBenchmark.High.Short
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [15]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerShortDuration
-        Blocking: none
-        Operations: *UpdateOps
-
-- Name: RemoveBenchmark.High.Short
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [15]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerShortDuration
-        Blocking: none
-        Operations: *RemoveOps
-
-- Name: InsertBenchmark.High.Medium
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [17]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerMediumDuration
-        Blocking: none
-        Operations: *InsertOps
-
-- Name: QueryBenchmark.High.Medium
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [17]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerMediumDuration
-        Blocking: none
-        Operations: *QueryOps
-
-- Name: UpdateBenchmark.High.Medium
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [17]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerMediumDuration
-        Blocking: none
-        Operations: *UpdateOps
-
-- Name: RemoveBenchmark.High.Medium
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [17]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerMediumDuration
-        Blocking: none
-        Operations: *RemoveOps
-
-- Name: InsertBenchmark.High.Long
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [19]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerLongDuration
-        Blocking: none
-        Operations: *InsertOps
-
-- Name: QueryBenchmark.High.Long
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [19]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerLongDuration
-        Blocking: none
-        Operations: *QueryOps
-
-- Name: UpdateBenchmerk.High.Long
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [19]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerLongDuration
-        Blocking: none
-        Operations: *UpdateOps
-
-- Name: RemoveBenchmark.High.Long
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [19]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerLongDuration
-        Blocking: none
-        Operations: *RemoveOps
-
-
 #AutoRun:
 #  Requires:
 #    mongodb_setup:
+#      - atlas
 #      - replica
-#      - single-replica
 #      - replica-all-feature-flags
+#      - single-replica
