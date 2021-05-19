@@ -158,7 +158,7 @@ ActorTemplates:
       Threads: *ThreadsValue
       Phases:
         OnlyActiveInPhases:
-          Active:  {^Parameter: {Name: "OnlyActiveInPhase", Default: [5]}}
+          Active:  {^Parameter: {Name: "Active", Default: [5]}}
           NopInPhasesUpTo: *MaxPhases
           PhaseConfig:
             GlobalRate: *GlobalRateValue
@@ -183,7 +183,7 @@ ActorTemplates:
       Threads: *ThreadsValue
       Phases:
         OnlyActiveInPhases:
-          Active:  {^Parameter: {Name: "OnlyActiveInPhase", Default: [5]}}
+          Active:  {^Parameter: {Name: "Active", Default: [5]}}
           NopInPhasesUpTo: *MaxPhases
           PhaseConfig:
             GlobalRate: *GlobalRateValue
