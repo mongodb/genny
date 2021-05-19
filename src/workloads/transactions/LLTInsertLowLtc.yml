@@ -4,6 +4,14 @@ Description: |
   Workload to Benchmark the effect of LongLivedTransactions on an Insert workload.
 
 GlobalDefaults:
+  # Start: The following block gets updated for the other configurations.
+  # In-memory: Database size works out about 12GB.
+  InitialDocumentCount: &InitialNumDocs 10000000
+  SecondaryDocumentCount: &SecondaryNumDocs 10000000
+  GlobalRateValue: &GlobalRateValue 1 per 2500 microsecond
+  ThreadsValue: &ThreadsValue 8
+  # End: The previous block gets updated for the other configurations.
+
   # These values should match those are the top of LLTPhases.yml
   dbname: &dbname llt
   MaxPhases: &MaxPhases 16
@@ -26,14 +34,7 @@ GlobalDefaults:
   LoadThreads: &LoadThreads 4
   LoadBatchSize: &LoadBatchSize 1000
 
-  # In-memory: Database size works out about 12GB.
-  InitialDocumentCount: &InitialNumDocs 10000000
-  SecondaryDocumentCount: &SecondaryNumDocs 10000000
-
   CollectionCount: &CollectionCount 4
-
-  GlobalRateValue: &GlobalRateValue 1 per 2500 microsecond
-  ThreadsValue: &ThreadsValue 8
 
   # Scanner
   SnapshotScannerShortDuration: &SnapshotScannerShortDuration 1 minutes
