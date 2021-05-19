@@ -1,12 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  Workload to Benchmark the effect of LongLivedTransactions on a Query workload.
+  Workload to Benchmark the effect of LongLivedTransactions on an Insert workload.
 
 GlobalDefaults:
   # These values should match those are the top of LLTPhases.yml
   dbname: &dbname llt
-  MaxPhases: &MaxPhases 20
+  MaxPhases: &MaxPhases 16
 
   # The Sample Document Shape.
   Document: &Doc
@@ -33,50 +33,30 @@ GlobalDefaults:
   # WIP make a copy of the workload once these values are tuned correctly and
   # the workload runs consistently.
   # Not In-memory: Database size works out about 30GB.
-  # InitialDocumentCount: &InitialNumDocs 49000000
-  # SecondaryDocumentCount: &SecondaryNumDocs 1000000
+  #InitialDocumentCount: &InitialNumDocs 49000000
+  #SecondaryDocumentCount: &SecondaryNumDocs 1000000
   CollectionCount: &CollectionCount 4
 
-  # The query operation name indicates the index in use (see LLTIndexes) :
-  #  * Ptc => price_1_ts_1_cuid_1
-  #  * Pc  => price_1_cuid_1
-  #  * Cpc => caid_1_price_1_cuid_1
-  PtcQueryOperation: &PtcQueryOperation
-    OperationName: findOne
-    OperationCommand:
-      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      Options:
-        Hint: price_1_ts_1_cuid_1
-        Comment: PtcQueryOperation
+  GlobalRateValue: &GlobalRateValue 1 per 2500 microsecond
+  ThreadsValue: &ThreadsValue 8
 
-  PcQueryOperation: &PcQueryOperation
-    OperationName: findOne
-    OperationCommand:
-      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      Options:
-        Hint: price_1_cuid_1
-        Comment: PcQueryOperation
-
-  CpcQueryOperation: &CpcQueryOperation
-    OperationName: findOne
-    OperationCommand:
-      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
-      Options:
-        Hint: caid_1_price_1_cuid_1
-        Comment: CpcQueryOperation
-
-  # Low Baseline / Benchmark
-  LowGlobalRate: &LowGlobalRate 400 per 1 second
-  LowThreads: &LowThreads 8
-
-  # Low Baseline / Benchmark
-  HighGlobalRate: &HighGlobalRate 800 per 1 second
-  HighThreads: &HighThreads 16
+#  # Low Baseline / Benchmark
+#  GlobalRateValue: &GlobalRateValue 800 per 1 second
+#  ThreadsValue: &ThreadsValue 16
 
   # Scanner
   SnapshotScannerShortDuration: &SnapshotScannerShortDuration 1 minutes
   SnapshotScannerMediumDuration: &SnapshotScannerMediumDuration 10 minutes
   SnapshotScannerLongDuration: &SnapshotScannerLongDuration 60 minutes
+
+  # The write concern. The intent is to use what is chosen as the default in 5.0.
+  InsertOperation: &InsertOperation
+    OperationName: insertOne
+    OperationCommand:
+      Document: *Doc
+      OperationOptions: &OperationOptions
+        WriteConcern:
+          Level: majority
 
 Clients:
   Default:
@@ -142,7 +122,7 @@ Actors:
   Database: *dbname
   Phases:
     OnlyActiveInPhases:
-      Active: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+      Active: [0, 2, 4, 6, 8, 10, 12, 14, 16]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -153,62 +133,68 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+      Active: [1, 3, 5, 7, 9, 11, 13, 15]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         LogEvery: 15 minutes
         Blocking: None
 
-- Name: QueryBaseline.Low
+# Naming Conventions:
+# Duration.Operation.Type_of_test
+# Duration:      Short|Medium|Long
+# Operation:     Insert|Query|Update|Remove|Mixed|Scan
+# Type of test:  Baseline|Benchmark|Snapshot
+#
+# Baseline without scans, benchmark with scans
+- Name: Short.Insert.Baseline
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [5]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        GlobalRate: *GlobalRateValue
+        Threads: *ThreadsValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
         Operations: &Operations
-          - *PtcQueryOperation
-          - *PcQueryOperation
-          - *CpcQueryOperation
-          - *PtcQueryOperation
-          - *PcQueryOperation
-          - *CpcQueryOperation
-          - *PtcQueryOperation
-          - *PcQueryOperation
-          - *CpcQueryOperation
-          - *PtcQueryOperation
-          - *PcQueryOperation
-          - *CpcQueryOperation
-          - *PtcQueryOperation
-          - *PcQueryOperation
-          - *CpcQueryOperation
-          - *PtcQueryOperation
-          - *PcQueryOperation
-          - *CpcQueryOperation
-          - *PtcQueryOperation
-          - *PcQueryOperation
-          - *CpcQueryOperation
-          - *PtcQueryOperation
-          - *PcQueryOperation
-          - *CpcQueryOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
+          - *InsertOperation
 
-- Name: QueryBenchmark.Low.Short
+- Name: Short.Insert.Benchmark
   Type: CrudActor
-  Threads: *LowThreads
-  Database: *dbname
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        Threads: *ThreadsValue
+        GlobalRate: *GlobalRateValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerShortDuration
@@ -216,7 +202,7 @@ Actors:
         Operations: *Operations
 
 ## A thread per collection doing a scan.
-- Name: SnapshotScannerShort
+- Name: Short.Scan.Snapshot
   Type: CollectionScanner
   Threads: *CollectionCount
   CollectionCount: *CollectionCount
@@ -235,64 +221,41 @@ Actors:
         CollectionSortOrder: forward
         FindOptions:
           BatchSize: 1000
-          Hint: _id_ # Currently only support the index name.
+          Hint: _id_
           Comment: SnapshotScannerShort
 
-- Name: QueryBenchmark.Low.Medium
+- Name: Medium.Insert.Baseline
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [9]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        Threads: *ThreadsValue
+        GlobalRate: *GlobalRateValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerMediumDuration
-        Blocking: none
         Operations: *Operations
 
-- Name: SnapshotScannerMedium
-  Type: CollectionScanner
-  Threads: *CollectionCount
-  CollectionCount: *CollectionCount
-  Database: *dbname
-  GenerateCollectionNames: true
-  Phases:
-    OnlyActiveInPhases:
-      Active: [9]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: *SnapshotScannerMediumDuration
-        ScanDuration: *SnapshotScannerMediumDuration
-        ScanType: snapshot
-        ScanContinuous: true
-        GenerateCollectionNames: true
-        CollectionSortOrder: forward
-        FindOptions:
-          BatchSize: 1000
-          Hint: _id_ # Currently only support the index name.
-          Comment: SnapshotScannerMedium
-
-- Name: QueryBenchmark.Low.Long
+- Name: Medium.Insert.Benchmark
   Type: CrudActor
-  Threads: *LowThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
       Active: [11]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *LowGlobalRate
-        Threads: *LowThreads
+        Threads: *ThreadsValue
+        GlobalRate: *GlobalRateValue
         CollectionCount: *CollectionCount
         Database: *dbname
-        Duration: *SnapshotScannerLongDuration
+        Duration: *SnapshotScannerMediumDuration
         Blocking: none
         Operations: *Operations
 
-- Name: SnapshotScannerLong
+- Name: Medium.Scan.Snapshot
   Type: CollectionScanner
   Threads: *CollectionCount
   CollectionCount: *CollectionCount
@@ -301,98 +264,6 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [11]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: *SnapshotScannerLongDuration
-        ScanDuration: *SnapshotScannerLongDuration
-        ScanType: snapshot
-        ScanContinuous: true
-        GenerateCollectionNames: true
-        CollectionSortOrder: forward
-        FindOptions:
-          BatchSize: 1000
-          Hint: _id_ # Currently only support the index name.
-          Comment: SnapshotScannerLong
-
-- Name: QueryBaseline.High
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [13]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerShortDuration
-        Operations: *Operations
-
-- Name: QueryBenchmark.High.Short
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [15]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerShortDuration
-        Blocking: none
-        Operations: *Operations
-
-# A thread per collection doing a scan.
-- Name: SnapshotScannerShort
-  Type: CollectionScanner
-  Threads: *CollectionCount
-  CollectionCount: *CollectionCount
-  Database: *dbname
-  GenerateCollectionNames: true
-  Phases:
-    OnlyActiveInPhases:
-      Active: [15]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: *SnapshotScannerShortDuration
-        ScanDuration: *SnapshotScannerShortDuration
-        ScanType: snapshot
-        ScanContinuous: true
-        GenerateCollectionNames: true
-        CollectionSortOrder: forward
-        FindOptions:
-          BatchSize: 1000
-          Hint: _id_ # Currently only support the index name.
-          Comment: SnapshotScannerShort
-
-- Name: QueryBenchmark.High.Medium
-  Type: CrudActor
-  Threads: *HighThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [17]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Duration: *SnapshotScannerMediumDuration
-        Blocking: none
-        Operations: *Operations
-
-- Name: SnapshotScannerMedium
-  Type: CollectionScanner
-  Threads: *CollectionCount
-  CollectionCount: *CollectionCount
-  Database: *dbname
-  GenerateCollectionNames: true
-  Phases:
-    OnlyActiveInPhases:
-      Active: [17]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerMediumDuration
@@ -406,23 +277,38 @@ Actors:
           Hint: _id_
           Comment: SnapshotScannerMedium
 
-- Name: QueryBenchmark.High.Long
+- Name: Long.Insert.Baseline
   Type: CrudActor
-  Threads: *HighThreads
+  Threads: *ThreadsValue
   Phases:
     OnlyActiveInPhases:
-      Active: [19]
+      Active: [13]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        GlobalRate: *HighGlobalRate
-        Threads: *HighThreads
+        Threads: *ThreadsValue
+        GlobalRate: *GlobalRateValue
+        CollectionCount: *CollectionCount
+        Database: *dbname
+        Duration: *SnapshotScannerLongDuration
+        Operations: *Operations
+
+- Name: Long.Insert.Benchmark
+  Type: CrudActor
+  Threads: *ThreadsValue
+  Phases:
+    OnlyActiveInPhases:
+      Active: [15]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Threads: *ThreadsValue
+        GlobalRate: *GlobalRateValue
         CollectionCount: *CollectionCount
         Database: *dbname
         Duration: *SnapshotScannerLongDuration
         Blocking: none
         Operations: *Operations
 
-- Name: SnapshotScannerLong
+- Name: Long.Scan.Snapshot
   Type: CollectionScanner
   Threads: *CollectionCount
   CollectionCount: *CollectionCount
@@ -430,23 +316,24 @@ Actors:
   GenerateCollectionNames: true
   Phases:
     OnlyActiveInPhases:
-      Active: [19]
+      Active: [15]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *SnapshotScannerLongDuration
-        ScanDuration: *SnapshotScannerLongDuration
+        ScanDuration: *SnapshotScannerMediumDuration
         ScanType: snapshot
         ScanContinuous: true
         GenerateCollectionNames: true
         CollectionSortOrder: forward
         FindOptions:
           BatchSize: 1000
-          Hint: _id_ # Currently only support the index name.
+          Hint: _id_
           Comment: SnapshotScannerLong
 
 #AutoRun:
 #  Requires:
 #    mongodb_setup:
+#      - atlas
 #      - replica
-#      - single-replica
 #      - replica-all-feature-flags
+#      - single-replica
