@@ -177,3 +177,11 @@ Actors:
         find: Collection0
         filter: *filter
         projection: *projection
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+    - atlas
+    - replica
+    - single-replica
+    - standalone
