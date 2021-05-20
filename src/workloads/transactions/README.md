@@ -9,7 +9,7 @@ To generate the other configurations, run the following commands from the root d
 
 ```bash
 for file in src/workloads/transactions/LLT*LowLtc.yml; do
-    sed -e 's/^  GlobalRateValue: .*$/  GlobalRateValue: \&GlobalRateValue 800 per 1 second/' \
+    sed -e 's/^  GlobalRateValue: .*$/  GlobalRateValue: \&GlobalRateValue 1 per 1250 microsecond/' \
          -e 's/^  ThreadsValue: .*$/  ThreadsValue: \&ThreadsValue 16/' ${file} > ${file/Low/High}
 done
 for file in src/workloads/transactions/LLT*Ltc.yml; do
