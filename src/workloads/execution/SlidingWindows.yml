@@ -10,11 +10,12 @@ Actors:
     Database: &db test
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 100000
-    BatchSize: 10000
+    # Choose a sufficiently small document count to keep from spilling to disk.
+    DocumentCount: 10000
+    BatchSize: &batchSize 10000
     Document:
-      part: {^RandomInt: {min: 1, max: 10}}
-      time: {^RandomDate: {min: 1588626902000, max: 1620162902000}}
+      partitionKey: {^RandomInt: {min: 1, max: 5}}
+      time: {^RandomDate: {min: "2020-01-01", max: "2020-01-02"}}
       temp: {^RandomDouble: {distribution: normal, mean: 145, sigma: 30.0}}
   - &Nop {Nop: true}
   - *Nop
@@ -47,88 +48,84 @@ Actors:
           aggregate: Collection0
           pipeline:
             [{$setWindowFields: {
-                partitionBy: "$part",
+                partitionBy: "$partitionKey",
                 sortBy: {time: 1},
-                output: {avg: {$avg: {input: "$temp", documents: [-2, 2]}}}}}]
-          cursor: {batchSize: 10000}
-          allowDiskUse: true
+                output: {avg: {$avg: "$temp", window: {documents: [-5, 5]}}}}}]
+          cursor: {batchSize: *batchSize}
     - OperationMetricsName: MovingAvgTimeBased
       OperationName: RunCommand
       OperationCommand:
           aggregate: Collection0
           pipeline:
             [{$setWindowFields: {
-                partitionBy: "$part",
+                partitionBy: "$partitionKey",
                 sortBy: {time: 1},
-                output: {avg: {$avg: {input: "$temp", range: [-10, 0], unit: "second"}}}}}]
-          cursor: {batchSize: 10000}
-          allowDiskUse: true
+                output: {avg: {$avg: "$temp", window: {range: [-1, 0], unit: "hour"}}}}}]
+          cursor: {batchSize: *batchSize}
     - OperationMetricsName: MinPositionBased
       OperationName: RunCommand
       OperationCommand:
           aggregate: Collection0
           pipeline:
             [{$setWindowFields: {
-                partitionBy: "$part",
+                partitionBy: "$partitionKey",
                 sortBy: {time: 1},
-                output: {min: {$min: {input: "$temp", documents: [-5, 5]}}}}}]
-          cursor: {batchSize: 10000}
-          allowDiskUse: true
+                output: {min: {$min: "$temp", window: {documents: [-5, 5]}}}}}]
+          cursor: {batchSize: *batchSize}
     - OperationMetricsName: MinTimeBased
       OperationName: RunCommand
       OperationCommand:
           aggregate: Collection0
           pipeline:
             [{$setWindowFields: {
-                partitionBy: "$part",
+                partitionBy: "$partitionKey",
                 sortBy: {time: 1},
-                output: {min: {$min: {input: "$temp", range: [-20, 0], unit: "second"}}}}}]
-          cursor: {batchSize: 10000}
-          allowDiskUse: true
+                output: {min: {$min: "$temp", window: {range: [-1, 0], unit: "hour"}}}}}]
+          cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExpMovingAvgSmallN
       OperationName: RunCommand
       OperationCommand:
           aggregate: Collection0
           pipeline:
             [{$setWindowFields: {
-                partitionBy: "$part",
+                partitionBy: "$partitionKey",
                 sortBy: {time: 1},
                 output: {ema: {$expMovingAvg: {input: "$temp", N: 10}}}}}]
-          cursor: {batchSize: 10000}
-          allowDiskUse: true
+          cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExpMovingAvgLargeN
       OperationName: RunCommand
       OperationCommand:
           aggregate: Collection0
           pipeline:
             [{$setWindowFields: {
-                partitionBy: "$part",
+                partitionBy: "$partitionKey",
                 sortBy: {time: 1},
                 output: {ema: {$expMovingAvg: {input: "$temp", N: 500}}}}}]
-          cursor: {batchSize: 10000}
-          allowDiskUse: true
+          cursor: {batchSize: *batchSize}
     - OperationMetricsName: DerivativeSmallWindow
       OperationName: RunCommand
       OperationCommand:
           aggregate: Collection0
           pipeline:
             [{$setWindowFields: {
-                partitionBy: "$part",
+                partitionBy: "$partitionKey",
                 sortBy: {time: 1},
-                output: {rate: {$derivative: {input: "$temp"}, window: {documents: [-10, 0]}}}}}]
-          cursor: {batchSize: 10000}
-          allowDiskUse: true
+                output: {rate: {
+                  $derivative: {input: "$temp", outputUnit: "second"},
+                  window: {documents: [-10, 0]}}}}}]
+          cursor: {batchSize: *batchSize}
     - OperationMetricsName: DerivativeLargeWindow
       OperationName: RunCommand
       OperationCommand:
           aggregate: Collection0
           pipeline:
             [{$setWindowFields: {
-                partitionBy: "$part",
+                partitionBy: "$partitionKey",
                 sortBy: {time: 1},
-                output: {rate: {$derivative: {input: "$temp"}, window: {documents: [-500, 0]}}}}}]
-          cursor: {batchSize: 10000}
-          allowDiskUse: true
+                output: {rate: {
+                  $derivative: {input: "$temp", outputUnit: "second"},
+                  window: {documents: [-500, 0]}}}}}]
+          cursor: {batchSize: *batchSize}
 
 AutoRun:
   Requires:
@@ -136,3 +133,4 @@ AutoRun:
     - standalone
     - replica
     - replica-all-feature-flags
+    - shard-lite
