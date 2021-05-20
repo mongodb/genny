@@ -8,7 +8,7 @@ GlobalDefaults:
   # Not In-memory: Database size works out about 30GB.
   InitialDocumentCount: &InitialNumDocs 49000000
   SecondaryDocumentCount: &SecondaryNumDocs 10000000
-  GlobalRateValue: &GlobalRateValue 800 per 1 second
+  GlobalRateValue: &GlobalRateValue 1 per 1250 microsecond
   ThreadsValue: &ThreadsValue 16
   # End: The previous block gets updated for the other configurations.
 
