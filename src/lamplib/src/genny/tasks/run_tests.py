@@ -176,28 +176,30 @@ def _setup_resmoke(
     resmoke_venv: str = os.path.join(mongo_repo_path, "resmoke_venv")
     resmoke_python: str = os.path.join(resmoke_venv, "bin", "python3")
 
+    # TODO: TIG-2943 re-enable conditional checkout.
     # Clone repo unless exists
-    if not os.path.exists(mongo_repo_path):
-        SLOG.info("Mongo repo doesn't exist. Checking it out.", mongo_repo_path=mongo_repo_path)
-        cmd_runner.run_command(
-            cmd=["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path],
-            cwd=workspace_root,
-            check=True,
-            capture=False,
-        )
-        cmd_runner.run_command(
-            # If changing this sha, you may need to use later binaries
-            # in the _canned_artifacts dict.
-            cmd=["git", "checkout", "298d4d6bbb9980b74bded06241067fe6771bef68"],
-            cwd=mongo_repo_path,
-            check=True,
-            capture=False,
-        )
-    else:
-        SLOG.info("Using existing mongo repo checkout", mongo_repo_path=mongo_repo_path)
-        cmd_runner.run_command(
-            cmd=["git", "rev-parse", "HEAD"], check=False, cwd=mongo_repo_path, capture=False,
-        )
+    #if not os.path.exists(mongo_repo_path):
+    shutil.rmtree(mongo_repo_path)
+    SLOG.info("Mongo repo doesn't exist. Checking it out.", mongo_repo_path=mongo_repo_path)
+    cmd_runner.run_command(
+        cmd=["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path],
+        cwd=workspace_root,
+        check=True,
+        capture=False,
+    )
+    cmd_runner.run_command(
+        # If changing this sha, you may need to use later binaries
+        # in the _canned_artifacts dict.
+        cmd=["git", "checkout", "298d4d6bbb9980b74bded06241067fe6771bef68"],
+        cwd=mongo_repo_path,
+        check=True,
+        capture=False,
+    )
+    #else:
+    #    SLOG.info("Using existing mongo repo checkout", mongo_repo_path=mongo_repo_path)
+    #    cmd_runner.run_command(
+    #        cmd=["git", "rev-parse", "HEAD"], check=False, cwd=mongo_repo_path, capture=False,
+    #    )
 
     # Look for mongod in
     # build/opt/mongo/db/mongod
