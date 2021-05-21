@@ -29,7 +29,9 @@ Here're the steps to get Genny up and running locally:
     The ones from mongodbtoolchain v3 are safe bets if you're
     unsure. (mongodbtoolchain is internal to MongoDB).
 
-3.  `./run-genny install [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
+3.  Make sure you have [libmongocrypt installed](https://github.com/mongodb/libmongocrypt#installing-libmongocrypt-from-distribution-packages)
+
+4.  `./run-genny install [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
 
     This command downloads Genny's toolchain, compiles Genny, creates its
     virtualenv, and installs Genny to `dist/`. You can rerun this command
