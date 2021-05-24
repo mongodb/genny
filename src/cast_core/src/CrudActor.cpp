@@ -154,9 +154,9 @@ struct CreateIndexOperation : public BaseOperation {
 
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             _onSession
-                ? _collection.create_index(keys.view(), indexOptions.view(), _operationOptions)
-                : _collection.create_index(
-                      session, keys.view(), indexOptions.view(), _operationOptions);
+                ? _collection.create_index(
+                      session, keys.view(), indexOptions.view(), _operationOptions)
+                : _collection.create_index(keys.view(), indexOptions.view(), _operationOptions);
             return std::make_optional(std::move(keys));
         });
     }
