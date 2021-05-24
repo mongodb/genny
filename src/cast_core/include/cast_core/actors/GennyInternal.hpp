@@ -55,8 +55,6 @@ private:
 
     /** @private */
     Orchestrator& _orchestrator;
-    void reportPhase(metrics::clock::time_point finishTime, metrics::clock::time_point startTime);
-
 };
 
 }  // namespace genny::actor
