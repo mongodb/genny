@@ -21,7 +21,7 @@ Here're the steps to get Genny up and running locally:
     -   Ubuntu 18.04: `sudo apt install build-essential`
     -   Red Hat/CentOS 7/Amazon Linux 2:
         `sudo yum groupinstall "Development Tools"`
-    -   Arch: Everything should already be set up.
+    -   Arch: `apk add bash clang gcc musl-dev linux-headers`
     -   macOS: `xcode-select --install`
     -   Windows: <https://visualstudio.microsoft.com/>
 
