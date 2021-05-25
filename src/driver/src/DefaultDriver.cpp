@@ -78,14 +78,9 @@ void reportMetrics(genny::metrics::Registry& metrics,
                    const std::string& actorName,
                    const std::string& operationName,
                    bool success,
-                   metrics::clock::time_point startTime,
-                   bool canary = true) {
+                   metrics::clock::time_point startTime) {
     auto finishTime = metrics::clock::now();
-    // The "Setup" operation is a genny internal operation. We want the trend graph to be hidden by
-    // default to not confuse users, so we prefix it with "canary_" to hit the
-    // CANARY_EXCLUSION_REGEX in https://git.io/Jtjdr
-    std::string reportedActorName = canary ? "canary_" + actorName : actorName;
-    auto actorSetup = metrics.operation(reportedActorName, operationName, 0u, std::nullopt, true);
+    auto actorSetup = metrics.operation(actorName, operationName, 0u, std::nullopt, true);
     auto outcome = success ? metrics::OutcomeType::kSuccess : metrics::OutcomeType::kFailure;
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finishTime - startTime);
     actorSetup.report(std::move(finishTime), std::move(duration), std::move(outcome));
@@ -162,11 +157,8 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     reportMetrics(metrics, workloadName, "Setup", true, startTime);
 
-    // The "ActorStarted" and "ActorFinished" operations are genny internal operations. We want the
-    // trend graph to be hidden by default to not confuse users, so we prefix them with "canary_"
-    // to hit the CANARY_EXCLUSION_REGEX in https://git.io/Jtjdr
-    auto startedActors = metrics.operation("canary_" + workloadName, "ActorStarted", 0u, std::nullopt, true);
-    auto finishedActors = metrics.operation("canary_" + workloadName, "ActorFinished", 0u, std::nullopt, true);
+    auto startedActors = metrics.operation(workloadName, "ActorStarted", 0u, std::nullopt, true);
+    auto finishedActors = metrics.operation(workloadName, "ActorFinished", 0u, std::nullopt, true);
 
     std::atomic<DefaultDriver::OutcomeCode> outcomeCode = DefaultDriver::OutcomeCode::kSuccess;
 
@@ -212,7 +204,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     }
 
     // We use the "GennyInternal" actor name to match the same-named actor.
-    reportMetrics(metrics, "GennyInternal", "Workload", true, startTime, false);
+    reportMetrics(metrics, "GennyInternal", "Workload", true, startTime);
 
     return outcomeCode;
 }

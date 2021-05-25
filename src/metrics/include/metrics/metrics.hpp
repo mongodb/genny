@@ -208,7 +208,7 @@ public:
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
-            auto name = createName(actorName, opName, phase);
+            auto name = createName(actorName, opName, phase, internal);
             stream = _grpcClient->createStream(actorId, name, phase, pathPrefix);
         }
         auto opIt =
@@ -229,7 +229,7 @@ public:
         auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
         StreamPtr stream = nullptr;
         if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
-            auto name = createName(actorName, opName, phase);
+            auto name = createName(actorName, opName, phase, internal);
             stream = _grpcClient->createStream(actorId, name, phase, pathPrefix);
         }
         auto opIt =
@@ -274,8 +274,12 @@ public:
 private:
     std::string createName(const std::string& actorName,
                            const std::string& opName,
-                           const std::optional<genny::PhaseNumber>& phase) {
+                           const std::optional<genny::PhaseNumber>& phase,
+                           bool internal) {
         std::stringstream str;
+        if (internal) {
+            str << "GennyInternal" << '.';
+        }
         str << actorName << '.' << opName;
         if (phase) {
             str << '.' << *phase;
