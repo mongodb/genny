@@ -204,7 +204,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     }
 
     // We use the "GennyInternal" actor name to match the same-named actor.
-    reportMetrics(metrics, "GennyInternal", "Workload", true, startTime);
+    reportMetrics(metrics, workloadName, "Workload", true, startTime);
 
     return outcomeCode;
 }
