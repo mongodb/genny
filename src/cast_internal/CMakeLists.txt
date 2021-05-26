@@ -12,16 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project(driver VERSION 0.0.1 LANGUAGES CXX)
+project(cast_internal VERSION 0.0.1 LANGUAGES CXX)
 
 CreateGennyTargets(
-    NAME    driver
-    TYPE    STATIC
+    NAME    cast_internal
+    TYPE    SHARED
     DEPENDS
-        cast_core
-        cast_internal
         gennylib
-        Boost::program_options
     TEST_DEPENDS    testlib
-    EXECUTABLE      genny_core
 )

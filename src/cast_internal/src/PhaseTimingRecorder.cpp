@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cast_core/actors/GennyInternal.hpp>
+#include <cast_internal/actors/PhaseTimingRecorder.hpp>
 
 #include <memory>
 
@@ -33,9 +33,9 @@
 
 #include <value_generators/DocumentGenerator.hpp>
 
-namespace genny::actor {
+namespace genny::v1::actor {
 
-void GennyInternal::run() {
+void PhaseTimingRecorder::run() {
 
     std::optional<metrics::clock::time_point> startTime;
     metrics::clock::time_point finishTime;
@@ -51,13 +51,13 @@ void GennyInternal::run() {
     }
 }
 
-GennyInternal::GennyInternal(genny::ActorContext& context)
+PhaseTimingRecorder::PhaseTimingRecorder(genny::ActorContext& context)
     : Actor{context},
-      _phaseOp{context.operation("Phase", GennyInternal::id(), true)},
+      _phaseOp{context.operation("Phase", PhaseTimingRecorder::id(), true)},
       _orchestrator{context.orchestrator()} {}
 
 namespace {
 
-auto registerGennyInternal = Cast::registerDefault<GennyInternal>();
+auto registerPhaseTimingRecorder = Cast::registerDefault<PhaseTimingRecorder>();
 }  // namespace
-}  // namespace genny::actor
+}  // namespace genny::v1::actor

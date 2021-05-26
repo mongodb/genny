@@ -25,7 +25,7 @@
 
 #include <metrics/metrics.hpp>
 
-namespace genny::actor {
+namespace genny::v1::actor {
 
 /**
  * Actor for tracking and reporting Genny internal state.
@@ -34,20 +34,20 @@ namespace genny::actor {
  * is automatically instantiated by Genny's preprocessor by default.
  *
  * Reports:
- *   GennyInternal.Phase - Records an event at the end of each phase, with a duration the length of the phase.
+ *   GennyInternal.PhaseTimingRecorder.Phase - Records an event at the end of each phase, with a duration the length of the phase.
  *
  * Owner: 10gen/dev-prod-tips
  */
-class GennyInternal : public Actor {
+class PhaseTimingRecorder : public Actor {
 
 public:
-    explicit GennyInternal(ActorContext& context);
-    ~GennyInternal() = default;
+    explicit PhaseTimingRecorder(ActorContext& context);
+    ~PhaseTimingRecorder() = default;
 
     void run() override;
 
     static std::string_view defaultName() {
-        return "GennyInternal";
+        return "PhaseTimingRecorder";
     }
 
 private:
@@ -57,6 +57,6 @@ private:
     Orchestrator& _orchestrator;
 };
 
-}  // namespace genny::actor
+}  // namespace genny::v1::actor
 
 #endif  // HEADER_255CB4E5_1FC3_431F_8E2F_7251A3A22B94_INCLUDED

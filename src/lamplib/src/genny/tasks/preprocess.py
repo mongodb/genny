@@ -9,7 +9,7 @@ import yaml
 import structlog
 
 SLOG = structlog.get_logger(__name__)
-GENNY_INTERNAL = {"Name": "GennyInternal", "Type": "GennyInternal", "Threads": 1}
+GENNY_INTERNAL = {"Name": "PhaseTimingRecorder", "Type": "PhaseTimingRecorder", "Threads": 1}
 
 
 class ParseException(Exception):
@@ -226,7 +226,7 @@ class _WorkloadParser(object):
     def _parse_actors(self, actors):
         actor_list = self._recursive_parse(actors)
         names = [actor["Name"] for actor in actor_list]
-        if "GennyInternal" not in names:
+        if "PhaseTimingRecorder" not in names:
             actor_list.append(self._recursive_parse(GENNY_INTERNAL))
         return actor_list
 

@@ -147,8 +147,8 @@ Actors:
     Mode: NoException
   - Nop: true
   AnotherValueFromRepeat: GoodValue
-- Name: GennyInternal
-  Type: GennyInternal
+- Name: PhaseTimingRecorder
+  Type: PhaseTimingRecorder
   Threads: 1
 """
 
@@ -197,8 +197,8 @@ Actors:
   - Duration: 3 minutes
   - *id002
   - *id002
-- Name: GennyInternal
-  Type: GennyInternal
+- Name: PhaseTimingRecorder
+  Type: PhaseTimingRecorder
   Threads: 1
 """
 
@@ -223,8 +223,8 @@ Actors:
   Phases:
   - Repeat: 1
     Mode: NoException
-- Name: GennyInternal
-  Type: GennyInternal
+- Name: PhaseTimingRecorder
+  Type: PhaseTimingRecorder
   Threads: 1
 """
 
@@ -249,8 +249,8 @@ Actors:
   Phases:
   - Repeat: 1
     Mode: NoException
-- Name: GennyInternal
-  Type: GennyInternal
+- Name: PhaseTimingRecorder
+  Type: PhaseTimingRecorder
   Threads: 1
 """
 
@@ -276,8 +276,8 @@ Actors:
   Phases:
   - Repeat: 2
     Mode: NoException
-- Name: GennyInternal
-  Type: GennyInternal
+- Name: PhaseTimingRecorder
+  Type: PhaseTimingRecorder
   Threads: 1
 """
         self._assertYaml(yaml_input, expected)
@@ -302,8 +302,8 @@ Actors:
   Phases:
   - Mode: NoException
     Repeat: 3
-- Name: GennyInternal
-  Type: GennyInternal
+- Name: PhaseTimingRecorder
+  Type: PhaseTimingRecorder
   Threads: 1
 """
         self._assertYaml(yaml_input, expected)
