@@ -1,0 +1,155 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    # Small collection size to keep from spilling to disk during sorts.
+    DocumentCount: 10000
+    BatchSize: &batchSize 10000
+    Document:
+      t: {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}}
+      x: {^RandomDouble: {distribution: normal, mean: 0, sigma: 3}}
+      y: {^RandomDouble: {distribution: normal, mean: 1, sigma: 3}}
+      z: {^RandomString: {length: 8}}
+  - Nop: true
+  - Nop: true
+
+- Name: Quiesce
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        fsync: 1
+  - Nop: true
+
+- Name: CumulativeWindows
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
+    - OperationMetricsName: Sum
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{
+              $setWindowFields: {
+                sortBy: {t: 1},
+                output: {
+                  sum: {
+                    $sum: "$x",
+                    window: {documents: ["unbounded", "current"]}
+                  }
+                }
+              }
+            }]
+          cursor: {batchSize: *batchSize}
+    - OperationMetricsName: Avg
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{
+              $setWindowFields: {
+                sortBy: {t: 1},
+                output: {
+                  avg: {
+                    $avg: "$x",
+                    window: {documents: ["unbounded", "current"]}
+                  }
+                }
+              }
+            }]
+          cursor: {batchSize: *batchSize}
+    - OperationMetricsName: StdDevPop
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{
+              $setWindowFields: {
+                sortBy: {t: 1},
+                output: {
+                  stdDevPop: {
+                    $stdDevPop: "$x",
+                    window: {documents: ["unbounded", "current"]}
+                  }
+                }
+              }
+            }]
+          cursor: {batchSize: *batchSize}
+    - OperationMetricsName: StdDevSamp
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{
+              $setWindowFields: {
+                sortBy: {t: 1},
+                output: {
+                  stdDevSamp: {
+                    $stdDevSamp: "$x",
+                    window: {documents: ["unbounded", "current"]}
+                  }
+                }
+              }
+            }]
+          cursor: {batchSize: *batchSize}
+    - OperationMetricsName: CovPop
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{
+              $setWindowFields: {
+                sortBy: {t: 1},
+                output: {
+                  covariancePop: {
+                    $covariancePop: ["$x", "$y"],
+                    window: {documents: ["unbounded", "current"]}
+                  }
+                }
+              }
+            }]
+          cursor: {batchSize: *batchSize}
+    - OperationMetricsName: CovSamp
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{
+              $setWindowFields: {
+                sortBy: {t: 1},
+                output: {
+                  covarianceSamp: {
+                    $covarianceSamp: ["$x", "$y"],
+                    window: {documents: ["unbounded", "current"]}
+                  }
+                }
+              }
+            }]
+          cursor: {batchSize: *batchSize}
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+    - standalone
+    - replica
+    - replica-all-feature-flags
+    - shard-lite
