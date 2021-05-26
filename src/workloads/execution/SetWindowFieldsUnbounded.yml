@@ -27,7 +27,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     # Through trial and error, it seems 60k documents, when divided into 12 partitions, does not spill,
-    # but divided into fewer partitions (10 partitions), fits in the memory limit.
+    # but divided into fewer partitions (10 partitions), does spill.
     DocumentCount: 60000
     BatchSize: &batchSize 1000
     Document:
