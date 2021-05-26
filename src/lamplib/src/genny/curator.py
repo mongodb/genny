@@ -44,7 +44,9 @@ def _get_poplar_args(genny_repo_root: str, workspace_root: str):
     return [curator, "poplar", "grpc"]
 
 
-def _get_export_args(genny_repo_root: str, workspace_root: str, input_path: str, output_path: str = None):
+def _get_export_args(
+    genny_repo_root: str, workspace_root: str, input_path: str, output_path: str = None
+):
     """
     Returns the argument list used to export ftdc files to csv.
 
@@ -82,8 +84,12 @@ def _cleanup_metrics():
 
 
 def export(workspace_root: str, genny_repo_root: str, input_path: str, output_path: str = None):
-    args = _get_export_args(workspace_root=workspace_root, genny_repo_root=genny_repo_root,
-                            input_path=input_path, output_path=output_path)
+    args = _get_export_args(
+        workspace_root=workspace_root,
+        genny_repo_root=genny_repo_root,
+        input_path=input_path,
+        output_path=output_path,
+    )
     subprocess.run(args, check=True)
 
 

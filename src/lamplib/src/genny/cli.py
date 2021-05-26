@@ -154,16 +154,18 @@ def evaluate(ctx: click.Context, workload_path: str, output: str, smoke: bool):
     "--output",
     required=False,
     default=None,
-    help=(
-        "Filepath where the output CSV will be written. Will write to stdout by default."
-    ),
+    help=("Filepath where the output CSV will be written. Will write to stdout by default."),
 )
 @click.pass_context
 def evaluate(ctx: click.Context, ftdc_path: str, output):
     from genny.curator import export
 
-    export(workspace_root=ctx.obj["WORKSPACE_ROOT"], genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
-           input_path=ftdc_path, output_path=output)
+    export(
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        input_path=ftdc_path,
+        output_path=output,
+    )
 
 
 @cli.command(
