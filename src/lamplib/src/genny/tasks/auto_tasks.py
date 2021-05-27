@@ -147,8 +147,14 @@ class CurrentBuildInfo:
 
 class GeneratedTask(NamedTuple):
     name: str
-    mongodb_setup: Optional[str]
+    bootstrap_key: Optional[str]
+    bootstrap_value: Optional[str]
     workload: "Workload"
+
+
+class AutoRunBlock(NamedTuple):
+    when: dict
+    then_run: dict
 
 
 class Workload:
@@ -162,11 +168,8 @@ class Workload:
 
     is_modified: bool
 
-    requires: Optional[dict] = None
-    """The `Requires` block, if present"""
-
-    setups: Optional[List[str]] = None
-    """The PrepareEnvironmentWith:mongodb_setup block, if any"""
+    auto_run_info: Optional[List[AutoRunBlock]] = None
+    """The list of `When/ThenRun` blocks, if present"""
 
     def __init__(self, workspace_root: str, file_path: str, is_modified: bool, reader: YamlReader):
         self.file_path = file_path
@@ -178,61 +181,104 @@ class Workload:
             return
 
         auto_run = conts["AutoRun"]
-        self.requires = auto_run["Requires"]
-        if "PrepareEnvironmentWith" in auto_run:
-            prep = auto_run["PrepareEnvironmentWith"]
-            if len(prep) != 1 or "mongodb_setup" not in prep:
-                raise ValueError(
-                    f"Need exactly mongodb_setup: [list] "
-                    f"in PrepareEnvironmentWith for file {file_path}"
-                )
-            self.setups = prep["mongodb_setup"]
+        if not isinstance(auto_run, list):
+            raise ValueError(f"AutoRun must be a list, instead got {auto_run}")
+        self._validate_auto_run(auto_run)
+        auto_run_info = []
+        for block in auto_run:
+            if block["ThenRun"]:
+                then_run = block["ThenRun"]
+            else:
+                then_run = []
+            auto_run_info.append(AutoRunBlock(block["When"], then_run))
+
 
     @property
     def file_base_name(self) -> str:
         return str(os.path.basename(self.file_path).split(".yml")[0])
 
     @property
+    def snake_case_base_name(self) -> str:
+        return self._to_snake_case(self.file_base_name)
+
+    @property
     def relative_path(self) -> str:
         return self.file_path.split("src/workloads/")[1]
-
-    def all_tasks(self) -> List[GeneratedTask]:
-        """
-        :return: all possible tasks irrespective of the current build-variant etc.
-        """
-        base = self._to_snake_case(self.file_base_name)
-        if self.setups is None:
-            return [GeneratedTask(base, None, self)]
-        return [
-            GeneratedTask(f"{base}_{self._to_snake_case(setup)}", setup, self)
-            for setup in self.setups
-        ]
 
     def variant_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
         :param build: info about current build
         :return: tasks that we should do given the current build e.g. if we have Requires info etc.
         """
-        if not self.requires:
+        if not self.auto_run_info:
             return []
 
-        def meets_criteria() -> bool:
-            okay = True
-            for key, acceptable_values in self.requires.items():
-                msg = "Scheduling workload."
-                if not build.has(key, acceptable_values):
-                    msg = "Not scheduling workload"
-                    okay = False
-                SLOG.info(
-                    msg,
-                    workload_base_name=self.file_base_name,
-                    key=key,
-                    acceptable_values=acceptable_values,
-                    build_variant=build.conts.get("build_variant", "unknown"),
-                )
-            return okay
+        tasks = []
+        for block in self.auto_run_info():
+            when = block["when"]
+            then_run = block["then_run"]
+            for key, condition in when.items():
+                okay = False
+                if len(condition) != 1:
+                    raise ValueError(
+                        f"Need exactly one condition per key in When block."
+                        f"Got key ${key} with condition ${condition}."
+                    )
+                if condition["$eq"]:
+                    acceptable_values = condition["$eq"]
+                    if not isinstance(acceptable_values, list):
+                        acceptable_values = [acceptable_values]
+                    if build.has(key, acceptable_values):
+                        okay = True
+                elif condition["$neq"]:
+                    acceptable_values = condition["$eq"]
+                    if not isinstance(acceptable_values, list):
+                        acceptable_values = [acceptable_values]
+                    if not build.has(key, acceptable_values):
+                        okay = True
+                else:
+                    raise ValueError(
+                        f"The only supported operators are $eq and $neq. Got ${condition.keys()}"
+                    )
 
-        return [task for task in self.all_tasks() if meets_criteria()]
+                if okay:
+                    if len(then_run) == 0:
+                        tasks.append([GeneratedTask(self.snake_case_base_name, None, None, self)])
+                        SLOG.info(
+                            "Scheduling workload",
+                            workload_base_name=self.file_base_name,
+                            build_variant=build.conts.get("build_variant", "unknown"),
+                        )
+                    else:
+                        for bootstrap_key, bootstrap_value in then_run.items():
+                            SLOG.info(
+                                "Scheduling workload",
+                                workload_base_name=self.file_base_name,
+                                changed_bootstrap_key=bootstrap_key,
+                                changed_bootstrap_value=bootstrap_value,
+                                build_variant=build.conts.get("build_variant", "unknown"),
+                            )
+                            task_name = f"{self.snake_case_base_name}_${self._to_snake_case(bootstrap_value)}"
+                            tasks.append([GeneratedTask(task_name, key, bootstrap_value, self)])
+
+        return tasks
+
+    @staticmethod
+    def _validate_auto_run(auto_run):
+        """Perform syntax validation on the auto_run section."""
+        if not isinstance(auto_run, list):
+            raise ValueError(f"AutoRun must be a list, instead got {auto_run}")
+        for block in auto_run:
+            if not block["When"] or not isinstance(block["When"], dict):
+                raise ValueError(
+                    f"Each AutoRun block must consist of a 'When' and optional 'ThenRun' section,"
+                    f"instead got {block}"
+                )
+            if block["ThenRun"]:
+                if not isinstance(block["ThenRun"], dict):
+                    raise ValueError(
+                        f"ThenRun must be of type dict. Instead was {block['ThenRun']}."
+                    )
 
     # noinspection RegExpAnonymousGroup
     @staticmethod
@@ -368,8 +414,8 @@ class ConfigWriter:
                 "test_control": task.name,
                 "auto_workload_path": task.workload.relative_path,
             }
-            if task.mongodb_setup:
-                bootstrap["mongodb_setup"] = task.mongodb_setup
+            if task.bootstrap_key:
+                bootstrap[task.bootstrap_key] = task.bootstrap_value
 
             t = c.task(task.name)
             t.priority(5)
