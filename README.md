@@ -327,12 +327,12 @@ cd genny
 evergreen set-module -m genny -i <ID> # Use the build ID from the previous step.
 ```
 
-In the browser window, select either `genny_patch_tasks` or `genny_auto_tasks`.
-`genny_patch_tasks` will run any workloads that you have added or modified locally
+In the browser window, select either `schedule_patch_auto_tasks` or `schedule_global_auto_tasks`.
+`schedule_patch_auto_tasks` will run any workloads that you have added or modified locally
 (based on your git history). This is useful if you want to test only the workload(s)
 you've been working on. 
 
-`genny_auto_tasks` automatically runs workloads based on the evergreen environment
+`schedule_global_auto_tasks` automatically runs workloads based on the evergreen environment
 (variables from `bootstrap.yml` and `runtime.yml` in DSI) and an optional AutoRun
 section in any workload, doing simple key-value matching between them. For example,
 suppose we have a `test_workload.yml` file in a `workloads/*/` subdirectory,
@@ -349,10 +349,10 @@ AutoRun:
 
 In this case, `test_workload` would be run whenever `bootstrap.yml`'s `mongodb_setup`
 variable has a value of `replica` or `single-replica`. In practice, the workload
-AutoRun sections are setup so that you can use `genny_auto_tasks` to run all relevant
+AutoRun sections are setup so that you can use `schedule_global_auto_tasks` to run all relevant
 workloads on a specific buildvariant.
 
-Both `genny_patch_tasks` and `genny_auto_tasks` will compile mongodb and then run
+Both `schedule_patch_auto_tasks` and `schedule_global_auto_tasks` will compile mongodb and then run
 the relevant workloads.
 
 NB:
