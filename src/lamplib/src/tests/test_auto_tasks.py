@@ -79,10 +79,15 @@ class BaseTestClass(unittest.TestCase):
 
         config = writer.write(tasks, write=False)
         parsed = json.loads(config.to_json())
+
+        print("parsed")
+        print(parsed)
+        print("then_writes")
+        print(then_writes)
         try:
             self.assertDictEqual(then_writes, parsed)
         except AssertionError:
-            print(parsed)
+            # print(parsed)
             raise
 
 
@@ -95,7 +100,7 @@ TIMEOUT_COMMAND = {
 class AutoTasksTests(BaseTestClass):
     def test_all_tasks(self):
         self.assert_result(
-            given_files=[EMPTY_UNMODIFIED, MULTI_MODIFIED, EXPANSIONS],
+            given_files=[EMPTY_UNMODIFIED, MULTI_MODIFIED_EQ, EXPANSIONS],
             and_mode="all_tasks",
             then_writes={
                 "tasks": [
@@ -149,10 +154,40 @@ class AutoTasksTests(BaseTestClass):
             to_file="./build/TaskJSON/Tasks.json",
         )
 
-    def test_variant_tasks(self):
+    def run_test_variant_tasks(self, given_files, then_writes):
         self.assert_result(
-            given_files=[EXPANSIONS, MULTI_UNMODIFIED, MATCHES_UNMODIFIED],
+            given_files=given_files,
             and_mode="variant_tasks",
+            then_writes=then_writes,
+            to_file="./build/TaskJSON/Tasks.json",
+        )
+
+    def test_patch_tasks(self):
+        # "Patch tasks always run for the selected variant "
+        # "but only if "When" condition is met.
+        self.assert_result(
+            given_files=[
+                EXPANSIONS,
+                MULTI_MODIFIED_EQ,
+                MULTI_UNMODIFIED_EQ,
+                NOT_MATCHES_MODIFIED,
+                NOT_MATCHES_UNMODIFIED,
+            ],
+            and_mode="patch_tasks",
+            then_writes={
+                "buildvariants": [
+                    {
+                        "name": "some-build-variant",
+                        "tasks": [{"name": "multi_a"}, {"name": "multi_b"},],
+                    }
+                ]
+            },
+            to_file="./build/TaskJSON/Tasks.json",
+        )
+
+    def test_variant_tasks(self):
+        self.run_test_variant_tasks(
+            given_files=[EXPANSIONS, MULTI_UNMODIFIED_EQ, MATCHES_UNMODIFIED],
             then_writes={
                 "buildvariants": [
                     {
@@ -165,35 +200,26 @@ class AutoTasksTests(BaseTestClass):
                     }
                 ]
             },
-            to_file="./build/TaskJSON/Tasks.json",
         )
 
-    def test_patch_tasks(self):
-        # "Patch tasks always run for the selected variant "
-        # "even if their Requires blocks don't align",
-        self.assert_result(
-            given_files=[
-                EXPANSIONS,
-                MULTI_MODIFIED,
-                MULTI_UNMODIFIED,
-                NOT_MATCHES_MODIFIED,
-                NOT_MATCHES_UNMODIFIED,
-            ],
-            and_mode="patch_tasks",
-            then_writes={
-                "buildvariants": [
-                    {
-                        "name": "some-build-variant",
-                        "tasks": [
-                            {"name": "multi_a"},
-                            {"name": "multi_b"},
-                            {"name": "not_matches_modified"},
-                        ],
-                    }
-                ]
-            },
-            to_file="./build/TaskJSON/Tasks.json",
-        )
+        for expansions in EXPANSIONS_COMPLEX_LIST:
+            self.run_test_variant_tasks(
+                given_files=[expansions, MULTI_UNMODIFIED_COMPLEX],
+                then_writes={
+                    "buildvariants": [
+                        {
+                            "name": "some-build-variant",
+                            "tasks": [
+                                {"name": "multi_unmodified_c"},
+                                {"name": "multi_unmodified_d"},
+                                {"name": "multi_unmodified_e"},
+                                {"name": "multi_unmodified_f"},
+                                {"name": "multi_unmodified_infra_a"},
+                            ],
+                        }
+                    ]
+                },
+            )
 
 
 # Example Input Files
@@ -209,28 +235,84 @@ EXPANSIONS = MockFile(
     yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches"},
 )
 
-MULTI_MODIFIED = MockFile(
+EXPANSIONS_COMPLEX_LIST = [
+    MockFile(
+        base_name="expansions.yml",
+        modified=False,
+        yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches"},
+    ),
+    MockFile(
+        base_name="expansions.yml",
+        modified=False,
+        yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches1"},
+    ),
+    MockFile(
+        base_name="expansions.yml",
+        modified=False,
+        yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches2"},
+    ),
+]
+
+MULTI_MODIFIED_EQ = MockFile(
     base_name="src/workloads/src/Multi.yml",
     modified=True,
     yaml_conts={
-        "AutoRun": {
-            "Requires": {"mongodb_setup": ["matches"]},
-            "PrepareEnvironmentWith": {"mongodb_setup": ["a", "b"]},
-        }
+        "AutoRun": [
+            {
+                "When": {"mongodb_setup": {"$eq": "matches"}},
+                "ThenRun": [{"mongodb_setup": "a"}, {"mongodb_setup": "b"}],
+            }
+        ]
     },
 )
 
-
-MULTI_UNMODIFIED = MockFile(
+MULTI_UNMODIFIED_EQ = MockFile(
     base_name="src/workloads/src/MultiUnmodified.yml",
     modified=False,
     yaml_conts={
-        "AutoRun": {
-            "Requires": {"mongodb_setup": ["matches"]},
-            "PrepareEnvironmentWith": {"mongodb_setup": ["c", "d"]},
-        }
+        "AutoRun": [
+            {
+                "When": {"mongodb_setup": {"$eq": "matches"}},
+                "ThenRun": [{"mongodb_setup": "c"}, {"mongodb_setup": "d"}],
+            }
+        ]
     },
 )
+
+MULTI_UNMODIFIED_NEQ = MockFile(
+    base_name="src/workloads/src/MultiUnmodified.yml",
+    modified=False,
+    yaml_conts={
+        "AutoRun": [
+            {
+                "When": {"mongodb_setup": {"$eq": "some-other-setup"}},
+                "ThenRun": [{"mongodb_setup": "c"}, {"mongodb_setup": "d"}],
+            }
+        ]
+    },
+)
+
+MULTI_UNMODIFIED_COMPLEX = MockFile(
+    base_name="src/workloads/src/MultiUnmodified.yml",
+    modified=False,
+    yaml_conts={
+        "AutoRun": [
+            {
+                "When": {"mongodb_setup": {"$neq": ["something-else", "something-else-2"]}},
+                "ThenRun": [
+                    {"mongodb_setup": "c"},
+                    {"mongodb_setup": "d"},
+                    {"infrastructure_provisioning": "infra_a"},
+                ],
+            },
+            {
+                "When": {"mongodb_setup": {"$eq": ["matches", "matches1", "matches2"]}},
+                "ThenRun": [{"mongodb_setup": "e"}, {"mongodb_setup": "f"}],
+            },
+        ]
+    },
+)
+
 
 EMPTY_MODIFIED = MockFile(
     base_name="src/workloads/scale/EmptyModified.yml", modified=True, yaml_conts={}
@@ -243,20 +325,20 @@ EMPTY_UNMODIFIED = MockFile(
 MATCHES_UNMODIFIED = MockFile(
     base_name="src/workloads/scale/Foo.yml",
     modified=False,
-    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["matches"]}}},
+    yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "matches"}},}]},
 )
 
 NOT_MATCHES_UNMODIFIED = MockFile(
     base_name="src/workloads/scale/Foo.yml",
     modified=False,
-    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
+    yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "some-other-setup"}},}]},
 )
 
 
 NOT_MATCHES_MODIFIED = MockFile(
     base_name="src/workloads/scale/NotMatchesModified.yml",
     modified=True,
-    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
+    yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "some-other-setup"}},}]},
 )
 
 

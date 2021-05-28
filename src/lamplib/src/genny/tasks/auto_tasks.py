@@ -186,12 +186,13 @@ class Workload:
         self._validate_auto_run(auto_run)
         auto_run_info = []
         for block in auto_run:
-            if block["ThenRun"]:
+            if "ThenRun" in block:
                 then_run = block["ThenRun"]
             else:
                 then_run = []
             auto_run_info.append(AutoRunBlock(block["When"], then_run))
 
+        self.auto_run_info = auto_run_info
 
     @property
     def file_base_name(self) -> str:
@@ -205,18 +206,56 @@ class Workload:
     def relative_path(self) -> str:
         return self.file_path.split("src/workloads/")[1]
 
+    def generate_requested_tasks(self, then_run) -> List[GeneratedTask]:
+        """
+        :return: tasks requested.
+        """
+        # if not self.auto_run_info:
+        #     return [GeneratedTask(self.snake_case_base_name, None, None, self)]
+
+        # Only one base task can be added, even if there are multiple empty ThenRun sections.
+        # base_task_added = False
+        tasks = []
+        # for block in self.auto_run_info:
+        # then_run = block.then_run
+        if len(then_run) == 0:
+            tasks += [GeneratedTask(self.snake_case_base_name, None, None, self)]
+
+        for then_run_block in then_run:
+            # Just a sanity check; we check this in _validate_auto_run
+            assert len(then_run_block) == 1
+            [(bootstrap_key, bootstrap_value)] = then_run_block.items()
+            task_name = f"{self.snake_case_base_name}_{self._to_snake_case(bootstrap_value)}"
+            tasks.append(GeneratedTask(task_name, bootstrap_key, bootstrap_value, self))
+
+        return tasks
+
+    def all_tasks(self) -> List[GeneratedTask]:
+        """
+        :return: all possible tasks irrespective of the current build-variant etc.
+        """
+        if not self.auto_run_info:
+            return [GeneratedTask(self.snake_case_base_name, None, None, self)]
+
+        # Only one base task can be added, even if there are multiple empty ThenRun sections.
+        tasks = []
+        for block in self.auto_run_info:
+            tasks += self.generate_requested_tasks(block.then_run)
+
+        return self._dedup_task(tasks)
+
     def variant_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
         :param build: info about current build
-        :return: tasks that we should do given the current build e.g. if we have Requires info etc.
+        :return: tasks that we should do given the current build e.g. if we have When/ThenRun info etc.
         """
         if not self.auto_run_info:
             return []
 
         tasks = []
-        for block in self.auto_run_info():
-            when = block["when"]
-            then_run = block["then_run"]
+        for block in self.auto_run_info:
+            when = block.when
+            then_run = block.then_run
             for key, condition in when.items():
                 okay = False
                 if len(condition) != 1:
@@ -224,14 +263,14 @@ class Workload:
                         f"Need exactly one condition per key in When block."
                         f"Got key ${key} with condition ${condition}."
                     )
-                if condition["$eq"]:
+                if "$eq" in condition:
                     acceptable_values = condition["$eq"]
                     if not isinstance(acceptable_values, list):
                         acceptable_values = [acceptable_values]
                     if build.has(key, acceptable_values):
                         okay = True
-                elif condition["$neq"]:
-                    acceptable_values = condition["$eq"]
+                elif "$neq" in condition:
+                    acceptable_values = condition["$neq"]
                     if not isinstance(acceptable_values, list):
                         acceptable_values = [acceptable_values]
                     if not build.has(key, acceptable_values):
@@ -242,26 +281,17 @@ class Workload:
                     )
 
                 if okay:
-                    if len(then_run) == 0:
-                        tasks.append([GeneratedTask(self.snake_case_base_name, None, None, self)])
-                        SLOG.info(
-                            "Scheduling workload",
-                            workload_base_name=self.file_base_name,
-                            build_variant=build.conts.get("build_variant", "unknown"),
-                        )
-                    else:
-                        for bootstrap_key, bootstrap_value in then_run.items():
-                            SLOG.info(
-                                "Scheduling workload",
-                                workload_base_name=self.file_base_name,
-                                changed_bootstrap_key=bootstrap_key,
-                                changed_bootstrap_value=bootstrap_value,
-                                build_variant=build.conts.get("build_variant", "unknown"),
-                            )
-                            task_name = f"{self.snake_case_base_name}_${self._to_snake_case(bootstrap_value)}"
-                            tasks.append([GeneratedTask(task_name, key, bootstrap_value, self)])
+                    tasks += self.generate_requested_tasks(then_run)
 
-        return tasks
+        return self._dedup_task(tasks)
+
+    @staticmethod
+    def _dedup_task(tasks: List[GeneratedTask]) -> List[GeneratedTask]:
+        """
+        :return: unique tasks.
+        """
+        # Sort the result to make checking dict equality in unittests easier.
+        return sorted(list(set([task for task in tasks])))
 
     @staticmethod
     def _validate_auto_run(auto_run):
@@ -269,16 +299,22 @@ class Workload:
         if not isinstance(auto_run, list):
             raise ValueError(f"AutoRun must be a list, instead got {auto_run}")
         for block in auto_run:
-            if not block["When"] or not isinstance(block["When"], dict):
+            if "When" not in block or not isinstance(block["When"], dict):
                 raise ValueError(
                     f"Each AutoRun block must consist of a 'When' and optional 'ThenRun' section,"
                     f"instead got {block}"
                 )
-            if block["ThenRun"]:
-                if not isinstance(block["ThenRun"], dict):
+            if "ThenRun" in block:
+                if not isinstance(block["ThenRun"], list):
                     raise ValueError(
-                        f"ThenRun must be of type dict. Instead was {block['ThenRun']}."
+                        f"ThenRun must be of type list. Instead was {block['ThenRun']}."
                     )
+                for then_run_block in block["ThenRun"]:
+                    if not isinstance(then_run_block, dict) or len(then_run_block) != 1:
+                        raise ValueError(
+                            f"Each block in ThenRun must be of type dict with one key/value pair."
+                            f"Instead was {then_run_block}."
+                        )
 
     # noinspection RegExpAnonymousGroup
     @staticmethod
@@ -327,17 +363,19 @@ class Repo:
         # Double list-comprehensions always read backward to me :(
         return [task for workload in self.all_workloads() for task in workload.all_tasks()]
 
-    def variant_tasks(self, build: CurrentBuildInfo):
+    def variant_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
         :return: Tasks to schedule given the current variant (runtime)
         """
         return [task for workload in self.all_workloads() for task in workload.variant_tasks(build)]
 
-    def patch_tasks(self) -> List[GeneratedTask]:
+    def patch_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
         :return: Tasks for modified workloads current variant (runtime)
         """
-        return [task for workload in self.modified_workloads() for task in workload.all_tasks()]
+        return [
+            task for workload in self.modified_workloads() for task in workload.variant_tasks(build)
+        ]
 
     def tasks(self, op: CLIOperation, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
@@ -348,7 +386,7 @@ class Repo:
         if op.mode == OpName.ALL_TASKS:
             tasks = self.all_tasks()
         elif op.mode == OpName.PATCH_TASKS:
-            tasks = self.patch_tasks()
+            tasks = self.patch_tasks(build)
         elif op.mode == OpName.VARIANT_TASKS:
             tasks = self.variant_tasks(build)
         else:
