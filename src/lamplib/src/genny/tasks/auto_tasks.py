@@ -256,8 +256,8 @@ class Workload:
         for block in self.auto_run_info:
             when = block.when
             then_run = block.then_run
+            okay = True
             for key, condition in when.items():
-                okay = False
                 if len(condition) != 1:
                     raise ValueError(
                         f"Need exactly one condition per key in When block."
@@ -267,21 +267,21 @@ class Workload:
                     acceptable_values = condition["$eq"]
                     if not isinstance(acceptable_values, list):
                         acceptable_values = [acceptable_values]
-                    if build.has(key, acceptable_values):
-                        okay = True
+                    if not build.has(key, acceptable_values):
+                        okay = False
                 elif "$neq" in condition:
                     acceptable_values = condition["$neq"]
                     if not isinstance(acceptable_values, list):
                         acceptable_values = [acceptable_values]
-                    if not build.has(key, acceptable_values):
-                        okay = True
+                    if build.has(key, acceptable_values):
+                        okay = False
                 else:
                     raise ValueError(
                         f"The only supported operators are $eq and $neq. Got ${condition.keys()}"
                     )
 
-                if okay:
-                    tasks += self.generate_requested_tasks(then_run)
+            if okay:
+                tasks += self.generate_requested_tasks(then_run)
 
         return self._dedup_task(tasks)
 
