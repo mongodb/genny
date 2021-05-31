@@ -282,12 +282,16 @@ class Workload:
 
             if okay:
                 tasks += self.generate_requested_tasks(then_run)
+        print("GOT HERE")
+        print(tasks)
 
         return self._dedup_task(tasks)
 
     @staticmethod
     def _dedup_task(tasks: List[GeneratedTask]) -> List[GeneratedTask]:
         """
+        Evergreen barfs if a task is declared mroe than once.
+
         :return: unique tasks.
         """
         # Sort the result to make checking dict equality in unittests easier.
