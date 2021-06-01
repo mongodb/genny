@@ -277,8 +277,12 @@ private:
                            const std::optional<genny::PhaseNumber>& phase,
                            bool internal) {
         std::stringstream str;
+
+        // We want the trend graph to be hidden by
+        // default to not confuse users, so we prefix it with "canary_" to hit the
+        // CANARY_EXCLUSION_REGEX in https://git.io/Jtjdr
         if (internal) {
-            str << "GennyInternal" << '.';
+            str << "canary_";
         }
         str << actorName << '.' << opName;
         if (phase) {
