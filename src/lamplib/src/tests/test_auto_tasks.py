@@ -161,7 +161,7 @@ class AutoTasksTests(BaseTestClass):
                                 "vars": {
                                     "test_control": "multi_b",
                                     "auto_workload_path": "src/Multi.yml",
-                                    "arb_bootstrap_key": "b",   # test that arb bootstrap_key works
+                                    "arb_bootstrap_key": "b",  # test that arb bootstrap_key works
                                 },
                             },
                         ],
@@ -286,9 +286,7 @@ class AutoTasksTests(BaseTestClass):
                             "ThenRun": [
                                 {"mongodb_setup": "c"},
                                 {"mongodb_setup": "d"},
-                                {
-                                    "infrastructure_provisioning": "infra_a"
-                                },
+                                {"infrastructure_provisioning": "infra_a"},
                             ],
                         },
                         {
