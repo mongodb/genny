@@ -101,7 +101,8 @@ Actors:
         Duration: 5 minutes
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - shard
-    - shard-lite
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard
+          - shard-lite

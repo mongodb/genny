@@ -145,6 +145,6 @@ Actors:
     Operations: *ReadWriteOperations
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - shard-lite-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq: shard-lite-all-feature-flags

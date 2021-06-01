@@ -179,9 +179,10 @@ Actors:
         projection: *projection
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - atlas
-    - replica
-    - single-replica
-    - standalone
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - single-replica
+          - standalone

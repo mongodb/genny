@@ -27,6 +27,6 @@ Actors:
         replSetTestEgress: 1
 
 AutoRun:
-  Requires:
-    mongodb_setup: 
-    - replica-auth-cluster-delay
+  - When:
+      mongodb_setup:
+        $eq: replica-auth-cluster-delay

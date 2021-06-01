@@ -294,13 +294,14 @@ Actors:
       OnlyActiveInPhase: 10
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - atlas
-    - replica
-    - single-replica
-    - standalone
-    - replica-noflowcontrol
-    - replica-1dayhistory-15gbwtcache
-    - replica-maintenance-events
-    - replica-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - single-replica
+          - standalone
+          - replica-noflowcontrol
+          - replica-1dayhistory-15gbwtcache
+          - replica-maintenance-events
+          - replica-all-feature-flags

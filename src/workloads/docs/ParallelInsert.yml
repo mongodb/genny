@@ -181,10 +181,9 @@ Actors:
   - *DropCollection
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - replica
-  PrepareEnvironmentWith:
-    mongodb_setup:
-    - replica-delay-mixed
-    - replica
+  - When:
+      mongodb_setup:
+        $eq: replica
+    ThenRun:
+      - mongodb_setup: replica-delay-mixed
+      - mongodb_setup: replica

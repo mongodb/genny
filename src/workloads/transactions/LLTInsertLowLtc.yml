@@ -274,9 +274,11 @@ Actors:
       ScanDuration: *SnapshotScannerLongDuration
 
 #AutoRun:
-#  Requires:
-#    mongodb_setup:
-#      - atlas
-#      - replica
-#      - replica-all-feature-flags
-#      - single-replica
+#  - When:
+#      mongodb_setup:
+#        $eq:
+#          - atlas
+#          - replica
+#          - replica-all-feature-flags
+#          - single-replica
+

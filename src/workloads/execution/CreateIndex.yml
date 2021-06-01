@@ -59,9 +59,10 @@ Actors:
         Repeat: 5
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - atlas
-    - replica
-    - single-replica
-    - standalone
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - single-replica
+          - standalone
