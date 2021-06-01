@@ -10,28 +10,30 @@ Actors:
     Database: &db test
     Threads: 1
     CollectionCount: 1
-    # Small collection size to keep from spilling to disk during sorts.
-    DocumentCount: 10000
-    BatchSize: &batchSize 10000
+    # Choose a collection large enough such that a sort will trigger a spill to disk.
+    # Note that we create an index on the sort field (t) to keep from generating a sort operation.
+    DocumentCount: 100000
+    BatchSize: &batchSize 100000
     Document:
       t: {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}}
       x: {^RandomDouble: {distribution: normal, mean: 0, sigma: 3}}
       y: {^RandomDouble: {distribution: normal, mean: 1, sigma: 3}}
-      z: {^RandomString: {length: 8}}
+      z: {^RandomString: {length: 1000}} # Unused field
   - Nop: true
   - Nop: true
 
-- Name: Quiesce
+- Name: CreateIndex
   Type: RunCommand
   Threads: 1
   Phases:
   - Nop: true
   - Repeat: 1
-    Database: admin
+    Database: *db
     Operations:
     - OperationName: RunCommand
       OperationCommand:
-        fsync: 1
+        createIndexes: Collection0
+        indexes: [{key: {t: 1}, name: "t"}]
   - Nop: true
 
 - Name: CumulativeWindows
