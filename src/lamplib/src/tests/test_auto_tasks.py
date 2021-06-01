@@ -80,10 +80,6 @@ class BaseTestClass(unittest.TestCase):
         config = writer.write(tasks, write=False)
         parsed = json.loads(config.to_json())
 
-        print("parsed")
-        print(parsed)
-        print("then_writes")
-        print(then_writes)
         try:
             self.assertDictEqual(then_writes, parsed)
         except AssertionError:
@@ -100,15 +96,30 @@ TIMEOUT_COMMAND = {
 def expansions_mock(exp_vars) -> MockFile:
     yaml_conts = {"build_variant": "some-build-variant"}
     yaml_conts.update(exp_vars)
-    l = MockFile(base_name="expansions.yml", modified=False, yaml_conts=yaml_conts,)
-    print(l)
-    return l
+    return MockFile(base_name="expansions.yml", modified=False, yaml_conts=yaml_conts,)
 
 
 class AutoTasksTests(BaseTestClass):
     def test_all_tasks(self):
+        expansions = expansions_mock({"mongodb_setup": "matches"})
+        empty_unmodified = MockFile(
+            base_name="src/workloads/scale/EmptyUnmodified.yml", modified=False, yaml_conts={}
+        )
+        multi_modified = MockFile(
+            base_name="src/workloads/src/Multi.yml",
+            modified=True,
+            yaml_conts={
+                "AutoRun": [
+                    {
+                        "When": {"mongodb_setup": {"$eq": "matches"}},
+                        "ThenRun": [{"mongodb_setup": "a"}, {"arb_bootstrap_key": "b"}],
+                    }
+                ]
+            },
+        )
+
         self.assert_result(
-            given_files=[EMPTY_UNMODIFIED, MULTI_MODIFIED_EQ, EXPANSIONS],
+            given_files=[expansions, empty_unmodified, multi_modified],
             and_mode="all_tasks",
             then_writes={
                 "tasks": [
@@ -150,7 +161,7 @@ class AutoTasksTests(BaseTestClass):
                                 "vars": {
                                     "test_control": "multi_b",
                                     "auto_workload_path": "src/Multi.yml",
-                                    "mongodb_setup": "b",
+                                    "arb_bootstrap_key": "b",   # test that arb bootstrap_key works
                                 },
                             },
                         ],
@@ -173,7 +184,8 @@ class AutoTasksTests(BaseTestClass):
         )
 
     def test_variant_tasks_1(self):
-        """Basic test.
+        """
+        Basic test.
 
         Tests (true) $eq and $neq with scalar values.
         Tests When with single (true) condition.
@@ -268,13 +280,15 @@ class AutoTasksTests(BaseTestClass):
                     "AutoRun": [
                         {
                             "When": {
-                                "mongodb_setup": {"$neq": ["something-else", "something-else-2"]},
+                                "mongodb_setup": {"$neq": ["something-else", "something-else-1"]},
                                 "branch": {"$neq": ["4.0", "4.2"]},
                             },
                             "ThenRun": [
                                 {"mongodb_setup": "c"},
                                 {"mongodb_setup": "d"},
-                                {"infrastructure_provisioning": "infra_a"},  # test that arb bootstrap_key works
+                                {
+                                    "infrastructure_provisioning": "infra_a"
+                                },
                             ],
                         },
                         {
@@ -332,8 +346,11 @@ class AutoTasksTests(BaseTestClass):
                         {
                             "When": {
                                 "mongodb_setup": {
-                                    "$eq": ["not-matches", "not-matches1"]
-                                }  # this invalidates the When
+                                    "$eq": [
+                                        "not-matches",
+                                        "not-matches1",
+                                    ]  # this invalidates the When
+                                }
                             },
                             "ThenRun": [{"mongodb_setup": "e"}, {"mongodb_setup": "f"}],
                         },
@@ -345,107 +362,73 @@ class AutoTasksTests(BaseTestClass):
         self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)
 
     def test_patch_tasks(self):
-        # Patch tasks always run for the selected variant
-        # but only if "When" condition is met.
+        """patch_tasks is just variant_tasks for only modified files."""
+
+        expansions = expansions_mock({"mongodb_setup": "matches"})
+        multi_yaml_consts = {
+            "AutoRun": [
+                {
+                    "When": {"mongodb_setup": {"$neq": ["something-else", "something-else-2"]}},
+                    "ThenRun": [
+                        {"mongodb_setup": "c"},
+                        {"mongodb_setup": "d"},
+                        {
+                            "infrastructure_provisioning": "infra_a"
+                        },  # test that arb bootstrap_key works
+                    ],
+                },
+                {
+                    "When": {"mongodb_setup": {"$eq": ["matches", "matches", "matches2"]}},
+                    "ThenRun": [{"mongodb_setup": "e"}, {"mongodb_setup": "f"}],
+                },
+            ]
+        }
+        multi_modified = MockFile(
+            base_name="src/workloads/src/MultiModified.yml",
+            modified=True,
+            yaml_conts=multi_yaml_consts,
+        )
+        multi_unmodified = MockFile(
+            base_name="src/workloads/src/MultiUnmodified.yml",
+            modified=False,
+            yaml_conts=multi_yaml_consts,
+        )
+        matches_unmodified = MockFile(
+            base_name="src/workloads/scale/MatchesUnmodified.yml",
+            modified=False,
+            yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "matches"}}}]},
+        )
+        matches_modified = MockFile(
+            base_name="src/workloads/scale/MatchesModified.yml",
+            modified=True,
+            yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "matches"}}}]},
+        )
         self.assert_result(
             given_files=[
-                EXPANSIONS,
-                MULTI_MODIFIED_EQ,
-                MULTI_UNMODIFIED_EQ,
-                NOT_MATCHES_MODIFIED,
-                NOT_MATCHES_UNMODIFIED,
+                expansions,
+                multi_modified,
+                multi_unmodified,
+                matches_unmodified,
+                matches_modified,
             ],
             and_mode="patch_tasks",
             then_writes={
                 "buildvariants": [
                     {
                         "name": "some-build-variant",
-                        "tasks": [{"name": "multi_a"}, {"name": "multi_b"}],
+                        "tasks": [
+                            {"name": "multi_modified_c"},
+                            {"name": "multi_modified_d"},
+                            {"name": "multi_modified_e"},
+                            {"name": "multi_modified_f"},
+                            {"name": "multi_modified_infra_a"},
+                            {"name": "matches_modified"},
+                        ],
                     }
                 ]
             },
             to_file="./build/TaskJSON/Tasks.json",
         )
-
-# Example Input Files
-
-
-BOOTSTRAP = MockFile(
-    base_name="bootstrap.yml", modified=False, yaml_conts={"mongodb_setup": "matches"}
-)
-
-EXPANSIONS = MockFile(
-    base_name="expansions.yml",
-    modified=False,
-    yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches"},
-)
-
-MULTI_MODIFIED_EQ = MockFile(
-    base_name="src/workloads/src/Multi.yml",
-    modified=True,
-    yaml_conts={
-        "AutoRun": [
-            {
-                "When": {"mongodb_setup": {"$eq": "matches"}},
-                "ThenRun": [{"mongodb_setup": "a"}, {"mongodb_setup": "b"}],
-            }
-        ]
-    },
-)
-
-MULTI_UNMODIFIED_EQ = MockFile(
-    base_name="src/workloads/src/MultiUnmodified.yml",
-    modified=False,
-    yaml_conts={
-        "AutoRun": [
-            {
-                "When": {"mongodb_setup": {"$eq": "matches"}},
-                "ThenRun": [{"mongodb_setup": "c"}, {"mongodb_setup": "d"}],
-            }
-        ]
-    },
-)
-
-MULTI_UNMODIFIED_NEQ = MockFile(
-    base_name="src/workloads/src/MultiUnmodified.yml",
-    modified=False,
-    yaml_conts={
-        "AutoRun": [
-            {
-                "When": {"mongodb_setup": {"$eq": "some-other-setup"}},
-                "ThenRun": [{"mongodb_setup": "c"}, {"mongodb_setup": "d"}],
-            }
-        ]
-    },
-)
-
-
-EMPTY_MODIFIED = MockFile(
-    base_name="src/workloads/scale/EmptyModified.yml", modified=True, yaml_conts={}
-)
-EMPTY_UNMODIFIED = MockFile(
-    base_name="src/workloads/scale/EmptyUnmodified.yml", modified=False, yaml_conts={}
-)
-
-
-MATCHES_UNMODIFIED = MockFile(
-    base_name="src/workloads/scale/Foo.yml",
-    modified=False,
-    yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "matches"}},}]},
-)
-
-NOT_MATCHES_UNMODIFIED = MockFile(
-    base_name="src/workloads/scale/Foo.yml",
-    modified=False,
-    yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "some-other-setup"}},}]},
-)
-
-
-NOT_MATCHES_MODIFIED = MockFile(
-    base_name="src/workloads/scale/NotMatchesModified.yml",
-    modified=True,
-    yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "some-other-setup"}},}]},
-)
 
 
 if __name__ == "__main__":

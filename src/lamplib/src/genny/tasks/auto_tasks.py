@@ -210,14 +210,7 @@ class Workload:
         """
         :return: tasks requested.
         """
-        # if not self.auto_run_info:
-        #     return [GeneratedTask(self.snake_case_base_name, None, None, self)]
-
-        # Only one base task can be added, even if there are multiple empty ThenRun sections.
-        # base_task_added = False
         tasks = []
-        # for block in self.auto_run_info:
-        # then_run = block.then_run
         if len(then_run) == 0:
             tasks += [GeneratedTask(self.snake_case_base_name, None, None, self)]
 
@@ -282,8 +275,6 @@ class Workload:
 
             if okay:
                 tasks += self.generate_requested_tasks(then_run)
-        print("GOT HERE")
-        print(tasks)
 
         return self._dedup_task(tasks)
 
