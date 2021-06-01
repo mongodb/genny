@@ -27,6 +27,7 @@
 
 namespace genny::v1::actor {
 
+// TODO: In TIG-3090 move this to an internal library.
 /**
  * Actor for tracking and reporting Genny internal state.
  *
