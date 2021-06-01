@@ -327,35 +327,67 @@ cd genny
 evergreen set-module -m genny -i <ID> # Use the build ID from the previous step.
 ```
 
-In the browser window, select either `genny_patch_tasks` or `genny_auto_tasks`.
-`genny_patch_tasks` will run any workloads that you have added or modified locally
+In the browser window, select either `schedule_patch_auto_tasks` or `schedule_variant_auto_tasks`.
+`schedule_patch_auto_tasks` will run any workloads that you have added or modified locally
 (based on your git history). This is useful if you want to test only the workload(s)
-you've been working on. 
+you've been working on. Note that `schedule_patch_auto_tasks` will only schedule a task for
+a variant if the workload is compatible (see AutoRun below).
 
-`genny_auto_tasks` automatically runs workloads based on the evergreen environment
+`schedule_variant_auto_tasks` automatically runs workloads based on the evergreen environment
 (variables from `bootstrap.yml` and `runtime.yml` in DSI) and an optional AutoRun
-section in any workload, doing simple key-value matching between them. For example,
+section in any workload. The AutoRun section is a list of <When/ThenRun> blocks,
+where if the When condition is met, tasks are scheduled with additional bootstrap
+values from ThenRun. For example,
 suppose we have a `test_workload.yml` file in a `workloads/*/` subdirectory,
 containing the following AutoRun section:
 
 ```yaml
 AutoRun:
-  Requires:
-    bootstrap:
-      mongodb_setup: 
-        - replica
-        - single-replica
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-noflowcontrol
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+    ThenRun:
+      - infrastructure_provisioning: foo
+      - infrastructure_provisioning: bar
+      - arbitrary_bootstrap: baz
 ```
 
-In this case, `test_workload` would be run whenever `bootstrap.yml`'s `mongodb_setup`
-variable has a value of `replica` or `single-replica`. In practice, the workload
-AutoRun sections are setup so that you can use `genny_auto_tasks` to run all relevant
-workloads on a specific buildvariant.
+In this case, it looks in the `bootstrap.yml` of `test_workload`, checks if `mongodb_setup`
+is either `replica` or `replica-noflowcontrol`, and also if `branch_name` is neither v4.0 or v4.2.
+If both conditions are true, then we schedule several tasks. Let's say the workload name is
+`DemoWorkload`, 3 tasks are scheduled - `demo_workload_foo`, `demo_workload_bar`, and `demo_workload_baz`.
+The first task is passed in the bootstrap value `infrastructure_provisioning: foo`, the second
+is passed in `infrastructure_provisioning: bar` and the third `arbitrary_bootstrap: baz`.
 
-Both `genny_patch_tasks` and `genny_auto_tasks` will compile mongodb and then run
-the relevant workloads.
+This is a more complex example of AutoRun. Here's a more simple one representing usual usecases:
 
-NB:
+```yaml
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq: standalone
+```
+
+Let's say this is `DemoWorkload` again. In this case, if `mongodb_setup` is `standalone`
+we schedule `demo_workload` with no params.
+
+A few notes on the syntax:
+- supports multiple When/ThenRun blocks per AutoRun. Each are evaluated independently.
+- When blocks can evaluate multiple conditions. All conditions must be true in this case.
+- When supports $eq and $neq. Both can accept either a scalar or list of values.
+- For a list of values, $eq evaluates to true if it is equal to at least one.
+- For a list of values, $neq evaluates to true if it is equal to none of the values.
+- AutoRun will fail if the bootstrap value used in When does not exist in expansions.yml.
+- ThenRun blocks are optional.
+- Each item in the ThenRun list can only support one {bootstrap_key: bootstrap_value} pair.
+
+NB on patch-testing:
 
 1.  After the task runs you can call `set-module` again with more local changes from Genny or DSI.
     This lets you skip the 20 minute wait to recompile the server.
