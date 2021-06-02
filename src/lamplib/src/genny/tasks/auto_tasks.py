@@ -140,7 +140,7 @@ class CurrentBuildInfo:
         :return: if the actual value from env[key] is in the list of acceptable values
         """
         if key not in self.conts:
-            raise Exception(f"Unknown key {key}. Know about {self.conts.keys()}")
+            return False
         actual = self.conts[key]
         return any(actual == acceptable_value for acceptable_value in acceptable_values)
 

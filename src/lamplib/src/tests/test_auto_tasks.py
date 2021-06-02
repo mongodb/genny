@@ -270,7 +270,7 @@ class AutoTasksTests(BaseTestClass):
         Tests When with multiple (true) conditions.
         Tests multiple When/ThenRun blocks.
         """
-        expansions = expansions_mock({"mongodb_setup": "matches", "branch": "4.4"})
+        expansions = expansions_mock({"mongodb_setup": "matches", "branch_name": "v4.4"})
         given_files = [
             expansions,
             MockFile(
@@ -281,7 +281,7 @@ class AutoTasksTests(BaseTestClass):
                         {
                             "When": {
                                 "mongodb_setup": {"$neq": ["something-else", "something-else-1"]},
-                                "branch": {"$neq": ["4.0", "4.2"]},
+                                "branch_name": {"$neq": ["v4.0", "v4.2"]},
                             },
                             "ThenRun": [
                                 {"mongodb_setup": "c"},
@@ -322,7 +322,7 @@ class AutoTasksTests(BaseTestClass):
         Tests When with multiple (one true, one false) conditions.
         Tests multiple When/ThenRun blocks.
         """
-        expansions = expansions_mock({"mongodb_setup": "matches", "branch": "4.2"})
+        expansions = expansions_mock({"mongodb_setup": "matches", "branch_name": "v4.2"})
         given_files = [
             expansions,
             MockFile(
@@ -333,7 +333,7 @@ class AutoTasksTests(BaseTestClass):
                         {
                             "When": {
                                 "mongodb_setup": {"$neq": ["something-else", "something-else-2"]},
-                                "branch": {"$neq": ["4.0", "4.2"]},  # this invalidates the When
+                                "branch_name": {"$neq": ["v4.0", "v4.2"]},  # this invalidates the When
                             },
                             "ThenRun": [
                                 {"mongodb_setup": "c"},
