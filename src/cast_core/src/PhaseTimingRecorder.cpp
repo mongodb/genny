@@ -37,9 +37,6 @@ namespace genny::v1::actor {
 
 void PhaseTimingRecorder::run() {
 
-    std::optional<metrics::clock::time_point> startTime;
-    metrics::clock::time_point finishTime;
-
     // We don't use PhaseLoop because we want this actor to be usable
     // in any workload regardless of number of phases defined.
     while (_orchestrator.morePhases()) {
