@@ -355,17 +355,17 @@ AutoRun:
     ThenRun:
       - infrastructure_provisioning: foo
       - infrastructure_provisioning: bar
-      - arbitrary_bootstrap: baz
+      - arbitrary_key: baz
 ```
 
 In this case, it looks in the `bootstrap.yml` of `test_workload`, checks if `mongodb_setup`
-is either `replica` or `replica-noflowcontrol`, and also if `branch_name` is neither v4.0 or v4.2.
+is either `replica` or `replica-noflowcontrol`, and also if `branch_name` is neither `v4.0` nor `v4.2`.
 If both conditions are true, then we schedule several tasks. Let's say the workload name is
 `DemoWorkload`, 3 tasks are scheduled - `demo_workload_foo`, `demo_workload_bar`, and `demo_workload_baz`.
 The first task is passed in the bootstrap value `infrastructure_provisioning: foo`, the second
-is passed in `infrastructure_provisioning: bar` and the third `arbitrary_bootstrap: baz`.
+is passed in `infrastructure_provisioning: bar` and the third `arbitrary_key: baz`.
 
-This is a more complex example of AutoRun. Here's a more simple one representing usual usecases:
+This is a more complex example of AutoRun. Here's a more simple one representing a more common usecase:
 
 ```yaml
 AutoRun:
@@ -375,15 +375,14 @@ AutoRun:
 ```
 
 Let's say this is `DemoWorkload` again. In this case, if `mongodb_setup` is `standalone`
-we schedule `demo_workload` with no params.
+we schedule `demo_workload` with no additional params.
 
 A few notes on the syntax:
-- supports multiple When/ThenRun blocks per AutoRun. Each are evaluated independently.
-- When blocks can evaluate multiple conditions. All conditions must be true in this case.
+- Supports multiple When/ThenRun blocks per AutoRun. Each are evaluated independently.
+- When blocks can evaluate multiple conditions. All conditions must be true to schedule the task.
 - When supports $eq and $neq. Both can accept either a scalar or list of values.
 - For a list of values, $eq evaluates to true if it is equal to at least one.
 - For a list of values, $neq evaluates to true if it is equal to none of the values.
-- AutoRun will fail if the bootstrap value used in When does not exist in expansions.yml.
 - ThenRun blocks are optional.
 - Each item in the ThenRun list can only support one {bootstrap_key: bootstrap_value} pair.
 
