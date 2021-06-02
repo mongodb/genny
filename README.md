@@ -369,17 +369,11 @@ After running, Genny will export data to the `build/CedarMetrics` directory as `
 actor and operation recorded.
 When executed in CI after submitting a patch, this data will be visible in the Evergreen perf UI.
 
-If running locally you can use the `curator` binary that Genny automatically downloads to export the
-metrics to various formats. You can view the export options like so:
-
-```sh
-./curator/curator ftdc export --help
-```
-
+If running locally you can use the `export` command that Genny provides to export to CSV.
 For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
 
 ```sh
-./curator/curator ftdc export csv --input build/CedarMetrics/InsertRemoveTest.Insert.ftdc --output insert.csv
+./run-genny export build/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
 ```
 
 ## Code Style and Limitations

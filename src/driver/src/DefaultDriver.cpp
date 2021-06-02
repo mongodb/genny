@@ -75,14 +75,12 @@ void runActor(Actor&& actor,
 }
 
 void reportMetrics(genny::metrics::Registry& metrics,
-                   const std::string& workloadName,
+                   const std::string& actorName,
+                   const std::string& operationName,
                    bool success,
                    metrics::clock::time_point startTime) {
     auto finishTime = metrics::clock::now();
-    // The "Setup" operation is a genny internal operation. We want the trend graph to be hidden by
-    // default to not confuse users, so we prefix it with "canary_" to hit the
-    // CANARY_EXCLUSION_REGEX in https://git.io/Jtjdr
-    auto actorSetup = metrics.operation("canary_" + workloadName, "Setup", 0u);
+    auto actorSetup = metrics.operation(actorName, operationName, 0u, std::nullopt, true);
     auto outcome = success ? metrics::OutcomeType::kSuccess : metrics::OutcomeType::kFailure;
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finishTime - startTime);
     actorSetup.report(std::move(finishTime), std::move(duration), std::move(outcome));
@@ -98,14 +96,14 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     if (options.runMode == DefaultDriver::RunMode::kListActors) {
         globalCast().streamProducersTo(std::cout);
         genny::metrics::Registry metrics;
-        reportMetrics(metrics, workloadName, true, startTime);
+        reportMetrics(metrics, workloadName, "Setup", true, startTime);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
     if (options.workloadSource.empty()) {
         std::cerr << "Must specify a workload YAML file" << std::endl;
         genny::metrics::Registry metrics;
-        reportMetrics(metrics, workloadName, false, startTime);
+        reportMetrics(metrics, workloadName, "Setup", false, startTime);
         return DefaultDriver::OutcomeCode::kUserException;
     }
 
@@ -150,20 +148,17 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     if (options.runMode == DefaultDriver::RunMode::kDryRun) {
         std::cout << "Workload context constructed without errors." << std::endl;
-        reportMetrics(metrics, workloadName, true, startTime);
+        reportMetrics(metrics, workloadName, "Setup", true, startTime);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
 
-    reportMetrics(metrics, workloadName, true, startTime);
+    reportMetrics(metrics, workloadName, "Setup", true, startTime);
 
-    // The "ActorStarted" and "ActorFinished" operations are genny internal operations. We want the
-    // trend graph to be hidden by default to not confuse users, so we prefix them with "canary_"
-    // to hit the CANARY_EXCLUSION_REGEX in https://git.io/Jtjdr
-    auto startedActors = metrics.operation("canary_" + workloadName, "ActorStarted", 0u);
-    auto finishedActors = metrics.operation("canary_" + workloadName, "ActorFinished", 0u);
+    auto startedActors = metrics.operation(workloadName, "ActorStarted", 0u, std::nullopt, true);
+    auto finishedActors = metrics.operation(workloadName, "ActorFinished", 0u, std::nullopt, true);
 
     std::atomic<DefaultDriver::OutcomeCode> outcomeCode = DefaultDriver::OutcomeCode::kSuccess;
 
@@ -207,6 +202,10 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
             reporter.report(metricsOutput, metrics.getFormat());
         }
     }
+
+    // We don't use the workload name because downstream sources may expect consistent
+    // names for timing files.
+    reportMetrics(metrics, "WorkloadTimingRecorder", "Workload", true, startTime);
 
     return outcomeCode;
 }

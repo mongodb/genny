@@ -52,6 +52,7 @@ private:
 public:
     using duration = clock_type::duration;
     using time_point = std::chrono::time_point<clock_type>;
+    using report_time_point = time_point;
 
     static void advance(metrics::Period<clock_type> inc = 1ns) {
         _now += inc;
@@ -63,6 +64,10 @@ public:
 
     static time_point now() {
         return _now;
+    }
+
+    static report_time_point toReportTime(time_point givenTime) {
+        return givenTime;
     }
 
 private:
