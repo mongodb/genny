@@ -79,11 +79,10 @@ class BaseTestClass(unittest.TestCase):
 
         config = writer.write(tasks, write=False)
         parsed = json.loads(config.to_json())
-
         try:
             self.assertDictEqual(then_writes, parsed)
         except AssertionError:
-            # print(parsed)
+            print(parsed)
             raise
 
 
@@ -333,7 +332,9 @@ class AutoTasksTests(BaseTestClass):
                         {
                             "When": {
                                 "mongodb_setup": {"$neq": ["something-else", "something-else-2"]},
-                                "branch_name": {"$neq": ["v4.0", "v4.2"]},  # this invalidates the When
+                                "branch_name": {
+                                    "$neq": ["v4.0", "v4.2"]
+                                },  # this invalidates the When
                             },
                             "ThenRun": [
                                 {"mongodb_setup": "c"},

@@ -230,7 +230,6 @@ class Workload:
         if not self.auto_run_info:
             return [GeneratedTask(self.snake_case_base_name, None, None, self)]
 
-        # Only one base task can be added, even if there are multiple empty ThenRun sections.
         tasks = []
         for block in self.auto_run_info:
             tasks += self.generate_requested_tasks(block.then_run)
@@ -249,6 +248,7 @@ class Workload:
         for block in self.auto_run_info:
             when = block.when
             then_run = block.then_run
+            # All When conditions must be true. We set okay: False if any single one is not true.
             okay = True
             for key, condition in when.items():
                 if len(condition) != 1:
@@ -281,7 +281,7 @@ class Workload:
     @staticmethod
     def _dedup_task(tasks: List[GeneratedTask]) -> List[GeneratedTask]:
         """
-        Evergreen barfs if a task is declared mroe than once.
+        Evergreen barfs if a task is declared more than once.
 
         :return: unique tasks.
         """
