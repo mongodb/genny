@@ -157,8 +157,8 @@ class ToolchainDownloader(Downloader):
     # These build IDs are from the genny-toolchain Evergreen task.
     # https://evergreen.mongodb.com/waterfall/genny-toolchain
 
-    TOOLCHAIN_BUILD_ID = "0db5d1544746c1570371f51109a0a312a7215b65_20_10_01_06_38_39"
-    TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
+    AWS_BUCKET = "https://dsi-donot-remove.s3-us-west-2.amazonaws.com/genny-toolchain"
+    TOOLCHAIN_GIT_HASH = "815d1e868681f2a712f5518431d5bba44d40d014"
     TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
     def __init__(
@@ -181,11 +181,9 @@ class ToolchainDownloader(Downloader):
 
     def _get_url(self):
         prefix = "macos_1014" if self._os_family == "Darwin" else self._linux_distro
-        return (
-            "https://s3.amazonaws.com/mciuploads/genny-toolchain/"
-            "genny_toolchain_{}_{}/gennytoolchain.tgz".format(
-                prefix, ToolchainDownloader.TOOLCHAIN_BUILD_ID
-            )
+        print(f"{self.AWS_BUCKET}/{self.TOOLCHAIN_GIT_HASH}/genny-toolchain-{prefix}.tgz")
+        return(
+            f"{self.AWS_BUCKET}/{self.TOOLCHAIN_GIT_HASH}/genny-toolchain-{prefix}.tgz"
         )
 
     def _can_ignore(self):
