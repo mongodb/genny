@@ -1,6 +1,7 @@
 import json
 import os
 
+from pathlib import Path
 from typing import Optional, NamedTuple
 import structlog
 
@@ -93,6 +94,7 @@ def _compute_toolchain_info(
     toolchain_env = _create_compile_environment(triplet_os, toolchain_dir)
     if not toolchain_downloader.fetch_and_install():
         raise Exception("Could not fetch and install")
+    Path(toolchain_downloader.toolchain_git_hash_file).touch()
     return ToolchainInfo(
         toolchain_dir=toolchain_dir,
         triplet_os=triplet_os,
@@ -158,7 +160,7 @@ class ToolchainDownloader(Downloader):
     # https://evergreen.mongodb.com/waterfall/genny-toolchain
 
     AWS_BUCKET = "https://dsi-donot-remove.s3-us-west-2.amazonaws.com/genny-toolchain"
-    TOOLCHAIN_GIT_HASH = "815d1e868681f2a712f5518431d5bba44d40d014"
+    TOOLCHAIN_GIT_HASH = "c3362d91ee89a4f4afcc91dcc683e8c4afed282d"
     TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
     def __init__(
@@ -177,14 +179,14 @@ class ToolchainDownloader(Downloader):
             install_dir=ToolchainDownloader.TOOLCHAIN_ROOT,
             name="gennytoolchain",
         )
+        self.toolchain_git_hash_file = os.path.join(
+            self.result_dir, ToolchainDownloader.TOOLCHAIN_GIT_HASH
+        )
         self.ignore_toolchain_version = ignore_toolchain_version
 
     def _get_url(self):
         prefix = "macos_1014" if self._os_family == "Darwin" else self._linux_distro
-        print(f"{self.AWS_BUCKET}/{self.TOOLCHAIN_GIT_HASH}/genny-toolchain-{prefix}.tgz")
-        return(
-            f"{self.AWS_BUCKET}/{self.TOOLCHAIN_GIT_HASH}/genny-toolchain-{prefix}.tgz"
-        )
+        return f"{ToolchainDownloader.AWS_BUCKET}/{ToolchainDownloader.TOOLCHAIN_GIT_HASH}/genny-toolchain-{prefix}.tgz"
 
     def _can_ignore(self):
         # If the toolchain dir is outdated or we ignore the toolchain version.
@@ -193,7 +195,7 @@ class ToolchainDownloader(Downloader):
         )
 
     def _check_toolchain_githash(self):
-        res = "".join(
-            run_command(cmd=["git", "rev-parse", "HEAD"], cwd=self.result_dir, check=True).stdout
-        )
-        return res.strip() == ToolchainDownloader.TOOLCHAIN_GIT_HASH
+        if os.path.exists(self.toolchain_git_hash_file):
+            return True
+
+        return False
