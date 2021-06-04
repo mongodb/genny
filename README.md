@@ -384,7 +384,18 @@ A few notes on the syntax:
 - For a list of values, $eq evaluates to true if it is equal to at least one.
 - For a list of values, $neq evaluates to true if it is equal to none of the values.
 - ThenRun blocks are optional.
+    - **Most usecases do not need to use ThenRun**
+    - If you do use ThenRun, please be judicious. If you have a task that is scheduled when
+      mongodb_setup == replica, it would be confusing if mongodb_setup was overwritten to standalone.
+      But it would be ok to overwrite mongodb_setup to replica-delay-mixed, as is done in the
+      [ParallelWorkload][pi] workload.
 - Each item in the ThenRun list can only support one {bootstrap_key: bootstrap_value} pair.
+- If using ThenRun but you would also like to schedule a task without any bootstrap overrides,
+  Add an extra pair to ThenRun with the original key/value, like done on line 189 [here][pi].
+- If using ThenRun, the new task name becomes <taskname>_<bootstrap-value>. In the ParallelWorkload example,
+  the task name becomes parallel_insert_replica_delay_mixed (name is automatically converted to snake_case).
+  The bootstrap-key is not included in the name for the purpose of not changing existing names and
+  thus deleting history. This may change after PM-2310.
 
 NB on patch-testing:
 
@@ -456,5 +467,6 @@ The toolchain isn't instrumented with sanitizers, so you may get
 
 
 [fp]: https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow#false-positives
+[pi]: https://github.com/mongodb/genny/blob/762b08ee3b71184d5f521e82f7ce6d6eeb3c0cc9/src/workloads/docs/ParallelInsert.yml#L183-L189
 
 

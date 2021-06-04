@@ -182,7 +182,7 @@ class Workload:
 
         auto_run = conts["AutoRun"]
         if not isinstance(auto_run, list):
-            raise ValueError(f"AutoRun must be a list, instead got {auto_run}")
+            raise ValueError(f"AutoRun must be a list, instead got type {type(auto_run)}")
         self._validate_auto_run(auto_run)
         auto_run_info = []
         for block in auto_run:
@@ -254,7 +254,7 @@ class Workload:
                 if len(condition) != 1:
                     raise ValueError(
                         f"Need exactly one condition per key in When block."
-                        f"Got key ${key} with condition ${condition}."
+                        f" Got key ${key} with condition ${condition}."
                     )
                 if "$eq" in condition:
                     acceptable_values = condition["$eq"]
@@ -263,10 +263,10 @@ class Workload:
                     if not build.has(key, acceptable_values):
                         okay = False
                 elif "$neq" in condition:
-                    acceptable_values = condition["$neq"]
-                    if not isinstance(acceptable_values, list):
-                        acceptable_values = [acceptable_values]
-                    if build.has(key, acceptable_values):
+                    unacceptable_values = condition["$neq"]
+                    if not isinstance(unacceptable_values, list):
+                        unacceptable_values = [unacceptable_values]
+                    if build.has(key, unacceptable_values):
                         okay = False
                 else:
                     raise ValueError(
@@ -281,7 +281,9 @@ class Workload:
     @staticmethod
     def _dedup_task(tasks: List[GeneratedTask]) -> List[GeneratedTask]:
         """
-        Evergreen barfs if a task is declared more than once.
+        Evergreen barfs if a task is declared more than once, and the AutoTask impl may add the same task twice to the
+        list. For an example, if we have two When blocks that are both true (and no ThenRun task), we will add the base
+        task twice. So we need to dedup the final task list.
 
         :return: unique tasks.
         """
@@ -292,23 +294,28 @@ class Workload:
     def _validate_auto_run(auto_run):
         """Perform syntax validation on the auto_run section."""
         if not isinstance(auto_run, list):
-            raise ValueError(f"AutoRun must be a list, instead got {auto_run}")
+            raise ValueError(f"AutoRun must be a list, instead got {type(auto_run)}")
         for block in auto_run:
-            if "When" not in block or not isinstance(block["When"], dict):
+            if not isinstance(block["When"], dict) or "When" not in block:
                 raise ValueError(
                     f"Each AutoRun block must consist of a 'When' and optional 'ThenRun' section,"
-                    f"instead got {block}"
+                    f" instead got {block}"
                 )
             if "ThenRun" in block:
                 if not isinstance(block["ThenRun"], list):
                     raise ValueError(
-                        f"ThenRun must be of type list. Instead was {block['ThenRun']}."
+                        f"ThenRun must be of type list. Instead was type {type(block['ThenRun'])}."
                     )
                 for then_run_block in block["ThenRun"]:
-                    if not isinstance(then_run_block, dict) or len(then_run_block) != 1:
+                    if not isinstance(then_run_block, dict):
                         raise ValueError(
-                            f"Each block in ThenRun must be of type dict with one key/value pair."
-                            f"Instead was {then_run_block}."
+                            f"Each block in ThenRun must be of type dict."
+                            f" Instead was type {type(then_run_block)}."
+                        )
+                    elif len(then_run_block) != 1:
+                        raise ValueError(
+                            f"Each block in ThenRun must contain one key/value pair. Instead was length"
+                            f" {len(then_run_block)}."
                         )
 
     # noinspection RegExpAnonymousGroup

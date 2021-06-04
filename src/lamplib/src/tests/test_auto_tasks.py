@@ -378,7 +378,7 @@ class AutoTasksTests(BaseTestClass):
                 },
                 {
                     "When": {"mongodb_setup": {"$eq": ["matches", "matches", "matches2"]}},
-                    "ThenRun": [{"mongodb_setup": "e"}, {"mongodb_setup": "f"}],
+                    "ThenRun": [{"mongodb_setup": "e"}, {"mongodb_setup": "f"},],
                 },
             ]
         }
