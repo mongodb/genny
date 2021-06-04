@@ -82,26 +82,24 @@ buildvariants:
   tasks:
   - name: tg_compile
 
-# TODO: TIG-2819
-#- name: ubuntu1804
-#  display_name: Ubuntu 18.04
-#  modules: [mongo]
-#  expansions:
-#    distro: ubuntu1804
-#  run_on:
-#  - ubuntu1804-build
-#  tasks:
-#  - name: tg_compile
-#  - name: t_push
+- name: ubuntu1804
+  display_name: Ubuntu 18.04
+  modules: [mongo]
+  expansions:
+    distro: ubuntu1804
+  run_on:
+  - ubuntu1804-build
+  tasks:
+  - name: tg_compile
+  - name: t_push
 
-# TODO: Re-enable after TIG-2819
-#- name: macos-1014
-#  display_name: macOS Mojave
-#  modules: [mongo]
-#  run_on:
-#  - macos-1014
-#  tasks:
-#  - name: tg_compile
+- name: macos-1014
+  display_name: macOS Mojave
+  modules: [mongo]
+  run_on:
+  - macos-1014
+  tasks:
+  - name: tg_compile
 
 - name: centos6-perf
   display_name: CentOS 6 for Performance
