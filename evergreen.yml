@@ -91,7 +91,6 @@ buildvariants:
   - ubuntu1804-build
   tasks:
   - name: tg_compile
-  - name: t_push
 
 - name: macos-1014
   display_name: macOS Mojave
