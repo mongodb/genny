@@ -172,7 +172,7 @@ class CuratorDownloader(Downloader):
             self._linux_distro = "macos"
 
         if "ubuntu" in self._linux_distro:
-            self._linux_distro = "ubuntu1604"
+            self._linux_distro = "ubuntu"
 
         if self._linux_distro in ("amazon2", "rhel8", "rhel62"):
             self._linux_distro = "rhel70"
