@@ -21,7 +21,7 @@ Here're the steps to get Genny up and running locally:
     -   Ubuntu 18.04: `sudo apt install build-essential`
     -   Red Hat/CentOS 7/Amazon Linux 2:
         `sudo yum groupinstall "Development Tools"`
-    -   Arch: Everything should already be set up.
+    -   Arch: `apk add bash clang gcc musl-dev linux-headers`
     -   macOS: `xcode-select --install`
     -   Windows: <https://visualstudio.microsoft.com/>
 
@@ -29,7 +29,9 @@ Here're the steps to get Genny up and running locally:
     The ones from mongodbtoolchain v3 are safe bets if you're
     unsure. (mongodbtoolchain is internal to MongoDB).
 
-3.  `./run-genny install [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
+3.  Make sure you have [libmongocrypt installed](https://github.com/mongodb/libmongocrypt#installing-libmongocrypt-from-distribution-packages)
+
+4.  `./run-genny install [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
 
     This command downloads Genny's toolchain, compiles Genny, creates its
     virtualenv, and installs Genny to `dist/`. You can rerun this command
@@ -325,12 +327,12 @@ cd genny
 evergreen set-module -m genny -i <ID> # Use the build ID from the previous step.
 ```
 
-In the browser window, select either `genny_patch_tasks` or `genny_auto_tasks`.
-`genny_patch_tasks` will run any workloads that you have added or modified locally
+In the browser window, select either `schedule_patch_auto_tasks` or `schedule_global_auto_tasks`.
+`schedule_patch_auto_tasks` will run any workloads that you have added or modified locally
 (based on your git history). This is useful if you want to test only the workload(s)
 you've been working on. 
 
-`genny_auto_tasks` automatically runs workloads based on the evergreen environment
+`schedule_global_auto_tasks` automatically runs workloads based on the evergreen environment
 (variables from `bootstrap.yml` and `runtime.yml` in DSI) and an optional AutoRun
 section in any workload, doing simple key-value matching between them. For example,
 suppose we have a `test_workload.yml` file in a `workloads/*/` subdirectory,
@@ -347,10 +349,10 @@ AutoRun:
 
 In this case, `test_workload` would be run whenever `bootstrap.yml`'s `mongodb_setup`
 variable has a value of `replica` or `single-replica`. In practice, the workload
-AutoRun sections are setup so that you can use `genny_auto_tasks` to run all relevant
+AutoRun sections are setup so that you can use `schedule_global_auto_tasks` to run all relevant
 workloads on a specific buildvariant.
 
-Both `genny_patch_tasks` and `genny_auto_tasks` will compile mongodb and then run
+Both `schedule_patch_auto_tasks` and `schedule_global_auto_tasks` will compile mongodb and then run
 the relevant workloads.
 
 NB:
@@ -367,17 +369,11 @@ After running, Genny will export data to the `build/CedarMetrics` directory as `
 actor and operation recorded.
 When executed in CI after submitting a patch, this data will be visible in the Evergreen perf UI.
 
-If running locally you can use the `curator` binary that Genny automatically downloads to export the
-metrics to various formats. You can view the export options like so:
-
-```sh
-./curator/curator ftdc export --help
-```
-
+If running locally you can use the `export` command that Genny provides to export to CSV.
 For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
 
 ```sh
-./curator/curator ftdc export csv --input build/CedarMetrics/InsertRemoveTest.Insert.ftdc --output insert.csv
+./run-genny export build/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
 ```
 
 ## Code Style and Limitations

@@ -8,8 +8,8 @@ GlobalDefaults:
   # In-memory: Database size works out about 12GB.
   InitialDocumentCount: &InitialNumDocs 10000000
   SecondaryDocumentCount: &SecondaryNumDocs 10000000
-  GlobalRateValue: &GlobalRateValue 1 per 2500 microsecond
-  ThreadsValue: &ThreadsValue 8
+  GlobalRateValue: &GlobalRateValue 1 per 1250 microsecond
+  ThreadsValue: &ThreadsValue 16
   # End: The previous block gets updated for the other configurations.
 
   # These values should match those are the top of LLTPhases.yml
