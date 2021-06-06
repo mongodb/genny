@@ -45,13 +45,11 @@ GlobalDefaults:
     OperationCommand:
       Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
       Update: {$inc: {counter: 1}}
-      # Write operations can fail with a ShardInvalidatedForTargeting error response due to the
-      # routing information for the temporary resharding collection not being available on the
-      # donor shard. Mongos is expected to automatically retry on it. TODO: Use the default
-      # {ThrowOnFailure: true} behavior after this issue has been addressed by SERVER-54020.
-      ThrowOnFailure: false
 
 Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 200
   # The reshardCollection command is expected to take a long to complete so we give the actor
   # running it a much higher socket timeout.
   ReshardCollection:
@@ -124,23 +122,21 @@ Actors:
 
 - Name: ReadWriteCollectionBeingResharded
   Type: CrudActor
+  Threads: 100
   Database: *Database
   Phases:
   - *Nop
   - *Nop
   - MetricsName: BeforeResharding
     Duration: 10 seconds
-    Threads: 100
     Collection: *Collection
     Operations: *ReadWriteOperations
   - MetricsName: DuringResharding
     Blocking: None
-    Threads: 100
     Collection: *Collection
     Operations: *ReadWriteOperations
   - MetricsName: AfterResharding
     Duration: 10 seconds
-    Threads: 100
     Collection: *Collection
     Operations: *ReadWriteOperations
 
