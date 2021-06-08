@@ -148,7 +148,7 @@ ActorTemplates:
           PhaseConfig:
             Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
             #ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
-            ScanType: standard
+            ScanType: snapshot
             #ScanContinuous: true
             # GenerateCollectionNames: true
             AggregatePipeline:
@@ -308,7 +308,7 @@ Actors:
       Active: [11]
       Comment: SnapshotScannerMedium
       Duration: *SnapshotScannerMediumDuration
-      ScanDuration: *SnapshotScannerMediumDuration
+      #ScanDuration: *SnapshotScannerMediumDuration
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
@@ -332,7 +332,7 @@ Actors:
       Active: [15]
       Comment: SnapshotScannerLong
       Duration: *SnapshotScannerLongDuration
-      ScanDuration: *SnapshotScannerLongDuration
+      #ScanDuration: *SnapshotScannerLongDuration
 
 #AutoRun:
 #  Requires:
