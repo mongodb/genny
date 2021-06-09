@@ -28,6 +28,7 @@
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
+#include <bsoncxx/types/bson_value/view.hpp>
 
 
 namespace {
@@ -751,6 +752,65 @@ private:
     const UniqueGenerator<int64_t> _maxGen;
 };
 
+class CycleGenerator : public Appendable {
+
+public:
+    CycleGenerator(const Node& node,
+                    GeneratorArgs generatorArgs,
+                    std::map<std::string, Parser<UniqueAppendable>> parsers)
+        : CycleGenerator(
+            extract(node, "of", "^Cycle"),
+            generatorArgs,
+            parsers,
+            extract(node, "number", "^Cycle").to<int64_t>()) {}
+
+    CycleGenerator(const Node& node,
+                GeneratorArgs generatorArgs,
+                std::map<std::string, Parser<UniqueAppendable>> parsers,
+                int64_t size)
+    : _cacheSize{size},
+      _cache{generateCache(node, generatorArgs, parsers, _cacheSize)},
+      _index{0} {}
+
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        auto cacheView = _cache.view();
+        builder.append(bsoncxx::builder::basic::kvp(key, cacheView[_index].get_value()));
+        updateIndex();
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        auto cacheView = _cache.view();
+        builder.append(cacheView[_index].get_value());
+        updateIndex();
+    }
+
+private:
+    static bsoncxx::array::value generateCache(const Node& node,
+                    GeneratorArgs generatorArgs,
+                    std::map<std::string, Parser<UniqueAppendable>> parsers,
+                    int64_t size) {
+        bsoncxx::builder::basic::array builder{};
+        auto valueGen = valueGenerator<false, UniqueAppendable>(node,
+            generatorArgs,
+            parsers);
+
+        for(int64_t i = 0; i < size; i++) {
+            valueGen->append(builder);
+        }
+        return builder.extract();
+    }
+
+    void updateIndex() {
+        _index += 1;
+        if(_index == _cacheSize) {
+            _index = 0;
+        }
+    }
+
+    int64_t _cacheSize;
+    bsoncxx::array::value _cache;
+    int64_t _index;
+
+};
 
 /** `{^Array: {of: {a: b}, number: 2}` */
 class ArrayGenerator : public Generator<bsoncxx::array::value> {
@@ -965,6 +1025,14 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
      }},
+    {"^Cycle",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers);
+     }},
+     {"^Once",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers, 1);
+     }},
 };
 
 
@@ -987,6 +1055,7 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node,
             if (meta == "^Verbatim") {
                 return documentGenerator<true>(node["^Verbatim"], generatorArgs);
             }
+
             std::stringstream msg;
             msg << "Invalid meta-key " << *meta << " at top-level";
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
