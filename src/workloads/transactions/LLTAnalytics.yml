@@ -14,7 +14,7 @@ GlobalDefaults:
 
   # These values should match those are the top of LLTPhases.yml
   dbname: &dbname llt
-  MaxPhases: &MaxPhases 16
+  MaxPhases: &MaxPhases 8
 
   # The Sample Document Shape.
   Document: &Doc
@@ -25,7 +25,8 @@ GlobalDefaults:
     price: {^RandomDouble: {min: 0.0, max: 1000.0}}
     data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
     orders: {^Array: {of: {ts: { ^RandomDate: { min: "2011-01-01", max: "2021-01-01" }},
-                          quantity: { ^RandomInt: { min: 1, max: 100 } } },
+                          quantity: { ^RandomInt: { min: 1, max: 100 } },
+                          unitPrice: { ^RandomDouble: {min: 0.0, max: 1000.0 } } },
                       number: { ^RandomInt: { min: 0, max: 10 }} }}
 
   LLTIndexes: &LLTIndexes
@@ -154,12 +155,12 @@ ActorTemplates:
             AggregatePipeline:
               {array: [{"$match":{"cuid":{"$gte":500}}},
                 {"$unwind": "$orders"},
-                {"$group": {"_id": "$ts", "count": {"$sum":"$orders.quantity"}}},
+                {"$group": {"_id": "$ts", "total": {"$sum":{ $multiply: [ "$orders.unitPrice", "$orders.quantity" ] }}}},
                 {"$sort": {"_id":1}}]
               }
             AggregateOptions:
               BatchSize: 1000
-              Comment: {^Parameter: {Name: "Comment", Default: "Scan.Snapshot"}}
+              Comment: {^Parameter: {Name: "Comment", Default: "Aggregate.Snapshot"}}
               AllowDiskUse: true # Naming convention follows c++ driver rather than mongo shell.  
 
 
@@ -242,7 +243,7 @@ Actors:
   Database: *dbname
   Phases:
     OnlyActiveInPhases:
-      Active: [0, 2, 4, 6, 8, 10, 12, 14, 16]
+      Active: [0, 2, 4, 6, 8]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -253,86 +254,42 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [1, 3, 5, 7, 9, 11, 13, 15]
+      Active: [1, 3, 5, 7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         LogEvery: 15 minutes
         Blocking: None
 
 # Naming Conventions:
-# Operation.Duration.Load_level.Operation.Type_of_test
+# Duration.Operation.Type_of_test
 # Operation:     Insert|Query|Update|Remove|Mixed
 # Duration:      Short|Medium|Long
 # Type of test:  Baseline|Benchmark
 #
-# Baseline without scans, benchmark with scans
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Short.Update.Baseline
-
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Short.Update.Benchmark
-      Active: [7]
-      Blocking: none
-
-## A thread per collection doing a scan.
-- ActorFromTemplate:
-    TemplateName: ScanTemplate
-    TemplateParameters:
-      Name: Short.Scan.Snapshot
-      Active: [7]
-      Comment: SnapshotScannerShort
-
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Medium.Update.Baseline
-      Active: [9]
-      Duration: *SnapshotScannerMediumDuration
-
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Medium.Update.Benchmark
-      Active: [11]
-      Blocking: none
-      Duration: *SnapshotScannerMediumDuration
-
-- ActorFromTemplate:
-    TemplateName: ScanTemplate
-    TemplateParameters:
-      Name: Medium.Scan.Snapshot
-      Active: [11]
-      Comment: SnapshotScannerMedium
-      Duration: *SnapshotScannerMediumDuration
-      #ScanDuration: *SnapshotScannerMediumDuration
+# Baseline without aggreagte, benchmark with aggregate
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Long.Update.Baseline
-      Active: [13]
+      Active: [5]
       Duration: *SnapshotScannerLongDuration
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Long.Update.Benchmark
-      Active: [15]
+      Active: [5]
       Blocking: none
       Duration: *SnapshotScannerLongDuration
 
 - ActorFromTemplate:
     TemplateName: ScanTemplate
     TemplateParameters:
-      Name: Long.Scan.Snapshot
-      Active: [15]
-      Comment: SnapshotScannerLong
+      Name: Long.Aggregate.Snapshot
+      Active: [7]
+      Comment: SnapshotAggregateLong
       Duration: *SnapshotScannerLongDuration
-      #ScanDuration: *SnapshotScannerLongDuration
 
 #AutoRun:
 #  Requires:
