@@ -163,22 +163,6 @@ ActorTemplates:
               Comment: {^Parameter: {Name: "Comment", Default: "Aggregate.Snapshot"}}
               AllowDiskUse: true # Naming convention follows c++ driver rather than mongo shell.  
 
-
-    #Documents: 1000
-    #ScanType: standard
-    #GlobalRate: 10 per 10 seconds
-    # Count the frequency of each character in array field "a".
-    #AggregatePipeline:
-    #    {array: [{"$addFields":{"a":{"$map":{"input":{"$range":[0,{"$strLenCP":"$a"}]},"in":{"$substrCP":["$a","$$this",1]}}}}},
-    #             {"$unwind": "$a"},
-    #             {"$group": {"_id": "$a", "count": {"$sum":1}}},
-    #             {"$sort": {"_id":1}},
-    #    ]}
-    #AggregateOptions:
-    #  BatchSize: 1000
-    #  Comment: Aggregation to count char frequency
-    #  AllowDiskUse: true # Naming convention follows c++ driver rather than mongo shell.             
-
 Clients:
   Default:
     QueryOptions:
@@ -279,14 +263,14 @@ Actors:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Long.Update.Benchmark
-      Active: [5]
+      Active: [7]
       Blocking: none
       Duration: *SnapshotScannerLongDuration
 
 - ActorFromTemplate:
     TemplateName: ScanTemplate
     TemplateParameters:
-      Name: Long.Aggregate.Snapshot
+      Name: Long.Aggregate.Benchmark
       Active: [7]
       Comment: SnapshotAggregateLong
       Duration: *SnapshotScannerLongDuration
