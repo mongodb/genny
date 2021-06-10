@@ -244,3 +244,6 @@ AutoRun:
           - replica
           - replica-all-feature-flags
           - standalone
+      branch_name:
+        $neq:
+          - v4.0

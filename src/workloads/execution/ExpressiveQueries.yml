@@ -186,3 +186,6 @@ AutoRun:
           - replica
           - single-replica
           - standalone
+      branch_name:
+        $neq:
+          - v4.0
