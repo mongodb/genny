@@ -1061,7 +1061,6 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node,
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
         }
     }
-
     DocumentGenerator::Impl::Entries entries;
     for (const auto&& [k, v] : node) {
         auto key = k.toString();
