@@ -150,7 +150,7 @@ ActorTemplates:
             Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
             #ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
             ScanType: snapshot
-            #ScanContinuous: true
+            ScanContinuous: true
             # GenerateCollectionNames: true
             AggregatePipeline:
               {array: [{"$match":{"cuid":{"$gte":500}}},
