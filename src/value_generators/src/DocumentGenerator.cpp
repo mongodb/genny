@@ -1055,12 +1055,12 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node,
             if (meta == "^Verbatim") {
                 return documentGenerator<true>(node["^Verbatim"], generatorArgs);
             }
-
             std::stringstream msg;
             msg << "Invalid meta-key " << *meta << " at top-level";
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
         }
     }
+
     DocumentGenerator::Impl::Entries entries;
     for (const auto&& [k, v] : node) {
         auto key = k.toString();
