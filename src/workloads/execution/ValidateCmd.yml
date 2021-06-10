@@ -56,5 +56,6 @@ Actors:
         validate: Collection0
 
 AutoRun:
-  Requires:
-    mongodb_setup: [standalone]
+  - When:
+      mongodb_setup:
+        $eq: standalone
