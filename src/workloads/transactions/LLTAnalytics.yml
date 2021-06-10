@@ -148,7 +148,7 @@ ActorTemplates:
           NopInPhasesUpTo: *MaxPhases
           PhaseConfig:
             Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
-            #ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
+            ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
             ScanType: snapshot
             ScanContinuous: true
             # GenerateCollectionNames: true
@@ -274,6 +274,7 @@ Actors:
       Active: [7]
       Comment: SnapshotAggregateLong
       Duration: *SnapshotScannerLongDuration
+      ScanDuration: *SnapshotScannerLongDuration
 
 #AutoRun:
 #  Requires:
