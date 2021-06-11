@@ -1,0 +1,116 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+
+  Database: &Database test
+
+  LocalCollection: &LocalCollection Collection0
+  LocalNamespace: &LocalNamespace test.Collection0
+
+  ForeignCollection: &ForeignCollection Collection1
+  ForeignNamespace: &ForeignNamespace test.Collection1
+
+  DocumentCount: &DocumentCount 5000
+  BatchSize: &BatchSize 1000
+  NumChunks: &NumChunks 5
+
+Actors:
+- Name: CreateShardedCollections
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *Database
+    - OperationMetricsName: ShardLocalCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: *LocalNamespace
+        key: {shardKey: hashed}
+        numInitialChunks: *NumChunks
+    - OperationMetricsName: ShardForeignCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: *ForeignNamespace
+        key: {shardKey: hashed}
+        numInitialChunks: *NumChunks
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: LoadInitialData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    BatchSize: *BatchSize
+    Threads: 1
+    DocumentCount: *DocumentCount
+    Database: *Database
+    CollectionCount: 2    # Loader will populate 'Collection0' then 'Collection1'.
+    Document:
+      shardKey: {^RandomInt: {min: 1, max: 100}}
+      date: &Date {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}}
+      int: {^RandomInt: {min: 1, max: 100}}
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        fsync: 1
+  - *Nop
+
+- Name: RunLookups
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 10    # Untargeted $lookup from sharded collection to sharded collection
+    Database: *Database
+    Operations:
+    - OperationMetricsName: UntargetedLookupShardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *LocalCollection
+        pipeline:
+          [{
+            $lookup: {
+              from: *ForeignCollection,
+              let: {localInt: "$int"},
+              pipeline: [{
+                $match: {
+                  $expr: {
+                    $and: [
+                      {$eq: ["$int", "$$localInt"]},
+                      {$lte: ["$date", *Date]}
+                    ]
+                  }
+                }
+              }],
+              as: matches
+            }
+          }]
+        cursor: {batchSize: *BatchSize}
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq: shard-lite-all-feature-flags
