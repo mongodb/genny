@@ -6,8 +6,8 @@ Description: |
 GlobalDefaults:
   # Start: The following block gets updated for the other configurations.
   # Not In-memory: Database size works out about 30GB.
-  InitialDocumentCount: &InitialNumDocs 4900000 #0
-  SecondaryDocumentCount: &SecondaryNumDocs 1000000 #0
+  InitialDocumentCount: &InitialNumDocs 49000000
+  SecondaryDocumentCount: &SecondaryNumDocs 10000000
   GlobalRateValue: &GlobalRateValue 1 per 1250 microsecond
   ThreadsValue: &ThreadsValue 16
   # End: The previous block gets updated for the other configurations.
@@ -148,9 +148,9 @@ ActorTemplates:
           NopInPhasesUpTo: *MaxPhases
           PhaseConfig:
             Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
-            ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
+            #ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
             ScanType: snapshot
-            ScanContinuous: true
+            #ScanContinuous: true
             # GenerateCollectionNames: true
             AggregatePipeline:
               {array: [{"$match":{"cuid":{"$gte":500}}},
@@ -274,7 +274,7 @@ Actors:
       Active: [7]
       Comment: SnapshotAggregateLong
       Duration: *SnapshotScannerLongDuration
-      ScanDuration: *SnapshotScannerLongDuration
+      #ScanDuration: *SnapshotScannerLongDuration
 
 #AutoRun:
 #  Requires:
