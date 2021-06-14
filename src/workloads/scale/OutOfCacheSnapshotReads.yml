@@ -76,5 +76,6 @@ Actors:
     ScanType: point-in-time
 
 AutoRun:
-  Requires:
-    mongodb_setup: [replica-1dayhistory-15gbwtcache]
+  - When:
+      mongodb_setup:
+        $eq: replica-1dayhistory-15gbwtcache

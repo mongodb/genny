@@ -235,10 +235,15 @@ Actors:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: [{$replaceWith: *largeDocument}], multi: false}]
         writeConcern: {w: majority}
+
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - atlas
-    - replica
-    - replica-all-feature-flags
-    - standalone
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - replica-all-feature-flags
+          - standalone
+      branch_name:
+        $neq:
+          - v4.0

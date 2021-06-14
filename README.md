@@ -327,35 +327,77 @@ cd genny
 evergreen set-module -m genny -i <ID> # Use the build ID from the previous step.
 ```
 
-In the browser window, select either `schedule_patch_auto_tasks` or `schedule_global_auto_tasks`.
+In the browser window, select either `schedule_patch_auto_tasks` or `schedule_variant_auto_tasks`.
 `schedule_patch_auto_tasks` will run any workloads that you have added or modified locally
 (based on your git history). This is useful if you want to test only the workload(s)
-you've been working on. 
+you've been working on. Note that `schedule_patch_auto_tasks` will only schedule a task for
+a variant if the workload is compatible (see AutoRun below).
 
-`schedule_global_auto_tasks` automatically runs workloads based on the evergreen environment
+`schedule_variant_auto_tasks` automatically runs workloads based on the evergreen environment
 (variables from `bootstrap.yml` and `runtime.yml` in DSI) and an optional AutoRun
-section in any workload, doing simple key-value matching between them. For example,
+section in any workload. The AutoRun section is a list of <When/ThenRun> blocks,
+where if the When condition is met, tasks are scheduled with additional bootstrap
+values from ThenRun. For example,
 suppose we have a `test_workload.yml` file in a `workloads/*/` subdirectory,
 containing the following AutoRun section:
 
 ```yaml
 AutoRun:
-  Requires:
-    bootstrap:
-      mongodb_setup: 
-        - replica
-        - single-replica
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-noflowcontrol
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+    ThenRun:
+      - infrastructure_provisioning: foo
+      - infrastructure_provisioning: bar
+      - arbitrary_key: baz
 ```
 
-In this case, `test_workload` would be run whenever `bootstrap.yml`'s `mongodb_setup`
-variable has a value of `replica` or `single-replica`. In practice, the workload
-AutoRun sections are setup so that you can use `schedule_global_auto_tasks` to run all relevant
-workloads on a specific buildvariant.
+In this case, it looks in the `bootstrap.yml` of `test_workload`, checks if `mongodb_setup`
+is either `replica` or `replica-noflowcontrol`, and also if `branch_name` is neither `v4.0` nor `v4.2`.
+If both conditions are true, then we schedule several tasks. Let's say the workload name is
+`DemoWorkload`, 3 tasks are scheduled - `demo_workload_foo`, `demo_workload_bar`, and `demo_workload_baz`.
+The first task is passed in the bootstrap value `infrastructure_provisioning: foo`, the second
+is passed in `infrastructure_provisioning: bar` and the third `arbitrary_key: baz`.
 
-Both `schedule_patch_auto_tasks` and `schedule_global_auto_tasks` will compile mongodb and then run
-the relevant workloads.
+This is a more complex example of AutoRun. Here's a more simple one representing a more common usecase:
 
-NB:
+```yaml
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq: standalone
+```
+
+Let's say this is `DemoWorkload` again. In this case, if `mongodb_setup` is `standalone`
+we schedule `demo_workload` with no additional params.
+
+A few notes on the syntax:
+- Supports multiple When/ThenRun blocks per AutoRun. Each are evaluated independently.
+- When blocks can evaluate multiple conditions. All conditions must be true to schedule the task.
+- When supports $eq and $neq. Both can accept either a scalar or list of values.
+- For a list of values, $eq evaluates to true if it is equal to at least one.
+- For a list of values, $neq evaluates to true if it is equal to none of the values.
+- ThenRun blocks are optional.
+    - **Most usecases do not need to use ThenRun**
+    - If you do use ThenRun, please be judicious. If you have a task that is scheduled when
+      mongodb_setup == replica, it would be confusing if mongodb_setup was overwritten to standalone.
+      But it would be ok to overwrite mongodb_setup to replica-delay-mixed, as is done in the
+      [ParallelWorkload][pi] workload.
+- Each item in the ThenRun list can only support one {bootstrap_key: bootstrap_value} pair.
+- If using ThenRun but you would also like to schedule a task without any bootstrap overrides,
+  Add an extra pair to ThenRun with the original key/value, like done on line 189 [here][pi].
+- If using ThenRun, the new task name becomes <taskname>_<bootstrap-value>. In the ParallelWorkload example,
+  the task name becomes parallel_insert_replica_delay_mixed (name is automatically converted to snake_case).
+  The bootstrap-key is not included in the name for the purpose of not changing existing names and
+  thus deleting history. This may change after PM-2310.
+
+NB on patch-testing:
 
 1.  After the task runs you can call `set-module` again with more local changes from Genny or DSI.
     This lets you skip the 20 minute wait to recompile the server.
@@ -425,5 +467,6 @@ The toolchain isn't instrumented with sanitizers, so you may get
 
 
 [fp]: https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow#false-positives
+[pi]: https://github.com/mongodb/genny/blob/762b08ee3b71184d5f521e82f7ce6d6eeb3c0cc9/src/workloads/docs/ParallelInsert.yml#L183-L189
 
 
