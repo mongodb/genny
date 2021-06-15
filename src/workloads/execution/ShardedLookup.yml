@@ -1,20 +1,13 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of $lookup against a sharded foreign collection.
 
-GlobalDefaults:
-  Nop: &Nop {Nop: true}
-
-  Database: &Database test
-
-  LocalCollection: &LocalCollection Collection0
-  LocalNamespace: &LocalNamespace test.Collection0
-
-  ForeignCollection: &ForeignCollection Collection1
-  ForeignNamespace: &ForeignNamespace test.Collection1
-
-  DocumentCount: &DocumentCount 5000
-  BatchSize: &BatchSize 1000
-  NumChunks: &NumChunks 5
+  The workload consists of the following phases:
+    1. Creating empty sharded collections distributed across all shards in the cluster.
+    2. Populating collections with data.
+    3. Fsync.
+    4. Running targeted $lookup from a sharded collection.
 
 Actors:
 - Name: CreateShardedCollections
@@ -27,20 +20,20 @@ Actors:
     - OperationMetricsName: EnableSharding
       OperationName: AdminCommand
       OperationCommand:
-        enableSharding: *Database
+        enableSharding: &Database test
     - OperationMetricsName: ShardLocalCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: *LocalNamespace
+        shardCollection: test.Collection0
         key: {shardKey: hashed}
-        numInitialChunks: *NumChunks
+        numInitialChunks: &NumChunks 5
     - OperationMetricsName: ShardForeignCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: *ForeignNamespace
+        shardCollection: test.Collection1
         key: {shardKey: hashed}
         numInitialChunks: *NumChunks
-  - *Nop
+  - &Nop {Nop: true}
   - *Nop
   - *Nop
 
@@ -50,9 +43,9 @@ Actors:
   Phases:
   - *Nop
   - Repeat: 1
-    BatchSize: *BatchSize
+    BatchSize: &BatchSize 1000
     Threads: 1
-    DocumentCount: *DocumentCount
+    DocumentCount: 5000
     Database: *Database
     CollectionCount: 2    # Loader will populate 'Collection0' then 'Collection1'.
     Document:
@@ -89,11 +82,11 @@ Actors:
     - OperationMetricsName: UntargetedLookupShardedToSharded
       OperationName: RunCommand
       OperationCommand:
-        aggregate: *LocalCollection
+        aggregate: Collection0
         pipeline:
           [{
             $lookup: {
-              from: *ForeignCollection,
+              from: Collection1,
               let: {localInt: "$int"},
               pipeline: [{
                 $match: {
