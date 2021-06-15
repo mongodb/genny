@@ -7,7 +7,7 @@ Description: |
     1. Creating empty sharded collections distributed across all shards in the cluster.
     2. Populating collections with data.
     3. Fsync.
-    4. Running targeted $lookup from a sharded collection.
+    4. Running untargeted $lookup from a sharded collection.
 
 Actors:
 - Name: CreateShardedCollections
@@ -25,8 +25,9 @@ Actors:
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0
+        # Hashed sharding will ensure that the chunks are evenly distributed across the shards.
         key: {shardKey: hashed}
-        numInitialChunks: &NumChunks 5
+        numInitialChunks: &NumChunks 6
     - OperationMetricsName: ShardForeignCollection
       OperationName: AdminCommand
       OperationCommand:
@@ -45,7 +46,7 @@ Actors:
   - Repeat: 1
     BatchSize: &BatchSize 1000
     Threads: 1
-    DocumentCount: 5000
+    DocumentCount: 10000
     Database: *Database
     CollectionCount: 2    # Loader will populate 'Collection0' then 'Collection1'.
     Document:
