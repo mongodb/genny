@@ -44,7 +44,7 @@ TEST_CASE_METHOD(
             Database: mydb
             Collection: mycoll
             BatchSize: 1000
-            DocumentCount: 10_000
+            DocumentCount: 10000
             Document: {field: {^RandomInt: {min: 0, max: 100}}}
     )",
                                   __FILE__);

@@ -51,7 +51,7 @@ namespace genny::actor {
  *     Database: test
  *     Collection: mycoll
  *     BatchSize: 1000
- *     DocumentCount: 100_000
+ *     DocumentCount: 100000
  *     Document: {field: {^RandomInt: {min: 0, max: 100}}}
  * ```
  *
