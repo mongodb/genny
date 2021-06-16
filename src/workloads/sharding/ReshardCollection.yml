@@ -21,7 +21,7 @@ GlobalDefaults:
   Nop: &Nop {Nop: true}
 
   Database: &Database test
-  # Collection0 is the default collection populated by the MonotonicLoader.
+  # Collection0 is the default collection populated by the MonotonicSingleLoader.
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
 
@@ -83,16 +83,14 @@ Actors:
   - *Nop
 
 - Name: LoadInitialData
-  Type: MonotonicLoader
-  Threads: 1
+  Type: MonotonicSingleLoader
+  Threads: 100
   Phases:
   - *Nop
   - Repeat: 1
     BatchSize: 1000
-    Threads: 1
     DocumentCount: *DocumentCount
     Database: *Database
-    CollectionCount: 1
     Document:
       oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
       newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
