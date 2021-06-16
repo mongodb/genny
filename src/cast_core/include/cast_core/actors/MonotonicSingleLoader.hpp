@@ -35,10 +35,13 @@ namespace genny::actor {
  * However, the MonotonicSingleLoader actor differs from the Loader and
  * MonotonicLoader actors in a few notable ways:
  *
+ *  - The MonotonicSingleLoader actor can only insert data into a single
+ *    collection.
+ *
  *  - The collection name is optional and defaults to "Collection0" if omitted.
  *
- *  - The MonotonicSingleLoader actor must only ever be active in one phase of the
- *    workload.
+ *  - The MonotonicSingleLoader actor must only ever be active in one phase of
+ *    the workload.
  *
  * ```yaml
  * SchemaVersion: 2018-07-01
