@@ -1,0 +1,16 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+
+Actors:
+- Name: LoadInitialData
+  Type: MonotonicSingleLoader
+  Threads: 100
+  # The MonotonicSingleLoader must only ever be active in a single phase of the workload.
+  Phases:
+  - Repeat: 1
+    Database: test
+    # The collection name is optional and defaults to "Collection0" if omitted.
+    Collection: mycoll
+    BatchSize: 1000
+    DocumentCount: 100000
+    Document: {field: {^RandomInt: {min: 0, max: 100}}}
