@@ -28,8 +28,8 @@ Actors:
     DocumentCount: 1000
     BatchSize: 1000
     Indexes:
-    - keys: {"hash" : 1, "key" : 1, "string1" : 1, "string2" : 1}
-    - keys: {"key": 1}
+    - keys: {hash : 1, key : 1, string1 : 1, string2 : 1}
+    - keys: {key: 1}
     Document:
       _id: {^Inc: {start: 0}}
       hash: &randomString {^RandomString: {length: 22}}
@@ -51,7 +51,7 @@ Actors:
       OperationCommand:
         Filter:
           hash:
-            $in: &arrayGenerator {^Once: {^Array: {of: *randomString, number: 20000}}}
+            $in: &arrayGenerator {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString, number: 20000}}}}
           key:
             $in: *arrayGenerator
 

@@ -759,27 +759,31 @@ public:
                     GeneratorArgs generatorArgs,
                     std::map<std::string, Parser<UniqueAppendable>> parsers)
         : CycleGenerator(
-            extract(node, "of", "^Cycle"),
+            node,
             generatorArgs,
             parsers,
-            extract(node, "number", "^Cycle").to<int64_t>()) {}
+            extract(node, "ofLength", "^Cycle").to<int64_t>()) {}
 
     CycleGenerator(const Node& node,
                 GeneratorArgs generatorArgs,
                 std::map<std::string, Parser<UniqueAppendable>> parsers,
-                int64_t size)
-    : _cacheSize{size},
-      _cache{generateCache(node, generatorArgs, parsers, _cacheSize)},
-      _index{0} {}
+                int64_t ofLength)
+    : _ofLength{ofLength},
+      _cache{generateCache(
+            extract(node, "fromGenerator", "^Cycle"),
+            generatorArgs,
+            parsers,
+            _ofLength)},
+      _currentIndex{0} {}
 
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         auto cacheView = _cache.view();
-        builder.append(bsoncxx::builder::basic::kvp(key, cacheView[_index].get_value()));
+        builder.append(bsoncxx::builder::basic::kvp(key, cacheView[_currentIndex].get_value()));
         updateIndex();
     }
     void append(bsoncxx::builder::basic::array& builder) override {
         auto cacheView = _cache.view();
-        builder.append(cacheView[_index].get_value());
+        builder.append(cacheView[_currentIndex].get_value());
         updateIndex();
     }
 
@@ -800,15 +804,12 @@ private:
     }
 
     void updateIndex() {
-        _index += 1;
-        if(_index == _cacheSize) {
-            _index = 0;
-        }
+        _currentIndex = (_currentIndex + 1) % _ofLength;
     }
 
-    int64_t _cacheSize;
+    int64_t _ofLength;
     bsoncxx::array::value _cache;
-    int64_t _index;
+    int64_t _currentIndex;
 
 };
 
@@ -1029,7 +1030,7 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers);
      }},
-     {"^Once",
+     {"^FixedGeneratedValue",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers, 1);
      }},
