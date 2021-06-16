@@ -756,25 +756,19 @@ class CycleGenerator : public Appendable {
 
 public:
     CycleGenerator(const Node& node,
-                    GeneratorArgs generatorArgs,
-                    std::map<std::string, Parser<UniqueAppendable>> parsers)
+                   GeneratorArgs generatorArgs,
+                   std::map<std::string, Parser<UniqueAppendable>> parsers)
         : CycleGenerator(
-            node,
-            generatorArgs,
-            parsers,
-            extract(node, "ofLength", "^Cycle").to<int64_t>()) {}
+              node, generatorArgs, parsers, extract(node, "ofLength", "^Cycle").to<int64_t>()) {}
 
     CycleGenerator(const Node& node,
-                GeneratorArgs generatorArgs,
-                std::map<std::string, Parser<UniqueAppendable>> parsers,
-                int64_t ofLength)
-    : _ofLength{ofLength},
-      _cache{generateCache(
-            extract(node, "fromGenerator", "^Cycle"),
-            generatorArgs,
-            parsers,
-            _ofLength)},
-      _currentIndex{0} {}
+                   GeneratorArgs generatorArgs,
+                   std::map<std::string, Parser<UniqueAppendable>> parsers,
+                   int64_t ofLength)
+        : _ofLength{ofLength},
+          _cache{generateCache(
+              extract(node, "fromGenerator", "^Cycle"), generatorArgs, parsers, _ofLength)},
+          _currentIndex{0} {}
 
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         auto cacheView = _cache.view();
@@ -788,16 +782,15 @@ public:
     }
 
 private:
-    static bsoncxx::array::value generateCache(const Node& node,
-                    GeneratorArgs generatorArgs,
-                    std::map<std::string, Parser<UniqueAppendable>> parsers,
-                    int64_t size) {
+    static bsoncxx::array::value generateCache(
+        const Node& node,
+        GeneratorArgs generatorArgs,
+        std::map<std::string, Parser<UniqueAppendable>> parsers,
+        int64_t size) {
         bsoncxx::builder::basic::array builder{};
-        auto valueGen = valueGenerator<false, UniqueAppendable>(node,
-            generatorArgs,
-            parsers);
+        auto valueGen = valueGenerator<false, UniqueAppendable>(node, generatorArgs, parsers);
 
-        for(int64_t i = 0; i < size; i++) {
+        for (int64_t i = 0; i < size; i++) {
             valueGen->append(builder);
         }
         return builder.extract();
@@ -810,16 +803,14 @@ private:
     int64_t _ofLength;
     bsoncxx::array::value _cache;
     int64_t _currentIndex;
-
 };
 
 /** `{^Array: {of: {a: b}, number: 2}` */
 class ArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
     ArrayGenerator(const Node& node,
-                      GeneratorArgs generatorArgs,
-                      std::map<std::string, Parser<UniqueAppendable>>
-                          parsers)
+                   GeneratorArgs generatorArgs,
+                   std::map<std::string, Parser<UniqueAppendable>> parsers)
         : _rng{generatorArgs.rng},
           _node{node},
           _generatorArgs{generatorArgs},
@@ -1030,7 +1021,7 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers);
      }},
-     {"^FixedGeneratedValue",
+    {"^FixedGeneratedValue",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers, 1);
      }},
@@ -1074,12 +1065,12 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node,
 /**
  * @tparam Verbatim if we're in a `^Verbatim block`
  * @param node sequence node
- * @return literal array of generators that has one valueGenerator (recursive type) for each element in
- * the node
+ * @return literal array of generators that has one valueGenerator (recursive type) for each element
+ * in the node
  */
 template <bool Verbatim>
 UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
-                                                      GeneratorArgs generatorArgs) {
+                                                             GeneratorArgs generatorArgs) {
     LiteralArrayGenerator::ValueType entries;
     for (const auto&& [k, v] : node) {
         auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, generatorArgs, allParsers);
