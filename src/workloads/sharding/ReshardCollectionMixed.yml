@@ -136,6 +136,18 @@ Actors:
     Collection: *Collection
     Operations: *ReadWriteOperations
 
+# Guard against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1, 3]
+      NopInPhasesUpTo: 4
+      PhaseConfig:
+        LogEvery: 15 minutes
+        Blocking: None
+
 AutoRun:
   - When:
       mongodb_setup:
