@@ -27,15 +27,13 @@ GlobalDefaults:
 
   # Note that the exact document size may exceed ApproxDocumentSize because of field names and other
   # fields in the document.
-  ApproxDocumentSize: &ApproxDocumentSize 10000  # = 10kB
-  ApproxDocumentSize80Pct: &ApproxDocumentSize80Pct 8000  # = 8kB
-  # TODO: Increase DocumentCount to 4000000 so there will be ~20GB of data inserted on each shard
-  # and increase NumReshardedChunks to 400 so there continue to be ~50MB of data per chunk.
-  DocumentCount: &DocumentCount 100000  # for an approximate total of 1GB
-  NumChunks: &NumChunks 20              # with approximately 50MB per chunk
+  ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
+  ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
+  DocumentCount: &DocumentCount 4_000_000  # for an approximate total of 6GB
+  NumChunks: &NumChunks 120                # with approximately 50MB per chunk
 
   ShardKeyValueMin: &ShardKeyValueMin 1
-  ShardKeyValueMax: &ShardKeyValueMax 100
+  ShardKeyValueMax: &ShardKeyValueMax 12_000
 
   ReadWriteOperations: &ReadWriteOperations
   - OperationName: findOne
@@ -55,7 +53,7 @@ Clients:
   ReshardCollection:
     QueryOptions:
       maxPoolSize: 1
-      socketTimeoutMS: 3600000  # = 1 hour
+      socketTimeoutMS: 36_000_000  # = 10 hours
 
 Actors:
 - Name: CreateShardedCollection
@@ -95,7 +93,7 @@ Actors:
       oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
       newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
       counter: 0
-      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize80Pct, max: *ApproxDocumentSize}}}}
+      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
   - *Nop
   - *Nop
   - *Nop
