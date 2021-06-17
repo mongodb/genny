@@ -49,7 +49,7 @@ GlobalDefaults:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 300
+      maxPoolSize: 301
   # The reshardCollection command is expected to take a long to complete so we give the actor
   # running it a much higher socket timeout.
   ReshardCollection:
