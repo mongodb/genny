@@ -51,7 +51,7 @@ GlobalDefaults:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 301
+      maxPoolSize: 201
   # The reshardCollection command is expected to take a long to complete so we give the actor
   # running it a much higher socket timeout.
   ReshardCollection:
@@ -122,7 +122,7 @@ Actors:
 
 - Name: ReadCollectionBeingResharded
   Type: CrudActor
-  Threads: 100
+  Threads: 50
   Database: *Database
   Phases:
   - *Nop
@@ -142,7 +142,7 @@ Actors:
 
 - Name: WriteCollectionBeingResharded
   Type: CrudActor
-  Threads: 100
+  Threads: 50
   Database: *Database
   Phases:
   - *Nop
