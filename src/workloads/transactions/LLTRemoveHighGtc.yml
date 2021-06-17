@@ -39,7 +39,7 @@ GlobalDefaults:
   PtcRemoveOperation: &PtcRemoveOperation
     OperationName: deleteOne
     OperationCommand:
-      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 1000.0 }}}}
       OperationOptions:
         WriteConcern:
           Level: majority
@@ -47,7 +47,7 @@ GlobalDefaults:
   PcRemoveOperation: &PcRemoveOperation
     OperationName: deleteOne
     OperationCommand:
-      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 1000.0 }}}}
       OperationOptions:
         WriteConcern:
           Level: majority
@@ -288,12 +288,15 @@ Actors:
       Duration: *SnapshotScannerLongDuration
       ScanDuration: *SnapshotScannerLongDuration
 
-#AutoRun:
-#  - When:
-#      mongodb_setup:
-#        $eq:
-#          - atlas
-#          - replica
-#          - replica-all-feature-flags
-#          - single-replica
-
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - replica-all-feature-flags
+          - single-replica
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
