@@ -126,7 +126,7 @@ Actors:
   - *Nop
   - *Nop
   - MetricsName: BeforeResharding
-    Duration: 10 seconds
+    Duration: 1 minute
     Collection: *Collection
     Operations: *ReadOperations
   - MetricsName: DuringResharding
@@ -134,7 +134,7 @@ Actors:
     Collection: *Collection
     Operations: *ReadOperations
   - MetricsName: AfterResharding
-    Duration: 10 seconds
+    Duration: 1 minute
     Collection: *Collection
     Operations: *ReadOperations
 
@@ -146,7 +146,7 @@ Actors:
   - *Nop
   - *Nop
   - MetricsName: BeforeResharding
-    Duration: 10 seconds
+    Duration: 1 minute
     Collection: *Collection
     Operations: *WriteOperations
   - MetricsName: DuringResharding
@@ -154,7 +154,7 @@ Actors:
     Collection: *Collection
     Operations: *WriteOperations
   - MetricsName: AfterResharding
-    Duration: 10 seconds
+    Duration: 1 minute
     Collection: *Collection
     Operations: *WriteOperations
 
