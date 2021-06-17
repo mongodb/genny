@@ -35,10 +35,12 @@ GlobalDefaults:
   ShardKeyValueMin: &ShardKeyValueMin 1
   ShardKeyValueMax: &ShardKeyValueMax 12_000
 
-  ReadWriteOperations: &ReadWriteOperations
+  ReadOperations: &ReadOperations
   - OperationName: findOne
     OperationCommand:
       Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+
+  WriteOperations: &WriteOperations
   - OperationName: updateOne
     OperationCommand:
       Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
@@ -116,7 +118,7 @@ Actors:
         key: {newKey: 1}
   - *Nop
 
-- Name: ReadWriteCollectionBeingResharded
+- Name: ReadCollectionBeingResharded
   Type: CrudActor
   Threads: 100
   Database: *Database
@@ -126,15 +128,35 @@ Actors:
   - MetricsName: BeforeResharding
     Duration: 10 seconds
     Collection: *Collection
-    Operations: *ReadWriteOperations
+    Operations: *ReadOperations
   - MetricsName: DuringResharding
     Blocking: None
     Collection: *Collection
-    Operations: *ReadWriteOperations
+    Operations: *ReadOperations
   - MetricsName: AfterResharding
     Duration: 10 seconds
     Collection: *Collection
-    Operations: *ReadWriteOperations
+    Operations: *ReadOperations
+
+- Name: WriteCollectionBeingResharded
+  Type: CrudActor
+  Threads: 100
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - MetricsName: BeforeResharding
+    Duration: 10 seconds
+    Collection: *Collection
+    Operations: *WriteOperations
+  - MetricsName: DuringResharding
+    Blocking: None
+    Collection: *Collection
+    Operations: *WriteOperations
+  - MetricsName: AfterResharding
+    Duration: 10 seconds
+    Collection: *Collection
+    Operations: *WriteOperations
 
 # Guard against timeout for no output.
 - Name: LoggingActor
