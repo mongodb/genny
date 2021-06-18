@@ -78,7 +78,11 @@ void MonotonicSingleLoader::run() {
 
                 {
                     auto individualOpCtx = _individualBulkLoad.start();
-                    auto result = config->collection.insert_many(std::move(docs));
+
+                    // Use ordered:false to increase write parallelism for sharded collections.
+                    auto options = mongocxx::options::insert();
+                    options.ordered(false);
+                    auto result = config->collection.insert_many(std::move(docs), options);
 
                     totalOpCtx.addBytes(numBytes);
                     individualOpCtx.addBytes(numBytes);
