@@ -29,13 +29,13 @@ GlobalDefaults:
   # fields in the document.
   ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
   ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
-  DocumentCount: &DocumentCount 2_000_000  # for an approximate total of 3GB
-  NumChunks: &NumChunks 60                 # with approximately 50MB per chunk
+  DocumentCount: &DocumentCount 8_000_000  # for an approximate total of 12GB
+  NumChunks: &NumChunks 240                # with approximately 50MB per chunk
 
   ShardKeyValueMin: &ShardKeyValueMin 1
   # We use 100x the number of chunks so that the $sample aggregation to choose the new split points
   # has a wide range of distinct values to choose from. It could be even larger.
-  ShardKeyValueMax: &ShardKeyValueMax 6000
+  ShardKeyValueMax: &ShardKeyValueMax 24_000
 
   ReadOperations: &ReadOperations
   - OperationName: findOne
@@ -122,7 +122,7 @@ Actors:
 
 - Name: ReadCollectionBeingResharded
   Type: CrudActor
-  Threads: 50
+  Threads: 95
   Database: *Database
   Phases:
   - *Nop
@@ -142,7 +142,7 @@ Actors:
 
 - Name: WriteCollectionBeingResharded
   Type: CrudActor
-  Threads: 50
+  Threads: 5
   Database: *Database
   Phases:
   - *Nop
