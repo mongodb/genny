@@ -1,0 +1,163 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    # Choose a collection large enough such that a sort will trigger a spill to disk.
+    # Note that we create an index on the sort field (t) to keep from generating a sort operation.
+    DocumentCount: 100000
+    BatchSize: &batchSize 100000
+    Document:
+      t: {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}}
+      x: {^RandomDouble: {distribution: normal, mean: 0, sigma: 3}}
+      y: {^RandomDouble: {distribution: normal, mean: 1, sigma: 3}}
+      z: {^RandomString: {length: 1000}} # Unused field
+  - Nop: true
+  - Nop: true
+
+- Name: CreateIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes: [{key: {t: 1}, name: "t"}]
+  - Nop: true
+
+- Name: CumulativeWindows
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
+    - OperationMetricsName: Sum
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{
+              $setWindowFields: {
+                sortBy: {t: 1},
+                output: {
+                  sum: {
+                    $sum: "$x",
+                    window: {documents: ["unbounded", "current"]}
+                  }
+                }
+              }
+            }]
+          cursor: {batchSize: *batchSize}
+    - OperationMetricsName: Avg
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{
+              $setWindowFields: {
+                sortBy: {t: 1},
+                output: {
+                  avg: {
+                    $avg: "$x",
+                    window: {documents: ["unbounded", "current"]}
+                  }
+                }
+              }
+            }]
+          cursor: {batchSize: *batchSize}
+    - OperationMetricsName: StdDevPop
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{
+              $setWindowFields: {
+                sortBy: {t: 1},
+                output: {
+                  stdDevPop: {
+                    $stdDevPop: "$x",
+                    window: {documents: ["unbounded", "current"]}
+                  }
+                }
+              }
+            }]
+          cursor: {batchSize: *batchSize}
+    - OperationMetricsName: StdDevSamp
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{
+              $setWindowFields: {
+                sortBy: {t: 1},
+                output: {
+                  stdDevSamp: {
+                    $stdDevSamp: "$x",
+                    window: {documents: ["unbounded", "current"]}
+                  }
+                }
+              }
+            }]
+          cursor: {batchSize: *batchSize}
+    - OperationMetricsName: CovPop
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{
+              $setWindowFields: {
+                sortBy: {t: 1},
+                output: {
+                  covariancePop: {
+                    $covariancePop: ["$x", "$y"],
+                    window: {documents: ["unbounded", "current"]}
+                  }
+                }
+              }
+            }]
+          cursor: {batchSize: *batchSize}
+    - OperationMetricsName: CovSamp
+      OperationName: RunCommand
+      OperationCommand:
+          aggregate: Collection0
+          pipeline:
+            [{
+              $setWindowFields: {
+                sortBy: {t: 1},
+                output: {
+                  covarianceSamp: {
+                    $covarianceSamp: ["$x", "$y"],
+                    window: {documents: ["unbounded", "current"]}
+                  }
+                }
+              }
+            }]
+          cursor: {batchSize: *batchSize}
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - replica
+          - replica-all-feature-flags
+          - shard-lite
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4

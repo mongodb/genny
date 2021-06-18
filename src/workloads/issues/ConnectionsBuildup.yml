@@ -95,6 +95,6 @@ Actors:
     Blocking: None # must be Blocking:None
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - shard-single
+  - When:
+      mongodb_setup:
+        $eq: shard-single

@@ -5,8 +5,8 @@ Description: |
 
 GlobalDefaults:
   # Start: The following block gets updated for the other configurations.
-  # Not In-memory: Database size works out about 30GB.
-  InitialDocumentCount: &InitialNumDocs 49000000
+  # In-memory: Database size works out about 12GB.
+  InitialDocumentCount: &InitialNumDocs 10000000
   SecondaryDocumentCount: &SecondaryNumDocs 10000000
   GlobalRateValue: &GlobalRateValue 1 per 2500 microsecond
   ThreadsValue: &ThreadsValue 8
@@ -43,7 +43,7 @@ GlobalDefaults:
   PtcUpdateOperation: &PtcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -57,7 +57,7 @@ GlobalDefaults:
   PcUpdateOperation: &PcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -71,7 +71,7 @@ GlobalDefaults:
   CpcUpdateOperation: &CpcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Filter: {caid: {$gte: {^RandomInt: { min: 0, max: 1000 }}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -310,10 +310,15 @@ Actors:
       Duration: *SnapshotScannerLongDuration
       ScanDuration: *SnapshotScannerLongDuration
 
-#AutoRun:
-#  Requires:
-#    mongodb_setup:
-#      - atlas
-#      - replica
-#      - replica-all-feature-flags
-#      - single-replica
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas-like-replica
+          - replica
+          - replica-all-feature-flags
+          - single-replica
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2

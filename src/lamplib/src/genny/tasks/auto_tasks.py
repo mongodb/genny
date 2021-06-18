@@ -140,15 +140,21 @@ class CurrentBuildInfo:
         :return: if the actual value from env[key] is in the list of acceptable values
         """
         if key not in self.conts:
-            raise Exception(f"Unknown key {key}. Know about {self.conts.keys()}")
+            return False
         actual = self.conts[key]
         return any(actual == acceptable_value for acceptable_value in acceptable_values)
 
 
 class GeneratedTask(NamedTuple):
     name: str
-    mongodb_setup: Optional[str]
+    bootstrap_key: Optional[str]
+    bootstrap_value: Optional[str]
     workload: "Workload"
+
+
+class AutoRunBlock(NamedTuple):
+    when: dict
+    then_run: dict
 
 
 class Workload:
@@ -162,11 +168,8 @@ class Workload:
 
     is_modified: bool
 
-    requires: Optional[dict] = None
-    """The `Requires` block, if present"""
-
-    setups: Optional[List[str]] = None
-    """The PrepareEnvironmentWith:mongodb_setup block, if any"""
+    auto_run_info: Optional[List[AutoRunBlock]] = None
+    """The list of `When/ThenRun` blocks, if present"""
 
     def __init__(self, workspace_root: str, file_path: str, is_modified: bool, reader: YamlReader):
         self.file_path = file_path
@@ -178,61 +181,142 @@ class Workload:
             return
 
         auto_run = conts["AutoRun"]
-        self.requires = auto_run["Requires"]
-        if "PrepareEnvironmentWith" in auto_run:
-            prep = auto_run["PrepareEnvironmentWith"]
-            if len(prep) != 1 or "mongodb_setup" not in prep:
-                raise ValueError(
-                    f"Need exactly mongodb_setup: [list] "
-                    f"in PrepareEnvironmentWith for file {file_path}"
-                )
-            self.setups = prep["mongodb_setup"]
+        if not isinstance(auto_run, list):
+            raise ValueError(f"AutoRun must be a list, instead got type {type(auto_run)}")
+        self._validate_auto_run(auto_run)
+        auto_run_info = []
+        for block in auto_run:
+            if "ThenRun" in block:
+                then_run = block["ThenRun"]
+            else:
+                then_run = []
+            auto_run_info.append(AutoRunBlock(block["When"], then_run))
+
+        self.auto_run_info = auto_run_info
 
     @property
     def file_base_name(self) -> str:
         return str(os.path.basename(self.file_path).split(".yml")[0])
 
     @property
+    def snake_case_base_name(self) -> str:
+        return self._to_snake_case(self.file_base_name)
+
+    @property
     def relative_path(self) -> str:
         return self.file_path.split("src/workloads/")[1]
+
+    def generate_requested_tasks(self, then_run) -> List[GeneratedTask]:
+        """
+        :return: tasks requested.
+        """
+        tasks = []
+        if len(then_run) == 0:
+            tasks += [GeneratedTask(self.snake_case_base_name, None, None, self)]
+
+        for then_run_block in then_run:
+            # Just a sanity check; we check this in _validate_auto_run
+            assert len(then_run_block) == 1
+            [(bootstrap_key, bootstrap_value)] = then_run_block.items()
+            task_name = f"{self.snake_case_base_name}_{self._to_snake_case(bootstrap_value)}"
+            tasks.append(GeneratedTask(task_name, bootstrap_key, bootstrap_value, self))
+
+        return tasks
 
     def all_tasks(self) -> List[GeneratedTask]:
         """
         :return: all possible tasks irrespective of the current build-variant etc.
         """
-        base = self._to_snake_case(self.file_base_name)
-        if self.setups is None:
-            return [GeneratedTask(base, None, self)]
-        return [
-            GeneratedTask(f"{base}_{self._to_snake_case(setup)}", setup, self)
-            for setup in self.setups
-        ]
+        if not self.auto_run_info:
+            return [GeneratedTask(self.snake_case_base_name, None, None, self)]
+
+        tasks = []
+        for block in self.auto_run_info:
+            tasks += self.generate_requested_tasks(block.then_run)
+
+        return self._dedup_task(tasks)
 
     def variant_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
         :param build: info about current build
-        :return: tasks that we should do given the current build e.g. if we have Requires info etc.
+        :return: tasks that we should do given the current build e.g. if we have When/ThenRun info etc.
         """
-        if not self.requires:
+        if not self.auto_run_info:
             return []
 
-        def meets_criteria() -> bool:
+        tasks = []
+        for block in self.auto_run_info:
+            when = block.when
+            then_run = block.then_run
+            # All When conditions must be true. We set okay: False if any single one is not true.
             okay = True
-            for key, acceptable_values in self.requires.items():
-                msg = "Scheduling workload."
-                if not build.has(key, acceptable_values):
-                    msg = "Not scheduling workload"
-                    okay = False
-                SLOG.info(
-                    msg,
-                    workload_base_name=self.file_base_name,
-                    key=key,
-                    acceptable_values=acceptable_values,
-                    build_variant=build.conts.get("build_variant", "unknown"),
-                )
-            return okay
+            for key, condition in when.items():
+                if len(condition) != 1:
+                    raise ValueError(
+                        f"Need exactly one condition per key in When block."
+                        f" Got key ${key} with condition ${condition}."
+                    )
+                if "$eq" in condition:
+                    acceptable_values = condition["$eq"]
+                    if not isinstance(acceptable_values, list):
+                        acceptable_values = [acceptable_values]
+                    if not build.has(key, acceptable_values):
+                        okay = False
+                elif "$neq" in condition:
+                    unacceptable_values = condition["$neq"]
+                    if not isinstance(unacceptable_values, list):
+                        unacceptable_values = [unacceptable_values]
+                    if build.has(key, unacceptable_values):
+                        okay = False
+                else:
+                    raise ValueError(
+                        f"The only supported operators are $eq and $neq. Got ${condition.keys()}"
+                    )
 
-        return [task for task in self.all_tasks() if meets_criteria()]
+            if okay:
+                tasks += self.generate_requested_tasks(then_run)
+
+        return self._dedup_task(tasks)
+
+    @staticmethod
+    def _dedup_task(tasks: List[GeneratedTask]) -> List[GeneratedTask]:
+        """
+        Evergreen barfs if a task is declared more than once, and the AutoTask impl may add the same task twice to the
+        list. For an example, if we have two When blocks that are both true (and no ThenRun task), we will add the base
+        task twice. So we need to dedup the final task list.
+
+        :return: unique tasks.
+        """
+        # Sort the result to make checking dict equality in unittests easier.
+        return sorted(list(set([task for task in tasks])))
+
+    @staticmethod
+    def _validate_auto_run(auto_run):
+        """Perform syntax validation on the auto_run section."""
+        if not isinstance(auto_run, list):
+            raise ValueError(f"AutoRun must be a list, instead got {type(auto_run)}")
+        for block in auto_run:
+            if not isinstance(block["When"], dict) or "When" not in block:
+                raise ValueError(
+                    f"Each AutoRun block must consist of a 'When' and optional 'ThenRun' section,"
+                    f" instead got {block}"
+                )
+            if "ThenRun" in block:
+                if not isinstance(block["ThenRun"], list):
+                    raise ValueError(
+                        f"ThenRun must be of type list. Instead was type {type(block['ThenRun'])}."
+                    )
+                for then_run_block in block["ThenRun"]:
+                    if not isinstance(then_run_block, dict):
+                        raise ValueError(
+                            f"Each block in ThenRun must be of type dict."
+                            f" Instead was type {type(then_run_block)}."
+                        )
+                    elif len(then_run_block) != 1:
+                        raise ValueError(
+                            f"Each block in ThenRun must contain one key/value pair. Instead was length"
+                            f" {len(then_run_block)}."
+                        )
 
     # noinspection RegExpAnonymousGroup
     @staticmethod
@@ -281,17 +365,19 @@ class Repo:
         # Double list-comprehensions always read backward to me :(
         return [task for workload in self.all_workloads() for task in workload.all_tasks()]
 
-    def variant_tasks(self, build: CurrentBuildInfo):
+    def variant_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
         :return: Tasks to schedule given the current variant (runtime)
         """
         return [task for workload in self.all_workloads() for task in workload.variant_tasks(build)]
 
-    def patch_tasks(self) -> List[GeneratedTask]:
+    def patch_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
         :return: Tasks for modified workloads current variant (runtime)
         """
-        return [task for workload in self.modified_workloads() for task in workload.all_tasks()]
+        return [
+            task for workload in self.modified_workloads() for task in workload.variant_tasks(build)
+        ]
 
     def tasks(self, op: CLIOperation, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
@@ -302,7 +388,7 @@ class Repo:
         if op.mode == OpName.ALL_TASKS:
             tasks = self.all_tasks()
         elif op.mode == OpName.PATCH_TASKS:
-            tasks = self.patch_tasks()
+            tasks = self.patch_tasks(build)
         elif op.mode == OpName.VARIANT_TASKS:
             tasks = self.variant_tasks(build)
         else:
@@ -368,8 +454,8 @@ class ConfigWriter:
                 "test_control": task.name,
                 "auto_workload_path": task.workload.relative_path,
             }
-            if task.mongodb_setup:
-                bootstrap["mongodb_setup"] = task.mongodb_setup
+            if task.bootstrap_key:
+                bootstrap[task.bootstrap_key] = task.bootstrap_value
 
             t = c.task(task.name)
             t.priority(5)

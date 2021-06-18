@@ -63,6 +63,6 @@ Actors:
     SleepAfter: 1 millisecond
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - standalone
+  - When:
+      mongodb_setup:
+        $eq: standalone

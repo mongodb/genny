@@ -20,9 +20,10 @@ Actors:
       string0: {^FastRandomString: {length: 15000000}}
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - atlas
-    - replica
-    - replica-all-feature-flags
-    - single-replica
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - replica-all-feature-flags
+          - single-replica

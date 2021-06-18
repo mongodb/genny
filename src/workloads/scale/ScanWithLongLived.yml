@@ -98,7 +98,8 @@ Actors:
       Key: SnapshotScanner10GigabytesFixedRateCmd
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - single-replica
-    - replica-noflowcontrol
+  - When:
+      mongodb_setup:
+        $eq:
+          - single-replica
+          - replica-noflowcontrol
