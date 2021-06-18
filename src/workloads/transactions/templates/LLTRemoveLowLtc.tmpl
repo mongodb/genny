@@ -39,7 +39,7 @@ GlobalDefaults:
   PtcRemoveOperation: &PtcRemoveOperation
     OperationName: deleteOne
     OperationCommand:
-      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 1000.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 1000.0 }}}}
       OperationOptions:
         WriteConcern:
           Level: majority
@@ -47,7 +47,7 @@ GlobalDefaults:
   PcRemoveOperation: &PcRemoveOperation
     OperationName: deleteOne
     OperationCommand:
-      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 1000.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 1000.0 }}}}
       OperationOptions:
         WriteConcern:
           Level: majority
@@ -55,7 +55,7 @@ GlobalDefaults:
   CpcRemoveOperation: &CpcRemoveOperation
     OperationName: deleteOne
     OperationCommand:
-      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Filter: {caid:  {$gte: {^RandomInt: { min: 0, max: 1000 }}}}
       OperationOptions:
         WriteConcern:
           Level: majority
@@ -292,7 +292,7 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - atlas
+          - atlas-like-replica
           - replica
           - replica-all-feature-flags
           - single-replica

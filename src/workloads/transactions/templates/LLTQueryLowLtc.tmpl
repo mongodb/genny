@@ -43,7 +43,7 @@ GlobalDefaults:
   PtcQueryOperation: &PtcQueryOperation
     OperationName: findOne
     OperationCommand:
-      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       Options:
         Hint: price_1_ts_1_cuid_1
         Comment: PtcQueryOperation
@@ -51,7 +51,7 @@ GlobalDefaults:
   PcQueryOperation: &PcQueryOperation
     OperationName: findOne
     OperationCommand:
-      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       Options:
         Hint: price_1_cuid_1
         Comment: PcQueryOperation
@@ -59,7 +59,7 @@ GlobalDefaults:
   CpcQueryOperation: &CpcQueryOperation
     OperationName: findOne
     OperationCommand:
-      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Filter: {caid: {$gte: {^RandomInt: { min: 0, max: 1000 }}}}
       Options:
         Hint: caid_1_price_1_cuid_1
         Comment: CpcQueryOperation
@@ -296,7 +296,7 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - atlas
+          - atlas-like-replica
           - replica
           - replica-all-feature-flags
           - single-replica

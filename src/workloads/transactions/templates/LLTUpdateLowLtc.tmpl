@@ -43,7 +43,7 @@ GlobalDefaults:
   PtcUpdateOperation: &PtcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -57,7 +57,7 @@ GlobalDefaults:
   PcUpdateOperation: &PcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -71,7 +71,7 @@ GlobalDefaults:
   CpcUpdateOperation: &CpcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Filter: {caid: {$gte: {^RandomInt: { min: 0, max: 1000 }}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -314,7 +314,7 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - atlas
+          - atlas-like-replica
           - replica
           - replica-all-feature-flags
           - single-replica

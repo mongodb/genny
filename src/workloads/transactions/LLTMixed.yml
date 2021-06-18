@@ -56,7 +56,7 @@ GlobalDefaults:
   PtcQueryOperation: &PtcQueryOperation
     OperationName: findOne
     OperationCommand:
-      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       Options:
         Hint: price_1_ts_1_cuid_1
         Comment: PtcQueryOperation
@@ -64,7 +64,7 @@ GlobalDefaults:
   PcQueryOperation: &PcQueryOperation
     OperationName: findOne
     OperationCommand:
-      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       Options:
         Hint: price_1_cuid_1
         Comment: PcQueryOperation
@@ -72,7 +72,7 @@ GlobalDefaults:
   CpcQueryOperation: &CpcQueryOperation
     OperationName: findOne
     OperationCommand:
-      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Filter: {caid:  {$gte: {^RandomInt: { min: 0, max: 1000 }}}}
       Options:
         Hint: caid_1_price_1_cuid_1
         Comment: CpcQueryOperation
@@ -81,7 +81,7 @@ GlobalDefaults:
   PtcUpdateOperation: &PtcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -95,7 +95,7 @@ GlobalDefaults:
   PcUpdateOperation: &PcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -109,7 +109,7 @@ GlobalDefaults:
   CpcUpdateOperation: &CpcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Filter: {caid:  {$gte: {^RandomInt: { min: 0, max: 1000 }}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -124,7 +124,7 @@ GlobalDefaults:
   PtcRemoveOperation: &PtcRemoveOperation
     OperationName: deleteOne
     OperationCommand:
-      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 1000.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 1000.0 }}}}
       OperationOptions:
         Comment: PtcRemoveOperation
         WriteConcern:
@@ -133,7 +133,7 @@ GlobalDefaults:
   PcRemoveOperation: &PcRemoveOperation
     OperationName: deleteOne
     OperationCommand:
-      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 1000.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 1000.0 }}}}
       OperationOptions:
         WriteConcern:
           Level: majority
@@ -141,7 +141,7 @@ GlobalDefaults:
   CpcRemoveOperation: &CpcRemoveOperation
     OperationName: deleteOne
     OperationCommand:
-      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Filter: {caid:  {$gte: {^RandomInt: { min: 0, max: 1000 }}}}
       OperationOptions:
         WriteConcern:
           Level: majority
@@ -565,7 +565,7 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - atlas
+          - atlas-like-replica
           - replica
           - replica-all-feature-flags
           - single-replica
