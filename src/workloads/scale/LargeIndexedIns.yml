@@ -74,5 +74,6 @@ Actors:
           $inc: {a: 1}
 
 AutoRun:
-  Requires:
-    mongodb_setup: [replica]
+  - When:
+      mongodb_setup:
+        $eq: replica
