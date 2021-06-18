@@ -1,15 +1,15 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  Workload to Benchmark the effect of LongLivedTransactions on an Update workload.
+  Workload to Benchmark the effect of LongLivedTransactions on a Query workload.
 
 GlobalDefaults:
   # Start: The following block gets updated for the other configurations.
-  # Not In-memory: Database size works out about 30GB.
-  InitialDocumentCount: &InitialNumDocs 49000000
+  # In-memory: Database size works out about 12GB.
+  InitialDocumentCount: &InitialNumDocs 10000000
   SecondaryDocumentCount: &SecondaryNumDocs 10000000
-  GlobalRateValue: &GlobalRateValue 1 per 1250 microsecond
-  ThreadsValue: &ThreadsValue 16
+  GlobalRateValue: &GlobalRateValue 1 per 2500 microsecond
+  ThreadsValue: &ThreadsValue 8
   # End: The previous block gets updated for the other configurations.
 
   # These values should match those are the top of LLTPhases.yml
@@ -36,51 +36,33 @@ GlobalDefaults:
 
   CollectionCount: &CollectionCount 4
 
-  # The query operation name indicates the index in use:
+  # The query operation name indicates the index in use (see LLTIndexes) :
   #  * Ptc => price_1_ts_1_cuid_1
   #  * Pc  => price_1_cuid_1
   #  * Cpc => caid_1_price_1_cuid_1
-  PtcUpdateOperation: &PtcUpdateOperation
-    OperationName: updateOne
+  PtcQueryOperation: &PtcQueryOperation
+    OperationName: findOne
     OperationCommand:
-      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      Update:
-        $set:
-          ts: {^Now: {}}
-          data: {^Join: {array: ["bbbbbbbbbb", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
-      OperationOptions:
-        Upsert: false
-        WriteConcern:
-          Level: majority
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Options:
         Hint: price_1_ts_1_cuid_1
+        Comment: PtcQueryOperation
 
-  PcUpdateOperation: &PcUpdateOperation
-    OperationName: updateOne
+  PcQueryOperation: &PcQueryOperation
+    OperationName: findOne
     OperationCommand:
-      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
-      Update:
-        $set:
-          ts: {^Now: {}}
-          prod: {^RandomInt: {min: 0, max: 10000}}
-      OperationOptions:
-        Upsert: false
-        WriteConcern:
-          Level: majority
+      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Options:
         Hint: price_1_cuid_1
+        Comment: PcQueryOperation
 
-  CpcUpdateOperation: &CpcUpdateOperation
-    OperationName: updateOne
+  CpcQueryOperation: &CpcQueryOperation
+    OperationName: findOne
     OperationCommand:
-      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
-      Update:
-        $set:
-          ts: {^Now: {}}
-          cuid: {^RandomInt: {min: 0, max: 100000}}
-      OperationOptions:
-        Upsert: false
-        WriteConcern:
-          Level: majority
+      Filter: {caid: {$gte: {^RandomInt: { min: 0, max: 1000 }}}}
+      Options:
         Hint: caid_1_price_1_cuid_1
+        Comment: CpcQueryOperation
 
   # Scanner
   SnapshotScannerShortDuration: &SnapshotScannerShortDuration 1 minutes
@@ -88,9 +70,9 @@ GlobalDefaults:
   SnapshotScannerLongDuration: &SnapshotScannerLongDuration 60 minutes
 
 ActorTemplates:
-  - TemplateName: UpdateTemplate
+  - TemplateName: QueryTemplate
     Config:
-      Name: {^Parameter: {Name: "Name", Default: "Short.Update.Baseline"}}
+      Name: {^Parameter: {Name: "Name", Default: "Short.Query.Baseline"}}
       Type: CrudActor
       Threads: *ThreadsValue
       Phases:
@@ -102,33 +84,33 @@ ActorTemplates:
             Threads: *ThreadsValue
             CollectionCount: *CollectionCount
             Database: *dbname
-            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
+            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}# *SnapshotScannerShortDuration
             Blocking:  {^Parameter: {Name: "Blocking", Default: yes}}
             Operations:
-              - *PtcUpdateOperation
-              - *PcUpdateOperation
-              - *CpcUpdateOperation
-              - *PtcUpdateOperation
-              - *PcUpdateOperation
-              - *CpcUpdateOperation
-              - *PtcUpdateOperation
-              - *PcUpdateOperation
-              - *CpcUpdateOperation
-              - *PtcUpdateOperation
-              - *PcUpdateOperation
-              - *CpcUpdateOperation
-              - *PtcUpdateOperation
-              - *PcUpdateOperation
-              - *CpcUpdateOperation
-              - *PtcUpdateOperation
-              - *PcUpdateOperation
-              - *CpcUpdateOperation
-              - *PtcUpdateOperation
-              - *PcUpdateOperation
-              - *CpcUpdateOperation
-              - *PtcUpdateOperation
-              - *PcUpdateOperation
-              - *CpcUpdateOperation
+              - *PtcQueryOperation
+              - *PcQueryOperation
+              - *CpcQueryOperation
+              - *PtcQueryOperation
+              - *PcQueryOperation
+              - *CpcQueryOperation
+              - *PtcQueryOperation
+              - *PcQueryOperation
+              - *CpcQueryOperation
+              - *PtcQueryOperation
+              - *PcQueryOperation
+              - *CpcQueryOperation
+              - *PtcQueryOperation
+              - *PcQueryOperation
+              - *CpcQueryOperation
+              - *PtcQueryOperation
+              - *PcQueryOperation
+              - *CpcQueryOperation
+              - *PtcQueryOperation
+              - *PcQueryOperation
+              - *CpcQueryOperation
+              - *PtcQueryOperation
+              - *PcQueryOperation
+              - *CpcQueryOperation
 
   - TemplateName: ScanTemplate
     Config:
@@ -143,8 +125,8 @@ ActorTemplates:
           Active: {^Parameter: {Name: "Active", Default: [7]}}# [7]
           NopInPhasesUpTo: *MaxPhases
           PhaseConfig:
-            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
-            ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
+            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}# *SnapshotScannerShortDuration
+            ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}# *SnapshotScannerShortDuration
             ScanType: snapshot
             ScanContinuous: true
             GenerateCollectionNames: true
@@ -243,14 +225,14 @@ Actors:
 #
 # Baseline without scans, benchmark with scans
 - ActorFromTemplate:
-    TemplateName: UpdateTemplate
+    TemplateName: QueryTemplate
     TemplateParameters:
-      Name: Short.Update.Baseline
+      Name: Short.Query.Baseline
 
 - ActorFromTemplate:
-    TemplateName: UpdateTemplate
+    TemplateName: QueryTemplate
     TemplateParameters:
-      Name: Short.Update.Benchmark
+      Name: Short.Query.Benchmark
       Active: [7]
       Blocking: none
 
@@ -263,16 +245,16 @@ Actors:
       Comment: SnapshotScannerShort
 
 - ActorFromTemplate:
-    TemplateName: UpdateTemplate
+    TemplateName: QueryTemplate
     TemplateParameters:
-      Name: Medium.Update.Baseline
+      Name: Medium.Query.Baseline
       Active: [9]
       Duration: *SnapshotScannerMediumDuration
 
 - ActorFromTemplate:
-    TemplateName: UpdateTemplate
+    TemplateName: QueryTemplate
     TemplateParameters:
-      Name: Medium.Update.Benchmark
+      Name: Medium.Query.Benchmark
       Active: [11]
       Blocking: none
       Duration: *SnapshotScannerMediumDuration
@@ -287,16 +269,16 @@ Actors:
       ScanDuration: *SnapshotScannerMediumDuration
 
 - ActorFromTemplate:
-    TemplateName: UpdateTemplate
+    TemplateName: QueryTemplate
     TemplateParameters:
-      Name: Long.Update.Baseline
+      Name: Long.Query.Baseline
       Active: [13]
       Duration: *SnapshotScannerLongDuration
 
 - ActorFromTemplate:
-    TemplateName: UpdateTemplate
+    TemplateName: QueryTemplate
     TemplateParameters:
-      Name: Long.Update.Benchmark
+      Name: Long.Query.Benchmark
       Active: [15]
       Blocking: none
       Duration: *SnapshotScannerLongDuration
@@ -310,12 +292,15 @@ Actors:
       Duration: *SnapshotScannerLongDuration
       ScanDuration: *SnapshotScannerLongDuration
 
-#AutoRun:
-#  - When:
-#      mongodb_setup:
-#        $eq:
-#          - atlas
-#          - replica
-#          - replica-all-feature-flags
-#          - single-replica
-
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas-like-replica
+          - replica
+          - replica-all-feature-flags
+          - single-replica
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
