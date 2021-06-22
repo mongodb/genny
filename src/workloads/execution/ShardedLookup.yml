@@ -17,6 +17,8 @@ Actors:
   - Repeat: 1
     Database: admin
     Operations:
+    # Shard Collection0 and Collection1 using hashed sharding to ensure that the chunks are evenly
+    # distributed across the shards.
     - OperationMetricsName: EnableSharding
       OperationName: AdminCommand
       OperationCommand:
@@ -25,7 +27,6 @@ Actors:
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0
-        # Hashed sharding will ensure that the chunks are evenly distributed across the shards.
         key: {shardKey: hashed}
         numInitialChunks: &NumChunks 6
     - OperationMetricsName: ShardForeignCollection
@@ -34,6 +35,11 @@ Actors:
         shardCollection: test.Collection1
         key: {shardKey: hashed}
         numInitialChunks: *NumChunks
+    # Disable the balancer so that it can't skew results while the $lookups are running.
+    - OperationMetricsName: DisableBalancer
+      OperationName: AdminCommand
+      OperationCommand:
+        balancerStop: 1
   - &Nop {Nop: true}
   - *Nop
   - *Nop
