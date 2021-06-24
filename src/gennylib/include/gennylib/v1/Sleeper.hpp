@@ -49,6 +49,13 @@ public:
     Sleeper(Sleeper&& other) = delete;
     Sleeper& operator=(Sleeper&& other) = delete;
 
+    constexpr void sleep_for(const Orchestrator& o, const PhaseNumber pn,
+            const Duration period, bool phaseChangeWakeup = false) const {
+        if (period.count() && o.currentPhase() == pn) {
+            std::this_thread::sleep_for(period);
+        }
+    }
+
     /**
      * Sleep for duration before an operation. Checks that the current phase has
      * not ended before sleeping.

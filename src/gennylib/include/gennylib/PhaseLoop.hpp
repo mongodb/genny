@@ -138,6 +138,7 @@ public:
 
     constexpr void limitRate(const SteadyClock::time_point referenceStartingPoint,
                              const int64_t currentIteration,
+                             const Orchestrator& orchestrator,
                              const PhaseNumber inPhase) {
         // This function is called after each iteration, so we never rate limit the
         // first iteration. This means the number of completed operations is always
@@ -155,7 +156,11 @@ public:
                     const auto rate = _rateLimiter->getRate() > 1e9 ? 1e9 : _rateLimiter->getRate();
 
                     // Add ±5% jitter to avoid threads waking up at once.
-                    std::this_thread::sleep_for(std::chrono::nanoseconds(
+                    //std::this_thread::sleep_for(std::chrono::nanoseconds(
+                    //    int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))));
+
+                    // Add ±5% jitter to avoid threads waking up at once.
+                    _sleeper->sleep_for(orchestrator, inPhase, std::chrono::nanoseconds(
                         int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))));
                     continue;
                 }
@@ -257,7 +262,7 @@ public:
     bool operator==(const ActorPhaseIterator& rhs) const {
         if (_iterationCheck) {
             _iterationCheck->sleepBefore(*_orchestrator, _inPhase);
-            _iterationCheck->limitRate(_referenceStartingPoint, _currentIteration, _inPhase);
+            _iterationCheck->limitRate(_referenceStartingPoint, _currentIteration, *_orchestrator, _inPhase);
         }
         // clang-format off
         return
