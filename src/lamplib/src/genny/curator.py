@@ -65,7 +65,7 @@ def _get_export_args(
 
 
 _DATE_FORMAT = "%Y-%m-%dT%H%M%SZ"
-_METRICS_PATH = "build/CedarMetrics"
+_METRICS_PATH = "build/WorkloadOutput/CedarMetrics"
 
 
 def _cleanup_metrics():
