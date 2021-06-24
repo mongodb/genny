@@ -47,6 +47,12 @@ GlobalDefaults:
     OperationCommand:
       Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
       Update: {$inc: {counter: 1}}
+      OperationOptions:
+        # w:majority is used here as a way to limit the write load so that the resharding
+        # coordinator successfully commits the operation by itself. TODO: Use GlobalRate instead to
+        # limit the write load after TIG-3028 adds support for using GlobalRate with Blocking:None.
+        WriteConcern:
+          Level: "majority"
 
 Clients:
   Default:
