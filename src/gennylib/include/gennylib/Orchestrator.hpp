@@ -21,12 +21,11 @@
 #include <shared_mutex>
 #include <vector>
 
+#include <gennylib/conventions.hpp>
+
 namespace genny {
 
 class Orchestrator;
-
-// May eventually want a proper type for Phase, but for now just a typedef is sufficient.
-using PhaseNumber = unsigned int;
 
 using OrchestratorCB = std::function<void(const Orchestrator*)>;
 
@@ -104,6 +103,10 @@ public:
      */
     bool continueRunning() const;
 
+    /**
+     * Sleep until the given phase ends or time out.
+     */
+    void sleepToPhaseEnd(const PhaseNumber pn, Duration timeout);
 
 private:
     mutable std::shared_mutex _mutex;

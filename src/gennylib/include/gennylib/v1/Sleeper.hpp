@@ -17,6 +17,7 @@
 
 #include <chrono>
 
+#include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
 
 
@@ -49,10 +50,16 @@ public:
     Sleeper(Sleeper&& other) = delete;
     Sleeper& operator=(Sleeper&& other) = delete;
 
-    constexpr void sleep_for(const Orchestrator& o, const PhaseNumber pn,
+    constexpr void sleep_for(Orchestrator& o, const PhaseNumber pn,
             const Duration period, bool phaseChangeWakeup = false) const {
         if (period.count() && o.currentPhase() == pn) {
-            std::this_thread::sleep_for(period);
+            if (phaseChangeWakeup) {
+                // Using locks / condition variables is less efficient/safe, so we
+                // only use this mechanism if the caller explicitly asked for it.
+                o.sleepToPhaseEnd(pn, period);
+            } else {
+                std::this_thread::sleep_for(period);
+            }
         }
     }
 

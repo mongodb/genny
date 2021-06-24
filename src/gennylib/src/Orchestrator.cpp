@@ -160,4 +160,12 @@ void Orchestrator::abort() {
     _phaseChange.notify_all();
 }
 
+void Orchestrator::sleepToPhaseEnd(const PhaseNumber pn, Duration timeout) {
+    reader lock{_mutex};
+    if (this->_current != pn || state == State::PhaseEnded) {
+        return;
+    }
+    _phaseChange.wait_for(lock, timeout);
+}
+
 }  // namespace genny

@@ -138,12 +138,8 @@ public:
 
     constexpr void limitRate(const SteadyClock::time_point referenceStartingPoint,
                              const int64_t currentIteration,
-                             const Orchestrator& orchestrator,
+                             Orchestrator& orchestrator,
                              const PhaseNumber inPhase) {
-        // This function is called after each iteration, so we never rate limit the
-        // first iteration. This means the number of completed operations is always
-        // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
-        // _burstSize. `m` here is the number of threads using the rate limiter.
         if (_rateLimiter) {
             while (true) {
                 const auto now = SteadyClock::now();
@@ -154,10 +150,6 @@ public:
                     // specified in seconds or lower resolution can cause the workloads to
                     // run visibly longer than the specified duration.
                     const auto rate = _rateLimiter->getRate() > 1e9 ? 1e9 : _rateLimiter->getRate();
-
-                    // Add ±5% jitter to avoid threads waking up at once.
-                    //std::this_thread::sleep_for(std::chrono::nanoseconds(
-                    //    int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))));
 
                     // Add ±5% jitter to avoid threads waking up at once.
                     _sleeper->sleep_for(orchestrator, inPhase, std::chrono::nanoseconds(

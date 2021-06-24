@@ -26,7 +26,7 @@
 
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Node.hpp>
-#include <gennylib/Orchestrator.hpp>
+
 
 namespace genny {
 
@@ -188,6 +188,9 @@ private:
     std::variant<std::monostate, BaseRateSpec, PercentileRateSpec> _spec;
 };
 
+
+// May eventually want a proper type for Phase, but for now just a typedef is sufficient.
+using PhaseNumber = unsigned int;
 
 struct PhaseRangeSpec {
     PhaseRangeSpec() = default;
