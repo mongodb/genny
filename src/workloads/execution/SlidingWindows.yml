@@ -111,7 +111,7 @@ Actors:
                 partitionBy: "$partitionKey",
                 sortBy: {time: 1},
                 output: {rate: {
-                  $derivative: {input: "$temp", outputUnit: "second"},
+                  $derivative: {input: "$temp", unit: "second"},
                   window: {documents: [-10, 0]}}}}}]
           cursor: {batchSize: *batchSize}
     - OperationMetricsName: DerivativeLargeWindow
@@ -123,7 +123,7 @@ Actors:
                 partitionBy: "$partitionKey",
                 sortBy: {time: 1},
                 output: {rate: {
-                  $derivative: {input: "$temp", outputUnit: "second"},
+                  $derivative: {input: "$temp", unit: "second"},
                   window: {documents: [-500, 0]}}}}}]
           cursor: {batchSize: *batchSize}
 
