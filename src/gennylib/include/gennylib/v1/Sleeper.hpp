@@ -52,14 +52,13 @@ public:
 
     constexpr void sleep_for(Orchestrator& o, const PhaseNumber pn,
             const Duration period, bool phaseChangeWakeup = false) const {
-        if (period.count() && o.currentPhase() == pn) {
-            if (phaseChangeWakeup) {
-                // Using locks / condition variables is less efficient/safe, so we
-                // only use this mechanism if the caller explicitly asked for it.
-                o.sleepToPhaseEnd(pn, period);
-            } else {
-                std::this_thread::sleep_for(period);
-            }
+
+        if (phaseChangeWakeup) {
+            // Using locks / condition variables is less efficient/safe, so we
+            // only use this mechanism if the caller explicitly asked for it.
+            o.sleepToPhaseEnd(pn, period);
+        } else if (period.count() && o.currentPhase() == pn) {
+            std::this_thread::sleep_for(period);
         }
     }
 

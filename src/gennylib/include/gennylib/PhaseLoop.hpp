@@ -144,7 +144,9 @@ public:
             while (true) {
                 const auto now = SteadyClock::now();
                 auto success = _rateLimiter->consumeIfWithinRate(now);
-                if (!success && !isDone(referenceStartingPoint, currentIteration, now)) {
+                // If we don't block, we can trust the sleeper to check if the phase ended.
+                bool phaseStillGoing = !_doesBlock || !isDone(referenceStartingPoint, currentIteration, now);
+                if (!success && phaseStillGoing) {
 
                     // Don't sleep for more than 1 second (1e9 nanoseconds). Otherwise rates
                     // specified in seconds or lower resolution can cause the workloads to
@@ -153,7 +155,7 @@ public:
 
                     // Add ±5% jitter to avoid threads waking up at once.
                     _sleeper->sleep_for(orchestrator, inPhase, std::chrono::nanoseconds(
-                        int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))));
+                        int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))), !_doesBlock);
                     continue;
                 }
                 break;
