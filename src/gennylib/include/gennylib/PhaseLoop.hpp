@@ -125,12 +125,6 @@ public:
             const auto rateLimiterName =
                 phaseContext["RateLimiterName"].maybe<std::string>().value_or(defaultRLName.str());
 
-            if (!_doesBlock) {
-                throw InvalidConfigurationException(
-                    "GlobalRate must be specified alongside either Duration or Repeat, otherwise "
-                    "there's no guarantee the rate limited operation will run in the correct "
-                    "phase");
-            }
             _rateLimiter =
                 phaseContext.workload().getRateLimiter(rateLimiterName, rateSpec.value());
         }
