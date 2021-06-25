@@ -1,18 +1,24 @@
+# This workload was created for PERF-2317 Extend LLT measurements for Analytics workloads
+# The ticket was closed as incomplete, but the workload saved in the repository
+# in case if needed in the future or the work would be continued
+# It is not used anywhere at the moment
+
+# Some plans to develop it were to use mixed workload and continous scan,
+# but here it is 'as is' for the moment when work was stopped
+
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
   Workload to Benchmark the effect of LongLivedTransactions on an Update workload.
 
 GlobalDefaults:
-  # Start: The following block gets updated for the other configurations.
-  # Not In-memory: Database size works out about 30GB.
+  # That is 236M docs (4 collections x 59M docs), result in about 144GB for /data/dbs after the test
+  # It takes about 9 hours to run this test - so many tests was done with 1/10 of data
   InitialDocumentCount: &InitialNumDocs 49000000
   SecondaryDocumentCount: &SecondaryNumDocs 10000000
   GlobalRateValue: &GlobalRateValue 1 per 1250 microsecond
   ThreadsValue: &ThreadsValue 16
-  # End: The previous block gets updated for the other configurations.
 
-  # These values should match those are the top of LLTPhases.yml
   dbname: &dbname llt
   MaxPhases: &MaxPhases 8
 
