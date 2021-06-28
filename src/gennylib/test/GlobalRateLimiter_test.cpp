@@ -213,7 +213,6 @@ Actors:
         t.join();
 
         const auto state = getCurState();
-        //REQUIRE_THROWS_WITH(fun(), Matches(R"(.*alongside either Duration or Repeat.*)"));
         REQUIRE(state == 72);
     }
 
