@@ -50,9 +50,9 @@ Actors:
   Phases:
   - *Nop
   - Repeat: 1
-    BatchSize: &BatchSize 1000
+    BatchSize: 1000
     Threads: 1
-    DocumentCount: 10000
+    DocumentCount: &NumDocs 3000
     Database: *Database
     CollectionCount: 2    # Loader will populate 'Collection0' then 'Collection1'.
     Document:
@@ -108,7 +108,9 @@ Actors:
               as: matches
             }
           }]
-        cursor: {batchSize: *BatchSize}
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *NumDocs}
 
 AutoRun:
   - When:
