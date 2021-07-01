@@ -56,8 +56,8 @@ public:
         if (phaseChangeWakeup) {
             // Using locks / condition variables is less efficient/safe, so we
             // only use this mechanism if the caller explicitly asked for it.
-            orchestrator.sleepToPhaseEnd(phase, period);
-        } else if (period.count() && orchestrator.currentPhase() == phase) {
+            orchestrator.sleepToPhaseEnd(period, phase);
+        } else if (period.count() > 0 && orchestrator.currentPhase() == phase) {
             std::this_thread::sleep_for(period);
         }
     }
@@ -67,7 +67,7 @@ public:
      * not ended before sleeping.
      */
     constexpr void before(const Orchestrator& orchestrator, const PhaseNumber phase) const {
-        if (_before.count() && orchestrator.currentPhase() == phase) {
+        if (_before.count() > 0 && orchestrator.currentPhase() == phase) {
             std::this_thread::sleep_for(_before);
         }
     }
@@ -76,7 +76,7 @@ public:
      * @see Sleeper::before
      */
     constexpr void after(const Orchestrator& orchestrator, const PhaseNumber phase) const {
-        if (_after.count() && orchestrator.currentPhase() == phase) {
+        if (_after.count() > 0 && orchestrator.currentPhase() == phase) {
             std::this_thread::sleep_for(_after);
         }
     }

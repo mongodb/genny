@@ -104,9 +104,10 @@ public:
     bool continueRunning() const;
 
     /**
-     * Sleep until the given phase ends or time out.
+     * Sleep for the duration, also waking up if the phase changes before the
+     * duration passes.
      */
-    void sleepToPhaseEnd(const PhaseNumber pn, Duration timeout);
+    void sleepToPhaseEnd(Duration timeout, const PhaseNumber pn);
 
 private:
     mutable std::shared_mutex _mutex;

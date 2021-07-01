@@ -160,7 +160,7 @@ void Orchestrator::abort() {
     _phaseChange.notify_all();
 }
 
-void Orchestrator::sleepToPhaseEnd(const PhaseNumber pn, Duration timeout) {
+void Orchestrator::sleepToPhaseEnd(const Duration timeout, const PhaseNumber pn) {
     reader lock{_mutex};
     if (this->_current != pn || state == State::PhaseEnded) {
         return;
