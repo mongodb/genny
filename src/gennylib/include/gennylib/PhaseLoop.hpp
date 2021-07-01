@@ -148,7 +148,7 @@ public:
                     const auto rate = _rateLimiter->getRate() > 1e9 ? 1e9 : _rateLimiter->getRate();
 
                     // Add ±5% jitter to avoid threads waking up at once.
-                    _sleeper->sleep_for(orchestrator, inPhase, std::chrono::nanoseconds(
+                    _sleeper->sleepFor(orchestrator, inPhase, std::chrono::nanoseconds(
                         int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))), !_doesBlock);
                     continue;
                 }
