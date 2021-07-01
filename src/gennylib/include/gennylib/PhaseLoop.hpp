@@ -139,7 +139,8 @@ public:
                 const auto now = SteadyClock::now();
                 auto success = _rateLimiter->consumeIfWithinRate(now);
                 // If we don't block, we can trust the sleeper to check if the phase ended.
-                bool phaseStillGoing = !_doesBlock || !isDone(referenceStartingPoint, currentIteration, now);
+                bool phaseStillGoing =
+                    !_doesBlock || !isDone(referenceStartingPoint, currentIteration, now);
                 if (!success && phaseStillGoing) {
 
                     // Don't sleep for more than 1 second (1e9 nanoseconds). Otherwise rates
@@ -148,8 +149,11 @@ public:
                     const auto rate = _rateLimiter->getRate() > 1e9 ? 1e9 : _rateLimiter->getRate();
 
                     // Add ±5% jitter to avoid threads waking up at once.
-                    _sleeper->sleepFor(orchestrator, inPhase, std::chrono::nanoseconds(
-                        int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))), !_doesBlock);
+                    _sleeper->sleepFor(orchestrator,
+                                       inPhase,
+                                       std::chrono::nanoseconds(int64_t(
+                                           rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))),
+                                       !_doesBlock);
                     continue;
                 }
                 break;
@@ -250,7 +254,8 @@ public:
     bool operator==(const ActorPhaseIterator& rhs) const {
         if (_iterationCheck) {
             _iterationCheck->sleepBefore(*_orchestrator, _inPhase);
-            _iterationCheck->limitRate(_referenceStartingPoint, _currentIteration, *_orchestrator, _inPhase);
+            _iterationCheck->limitRate(
+                _referenceStartingPoint, _currentIteration, *_orchestrator, _inPhase);
         }
         // clang-format off
         return

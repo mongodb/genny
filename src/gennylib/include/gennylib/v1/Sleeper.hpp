@@ -50,8 +50,10 @@ public:
     Sleeper(Sleeper&& other) = delete;
     Sleeper& operator=(Sleeper&& other) = delete;
 
-    constexpr void sleepFor(Orchestrator& orchestrator, const PhaseNumber phase,
-            const Duration period, bool phaseChangeWakeup = false) const {
+    constexpr void sleepFor(Orchestrator& orchestrator,
+                            const PhaseNumber phase,
+                            const Duration period,
+                            bool phaseChangeWakeup = false) const {
 
         if (phaseChangeWakeup) {
             // Using locks / condition variables is less efficient/safe, so we

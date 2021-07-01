@@ -393,8 +393,7 @@ public:
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
     typedef EventStream<ClockSource, StreamInterface> Stream;
 
-    GrpcClient(bool assertMetricsBuffer)
-        : _assertMetricsBuffer{assertMetricsBuffer} {}
+    GrpcClient(bool assertMetricsBuffer) : _assertMetricsBuffer{assertMetricsBuffer} {}
 
     Stream* createStream(const ActorId& actorId,
                          const std::string& name,

@@ -64,7 +64,8 @@ public:
         }
 
         std::stringstream msg;
-        msg << "Need one of ThenReturns, ThenExecuteAndIgnore or ThenThrows'" << toString(node) << "'";
+        msg << "Need one of ThenReturns, ThenExecuteAndIgnore or ThenThrows'" << toString(node)
+            << "'";
         throw std::invalid_argument(msg.str());
     }
 
@@ -92,7 +93,8 @@ public:
             NodeSource ns = toNode(this->_givenTemplate);
             genny::DefaultRandom rng;
             auto docGen = genny::DocumentGenerator(ns.root(), GeneratorArgs{rng, 2});
-            if (_runMode == RunMode::kIgnoreReturn) return;
+            if (_runMode == RunMode::kIgnoreReturn)
+                return;
             for (const auto&& nextValue : this->_thenReturns) {
                 auto expected = testing::toDocumentBson(nextValue);
                 auto actual = docGen();
