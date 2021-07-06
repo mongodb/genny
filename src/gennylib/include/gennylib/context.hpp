@@ -506,7 +506,11 @@ public:
         }
 
         return this->workload()._registry.operation(
-            this->_actor->operator[]("Name").to<std::string>(), stm.str(), id, _phaseNumber, internal);
+            this->_actor->operator[]("Name").to<std::string>(),
+            stm.str(),
+            id,
+            _phaseNumber,
+            internal);
     }
 
     const auto getPhaseNumber() const {

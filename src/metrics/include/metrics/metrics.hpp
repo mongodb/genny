@@ -113,7 +113,7 @@ class MetricsClockSource {
 private:
     using clock_type = std::chrono::steady_clock;
     using report_clock_type = std::chrono::system_clock;
-    
+
 
 public:
     using duration = clock_type::duration;
@@ -187,8 +187,9 @@ public:
     explicit RegistryT(MetricsFormat format,
                        boost::filesystem::path pathPrefix,
                        bool assertMetricsBuffer = true)
-        : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)},
-        _internalPathPrefix{_pathPrefix / INTERNAL_DIR} {
+        : _format{std::move(format)},
+          _pathPrefix{std::move(pathPrefix)},
+          _internalPathPrefix{_pathPrefix / INTERNAL_DIR} {
         if (_format.useGrpc()) {
             boost::filesystem::create_directories(_pathPrefix);
             boost::filesystem::create_directories(_internalPathPrefix);

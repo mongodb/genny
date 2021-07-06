@@ -959,14 +959,14 @@ struct WithTransactionOperation : public BaseOperation {
                              metrics::Operation operation,
                              PhaseContext& context,
                              ActorId id)
-            : BaseOperation(context, opNode),
-              _onSession{onSession},
-              _collection{std::move(collection)},
-              _operation{operation} {
+        : BaseOperation(context, opNode),
+          _onSession{onSession},
+          _collection{std::move(collection)},
+          _operation{operation} {
         auto& opsInTxn = opNode["OperationsInTransaction"];
         if (!opsInTxn.isSequence()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                 "'WithTransaction' requires an 'OperationsInTransaction' node of sequence type."));
+                "'WithTransaction' requires an 'OperationsInTransaction' node of sequence type."));
         }
         for (const auto&& [k, txnOp] : opsInTxn) {
             createTxnOps(txnOp, context, id);
@@ -992,7 +992,8 @@ private:
     void createTxnOps(const Node& txnOp, PhaseContext& context, ActorId id) {
         auto opName = txnOp["OperationName"].to<std::string>();
         // MongoDB does not support transactions within transactions.
-        std::set<std::string> excludeSet = {"startTransaction", "commitTransaction", "withTransaction"};
+        std::set<std::string> excludeSet = {
+            "startTransaction", "commitTransaction", "withTransaction"};
         if (excludeSet.find(opName) != excludeSet.end()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "Operation '" + opName + "' not supported inside a 'with_transaction' operation."));
@@ -1093,29 +1094,29 @@ private:
 
 std::unordered_map<std::string, OpCallback&> getOpConstructors() {
     // Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
-    std::unordered_map<std::string, OpCallback &> opConstructors = {
-        {"bulkWrite",         baseCallback<BaseOperation, OpCallback, BulkWriteOperation>},
-        {"countDocuments",    baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
+    std::unordered_map<std::string, OpCallback&> opConstructors = {
+        {"bulkWrite", baseCallback<BaseOperation, OpCallback, BulkWriteOperation>},
+        {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
         {"estimatedDocumentCount",
-                              baseCallback<BaseOperation, OpCallback, EstimatedDocumentCountOperation>},
-        {"createIndex",       baseCallback<BaseOperation, OpCallback, CreateIndexOperation>},
-        {"find",              baseCallback<BaseOperation, OpCallback, FindOperation>},
-        {"findOne",           baseCallback<BaseOperation, OpCallback, FindOneOperation>},
-        {"findOneAndUpdate",  baseCallback<BaseOperation, OpCallback, FindOneAndUpdateOperation>},
-        {"findOneAndDelete",  baseCallback<BaseOperation, OpCallback, FindOneAndDeleteOperation>},
+         baseCallback<BaseOperation, OpCallback, EstimatedDocumentCountOperation>},
+        {"createIndex", baseCallback<BaseOperation, OpCallback, CreateIndexOperation>},
+        {"find", baseCallback<BaseOperation, OpCallback, FindOperation>},
+        {"findOne", baseCallback<BaseOperation, OpCallback, FindOneOperation>},
+        {"findOneAndUpdate", baseCallback<BaseOperation, OpCallback, FindOneAndUpdateOperation>},
+        {"findOneAndDelete", baseCallback<BaseOperation, OpCallback, FindOneAndDeleteOperation>},
         {"findOneAndReplace", baseCallback<BaseOperation, OpCallback, FindOneAndReplaceOperation>},
-        {"insertMany",        baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
-        {"startTransaction",  baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
+        {"insertMany", baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
+        {"startTransaction", baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
         {"commitTransaction", baseCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
-        {"withTransaction",   baseCallback<BaseOperation, OpCallback, WithTransactionOperation>},
-        {"setReadConcern",    baseCallback<BaseOperation, OpCallback, SetReadConcernOperation>},
-        {"drop",              baseCallback<BaseOperation, OpCallback, DropOperation>},
-        {"insertOne",         baseCallback<BaseOperation, OpCallback, InsertOneOperation>},
-        {"deleteOne",         baseCallback<BaseOperation, OpCallback, DeleteOneOperation>},
-        {"deleteMany",        baseCallback<BaseOperation, OpCallback, DeleteManyOperation>},
-        {"updateOne",         baseCallback<BaseOperation, OpCallback, UpdateOneOperation>},
-        {"updateMany",        baseCallback<BaseOperation, OpCallback, UpdateManyOperation>},
-        {"replaceOne",        baseCallback<BaseOperation, OpCallback, ReplaceOneOperation>}};
+        {"withTransaction", baseCallback<BaseOperation, OpCallback, WithTransactionOperation>},
+        {"setReadConcern", baseCallback<BaseOperation, OpCallback, SetReadConcernOperation>},
+        {"drop", baseCallback<BaseOperation, OpCallback, DropOperation>},
+        {"insertOne", baseCallback<BaseOperation, OpCallback, InsertOneOperation>},
+        {"deleteOne", baseCallback<BaseOperation, OpCallback, DeleteOneOperation>},
+        {"deleteMany", baseCallback<BaseOperation, OpCallback, DeleteManyOperation>},
+        {"updateOne", baseCallback<BaseOperation, OpCallback, UpdateOneOperation>},
+        {"updateMany", baseCallback<BaseOperation, OpCallback, UpdateManyOperation>},
+        {"replaceOne", baseCallback<BaseOperation, OpCallback, ReplaceOneOperation>}};
 
     return opConstructors;
 }

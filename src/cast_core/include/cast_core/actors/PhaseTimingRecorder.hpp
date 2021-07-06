@@ -35,7 +35,8 @@ namespace genny::v1::actor {
  * is automatically instantiated by Genny's preprocessor by default.
  *
  * Reports:
- *   GennyInternal.PhaseTimingRecorder.Phase - Records an event at the end of each phase, with a duration the length of the phase.
+ *   GennyInternal.PhaseTimingRecorder.Phase - Records an event at the end of each phase, with a
+ * duration the length of the phase.
  *
  * Owner: 10gen/dev-prod-tips
  */

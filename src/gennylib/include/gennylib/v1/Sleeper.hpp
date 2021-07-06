@@ -17,6 +17,7 @@
 
 #include <chrono>
 
+#include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
 
 
@@ -49,12 +50,26 @@ public:
     Sleeper(Sleeper&& other) = delete;
     Sleeper& operator=(Sleeper&& other) = delete;
 
+    constexpr void sleepFor(Orchestrator& orchestrator,
+                            const PhaseNumber phase,
+                            const Duration period,
+                            bool phaseChangeWakeup = false) const {
+
+        if (phaseChangeWakeup) {
+            // Using locks / condition variables is less efficient/safe, so we
+            // only use this mechanism if the caller explicitly asked for it.
+            orchestrator.sleepToPhaseEnd(period, phase);
+        } else if (period.count() > 0 && orchestrator.currentPhase() == phase) {
+            std::this_thread::sleep_for(period);
+        }
+    }
+
     /**
      * Sleep for duration before an operation. Checks that the current phase has
      * not ended before sleeping.
      */
-    constexpr void before(const Orchestrator& o, const PhaseNumber pn) const {
-        if (_before.count() && o.currentPhase() == pn) {
+    constexpr void before(const Orchestrator& orchestrator, const PhaseNumber phase) const {
+        if (_before.count() > 0 && orchestrator.currentPhase() == phase) {
             std::this_thread::sleep_for(_before);
         }
     }
@@ -62,8 +77,8 @@ public:
     /**
      * @see Sleeper::before
      */
-    constexpr void after(const Orchestrator& o, const PhaseNumber pn) const {
-        if (_after.count() && o.currentPhase() == pn) {
+    constexpr void after(const Orchestrator& orchestrator, const PhaseNumber phase) const {
+        if (_after.count() > 0 && orchestrator.currentPhase() == phase) {
             std::this_thread::sleep_for(_after);
         }
     }

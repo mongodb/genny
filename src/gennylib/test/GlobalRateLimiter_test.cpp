@@ -177,7 +177,7 @@ auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
 TEST_CASE("Global rate limiter can be used by phase loop", "[benchmark]") {
     using namespace std::chrono_literals;
 
-    SECTION("Fail if no Repeat or Duration") {
+    SECTION("Works with no Repeat or Duration") {
         NodeSource ns(R"(
 SchemaVersion: 2018-07-01
 Actors:
@@ -185,17 +185,35 @@ Actors:
   Type: IncActor
   Threads: 1
   Phases:
-    - GlobalRate: 5 per 4 seconds
-      Blocking: None
+    - Duration: 50 milliseconds 
+      GlobalRate: 7 per 20 milliseconds
+    - Duration: 50 milliseconds 
+      GlobalRate: 8 per 100 milliseconds
+
+- Name: Two
+  Type: IncActor
+  Threads: 1
+  Phases:
+    - Blocking: None
+      GlobalRate: 8 per 100 milliseconds
+
+      # When the phase ends the rate limit is reset and all threads
+      # are immediately woken up.
+    - Blocking: None
+      GlobalRate: 7 per 20 milliseconds
 )",
                       "");
         auto& config = ns.root();
         int num_threads = 2;
 
-        auto fun = [&]() {
-            genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
-        };
-        REQUIRE_THROWS_WITH(fun(), Matches(R"(.*alongside either Duration or Repeat.*)"));
+        genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
+        auto runInBg = [&ah]() { ah.run(); };
+        std::thread t(runInBg);
+        std::this_thread::sleep_for(110ms);
+        t.join();
+
+        const auto state = getCurState();
+        REQUIRE(state == 72);
     }
 
     // The rate interval needs to be large enough to avoid sporadic failures, which makes
