@@ -168,7 +168,7 @@ void Orchestrator::sleepToPhaseEnd(Duration timeout, const PhaseNumber pn) {
     reader lock{_mutex};
 
     // While loop to handle spurious wakeups.
-    while (this->_current == pn || state != State::PhaseEnded) {
+    while (this->_current == pn && state != State::PhaseEnded) {
         const auto waitTimeout = sleepEnd - SteadyClock::now();
         // If we've already passed the timeout then exit.
         if (waitTimeout < Duration::zero()) {
