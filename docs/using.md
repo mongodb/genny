@@ -1,3 +1,8 @@
+# Using Genny
+
+This page describes how to run Genny and view its outputs. It also describes how
+to add actors and workloads. For details on the development process, see [Developing Genny](./developing).
+
 ## Running Genny Workloads
 
 First install mongodb and start a mongod process:
@@ -21,6 +26,20 @@ If you see errors like the following, try reducing the number of threads and dur
 
 Logging currently goes to stdout and metrics data (ftdc) is written to
 `./build/CedarMetrics`.
+
+## Viewing Metrics Data
+
+After running, Genny will export data to the `build/CedarMetrics` directory as `.ftdc` files corresponding to the
+actor and operation recorded.
+When executed in CI after submitting a patch, this data will be visible in the Evergreen perf UI.
+
+If running locally you can use the `export` command that Genny provides to export to CSV.
+For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
+
+```sh
+./run-genny export build/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
+```
+
 
 ## Creating New Actors
 
@@ -68,16 +87,4 @@ A couple of tips on defining external phase configs:
 2.  `./run-genny workload -- evaluate ./src/workloads/docs/HelloWorld.yml` is your friend. `evaluate` prints out
     the final YAML workload with all external phase definitions inlined.
 
-## Viewing Metrics Data
-
-After running, Genny will export data to the `build/CedarMetrics` directory as `.ftdc` files corresponding to the
-actor and operation recorded.
-When executed in CI after submitting a patch, this data will be visible in the Evergreen perf UI.
-
-If running locally you can use the `export` command that Genny provides to export to CSV.
-For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
-
-```sh
-./run-genny export build/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
-```
 
