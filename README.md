@@ -8,4 +8,4 @@ time-series data-collection of operations running against MongoDB.
 
 `./run-genny --help`
 
-For more details on using Genny, please see the [docs](./docs/start)!
+For details on using Genny or contributing to the project, please see the [docs](./docs/start.md)!
