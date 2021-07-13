@@ -1,3 +1,8 @@
+
+
+# Index
+* [Setting Up Genny](./docs/setup.md)
+
 Genny uses the [Evergreen Commit-Queue][cq]. When you have received approval
 for your PR, simply comment `evergreen merge` and your PR will automatically
 be tested and merged.
