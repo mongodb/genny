@@ -10,3 +10,4 @@ If you feel like these docs can be improved in any way, feel free to open a PR a
 * [Using Genny](./using.md)
 * [Hitchhiker's Guide (Internals)](./HitchhikersGuide.md)
 * [Contribution Guidelines](../CONTRIBUTING.md)
+* [Documentation Workloads](../src/workloads/docs)
