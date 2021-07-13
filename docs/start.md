@@ -8,3 +8,4 @@ If you feel like these docs can be improved in any way, feel free to open a PR a
 * [Setting Up](./setup.md)
 * [Developing in Genny](./developing.md)
 * [Using Genny](./using.md)
+* [Hitchhiker's Guide (Internals)](./HitchhikersGuide.md)
