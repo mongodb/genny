@@ -14,6 +14,7 @@
 
 #include <cast_core/actors/MonotonicLoader.hpp>
 
+#include <iostream>
 #include <memory>
 
 #include <yaml-cpp/yaml.h>
@@ -50,6 +51,8 @@ struct MonotonicLoader::PhaseConfig {
                          context["Threads"].to<IntegerSpec>()},
           numDocuments{context["DocumentCount"].to<IntegerSpec>()},
           batchSize{context["BatchSize"].to<IntegerSpec>()},
+          fieldIncreasingByOffsetFromID{context["FieldIncreasingByOffsetFromID"].to<std::string>()},
+          offsetFromID{context["OffsetFromID"].to<IntegerSpec>()},
           documentExpr{context["Document"].to<DocumentGenerator>(context, id)},
           collectionOffset{numCollections * thread} {
         auto& indexNodes = context["Indexes"];
@@ -67,6 +70,8 @@ struct MonotonicLoader::PhaseConfig {
     int64_t numCollections;
     int64_t numDocuments;
     int64_t batchSize;
+    std::string fieldIncreasingByOffsetFromID;
+    int64_t offsetFromID;
     DocumentGenerator documentExpr;
     std::vector<index_type> indexes;
     int64_t collectionOffset;
@@ -95,6 +100,8 @@ void genny::actor::MonotonicLoader::run() {
                             auto tmpDoc = config->documentExpr();
                             auto builder = bsoncxx::builder::stream::document();
                             builder << "_id" << ++id_num;
+                            builder << config->fieldIncreasingByOffsetFromID 
+                                << (id_num + config->offsetFromID);
                             builder << bsoncxx::builder::concatenate(tmpDoc.view());
                             bsoncxx::document::value newDoc = builder
                                 << bsoncxx::builder::stream::finalize;
