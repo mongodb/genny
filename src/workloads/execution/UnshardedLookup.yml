@@ -1,0 +1,70 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  Benchmark a $lookup from one unsharded collection to another in a sharded environment.
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    DocumentCount: 1000
+    BatchSize: &batchSize 1000
+    CollectionCount: 2
+    Document:
+      shardKey: {^RandomInt: {min: 1, max: 1000}}
+      a: {^RandomInt: {min: 1, max: 1000}}
+      b: &string {^RandomString: {length: 10000}}
+  - &Nop {Nop: true}
+  - *Nop
+
+- Name: Quiesce
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        fsync: 1
+  - *Nop
+
+- Name: Lookup
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 10
+    Database: *db
+    Operations:
+    - OperationMetricsName: Lookup
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $lookup: {
+              from: "Collection1",
+              let: {a0: "$a"},
+              pipeline: [{
+                $match: {
+                  $expr: {$eq: ["$a", "$$a0"]},
+                }
+              }],
+              as: "joined"
+            }
+          }]
+        cursor: {batchSize: *batchSize}
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard-lite
+          - shard-lite-all-feature-flags
