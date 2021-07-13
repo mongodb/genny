@@ -1,7 +1,7 @@
 # Developing Genny
 
 This page describes the details of developing in Genny: How to run tests, debug, sanitizers, etc.
-For information on how to write actors and workloads, see [Using Genny](./docs/using.md).
+For information on how to write actors and workloads, see [Using Genny](./using.md).
 
 ## Commit Queue
 
@@ -98,7 +98,7 @@ restart *all* the tasks not just failed tasks. This is because Genny's
 tasks rely on being run in dependency-order on the same machine.
 Rescheduled tasks don't re-run dependent tasks.
 
-See [this page](./docs/using.md)'s section on Patch-Testing Genny Changes with Sys-Perf / DSI
+See [this page](./using.md)'s section on Patch-Testing Genny Changes with Sys-Perf / DSI
 if you are writing a workload or making changes to more than just this repo.
 
 ## Debugging
