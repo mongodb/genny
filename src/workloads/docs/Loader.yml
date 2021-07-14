@@ -8,52 +8,54 @@ Clients:
       maxPoolSize: 200
 
 Actors:
-  - Name: Loader
+  - Name: MultipleCollectionsPerLoaderThread
     Type: Loader
     Threads: 10
     Phases:
+      # If CollectionCount is less than the PhaseConfig Threads, then unexpected outcomes will occur.
       - Repeat: 1
+        # create 6 collection (CollectionCount / PhaseConfig Threads) per thread over 10 threads.
+        # Thread 0 creates collection 0 to 5
+        # Thread 1 creates collection 6 to 11
+        # etc.
+        Database: hot
+        CollectionCount: 6
+        Threads: 1
+        DocumentCount: 200000
+        BatchSize: 100000
+        Document:
+          a: {^RandomString: { length: 100 }}
+        FindOptions:
+          Hint: a_index # Currently only support the index name.
+          Comment: "Phase 1 loader"
+        # Each thread creates the indexes for each collection it manages.
+        Indexes:
+          - keys: {a: 1}
+            options: {name: "a_index"}
+      - Repeat: 1
+        # create 3 collection (CollectionCount / PhaseConfig Threads) per thread over 10 threads.
+        # Thread 0 creates collection 0 to 2
+        # Thread 1 creates collection 3 to 5
+        # etc.
         Database: cold
         CollectionCount: 6
-        Threads: 1
+        Threads: 2
         DocumentCount: 200000
         BatchSize: 100000
         Document:
           a: {^RandomString: { length: 100 }}
       - Repeat: 1
-        Database: hot
+        # create a single collection (CollectionCount / PhaseConfig Threads) per thread over 10 threads.
+        # Thread 0 creates collection 0
+        # Thread 1 creates collection 1
+        # etc.
+        Database: tepid
         CollectionCount: 6
-        Threads: 1
+        Threads: 6
         DocumentCount: 200000
         BatchSize: 100000
         Document:
           a: {^RandomString: { length: 100 }}
-        FindOptions:
-          Hint: a_1 # Currently only support the index name.
-          Comment: "Phase 1 loader"
-      - Repeat: 1
-        Database: hot
-        CollectionCount: 6
-        Threads: 1
-        DocumentCount: 200000
-        BatchSize: 100000
-        Document:
-          a: {^RandomString: { length: 100 }}
-        FindOptions:
-          Hint: a_1 # Currently only support the index name.
-          Comment: "Phase 1 loader"
-      - Repeat: 1
-        Database: multithreaded
-        # Create 2 collections and populate with 5 threads / collection.
-        CollectionCount: 2
-        MultipleThreadsPerCollection: true
-        DocumentCount: 200000
-        BatchSize: 100000
-        Document:
-          a: {^RandomString: { length: 100 }}
-        FindOptions:
-          Hint: a_1 # Currently only support the index name.
-          Comment: "Phase 1 loader"
   - Name: MultipleLoadThreadsPerCollection
     Type: Loader
     Threads: 100
@@ -67,13 +69,15 @@ Actors:
         CollectionCount: 10
         # DocumentCount is the total document count. Each thread populate an equal fraction of the count.
         DocumentCount: 200000
-        BatchSize: 100000
+        BatchSize: 1000
         Document:
           a: {^RandomString: { length: 100 }}
         FindOptions:
-          Hint: a_1 # Currently only support the index name.
+          Hint: a_index # Currently only support the index name.
           Comment: "Phase 1 loader"
         # Only one thread will create the indexes (for each collection).
         Indexes:
           - keys: {a: 1}
-            options: {name: "a"}
+            options: {name: "a_index"}
+      - {Nop: true}
+      - {Nop: true}
