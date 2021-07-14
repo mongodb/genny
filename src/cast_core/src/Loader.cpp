@@ -41,7 +41,7 @@ struct Loader::PhaseConfig {
     PhaseConfig(PhaseContext& context,
                 mongocxx::pool::entry& client,
                 uint thread,
-                uint totalThreads,
+                size_t totalThreads,
                 ActorId id)
         : database{(*client)[context["Database"].to<std::string>()]},
           multipleThreadsPerCollection{
@@ -74,8 +74,10 @@ struct Loader::PhaseConfig {
             }
             uint collectionCount = context["CollectionCount"].to<IntegerSpec>();
             if (totalThreads % collectionCount != 0) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "'CollectionCount' must be an even divisor of 'Threads'."));
+                std::ostringstream ss;
+                ss << "'CollectionCount' (" << collectionCount
+                   << ") must be an even divisor of 'Threads' (" << totalThreads << ").";
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(ss.str()));
             }
             uint numThreads = totalThreads / collectionCount;
             numDocuments = context["DocumentCount"].to<int64_t>() / numThreads;
@@ -162,7 +164,7 @@ void genny::actor::Loader::run() {
     }
 }
 
-Loader::Loader(genny::ActorContext& context, uint thread, uint totalThreads)
+Loader::Loader(genny::ActorContext& context, uint thread, size_t totalThreads)
     : Actor(context),
       _totalBulkLoad{context.operation("TotalBulkInsert", Loader::id())},
       _individualBulkLoad{context.operation("IndividualBulkInsert", Loader::id())},
