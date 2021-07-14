@@ -1,6 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 
+# More threads requires a larger connection pool.
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 200
+
 Actors:
   - Name: Loader
     Type: Loader
@@ -37,6 +43,7 @@ Actors:
           Hint: a_1 # Currently only support the index name.
           Comment: "Phase 1 loader"
       - Repeat: 1
+        Database: multithreaded
         # Create 2 collections and populate with 5 threads / collection.
         CollectionCount: 2
         MultipleThreadsPerCollection: true
@@ -52,6 +59,7 @@ Actors:
     Threads: 100
     Phases:
       - Repeat: 1
+        Database: multithreaded
         # CollectionCount must be an even divisor of Threads.
         # Phase config cannot contain Threads if MultipleThreadsPerCollection is true.
         # Create 10 collections and populate with 10 threads per collection.
@@ -66,6 +74,6 @@ Actors:
           Hint: a_1 # Currently only support the index name.
           Comment: "Phase 1 loader"
         # Only one thread will create the indexes (for each collection).
-        Indexes: [{key: {a: 1}, name: "a"}]
-      - {Nop: true}
-
+        Indexes:
+          - keys: {a: 1}
+            options: {name: "a"}
