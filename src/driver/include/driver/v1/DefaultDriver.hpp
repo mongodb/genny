@@ -66,6 +66,7 @@ public:
         std::string description;
         DefaultDriver::RunMode runMode = RunMode::kNormal;
         boost::log::trivial::severity_level logVerbosity;
+        OutcomeCode parseOutcome = OutcomeCode::kSuccess;
     };
 
     /**
