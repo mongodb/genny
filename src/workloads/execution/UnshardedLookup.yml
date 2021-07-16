@@ -15,9 +15,9 @@ Actors:
     BatchSize: &batchSize 1000
     CollectionCount: 2
     Document:
-      shardKey: {^RandomInt: {min: 1, max: 1000}}
       a: {^RandomInt: {min: 1, max: 1000}}
-      b: &string {^RandomString: {length: 10000}}
+      b: {^RandomInt: {min: 1, max: 100}}
+      c: {^RandomString: {length: 10000}}
   - &Nop {Nop: true}
   - *Nop
 
@@ -43,7 +43,7 @@ Actors:
   - Repeat: 10
     Database: *db
     Operations:
-    - OperationMetricsName: Lookup
+    - OperationMetricsName: LookupOneToOne
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -54,7 +54,25 @@ Actors:
               let: {a0: "$a"},
               pipeline: [{
                 $match: {
-                  $expr: {$eq: ["$a", "$$a0"]},
+                  $expr: {$eq: ["$$a0", "$a"]},
+                }
+              }],
+              as: "joined"
+            }
+          }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: LookupOneToMany
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $lookup: {
+              from: "Collection1",
+              let: {b0: "$b"},
+              pipeline: [{
+                $match: {
+                  $expr: {$eq: ["$$b0", "$b"]},
                 }
               }],
               as: "joined"
