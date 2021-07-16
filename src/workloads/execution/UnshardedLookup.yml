@@ -11,11 +11,11 @@ Actors:
   - Repeat: 1
     Database: &db test
     Threads: 1
-    DocumentCount: 1000
-    BatchSize: &batchSize 1000
+    DocumentCount: 500
+    BatchSize: &batchSize 500
     CollectionCount: 2
     Document:
-      a: {^RandomInt: {min: 1, max: 1000}}
+      a: {^RandomInt: {min: 1, max: 500}}
       b: {^RandomInt: {min: 1, max: 100}}
       c: {^RandomString: {length: 10000}}
   - &Nop {Nop: true}
@@ -48,36 +48,38 @@ Actors:
       OperationCommand:
         aggregate: Collection0
         pipeline:
-          [{
-            $lookup: {
+          [
+            {$lookup: {
               from: "Collection1",
               let: {a0: "$a"},
-              pipeline: [{
-                $match: {
-                  $expr: {$eq: ["$$a0", "$a"]},
-                }
-              }],
+              pipeline: [{$match: {$expr: {$eq: ["$$a0", "$a"]}}}],
               as: "joined"
-            }
-          }]
+            }},
+            {$project: {a: 1, b: 1, c: "$joined.b"}},
+            {$unwind: "$c"},
+            # Fetching from the cursor more than once is not supported, therefore we aggregate the
+            # result so that only one fetch is needed to exhaust the cursor.
+            {$count: "nDocs"}
+          ]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: LookupOneToMany
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
         pipeline:
-          [{
-            $lookup: {
+          [
+            {$lookup: {
               from: "Collection1",
               let: {b0: "$b"},
-              pipeline: [{
-                $match: {
-                  $expr: {$eq: ["$$b0", "$b"]},
-                }
-              }],
+              pipeline: [{$match: {$expr: {$eq: ["$$b0", "$b"]}}}],
               as: "joined"
-            }
-          }]
+            }},
+            {$project: {a: 1, b: 1, c: "$joined.a"}},
+            {$unwind: "$c"},
+            # Fetching from the cursor more than once is not supported, therefore we aggregate the
+            # result so that only one fetch is needed to exhaust the cursor.
+            {$count: "nDocs"}
+          ]
         cursor: {batchSize: *batchSize}
 
 AutoRun:
