@@ -37,7 +37,7 @@ namespace genny::actor {
 class Loader : public Actor {
 
 public:
-    explicit Loader(ActorContext& context, uint thread);
+    explicit Loader(ActorContext& context, uint thread, size_t totalThreads);
     ~Loader() override = default;
 
     static std::string_view defaultName() {
