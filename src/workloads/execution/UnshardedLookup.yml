@@ -11,13 +11,13 @@ Actors:
   - Repeat: 1
     Database: &db test
     Threads: 1
-    DocumentCount: 500
-    BatchSize: &batchSize 500
+    DocumentCount: 1000
+    BatchSize: &batchSize 1000
     CollectionCount: 2
     Document:
-      a: {^RandomInt: {min: 1, max: 500}}
-      b: {^RandomInt: {min: 1, max: 100}}
-      c: {^RandomString: {length: 10000}}
+      a: {^RandomInt: {min: 1, max: 100}}
+      b: {^RandomInt: {min: 1, max: 10}}
+      c: {^RandomInt: {min: 0, max: 999}}
   - &Nop {Nop: true}
   - *Nop
 
@@ -43,7 +43,7 @@ Actors:
   - Repeat: 10
     Database: *db
     Operations:
-    - OperationMetricsName: LookupOneToOne
+    - OperationMetricsName: LookupOneToFew
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -54,12 +54,7 @@ Actors:
               let: {a0: "$a"},
               pipeline: [{$match: {$expr: {$eq: ["$$a0", "$a"]}}}],
               as: "joined"
-            }},
-            {$project: {a: 1, b: 1, c: "$joined.b"}},
-            {$unwind: "$c"},
-            # Fetching from the cursor more than once is not supported, therefore we aggregate the
-            # result so that only one fetch is needed to exhaust the cursor.
-            {$count: "nDocs"}
+            }}
           ]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: LookupOneToMany
@@ -73,12 +68,7 @@ Actors:
               let: {b0: "$b"},
               pipeline: [{$match: {$expr: {$eq: ["$$b0", "$b"]}}}],
               as: "joined"
-            }},
-            {$project: {a: 1, b: 1, c: "$joined.a"}},
-            {$unwind: "$c"},
-            # Fetching from the cursor more than once is not supported, therefore we aggregate the
-            # result so that only one fetch is needed to exhaust the cursor.
-            {$count: "nDocs"}
+            }}
           ]
         cursor: {batchSize: *batchSize}
 
