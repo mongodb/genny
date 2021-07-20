@@ -14,7 +14,6 @@
 
 #include <cast_core/actors/MonotonicLoader.hpp>
 
-#include <iostream>
 #include <memory>
 
 #include <yaml-cpp/yaml.h>
@@ -51,8 +50,6 @@ struct MonotonicLoader::PhaseConfig {
                          context["Threads"].to<IntegerSpec>()},
           numDocuments{context["DocumentCount"].to<IntegerSpec>()},
           batchSize{context["BatchSize"].to<IntegerSpec>()},
-          fieldIncreasingByOffsetFromID{context["FieldIncreasingByOffsetFromID"].to<std::string>()},
-          offsetFromID{context["OffsetFromID"].to<IntegerSpec>()},
           documentExpr{context["Document"].to<DocumentGenerator>(context, id)},
           collectionOffset{numCollections * thread} {
         auto& indexNodes = context["Indexes"];
@@ -64,6 +61,24 @@ struct MonotonicLoader::PhaseConfig {
             // Pick up any extra collections left over by the division
             numCollections += context["CollectionCount"].to<uint>() % context["Threads"].to<uint>();
         }
+
+        buildingFieldIncreasingByOffset = false;
+        if (context["FieldIncreasingByOffsetFromID"] && !context["OffsetFromID"]) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "'FieldIncreasingByOffsetFromID' parameter is not supported if 'OffsetFromID' "
+                    "is not specified."));
+        }
+        else if (!context["FieldIncreasingByOffsetFromID"] && context["OffsetFromID"]) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "'OffsetFromID' parameter is not supported if 'FieldIncreasingByOffsetFromID' "
+                    "is not specified."));
+        }
+        else if (context["FieldIncreasingByOffsetFromID"] && context["OffsetFromID"]) {
+            fieldIncreasingByOffsetFromID = 
+                context["FieldIncreasingByOffsetFromID"].to<std::string>();
+            offsetFromID = context["OffsetFromID"].to<IntegerSpec>();
+            buildingFieldIncreasingByOffset = true;
+        }
     }
 
     mongocxx::database database;
@@ -72,6 +87,7 @@ struct MonotonicLoader::PhaseConfig {
     int64_t batchSize;
     std::string fieldIncreasingByOffsetFromID;
     int64_t offsetFromID;
+    bool buildingFieldIncreasingByOffset;
     DocumentGenerator documentExpr;
     std::vector<index_type> indexes;
     int64_t collectionOffset;
@@ -100,8 +116,12 @@ void genny::actor::MonotonicLoader::run() {
                             auto tmpDoc = config->documentExpr();
                             auto builder = bsoncxx::builder::stream::document();
                             builder << "_id" << ++id_num;
-                            builder << config->fieldIncreasingByOffsetFromID 
-                                << (id_num + config->offsetFromID);
+                            // Only add the optional field that increases with '_id' if the 
+                            // parameters were specified.
+                            if (config->buildingFieldIncreasingByOffset) {
+                                builder << config->fieldIncreasingByOffsetFromID 
+                                    << (id_num + config->offsetFromID);
+                            }
                             builder << bsoncxx::builder::concatenate(tmpDoc.view());
                             bsoncxx::document::value newDoc = builder
                                 << bsoncxx::builder::stream::finalize;

@@ -34,9 +34,9 @@ namespace genny::actor {
  * number of collections, and list of indexes are all adjustable from the yaml configuration.
  *
  * This actor is identical to `Loader` except it loads with monotonically increasing _ids and it has
- * an additional pair of arguments ('FieldIncreasingByOffsetFromID' and 'OffsetFromID') to generate
- * a field in each document whose value is 'OffsetFromID' greater than the '_id' of the document.
- * For example, if the field name is 'a' and the offset is 1, the documents will look like
+ * an optional additional pair of arguments ('FieldIncreasingByOffsetFromID' and 'OffsetFromID') to 
+ * generate a field in each document whose value is 'OffsetFromID' greater than the '_id' of the 
+ * document. For example, if the field name is 'a' and the offset is 1, the documents will look like
  *      {
  *          "_id": 1,
  *          "a": 2,
