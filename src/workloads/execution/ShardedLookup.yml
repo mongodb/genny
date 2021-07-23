@@ -54,7 +54,7 @@ Actors:
     Threads: 1
     DocumentCount: &NumDocs 3000
     Database: *Database
-    CollectionCount: 2    # Loader will populate 'Collection0' then 'Collection1'.
+    CollectionCount: 3    # Loader will populate 'Collection0', 'Collection1' and 'Collection2'.
     Document:
       shardKey: {^RandomInt: {min: 1, max: 100}}
       date: &Date {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}}
@@ -83,7 +83,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: 10    # Untargeted $lookup from sharded collection to sharded collection
+  - Repeat: 10
     Database: *Database
     Operations:
     - OperationMetricsName: UntargetedLookupShardedToSharded
@@ -110,6 +110,62 @@ Actors:
           }]
         # To get meaningful results, the entire result set should fit in a single batch. This should
         # be possible since both collections are small.
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: TargetedLookupShardedIntoSharded # PERF-2359
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$lookup: {
+              from: "Collection1",
+              localField: "shardKey",
+              foreignField: "shardKey",
+              as: "joined"
+            }}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: UntargetedLookupShardedIntoSharded # PERF-2359
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$lookup: {
+              from: "Collection1",
+              localField: "shardKey",
+              foreignField: "int",
+              as: "joined"
+            }}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: UntargetedLookupUnshardedIntoSharded # PERF-2362
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection2
+        pipeline:
+          [
+            {$lookup: {
+              from: "Collection1",
+              localField: "int",
+              foreignField: "int",
+              as: "joined"
+            }}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: TargetedLookupUnshardedIntoSharded # PERF-2358
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection2
+        pipeline:
+          [
+            {$lookup: {
+              from: "Collection1",
+              localField: "shardKey",
+              foreignField: "shardKey",
+              as: "joined"
+            }}
+          ]
         cursor: {batchSize: *NumDocs}
 
 AutoRun:
