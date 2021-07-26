@@ -334,6 +334,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     if (!vm.count("subcommand")) {
         std::cerr << "ERROR: missing subcommand" << std::endl;
         this->runMode = RunMode::kHelp;
+        this->parseOutcome = OutcomeCode::kUserException;
         return;
     }
     const auto subcommand = vm["subcommand"].as<std::string>();
@@ -349,6 +350,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     else {
         std::cerr << "ERROR: Unexpected subcommand " << subcommand << std::endl;
         this->runMode = RunMode::kHelp;
+        this->parseOutcome = OutcomeCode::kUserException;
         return;
     }
 
