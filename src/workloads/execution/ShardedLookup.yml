@@ -7,7 +7,7 @@ Description: |
     1. Creating empty sharded collections distributed across all shards in the cluster.
     2. Populating collections with data.
     3. Fsync.
-    4. Running untargeted $lookup from a sharded collection.
+    4. Running targeted and untargeted $lookups against a sharded foreign collection.
 
 Actors:
 - Name: CreateShardedCollections
@@ -50,15 +50,15 @@ Actors:
   Phases:
   - *Nop
   - Repeat: 1
-    BatchSize: 1000
+    BatchSize: 3000
     Threads: 1
     DocumentCount: &NumDocs 3000
     Database: *Database
     CollectionCount: 3    # Loader will populate 'Collection0', 'Collection1' and 'Collection2'.
     Document:
       shardKey: {^RandomInt: {min: 1, max: 100}}
-      date: &Date {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}}
       int: {^RandomInt: {min: 1, max: 100}}
+      str: {^RandomString: {length: 100}}
   - *Nop
   - *Nop
 
@@ -86,32 +86,7 @@ Actors:
   - Repeat: 10
     Database: *Database
     Operations:
-    - OperationMetricsName: UntargetedLookupShardedToSharded
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
-          [{
-            $lookup: {
-              from: Collection1,
-              let: {localInt: "$int"},
-              pipeline: [{
-                $match: {
-                  $expr: {
-                    $and: [
-                      {$eq: ["$int", "$$localInt"]},
-                      {$lte: ["$date", *Date]}
-                    ]
-                  }
-                }
-              }],
-              as: matches
-            }
-          }]
-        # To get meaningful results, the entire result set should fit in a single batch. This should
-        # be possible since both collections are small.
-        cursor: {batchSize: *NumDocs}
-    - OperationMetricsName: TargetedLookupShardedIntoSharded # PERF-2359
+    - OperationMetricsName: TargetedLookupShardedToSharded
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -125,7 +100,7 @@ Actors:
             }}
           ]
         cursor: {batchSize: *NumDocs}
-    - OperationMetricsName: UntargetedLookupShardedIntoSharded # PERF-2359
+    - OperationMetricsName: UntargetedLookupShardedToSharded
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -133,13 +108,13 @@ Actors:
           [
             {$lookup: {
               from: "Collection1",
-              localField: "shardKey",
+              localField: "int",
               foreignField: "int",
               as: "joined"
             }}
           ]
         cursor: {batchSize: *NumDocs}
-    - OperationMetricsName: UntargetedLookupUnshardedIntoSharded # PERF-2362
+    - OperationMetricsName: UntargetedLookupUnshardedToSharded
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection2
@@ -153,7 +128,7 @@ Actors:
             }}
           ]
         cursor: {batchSize: *NumDocs}
-    - OperationMetricsName: TargetedLookupUnshardedIntoSharded # PERF-2358
+    - OperationMetricsName: TargetedLookupUnshardedToSharded
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection2
