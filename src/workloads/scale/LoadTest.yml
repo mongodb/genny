@@ -15,7 +15,7 @@ GlobalDefaults:
     prod: {^RandomInt: {min: 0, max: 10000}}
     price: {^RandomDouble: {min: 0.0, max: 1000.0}}
     data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
-    c: &string {^RandomString: {length: 75}}  # Adjust this so the doc comes out as 200 B.
+    c: &string {^FastRandomString: {length: 75}}  # Adjust this so the doc comes out as 200 B.
 
   FirstIndex: &FirstIndex
     - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
@@ -40,7 +40,7 @@ Clients:
       maxPoolSize: 400
 
 Actors:
-- Name: InitialLoad
+- Name: InitialNoIndexes
   Type: Loader
   Threads: *LoadThreads
   Phases:
@@ -57,7 +57,7 @@ Actors:
         Indexes: *FirstIndex
         BatchSize: *LoadBatchSize
 
-- Name: SecondLoad
+- Name: LoadWithOneIndex
   Type: Loader
   Threads: *LoadThreads
   Phases:
@@ -74,7 +74,7 @@ Actors:
         Indexes: *MoreIndexes
         BatchSize: *LoadBatchSize
 
-- Name: ThirdLoad
+- Name: LoadWithTwoMoreIndexes
   Type: Loader
   Threads: *LoadThreads
   Phases:
@@ -117,3 +117,5 @@ AutoRun:
   Requires:
     mongodb_setup:
       - replica
+      - shard-lite
+      - single-replica
