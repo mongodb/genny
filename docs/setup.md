@@ -45,6 +45,9 @@ you run `make install` to install globally after cmaking the project.
 
 After installing these dependencies, re-running the `./run-genny install` phase above should work.
 
+# macOS Unable to get local issuer certificate
+If you are on macOS and you see python errors such as when trying `./run-genny install` that contain `ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate` this is likely a problem with the python `requests` library. Here is a [StackOverflow answer](https://stackoverflow.com/questions/44649449/brew-installation-of-python-3-6-1-ssl-certificate-verify-failed-certificate/44649450#44649450) which addresses the problem.
+
 ## IDEs and Whatnot
 
 We follow CMake and C++17 best-practices, so anything that doesn't work
