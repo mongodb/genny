@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  Benchmark a $lookup where the foreign collection (right side) is unsharded.
+  Benchmark a $lookup in a sharded environment where the foreign collection is unsharded.
 
 Actors:
 - Name: CreateShardedCollections
@@ -14,13 +14,17 @@ Actors:
     - OperationMetricsName: EnableSharding
       OperationName: AdminCommand
       OperationCommand:
-        enableSharding: &Database test
+        enableSharding: &db test
     - OperationMetricsName: ShardSourceCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection2
         key: {a: hashed}
-        numInitialChunks: &NumChunks 8
+        numInitialChunks: 8
+    - OperationMetricsName: DisableBalancer
+      OperationName: AdminCommand
+      OperationCommand:
+        balancerStop: 1
   - &Nop {Nop: true}
   - *Nop
   - *Nop
@@ -31,15 +35,17 @@ Actors:
   Phases:
   - *Nop
   - Repeat: 1
-    Database: &db test
+    Database: *db
     Threads: 1
-    DocumentCount: 1000
-    BatchSize: &batchSize 1000
+    DocumentCount: 2000
+    BatchSize: &batchSize 2000
     CollectionCount: 3
     Document:
       a: {^RandomInt: {min: 1, max: 100}}
       b: {^RandomInt: {min: 1, max: 10}}
-      c: {^RandomInt: {min: 0, max: 999}}
+      c: {^RandomInt: {min: 1, max: 10}}
+      d: {^RandomInt: {min: 1, max: 1000}}
+      s: {^RandomString: {length: 1000}}
   - *Nop
   - *Nop
 
@@ -67,64 +73,68 @@ Actors:
   - Repeat: 10
     Database: *db
     Operations:
-    - OperationMetricsName: LookupOneToFew
+    - OperationMetricsName: UnshardedToUnshardedLookupOneToFew
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
         pipeline:
           [
+            {$match: {c: 5}},
             {$lookup: {
               from: "Collection1",
               let: {a0: "$a"},
               pipeline: [{$match: {$expr: {$eq: ["$$a0", "$a"]}}}],
               as: "joined"
-            }}
+            }},
+            {$project: {"joined.s": 0}}
           ]
         cursor: {batchSize: *batchSize}
-    - OperationMetricsName: LookupOneToMany
+    - OperationMetricsName: UnshardedToUnshardedLookupOneToMany
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
         pipeline:
           [
+            {$match: {c: 5}},
             {$lookup: {
               from: "Collection1",
               let: {b0: "$b"},
               pipeline: [{$match: {$expr: {$eq: ["$$b0", "$b"]}}}],
               as: "joined"
-            }}
-          ]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MatchAllShardsLookupUnsharded
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection2
-        pipeline:
-          [
-            {$match: {
-              c: {$in: [84, 112, 253, 396, 495, 515, 638, 754, 872, 998]}
             }},
-            {$lookup: {
-              from: "Collection1",
-              let: {b0: "$b"},
-              pipeline: [{$match: {$expr: {$eq: ["$$b0", "$b"]}}}],
-              as: "joined"
-            }}
+            {$project: {"joined.s": 0}}
           ]
         cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MatchSingleShardLookupUnsharded
+    - OperationMetricsName: ShardedToUnshardedLookupMatchAllShards
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection2
         pipeline:
           [
-            {$match: {a: 23}},
+            {$match: {d: {$lte: 40}}},
             {$lookup: {
               from: "Collection1",
               let: {b0: "$b"},
               pipeline: [{$match: {$expr: {$eq: ["$$b0", "$b"]}}}],
               as: "joined"
-            }}
+            }},
+            {$project: {"joined.s": 0}}
+          ]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: ShardedToUnshardedLookupMatchSomeShards
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection2
+        pipeline:
+          [
+            {$match: {a: {$lte: 4}}},
+            {$lookup: {
+              from: "Collection1",
+              let: {b0: "$b"},
+              pipeline: [{$match: {$expr: {$eq: ["$$b0", "$b"]}}}],
+              as: "joined"
+            }},
+            {$project: {"joined.s": 0}}
           ]
         cursor: {batchSize: *batchSize}
 
