@@ -142,6 +142,40 @@ Actors:
             }}
           ]
         cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: LookupWithCachedPrefixShardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $lookup: {
+              from: Collection1,
+              let: {localInt: "$int"},
+              pipeline: [
+                {$group: {_id: {$sum: ["$int", 1]}}},
+                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
+              ],
+              as: matches
+            }
+          }]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: LookupWithCachedPrefixUnshardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection2
+        pipeline:
+          [{
+            $lookup: {
+              from: Collection1,
+              let: {localInt: "$int"},
+              pipeline: [
+                {$group: {_id: {$sum: ["$int", 1]}}},
+                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
+              ],
+              as: matches
+            }
+          }]
+        cursor: {batchSize: *NumDocs}
 
 AutoRun:
   - When:
