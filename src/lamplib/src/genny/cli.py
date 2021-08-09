@@ -180,9 +180,9 @@ def evaluate(ctx: click.Context, ftdc_path: str, output):
 )
 @click.pass_context
 def translate(ctx: click.Context, ftdc_path: str, output):
-    from genny.curator import export
+    from genny.curator import translate
 
-    export(
+    translate(
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         input_path=ftdc_path,
