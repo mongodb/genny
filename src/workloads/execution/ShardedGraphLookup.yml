@@ -124,6 +124,18 @@ Actors:
 
     # For the queries where the local collection is unsharded, the same flow as above applies except
     # we do the process for each document X in Collection1.
+    
+    # It should be noted that the results of this test indicate that there is not much of a 
+    # time difference between the different depth limited queries. One reason for this could be
+    # that in an attempt to limit the result set size by starting with a field 'c' that has values
+    # in a smaller range, the cache fills up with most (if not all) relevant documents in only a 
+    # few (relatively) rounds of recursion. This would explain the lack of difference between the 
+    # targeted and untargeted queries, as well as the unsharded and sharded queries since the 
+    # unsharded case has a shared cache but the sharded case benefits from parallelism.
+
+    # One other thing to note is that the results from the no recursion/depth limited cases cannot
+    # be directly compared to the depth unlimited cases since the queries are on different-sized
+    # collections.
 
     # Targeted $graphLookup from sharded collection to sharded collection, no recursion
     - OperationMetricsName: TargetedGraphLookupShardedToShardedNoRecursion
