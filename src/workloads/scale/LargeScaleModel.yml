@@ -65,7 +65,7 @@ Actors:
   TrackProportion: *TrackProportion
   Phases:
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedCreatorCmd
       Parameters:
@@ -82,7 +82,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedIndexReaderCmd
       Parameters:
@@ -98,7 +98,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedReaderCmd
       Parameters:
@@ -114,7 +114,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedWriterCmd
       Parameters:
@@ -132,7 +132,7 @@ Actors:
   Threads: 1
   Phases:
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: RollingSetupCmd
       Parameters:
@@ -149,7 +149,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: RollingManageCmd
 
@@ -161,7 +161,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: RollingWriterCmd
       Parameters:
@@ -176,7 +176,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: RollingReader1Cmd
       Parameters:
@@ -191,7 +191,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: RollingReader2Cmd
       Parameters:
@@ -204,7 +204,7 @@ Actors:
   Threads: 1
   Phases:
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: HotDocumentLoaderCmd
       Parameters:
@@ -219,7 +219,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: HotDocumentUpdaterCmd
       Parameters:
@@ -231,7 +231,7 @@ Actors:
   Threads: 1
   Phases:
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: HotCollectionLoaderCmd
       Parameters:
@@ -246,7 +246,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: HotCollectionUpdaterCmd
       Parameters:
@@ -259,7 +259,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: HotCollectionDeleterCmd
 
@@ -276,7 +276,7 @@ Actors:
     # Each collection is ~100M.  Assuming N is equal to ScannerColdDBGigabytes.
     # Each thread has N collections, and with 10 threads, that's
     # 10*N collections, or N gigabytes of space.
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: ScannerLoaderCmd
       Parameters:
@@ -299,7 +299,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: SnapshotScanner1GigabytesCmd
 
@@ -310,7 +310,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: SnapshotScanner5GigabytesCmd
 
@@ -322,7 +322,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: SnapshotScannerAllCmd
 
@@ -334,6 +334,6 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: OplogTrailerCmd

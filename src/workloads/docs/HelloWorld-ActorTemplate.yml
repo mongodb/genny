@@ -16,7 +16,7 @@ ActorTemplates:
         # to avoid when possible. At that point writing a new actor may be simpler.
         # You can always use `genny evaluate` on a workload yaml to see what it gets
         # preprocessed into.
-      - ExternalPhaseConfig:
+      - LoadConfig:
           Path: ../../phases/HelloWorld/ExamplePhase2.yml
           Key: UseMe  # Only load the YAML structure from this top-level key.
           Parameters:

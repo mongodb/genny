@@ -50,7 +50,7 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: InsertData
       Parameters:
@@ -69,32 +69,32 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: Create2dIndexesCmd
       Parameters:
         Duration: 5 minutes
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: Create2dSphereIndexesCoordCmd
       Parameters:
         Duration: 5 minutes
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: Create2dSphereGeoJsonIndexesCmd
       Parameters:
         Duration: 5 minutes
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: CreateHashedIndexesCmd
       Parameters:
         Duration: 5 minutes
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: CreateTextIndexesCmd
       Parameters:
         Duration: 5 minutes
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: CreateWildCardIndexesCmd
       Parameters:

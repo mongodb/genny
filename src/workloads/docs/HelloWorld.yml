@@ -18,7 +18,7 @@ Actors:
     # This will run at max throughput for 1 minute or 3 iterations, whichever is longer,
     # then limit to a fraction of that for the rest of the phase.
     # GlobalRate: 80%
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/HelloWorld/ExamplePhase2.yml
       Key: UseMe  # Only load the YAML structure from this top-level key.
       Parameters:

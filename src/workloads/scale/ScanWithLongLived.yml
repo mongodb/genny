@@ -42,7 +42,7 @@ Actors:
   TrackProportion: *TrackProportion
   Phases:
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedCreatorCmd
       Parameters:
@@ -59,7 +59,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedReaderCmd
       Parameters:
@@ -76,7 +76,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: LongLivedWriterCmd
       Parameters:
@@ -93,7 +93,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/scale/LargeScalePhases.yml
       Key: SnapshotScanner10GigabytesFixedRateCmd
 
