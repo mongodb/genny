@@ -1,0 +1,384 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of $graphLookup against a sharded foreign collection.
+
+  The workload consists of the following phases:
+    1. Creating empty sharded collections distributed across all shards in the cluster.
+    2. Populating collections with data.
+    3. Fsync.
+    4. Running $graphLookup into a sharded collection.
+
+GlobalDefaults:
+  NumDocsBase: &num_docs_base 95
+  NumDocsAdded: &num_docs_added 2905
+  NumDocsTotal: &num_docs_total 3000 # Should be *num_docs_base + *num_docs_added
+
+Actors:
+- Name: CreateShardedCollections
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    # Shard Collection0 and Collection2 using hashed sharding to ensure that the chunks are evenly
+    # distributed across the shards.
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: &Database test
+    - OperationMetricsName: ShardLocalCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0
+        key: {b: hashed}
+        numInitialChunks: &NumChunks 6
+    - OperationMetricsName: ShardForeignCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection2
+        key: {b: hashed}
+        numInitialChunks: *NumChunks
+    # Disable the balancer so that it can't skew results while the $lookups are running.
+    - OperationMetricsName: DisableBalancer
+      OperationName: AdminCommand
+      OperationCommand:
+        balancerStop: 1
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: LoadGraphLookupData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  # We want the size of 'Collection2' to be smaller than the other two collections for the queries 
+  # where 'maxDepth' is not specified, so we first populate all three collections with the number of 
+  # documents we want in 'Collection2' and then in the next phase add more to 'Collection0' and 
+  # 'Collection1'.
+  - Repeat: 1
+    BatchSize: 1000
+    Threads: 1
+    DocumentCount: *num_docs_base
+    Database: *Database
+    CollectionCount: 3 # Loader will populate 'Collection0', 'Collection1', and 'Collection2'.
+    Document:
+      a: {^RandomInt: {min: 1, max: 100}}
+      b: {^RandomInt: {min: 1, max: 100}}
+      c: {^RandomInt: {min: 1, max: 10}}
+  - Repeat: 1
+    BatchSize: 1000
+    Threads: 1
+    DocumentCount: *num_docs_added
+    Database: *Database
+    CollectionCount: 2 # Loader will add additional documents to 'Collection0' and 'Collection1'.
+    Document:
+      a: {^RandomInt: {min: 1, max: 100}}
+      b: {^RandomInt: {min: 1, max: 100}}
+      c: {^RandomInt: {min: 1, max: 10}}
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        fsync: 1
+  - *Nop
+
+- Name: RunGraphLookups
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    # The recursive targeted queries below work as follows: for each document X in Collection0 
+    # we find any document Y in Collection0 where X's 'c' field (startWith) is equal to Y's 'b'
+    # (connectToField). Then, we look at Y's 'a' (connectFromField) value and find any document Z in 
+    # Collection0 that has the same value for its 'b' (connectToField), and so on. 
+    # Because the collection is sharded by 'b' the $graphLookup is targeted towards 
+    # specific shard(s).
+
+    # Similarly, for the recursive untargeted queries below: for each document X in Collection0
+    # we find any document Y in Collection0 where X's 'c' value (startWith) is equal to Y's 'a' 
+    # value (connectToField). Then, we look at Y's 'b' (connectFromField) and find any document Z
+    # in Collection0 that has the same value for its 'a' value (connectToField), and so on. 
+    # Because the collection is sharded by 'b' and 'a' is the connectToField, the $graphLookup
+    # is not targeted to any specific shard.
+
+    # For the queries where the local collection is unsharded, the same flow as above applies except
+    # we do the process for each document X in Collection1.
+    
+    # It should be noted that the results of this test indicate that there is not much of a 
+    # time difference between the different depth limited queries. One reason for this could be
+    # that in an attempt to limit the result set size by starting with a field 'c' that has values
+    # in a smaller range, the cache fills up with most (if not all) relevant documents in only a 
+    # few (relatively) rounds of recursion. This would explain the lack of difference between the 
+    # targeted and untargeted queries, as well as the unsharded and sharded queries since the 
+    # unsharded case has a shared cache but the sharded case benefits from parallelism.
+
+    # One other thing to note is that the results from the no recursion/depth limited cases cannot
+    # be directly compared to the depth unlimited cases since the queries are on different-sized
+    # collections.
+
+    # Targeted $graphLookup from sharded collection to sharded collection, no recursion
+    - OperationMetricsName: TargetedGraphLookupShardedToShardedNoRecursion
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $graphLookup: {
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "a", 
+              connectToField: "b", 
+              as: "matches",
+              maxDepth: 0
+            }
+          }]
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *num_docs_total}
+
+    # Targeted $graphLookup from sharded collection to sharded collection, depth limited
+    - OperationMetricsName: TargetedGraphLookupShardedToShardedDepthLimited
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $graphLookup: {
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "a", 
+              connectToField: "b", 
+              as: "matches",
+              maxDepth: 2
+            }
+          }]
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *num_docs_total}
+
+    # Untargeted $graphLookup from sharded collection to sharded collection, no recursion
+    - OperationMetricsName: UntargetedGraphLookupShardedToShardedNoRecursion
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $graphLookup: {
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "b", 
+              connectToField: "a", 
+              as: "matches" ,
+              maxDepth: 0
+            }
+          }]
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *num_docs_total}
+    
+    # Untargeted $graphLookup from sharded collection to sharded collection, depth limited
+    - OperationMetricsName: UntargetedGraphLookupShardedToShardedDepthLimited
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $graphLookup: {
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "b", 
+              connectToField: "a", 
+              as: "matches",
+              maxDepth: 2
+            }
+          }]
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *num_docs_total}
+
+    # Targeted $graphLookup from unsharded collection to sharded collection, no recursion
+    - OperationMetricsName: TargetedGraphLookupUnshardedToShardedNoRecursion
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection1
+        pipeline:
+          [{
+            $graphLookup: {
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "a", 
+              connectToField: "b", 
+              as: "matches",
+              maxDepth: 0
+            }
+          }]
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *num_docs_total}
+
+    # Targeted $graphLookup from unsharded collection to sharded collection, depth limited
+    - OperationMetricsName: TargetedGraphLookupUnshardedToShardedDepthLimited
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection1
+        pipeline:
+          [{
+            $graphLookup: {
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "a", 
+              connectToField: "b", 
+              as: "matches",
+              maxDepth: 2
+            }
+          }]
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *num_docs_total}
+
+    # Untargeted $graphLookup from unsharded collection to sharded collection, no recursion
+    - OperationMetricsName: UntargetedGraphLookupUnshardedToShardedNoRecursion
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection1
+        pipeline:
+          [{
+            $graphLookup: {
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "b", 
+              connectToField: "a", 
+              as: "matches",
+              maxDepth: 0
+            }
+          }]
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *num_docs_total}
+    
+    # Untargeted $graphLookup from unsharded collection to sharded collection, depth limited
+    - OperationMetricsName: UntargetedGraphLookupUnshardedToShardedDepthLimited
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection1
+        pipeline:
+          [{
+            $graphLookup: {
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "b", 
+              connectToField: "a", 
+              as: "matches",
+              maxDepth: 2
+            }
+          }]
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *num_docs_total}
+
+    # In the following queries the 'maxDepth' field is not specified, so the $graphLookup runs
+    # to completion. The foreign collection here is smaller to account for the worst case scenario
+    # where all the documents in the local collection match all the documents in the foreign
+    # collection.
+
+    # Targeted $graphLookup from sharded collection to sharded collection, depth unlimited
+    - OperationMetricsName: TargetedGraphLookupShardedToShardedDepthUnlimited
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $graphLookup: {
+              from: "Collection2", 
+              startWith: "$c", 
+              connectFromField: "a", 
+              connectToField: "b", 
+              as: "matches"
+            }
+          }]
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *num_docs_total}
+    
+    # Untargeted $graphLookup from sharded collection to sharded collection, depth unlimited
+    - OperationMetricsName: UntargetedGraphLookupShardedToShardedDepthUnlimited
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $graphLookup: {
+              from: "Collection2", 
+              startWith: "$c", 
+              connectFromField: "b", 
+              connectToField: "a", 
+              as: "matches" 
+            }
+          }]
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *num_docs_total}
+    
+    # Targeted $graphLookup from unsharded collection to sharded collection, depth unlimited
+    - OperationMetricsName: TargetedGraphLookupUnshardedToShardedDepthUnlimited
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection1
+        pipeline:
+          [{
+            $graphLookup: {
+              from: "Collection2", 
+              startWith: "$c", 
+              connectFromField: "a", 
+              connectToField: "b", 
+              as: "matches"
+            }
+          }]
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *num_docs_total}
+    
+    # Untargeted $graphLookup from unsharded collection to sharded collection, depth unlimited
+    - OperationMetricsName: UntargetedGraphLookupUnshardedToShardedDepthUnlimited
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection1
+        pipeline:
+          [{
+            $graphLookup: {
+              from: "Collection2", 
+              startWith: "$c", 
+              connectFromField: "b", 
+              connectToField: "a", 
+              as: "matches"
+            }
+          }]
+        # To get meaningful results, the entire result set should fit in a single batch. This should
+        # be possible since both collections are small.
+        cursor: {batchSize: *num_docs_total}
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq: shard-lite-all-feature-flags

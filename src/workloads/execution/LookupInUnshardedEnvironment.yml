@@ -1,0 +1,73 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises $lookup in an unsharded environment.
+
+  The workload consists of the following phases:
+    1. Populating collections with data.
+    2. Fsync.
+    3. Running $lookup's with cacheable subpipeline prefixes.
+
+Actors:
+- Name: LoadInitialData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    BatchSize: 1000
+    Threads: 1
+    DocumentCount: &NumDocs 3000
+    Database: &Database test
+    CollectionCount: 2    # Loader will populate 'Collection0' and 'Collection1'.
+    Document:
+      key: {^RandomInt: {min: 1, max: 100}}
+      int: {^RandomInt: {min: 1, max: 100}}
+      str: {^RandomString: {length: 100}}
+  - &Nop {Nop: true}
+  - *Nop
+
+- Name: Quiesce
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        fsync: 1
+  - *Nop
+
+- Name: RunLookups
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: LookupWithCachedPrefixUnshardedEnvironment
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $lookup: {
+              from: Collection1,
+              let: {localInt: "$int"},
+              pipeline: [
+                {$group: {_id: {$sum: ["$int", 1]}}},
+                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
+              ],
+              as: matches
+            }
+          }]
+        cursor: {batchSize: *NumDocs}
+    
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
