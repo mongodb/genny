@@ -90,7 +90,7 @@ ActorTemplates:
     Phases:
       - Nop: true
       - Nop: true
-      - ExternalPhaseConfig:
+      - LoadConfig:
           Path: src/testlib/phases/Good.yml
           Parameters:
             Repeat: 2
@@ -212,7 +212,7 @@ Actors:
     Name: Fails
     Threads: 1
     Phases:
-    - ExternalPhaseConfig:
+    - LoadConfig:
         Path: src/testlib/phases/Good.yml"""
 
         expected = """SchemaVersion: 2018-07-01
@@ -237,7 +237,7 @@ Actors:
   Name: Fails
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: src/testlib/phases/GoodWithKey.yml
       Key: ForSelfTest"""
 
@@ -263,7 +263,7 @@ Actors:
   Name: Fails
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: src/testlib/phases/Good.yml
       Parameters:
         Repeat: 2
@@ -290,7 +290,7 @@ Actors:
   Name: Fails
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: "src/testlib/phases/GoodNoRepeat.yml"
     Repeat: 3
 """
@@ -316,7 +316,7 @@ Actors:
   Name: Fails
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: src/testlib/phases/MissingAllFields.yml
       Parameters:
         Repeat: 2
@@ -331,7 +331,7 @@ Actors:
     Name: Fails
     Threads: 1
     Phases:
-    - ExternalPhaseConfig:
+    - LoadConfig:
         Path: src/testlib/phases/MissingDefault.yml
         Parameters:
           Repeat: 2
@@ -345,7 +345,7 @@ Actors:
     Name: Fails
     Threads: 1
     Phases:
-    - ExternalPhaseConfig:
+    - LoadConfig:
         Path: src/testlib/phases/MissingName.yml
         Parameters:
           Repeat: 2
@@ -359,7 +359,7 @@ Actors:
     Name: Fails
     Threads: 1
     Phases:
-    - ExternalPhaseConfig:
+    - LoadConfig:
         Path: "src/testlib/phases/MissingSchemaVersion.yml"
 """
         self._assertParseException(yaml_input)

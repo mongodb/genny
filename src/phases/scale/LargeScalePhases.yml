@@ -1,4 +1,4 @@
-PhaseSchemaVersion: 2018-07-01
+SchemaVersion: 2018-07-01
 Owner: Storage Engines
 
 # This is the set of shared phases for the Large Scale Workload Automation project.

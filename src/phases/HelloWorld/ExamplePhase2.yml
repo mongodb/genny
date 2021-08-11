@@ -1,5 +1,5 @@
 # Example to illustrate how PhaseConfig composition works.
-PhaseSchemaVersion: 2018-07-01
+SchemaVersion: 2018-07-01
 
 UseMe:
   Message: Hello Phase 2

@@ -185,14 +185,14 @@ class _WorkloadParser(object):
             out["Actors"] = self._parse_actors(value)
         elif key == "OnlyActiveInPhases":
             out = self._parse_only_in(value)
-        elif key == "ExternalPhaseConfig":
-            external = self._parse_external(value)
+        elif key == "LoadConfig":
+            loaded_config = self._parse_load_config(value)
 
-            # Merge the external node with the any other parameters specified
+            # Merge the loaded node with the any other parameters specified
             # for this node like "Repeat" or "Duration".
-            for key in external:
+            for key in loaded_config:
                 if key not in out:
-                    out[key] = external[key]
+                    out[key] = loaded_config[key]
         else:
             out[key] = self._recursive_parse(value)
         return out
@@ -259,22 +259,22 @@ class _WorkloadParser(object):
                 out.append(nop)
         return out
 
-    def _parse_external(self, external):
+    def _parse_load_config(self, load_config):
         with self._context.enter():
             keysSeen = 0
 
-            if "Path" not in external:
-                msg = f"Missing the `Path` top-level key in your external phase configuration: {external}"
+            if "Path" not in load_config:
+                msg = f"Missing the `Path` top-level key in your loadable configuration: {load_config}"
                 raise ParseException(msg)
 
-            path = external["Path"]
+            path = load_config["Path"]
             keysSeen += 1
 
             path = os.path.join(self._phase_config_path, path)
 
             if not os.path.isfile(path):
                 msg = (
-                    f"Invalid path to external PhaseConfig: {path}"
+                    f"Invalid path to loadable config: {path}"
                     ". Please ensure your workload file is placed in 'workloads/[subdirectory]/' and the "
                     "'Path' parameter is relative to the 'phases/' directory"
                 )
@@ -282,40 +282,40 @@ class _WorkloadParser(object):
 
             replacement = _load_file(path)
 
-            if "PhaseSchemaVersion" not in replacement:
+            if "SchemaVersion" not in replacement:
                 raise ParseException(
-                    "Missing the `PhaseSchemaVersion` top-level key in your external phase "
+                    "Missing the `SchemaVersion` top-level key in your loadable "
                     "configuration"
                 )
 
             # Python will parse the schema version as a datetime.
-            phase_schema_version = str(replacement["PhaseSchemaVersion"])
-            if phase_schema_version != "2018-07-01":
+            loadable_schema_version = str(replacement["SchemaVersion"])
+            if loadable_schema_version != "2018-07-01":
                 msg = (
-                    f"Invalid phase schema version: {phase_schema_version}"
-                    ". Please ensure the schema for your external phase config is valid and the "
-                    "`PhaseSchemaVersion` top-level key is set correctly"
+                    f"Invalid phase schema version: {loadable_schema_version}"
+                    ". Please ensure the schema for your loadable config is valid and the "
+                    "`SchemaVersion` top-level key is set correctly"
                 )
                 raise ParseException(msg)
 
             # Delete the schema version instead of adding it to `keysSeen`.
-            del replacement["PhaseSchemaVersion"]
+            del replacement["SchemaVersion"]
 
-            if "Parameters" in external:
+            if "Parameters" in load_config:
                 keysSeen += 1
-                self._context.insert_all(external["Parameters"], _ContextType.Parameter)
+                self._context.insert_all(load_config["Parameters"], _ContextType.Parameter)
 
-            if "Key" in external:
+            if "Key" in load_config:
                 keysSeen += 1
-                key = external["Key"]
+                key = load_config["Key"]
                 if key not in replacement:
-                    msg = f"Could not find top-level key: {key} in phase config YAML file: {path}"
+                    msg = f"Could not find top-level key: {key} in loadable config YAML file: {path}"
                     raise ParseException(msg)
                 replacement = replacement[key]
 
-            if len(external) != keysSeen:
+            if len(load_config) != keysSeen:
                 msg = (
-                    "Invalid keys for 'External'. Please set 'Path' and if any, 'Parameters' in the YAML "
+                    "Invalid keys for 'LoadConfig'. Please set 'Path' and if any, 'Parameters' in the YAML "
                     f"file: {path} with the following content: {external}"
                 )
                 raise ParseException(msg)

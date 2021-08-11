@@ -1,4 +1,4 @@
-PhaseSchemaVersion: 2018-07-01
+SchemaVersion: 2018-07-01
 
 Document: &Doc  # Documents are approximately 1 KB in size
   t: {^RandomInt: {min: 0, max: 10}}
