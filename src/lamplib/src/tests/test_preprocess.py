@@ -91,7 +91,7 @@ ActorTemplates:
       - Nop: true
       - Nop: true
       - LoadConfig:
-          Path: src/testlib/phases/Good.yml
+          Path: src/testlib/configs/Good.yml
           Parameters:
             Repeat: 2
       - Nop: true
@@ -213,7 +213,7 @@ Actors:
     Threads: 1
     Phases:
     - LoadConfig:
-        Path: src/testlib/phases/Good.yml"""
+        Path: src/testlib/configs/Good.yml"""
 
         expected = """SchemaVersion: 2018-07-01
 Actors:
@@ -238,7 +238,7 @@ Actors:
   Threads: 1
   Phases:
   - LoadConfig:
-      Path: src/testlib/phases/GoodWithKey.yml
+      Path: src/testlib/configs/GoodWithKey.yml
       Key: ForSelfTest"""
 
         expected = """SchemaVersion: 2018-07-01
@@ -264,7 +264,7 @@ Actors:
   Threads: 1
   Phases:
   - LoadConfig:
-      Path: src/testlib/phases/Good.yml
+      Path: src/testlib/configs/Good.yml
       Parameters:
         Repeat: 2
 """
@@ -291,7 +291,7 @@ Actors:
   Threads: 1
   Phases:
   - LoadConfig:
-      Path: "src/testlib/phases/GoodNoRepeat.yml"
+      Path: "src/testlib/configs/GoodNoRepeat.yml"
     Repeat: 3
 """
         expected = """SchemaVersion: 2018-07-01
@@ -317,7 +317,7 @@ Actors:
   Threads: 1
   Phases:
   - LoadConfig:
-      Path: src/testlib/phases/MissingAllFields.yml
+      Path: src/testlib/configs/MissingAllFields.yml
       Parameters:
         Repeat: 2
 """
@@ -332,7 +332,7 @@ Actors:
     Threads: 1
     Phases:
     - LoadConfig:
-        Path: src/testlib/phases/MissingDefault.yml
+        Path: src/testlib/configs/MissingDefault.yml
         Parameters:
           Repeat: 2
 """
@@ -346,7 +346,7 @@ Actors:
     Threads: 1
     Phases:
     - LoadConfig:
-        Path: src/testlib/phases/MissingName.yml
+        Path: src/testlib/configs/MissingName.yml
         Parameters:
           Repeat: 2
 """
@@ -360,7 +360,7 @@ Actors:
     Threads: 1
     Phases:
     - LoadConfig:
-        Path: "src/testlib/phases/MissingSchemaVersion.yml"
+        Path: "src/testlib/configs/MissingSchemaVersion.yml"
 """
         self._assertParseException(yaml_input)
 
@@ -368,7 +368,7 @@ Actors:
         yaml_input = """SchemaVersion: 2018-07-01
 
 LoadConfig:
-    Path: "src/testlib/phases/workload.yml"
+    Path: "src/testlib/configs/workload.yml"
 """
 
         expected = """SchemaVersion: 2018-07-01
@@ -389,7 +389,7 @@ Actors:
         yaml_input = """SchemaVersion: 2018-07-01
 
 LoadConfig:
-    Path: "src/testlib/phases/workload.yml"
+    Path: "src/testlib/configs/workload.yml"
     Parameters:
       Name: Passes
 """
@@ -412,7 +412,7 @@ Actors:
         yaml_input = """SchemaVersion: 2018-07-01
 
 LoadConfig:
-    Path: "src/testlib/phases/workload.yml"
+    Path: "src/testlib/configs/workload.yml"
     Parameters:
         RepeatMeta: 3
 """

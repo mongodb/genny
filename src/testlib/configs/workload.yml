@@ -5,7 +5,7 @@ Actors:
   Threads: 1
   Phases:
   - LoadConfig:
-      Path: src/testlib/phases/Good.yml
+      Path: src/testlib/configs/Good.yml
       Parameters:
         # TODO: Is this too confusing?
         Repeat: {^Parameter: {Name: "RepeatMeta", Default: 2}}

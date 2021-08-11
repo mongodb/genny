@@ -239,7 +239,18 @@ class _WorkloadParser(object):
                 name = instance["TemplateName"]
                 msg = f"Expected template named {name} but could not be found."
                 raise ParseException(msg)
-            self._context.insert_all(instance["TemplateParameters"], _ContextType.Parameter)
+
+            paramNode = instance["TemplateParameters"]
+            if paramNode is not None and not isinstance(paramNode, dict):
+                msg = (
+                    f"Invalid context storage of node: {paramNode}."
+                    ". Please ensure this node is a map rather than a sequence."
+                )
+                raise ParseException(msg)
+
+            for key, val in instance["TemplateParameters"].items():
+                self._context.insert(key, self._recursive_parse(val), _ContextType.Parameter)
+
             actor = self._recursive_parse(templateNode)
         return actor
 
@@ -303,7 +314,17 @@ class _WorkloadParser(object):
 
             if "Parameters" in load_config:
                 keysSeen += 1
-                self._context.insert_all(load_config["Parameters"], _ContextType.Parameter)
+                paramNode = load_config["Parameters"]
+                if not isinstance(paramNode, dict):
+                    msg = (
+                        f"Invalid context storage of node: {paramNode}."
+                        ". Please ensure this node is a map rather than a sequence."
+                    )
+                    raise ParseException(msg)
+
+                for key, val in load_config["Parameters"].items():
+                    self._context.insert(key, self._recursive_parse(val), _ContextType.Parameter)
+
 
             if "Key" in load_config:
                 keysSeen += 1
