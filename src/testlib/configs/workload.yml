@@ -7,5 +7,4 @@ Actors:
   - LoadConfig:
       Path: src/testlib/configs/Good.yml
       Parameters:
-        # TODO: Is this too confusing?
-        Repeat: {^Parameter: {Name: "RepeatMeta", Default: 2}}
+        Repeat: {^Parameter: {Name: "Repeat", Default: 2}}

@@ -414,9 +414,11 @@ Actors:
 LoadConfig:
     Path: "src/testlib/configs/workload.yml"
     Parameters:
-        RepeatMeta: 3
+        Repeat: 3
 """
 
+        # Even though the nested workload defines a "Repeat"
+        # paramter, the stored/nested one gets evaluated first.
         expected = """SchemaVersion: 2018-07-01
 Actors:
 - Type: Fails
