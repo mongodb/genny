@@ -35,3 +35,18 @@ Actors:
     TemplateParameters:
       Name: Hello_2
       Threads: 2
+
+- Name: {^Parameter: {Name: "Name", Default: "HelloWorld-NonTemplate"}}
+  Type: HelloWorld
+  Threads: {^Parameter: {Name: "Threads", Default: 1}}
+  Phases:
+    - Message: Hello Phase 0 🐳
+      Duration: 50 milliseconds
+    - Message: Hello Phase 1 👬
+      Repeat: 100
+    - LoadConfig:
+        Path: ../../phases/HelloWorld/ExamplePhase2.yml
+        Key: UseMe  # Only load the YAML structure from this top-level key.
+        Parameters:
+          Repeat: 2
+

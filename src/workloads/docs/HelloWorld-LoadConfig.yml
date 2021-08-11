@@ -1,0 +1,13 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/dev-prod-tips"
+
+LoadConfig:
+  Path: "./HelloWorld-ActorTemplate.yml"
+  Parameters:
+    # The non-templatized actor in the workload above has its name overridden,
+    # but the parameters inside the actor template are NOT overridden, because
+    # they are not evaluated until after the "ActorFromTemplate" is evaluated.
+    #
+    # You can always use `genny evaluate` on a workload yaml to see what it gets
+    # preprocessed into.
+    Name: Helloworld-Overridden

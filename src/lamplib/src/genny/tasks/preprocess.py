@@ -188,11 +188,14 @@ class _WorkloadParser(object):
         elif key == "LoadConfig":
             loaded_config = self._parse_load_config(value)
 
-            # Merge the loaded node with the any other parameters specified
-            # for this node like "Repeat" or "Duration".
-            for key in loaded_config:
-                if key not in out:
-                    out[key] = loaded_config[key]
+            if isinstance(loaded_config, dict):
+                # Merge the loaded node with the any other parameters specified
+                # for this node like "Repeat" or "Duration".
+                for key in loaded_config:
+                    if key not in out:
+                        out[key] = loaded_config[key]
+            else:
+                out = loaded_config
         else:
             out[key] = self._recursive_parse(value)
         return out
