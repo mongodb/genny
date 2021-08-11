@@ -363,3 +363,71 @@ Actors:
         Path: "src/testlib/phases/MissingSchemaVersion.yml"
 """
         self._assertParseException(yaml_input)
+
+    def test_load_entire_workload(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+
+LoadConfig:
+    Path: "src/testlib/phases/workload.yml"
+"""
+
+        expected = """SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Fails
+  Threads: 1
+  Phases:
+  - Repeat: 2
+    Mode: NoException
+- Name: PhaseTimingRecorder
+  Type: PhaseTimingRecorder
+  Threads: 1
+"""
+        self._assertYaml(yaml_input, expected)
+
+    def test_load_entire_workload_param_substitution(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+
+LoadConfig:
+    Path: "src/testlib/phases/workload.yml"
+    Parameters:
+      Name: Passes
+"""
+
+        expected = """SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Passes
+  Threads: 1
+  Phases:
+  - Repeat: 2
+    Mode: NoException
+- Name: PhaseTimingRecorder
+  Type: PhaseTimingRecorder
+  Threads: 1
+"""
+        self._assertYaml(yaml_input, expected)
+
+    def test_load_entire_workload_nested_param(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+
+LoadConfig:
+    Path: "src/testlib/phases/workload.yml"
+    Parameters:
+        RepeatMeta: 3
+"""
+
+        expected = """SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Fails
+  Threads: 1
+  Phases:
+  - Repeat: 3
+    Mode: NoException
+- Name: PhaseTimingRecorder
+  Type: PhaseTimingRecorder
+  Threads: 1
+"""
+        self._assertYaml(yaml_input, expected)
+

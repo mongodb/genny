@@ -213,9 +213,9 @@ class _WorkloadParser(object):
         # Nested params are ignored for simplicity.
         paramVal = self._context.get(name, _ContextType.Parameter)
         if paramVal is not None:
-            return paramVal
+            return self._recursive_parse(paramVal)
         else:
-            return defaultVal
+            return self._recursive_parse(defaultVal)
 
     def _parse_templates(self, templates):
         for template_node in templates:

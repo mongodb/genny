@@ -1,0 +1,11 @@
+SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: {^Parameter: {Name: "Name", Default: "Fails"}}
+  Threads: 1
+  Phases:
+  - LoadConfig:
+      Path: src/testlib/phases/Good.yml
+      Parameters:
+        # TODO: Is this too confusing?
+        Repeat: {^Parameter: {Name: "RepeatMeta", Default: 2}}
