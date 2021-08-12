@@ -1,0 +1,25 @@
+SchemaVersion: 2018-07-01
+Owner: TODO put your github team name here e.g. @mongodb/stm
+
+# TODO: delete this file or add a meaningful workload using or
+#       demonstrating your Actor
+#
+# For more information on how to configure Repeat/Duration/*
+# see extended example file
+# `src/workloads/docs/HelloWorld-MultiplePhases.yml`
+
+Actors:
+- Name: MoveChunkToRandomShardActor
+  Type: MoveChunkToRandomShardActor
+  Threads: 100
+  Database: test
+  Phases:
+  - Phase: 0
+    Repeat: 1e3 # used by PhaesLoop
+    # below used by PhaseConfig in MoveChunkToRandomShardActor.cpp
+    Collection: test
+    Document: {foo: {^RandomInt: {min: 0, max: 100}}}
+  - Phase: 1
+    Duration: 5 seconds
+    Collection: test
+    Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
