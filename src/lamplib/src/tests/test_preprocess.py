@@ -432,4 +432,3 @@ Actors:
   Threads: 1
 """
         self._assertYaml(yaml_input, expected)
-

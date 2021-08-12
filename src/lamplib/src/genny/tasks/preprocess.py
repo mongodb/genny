@@ -298,8 +298,7 @@ class _WorkloadParser(object):
 
             if "SchemaVersion" not in replacement:
                 raise ParseException(
-                    "Missing the `SchemaVersion` top-level key in your loadable "
-                    "configuration"
+                    "Missing the `SchemaVersion` top-level key in your loadable " "configuration"
                 )
 
             # Python will parse the schema version as a datetime.
@@ -328,12 +327,13 @@ class _WorkloadParser(object):
                 for key, val in load_config["Parameters"].items():
                     self._context.insert(key, self._recursive_parse(val), _ContextType.Parameter)
 
-
             if "Key" in load_config:
                 keysSeen += 1
                 key = load_config["Key"]
                 if key not in replacement:
-                    msg = f"Could not find top-level key: {key} in loadable config YAML file: {path}"
+                    msg = (
+                        f"Could not find top-level key: {key} in loadable config YAML file: {path}"
+                    )
                     raise ParseException(msg)
                 replacement = replacement[key]
 
