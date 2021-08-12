@@ -1,25 +1,29 @@
 SchemaVersion: 2018-07-01
-Owner: TODO put your github team name here e.g. @mongodb/stm
-
-# TODO: delete this file or add a meaningful workload using or
-#       demonstrating your Actor
-#
-# For more information on how to configure Repeat/Duration/*
-# see extended example file
-# `src/workloads/docs/HelloWorld-MultiplePhases.yml`
-
+Owner: @mongodb/sharding
 Actors:
-- Name: MoveChunkToRandomShardActor
-  Type: MoveChunkToRandomShardActor
-  Threads: 100
-  Database: test
+- Name: CreateShardedCollection
+  Type: AdminCommand
+  Threads: 1
   Phases:
-  - Phase: 0
-    Repeat: 1e3 # used by PhaesLoop
-    # below used by PhaseConfig in MoveChunkToRandomShardActor.cpp
-    Collection: test
-    Document: {foo: {^RandomInt: {min: 0, max: 100}}}
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: test
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.collection0
+        key: {Key: 1}
+  - {Nop: true}
+
+- Name: MoveRandomChunkToRandomShard
+  Type: MoveRandomChunkToRandomShard
+  Thread: 1
+  Phases:
+  - {Nop: true}
   - Phase: 1
     Duration: 5 seconds
-    Collection: test
-    Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
+    Namespace: test.collection0
