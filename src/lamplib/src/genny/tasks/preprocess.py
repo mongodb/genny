@@ -213,7 +213,7 @@ class _WorkloadParser(object):
         # The default value is mandatory.
         defaultVal = input["Default"]
 
-        # Nested params are ignored for simplicity.
+        # Nested params are evaluated.
         paramVal = self._context.get(name, _ContextType.Parameter)
         if paramVal is not None:
             return self._recursive_parse(paramVal)
