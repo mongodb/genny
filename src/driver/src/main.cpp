@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
         // basically just a test that we're using c++17
         std::cout << u8"\n🧞 Genny" << " Version " << v.value_or("ERROR") << u8" 💝🐹🌇⛔\n";
         std::cout << opts.description << std::endl;
-        return 0;
+        return static_cast<int>(opts.parseOutcome);
     }
 
     genny::driver::DefaultDriver d;

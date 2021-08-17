@@ -70,8 +70,10 @@ Actors:
     Nop: true
 
 AutoRun:
-  Requires:
-    mongodb_setup: 
-    - replica
-    - replica-noflowcontrol
-    - replica-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - replica-noflowcontrol
+          - replica-all-feature-flags

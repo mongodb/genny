@@ -1,0 +1,183 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of $lookup against a sharded foreign collection.
+
+  The workload consists of the following phases:
+    1. Creating empty sharded collections distributed across all shards in the cluster.
+    2. Populating collections with data.
+    3. Fsync.
+    4. Running targeted and untargeted $lookups against a sharded foreign collection.
+
+Actors:
+- Name: CreateShardedCollections
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    # Shard Collection0 and Collection1 using hashed sharding to ensure that the chunks are evenly
+    # distributed across the shards.
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: &Database test
+    - OperationMetricsName: ShardLocalCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0
+        key: {shardKey: hashed}
+        numInitialChunks: &NumChunks 6
+    - OperationMetricsName: ShardForeignCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection1
+        key: {shardKey: hashed}
+        numInitialChunks: *NumChunks
+    # Disable the balancer so that it can't skew results while the $lookups are running.
+    - OperationMetricsName: DisableBalancer
+      OperationName: AdminCommand
+      OperationCommand:
+        balancerStop: 1
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+
+- Name: LoadInitialData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    BatchSize: 3000
+    Threads: 1
+    DocumentCount: &NumDocs 3000
+    Database: *Database
+    CollectionCount: 3    # Loader will populate 'Collection0', 'Collection1' and 'Collection2'.
+    Document:
+      shardKey: {^RandomInt: {min: 1, max: 100}}
+      int: {^RandomInt: {min: 1, max: 100}}
+      str: {^RandomString: {length: 100}}
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        fsync: 1
+  - *Nop
+
+- Name: RunLookups
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: TargetedLookupShardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$lookup: {
+              from: "Collection1",
+              localField: "shardKey",
+              foreignField: "shardKey",
+              as: "joined"
+            }}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: UntargetedLookupShardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$lookup: {
+              from: "Collection1",
+              localField: "int",
+              foreignField: "int",
+              as: "joined"
+            }}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: UntargetedLookupUnshardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection2
+        pipeline:
+          [
+            {$lookup: {
+              from: "Collection1",
+              localField: "int",
+              foreignField: "int",
+              as: "joined"
+            }}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: TargetedLookupUnshardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection2
+        pipeline:
+          [
+            {$lookup: {
+              from: "Collection1",
+              localField: "shardKey",
+              foreignField: "shardKey",
+              as: "joined"
+            }}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: LookupWithCachedPrefixShardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $lookup: {
+              from: Collection1,
+              let: {localInt: "$int"},
+              pipeline: [
+                {$group: {_id: {$sum: ["$int", 1]}}},
+                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
+              ],
+              as: matches
+            }
+          }]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: LookupWithCachedPrefixUnshardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection2
+        pipeline:
+          [{
+            $lookup: {
+              from: Collection1,
+              let: {localInt: "$int"},
+              pipeline: [
+                {$group: {_id: {$sum: ["$int", 1]}}},
+                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
+              ],
+              as: matches
+            }
+          }]
+        cursor: {batchSize: *NumDocs}
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq: shard-lite-all-feature-flags

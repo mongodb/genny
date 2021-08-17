@@ -80,11 +80,13 @@ Actors:
     Update: {$inc: {x1: 1}}
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - replica
-    - standalone
-    - shard
-    - single-replica
-    - single-replica-15gbwtcache
-    - replica-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - replica-all-feature-flags
+          - single-replica
+          - single-replica-15gbwtcache
+          - shard
+          - standalone

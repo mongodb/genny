@@ -21,7 +21,7 @@ GlobalDefaults:
   Nop: &Nop {Nop: true}
 
   Database: &Database test
-  # Collection0 is the default collection populated by the MonotonicLoader.
+  # Collection0 is the default collection populated by the MonotonicSingleLoader.
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
 
@@ -45,13 +45,11 @@ GlobalDefaults:
     OperationCommand:
       Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
       Update: {$inc: {counter: 1}}
-      # Write operations can fail with a ShardInvalidatedForTargeting error response due to the
-      # routing information for the temporary resharding collection not being available on the
-      # donor shard. Mongos is expected to automatically retry on it. TODO: Use the default
-      # {ThrowOnFailure: true} behavior after this issue has been addressed by SERVER-54020.
-      ThrowOnFailure: false
 
 Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 300
   # The reshardCollection command is expected to take a long to complete so we give the actor
   # running it a much higher socket timeout.
   ReshardCollection:
@@ -85,16 +83,14 @@ Actors:
   - *Nop
 
 - Name: LoadInitialData
-  Type: MonotonicLoader
-  Threads: 1
+  Type: MonotonicSingleLoader
+  Threads: 100
   Phases:
   - *Nop
   - Repeat: 1
     BatchSize: 1000
-    Threads: 1
     DocumentCount: *DocumentCount
     Database: *Database
-    CollectionCount: 1
     Document:
       oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
       newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
@@ -124,27 +120,25 @@ Actors:
 
 - Name: ReadWriteCollectionBeingResharded
   Type: CrudActor
+  Threads: 100
   Database: *Database
   Phases:
   - *Nop
   - *Nop
   - MetricsName: BeforeResharding
     Duration: 10 seconds
-    Threads: 100
     Collection: *Collection
     Operations: *ReadWriteOperations
   - MetricsName: DuringResharding
     Blocking: None
-    Threads: 100
     Collection: *Collection
     Operations: *ReadWriteOperations
   - MetricsName: AfterResharding
     Duration: 10 seconds
-    Threads: 100
     Collection: *Collection
     Operations: *ReadWriteOperations
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - shard-lite-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq: shard-lite-all-feature-flags

@@ -1,0 +1,191 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+
+Actors:
+
+# Phases:
+# 1. Insert data
+# 2. Fsync
+# 3. Plain query (without index or projection)
+# 4. Query with projection, but without index
+# 5. Create index
+# 6. Fsync
+# 7. Query with projection and with index
+
+- Name: InsertData
+  Type: Loader
+  # Loader doesn't support multiple threads for a single collection.
+  # TODO: TIG-2938 Use multiple threads to speedup insertion.
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &DB test
+    Threads: 1
+    CollectionCount: 1 # Collection name will be Collection0, this is not configurable.
+    DocumentCount: 1e6
+    BatchSize: 1000
+    Document:
+      region: {^RandomInt: {min: 0, max: 1999}}
+      firstname: &firstname {^FastRandomString: {length: {^RandomInt: {min: 3, max: 10}}}}
+      lastname: &lastname {^FastRandomString: {length: {^RandomInt: {min: 5, max: 10}}}}
+      cell: {^RandomInt: {min: 1111111111, max: 9999999999}}
+      email: {^Join: {array: [
+        {^FastRandomString: {length: {^RandomInt: {min: 3, max: 10}}, alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"}},
+        "@",
+        {^Choose: {from: ["gmail", "yandex", "yahoo"]}},
+        ".",
+        {^Choose: {from: ["com", "org", "net"]}}
+      ]}}
+      dob: {^RandomDate: {min: "1930-01-01", max: "2016-12-31"}}
+      gender: {^Choose: {from: ["Male", "Female", "Other"]}}
+      address: &address {
+        number: {^RandomInt: {min: 1, max: 9999}},
+        street: {^FastRandomString: {length: {^RandomInt: {min: 30, max: 60}}}},
+        city: {^FastRandomString: {length: {^RandomInt: {min: 5, max: 10}}}},
+        state: {^Choose: {from: ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]}},
+        zip: {^FastRandomString: {length: 6, alphabet: "0123456789"}},
+        location: {position: {type: "Point", coordinates: [
+          {^RandomDouble: {min: -118.668469, max: -82.062023}},
+          {^RandomDouble: {min: 32.924436, max: 41.679986}}
+        ]}}
+      }
+      policies: {^Array: {number: {^RandomInt: {min: 3, max: 6}}, of: {^Choose: {from: [
+        {
+          policyType: "auto",
+          policyNum: &policyNum {^FastRandomString: {length: 30}},
+          nextRenewalDt: &nextRenewalDt {^RandomDate: {min: "2017-01-01", max: "2017-12-31"}},
+          year: {^RandomInt: {min: 1980, max: 2017}},
+          value: {^RandomInt: {min: 500, max: 500000}},
+          model: {^FastRandomString: {length: 30}},
+        },
+        {
+          policyType: "home",
+          policyNum: *policyNum,
+          nextRenewalDt: *nextRenewalDt,
+          year: {^RandomInt: {min: 1970, max: 2017}},
+          value: {^RandomInt: {min: 500, max: 10000000}},
+          address: *address
+        },
+        {
+          policyType: "life",
+          policyNum: *policyNum,
+          nextRenewalDt: *nextRenewalDt,
+          insured_person: {
+            firstname: *firstname,
+            lastname: *lastname,
+            yob: {^RandomDate: {min: "1930-01-01", max: "2016-12-31"}},
+            smoking: {^RandomInt: {min: 0, max: 1}}
+          }
+        }
+      ]}}}}
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *DB
+  Phases:
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+
+- Name: CreateIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  # Create index *after* running some queries without it.
+  - Repeat: 1
+    Database: *DB
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - key:
+            address.state: 1
+            policies.policyType: 1
+            policies.insured_person.smoking: 1
+            gender: 1
+            dob: 1
+          name: usefulIndex
+  - *Nop
+  - *Nop
+
+# TODO: TIG-3050 Switch to CrudActor once projection argument is supported for find operation.
+- Name: RunQueries
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 100
+    Duration: 5 minutes
+    Database: *DB
+    Operations:
+    - OperationMetricsName: QueryNoProjectionNoIndex
+      OperationName: RunCommand
+      OperationCommand:
+        find: Collection0
+        filter: &filter {
+          gender: "Female",
+          dob: {
+            # Currently, using generator is the only way to generate date value with the appropriate BSON type.
+            # TODO: PERF-2084 Use ^Date instead.
+            $gte: {^RandomDate: {min: "1990-01-01", max: "1990-01-01T00:00:00.001"}},
+            $lte: {^RandomDate: {min: "1990-12-31", max: "1990-12-31T00:00:00.001"}}
+          },
+          address.state: "UT",
+          policies: {
+            $elemMatch: {
+              policyType: "life",
+              insured_person.smoking: 1
+            }
+          }
+        }
+  - Repeat: 100
+    Duration: 5 minutes
+    Database: *DB
+    Operations:
+    - OperationMetricsName: QueryWithProjectionNoIndex
+      OperationName: RunCommand
+      OperationCommand:
+        find: Collection0
+        filter: *filter
+        projection: &projection {_id: 0, firstname: 1, lastname: 1, dob: 1}
+  - *Nop
+  - *Nop
+  - Repeat: 1000 # This query is very fast, so we need to run it more times than others.
+    Duration: 5 minutes
+    Database: *DB
+    Operations:
+    - OperationMetricsName: QueryWithProjectionWithIndex
+      OperationName: RunCommand
+      OperationCommand:
+        find: Collection0
+        filter: *filter
+        projection: *projection
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - single-replica
+          - standalone
+      branch_name:
+        $neq:
+          - v4.0

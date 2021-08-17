@@ -18,6 +18,7 @@
 
 #include <algorithm>  // std::max
 #include <cassert>
+#include <chrono>
 
 namespace {
 
@@ -158,6 +159,23 @@ void Orchestrator::abort() {
     writer lock{_mutex};
     this->_errors = true;
     _phaseChange.notify_all();
+}
+
+void Orchestrator::sleepToPhaseEnd(Duration timeout, const PhaseNumber pn) {
+    using SteadyClock = std::chrono::steady_clock;
+    const auto sleepEnd = SteadyClock::now() + timeout;
+
+    reader lock{_mutex};
+
+    // While loop to handle spurious wakeups.
+    while (this->_current == pn && state != State::PhaseEnded) {
+        const auto waitTimeout = sleepEnd - SteadyClock::now();
+        // If we've already passed the timeout then exit.
+        if (waitTimeout < Duration::zero()) {
+            return;
+        }
+        _phaseChange.wait_for(lock, waitTimeout);
+    }
 }
 
 }  // namespace genny

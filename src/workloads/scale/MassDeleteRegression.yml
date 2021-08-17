@@ -54,6 +54,6 @@ Actors:
         Filter: {_id: {$lte: *docs}}
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - replica
+  - When:
+      mongodb_setup:
+        $eq: replica

@@ -125,12 +125,6 @@ public:
             const auto rateLimiterName =
                 phaseContext["RateLimiterName"].maybe<std::string>().value_or(defaultRLName.str());
 
-            if (!_doesBlock) {
-                throw InvalidConfigurationException(
-                    "GlobalRate must be specified alongside either Duration or Repeat, otherwise "
-                    "there's no guarantee the rate limited operation will run in the correct "
-                    "phase");
-            }
             _rateLimiter =
                 phaseContext.workload().getRateLimiter(rateLimiterName, rateSpec.value());
         }
@@ -138,16 +132,16 @@ public:
 
     constexpr void limitRate(const SteadyClock::time_point referenceStartingPoint,
                              const int64_t currentIteration,
+                             Orchestrator& orchestrator,
                              const PhaseNumber inPhase) {
-        // This function is called after each iteration, so we never rate limit the
-        // first iteration. This means the number of completed operations is always
-        // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
-        // _burstSize. `m` here is the number of threads using the rate limiter.
         if (_rateLimiter) {
             while (true) {
                 const auto now = SteadyClock::now();
                 auto success = _rateLimiter->consumeIfWithinRate(now);
-                if (!success && !isDone(referenceStartingPoint, currentIteration, now)) {
+                // If we don't block, we can trust the sleeper to check if the phase ended.
+                bool phaseStillGoing =
+                    !_doesBlock || !isDone(referenceStartingPoint, currentIteration, now);
+                if (!success && phaseStillGoing) {
 
                     // Don't sleep for more than 1 second (1e9 nanoseconds). Otherwise rates
                     // specified in seconds or lower resolution can cause the workloads to
@@ -155,8 +149,11 @@ public:
                     const auto rate = _rateLimiter->getRate() > 1e9 ? 1e9 : _rateLimiter->getRate();
 
                     // Add ±5% jitter to avoid threads waking up at once.
-                    std::this_thread::sleep_for(std::chrono::nanoseconds(
-                        int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))));
+                    _sleeper->sleepFor(orchestrator,
+                                       inPhase,
+                                       std::chrono::nanoseconds(int64_t(
+                                           rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))),
+                                       !_doesBlock);
                     continue;
                 }
                 break;
@@ -257,7 +254,8 @@ public:
     bool operator==(const ActorPhaseIterator& rhs) const {
         if (_iterationCheck) {
             _iterationCheck->sleepBefore(*_orchestrator, _inPhase);
-            _iterationCheck->limitRate(_referenceStartingPoint, _currentIteration, _inPhase);
+            _iterationCheck->limitRate(
+                _referenceStartingPoint, _currentIteration, *_orchestrator, _inPhase);
         }
         // clang-format off
         return

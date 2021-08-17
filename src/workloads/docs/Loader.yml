@@ -1,0 +1,169 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+
+# More threads requires a larger connection pool.
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 200
+
+# The Loader actor loads a fixed number of documents using a fixed
+# number of threads to a set of collections. The number of collections created
+# depends on the Phase.MultipleThreadsPerCollection, Phase.CollectionCount,
+# Phase.Threads and Actor.Threads values and is explained later.
+#
+# Actor.Threads specifies the total number of threads created and used by the loader.
+#
+# Phase.MultipleThreadsPerCollection controls whether there is a collections per thread or a
+# threads per collection load (defaults to false, so at most one thread will write to each collection).
+#
+# When MultipleThreadsPerCollection is false, the actor will use at most one thread to load
+# one of more collections.
+# In this mode of operation the loader Actor will:
+#  * create a total of  math.floor(Phase.CollectionCount / Phase.Threads) *  Actor.Threads collections.
+#  * create Actor.Threads loader threads.
+#  * each loader thread will create math.floor(Phase.CollectionCount / Phase.Threads) collections.
+# Both Actor.Threads and Phase.Threads must be set in this mode.
+#
+# When MultipleThreadsPerCollection is true, the actor will use at least one thread to load
+# each collection.
+# In this mode of operation the loader will:
+#  * creates a total of Phase.CollectionCount collections.
+#  * each collection will be populated by (Actor.Thread / Phase.CollectionCount) threads.
+#  * raise an InvalidConfiguration exception if Phase.CollectionCount doesn't divide
+#    evenly into Actor.Threads.
+#  * raise an InvalidConfiguration exception if Phase.Threads is set.
+#
+
+Actors:
+  - Name: MultipleCollectionsPerLoaderThread
+    Type: Loader
+    Threads: 10
+    Phases:
+      - Repeat: 1
+        # create 10 collection math.floor(Phase.CollectionCount / Phase.Threads) *  Actor.Threads.
+        #   1. Thread 0 creates and loads Collection0
+        #   2. Thread 1 creates and loads Collection1
+        # Thread 1 creates collection 6 to 11
+        # etc.
+        Database: OneLoaderThreadPerCollection
+        CollectionCount: 10
+        Threads: 10
+        DocumentCount: &DocumentCount 200000
+        BatchSize: &BatchSize 100000
+        Document:
+          a: {^RandomString: { length: 100 }}
+        FindOptions:
+          Hint: a_index # Currently only support the index name.
+          Comment: "Phase 1 loader"
+        # Each thread creates the indexes for each collection it manages.
+        Indexes:
+          - keys: {a: 1}
+            options: {name: "a_index"}
+      - Repeat: 1
+        # create 60 collection math.floor(Phase.CollectionCount / Phase.Threads) *  Actor.Threads.
+        #   * Thread 0 creates collection 0 to 5
+        #   * Thread 1 creates collection 6 to 11
+        # etc.
+        Database: SixCollectionsPerThread
+        CollectionCount: 6
+        Threads: 1
+        DocumentCount: *DocumentCount
+        BatchSize: *BatchSize
+        Document:
+          a: {^RandomString: { length: 100 }}
+        FindOptions:
+          Hint: a_index # Currently only support the index name.
+          Comment: "Phase 1 loader"
+        # Each thread creates the indexes for each collection it manages.
+        Indexes:
+          - keys: {a: 1}
+            options: {name: "a_index"}
+      - Repeat: 1
+        # create 30 collection math.floor(Phase.CollectionCount / Phase.Threads) *  Actor.Threads.
+        #   * Thread 0 creates collection 0 to 2
+        #   * Thread 1 creates collection 3 to 5
+        # etc.
+        Database: ThreeCollectionsPerThread
+        CollectionCount: 6
+        Threads: 2
+        DocumentCount: *DocumentCount
+        BatchSize: *BatchSize
+        Document:
+          a: {^RandomString: { length: 100 }}
+      - Repeat: 1
+        # create 10 collection math.floor(Phase.CollectionCount / Phase.Threads) *  Actor.Threads.
+        #   * Thread 0 creates collection 0 to 2
+        #   * Thread 1 creates collection 3 to 5
+        # etc.
+        Database: AlsoOneLoaderThreadPerCollection
+        CollectionCount: 6
+        Threads: 6
+        DocumentCount: *DocumentCount
+        BatchSize: *BatchSize
+        Document:
+          a: {^RandomString: { length: 100 }}
+      - Repeat: 1
+        # create 20 collection math.floor(Phase.CollectionCount / Phase.Threads) *  Actor.Threads.
+        #   * Thread 0 creates collection 0 to 1
+        #   * Thread 1 creates collection 2 to 3
+        # etc.
+        Database: TwoCollectionsPerThread
+        CollectionCount: 17
+        Threads: 6
+        DocumentCount: *DocumentCount
+        BatchSize: *BatchSize
+        Document:
+          a: {^RandomString: { length: 100 }}
+      - Repeat: 1
+        # create 10 collection (Phase.CollectionCount / Phase.Threads) *  Actor.Threads.
+        #   * Thread 0 creates collection 0 to 2
+        #   * Thread 1 creates collection 3 to 5
+        # etc.
+        Database: SixCollectionsSingleThread
+        CollectionCount: 6
+        Threads: 8 # Any value between 7 (Phase.CollectionCount + 1) and Actor.Threads (10)
+        DocumentCount: *DocumentCount
+        BatchSize: *BatchSize
+        Document:
+          a: {^RandomString: { length: 100 }}
+      - Repeat: 1
+        # create 0 collection (Phase.CollectionCount / Phase.Threads) *  Actor.Threads.
+        Database: ZeroCollections
+        CollectionCount: 1
+        Threads: 20 # Any value greater than Actor.Threads (10) and Phase.CollectionCount (1)
+        DocumentCount: *DocumentCount
+        BatchSize: 100000
+        Document:
+          a: {^RandomString: { length: 100 }}
+  - Name: MultipleLoadThreadsPerCollection
+    Type: Loader
+    Threads: 100
+    Phases:
+      # Run MultiThreadedLoader every even Phase number.
+      OnlyActiveInPhases:
+        Active: [0, 2, 4]
+        NopInPhasesUpTo: 5
+        PhaseConfig:
+          Repeat: 1
+          # create 10 (Phase.CollectionCount) collection populated by 100 (Actor.Threads) threads. Each
+          # collection will be written to by 10 (Actor.Threads / Phase.CollectionCount) threads.
+          # A single thread for each collection will create any indexes.
+          Database: MultiThreaded
+          # Phase.Threads cannot be set if MultipleThreadsPerCollection is true.
+          # CollectionCount must be an even divisor of Threads.
+          # Create 10 collections and populate with 10 threads per collection.
+          MultipleThreadsPerCollection: true
+          CollectionCount: 10
+          # DocumentCount is the total document count. Each thread populate an equal fraction of the count.
+          DocumentCount: 200001
+          BatchSize: 100
+          Document:
+            a: {^RandomString: { length: 100 }}
+          FindOptions:
+            Hint: a_index # Currently only support the index name.
+            Comment: "Phase 1 loader"
+          # Only one thread will create the indexes (for each collection).
+          Indexes:
+            - keys: {a: 1}
+              options: {name: "a_index"}

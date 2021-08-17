@@ -70,10 +70,14 @@ struct CollectionScanner::PhaseConfig {
     SortOrderType sortOrder;
     int64_t collectionSkip;
     std::optional<TimeSpec> scanDuration;
+    bool scanContinuous = false;
     bool selectClusterTimeOnly = false;
     bool queryCollectionList;
     std::optional<mongocxx::options::transaction> transactionOptions;
     mongocxx::options::find findOptions;
+    bool aggregate = false;
+    std::optional<DocumentGenerator> aggregatePipelineExpr;
+    mongocxx::options::aggregate aggregateOptions;
 
     PhaseConfig(PhaseContext& context,
                 const CollectionScanner* actor,
@@ -91,12 +95,22 @@ struct CollectionScanner::PhaseConfig {
           scanSizeBytes{context["ScanSizeBytes"].maybe<IntegerSpec>().value_or(0)},
           collectionSkip{context["CollectionSkip"].maybe<IntegerSpec>().value_or(0)},
           scanDuration{context["ScanDuration"].maybe<TimeSpec>()},
+          scanContinuous{context["ScanContinuous"].maybe<bool>().value_or(false)},
           selectClusterTimeOnly{context["SelectClusterTimeOnly"].maybe<bool>().value_or(false)},
-          findOptions{context["FindOptions"].maybe<mongocxx::options::find>().value_or(mongocxx::options::find{})} {
+          findOptions{context["FindOptions"].maybe<mongocxx::options::find>().value_or(
+              mongocxx::options::find{})},
+          aggregate{context["AggregatePipeline"]},
+          aggregatePipelineExpr{
+              context["AggregatePipeline"].maybe<DocumentGenerator>(context, actor->id())},
+          aggregateOptions{
+              context["AggregateOptions"].maybe<mongocxx::options::aggregate>().value_or(
+                  mongocxx::options::aggregate{})} {
         // The list of databases is comma separated.
         std::vector<std::string> dbnames;
-        boost::split(dbnames, databaseNames, [](char c) { return (c == ','); });
-        for (const auto& dbname : dbnames) {
+        boost::split(dbnames, databaseNames, boost::is_any_of(","));
+
+        for (auto& dbname : dbnames) {
+            boost::trim(dbname);
             databases.push_back((*actor->_client)[dbname]);
         }
         const auto now = SteadyClock::now();
@@ -136,6 +150,19 @@ struct CollectionScanner::PhaseConfig {
                     "ScanDuration must be used with snapshot scans."));
             }
         }
+        if (scanContinuous) {
+            auto os = std::ostringstream();
+            if (scanType != ScanType::kSnapshot) {
+                os << "ScanContinuous is only valid with snapshot scans.";
+            }
+            if (!scanDuration) {
+                os << "ScanContinuous is only valid with a scan duration.";
+            }
+            auto err = os.str();
+            if (!err.empty()) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(err));
+            }
+        }
         auto sortOrderString = context["CollectionSortOrder"].maybe<std::string>().value_or("none");
         if (sortOrderString == "none") {
             sortOrder = SortOrderType::kSortNone;
@@ -160,6 +187,10 @@ struct CollectionScanner::PhaseConfig {
             }
         } else {
             queryCollectionList = true;
+        }
+        if (aggregate && filterExpr) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "Only one of filterExpr and AggregatePipeline can be set."));
         }
     }
 
@@ -188,6 +219,15 @@ struct CollectionScanner::PhaseConfig {
     }
 };
 
+// Evaluate the Aggregation Pipeline Expression to create a mongocxx::pipeline.
+auto evaluatePipeline(CollectionScanner::PhaseConfig* config) {
+    auto expr = config->aggregatePipelineExpr->evaluate();
+    bsoncxx::array::view pipeline{expr.view()["array"].get_array().value};
+    mongocxx::pipeline pl{};
+    pl.append_stages(std::move(pipeline));
+    return pl;
+}
+
 void collectionScan(CollectionScanner::PhaseConfig* config,
                     std::vector<mongocxx::collection>& collections,
                     GlobalRateLimiter* rateLimiter,
@@ -202,15 +242,25 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
     bool scanFinished = false;
     auto statTracker = config->scanOperation.start();
     for (auto& collection : collections) {
-        auto filter = config->filterExpr ? config->filterExpr->evaluate()
-                                         : bsoncxx::document::view_or_value{};
-        auto docs = collection.find(session, filter, config->findOptions);
+        // Use a lambda to hide calling the correct operation.
+        auto cursor = [&]() {
+            if (config->aggregate) {
+                return collection.aggregate(
+                    session, evaluatePipeline(config), config->aggregateOptions);
+            } else {
+                auto filter = config->filterExpr ? config->filterExpr->evaluate()
+                                                 : bsoncxx::document::view_or_value{};
+                return collection.find(session, filter, config->findOptions);
+            }
+        };
+
         /*
          * Try-catch this as the collection may have been deleted.
          * You can still do a find but it'll throw an exception when we iterate.
          */
         try {
-            for (auto& doc : docs) {
+            // Execute the lambda, iterate over all the docs in the cursor.
+            for (auto& doc : cursor()) {
                 docCount += 1;
                 scanSize += doc.length();
                 if (config->documents != 0 && config->documents == docCount) {
@@ -392,8 +442,9 @@ void CollectionScanner::run() {
                     config->collectionsFromNameList(database, config->collectionNames, collections);
                 }
             }
-            BOOST_LOG_TRIVIAL(debug) << "Starting collection scanner databases: \"" << _databaseNames
-                                     << "\", id: " << this->_index << " " << config->collectionNames.size();
+            BOOST_LOG_TRIVIAL(debug)
+                << "Starting collection scanner databases: \"" << _databaseNames
+                << "\", id: " << this->_index << " " << config->collectionNames.size();
 
 
             const SteadyClock::time_point started = SteadyClock::now();
@@ -405,30 +456,43 @@ void CollectionScanner::run() {
                 try {
                     mongocxx::client_session session = _client->start_session({});
                     session.start_transaction(*config->transactionOptions);
-                    collectionScan(config, collections, _rateLimiter, session);
-                    // If a scan duration was specified, we must make the scan
-                    // last at least that long.  We'll do this within any
-                    // running transaction, so we keep the "long running
-                    // transaction" active as long as we've been asked to.
-                    // However, honor the phase's duration if specified.
-                    if (config->scanDuration) {
-                        const SteadyClock::time_point now = SteadyClock::now();
-                        auto stop = started + (*config->scanDuration).value;
-                        if (config->stopPhase && *config->stopPhase < stop) {
-                            stop = *config->stopPhase;
+                    // Initialize 'finished' to true so that the loop will execute exactly once if
+                    // ScanContinuous is false. If ScanContinuous is true 'finished' is
+                    // re-evaluated within the loop.
+                    auto finished = true;
+                    do {
+                        BOOST_LOG_TRIVIAL(debug) << "Scanner id: " << this->_index << " scanning";
+                        collectionScan(config, collections, _rateLimiter, session);
+                        // If a scan duration was specified, we must make the scan
+                        // last at least that long.
+                        // For non-continuous scans (default behaviour) we'll do this within any
+                        // running transaction by keeping the "long running transaction" active
+                        // as long as we've been asked to.
+                        // For continuous scans we repeat the collectionScan
+                        // within the transaction until we have reached the scan duration.
+                        // However, honor the phase's duration if specified.
+                        if (config->scanDuration) {
+                            const SteadyClock::time_point now = SteadyClock::now();
+                            auto stop = started + (*config->scanDuration).value;
+                            if (config->stopPhase && *config->stopPhase < stop) {
+                                stop = *config->stopPhase;
+                            }
+                            finished = now >= stop;
+                            if (!finished && !config->scanContinuous) {
+                                auto sleepDuration = stop - now;
+                                auto secs = sleepDuration.count() / (1000 * 1000 * 1000);
+                                BOOST_LOG_TRIVIAL(debug)
+                                    << "Scanner id: " << this->_index << " sleeping " << secs;
+                                std::this_thread::sleep_for(sleepDuration);
+                                finished = true;
+                            }
                         }
-                        if (stop > now) {
-                            auto sleepDuration = stop - now;
-                            auto secs = sleepDuration.count() / (1000 * 1000 * 1000);
-                            BOOST_LOG_TRIVIAL(info)
-                                << "Scanner id: " << this->_index << " sleeping " << secs;
-                            std::this_thread::sleep_for(sleepDuration);
-                        }
-                    }
+                    } while (!finished);
                     session.commit_transaction();
                 } catch (const mongocxx::operation_exception& e) {
-                    if(e.has_error_label(transientTransactionLabel) ) {
-                        BOOST_LOG_TRIVIAL(debug) << "Snapshot Scanner operation exception: " << e.what();
+                    if (e.has_error_label(transientTransactionLabel)) {
+                        BOOST_LOG_TRIVIAL(debug)
+                            << "Snapshot Scanner operation exception: " << e.what();
                         auto transientExceptions = config->transientExceptions.start();
                         transientExceptions.addDocuments(1);
                         transientExceptions.success();

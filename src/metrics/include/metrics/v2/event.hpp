@@ -393,13 +393,13 @@ public:
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
     typedef EventStream<ClockSource, StreamInterface> Stream;
 
-    GrpcClient(bool assertMetricsBuffer, const boost::filesystem::path& pathPrefix)
-        : _pathPrefix{pathPrefix}, _assertMetricsBuffer{assertMetricsBuffer} {}
+    GrpcClient(bool assertMetricsBuffer) : _assertMetricsBuffer{assertMetricsBuffer} {}
 
     Stream* createStream(const ActorId& actorId,
                          const std::string& name,
-                         const OptionalPhaseNumber& phase) {
-        _collectors.try_emplace(name, name, _pathPrefix);
+                         const OptionalPhaseNumber& phase,
+                         const boost::filesystem::path pathPrefix) {
+        _collectors.try_emplace(name, name, pathPrefix);
         _collectors.at(name).incStreams();
         _streams.emplace_back(actorId, name, phase);
         _threads.emplace_back(_assertMetricsBuffer, _streams.back());
@@ -413,7 +413,6 @@ public:
     }
 
 private:
-    const boost::filesystem::path _pathPrefix;
     const bool _assertMetricsBuffer;
     CollectorsMap _collectors;
     // deque avoid copy-constructor calls
@@ -540,10 +539,14 @@ public:
             return false;
         auto metricsArgs = *metricsArgsOptional;
 
+        // We only actually convert to report-able system time here because
+        // the stead_clock finish time is used to calculate the total field
+        // further below.
+        auto reportFinish = ClockSource::toReportTime(metricsArgs.finish);
         _metrics.mutable_time()->set_seconds(
-            Period<ClockSource>(metricsArgs.finish.time_since_epoch()).getSecondsCount());
+            Period<ClockSource>(reportFinish.time_since_epoch()).getSecondsCount());
         _metrics.mutable_time()->set_nanos(
-            Period<ClockSource>(metricsArgs.finish.time_since_epoch()).getNanosecondsCount());
+            Period<ClockSource>(reportFinish.time_since_epoch()).getNanosecondsCount());
 
         _metrics.mutable_timers()->mutable_duration()->set_seconds(
             metricsArgs.event.duration.getSecondsCount());

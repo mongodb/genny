@@ -212,6 +212,14 @@ Actors:
                                              data: { ^Join: { array: [ "aaaaaaaaaa", { ^FastRandomString: { length: { ^RandomInt: { min: 0, max: 10 } } } } ] } }},
                                           number: 10}}
 
+            # Large sequences of random strings can be expensive to generate.  FixedGeneratedValue
+            # can be used to generate an array once during initialization for re-use
+            fixedLargeArray: {^FixedGeneratedValue: {fromGenerator: {^Array: {of: {^RandomString: {length: 22}}, number: 20000}}}}
+
+            # To pre-generate multiple values and cycle through them, a Cycle Generator can be used.  This example
+            # generates 10 random strings and will cycle between them in order
+            cycleOfRandomStrings: {^Cycle: {ofLength: 10, fromGenerator: {^RandomString: {length: 22}}}}
+
   - Repeat: 1
     Collection: test
     Operation:

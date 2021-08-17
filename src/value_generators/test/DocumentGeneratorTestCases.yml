@@ -116,6 +116,26 @@ Tests:
       - {a: [ { "a": 1 }, 1, { "a": 1 } ] }
       - {a: [ 1, 1, { "a": 1 }, 1, "abc" ] }
 
+  - Name: ArrayChooseNestedGenerator
+    GivenTemplate:
+      a: {^Array: {number: 4, of: {^Choose: {from: [
+        {b: {^RandomInt: {min: 200, max: 500}}},
+        {c: {^RandomInt: {min: -500, max: -200}}}
+      ]}}}}
+    ThenReturns:
+      - { "a" : [ { "b" : { "$numberLong" : "206"} },
+        { "b" : { "$numberLong" : "448"} },
+        { "c" : { "$numberLong" : "-380"} },
+        { "b" : { "$numberLong" : "262"} } ] }
+      - { "a" : [ { "b" : { "$numberLong" : "358"} },
+        { "b" : { "$numberLong" : "379"} },
+        { "c" : { "$numberLong" : "-433"} },
+        { "b" : { "$numberLong" : "369"} } ] }
+      - { "a" : [ { "c" : { "$numberLong" : "-402"} },
+        { "b" : { "$numberLong" : "493"} },
+        { "b" : { "$numberLong" : "472"} },
+        { "c" : { "$numberLong" : "-225"} } ] }
+
   - Name: Array Complex Docs
     GivenTemplate:
       a: {^Array: {of: { ts: {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}},
@@ -586,15 +606,10 @@ Tests:
     ThenReturns:
     - { "int" : { "$numberLong" : "2000000000"}}
 
-  # Now moves with time so would always fail until PERF-2086 is available.
-#  - Name: Now
-#    GivenTemplate:
-#      date: {^Now: {}}
-#    ThenReturns:
-#    # The $date notation is extended json
-#    # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-#    # Check with linux command line `date --utc -d@$((1453689676330 / 1000.0))  +"%Y-%m-%dT%H:%M:%S.%3N"`
-#    - { "date" : { "$date" : { "$numberLong" : "1453689676330" } } }
+  - Name: Now
+    GivenTemplate:
+      date: {^Now: {}}
+    ThenExecuteAndIgnore: true
 
   # Date: min equal max is invalid.
   - Name: RandomDateMinEqualMax
@@ -840,3 +855,46 @@ Tests:
     - "int" : { "$numberLong" :"1"}
     - "int" : { "$numberLong" :"2"}
     - "int" : { "$numberLong" :"3"}
+
+  - Name: Cycle through three pre-computed elements
+    GivenTemplate:
+      a: {^Cycle: {ofLength: 3, fromGenerator: {^FastRandomString: {length: {^RandomInt: {min: 2, max: 5}}}}}}
+    ThenReturns:
+      - {a: qg}
+      - {a: kt}
+      - {a: JJP}
+      - {a: qg}
+      - {a: kt}
+      - {a: JJP}
+      - {a: qg}
+
+  - Name: Cycle with an integer generator
+    GivenTemplate:
+      a: {^Cycle: {ofLength: 2, fromGenerator: {^RandomInt: {distribution: poisson, mean: 10000000000000}}}}
+    ThenReturns:
+      - {a: 9999997460716}
+      - {a: 9999996810402}
+      - {a: 9999997460716}
+      - {a: 9999996810402}
+      - {a: 9999997460716}
+      - {a: 9999996810402}
+      - {a: 9999997460716}
+      - {a: 9999996810402}
+
+  - Name: Cycle with a single element
+    GivenTemplate:
+      a: {^Cycle: {ofLength: 1, fromGenerator: {^FastRandomString: {length: {^RandomInt: {min: 2, max: 5}}}}}}
+    ThenReturns:
+      - {a: qg}
+      - {a: qg}
+      - {a: qg}
+      - {a: qg}
+
+  - Name: FixedGenerated value for pre-computing, caching and re-using the result of an expensive generator
+    GivenTemplate:
+      a: {^FixedGeneratedValue: {fromGenerator: {^RandomInt: {distribution: poisson, mean: 10000000000000}}}}
+    ThenReturns:
+      - {a: 9999997460716}
+      - {a: 9999997460716}
+      - {a: 9999997460716}
+      - {a: 9999997460716}

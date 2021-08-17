@@ -417,10 +417,11 @@ public:
      *
      * @param operationName the name of the operation being run.
      * @param id the id of this Actor.
+     * @param internal whether this operation is Genny-internal.
      */
-    auto operation(const std::string& operationName, ActorId id) const {
+    auto operation(const std::string& operationName, ActorId id, bool internal = false) const {
         return this->_workload->_registry.operation(
-            this->_node["Name"].to<std::string>(), operationName, id);
+            this->_node["Name"].to<std::string>(), operationName, id, std::nullopt, internal);
     }
 
 private:
@@ -494,8 +495,9 @@ public:
      * @param defaultMetricName the default name of the metric if "MetricsName" is not specified
      *                          for a phase in the workload YAML.
      * @param id the id of this Actor.
+     * @param internal whether this operation is Genny-internal.
      */
-    auto operation(const std::string& defaultMetricsName, ActorId id) const {
+    auto operation(const std::string& defaultMetricsName, ActorId id, bool internal = false) const {
         std::ostringstream stm;
         if (auto metricsName = this->_node["MetricsName"].maybe<std::string>()) {
             stm << *metricsName;
@@ -504,7 +506,11 @@ public:
         }
 
         return this->workload()._registry.operation(
-            this->_actor->operator[]("Name").to<std::string>(), stm.str(), id, _phaseNumber);
+            this->_actor->operator[]("Name").to<std::string>(),
+            stm.str(),
+            id,
+            _phaseNumber,
+            internal);
     }
 
     const auto getPhaseNumber() const {

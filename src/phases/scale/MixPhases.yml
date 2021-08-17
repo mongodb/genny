@@ -21,7 +21,7 @@ UpdatePhase:
   Operations:
   - OperationName: updateOne
     OperationCommand:
-      Filter: &filter {id: {^RandomInt: {min: 0, max: *NumDocs}}}
+      Filter: *filter
       Update:
         $inc: {a: 1}
         $set: {c: *string}

@@ -24,6 +24,18 @@ Clients:
       maxPoolSize: 5000
 
 Actors:
+# Guard Against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0, 1, 2]
+      NopInPhasesUpTo: 2
+      PhaseConfig:
+        LogEvery: 15 minutes
+        Blocking: None
+
 - Name: LongLivedCreator
   Type: MonotonicLoader
   Threads: 10
@@ -86,7 +98,8 @@ Actors:
       Key: SnapshotScanner10GigabytesFixedRateCmd
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-    - single-replica
-    - replica-noflowcontrol
+  - When:
+      mongodb_setup:
+        $eq:
+          - single-replica
+          - replica-noflowcontrol

@@ -1,0 +1,192 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: |
+  Runs the reshardCollection command while read and write operations are active on the collection
+  being resharded.
+
+  The workload consists of 5 phases:
+    1. Creating an empty sharded collection distributed across all shards in the cluster.
+    2. Populating the sharded collection with data.
+    3. Running read and write operations on the collection before it is resharded.
+    4. Running read and write operations on the collection while it is being resharded.
+    5. Running read and write operations on the collection after it has been resharded.
+
+  The inserted documents have the following form:
+
+      {_id: 10, oldKey: 20, newKey: 30, counter: 0, padding: 'random string of bytes ...'}
+
+  The collection is initially sharded on {oldKey: 'hashed'} and then resharded on {newKey: 1}.
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+
+  Database: &Database test
+  # Collection0 is the default collection populated by the MonotonicSingleLoader.
+  Collection: &Collection Collection0
+  Namespace: &Namespace test.Collection0
+
+  # Note that the exact document size may exceed ApproxDocumentSize because of field names and other
+  # fields in the document.
+  ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
+  ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
+  DocumentCount: &DocumentCount 2_000_000  # for an approximate total of 3GB
+  NumChunks: &NumChunks 60                 # with approximately 50MB per chunk
+
+  ShardKeyValueMin: &ShardKeyValueMin 1
+  # We use 100x the number of chunks so that the $sample aggregation to choose the new split points
+  # has a wide range of distinct values to choose from. It could be even larger.
+  ShardKeyValueMax: &ShardKeyValueMax 6000
+
+  ReadOperations: &ReadOperations
+  - OperationName: findOne
+    OperationCommand:
+      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+
+  WriteOperations: &WriteOperations
+  - OperationName: updateOne
+    OperationCommand:
+      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+      Update: {$inc: {counter: 1}}
+      OperationOptions:
+        # w:majority is used here as a way to limit the write load so that the resharding
+        # coordinator successfully commits the operation by itself. TODO: Use GlobalRate instead to
+        # limit the write load after TIG-3028 adds support for using GlobalRate with Blocking:None.
+        WriteConcern:
+          Level: "majority"
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 201
+  # The reshardCollection command is expected to take a long to complete so we give the actor
+  # running it a much higher socket timeout.
+  ReshardCollection:
+    QueryOptions:
+      maxPoolSize: 1
+      socketTimeoutMS: 36_000_000  # = 10 hours
+
+Actors:
+- Name: CreateShardedCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *Database
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: *Namespace
+        # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
+        # the shards.
+        key: {oldKey: hashed}
+        numInitialChunks: *NumChunks
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: LoadInitialData
+  Type: MonotonicSingleLoader
+  Threads: 100
+  Phases:
+  - *Nop
+  - Repeat: 1
+    BatchSize: 1000
+    DocumentCount: *DocumentCount
+    Database: *Database
+    Document:
+      oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+      newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+      counter: 0
+      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: ReshardCollection
+  Type: AdminCommand
+  Threads: 1
+  ClientName: ReshardCollection
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: ReshardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        reshardCollection: *Namespace
+        key: {newKey: 1}
+  - *Nop
+
+- Name: ReadCollectionBeingResharded
+  Type: CrudActor
+  Threads: 50
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - MetricsName: BeforeResharding
+    Duration: 1 minute
+    Collection: *Collection
+    Operations: *ReadOperations
+  - MetricsName: DuringResharding
+    Blocking: None
+    Collection: *Collection
+    Operations: *ReadOperations
+  - MetricsName: AfterResharding
+    Duration: 1 minute
+    Collection: *Collection
+    Operations: *ReadOperations
+
+- Name: WriteCollectionBeingResharded
+  Type: CrudActor
+  Threads: 50
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - MetricsName: BeforeResharding
+    Duration: 1 minute
+    Collection: *Collection
+    Operations: *WriteOperations
+  - MetricsName: DuringResharding
+    Blocking: None
+    Collection: *Collection
+    Operations: *WriteOperations
+  - MetricsName: AfterResharding
+    Duration: 1 minute
+    Collection: *Collection
+    Operations: *WriteOperations
+
+# Guard against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1, 3]
+      NopInPhasesUpTo: 4
+      PhaseConfig:
+        LogEvery: 15 minutes
+        Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-lite
+      - shard-lite-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4

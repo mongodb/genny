@@ -92,6 +92,14 @@ if ! python3 -c 'import sys; sys.exit(1 if "Python3.framework" in sys.prefix els
     exit 1
 fi
 
+
+if ! _pip --version >/dev/null 2>&1; then
+    # ensurepip is built-in as of 3.4.
+    /usr/bin/env python3 -m ensurepip --upgrade
+    _pip install --upgrade pip
+fi
+
+
 if ! _pip --version >/dev/null 2>&1; then
     echo >&2 "Your installation of python does not contain pip."
     echo >&2 "On macOS you can run:"

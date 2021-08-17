@@ -30,6 +30,9 @@
 
 namespace genny::metrics {
 
+// The directory to use for internal operations.
+const std::string INTERNAL_DIR = "internal";
+
 /**
  * Class wrapping the logic involving metrics formats.
  */
@@ -109,14 +112,32 @@ class OperationImpl;
 class MetricsClockSource {
 private:
     using clock_type = std::chrono::steady_clock;
+    using report_clock_type = std::chrono::system_clock;
+
 
 public:
     using duration = clock_type::duration;
     using time_point = std::chrono::time_point<clock_type>;
+    using report_time_point = std::chrono::time_point<report_clock_type>;
 
     static time_point now() {
         return clock_type::now();
     }
+
+    /**
+     * Translate a given time point to a one suitable for
+     * external reporting.
+     */
+    static report_time_point toReportTime(time_point givenTime) {
+        auto timeSinceStarted = givenTime - _timeStarted;
+        auto reportDur = std::chrono::duration_cast<report_clock_type::duration>(timeSinceStarted);
+        return _reportTimeStarted + reportDur;
+    }
+
+private:
+    // Inlining lets us initialize these in the header.
+    inline static time_point _timeStarted = now();
+    inline static report_time_point _reportTimeStarted = report_clock_type::now();
 };
 
 /**
@@ -166,16 +187,13 @@ public:
     explicit RegistryT(MetricsFormat format,
                        boost::filesystem::path pathPrefix,
                        bool assertMetricsBuffer = true)
-        : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
+        : _format{std::move(format)},
+          _pathPrefix{std::move(pathPrefix)},
+          _internalPathPrefix{_pathPrefix / INTERNAL_DIR} {
         if (_format.useGrpc()) {
             boost::filesystem::create_directories(_pathPrefix);
-
-            boost::filesystem::path startTimeFilePath = _pathPrefix / "start_time.txt";
-            std::ofstream startTimeFile(startTimeFilePath.string());
-            startTimeFile << "This file only exists to mark execution start time.";
-            startTimeFile.close();
-
-            _grpcClient = std::make_unique<GrpcClient>(assertMetricsBuffer, _pathPrefix);
+            boost::filesystem::create_directories(_internalPathPrefix);
+            _grpcClient = std::make_unique<GrpcClient>(assertMetricsBuffer);
         }
     }
 
@@ -183,14 +201,16 @@ public:
     OperationT<ClockSource> operation(std::string actorName,
                                       std::string opName,
                                       ActorId actorId,
-                                      std::optional<genny::PhaseNumber> phase = std::nullopt) {
+                                      std::optional<genny::PhaseNumber> phase = std::nullopt,
+                                      bool internal = false) {
         StreamPtr stream = nullptr;
 
+        auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
-            auto name = createName(actorName, opName, phase);
-            stream = _grpcClient->createStream(actorId, name, phase);
+            auto name = createName(actorName, opName, phase, internal);
+            stream = _grpcClient->createStream(actorId, name, phase, pathPrefix);
         }
         auto opIt =
             opsByThread.try_emplace(actorId, std::move(actorName), *this, std::move(opName), stream)
@@ -203,13 +223,15 @@ public:
                                       ActorId actorId,
                                       genny::TimeSpec threshold,
                                       double_t percentage,
-                                      std::optional<genny::PhaseNumber> phase = std::nullopt) {
+                                      std::optional<genny::PhaseNumber> phase = std::nullopt,
+                                      bool internal = false) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
+        auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
         StreamPtr stream = nullptr;
         if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
-            auto name = createName(actorName, opName, phase);
-            stream = _grpcClient->createStream(actorId, name, phase);
+            auto name = createName(actorName, opName, phase, internal);
+            stream = _grpcClient->createStream(actorId, name, phase, pathPrefix);
         }
         auto opIt =
             opsByThread
@@ -253,8 +275,16 @@ public:
 private:
     std::string createName(const std::string& actorName,
                            const std::string& opName,
-                           const std::optional<genny::PhaseNumber>& phase) {
+                           const std::optional<genny::PhaseNumber>& phase,
+                           bool internal) {
         std::stringstream str;
+
+        // We want the trend graph to be hidden by
+        // default to not confuse users, so we prefix it with "canary_" to hit the
+        // CANARY_EXCLUSION_REGEX in https://git.io/Jtjdr
+        if (internal) {
+            str << "canary_";
+        }
         str << actorName << '.' << opName;
         if (phase) {
             str << '.' << *phase;
@@ -266,6 +296,7 @@ private:
     OperationsMap _ops;
     MetricsFormat _format;
     boost::filesystem::path _pathPrefix;
+    boost::filesystem::path _internalPathPrefix;
 };
 
 }  // namespace internals

@@ -20,11 +20,14 @@ def run_self_test(genny_repo_root: str, workspace_root: str):
     import pytest
 
     path = os.path.join(workspace_root, "build", "XUnitXML", "PyTest.xml")
+    path = os.path.abspath(path)
     os.makedirs(os.path.dirname(path), exist_ok=True)
+    genny_repo_root = os.path.abspath(genny_repo_root)
 
     # TODO: https://docs.pytest.org/en/stable/deprecations.html#junit-family-default-value-change-to-xunit2
     args = ["--junit-xml", path, genny_repo_root]
 
+    os.chdir(genny_repo_root)
     SLOG.info("Running pytest.", args=args)
     pytest.main(args)
 

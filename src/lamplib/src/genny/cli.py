@@ -117,6 +117,58 @@ def cmake_compile_install(
 
 
 @cli.command(
+    "evaluate", help=("Evaluate the YAML workload file with minimal validation."),
+)
+@click.argument("workload_path")
+@click.option(
+    "-o",
+    "--output",
+    required=False,
+    default=None,
+    help=(
+        "Filepath where the output of the evaluation will be written. Will write to stdout by default."
+    ),
+)
+@click.option(
+    "-s",
+    "--smoke",
+    is_flag=True,
+    help=(
+        "Convert a workload YAML into a version for smoke test where every phase"
+        " of every actor runs with Repeat: 1."
+    ),
+)
+@click.pass_context
+def evaluate(ctx: click.Context, workload_path: str, output: str, smoke: bool):
+    from genny.tasks import preprocess
+
+    preprocess.evaluate(workload_path=workload_path, smoke=smoke, output=output)
+
+
+@cli.command(
+    "export", help=("Export the given FTDC file to CSV."),
+)
+@click.argument("ftdc_path")
+@click.option(
+    "-o",
+    "--output",
+    required=False,
+    default=None,
+    help=("Filepath where the output CSV will be written. Will write to stdout by default."),
+)
+@click.pass_context
+def evaluate(ctx: click.Context, ftdc_path: str, output):
+    from genny.curator import export
+
+    export(
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        input_path=ftdc_path,
+        output_path=output,
+    )
+
+
+@cli.command(
     name="clean", help="Resets output and venv directories to clean checkout state.",
 )
 @click.pass_context
