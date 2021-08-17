@@ -1,0 +1,93 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: |
+  Creates a sharded collection with 2 chunks on 2 different shards using ranged sharding and updates
+  the shard key to trigger WouldChangeOwningShard errors.
+
+  The workload consists of 3 phases:
+    1. Shard an empty collection (using ranged sharding) into two chunks and wait for the balancer 
+    to distribute each chunk to its own shard.
+    2. Populate the sharded collection with data.
+    3. Update the shard key value to trigger WouldChangeOwningShard errors.
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+
+  Database: &Database test
+  # Collection0 is the default collection populated by the MonotonicSingleLoader.
+  Collection: &Collection Collection0
+  Namespace: &Namespace test.Collection0
+
+  DocumentCount: &DocumentCount 100000  # Number of documents to insert and modify.
+  BalancerWait: &BalancerWait "10 seconds" # Wait out the 10 second delay between balancing rounds
+  # with a little extra leeway for balancing to finish.
+
+Actors:
+- Name: CreateShardedCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *Database
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: *Namespace
+        key: {x: 1}
+    - OperationMetricsName: SplitChunks
+      OperationName: AdminCommand
+      OperationCommand:
+        split: *Namespace
+        middle: {x: 5}
+    - OperationMetricsName: BalancerStart
+      OperationName: AdminCommand
+      OperationCommand:
+        balancerStart: 1
+  - *Nop
+  - *Nop
+
+- Name: LoadInitialData
+  Type: MonotonicSingleLoader
+  Threads: 100
+  Phases:
+  - *Nop
+  - Repeat: 1
+    SleepBefore: *BalancerWait
+    BatchSize: 1000
+    DocumentCount: *DocumentCount
+    Database: *Database
+    Document: {x: 0}
+  - *Nop
+
+- Name: UpdateShardKey
+  Type: CrudActor
+  Threads: 1 # We want to use 1 thread to avoid updates throwing WriteConflict errors.
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: *DocumentCount
+    Database: *Database
+    Collection: *Collection
+    Operations:
+    - OperationMetricsName: UpdateShardKey
+      OperationName: updateOne
+      OperationCommand:
+        Filter: {x: 0}
+        Update: {$inc: {x: 10}}
+        Options:
+          WriteConcern:
+            Level: majority
+            TimeoutMillis: 5000
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-lite
+      - shard-lite-all-feature-flags
