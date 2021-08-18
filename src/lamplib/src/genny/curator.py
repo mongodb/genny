@@ -63,25 +63,6 @@ def _get_export_args(
     output_args = ["--output", output_path] if output_path is not None else []
     return [curator, "ftdc", "export", "csv", "--input", input_path] + output_args
 
-def _get_translate_args(
-    genny_repo_root: str, workspace_root: str, input_path: str, output_path: str = None
-):
-    """
-    Returns the argument list used to export genny workload files to ftdc.
-
-    If we are in the root of the genny repo, use the local executable.
-    Otherwise we search the PATH.
-    """
-    curator = _find_curator(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
-    if curator is None:
-        raise Exception(
-            f"Curator not found in genny_repo_root={genny_repo_root}, "
-            f"workspace_root={workspace_root}. "
-            f"Ensure you have run install."
-        )
-    output_args = ["--output", output_path] if output_path is not None else []
-    return [curator, "ftdc", "export", "t2", "--input", input_path] + output_args
-
 
 _DATE_FORMAT = "%Y-%m-%dT%H%M%SZ"
 _METRICS_PATH = "build/WorkloadOutput/CedarMetrics"
@@ -111,14 +92,6 @@ def export(workspace_root: str, genny_repo_root: str, input_path: str, output_pa
     )
     subprocess.run(args, check=True)
 
-def translate(workspace_root: str, genny_repo_root: str, input_path: str, output_path: str = None):
-    args = _get_translate_args(
-        workspace_root=workspace_root,
-        genny_repo_root=genny_repo_root,
-        input_path=input_path,
-        output_path=output_path,
-    )
-    subprocess.run(args, check=True)
 
 @contextmanager
 def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str):
