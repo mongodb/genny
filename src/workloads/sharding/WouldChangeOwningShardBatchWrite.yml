@@ -18,7 +18,7 @@ GlobalDefaults:
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
 
-  DocumentCount: &DocumentCount 1000  # Number of documents to insert and modify.
+  DocumentCount: &DocumentCount 100  # Number of documents to insert and modify.
   BalancerWait: &BalancerWait "15 seconds" # Wait out the 10 second delay between balancing rounds
   # with a little extra leeway for balancing to finish.
 
@@ -44,6 +44,10 @@ Actors:
       OperationCommand:
         split: *Namespace
         middle: {x: 5}
+    - OperationMetricsName: BalancerStart
+      OperationName: AdminCommand
+      OperationCommand:
+        balancerStart: 1
   - *Nop
   - *Nop
 
