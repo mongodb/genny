@@ -114,8 +114,8 @@ Actors:
         Blocking: None
 
 AutoRun:
-  Requires:
-    mongodb_setup:
-      - replica
-      - shard-lite
-      - single-replica
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
