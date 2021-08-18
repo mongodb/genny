@@ -37,9 +37,28 @@ TEST_CASE_METHOD(MongoTestFixture,
     NodeSource nodes = NodeSource(R"(
         SchemaVersion: 2018-07-01
         Actors:
+        - Name: CreateShardedCollection
+        Type: AdminCommand
+        Threads: 1
+        Phases:
+        - Repeat: 1
+            Database: admin
+            Operations:
+            - OperationMetricsName: EnableSharding
+            OperationName: AdminCommand
+            OperationCommand:
+                enableSharding: test
+            - OperationMetricsName: ShardCollection
+            OperationName: AdminCommand
+            OperationCommand:
+                shardCollection: test.collection0
+                key: {Key: 1}
+        - {Nop: true}
+
         - Name: MoveRandomChunkToRandomShard
           Type: MoveRandomChunkToRandomShard
           Phases:
+          - {Nop: true}
           - Repeat: 1
             Thread: 1
             Namespace: test.collection0
@@ -52,25 +71,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             dropAllDatabases();
             auto db = client.database("test");
 
-            mongocxx::options::client_session sessionOption;
-            mongocxx::client_session session = client.start_session(sessionOption);
-            bsoncxx::document::value enableShardingCmd = bsoncxx::builder::stream::document{}
-                << "enableSharding"
-                << "test" << bsoncxx::builder::stream::finalize;
-            client.database("admin").run_command(session, enableShardingCmd.view());
-
-            bsoncxx::document::value shardKey = bsoncxx::builder::stream::document{}
-                << "_id"
-                << "hashed" << bsoncxx::builder::stream::finalize;
-            bsoncxx::document::value shardCollectionCmd = bsoncxx::builder::stream::document{}
-                << "shardCollection"
-                << "test.collection0"
-                << "key" << shardKey.view() << "numInitialChunks" << 3
-                << bsoncxx::builder::stream::finalize;
             genny::ActorHelper ah(nodes.root(), 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
-            // TODO check that the chunk moved
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
             INFO("CAUGHT " << diagInfo);
