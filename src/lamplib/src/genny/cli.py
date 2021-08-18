@@ -167,6 +167,27 @@ def evaluate(ctx: click.Context, ftdc_path: str, output):
         output_path=output,
     )
 
+@cli.command(
+    "translate", help=("Translate the given genny workload directory to t2 ftdc."),
+)
+@click.argument("ftdc_path")
+@click.option(
+    "-o",
+    "--output",
+    required=False,
+    default=None,
+    help=("Filepath where the output ftdc will be written. Will write to stdout by default."),
+)
+@click.pass_context
+def translate(ctx: click.Context, ftdc_path: str, output):
+    from genny.curator import translate
+
+    translate(
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        input_path=ftdc_path,
+        output_path=output,
+    )
 
 @cli.command(
     name="clean", help="Resets output and venv directories to clean checkout state.",
