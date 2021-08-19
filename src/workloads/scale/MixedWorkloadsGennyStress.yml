@@ -56,7 +56,7 @@ ActorTemplates:
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 10
+        NopInPhasesUpTo: 2
         PhaseConfig:
           Duration: *PhaseDuration
           RecordFailure: true
@@ -80,7 +80,7 @@ ActorTemplates:
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 10
+        NopInPhasesUpTo: 2
         PhaseConfig:
           Duration: *PhaseDuration
           RecordFailure: true
@@ -100,7 +100,7 @@ ActorTemplates:
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 10
+        NopInPhasesUpTo: 2
         PhaseConfig:
           Duration: *PhaseDuration
           RecordFailure: true
@@ -120,7 +120,7 @@ ActorTemplates:
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 10
+        NopInPhasesUpTo: 2
         PhaseConfig:
           Duration: *PhaseDuration
           RecordFailure: true
@@ -162,8 +162,6 @@ Actors:
       OperationName: AdminCommand
       OperationCommand:
         fsync: 1
-  - *nop
-  - *quiesce
   - *nop
 
 # Update Actors
