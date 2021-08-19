@@ -167,6 +167,7 @@ def evaluate(ctx: click.Context, ftdc_path: str, output):
         output_path=output,
     )
 
+
 @cli.command(
     "translate", help=("Translate the given genny workload directory to t2 ftdc."),
 )
@@ -188,6 +189,7 @@ def translate(ctx: click.Context, ftdc_path: str, output):
         input_path=ftdc_path,
         output_path=output,
     )
+
 
 @cli.command(
     name="clean", help="Resets output and venv directories to clean checkout state.",

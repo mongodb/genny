@@ -63,6 +63,7 @@ def _get_export_args(
     output_args = ["--output", output_path] if output_path is not None else []
     return [curator, "ftdc", "export", "csv", "--input", input_path] + output_args
 
+
 def _get_translate_args(
     genny_repo_root: str, workspace_root: str, input_path: str, output_path: str = None
 ):
@@ -111,6 +112,7 @@ def export(workspace_root: str, genny_repo_root: str, input_path: str, output_pa
     )
     subprocess.run(args, check=True)
 
+
 def translate(workspace_root: str, genny_repo_root: str, input_path: str, output_path: str = None):
     args = _get_translate_args(
         workspace_root=workspace_root,
@@ -119,6 +121,7 @@ def translate(workspace_root: str, genny_repo_root: str, input_path: str, output
         output_path=output_path,
     )
     subprocess.run(args, check=True)
+
 
 @contextmanager
 def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str):
