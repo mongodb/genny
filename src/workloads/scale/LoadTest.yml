@@ -29,9 +29,9 @@ GlobalDefaults:
   CollectionCount: &CollectionCount 8
   LoadBatchSize: &LoadBatchSize 1000
 
-  InitialDocumentCount: &InitialNumDocs 20000000
-  SecondDocumentCount: &SecondNumDocs 12000000
-  FinalDocumentCount: &FinalDocumentCount 4000000
+  InitialDocumentCount: &InitialNumDocs 10000000
+  SecondDocumentCount: &SecondNumDocs 6000000
+  FinalDocumentCount: &FinalDocumentCount 2000000
 
 Clients:
   Default:
