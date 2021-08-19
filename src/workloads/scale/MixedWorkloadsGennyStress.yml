@@ -207,7 +207,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [0,2]
-      NopInPhasesUpTo: *MaxPhases
+      NopInPhasesUpTo: 2
       PhaseConfig:
         LogEvery: 10 seconds
         Blocking: None
