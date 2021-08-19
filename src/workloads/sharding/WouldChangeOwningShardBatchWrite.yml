@@ -53,7 +53,7 @@ Actors:
 
 - Name: LoadInitialData
   Type: MonotonicSingleLoader
-  Threads: 100
+  Threads: 50
   Phases:
   - *Nop
   - Repeat: 1
