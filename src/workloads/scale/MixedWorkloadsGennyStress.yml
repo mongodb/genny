@@ -200,6 +200,18 @@ Actors:
       Threads: 1024
       OnlyActiveInPhase: 2
 
+# Guard Against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0,2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LogEvery: 10 seconds
+        Blocking: None
+
 AutoRun:
   - When:
       mongodb_setup:

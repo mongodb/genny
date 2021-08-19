@@ -118,6 +118,17 @@ Actors:
     Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
     Limit: 20
 
+# Guard Against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0,1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LogEvery: 10 seconds
+        Blocking: None
 AutoRun:
   - When:
       mongodb_setup:
