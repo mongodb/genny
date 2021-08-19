@@ -3,21 +3,19 @@ PhaseSchemaVersion: 2018-07-01
 dbname: &dbname mix
 runtime: &runtime 7 minutes
 DocumentCount: &NumDocs 100000
-CollectionCount: &NumColls 1
-
 Filter: &filter {id: {^RandomInt: {min: 0, max: *NumDocs}}}
 string: &string {^FastRandomString: {length: 50}}
 Document: &doc
   id: {^RandomInt: {min: 0, max: *NumDocs}}
-  a: {^RandomInt: {min: 0, max: *NumDocs}}
-  # Note that in the original workload the string c was perfectly compressable.
-  # We can put a constant there if needed.
+  a: {^RandomInt: {min: 0, max: 1000000}}
+  # Note that in the original workload the string c was perfectly compressable. We can put a
+  # constant there if needed.
   c: *string
 
 UpdatePhase:
   Duration: *runtime
   RecordFailure: true
-  CollectionCount: *NumColls
+  Collection: Collection0
   Operations:
   - OperationName: updateOne
     OperationCommand:
@@ -29,7 +27,7 @@ UpdatePhase:
 RemovePhase:
   Duration: *runtime
   RecordFailure: true
-  CollectionCount: *NumColls
+  Collection: Collection0
   Operations:
   - OperationName: deleteOne
     OperationCommand:
@@ -38,7 +36,7 @@ RemovePhase:
 InsertPhase:
   Duration: *runtime
   RecordFailure: true
-  CollectionCount: *NumColls
+  Collection: Collection0
   Operations:
   - OperationName: insertOne
     OperationCommand:
@@ -47,7 +45,7 @@ InsertPhase:
 FindPhase:
   Duration: *runtime
   RecordFailure: true
-  CollectionCount: *NumColls
+  Collection: Collection0
   Operations:
   - OperationName: findOne
     OperationCommand:
