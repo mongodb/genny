@@ -21,9 +21,9 @@ Actors:
   Phases:
   - Repeat: 1
     Database: &DB test
-    CollectionCount: &CollectionCount 1e5
+    CollectionCount: &CollectionCount 10000
     Threads: 10
-    DocumentCount: 1e5
+    DocumentCount: 1e4
     BatchSize: 1000
     Document:  # Documents are approximately 1 KiB in size
       t: {^RandomInt: {min: 0, max: 10}}
