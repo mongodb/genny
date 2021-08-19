@@ -38,22 +38,22 @@ TEST_CASE_METHOD(MongoTestFixture,
         SchemaVersion: 2018-07-01
         Actors:
         - Name: CreateShardedCollection
-        Type: AdminCommand
-        Threads: 1
-        Phases:
-        - Repeat: 1
-            Database: admin
-            Operations:
-            - OperationMetricsName: EnableSharding
-            OperationName: AdminCommand
-            OperationCommand:
-                enableSharding: test
-            - OperationMetricsName: ShardCollection
-            OperationName: AdminCommand
-            OperationCommand:
-                shardCollection: test.collection0
-                key: {Key: 1}
-        - {Nop: true}
+          Type: AdminCommand
+          Threads: 1
+          Phases:
+          - Repeat: 1
+              Database: admin
+              Operations:
+              - OperationMetricsName: EnableSharding
+              OperationName: AdminCommand
+              OperationCommand:
+                  enableSharding: test
+              - OperationMetricsName: ShardCollection
+              OperationName: AdminCommand
+              OperationCommand:
+                  shardCollection: test.collection0
+                  key: {Key: 1}
+          - {Nop: true}
 
         - Name: MoveRandomChunkToRandomShard
           Type: MoveRandomChunkToRandomShard
