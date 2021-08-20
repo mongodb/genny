@@ -206,15 +206,15 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [0,2]
+      Active: [0, 2]
       NopInPhasesUpTo: 2
       PhaseConfig:
         LogEvery: 10 seconds
         Blocking: None
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - replica
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas
+      - replica

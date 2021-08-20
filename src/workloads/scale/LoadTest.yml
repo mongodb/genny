@@ -18,11 +18,11 @@ GlobalDefaults:
     c: &string {^FastRandomString: {length: 75}}  # Adjust this so the doc comes out as 200 B.
 
   FirstIndex: &FirstIndex
-    - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
+  - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
 
   MoreIndexes: &MoreIndexes
-    - keys: {price: 1, cuid: 1}            # Pc
-    - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
+  - keys: {price: 1, cuid: 1}            # Pc
+  - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
 
   # Loader Config.
   LoadThreads: &LoadThreads 8
@@ -114,8 +114,8 @@ Actors:
         Blocking: None
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - replica
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas
+      - replica

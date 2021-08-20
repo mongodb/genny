@@ -124,7 +124,7 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [0,1]
+      Active: [0, 1]
       NopInPhasesUpTo: 1
       PhaseConfig:
         LogEvery: 10 seconds
