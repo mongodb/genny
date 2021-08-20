@@ -129,9 +129,9 @@ Actors:
       PhaseConfig:
         LogEvery: 10 seconds
         Blocking: None
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - replica
+# AutoRun:
+#   - When:
+#       mongodb_setup:
+#         $eq:
+#           - atlas
+#           - replica
