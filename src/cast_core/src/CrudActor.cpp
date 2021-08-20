@@ -1225,11 +1225,22 @@ void CrudActor::run() {
         }
     }
 }
+static int i =0;
+std::string getClientName(genny::ActorContext& context) {
+    std::string name = context.get("ClientName").maybe<std::string>().value_or("Default");
+    bool perThread = context.get("ClientPerThread").maybe<bool>().value_or(false);
+    if (perThread) {
+        std::ostringstream out;
+        out << name << "-" << std::internal << std::setfill('0') << std::setw(8) << i;
+        i++;
+        name = out.str();
+    }
+    return name;
 
+}
 CrudActor::CrudActor(genny::ActorContext& context)
     : Actor(context),
-      _client{std::move(
-          context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
+      _client{std::move(context.client(getClientName(context)))},
       _loop{context, _client, CrudActor::id()} {}
 
 namespace {
