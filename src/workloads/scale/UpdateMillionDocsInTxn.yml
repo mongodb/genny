@@ -11,7 +11,7 @@ Actors:
   Type: Loader
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
       Key: Loader
       Parameters:

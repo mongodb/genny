@@ -10,7 +10,7 @@ Actors:
   Type: Loader
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
       Key: Loader
     Repeat: 1
@@ -22,7 +22,7 @@ Actors:
   Threads: 10
   Phases:
   - *Nop
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: *PhasePath
       Key: Update
     Duration: &Duration 1 hour
@@ -34,7 +34,7 @@ Actors:
   Threads: 10
   Phases:
   - *Nop
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: *PhasePath
       Key: Query
     Duration: *Duration
@@ -44,7 +44,7 @@ Actors:
   Threads: 2  # 2 threads for doing a two-minute query every minute.
   Phases:
   - *Nop
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: *PhasePath
       Key: LargeQuery
       Parameters:

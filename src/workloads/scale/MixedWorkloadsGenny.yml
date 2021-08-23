@@ -46,7 +46,7 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
         NopInPhasesUpTo: 10
         PhaseConfig:
-          ExternalPhaseConfig:
+          LoadConfig:
             Path: ../../phases/scale/MixPhases.yml
             Key: UpdatePhase
 
@@ -62,7 +62,7 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
         NopInPhasesUpTo: 10
         PhaseConfig:
-          ExternalPhaseConfig:
+          LoadConfig:
             Path: ../../phases/scale/MixPhases.yml
             Key: RemovePhase
 
@@ -78,7 +78,7 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
         NopInPhasesUpTo: 10
         PhaseConfig:
-          ExternalPhaseConfig:
+          LoadConfig:
             Path: ../../phases/scale/MixPhases.yml
             Key: InsertPhase
 
@@ -94,7 +94,7 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
         NopInPhasesUpTo: 10
         PhaseConfig:
-          ExternalPhaseConfig:
+          LoadConfig:
             Path: ../../phases/scale/MixPhases.yml
             Key: FindPhase
 

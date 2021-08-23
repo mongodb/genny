@@ -1,4 +1,4 @@
-PhaseSchemaVersion: 2018-07-01
+SchemaVersion: 2018-07-01
 
 dbname: &dbname mix
 runtime: &runtime 7 minutes

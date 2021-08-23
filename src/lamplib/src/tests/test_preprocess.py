@@ -90,8 +90,8 @@ ActorTemplates:
     Phases:
       - Nop: true
       - Nop: true
-      - ExternalPhaseConfig:
-          Path: src/testlib/phases/Good.yml
+      - LoadConfig:
+          Path: src/testlib/configs/Good.yml
           Parameters:
             Repeat: 2
       - Nop: true
@@ -212,8 +212,8 @@ Actors:
     Name: Fails
     Threads: 1
     Phases:
-    - ExternalPhaseConfig:
-        Path: src/testlib/phases/Good.yml"""
+    - LoadConfig:
+        Path: src/testlib/configs/Good.yml"""
 
         expected = """SchemaVersion: 2018-07-01
 Actors:
@@ -237,8 +237,8 @@ Actors:
   Name: Fails
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
-      Path: src/testlib/phases/GoodWithKey.yml
+  - LoadConfig:
+      Path: src/testlib/configs/GoodWithKey.yml
       Key: ForSelfTest"""
 
         expected = """SchemaVersion: 2018-07-01
@@ -263,8 +263,8 @@ Actors:
   Name: Fails
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
-      Path: src/testlib/phases/Good.yml
+  - LoadConfig:
+      Path: src/testlib/configs/Good.yml
       Parameters:
         Repeat: 2
 """
@@ -290,8 +290,8 @@ Actors:
   Name: Fails
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
-      Path: "src/testlib/phases/GoodNoRepeat.yml"
+  - LoadConfig:
+      Path: "src/testlib/configs/GoodNoRepeat.yml"
     Repeat: 3
 """
         expected = """SchemaVersion: 2018-07-01
@@ -316,8 +316,8 @@ Actors:
   Name: Fails
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
-      Path: src/testlib/phases/MissingAllFields.yml
+  - LoadConfig:
+      Path: src/testlib/configs/MissingAllFields.yml
       Parameters:
         Repeat: 2
 """
@@ -331,8 +331,8 @@ Actors:
     Name: Fails
     Threads: 1
     Phases:
-    - ExternalPhaseConfig:
-        Path: src/testlib/phases/MissingDefault.yml
+    - LoadConfig:
+        Path: src/testlib/configs/MissingDefault.yml
         Parameters:
           Repeat: 2
 """
@@ -345,8 +345,8 @@ Actors:
     Name: Fails
     Threads: 1
     Phases:
-    - ExternalPhaseConfig:
-        Path: src/testlib/phases/MissingName.yml
+    - LoadConfig:
+        Path: src/testlib/configs/MissingName.yml
         Parameters:
           Repeat: 2
 """
@@ -359,7 +359,76 @@ Actors:
     Name: Fails
     Threads: 1
     Phases:
-    - ExternalPhaseConfig:
-        Path: "src/testlib/phases/MissingSchemaVersion.yml"
+    - LoadConfig:
+        Path: "src/testlib/configs/MissingSchemaVersion.yml"
 """
         self._assertParseException(yaml_input)
+
+    def test_load_entire_workload(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+
+LoadConfig:
+    Path: "src/testlib/configs/workload.yml"
+"""
+
+        expected = """SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Fails
+  Threads: 1
+  Phases:
+  - Repeat: 2
+    Mode: NoException
+- Name: PhaseTimingRecorder
+  Type: PhaseTimingRecorder
+  Threads: 1
+"""
+        self._assertYaml(yaml_input, expected)
+
+    def test_load_entire_workload_param_substitution(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+
+LoadConfig:
+    Path: "src/testlib/configs/workload.yml"
+    Parameters:
+      Name: Passes
+"""
+
+        expected = """SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Passes
+  Threads: 1
+  Phases:
+  - Repeat: 2
+    Mode: NoException
+- Name: PhaseTimingRecorder
+  Type: PhaseTimingRecorder
+  Threads: 1
+"""
+        self._assertYaml(yaml_input, expected)
+
+    def test_load_entire_workload_nested_param(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+
+LoadConfig:
+    Path: "src/testlib/configs/workload.yml"
+    Parameters:
+        Repeat: 3
+"""
+
+        # Even though the nested workload defines a "Repeat"
+        # paramter, the stored/nested one gets evaluated first.
+        expected = """SchemaVersion: 2018-07-01
+Actors:
+- Type: Fails
+  Name: Fails
+  Threads: 1
+  Phases:
+  - Repeat: 3
+    Mode: NoException
+- Name: PhaseTimingRecorder
+  Type: PhaseTimingRecorder
+  Threads: 1
+"""
+        self._assertYaml(yaml_input, expected)

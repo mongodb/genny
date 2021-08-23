@@ -6,7 +6,7 @@ Actors:
   Type: Loader
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: InsertData
   - &Nop {Nop: true}
@@ -22,37 +22,37 @@ Actors:
   Threads: 1
   Phases:
   - *Nop
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: Create2dIndexesCmd
       Parameters:
         Repeat: 5
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: Create2dSphereIndexesCoordCmd
       Parameters:
         Repeat: 5
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: Create2dSphereGeoJsonIndexesCmd
       Parameters:
         Repeat: 5
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: CreateHashedIndexesCmd
       Parameters:
         Repeat: 5
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: CreateTextIndexesCmd
       Parameters:
         Repeat: 5
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: CreateUniqueIndexesCmd
       Parameters:
         Repeat: 5
-  - ExternalPhaseConfig:
+  - LoadConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: CreateWildCardIndexesCmd
       Parameters:

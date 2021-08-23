@@ -1,6 +1,6 @@
 # This Phase has 2 actors, InsertData and IndexCollection. InsertData inserts documents containing all types of indexes, and IndexCollection creates indexes for each of them, one at a time.
 
-PhaseSchemaVersion: 2018-07-01
+SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 
 InsertData:
