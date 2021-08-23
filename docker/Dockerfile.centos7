@@ -1,0 +1,60 @@
+#
+# Create an amazon2 docker container.
+#   $> docker build -t  genny/centos:7 ./ -f docker/Dockerfile.centos7 --no-cache --rm=true
+#   $> docker run -it genny/amazon:2
+#     OR with ssl support
+#   $> docker run -v /etc/pki:/etc/pki -it genny/centos:7
+#     OR with populate /etc/hosts
+#   $> docker run --add-host mongod0.dsitest.org:10.2.0.200 \
+#                 --add-host mongod1.dsitest.org:10.2.0.201 \
+#                 --add-host mongod2.dsitest.org:10.2.0.202 \
+#                 -v /etc/pki:/etc/pki \
+#                 -it genny/centos:7
+#
+#   # docker compose yml has extra_hosts for hostnames
+#   $> docker-compose -f docker/docker-compose.yml down --remove-orphans
+#   $> docker-compose -f docker/docker-compose.yml up -d --scale genny=2 && docker/download-client-metrics.sh
+#
+FROM centos:7
+
+RUN yum -y install shadow-utils \
+                   yum-utils \
+                   sudo \
+                   tar \
+                   git \
+                   cmake \
+                   make \
+                   libzstd
+    
+RUN yum install -y --quiet https://s3-us-west-2.amazonaws.com/dsi-donot-remove/genny/epel-release-latest-7.noarch.rpm  || true
+RUN yum-config-manager --enable epel
+RUN yum install -y --quiet gcc gcc-c++ python38 python38-pip python38-venv
+
+RUN mkdir -pv ~/mongodbtoolchain && \
+    curl -o mongodbtoolchain.tar.gz --retry 10 -L http://mongodbtoolchain.build.10gen.cc/toolchain/rhel70/x86_64/latest && \
+    mkdir -pv /opt/mongodbtoolchain/revisions && \
+    REVISION=$(tar --list -f mongodbtoolchain.tar.gz | head -1 | sed 's/\/$//') && \
+    tar -C /opt/mongodbtoolchain/revisions -xzvf mongodbtoolchain.tar.gz "$REVISION" && \
+    /opt/mongodbtoolchain/revisions/"$REVISION"/scripts/install.sh && \
+    rm mongodbtoolchain.tar.gz && \
+    yum install -y libicu > ./yum-install-libicu.log 2>&1
+
+
+# Create a genny user and add the required paths
+RUN adduser -ms /bin/bash  docker-user
+RUN mkdir -p /data/mci /data/workdir
+RUN chown docker-user /data/mci /data/workdir
+
+## Add genny to image (.dockerignore controls the files copied).
+ADD --chown=docker-user . / /data/workdir/src/genny/
+
+# Build and install genny as docker-user.
+WORKDIR /data/workdir/src/genny/
+USER docker-user
+
+## creating the genny-setup-done-v2 fails on the first run due to not being in a git repo.
+## So ... run it twice (to be sure, to be sure ;-).
+RUN ./run-genny -v install --build-system make --linux-distro amazon2 -- -DCMAKE_BUILD_TYPE=Debug || \
+    ./run-genny -v install --build-system make --linux-distro amazon2 -- -DCMAKE_BUILD_TYPE=Debug
+
+# CMD ./run-genny workload -- -v debug run  --mongo-uri "${MONGO_URI:-mongodb://10.2.0.200}" --workload-file "${WORKLOAD_FILE:-src/workloads/issues/PERF-2494-Excessive-MongoS-Latencies.yml}"
