@@ -241,7 +241,8 @@ Actors:
   - *LoggerPhase
   - *LoggerPhase
 
-###AutoRun:
-###  - When:
-###      mongodb_setup:
-###        $eq: shard-single
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas-shard
