@@ -11,6 +11,14 @@ SLOG = structlog.get_logger(__name__)
 def dry_run_workload(
     yaml_file_path: str, is_darwin: bool, genny_repo_root: str, workspace_root: str
 ):
+    if os.path.basename(yaml_file_path) in [
+        "MixedWorkloadsGennyStress.yml",
+    ]:
+        SLOG.info(
+            "TIG-3290 skipping dry run for MixedWorkloadsGennyStress.yml.", file=yaml_file_path
+        )
+        return
+
     if is_darwin and os.path.basename(yaml_file_path) in [
         "AuthNInsert.yml",
         "ParallelInsert.yml",
