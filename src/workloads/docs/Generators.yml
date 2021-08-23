@@ -224,7 +224,7 @@ Actors:
             roid: {^ObjectId: {^RandomString: {length: 24, alphabet: "0123456789ABCDEF"}}}
 
             # Next OID
-            noid: {^ObjectId: ""}}
+            noid: {^ObjectId: ""}
 
 
   - Repeat: 1
