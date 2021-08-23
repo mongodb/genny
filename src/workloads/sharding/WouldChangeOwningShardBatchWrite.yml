@@ -18,7 +18,7 @@ GlobalDefaults:
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
 
-  DocumentCount: &DocumentCount 100000  # Number of documents to insert and modify.
+  DocumentCount: &DocumentCount 10000  # Number of documents to insert and modify.
   BalancerWait: &BalancerWait "10 seconds" # Wait out the 10 second delay between balancing rounds
   # with a little extra leeway for balancing to finish.
 
