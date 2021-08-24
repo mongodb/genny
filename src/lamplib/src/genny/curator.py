@@ -180,7 +180,7 @@ class CuratorDownloader(Downloader):
 
     # Note that DSI also downloads Curator, the location is specified in defaults.yml.
     # Please try to keep the two versions consistent.
-    CURATOR_VERSION = "9b86f2019b66d288ce35ab4ebda5e2b8e4daf0b0"
+    CURATOR_VERSION = "e120ace606302c79da10cbd84e767a3f67405e71"
 
     def __init__(
         self,
