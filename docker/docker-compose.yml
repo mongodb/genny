@@ -6,6 +6,8 @@ services:
     command: ./run-genny workload -- -v debug run  --mongo-uri "${MONGO_URI:-mongodb://10.2.0.200:27016,10.2.0.201:27016,10.2.0.202:27016}" --workload-file "${WORKLOAD_SETUP:-src/workloads/issues/PERF-2494-Excessive-MongoS-Latencies-setup.yml}"
     env_file:
       - client-variables.env
+    volumes: &volumes
+      - /etc/pki:/etc/pki
     extra_hosts: &extra_hosts
       - "md:10.2.0.200"
       - "md0:10.2.0.200"
@@ -17,6 +19,9 @@ services:
       - "mongod0.dsitest.dev:10.2.0.200"
       - "mongod1.dsitest.dev:10.2.0.201"
       - "mongod2.dsitest.dev:10.2.0.202"
+      - "mongod0.dsitest.org:10.2.0.200"
+      - "mongod1.dsitest.org:10.2.0.201"
+      - "mongod2.dsitest.org:10.2.0.202"
       - "cs:10.2.0.71"
       - "cs0:10.2.0.71"
       - "cs1:10.2.0.72"
@@ -27,6 +32,9 @@ services:
       - "configsvr0.dsitest.dev:10.2.0.71"
       - "configsvr1.dsitest.dev:10.2.0.72"
       - "configsvr2.dsitest.dev:10.2.0.73"
+      - "configsvr0.dsitest.org:10.2.0.71"
+      - "configsvr1.dsitest.org:10.2.0.72"
+      - "configsvr2.dsitest.org:10.2.0.73"
       - "ms:10.2.0.71"
       - "ms0:10.2.0.71"
       - "ms1:10.2.0.72"
@@ -37,6 +45,9 @@ services:
       - "mongos0.dsitest.dev:10.2.0.80"
       - "mongos1.dsitest.dev:10.2.0.81"
       - "mongos2.dsitest.dev:10.2.0.82"
+      - "mongos0.dsitest.org:10.2.0.80"
+      - "mongos1.dsitest.org:10.2.0.81"
+      - "mongos2.dsitest.org:10.2.0.82"
   # docker-compose up -d --scale client=5
   genny:
     image: "${GENNY_DOCKER_IMAGE:-genny/amazon:2}"
@@ -47,3 +58,4 @@ services:
     env_file:
       - client-variables.env
     extra_hosts: *extra_hosts
+    volumes: *volumes

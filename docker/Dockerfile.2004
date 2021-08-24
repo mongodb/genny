@@ -1,12 +1,13 @@
 #
 # Create an amazon2 docker container.
-#   $> docker build -t  genny/ubuntu:2004 ./ -f docker/Dockerfile --no-cache --rm=true
-#   $> docker run  -it genny/ubuntu:2004
+#   $> docker build -t  genny/ubuntu:2004 ./ -f docker/Dockerfile.2004 --no-cache --rm=true
+#   $> docker run -v /etc/pki:/etc/pki -it genny/ubuntu:2004
 #     OR with populate /etc/hosts
-#   $> docker run  --add-host mongod0.dsitest.dev:10.2.0.200 \
-#                  --add-host mongod1.dsitest.dev:10.2.0.201 \
-#                  --add-host mongod2.dsitest.dev:10.2.0.202 \
-#                  -it genny/ubuntu:2004
+#   $> docker run --add-host mongod0.dsitest.dev:10.2.0.200 \
+#                 --add-host mongod1.dsitest.org:10.2.0.201 \
+#                 --add-host mongod2.dsitest.org:10.2.0.202 \
+#                 -v /etc/pki:/etc/pki \
+#                 -it genny/ubuntu:2004
 #
 #   # docker compose yml has extra_hosts for hostnames
 #   $> docker-compose -f docker/docker-compose.yml down --remove-orphans
@@ -42,20 +43,20 @@ RUN apt-get update && \
 RUN python3.8 -m venv /venv
 ENV PATH=/venv/bin:$PATH
 
-RUN mkdir -p /data/mci
+RUN mkdir -p /data/mci /data/workdir
 
 # Create a docker user and add the required paths
 # Create a genny user and add the required paths
 RUN useradd -d /home/docker-user -m docker-user
-RUN chown docker-user /data/mci
+RUN chown docker-user /data/mci /data/workdir
 RUN curl -o toolchain_installer.sh http://mongodbtoolchain.build.10gen.cc/installer.sh
 RUN USER=docker-user bash toolchain_installer.sh
 
 ## Add genny to image (.dockerignore controls the files copied).
-ADD --chown=docker-user . / /home/docker-user/src/genny/
+ADD --chown=docker-user . / /data/workdir/src/genny/
 
 # Build and install genny as docker-user.
-WORKDIR /home/docker-user/src/genny/
+WORKDIR /data/workdir/src/genny/
 USER docker-user
 
 ## creating the genny-setup-done-v2 fails on the first run due to not being in a git repo.
@@ -63,74 +64,4 @@ USER docker-user
 RUN ./run-genny -v install --build-system make --linux-distro ubuntu1804 -- -DCMAKE_BUILD_TYPE=Debug || \
     ./run-genny -v install --build-system make --linux-distro ubuntu1804 -- -DCMAKE_BUILD_TYPE=Debug
 
-## CMD ./run-genny workload -- -v debug run  --mongo-uri "${MONGO_URI:-mongodb://192.168.0.193}" --workload-file "${WORKLOAD_FILE:-src/workloads/issues/PERF-2494-Excessive-MongoS-Latencies.yml}"
-#
-## Do everything as genny from here.
-#USER genny
-#
-## Add genny to image.
-#ADD src/ /home/genny/src/
-#ADD run-genny /home/genny/
-#ADD build/.gitignore /home/genny/build/
-#ADD .clang-format /home/genny/
-#ADD cmake /home/genny/cmake
-#ADD CMakeLists.txt  /home/genny/
-#ADD CONTRIBUTING.md  /home/genny/
-#ADD docs  /home/genny/docs/
-#ADD Doxyfile  /home/genny/
-#ADD evergreen.yml  /home/genny/
-#ADD LICENSE.txt  /home/genny/
-#ADD pyproject.toml  /home/genny/
-#ADD README.md  /home/genny/
-#ADD THIRD-PARTY-NOTICES.txt  /home/genny/
-#ADD .yamllint  /home/genny/
-#
-#USER root
-#RUN chown -R genny /home/genny/
-#
-#WORKDIR /home/genny/
-#
-## Build and install genny as genny.
-#USER genny
-#RUN ./run-genny -v install --build-system make --linux-distro ubuntu1804 -- -DCMAKE_BUILD_TYPE=Debug
-#
-#
-## Use genny home as 'WORKDIR'.
-#WORKDIR /home/genny/
-## ./run-genny workload -- -v debug run  --mongo-uri 'mongodb://172.17.0.1' --workload-file src/workloads/issues/PERF-2494-Excessive-MongoS-Latencies.yml
-## ./run-genny workload -- -v debug run  --mongo-uri 'mongodb://192.168.0.193' --workload-file src/workloads/issues/PERF-2494-Excessive-MongoS-Latencies.yml
-#
-## # In order to launch our python code, we must import the 'server.py' and 'index.html' file.
-## # We use the keyword 'ADD' to do that.
-## # Just a remember, the first parameter 'server.py' is the name of the file on the host.
-## # The second parameter '/server/' is the path where to put the file on the image.
-## # Here we put files at the image '/server/' folder.
-## RUN useradd -ms /bin/bash  genny
-## USER genny
-## # ADD build/ /home/genny/build
-## RUN mkdir /home/genny/build
-#
-## ADD build/curator/ /home/genny/build/curator/
-#
-## ADD dist/ /home/genny/dist
-## ADD src/ /home/genny/src/
-## # ADD genny_venv/ /genny/genny_venv
-## ADD run-genny /home/genny/
-#
-## # EXPOSE 27017
-#
-## ADD mci/ /data/mci/
-#
-## # USER root
-## # RUN USER=genny bash toolchain_installer.sh
-## # RUN cd /genny && ./run-genny install
-## USER genny
-## # RUN ./run-genny -h
-#
-#
-## # I would like to introduce something new, the 'WORKDIR' command.
-## # This command changes the base directory of your image.
-## # Here we define '/server/' as base directory (where all commands will be executed).
-## WORKDIR /home/genny/
-## # ./run-genny workload -- -v debug run  --mongo-uri 'mongodb://172.17.0.1' --workload-file src/workloads/issues/PERF-2494-Excessive-MongoS-Latencies.yml
-## # ./run-genny workload -- -v debug run  --mongo-uri 'mongodb://192.168.0.193' --workload-file src/workloads/issues/PERF-2494-Excessive-MongoS-Latencies.yml
+## CMD ./run-genny workload -- -v debug run  --mongo-uri "${MONGO_URI:-mongodb://10.2.0.200}" --workload-file "${WORKLOAD_FILE:-src/workloads/issues/PERF-2494-Excessive-MongoS-Latencies.yml}"

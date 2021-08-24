@@ -1,12 +1,13 @@
 #
 # Create an amazon2 docker container.
-#   $> docker build -t  genny/centos:7 ./ -f docker/Dockerfile --no-cache --rm=true
-#   $> docker run  -it genny/centos:7
+#   $> docker build -t  genny/centos:7 ./ -f docker/Dockerfile.centos7 --no-cache --rm=true
+#   $> docker run -v /etc/pki:/etc/pki -it genny/centos:7
 #     OR with populate /etc/hosts
-#   $> docker run  --add-host mongod0.dsitest.dev:10.2.0.200 \
-#                  --add-host mongod1.dsitest.dev:10.2.0.201 \
-#                  --add-host mongod2.dsitest.dev:10.2.0.202 \
-#                  -it genny/centos:7
+#   $> docker run --add-host mongod0.dsitest.org:10.2.0.200 \
+#                 --add-host mongod1.dsitest.org:10.2.0.201 \
+#                 --add-host mongod2.dsitest.org:10.2.0.202 \
+#                 -v /etc/pki:/etc/pki \
+#                 -it genny/centos:7
 #
 #   # docker compose yml has extra_hosts for hostnames
 #   $> docker-compose -f docker/docker-compose.yml down --remove-orphans
@@ -39,17 +40,19 @@ RUN mkdir -pv ~/mongodbtoolchain && \
 
 # Create a genny user and add the required paths
 RUN adduser -ms /bin/bash  docker-user
-RUN mkdir -p /data/mci
-RUN chown docker-user /data/mci
+RUN mkdir -p /data/mci /data/workdir
+RUN chown docker-user /data/mci /data/workdir
 
 ## Add genny to image (.dockerignore controls the files copied).
-ADD --chown=docker-user . / /home/docker-user/src/genny/
+ADD --chown=docker-user . / /data/workdir/src/genny/
 
 # Build and install genny as docker-user.
-WORKDIR /home/docker-user/src/genny/
+WORKDIR /data/workdir/src/genny/
 USER docker-user
 
 ## creating the genny-setup-done-v2 fails on the first run due to not being in a git repo.
 ## So ... run it twice (to be sure, to be sure ;-).
 RUN ./run-genny -v install --build-system make --linux-distro amazon2 -- -DCMAKE_BUILD_TYPE=Debug || \
     ./run-genny -v install --build-system make --linux-distro amazon2 -- -DCMAKE_BUILD_TYPE=Debug
+
+# CMD ./run-genny workload -- -v debug run  --mongo-uri "${MONGO_URI:-mongodb://10.2.0.200}" --workload-file "${WORKLOAD_FILE:-src/workloads/issues/PERF-2494-Excessive-MongoS-Latencies.yml}"

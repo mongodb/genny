@@ -42,6 +42,8 @@ $> docker-compose -f docker/docker-compose.yml down --remove-orphans
 $> docker-compose -f docker/docker-compose.yml up --scale genny=270 && docker/download-client-metrics.sh
 ```
 
+### Multiple Clients
+
 Run 270 new clients, don't wait do a ps and then follow the logs.
 ```bash
 $> docker-compose -f docker/docker-compose.yml up -d  --scale genny=270
@@ -49,13 +51,18 @@ $> docker-compose -f docker/docker-compose.yml ps
 $> docker-compose -f docker/docker-compose.yml logs -f
 ```
 
-Run a different docker image:
+### SSL Support
 
+The container copies in the __/etc/pki__ directory (or you can use _-v /etc/pki:/etc/pki_ on the run command). To
+connect with ssl, you should then use the .org hostnames e.g. mongod0.dsitest.org
 ```bash
-GENNY_DOCKER_IMAGE=genny/ubuntu:1804 docker-compose -f docker/docker-compose.yml up -d  --scale genny=270
+$> MONGO_URI='mongodb://mongod0.dsitest.org:27016,mongod1.dsitest.org:27016,mongod2.dsitest.org:27016/?ssl=true&tlsallowinvalidhostnames=true' \ 
+   docker-compose -f docker/docker-compose.yml up -d  --scale genny=270
+$> docker-compose -f docker/docker-compose.yml ps
+$> docker-compose -f docker/docker-compose.yml logs -f
 ```
 
-Other Flavours
+Other Linux Container Flavours
 =====
 
 Create other docker container.
@@ -64,6 +71,13 @@ $> docker build -t  genny/ubuntu:1804 ./ -f docker/Dockerfile.1804 --no-cache --
 $> docker build -t  genny/ubuntu:2004 ./ -f docker/Dockerfile.2004 --no-cache --rm=true
 $> docker build -t  genny/centos:7 ./ -f docker/Dockerfile.centos7 --no-cache --rm=true
 ```
+
+Run a different docker image:
+
+```bash
+GENNY_DOCKER_IMAGE=genny/ubuntu:1804 docker-compose -f docker/docker-compose.yml up -d  --scale genny=270
+```
+
 
 
 Install Docker
