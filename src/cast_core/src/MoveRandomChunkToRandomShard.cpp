@@ -62,20 +62,21 @@ void MoveRandomChunkToRandomShard::run() {
                 bsoncxx::document::value chunksFilter = bsoncxx::builder::stream::document()
                     << "uuid" << uuid << bsoncxx::builder::stream::finalize;
                 auto numChunks = configDatabase["chunks"].count_documents(chunksFilter.view());
+                // The collection must have been sharded and must have at least one chunk;
+                assert(numChunks);
                 std::uniform_int_distribution<int64_t> chunkUniformDistribution{0, numChunks - 1};
+                auto numSkip = chunkUniformDistribution(_rng);
                 mongocxx::options::find chunkFindOptions;
                 auto chunkSort = bsoncxx::builder::stream::document()
                     << "lastmod" << 1 << bsoncxx::builder::stream::finalize;
                 chunkFindOptions.sort(chunkSort.view());
-                chunkFindOptions.skip(chunkUniformDistribution(_rng));
+                chunkFindOptions.skip(numSkip);
                 chunkFindOptions.limit(1);
                 auto chunkProjection = bsoncxx::builder::stream::document()
                     << "history" << false << bsoncxx::builder::stream::finalize;
                 chunkFindOptions.projection(chunkProjection.view());
                 auto chunkCursor =
                     configDatabase["chunks"].find(chunksFilter.view(), chunkFindOptions);
-                // The collection must have been sharded and must have at least one chunk;
-                assert(chunkCursor.begin() != chunkCursor.end());
                 bsoncxx::v_noabi::document::view chunk = *chunkCursor.begin();
 
                 // Find a destination shard different to the source.
@@ -93,12 +94,10 @@ void MoveRandomChunkToRandomShard::run() {
                 shardFindOptions.limit(1);
                 auto shardCursor =
                     configDatabase["shards"].find(shardFilter.view(), shardFindOptions);
-                // There must be at least 2 shards, the source and the destination.
+                // There must be at least 1 shard, which will be the destination.
                 assert(shardCursor.begin() != shardCursor.end());
                 bsoncxx::v_noabi::document::view shard = *shardCursor.begin();
 
-                mongocxx::options::client_session sessionOption;
-                mongocxx::client_session session = _client->start_session(sessionOption);
                 bsoncxx::document::value moveChunkCmd = bsoncxx::builder::stream::document{}
                     << "moveChunk" << config->collectionNamespace << "bounds"
                     << bsoncxx::builder::stream::open_array << chunk["min"].get_value()
@@ -109,11 +108,11 @@ void MoveRandomChunkToRandomShard::run() {
                     << "bounds" << bsoncxx::builder::stream::open_array << chunk["min"].get_value()
                     << chunk["max"].get_value() << bsoncxx::builder::stream::close_array
                     << bsoncxx::builder::stream::finalize;
-                BOOST_LOG_TRIVIAL(info) << " MoveChunkToRandomShardActor moving chunk "
+                BOOST_LOG_TRIVIAL(info) << "MoveChunkToRandomShardActor moving chunk "
                                         << bsoncxx::to_json(bounds.view())
                                         << " from: " << chunk["shard"].get_utf8().value.to_string()
                                         << " to: " << shard["_id"].get_utf8().value.to_string();
-                _client->database("admin").run_command(session, moveChunkCmd.view());
+                _client->database("admin").run_command(moveChunkCmd.view());
             } catch (mongocxx::operation_exception& e) {
                 BOOST_THROW_EXCEPTION(MongoException(
                     e,
