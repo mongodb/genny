@@ -72,6 +72,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                 << "_id"
                 << "test.collection0" << bsoncxx::builder::stream::finalize;
             auto collectionDocOpt = configDatabase["collections"].find_one(collectionFilter.view());
+            REQUIRE(collectionDocOpt);
             auto uuid = collectionDocOpt.get().view()["uuid"].get_binary();
 
             // Get the chunk information, the lower bound (for comparison) and the shard id.
@@ -84,6 +85,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             // There is only one chunk, store the initial shard id.
             auto chunkOpt =
                 configDatabase["chunks"].find_one(chunksFilter.view(), chunkFindOptions);
+            REQUIRE(chunkOpt);
 
             auto initialShardId = chunkOpt.get().view()["shard"].get_utf8().value.to_string();
 
@@ -95,6 +97,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             auto afterMigrationChunkOpt =
                 configDatabase["chunks"].find_one(chunksFilter.view(), chunkFindOptions);
 
+            REQUIRE(afterMigrationChunkOpt);
             auto finalShardId =
                 afterMigrationChunkOpt.get().view()["shard"].get_utf8().value.to_string();
 
