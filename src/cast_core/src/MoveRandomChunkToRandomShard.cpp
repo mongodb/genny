@@ -71,11 +71,12 @@ void MoveRandomChunkToRandomShard::run() {
                 auto numChunks = configDatabase["chunks"].count_documents(chunksFilter.view());
                 // The collection must have been sharded and must have at least one chunk;
                 std::uniform_int_distribution<int64_t> chunkUniformDistribution{0, numChunks - 1};
+                auto numSkip = chunkUniformDistribution(_rng);
                 mongocxx::options::find chunkFindOptions;
                 auto chunkSort = bsoncxx::builder::stream::document()
                     << "lastmod" << 1 << bsoncxx::builder::stream::finalize;
                 chunkFindOptions.sort(chunkSort.view());
-                chunkFindOptions.skip(chunkUniformDistribution(_rng));
+                chunkFindOptions.skip(numSkip);
                 chunkFindOptions.limit(1);
                 auto chunkProjection = bsoncxx::builder::stream::document()
                     << "history" << false << bsoncxx::builder::stream::finalize;
