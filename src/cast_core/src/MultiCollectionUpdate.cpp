@@ -53,7 +53,7 @@ struct MultiCollectionUpdate::PhaseConfig {
     //    DocumentGenerator  updateOptionsExpr;
 
     // uniform distribution random int for selecting collection
-    std::uniform_int_distribution<int64_t> uniformDistribution;
+    boost::random::uniform_int_distribution<int64_t> uniformDistribution;
 
     metrics::Operation updateOperation;
 };
