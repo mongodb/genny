@@ -72,12 +72,19 @@ TEST_CASE_METHOD(MongoTestFixture,
                 << "_id"
                 << "test.collection0" << bsoncxx::builder::stream::finalize;
             auto collectionDocOpt = configDatabase["collections"].find_one(collectionFilter.view());
-            REQUIRE(collectionDocOpt);
+            REQUIRE(collectionDocOpt.is_initialized());
             auto uuid = collectionDocOpt.get().view()["uuid"].get_binary();
 
             // Get the chunk information, the lower bound (for comparison) and the shard id.
-            bsoncxx::document::value chunksFilter = bsoncxx::builder::stream::document()
+            bsoncxx::document::value uuidDoc = bsoncxx::builder::stream::document()
                 << "uuid" << uuid << bsoncxx::builder::stream::finalize;
+            bsoncxx::document::value nsDoc = bsoncxx::builder::stream::document()
+                << "ns"
+                << "test.collection0" << bsoncxx::builder::stream::finalize;
+            // The $or is for backward compatibility, before 5.0 chunks were indexed by namespace.
+            bsoncxx::document::value chunksFilter = bsoncxx::builder::stream::document()
+                << "$or" << bsoncxx::builder::stream::open_array << uuidDoc.view() << nsDoc.view()
+                << bsoncxx::builder::stream::close_array << bsoncxx::builder::stream::finalize;
             auto chunkProjection = bsoncxx::builder::stream::document()
                 << "history" << false << bsoncxx::builder::stream::finalize;
             mongocxx::options::find chunkFindOptions;
@@ -85,7 +92,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             // There is only one chunk, store the initial shard id.
             auto chunkOpt =
                 configDatabase["chunks"].find_one(chunksFilter.view(), chunkFindOptions);
-            REQUIRE(chunkOpt);
+            REQUIRE(chunkOpt.is_initialized());
 
             auto initialShardId = chunkOpt.get().view()["shard"].get_utf8().value.to_string();
 
@@ -97,7 +104,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             auto afterMigrationChunkOpt =
                 configDatabase["chunks"].find_one(chunksFilter.view(), chunkFindOptions);
 
-            REQUIRE(afterMigrationChunkOpt);
+            REQUIRE(afterMigrationChunkOpt.is_initialized());
             auto finalShardId =
                 afterMigrationChunkOpt.get().view()["shard"].get_utf8().value.to_string();
 

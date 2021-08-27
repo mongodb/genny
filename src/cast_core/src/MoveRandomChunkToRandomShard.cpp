@@ -55,28 +55,34 @@ void MoveRandomChunkToRandomShard::run() {
                 auto collectionDocOpt =
                     configDatabase["collections"].find_one(collectionFilter.view());
                 // There must be a collection with the provided namespace.
-                assert(collectionDocOpt);
+                assert(collectionDocOpt.is_initialized());
                 auto uuid = collectionDocOpt.get().view()["uuid"].get_binary();
 
                 // Select a random chunk.
-                bsoncxx::document::value chunksFilter = bsoncxx::builder::stream::document()
+                bsoncxx::document::value uuidDoc = bsoncxx::builder::stream::document()
                     << "uuid" << uuid << bsoncxx::builder::stream::finalize;
+                // This is for backward compatibility, before 5.0 chunks were indexed by namespace.
+                bsoncxx::document::value nsDoc = bsoncxx::builder::stream::document()
+                    << "ns" << config->collectionNamespace << bsoncxx::builder::stream::finalize;
+                bsoncxx::document::value chunksFilter = bsoncxx::builder::stream::document()
+                    << "$or" << bsoncxx::builder::stream::open_array << uuidDoc.view()
+                    << nsDoc.view() << bsoncxx::builder::stream::close_array
+                    << bsoncxx::builder::stream::finalize;
                 auto numChunks = configDatabase["chunks"].count_documents(chunksFilter.view());
                 // The collection must have been sharded and must have at least one chunk;
-                assert(numChunks);
                 std::uniform_int_distribution<int64_t> chunkUniformDistribution{0, numChunks - 1};
-                auto numSkip = chunkUniformDistribution(_rng);
                 mongocxx::options::find chunkFindOptions;
                 auto chunkSort = bsoncxx::builder::stream::document()
                     << "lastmod" << 1 << bsoncxx::builder::stream::finalize;
                 chunkFindOptions.sort(chunkSort.view());
-                chunkFindOptions.skip(numSkip);
+                chunkFindOptions.skip(chunkUniformDistribution(_rng));
                 chunkFindOptions.limit(1);
                 auto chunkProjection = bsoncxx::builder::stream::document()
                     << "history" << false << bsoncxx::builder::stream::finalize;
                 chunkFindOptions.projection(chunkProjection.view());
                 auto chunkCursor =
                     configDatabase["chunks"].find(chunksFilter.view(), chunkFindOptions);
+                assert(chunkCursor.begin() != chunkCursor.end());
                 bsoncxx::v_noabi::document::view chunk = *chunkCursor.begin();
 
                 // Find a destination shard different to the source.
