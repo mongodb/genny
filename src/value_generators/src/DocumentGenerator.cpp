@@ -615,12 +615,12 @@ void format_element(boost::format& message, bsoncxx::document::element val) {
             message % "undefined";
             return;
         case bsoncxx::type::k_timestamp:
+            // Ignoring increment.
             message % val.get_timestamp().timestamp;
-            // message % val.get_timestamp().increment;
             return;
         case bsoncxx::type::k_regex:
+            // Ignoring options.
             message % val.get_regex().regex;
-            // message % val.get_regex().options;
             return;
         case bsoncxx::type::k_minkey:
             message % "minkey";
@@ -636,32 +636,47 @@ void format_element(boost::format& message, bsoncxx::document::element val) {
             return;
         case bsoncxx::type::k_dbpointer:
             message % val.get_dbpointer().value.to_string();
-            // message % val.get_dbpointer().collection;
             return;
         default:
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("format_element: unreachable code"));
     }
 }
 
-/** `{^FormatString: {"format": "% 4s%04d%s", "array": ["c", 3.1415, {^RandomInt: {min: 0, max:
+/** `{^FormatString: {"format": "% 4s%04d%s", "withArgs": ["c", 3.1415, {^RandomInt: {min: 0, max:
  * 999}}, {^RandomString: {length: 20, alphabet: b}}]}}` */
 class FormatStringGenerator : public Generator<std::string> {
 public:
     FormatStringGenerator(const Node& node,
                           GeneratorArgs generatorArgs,
                           std::map<std::string, Parser<UniqueAppendable>> parsers)
-        : _rng{generatorArgs.rng}, _fmtGen{stringGenerator(node["format"], generatorArgs)} {
-        if (!node["array"].isSequence()) {
-            std::stringstream msg;
-            msg << "Malformed node for FormatString array. Not a sequence " << node;
+        : _rng{generatorArgs.rng}, _format{node["format"].maybe<std::string>().value_or("")} {
+        std::stringstream msg;
+        if (!node["format"]) {
+            msg << "Malformed FormatString: format missing '" << _format << "'" << node
+                << "\n";
+        } else if (_format.empty()) {
+            msg << "Malformed FormatString: format cannot be empty '" << _format << "'"
+                << node << "\n";
+        }
+
+        if (!node["withArgs"]) {
+            msg << "Malformed FormatString: withArgs missing." << node;
+        } else if (!node["withArgs"].isSequence()) {
+            msg << "Malformed FormatString:  withArgs " << node.type()
+                << " not a sequence " << node;
+        }
+
+        if (!msg.str().empty()) {
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
         }
-        for (const auto&& [k, v] : node["array"]) {
-            _arguments.push_back(valueGenerator<false, UniqueAppendable>(v, generatorArgs, parsers));
+
+        for (const auto&& [k, v] : node["withArgs"]) {
+            _arguments.push_back(
+                valueGenerator<false, UniqueAppendable>(v, generatorArgs, parsers));
         }
     }
     std::string evaluate() override {
-        boost::format message(_fmtGen->evaluate());
+        boost::format message(_format);
         const std::string key{"current"};
         bsoncxx::builder::basic::document argumentBuilder{};
 
@@ -676,7 +691,7 @@ public:
 
 protected:
     DefaultRandom& _rng;
-    UniqueGenerator<std::string> _fmtGen;
+    std::string _format;
     std::vector<UniqueAppendable> _arguments;
 };
 

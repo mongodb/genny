@@ -905,7 +905,7 @@ Tests:
       a:
         ^FormatString:
           format: "% 4s:%8.2f:%04x:% 8s: %s"
-          array:
+          withArgs:
             - "c"
             - 3.1415
             - {^RandomInt: {min: 0, max: 999}}
@@ -919,7 +919,7 @@ Tests:
       $where:
         ^FormatString:
           format: "function() { sleep(%d); return true; }"
-          array: [{^RandomInt: {min: 0, max: 999}}]
+          withArgs: [{^RandomInt: {min: 0, max: 999}}]
     ThenReturns:
       - { "$where" :  "function() { sleep(155); return true; }"}
       - { "$where" :  "function() { sleep(107); return true; }"}
@@ -933,53 +933,12 @@ Tests:
       $where:
         ^FormatString:
           format: "function() { sleep(%2.d); return true; }"
-          array: [{^Choose: {from: [0,  0,  0,  0,  0,  0, 0, 0, 60]}}]
+          withArgs: [{^Choose: {from: [0, 60], weights: [2, 1]}}]
     ThenReturns:
       - { "$where" :  "function() { sleep( 0); return true; }"}
       - { "$where" :  "function() { sleep( 0); return true; }"}
       - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
       - { "$where" :  "function() { sleep(60); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep(60); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
-      - { "$where" :  "function() { sleep(60); return true; }"}
-      - { "$where" :  "function() { sleep( 0); return true; }"}
       - { "$where" :  "function() { sleep( 0); return true; }"}
 
   - Name: FormatStringCycleWhere
@@ -987,58 +946,23 @@ Tests:
       $where:
         ^FormatString:
           format: "function() { sleep(%s); return true; }"
-          array: [{^Cycle: {ofLength: 10, fromGenerator: {^RandomString: {length: 2, alphabet: "0006"}}}}]
+          withArgs: [{^Cycle: {ofLength: 3, fromGenerator: {^RandomString: {length: 2, alphabet: "06"}}}}]
     ThenReturns:
       - { "$where" :  "function() { sleep(00); return true; }"} # 0
       - { "$where" :  "function() { sleep(00); return true; }"} # 1
       - { "$where" :  "function() { sleep(06); return true; }"} # 2
-      - { "$where" :  "function() { sleep(60); return true; }"} # 3
-      - { "$where" :  "function() { sleep(00); return true; }"} # 4
-      - { "$where" :  "function() { sleep(00); return true; }"} # 5
-      - { "$where" :  "function() { sleep(00); return true; }"} # 6
-      - { "$where" :  "function() { sleep(00); return true; }"} # 7
-      - { "$where" :  "function() { sleep(00); return true; }"} # 8
-      - { "$where" :  "function() { sleep(00); return true; }"} # 9
       - { "$where" :  "function() { sleep(00); return true; }"} # 0
       - { "$where" :  "function() { sleep(00); return true; }"} # 1
       - { "$where" :  "function() { sleep(06); return true; }"} # 2
-      - { "$where" :  "function() { sleep(60); return true; }"} # 3
-      - { "$where" :  "function() { sleep(00); return true; }"} # 4
-      - { "$where" :  "function() { sleep(00); return true; }"} # 5
-      - { "$where" :  "function() { sleep(00); return true; }"} # 6
-      - { "$where" :  "function() { sleep(00); return true; }"} # 7
-      - { "$where" :  "function() { sleep(00); return true; }"} # 8
-      - { "$where" :  "function() { sleep(00); return true; }"} # 9
-      - { "$where" :  "function() { sleep(00); return true; }"} # 0
-      - { "$where" :  "function() { sleep(00); return true; }"} # 1
-      - { "$where" :  "function() { sleep(06); return true; }"} # 2
-      - { "$where" :  "function() { sleep(60); return true; }"} # 3
-      - { "$where" :  "function() { sleep(00); return true; }"} # 4
-      - { "$where" :  "function() { sleep(00); return true; }"} # 5
-      - { "$where" :  "function() { sleep(00); return true; }"} # 6
-      - { "$where" :  "function() { sleep(00); return true; }"} # 7
-      - { "$where" :  "function() { sleep(00); return true; }"} # 8
-      - { "$where" :  "function() { sleep(00); return true; }"} # 9
-      - { "$where" :  "function() { sleep(00); return true; }"} # 0
-      - { "$where" :  "function() { sleep(00); return true; }"} # 1
-      - { "$where" :  "function() { sleep(06); return true; }"} # 2
-      - { "$where" :  "function() { sleep(60); return true; }"} # 3
-      - { "$where" :  "function() { sleep(00); return true; }"} # 4
-      - { "$where" :  "function() { sleep(00); return true; }"} # 5
-      - { "$where" :  "function() { sleep(00); return true; }"} # 6
-      - { "$where" :  "function() { sleep(00); return true; }"} # 7
-      - { "$where" :  "function() { sleep(00); return true; }"} # 8
-      - { "$where" :  "function() { sleep(00); return true; }"} # 9
-      - { "$where" :  "function() { sleep(00); return true; }"} # 0
-      - { "$where" :  "function() { sleep(00); return true; }"} # 1
-      - { "$where" :  "function() { sleep(06); return true; }"} # 2
-      - { "$where" :  "function() { sleep(60); return true; }"} # 3
-      - { "$where" :  "function() { sleep(00); return true; }"} # 4
-      - { "$where" :  "function() { sleep(00); return true; }"} # 5
-      - { "$where" :  "function() { sleep(00); return true; }"} # 6
-      - { "$where" :  "function() { sleep(00); return true; }"} # 7
-      - { "$where" :  "function() { sleep(00); return true; }"} # 8
-      - { "$where" :  "function() { sleep(00); return true; }"} # 9
+
+  - Name: FormatStringWithQuotes
+    GivenTemplate:
+      $where:
+        ^FormatString:
+          format: "function() { print('%s'); }"
+          withArgs: ["Jimmy'); drop table x; print('"]
+    ThenReturns:
+      - { "$where" :  "function() { print('Jimmy'); drop table x; print(''); }"} # 0
 
   # https://www.boost.org/doc/libs/1_76_0/libs/format/doc/format.html
   - Name: Format positional
@@ -1046,7 +970,7 @@ Tests:
       a:
         ^FormatString:
           format: "%1% %2% %3% %2% %1%\n"
-          array:
+          withArgs:
             - first
             - second
             - third
@@ -1059,7 +983,7 @@ Tests:
       a:
         ^FormatString:
           format: "%2%, %1%, %|30t|%3%"
-          array:
+          withArgs:
             - name
             - surname
             - "+1 55 55 55 55"
@@ -1068,9 +992,34 @@ Tests:
 
   - Name: FormatString Like ObjectId
     GivenTemplate:
-      a: {^FormatString: {"format": "c%03d%s", "array": [1, {^RandomString: {length: 20, alphabet: a}}]}}
+      a: {^FormatString: {"format": "c%03d%s", "withArgs": [1, {^RandomString: {length: 20, alphabet: a}}]}}
     ThenReturns:
       - { "a" : "c001aaaaaaaaaaaaaaaaaaaa" }
+
+  - Name: FormatString Format Missing
+    GivenTemplate:
+      a: {^FormatString: {"withArgs": [1, {^RandomString: {length: 20, alphabet: a}}]}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: FormatString Format Blank
+    GivenTemplate:
+      a: {^FormatString: {"format": "", "withArgs": [1, {^RandomString: {length: 20, alphabet: a}}]}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: FormatString withArgs missing
+    GivenTemplate:
+      a: {^FormatString: {"format": "%s"}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: FormatString withArgs not a sequence
+    GivenTemplate:
+      a: {^FormatString: {"format": "%s", "withArgs": 1}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: FormatString missing format and withArgs
+    GivenTemplate:
+      a: {^FormatString: {}}
+    ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: RandomString ObjectID
     GivenTemplate:
@@ -1081,16 +1030,15 @@ Tests:
       - { "a" : { "$oid" : "5001154f526c36abafc0340c" } }
       - { "a" : { "$oid" : "534c7abdc66508f669117956" } }
 
-#  {^Choose: {from: [1, "abc", {a: 1}]}}, number: {^RandomInt: {min: 1, max: 5}}}}
   - Name: Formatted ObjectID
     GivenTemplate:
-      a: {^ObjectId: {^FormatString: {"format": "c%03d%s", "array": [1, {^RandomString: {length: 20, alphabet: a}}]}} }
+      a: {^ObjectId: {^FormatString: {"format": "c%03d%s", "withArgs": [1, {^RandomString: {length: 20, alphabet: a}}]}} }
     ThenReturns:
       - { "a" : { "$oid" : "c001aaaaaaaaaaaaaaaaaaaa" } }
 
   - Name: Random ObjectID
     GivenTemplate:
-      a: {^ObjectId: {^FormatString: {"format": "%04d%s", "array": [{^RandomInt: {min: 0, max: 999}}, {^RandomString: {length: 20, alphabet: b}}]}} }
+      a: {^ObjectId: {^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 999}}, {^RandomString: {length: 20, alphabet: b}}]}} }
     ThenReturns:
       - { "a" : { "$oid" : "0155bbbbbbbbbbbbbbbbbbbb" } }
       - { "a" : { "$oid" : "0107bbbbbbbbbbbbbbbbbbbb" } }

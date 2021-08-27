@@ -274,6 +274,24 @@ public:
         Map,
     };
 
+    friend std::ostream& operator<<(std::ostream& out, const Node::Type& t) {
+        switch (t) {
+            case Node::Type::Undefined:
+                return out << "Undefined";
+            case Node::Type::Null:
+                return out << "Null";
+            case Node::Type::Scalar:
+                return out << "Scalar";
+            case Node::Type::Sequence:
+                return out << "Sequence";
+            case Node::Type::Map:
+                return out << "Map";
+            default:
+                out.setstate(std::ios_base::failbit);
+                return out;
+        }
+    }
+
     /**
      * Access children of a sequence.
      *
