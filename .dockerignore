@@ -1,0 +1,12 @@
+build
+# Except this file
+!build/.gitignore
+dist
+genny_venv
+docker
+mci
+.git
+.github
+.idea
+.tmp
+containers

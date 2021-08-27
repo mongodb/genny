@@ -27,3 +27,6 @@ genny.egg-info
 
 # tools
 curator
+
+# docker
+containers
