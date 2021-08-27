@@ -220,6 +220,13 @@ Actors:
             # generates 10 random strings and will cycle between them in order
             cycleOfRandomStrings: {^Cycle: {ofLength: 10, fromGenerator: {^RandomString: {length: 22}}}}
 
+            # Random OID
+            roid: {^ObjectId: {^RandomString: {length: 24, alphabet: "0123456789ABCDEF"}}}
+
+            # Next OID
+            noid: {^ObjectId: ""}
+
+
   - Repeat: 1
     Collection: test
     Operation:

@@ -23,11 +23,14 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/date_time.hpp>
+#include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
+#include <bsoncxx/json.hpp>
+#include <bsoncxx/oid.hpp>
 #include <bsoncxx/types/bson_value/view.hpp>
 
 
@@ -41,6 +44,7 @@ public:
 };
 
 using UniqueAppendable = std::unique_ptr<Appendable>;
+using bsoncxx::oid;
 
 template <class T>
 class Generator : public Appendable {
@@ -565,6 +569,135 @@ protected:
     std::string _separator;
 };
 
+/** handle the formatting of an individual array element value with the latest format. */
+void format_element(boost::format& message, bsoncxx::document::element val) {
+    switch (val.type()) {
+        case bsoncxx::v_noabi::type::k_utf8:
+            message % val.get_utf8().value.to_string();
+            return;
+        case bsoncxx::type::k_int32:
+            message % val.get_int32().value;
+            return;
+        case bsoncxx::type::k_int64:
+            message % val.get_int64().value;
+            return;
+        case bsoncxx::type::k_document:
+            message % bsoncxx::to_json(val.get_document().value);
+            return;
+        case bsoncxx::type::k_array:
+            message % bsoncxx::to_json(val.get_array().value);
+            return;
+        case bsoncxx::type::k_oid:
+            message % val.get_oid().value.to_string();
+            return;
+        case bsoncxx::type::k_binary:
+            message % val.get_binary().bytes;
+            return;
+        case bsoncxx::type::k_bool:
+            message % val.get_bool();
+            return;
+        case bsoncxx::type::k_code:
+            message % val.get_code().code;
+            return;
+        case bsoncxx::type::k_codewscope:
+            message % val.get_codewscope().code;
+            return;
+        case bsoncxx::type::k_date:
+            message % val.get_date();
+            return;
+        case bsoncxx::type::k_double:
+            message % val.get_double();
+            return;
+        case bsoncxx::type::k_null:
+            message % "null";
+            return;
+        case bsoncxx::type::k_undefined:
+            message % "undefined";
+            return;
+        case bsoncxx::type::k_timestamp:
+            message % val.get_timestamp().timestamp;
+            // message % val.get_timestamp().increment;
+            return;
+        case bsoncxx::type::k_regex:
+            message % val.get_regex().regex;
+            // message % val.get_regex().options;
+            return;
+        case bsoncxx::type::k_minkey:
+            message % "minkey";
+            return;
+        case bsoncxx::type::k_maxkey:
+            message % "maxkey";
+            return;
+        case bsoncxx::type::k_decimal128:
+            message % val.get_decimal128().value.to_string();
+            return;
+        case bsoncxx::type::k_symbol:
+            message % val.get_symbol().symbol;
+            return;
+        case bsoncxx::type::k_dbpointer:
+            message % val.get_dbpointer().value.to_string();
+            // message % val.get_dbpointer().collection;
+            return;
+        default:
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("format_element: unreachable code"));
+    }
+}
+
+/** `{^FormatString: {"format": "% 4s%04d%s", "array": ["c", 3.1415, {^RandomInt: {min: 0, max:
+ * 999}}, {^RandomString: {length: 20, alphabet: b}}]}}` */
+class FormatStringGenerator : public Generator<std::string> {
+public:
+    FormatStringGenerator(const Node& node,
+                          GeneratorArgs generatorArgs,
+                          std::map<std::string, Parser<UniqueAppendable>> parsers)
+        : _rng{generatorArgs.rng}, _fmtGen{stringGenerator(node["format"], generatorArgs)} {
+        if (!node["array"].isSequence()) {
+            std::stringstream msg;
+            msg << "Malformed node for FormatString array. Not a sequence " << node;
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
+        for (const auto&& [k, v] : node["array"]) {
+            _arguments.push_back(valueGenerator<false, UniqueAppendable>(v, generatorArgs, parsers));
+        }
+    }
+    std::string evaluate() override {
+        boost::format message(_fmtGen->evaluate());
+        const std::string key{"current"};
+        bsoncxx::builder::basic::document argumentBuilder{};
+
+        for (auto&& argumentGen : _arguments) {
+            argumentGen->append(key, argumentBuilder);
+
+            format_element(message, argumentBuilder.view()[key]);
+            argumentBuilder.clear();
+        }
+        return message.str();
+    }
+
+protected:
+    DefaultRandom& _rng;
+    UniqueGenerator<std::string> _fmtGen;
+    std::vector<UniqueAppendable> _arguments;
+};
+
+/** `{^ObjectId: {hex: "61158c40f2a806ab5ed16548"}}` */
+class ObjectIdGenerator : public Generator<bsoncxx::types::b_oid> {
+public:
+    ObjectIdGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _rng{generatorArgs.rng}, _node{node}, _hexGen{stringGenerator(node, generatorArgs)} {}
+
+    bsoncxx::types::b_oid evaluate() override {
+        auto hex = _hexGen->evaluate();
+        auto objectId = bsoncxx::types::b_oid{hex.empty() ? oid{} : oid{hex}};
+        return objectId;
+    }
+
+private:
+    DefaultRandom& _rng;
+    const Node& _node;
+    const UniqueGenerator<std::string> _hexGen;
+};
+
 class StringGenerator : public Generator<std::string> {
 public:
     StringGenerator(const Node& node, GeneratorArgs generatorArgs)
@@ -979,6 +1112,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<JoinGenerator>(node, generatorArgs);
      }},
+    {"^FormatString",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers);
+     }},
     {"^Choose",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<ChooseGenerator>(node, generatorArgs);
@@ -1004,6 +1141,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^RandomDate",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<RandomDateGenerator>(node, generatorArgs);
+     }},
+    {"^ObjectId",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<ObjectIdGenerator>(node, generatorArgs);
      }},
     {"^Verbatim",
      [](const Node& node, GeneratorArgs generatorArgs) {
@@ -1250,6 +1391,10 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
         {"^ActorIdString",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ActorIdStringGenerator>(node, generatorArgs);
+         }},
+        {"^FormatString",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers);
          }},
     };
 

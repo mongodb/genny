@@ -898,3 +898,209 @@ Tests:
       - {a: 9999997460716}
       - {a: 9999997460716}
       - {a: 9999997460716}
+
+  # https://www.boost.org/doc/libs/1_76_0/libs/format/doc/format.html
+  - Name: FormatString
+    GivenTemplate:
+      a:
+        ^FormatString:
+          format: "% 4s:%8.2f:%04x:% 8s: %s"
+          array:
+            - "c"
+            - 3.1415
+            - {^RandomInt: {min: 0, max: 999}}
+            - {^RandomString: {length: 4, alphabet: b}}
+            - {^RandomDate: { min: "2020-01-01", max: "2021-01-01" }}
+    ThenReturns:
+      - { "a" : "   c:    3.14:009b:    bbbb: 1581225505613" }
+
+  - Name: FormatStringRandomIntWhere
+    GivenTemplate:
+      $where:
+        ^FormatString:
+          format: "function() { sleep(%d); return true; }"
+          array: [{^RandomInt: {min: 0, max: 999}}]
+    ThenReturns:
+      - { "$where" :  "function() { sleep(155); return true; }"}
+      - { "$where" :  "function() { sleep(107); return true; }"}
+      - { "$where" :  "function() { sleep(22); return true; }"}
+      - { "$where" :  "function() { sleep(73); return true; }"}
+      - { "$where" :  "function() { sleep(343); return true; }"}
+      - { "$where" :  "function() { sleep(826); return true; }"}
+
+  - Name: FormatStringRandomChoseWhere
+    GivenTemplate:
+      $where:
+        ^FormatString:
+          format: "function() { sleep(%2.d); return true; }"
+          array: [{^Choose: {from: [0,  0,  0,  0,  0,  0, 0, 0, 60]}}]
+    ThenReturns:
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep(60); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep(60); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep(60); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+      - { "$where" :  "function() { sleep( 0); return true; }"}
+
+  - Name: FormatStringCycleWhere
+    GivenTemplate:
+      $where:
+        ^FormatString:
+          format: "function() { sleep(%s); return true; }"
+          array: [{^Cycle: {ofLength: 10, fromGenerator: {^RandomString: {length: 2, alphabet: "0006"}}}}]
+    ThenReturns:
+      - { "$where" :  "function() { sleep(00); return true; }"} # 0
+      - { "$where" :  "function() { sleep(00); return true; }"} # 1
+      - { "$where" :  "function() { sleep(06); return true; }"} # 2
+      - { "$where" :  "function() { sleep(60); return true; }"} # 3
+      - { "$where" :  "function() { sleep(00); return true; }"} # 4
+      - { "$where" :  "function() { sleep(00); return true; }"} # 5
+      - { "$where" :  "function() { sleep(00); return true; }"} # 6
+      - { "$where" :  "function() { sleep(00); return true; }"} # 7
+      - { "$where" :  "function() { sleep(00); return true; }"} # 8
+      - { "$where" :  "function() { sleep(00); return true; }"} # 9
+      - { "$where" :  "function() { sleep(00); return true; }"} # 0
+      - { "$where" :  "function() { sleep(00); return true; }"} # 1
+      - { "$where" :  "function() { sleep(06); return true; }"} # 2
+      - { "$where" :  "function() { sleep(60); return true; }"} # 3
+      - { "$where" :  "function() { sleep(00); return true; }"} # 4
+      - { "$where" :  "function() { sleep(00); return true; }"} # 5
+      - { "$where" :  "function() { sleep(00); return true; }"} # 6
+      - { "$where" :  "function() { sleep(00); return true; }"} # 7
+      - { "$where" :  "function() { sleep(00); return true; }"} # 8
+      - { "$where" :  "function() { sleep(00); return true; }"} # 9
+      - { "$where" :  "function() { sleep(00); return true; }"} # 0
+      - { "$where" :  "function() { sleep(00); return true; }"} # 1
+      - { "$where" :  "function() { sleep(06); return true; }"} # 2
+      - { "$where" :  "function() { sleep(60); return true; }"} # 3
+      - { "$where" :  "function() { sleep(00); return true; }"} # 4
+      - { "$where" :  "function() { sleep(00); return true; }"} # 5
+      - { "$where" :  "function() { sleep(00); return true; }"} # 6
+      - { "$where" :  "function() { sleep(00); return true; }"} # 7
+      - { "$where" :  "function() { sleep(00); return true; }"} # 8
+      - { "$where" :  "function() { sleep(00); return true; }"} # 9
+      - { "$where" :  "function() { sleep(00); return true; }"} # 0
+      - { "$where" :  "function() { sleep(00); return true; }"} # 1
+      - { "$where" :  "function() { sleep(06); return true; }"} # 2
+      - { "$where" :  "function() { sleep(60); return true; }"} # 3
+      - { "$where" :  "function() { sleep(00); return true; }"} # 4
+      - { "$where" :  "function() { sleep(00); return true; }"} # 5
+      - { "$where" :  "function() { sleep(00); return true; }"} # 6
+      - { "$where" :  "function() { sleep(00); return true; }"} # 7
+      - { "$where" :  "function() { sleep(00); return true; }"} # 8
+      - { "$where" :  "function() { sleep(00); return true; }"} # 9
+      - { "$where" :  "function() { sleep(00); return true; }"} # 0
+      - { "$where" :  "function() { sleep(00); return true; }"} # 1
+      - { "$where" :  "function() { sleep(06); return true; }"} # 2
+      - { "$where" :  "function() { sleep(60); return true; }"} # 3
+      - { "$where" :  "function() { sleep(00); return true; }"} # 4
+      - { "$where" :  "function() { sleep(00); return true; }"} # 5
+      - { "$where" :  "function() { sleep(00); return true; }"} # 6
+      - { "$where" :  "function() { sleep(00); return true; }"} # 7
+      - { "$where" :  "function() { sleep(00); return true; }"} # 8
+      - { "$where" :  "function() { sleep(00); return true; }"} # 9
+
+  # https://www.boost.org/doc/libs/1_76_0/libs/format/doc/format.html
+  - Name: Format positional
+    GivenTemplate:
+      a:
+        ^FormatString:
+          format: "%1% %2% %3% %2% %1%\n"
+          array:
+            - first
+            - second
+            - third
+    ThenReturns:
+      - { "a" : "first second third second first\n" }
+
+  # https://www.boost.org/doc/libs/1_76_0/libs/format/doc/format.html
+  - Name: Format Tabulated
+    GivenTemplate:
+      a:
+        ^FormatString:
+          format: "%2%, %1%, %|30t|%3%"
+          array:
+            - name
+            - surname
+            - "+1 55 55 55 55"
+    ThenReturns:
+      - { "a" : "surname, name,                +1 55 55 55 55" }
+
+  - Name: FormatString Like ObjectId
+    GivenTemplate:
+      a: {^FormatString: {"format": "c%03d%s", "array": [1, {^RandomString: {length: 20, alphabet: a}}]}}
+    ThenReturns:
+      - { "a" : "c001aaaaaaaaaaaaaaaaaaaa" }
+
+  - Name: RandomString ObjectID
+    GivenTemplate:
+      a: {^ObjectId: {^RandomString: {length: 24, alphabet: "0123456789ABCDEF"}}}
+    ThenReturns:
+      - { "a" : { "$oid" : "21015dc462736b80b9a637c8" } }
+      - { "a" : { "$oid" : "e4508f40e80e6f6a9914d0b2" } }
+      - { "a" : { "$oid" : "5001154f526c36abafc0340c" } }
+      - { "a" : { "$oid" : "534c7abdc66508f669117956" } }
+
+#  {^Choose: {from: [1, "abc", {a: 1}]}}, number: {^RandomInt: {min: 1, max: 5}}}}
+  - Name: Formatted ObjectID
+    GivenTemplate:
+      a: {^ObjectId: {^FormatString: {"format": "c%03d%s", "array": [1, {^RandomString: {length: 20, alphabet: a}}]}} }
+    ThenReturns:
+      - { "a" : { "$oid" : "c001aaaaaaaaaaaaaaaaaaaa" } }
+
+  - Name: Random ObjectID
+    GivenTemplate:
+      a: {^ObjectId: {^FormatString: {"format": "%04d%s", "array": [{^RandomInt: {min: 0, max: 999}}, {^RandomString: {length: 20, alphabet: b}}]}} }
+    ThenReturns:
+      - { "a" : { "$oid" : "0155bbbbbbbbbbbbbbbbbbbb" } }
+      - { "a" : { "$oid" : "0107bbbbbbbbbbbbbbbbbbbb" } }
+      - { "a" : { "$oid" : "0022bbbbbbbbbbbbbbbbbbbb" } }
+      - { "a" : { "$oid" : "0073bbbbbbbbbbbbbbbbbbbb" } }
+      - { "a" : { "$oid" : "0343bbbbbbbbbbbbbbbbbbbb" } }
+
+  - Name: Next ObjectID
+    GivenTemplate:
+      a: {^ObjectId: ""}
+    ThenExecuteAndIgnore: true
+    # The actual Value will be something like the following
+    #   { "a" : { "$oid" : "61159412db9cbf4eec5d2061" } }
