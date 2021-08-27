@@ -13,21 +13,20 @@
 #   $> docker-compose -f docker/docker-compose.yml down --remove-orphans
 #   $> docker-compose -f docker/docker-compose.yml up -d --scale genny=2 && docker/download-client-metrics.sh
 #
-FROM centos:7
+FROM centos:7 AS cpp
 
-RUN yum -y install shadow-utils \
+RUN yum install -y --quiet https://s3-us-west-2.amazonaws.com/dsi-donot-remove/genny/epel-release-latest-7.noarch.rpm  || true &&\
+    yum-config-manager --enable epel &&\
+    yum -y install shadow-utils \
                    yum-utils \
                    sudo \
                    tar \
                    git \
                    cmake \
                    make \
-                   libzstd
-    
-RUN yum install -y --quiet https://s3-us-west-2.amazonaws.com/dsi-donot-remove/genny/epel-release-latest-7.noarch.rpm  || true
-RUN yum-config-manager --enable epel
-RUN yum install -y --quiet gcc gcc-c++ python38 python38-pip python38-venv
-
+                   libzstd \
+                   gcc \
+                   gcc-c++
 RUN mkdir -pv ~/mongodbtoolchain && \
     curl -o mongodbtoolchain.tar.gz --retry 10 -L http://mongodbtoolchain.build.10gen.cc/toolchain/rhel70/x86_64/latest && \
     mkdir -pv /opt/mongodbtoolchain/revisions && \
@@ -39,9 +38,11 @@ RUN mkdir -pv ~/mongodbtoolchain && \
 
 
 # Create a genny user and add the required paths
-RUN adduser -ms /bin/bash  docker-user
-RUN mkdir -p /data/mci /data/workdir
-RUN chown docker-user /data/mci /data/workdir
+RUN adduser -ms /bin/bash  docker-user &&\
+    mkdir -p /data/mci /data/workdir &&\
+    chown docker-user /data/mci /data/workdir &&\
+
+FROM cpp AS genny
 
 ## Add genny to image (.dockerignore controls the files copied).
 ADD --chown=docker-user . / /data/workdir/src/genny/

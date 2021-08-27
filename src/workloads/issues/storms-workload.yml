@@ -1,0 +1,243 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+# this workload created to reproduce SERVER-53853
+
+Clients:
+  Default:
+    QueryOptions:
+      minPoolSize: 1
+      maxPoolSize: 10000
+  PerThread:
+    QueryOptions:
+      maxPoolSize: 540
+
+GlobalDefaults:
+  DbName: &db test
+  Collection: &col Collection0
+  FullName: &fullname test.Collection0
+
+  ClassId: &classId { ^ObjectId: { ^FormatString: { "format": "c%04d%s", "array": [ { ^RandomInt: { min: 0, max: 200 } }, { ^RandomString: { length: 19, alphabet: b } } ] } } }
+  StudentId: &studentId { ^ObjectId: { ^FormatString: { "format": "%04d%s", "array": [ { ^RandomInt: { min: 0, max: 30 } }, { ^RandomString: { length: 20, alphabet: b } } ] } } }
+
+  Student: &student
+    classId: *classId
+    studentId: *studentId
+    connectedTime: {^RandomDate: {min: "2019-01-01", max: "2020-01-01"}}
+    lastPing: {^RandomDate: {min: "2019-01-01", max: "2020-01-01"}}
+
+  FindOperation: &FindOperation
+    OperationName: findOne
+    OperationCommand:
+      Filter: { classId: *classId , studentId: *studentId }
+      projection: {classId: 1, studentId: 1, connectedTime: 1, lastPing: 1, _id: 1}
+      Options:
+        WriteConcern:
+          Level: 0
+          Journal: false
+        ReadPreference:
+          ReadMode: primaryPreferred
+          MaxStaleness: 90 seconds
+
+  FindWhereOperation: &FindWhereOperation
+    OperationName: findOne
+    OperationCommand:
+      Filter:
+        classId: *classId
+        studentId: *studentId
+        $where:
+          ^FormatString:
+            format: "function() { sleep(%2.d); return true; }"
+            array: [{^Choose: {from: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 53, 59, 61]}}]
+      Options:
+        WriteConcern:
+          Level: 0
+          Journal: false
+        ReadPreference:
+          ReadMode: primaryPreferred
+          MaxStaleness: 90 seconds
+
+  UpdateOperation: &UpdateOperation
+    OperationName: updateOne
+    OperationCommand:
+      Filter: { classId: *classId , studentId: *studentId }
+      Update: {$currentDate: {connectedTime: true, lastPing: true}}
+      OnSession: true
+    Options:
+      WriteConcern:
+        Level: 0
+        Journal: false
+      ReadPreference:
+        ReadMode: primaryPreferred
+        MaxStaleness: 90 seconds
+
+  BulkUpdateOperation: &BulkUpdateOperation
+    OperationName: bulkWrite
+    OperationCommand:
+      WriteOperations:
+        - WriteCommand: updateOne
+          Filter: { classId: *classId , studentId: *studentId }
+          Update: {$set: {connectedTime: {^Now: {}}, lastPing: {^Now: {}}}}
+      OnSession: true
+      Options:
+        WriteConcern:
+          Level: 0
+          Journal: false
+        ReadPreference:
+          ReadMode: primaryPreferred
+          MaxStaleness: 90 seconds
+
+  LoggerPhase: &LoggerPhase
+    LogEvery: 10 second # TimeSpec
+    Blocking: None # must be Blocking:None
+
+  Nop: &Nop
+    {Nop: true}
+
+Actors:
+# - Name: EnableSharding
+#   Type: AdminCommand
+#   Threads: 1
+#   Phases:
+#   - Repeat: 1
+#     Database: admin
+#     Operations:
+#     - OperationMetricsName: EnableShardingMetrics
+#       OperationName: AdminCommand
+#       OperationCommand:
+#         enableSharding: *db
+#   - *Nop
+#   - *Nop
+#   - *Nop
+#   - *Nop
+#   - *Nop
+#   - *Nop
+
+# - Name: ShardCollection
+#   Type: AdminCommand
+#   Threads: 1
+#   Phases:
+#   - *Nop
+#   - Repeat: 1
+#     Database: admin
+#     Operations:
+#     - OperationMetricsName: ShardCollectionMetrics
+#       OperationName: AdminCommand
+#       OperationCommand:
+#         shardCollection: *fullname
+#         key:
+#           _id: 1
+#   - *Nop
+#   - *Nop
+#   - *Nop
+#   - *Nop
+#   - *Nop
+
+# - Name: InsertData
+#   Type: Loader
+#   Threads: 1
+#   Phases:
+#   - *Nop
+#   - *Nop
+#   - Repeat: 1
+#     Threads: 1
+#     Database: *db
+#     CollectionCount: 1
+#     DocumentCount: 6000
+#     BatchSize: 1000
+#     Document: *student
+#     Indexes:
+#       - keys: { classId: 1, studentId: 1 }
+#       - keys: { classId: 1, studentId: 1, connectedTime: 1, lastPing: 1, _id: 1  }
+#       - keys: { classId: 1, lastPing: 1 }
+#   - *Nop
+#   - *Nop
+#   - *Nop
+#   - *Nop
+
+# - Name: DisableBalancer
+#   Type: AdminCommand
+#   Threads: 1
+#   Phases:
+#   - *Nop
+#   - *Nop
+#   - *Nop
+#   - *Nop
+#   - Repeat: 1
+#     Database: admin
+#     Operations:
+#       - OperationMetricsName: DisableBalancer
+#         OperationName: AdminCommand
+#         OperationCommand:
+#           balancerStop: 1
+#   - *Nop
+#   - *Nop
+
+# - Name: DisableAutoSpit
+#   Type: CrudActor
+#   Threads: 1
+#   Phases:
+#   - *Nop
+#   - *Nop
+#   - *Nop
+#   - *Nop
+#   - *Nop
+#   - Repeat: 1
+#     Database: config
+#     Collection: settings
+#     Operations:
+#       - OperationName: updateOne
+#         OperationCommand:
+#           Filter: {_id: 'autosplit'}
+#           Update: {$set: {enabled: false}}
+#           UpdateOptions: {upsert: true, writeConcern: {w: 'majority', wtimeout: 30000}}
+#   - *Nop
+
+
+- Name: WorkPhase
+  Type: CrudActor
+  Database: *db
+  Threads: &threads 270
+  # ClientPerThread: true
+  Phases:
+    - *Nop
+    - *Nop
+    - *Nop
+    - *Nop
+    - *Nop
+    - *Nop
+    - Duration: 15 minutes
+      SleepAfter: 1 seconds
+      Threads: *threads
+      Collection: *col
+      Operations:
+        - *FindOperation
+        - *UpdateOperation
+        - *FindOperation
+        - *UpdateOperation
+        - *FindOperation
+        - *UpdateOperation
+        - *FindOperation
+        - *UpdateOperation
+        - *FindOperation
+        - *UpdateOperation
+        - *FindWhereOperation
+
+
+# to avoid connection closing
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1 # must be 1
+  Phases:
+  - *LoggerPhase
+  - *LoggerPhase
+  - *LoggerPhase
+  - *LoggerPhase
+  - *LoggerPhase
+  - *LoggerPhase
+  - *LoggerPhase
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas-shard

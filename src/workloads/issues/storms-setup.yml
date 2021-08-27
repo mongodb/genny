@@ -10,9 +10,6 @@ Clients:
   PerThread:
     QueryOptions:
       maxPoolSize: 540
-      minPoolSize: 270
-#      minPoolSize: 1
-#      maxPoolSize: 10000
 
 GlobalDefaults:
   DbName: &db test
@@ -62,7 +59,7 @@ GlobalDefaults:
       OnSession: true
 
   LoggerPhase: &LoggerPhase
-    LogEvery: 1 minute # TimeSpec
+    LogEvery: 10 second # TimeSpec
     Blocking: None # must be Blocking:None
 
   Nop: &Nop
@@ -168,64 +165,34 @@ Actors:
   - *Nop
 
 
-- Name: WorkPhase
-  Type: CrudActor
-  Database: *db
-  Threads: &threads 270
-  ClientPerThread: true
-  Phases:
-    - *Nop
-    - *Nop
-    - *Nop
-    - *Nop
-    - *Nop
-    - *Nop
-    - Duration: 60 minutes
-      SleepAfter: 1 seconds
-      Threads: *threads
-      Collection: *col
-      Operations:
-        - *FindOperation
-        - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-        # - *FindOperation
-        # - *UpdateOperation
-         - *FindWhereOperation
+# - Name: WorkPhase
+#   Type: CrudActor
+#   Database: *db
+#   Threads: &threads 5400
+#   ClientPerThread: true
+#   Phases:
+#     - *Nop
+#     - *Nop
+#     - *Nop
+#     - *Nop
+#     - *Nop
+#     - *Nop
+#     - Duration: 15 minutes
+#       SleepAfter: 1 seconds
+#       Threads: *threads
+#       Collection: *col
+#       Operations:
+#         - *FindOperation
+#         - *UpdateOperation
+#         - *FindOperation
+#         - *UpdateOperation
+#         - *FindOperation
+#         - *UpdateOperation
+#         - *FindOperation
+#         - *UpdateOperation
+#         - *FindOperation
+#         - *UpdateOperation
+#         - *FindWhereOperation
 
 
 # to avoid connection closing

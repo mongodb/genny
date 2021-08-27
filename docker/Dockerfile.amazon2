@@ -11,17 +11,19 @@
 #
 #   # docker compose yml has extra_hosts for hostnames
 #   $> docker-compose -f docker/docker-compose.yml down --remove-orphans
-#   $> docker-compose -f docker/docker-compose.yml up -d --scale genny=2 && docker/download-client-metrics.sh
 #
-FROM amazonlinux:2
+#   $> docker-compose --env-file docker/client-variables.env -f docker/docker-compose.yml up -d --scale genny=2 && docker/download-client-metrics.sh
+#
+FROM amazonlinux:2 AS python
 
 RUN yum install -y amazon-linux-extras && \
-     amazon-linux-extras enable python3.8
+    amazon-linux-extras enable python3.8 && \
+    yum -y install python3.8 python38-venv && \
+    python3.8 -m venv /venv
 
-RUN yum -y install python3.8 python38-venv
-
-RUN python3.8 -m venv /venv
 ENV PATH=/venv/bin:$PATH
+
+FROM python AS cpp
 
 RUN yum -y install shadow-utils \
                    yum-utils \
@@ -32,15 +34,14 @@ RUN yum -y install shadow-utils \
                    c++ \
                    cmake \
                    make \
-                   libzstd
+                   libzstd && \
+    adduser -ms /bin/bash  docker-user && \
+    mkdir -p /data/mci /data/workdir && \
+    chown docker-user /data/mci /data/workdir  && \
+    curl -o toolchain_installer.sh http://mongodbtoolchain.build.10gen.cc/installer.sh && \
+    USER=docker-user bash toolchain_installer.sh
 
-RUN mkdir -p /data/mci /data/workdir
-
-# Create a docker user and add the required paths
-RUN adduser -ms /bin/bash  docker-user
-RUN chown docker-user /data/mci /data/workdir
-RUN curl -o toolchain_installer.sh http://mongodbtoolchain.build.10gen.cc/installer.sh
-RUN USER=docker-user bash toolchain_installer.sh
+FROM cpp AS genny
 
 ## Add genny to image (.dockerignore controls the files copied).
 ADD --chown=docker-user . / /data/workdir/src/genny/

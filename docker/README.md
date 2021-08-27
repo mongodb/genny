@@ -42,6 +42,13 @@ $> docker-compose -f docker/docker-compose.yml down --remove-orphans
 $> docker-compose -f docker/docker-compose.yml up --scale genny=270 && docker/download-client-metrics.sh
 ```
 
+
+Use difference configurations:
+
+```bash
+$>  docker-compose --env-file docker/client-variables-60-minute.env -f docker/docker-compose.yml up -d --scale genny=125
+```
+
 ### Multiple Clients
 
 Run 270 new clients, don't wait do a ps and then follow the logs.
@@ -56,8 +63,8 @@ $> docker-compose -f docker/docker-compose.yml logs -f
 The container copies in the __/etc/pki__ directory (or you can use _-v /etc/pki:/etc/pki_ on the run command). To
 connect with ssl, you should then use the .org hostnames e.g. mongod0.dsitest.org
 ```bash
-$> MONGO_URI='mongodb://mongod0.dsitest.org:27016,mongod1.dsitest.org:27016,mongod2.dsitest.org:27016/?ssl=true&tlsallowinvalidhostnames=true' \ 
-   docker-compose -f docker/docker-compose.yml up -d  --scale genny=270
+$> MONGO_URI='mongodb://mongod0.dsitest.org:27016,mongod1.dsitest.org:27016,mongod2.dsitest.org:27016/?ssl=true&tlsallowinvalidhostnames=true' 
+$> docker-compose -f docker/docker-compose.yml up -d  --scale genny=270
 $> docker-compose -f docker/docker-compose.yml ps
 $> docker-compose -f docker/docker-compose.yml logs -f
 ```
