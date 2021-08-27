@@ -59,7 +59,7 @@ private:
     /** @private */
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
-    genny::DefaultRandom _rng;
+    genny::DefaultRandom& _rng;
 };
 
 }  // namespace genny::actor
