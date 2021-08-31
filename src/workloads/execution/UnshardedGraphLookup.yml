@@ -27,7 +27,7 @@ Actors:
         shardCollection: test.Collection0
         key: {c: hashed}
         numInitialChunks: &NumChunks 6
-    # Disable the balancer so that it can't skew results while the $lookups are running.
+    # Disable the balancer so that it can't skew results while the $graphLookups are running.
     - OperationMetricsName: DisableBalancer
       OperationName: AdminCommand
       OperationCommand:
@@ -42,7 +42,7 @@ Actors:
   Phases:
   - *Nop
   - Repeat: 1
-    BatchSize: 1000
+    BatchSize: 3000
     Threads: 1
     DocumentCount: &NumDocs 3000
     Database: *Database
@@ -50,7 +50,9 @@ Actors:
     Document:
       a: {^RandomInt: {min: 1, max: 3000}}
       b: {^RandomInt: {min: 1, max: 3000}}
-      c: {^RandomInt: {min: 1, max: 3000}}
+      c: {^RandomInt: {min: 1, max: 300}}
+      d: {^RandomInt: {min: 1, max: 600}}
+      e: {^RandomInt: {min: 1, max: 600}}
       s: {^RandomString: {length: 3000}}
   - *Nop
   - *Nop
@@ -79,7 +81,7 @@ Actors:
   - Repeat: 10
     Database: *Database
     Operations:
-    - OperationMetricsName: GraphLookupShardedToUnsharded
+    - OperationMetricsName: GraphLookupShardedToUnshardedOneToFew
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -96,7 +98,7 @@ Actors:
             {$project: {s: 0, "matches.s": 0}}
           ]
         cursor: {batchSize: *NumDocs}
-    - OperationMetricsName: GraphLookupUnshardedToUnsharded
+    - OperationMetricsName: GraphLookupUnshardedToUnshardedOneToFew
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection2
@@ -107,6 +109,76 @@ Actors:
               startWith: "$a",
               connectFromField: "a",
               connectToField: "b",
+              as: "matches",
+              maxDepth: 1
+            }},
+            {$project: {s: 0, "matches.s": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: GraphLookupShardedToUnshardedOneToMany
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$graphLookup: {
+              from: "Collection1",
+              startWith: "$d",
+              connectFromField: "d",
+              connectToField: "e",
+              as: "matches",
+              maxDepth: 1
+            }},
+            {$project: {s: 0, "matches.s": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: GraphLookupUnshardedToUnshardedOneToMany
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection2
+        pipeline:
+          [
+            {$graphLookup: {
+              from: "Collection1",
+              startWith: "$d",
+              connectFromField: "d",
+              connectToField: "e",
+              as: "matches",
+              maxDepth: 1
+            }},
+            {$project: {s: 0, "matches.s": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: GraphLookupShardedToUnshardedMatchAllShards
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$match: {a: {$lte: 30}}},
+            {$graphLookup: {
+              from: "Collection1",
+              startWith: "$d",
+              connectFromField: "d",
+              connectToField: "e",
+              as: "matches",
+              maxDepth: 1
+            }},
+            {$project: {s: 0, "matches.s": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: GraphLookupShardedToUnshardedMatchSomeShards
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$match: {c: {$in: [1, 2, 3]}}},
+            {$graphLookup: {
+              from: "Collection1",
+              startWith: "$d",
+              connectFromField: "d",
+              connectToField: "e",
               as: "matches",
               maxDepth: 1
             }},
