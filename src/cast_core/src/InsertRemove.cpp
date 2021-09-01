@@ -83,7 +83,7 @@ InsertRemove::InsertRemove(genny::ActorContext& context)
       _rng{context.workload().getRNGForThread(InsertRemove::id())},
       _insert{context.operation("Insert", InsertRemove::id())},
       _remove{context.operation("Remove", InsertRemove::id())},
-      _client{std::move(context.client())},
+      _client{std::move(context.client(v1::DEFAULT_CLIENT_NAME, InsertRemove::id()))},
       _loop{context, _rng, _client, InsertRemove::id()} {}
 
 namespace {

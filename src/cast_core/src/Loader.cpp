@@ -173,7 +173,7 @@ Loader::Loader(genny::ActorContext& context, uint thread, size_t totalThreads)
       _totalBulkLoad{context.operation("TotalBulkInsert", Loader::id())},
       _individualBulkLoad{context.operation("IndividualBulkInsert", Loader::id())},
       _indexBuild{context.operation("IndexBuild", Loader::id())},
-      _client{std::move(context.client())},
+      _client{std::move(context.client(v1::DEFAULT_CLIENT_NAME, Loader::id()))},
       _loop{context, _client, thread, totalThreads, Loader::id()} {}
 
 class LoaderProducer : public genny::ActorProducer {

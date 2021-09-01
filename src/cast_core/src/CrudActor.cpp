@@ -1229,7 +1229,7 @@ void CrudActor::run() {
 CrudActor::CrudActor(genny::ActorContext& context)
     : Actor(context),
       _client{std::move(
-          context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
+          context.client(context.get("ClientName").maybe<std::string>().value_or(v1::DEFAULT_CLIENT_NAME), CrudActor::id()))},
       _loop{context, _client, CrudActor::id()} {}
 
 namespace {

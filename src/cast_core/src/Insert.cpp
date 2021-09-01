@@ -60,7 +60,7 @@ void Insert::run() {
 Insert::Insert(genny::ActorContext& context)
     : Actor(context),
       _insert{context.operation("Insert", Insert::id())},
-      _client{std::move(context.client())},
+      _client{std::move(context.client(v1::DEFAULT_CLIENT_NAME, Insert::id()))},
       _loop{context, (*_client)[context["Database"].to<std::string>()], Insert::id()} {}
 
 namespace {

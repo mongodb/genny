@@ -68,7 +68,7 @@ void Deleter::run() {
 
 Deleter::Deleter(genny::ActorContext& context)
     : Actor{context},
-      _client{context.client()},
+      _client{context.client(v1::DEFAULT_CLIENT_NAME, Deleter::id())},
       _loop{context, (*_client)[context["Database"].to<std::string>()], Deleter::id()} {}
 
 namespace {

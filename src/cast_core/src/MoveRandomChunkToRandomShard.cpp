@@ -132,7 +132,7 @@ void MoveRandomChunkToRandomShard::run() {
 MoveRandomChunkToRandomShard::MoveRandomChunkToRandomShard(genny::ActorContext& context)
     : Actor{context},
       _rng{context.workload().getRNGForThread(MoveRandomChunkToRandomShard::id())},
-      _client{context.client()},
+      _client{context.client(v1::DEFAULT_CLIENT_NAME, MoveRandomChunkToRandomShard::id())},
       _loop{context, MoveRandomChunkToRandomShard::id()} {}
 
 namespace {

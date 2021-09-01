@@ -60,7 +60,11 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
     std::unique_lock<std::mutex> lock{lap.first};
 
     Pools& pools = lap.second;
-
+    auto perInstance =
+        context["Clients"][name]["PerInstance"].maybe<bool>().value_or(false);
+    if (!perInstance) {
+        instance = 0;
+    }
     auto& pool = pools[instance];
     if (pool == nullptr) {
         pool = createPool(this->_mongoUri, name, this->_apmCallback, context);

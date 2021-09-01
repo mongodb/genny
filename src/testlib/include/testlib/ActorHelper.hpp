@@ -77,7 +77,7 @@ public:
     }
 
     auto client() {
-        return workload()->client("Default");
+        return workload()->client(v1::DEFAULT_CLIENT_NAME);
     }
 
     WorkloadContext* workload() {

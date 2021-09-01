@@ -64,7 +64,7 @@ void QuiesceActor::run() {
 QuiesceActor::QuiesceActor(genny::ActorContext& context)
     : Actor{context},
       _totalQuiesces{context.operation("Quiesce", QuiesceActor::id())},
-      _client{context.client()},
+      _client{context.client(v1::DEFAULT_CLIENT_NAME, QuiesceActor::id())},
       _loop{context} {}
 
 namespace {

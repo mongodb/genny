@@ -43,6 +43,12 @@ Clients:
   SomeOtherPool:
     QueryOptions:
       maxPoolSize: 400
+  PerInstanceClient:
+    # Create a pool for each actor instance.
+    PerInstance: true
+    QueryOptions:
+      maxPoolSize: 5
+
 
 Actors:
 - Name: Generator Examples

@@ -516,7 +516,7 @@ void CollectionScanner::run() {
 CollectionScanner::CollectionScanner(genny::ActorContext& context)
     : Actor{context},
       _totalInserts{context.operation("Insert", CollectionScanner::id())},
-      _client{context.client()},
+      _client{context.client(v1::DEFAULT_CLIENT_NAME, CollectionScanner::id() )},
       _index{WorkloadContext::getActorSharedState<CollectionScanner, ActorCounter>().fetch_add(1)},
       _runningActorCounter{
           WorkloadContext::getActorSharedState<CollectionScanner, RunningActorCounter>()},

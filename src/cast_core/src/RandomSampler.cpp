@@ -87,7 +87,7 @@ void RandomSampler::run() {
 
 RandomSampler::RandomSampler(genny::ActorContext& context)
     : Actor{context},
-      _client{context.client()},
+      _client{context.client(v1::DEFAULT_CLIENT_NAME, RandomSampler::id())},
       _index{WorkloadContext::getActorSharedState<RandomSampler, ActorCounter>().fetch_add(1)},
       _activeCollectionScannerInstances{
           WorkloadContext::getActorSharedState<CollectionScanner,

@@ -201,7 +201,7 @@ public:
      * @throws
      *   InvalidConfigurationException if no connections available.
      */
-    mongocxx::pool::entry client(const std::string& name = "Default", size_t instance = 0);
+    mongocxx::pool::entry client(const std::string& name = v1::DEFAULT_CLIENT_NAME, size_t instance = 0);
 
     /**
      * Get states that can be shared across actors using the same WorkloadContext.

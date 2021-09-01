@@ -27,6 +27,8 @@
 
 namespace genny::v1 {
 
+const std::string DEFAULT_CLIENT_NAME = "Default";
+
 /**
  * A wrapper atop `PoolFactory` that manages a set of pools' lifecycles.
  */

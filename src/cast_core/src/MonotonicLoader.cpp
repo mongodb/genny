@@ -139,7 +139,7 @@ MonotonicLoader::MonotonicLoader(genny::ActorContext& context, uint thread)
       _totalBulkLoad{context.operation("TotalBulkInsert", MonotonicLoader::id())},
       _individualBulkLoad{context.operation("IndividualBulkInsert", MonotonicLoader::id())},
       _indexBuild{context.operation("IndexBuild", MonotonicLoader::id())},
-      _client{std::move(context.client())},
+      _client{std::move(context.client(v1::DEFAULT_CLIENT_NAME, MonotonicLoader::id()))},
       _loop{context, _client, thread, MonotonicLoader::id()} {}
 
 class MonotonicLoaderProducer : public genny::ActorProducer {
