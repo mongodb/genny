@@ -34,7 +34,7 @@ Actors:
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0 # Collection0 is the default collection populated by the Loader.
+        shardCollection: test.Collection0  # Collection0 is the default collection populated by the Loader.
         key:
           _id: 1
   - *Nop
@@ -83,18 +83,18 @@ Actors:
 # to avoid connection closing
 - Name: LoggingActor
   Type: LoggingActor
-  Threads: 1 # must be 1
+  Threads: 1  # must be 1
   Phases:
-  - LogEvery: 10 second # TimeSpec
-    Blocking: None # must be Blocking:None
-  - LogEvery: 10 second # TimeSpec
-    Blocking: None # must be Blocking:None
-  - LogEvery: 10 second # TimeSpec
-    Blocking: None # must be Blocking:None
-  - LogEvery: 1 minute # TimeSpec
-    Blocking: None # must be Blocking:None
+  - LogEvery: 10 second  # TimeSpec
+    Blocking: None  # must be Blocking:None
+  - LogEvery: 10 second  # TimeSpec
+    Blocking: None  # must be Blocking:None
+  - LogEvery: 10 second  # TimeSpec
+    Blocking: None  # must be Blocking:None
+  - LogEvery: 1 minute  # TimeSpec
+    Blocking: None  # must be Blocking:None
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq: shard-single
+- When:
+    mongodb_setup:
+      $eq: shard-single

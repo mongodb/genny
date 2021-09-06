@@ -45,98 +45,98 @@ Actors:
     - OperationMetricsName: MovingAvgPositionBased
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{$setWindowFields: {
-                partitionBy: "$partitionKey",
-                sortBy: {time: 1},
-                output: {avg: {$avg: "$temp", window: {documents: [-5, 5]}}}}}]
-          cursor: {batchSize: *batchSize}
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {avg: {$avg: "$temp", window: {documents: [-5, 5]}}}}}]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: MovingAvgTimeBased
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{$setWindowFields: {
-                partitionBy: "$partitionKey",
-                sortBy: {time: 1},
-                output: {avg: {$avg: "$temp", window: {range: [-1, 0], unit: "hour"}}}}}]
-          cursor: {batchSize: *batchSize}
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {avg: {$avg: "$temp", window: {range: [-1, 0], unit: "hour"}}}}}]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: MinPositionBased
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{$setWindowFields: {
-                partitionBy: "$partitionKey",
-                sortBy: {time: 1},
-                output: {min: {$min: "$temp", window: {documents: [-5, 5]}}}}}]
-          cursor: {batchSize: *batchSize}
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {min: {$min: "$temp", window: {documents: [-5, 5]}}}}}]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: MinTimeBased
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{$setWindowFields: {
-                partitionBy: "$partitionKey",
-                sortBy: {time: 1},
-                output: {min: {$min: "$temp", window: {range: [-1, 0], unit: "hour"}}}}}]
-          cursor: {batchSize: *batchSize}
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {min: {$min: "$temp", window: {range: [-1, 0], unit: "hour"}}}}}]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExpMovingAvgSmallN
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{$setWindowFields: {
-                partitionBy: "$partitionKey",
-                sortBy: {time: 1},
-                output: {ema: {$expMovingAvg: {input: "$temp", N: 10}}}}}]
-          cursor: {batchSize: *batchSize}
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {ema: {$expMovingAvg: {input: "$temp", N: 10}}}}}]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExpMovingAvgLargeN
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{$setWindowFields: {
-                partitionBy: "$partitionKey",
-                sortBy: {time: 1},
-                output: {ema: {$expMovingAvg: {input: "$temp", N: 500}}}}}]
-          cursor: {batchSize: *batchSize}
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {ema: {$expMovingAvg: {input: "$temp", N: 500}}}}}]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: DerivativeSmallWindow
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{$setWindowFields: {
-                partitionBy: "$partitionKey",
-                sortBy: {time: 1},
-                output: {rate: {
-                  $derivative: {input: "$temp", unit: "second"},
-                  window: {documents: [-10, 0]}}}}}]
-          cursor: {batchSize: *batchSize}
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {rate: {
+              $derivative: {input: "$temp", unit: "second"},
+              window: {documents: [-10, 0]}}}}}]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: DerivativeLargeWindow
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{$setWindowFields: {
-                partitionBy: "$partitionKey",
-                sortBy: {time: 1},
-                output: {rate: {
-                  $derivative: {input: "$temp", unit: "second"},
-                  window: {documents: [-500, 0]}}}}}]
-          cursor: {batchSize: *batchSize}
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {rate: {
+              $derivative: {input: "$temp", unit: "second"},
+              window: {documents: [-500, 0]}}}}}]
+        cursor: {batchSize: *batchSize}
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - standalone
-          - replica
-          - replica-all-feature-flags
-          - shard-lite
-      branch_name:
-        $neq:
-          - v4.0
-          - v4.2
-          - v4.4
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - replica
+      - replica-all-feature-flags
+      - shard-lite
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4

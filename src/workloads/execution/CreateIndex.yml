@@ -59,13 +59,13 @@ Actors:
         Repeat: 5
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - replica
-          - single-replica
-          - standalone
-      branch_name:
-        $neq:
-          - v4.0
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas
+      - replica
+      - single-replica
+      - standalone
+    branch_name:
+      $neq:
+      - v4.0

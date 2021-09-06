@@ -237,13 +237,13 @@ Actors:
         writeConcern: {w: majority}
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - replica
-          - replica-all-feature-flags
-          - standalone
-      branch_name:
-        $neq:
-          - v4.0
+- When:
+  mongodb_setup:
+    $eq:
+    - atlas
+    - replica
+    - replica-all-feature-flags
+    - standalone
+  branch_name:
+    $neq:
+    - v4.0

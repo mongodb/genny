@@ -31,7 +31,7 @@ Actors:
     - keys: {x: 1, y: 1}
     - keys: {x: 1, y: 1, b: 1}
     - keys: {arr: 1, z: 1}
-    - keys: {arr: 1, b : 1}
+    - keys: {arr: 1, b: 1}
     - keys: {a: "text"}
     - keys: {a: 1}
       options: {sparse: true}
@@ -66,7 +66,7 @@ Actors:
         Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
   - *Nop
   - *Nop
-    
+
 - Name: CrudWithValidation
   Type: CrudActor
   Database: *db
@@ -117,10 +117,10 @@ Actors:
         background: true
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq: standalone
-      branch_name:
-        $neq:
-          - v4.0
-          - v4.2
+- When:
+  mongodb_setup:
+    $eq: standalone
+  branch_name:
+    $neq:
+    - v4.0
+    - v4.2
