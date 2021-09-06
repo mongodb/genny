@@ -15,7 +15,7 @@ def main(genny_repo_root: str):
         path.join(genny_repo_root, "src", "resmokeconfig"),
     ]
 
-    yaml_files = [path.join(os.getcwd(), "evergreen.yml")]
+    yaml_files = [path.join(genny_repo_root, "evergreen.yml")]
 
     has_error = False
 
