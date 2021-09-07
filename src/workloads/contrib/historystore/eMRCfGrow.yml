@@ -85,8 +85,7 @@ Actors:
   Database: *TestDB
   Threads: 10
   Phases:
-  - &ChurnPhase
-    Repeat: 50000
+  - Repeat: 50000
     Collection: Collection0
     Operations:
     - OperationName: updateOne
@@ -133,8 +132,7 @@ Actors:
   Database: *TestDB
   Threads: 1
   Phases:
-  - &ChurnPhase
-    Repeat: 50000
+  - Repeat: 50000
     Collection: Collection0
     Operations:
     - OperationName: updateOne
