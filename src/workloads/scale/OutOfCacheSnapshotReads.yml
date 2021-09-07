@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: Replication
+Description: |
+  TODO: TIG-3321
 
 Clients:
   Default:

@@ -1,5 +1,8 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/stm"
+Owner: "@10gen/dev-prod-tips"
+Description: |
+  This workload demonstrates the RunCommand and AdminCommand actors, which can be used to
+  run commands against a target server.
 
 Actors:
 - Name: ServerStatusInsertFind

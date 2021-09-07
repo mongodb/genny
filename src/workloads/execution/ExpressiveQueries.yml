@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
+Description: |
+  TODO: TIG-3324
 
 Actors:
 

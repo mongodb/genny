@@ -1,6 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 # this workload created to reproduce SERVER-53853
+Description: |
+  TODO: TIG-3318
 
 Clients:
   Default:

@@ -1,5 +1,8 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/stm"
+Owner: "@10gen/dev-prod-tips"
+Description: |
+  This workload shows off the actor template utility, which can be used to create a general
+  actor template which can then be instantiated with parameters substituted.
 
 ActorTemplates:
 - TemplateName: HelloTemplate

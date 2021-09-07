@@ -1,5 +1,8 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/stm"
+Owner: "@10gen/dev-prod-tips"
+Description: |
+  This workload exhibits various generators, performing insertions to show them off.
+  Follow the inline commentary to learn more about them.
 
 # This workload demonstrates all the current Document and Value Generators. It creates documents
 # that look like this (simple)

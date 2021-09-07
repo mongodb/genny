@@ -2,6 +2,8 @@
 
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/replication"
+Description: |
+  TODO: TIG-3321
 
 Actors:
 

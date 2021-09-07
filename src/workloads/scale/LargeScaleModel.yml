@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
+Description: |
+  TODO: TIG-3319
 
 # This is the "model" workload for the Large Scale Workload Automation project.
 # At present, it is set up to run the basic workload, but will evolve.

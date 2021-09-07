@@ -28,7 +28,8 @@ def main(genny_repo_root: str):
 
     all_have_descriptions = True
     for workload_yaml in workload_yamls:
-        all_have_descriptions = check_description(workload_yaml)
+        if not check_description(workload_yaml):
+            all_have_descriptions = False
     if not all_have_descriptions:
         SLOG.error("The above YAML workloads lack a Description field. This field should be populated with a human-readable description "
                    "of the workload and its output metrics. After doing so, please re-run ./run-genny lint-yaml")
@@ -39,7 +40,7 @@ def main(genny_repo_root: str):
 
     SLOG.info(
         "Linting workload YAML files with yamllint",
-        count=len(yaml_files),
+        count=len(all_yamls),
         yamllint_argv=yamllint_argv,
     )
 
