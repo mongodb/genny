@@ -23,7 +23,9 @@ def main(genny_repo_root: str):
     all_yamls = workload_yamls + resmoke_yamls + evergreen_yamls
 
     if workload_error or resmoke_error or evergreen_error:
-        SLOG.error("Found invalidly-named yaml files. Please correct and rerun ./run-genny lint-yaml.")
+        SLOG.error(
+            "Found invalidly-named yaml files. Please correct and rerun ./run-genny lint-yaml."
+        )
         sys.exit(1)
 
     all_have_descriptions = True
@@ -31,8 +33,10 @@ def main(genny_repo_root: str):
         if not check_description(workload_yaml):
             all_have_descriptions = False
     if not all_have_descriptions:
-        SLOG.error("The above YAML workloads lack a Description field. This field should be populated with a human-readable description "
-                   "of the workload and its output metrics. After doing so, please re-run ./run-genny lint-yaml")
+        SLOG.error(
+            "The above YAML workloads lack a Description field. This field should be populated with a human-readable description "
+            "of the workload and its output metrics. After doing so, please re-run ./run-genny lint-yaml"
+        )
         sys.exit(1)
 
     config_file_path = path.join(os.getcwd(), ".yamllint")
@@ -56,7 +60,6 @@ def check_description(yaml_path):
 
 
 def _traverse_yamls(roots):
-
     def check_filename(filename):
         if filename.endswith(".yaml"):
             SLOG.error("All YAML files should have the .yml extension", found=filename)
@@ -79,6 +82,7 @@ def _traverse_yamls(roots):
         SLOG.error("Did not find any YAML files to lint", in_dirs=directories)
         raise Exception("No yamls found")
     return yaml_files, has_error
+
 
 def _load_yaml(yaml_path):
     with open(yaml_path) as file:
