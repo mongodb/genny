@@ -54,6 +54,6 @@ Actors:
     ScanType: Standard
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq: single-replica-15gbwtcache
+- When:
+    mongodb_setup:
+      $eq: single-replica-15gbwtcache

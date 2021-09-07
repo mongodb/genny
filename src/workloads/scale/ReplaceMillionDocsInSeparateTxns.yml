@@ -4,7 +4,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 
-Document: &Doc # The size of each document is about 2kb.
+Document: &Doc  # The size of each document is about 2kb.
   a: 1
   x: {^RandomInt: {min: 0, max: 2147483647}}
   string0: {^FastRandomString: {length: 2000}}
@@ -133,7 +133,7 @@ Actors:
   - *Nop
   - MetricsName: TotalModificationTime
     Repeat: 10000
-    Collection: &Coll Collection0 # This is the default collection populated by the Loader.
+    Collection: &Coll Collection0  # This is the default collection populated by the Loader.
     ThrowOnFailure: false  # Transactions are allowed to fail.
     RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
     Operations:

@@ -12,7 +12,7 @@ Actors:
   Phases:
   - Repeat: 1
     CollectionWindowSize: 10
-    Document: {a: {^RandomString: {length: 30}}, z : {^RandomInt: {min: 100, max: 200}}}
+    Document: {a: {^RandomString: {length: 30}}, z: {^RandomInt: {min: 100, max: 200}}}
     DocumentCount: 1000
     Indexes:
     - keys: {a: 1}
@@ -54,7 +54,7 @@ Actors:
   Phases:
   - {Nop: true}
   - Duration: *Duration
-    Document: {a: {^RandomString: {length: 30}}, z : {^RandomInt: {min: 100, max: 200}}}
+    Document: {a: {^RandomString: {length: 30}}, z: {^RandomInt: {min: 100, max: 200}}}
 
 - Name: Reader
   Type: RollingCollections
@@ -87,5 +87,5 @@ Actors:
   Threads: 1
   Operation: OplogTailer
   Phases:
-  - {Nop : true}
+  - {Nop: true}
   - Duration: *Duration

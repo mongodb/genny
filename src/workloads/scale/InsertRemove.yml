@@ -15,13 +15,13 @@ Actors:
     Database: test
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - replica
-          - single-replica
-          - standalone
-          - shard
-          - replica-1dayhistory-15gbwtcache
-          - replica-all-feature-flags
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas
+      - replica
+      - single-replica
+      - standalone
+      - shard
+      - replica-1dayhistory-15gbwtcache
+      - replica-all-feature-flags

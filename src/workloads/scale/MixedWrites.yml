@@ -36,9 +36,9 @@ Actors:
           Timeout: 6000 milliseconds
 
 AutoRun:
-  - When:
-      infrastructure_provisioning:
-        $eq: replica
-    ThenRun:
-      - mongodb_setup: replica-delay-mixed
-      - mongodb_setup: replica
+- When:
+    infrastructure_provisioning:
+      $eq: replica
+  ThenRun:
+  - mongodb_setup: replica-delay-mixed
+  - mongodb_setup: replica

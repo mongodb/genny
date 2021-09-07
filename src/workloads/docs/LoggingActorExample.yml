@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner:  "@mongodb/stm"
+Owner: "@mongodb/stm"
 
 Description:
   The LoggingActor exists so DSI and Evergreen don't quit
@@ -26,8 +26,8 @@ Description:
 Actors:
 - Name: LoggingActor
   Type: LoggingActor
-  Threads: 1 # must be 1
+  Threads: 1  # must be 1
   Phases:
   - Phase: 0
-    LogEvery: 15 minutes # TimeSpec
-    Blocking: None # must be Blocking:None
+    LogEvery: 15 minutes  # TimeSpec
+    Blocking: None  # must be Blocking:None

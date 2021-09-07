@@ -7,14 +7,14 @@ Description: |
 GlobalDefaults:
   TrackProportion: &TrackProportion 0
 
-  LongLivedDB: &LongLivedDB longlived # name of the long lived database
+  LongLivedDB: &LongLivedDB longlived  # name of the long lived database
   LongLivedCollectionCount: &LongLivedCollectionCount 1000
   LongLivedDocumentCount: &LongLivedDocumentCount 1000
 
   ScannerHotDB: &ScannerHotDB rolling
 
-  LongLivedWrites: &LongLivedWrites 600 per 1 second # x5 threads
-  LongLivedReads: &LongLivedReads 20 per 1 second    # x10 threads
+  LongLivedWrites: &LongLivedWrites 600 per 1 second  # x5 threads
+  LongLivedReads: &LongLivedReads 20 per 1 second     # x10 threads
 
   binomial_10k_int: &binomial_10k_int {^RandomInt: {distribution: binomial, t: 1000, p: 0.5}}
 
@@ -98,8 +98,8 @@ Actors:
       Key: SnapshotScanner10GigabytesFixedRateCmd
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - single-replica
-          - replica-noflowcontrol
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica
+      - replica-noflowcontrol

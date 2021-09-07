@@ -27,6 +27,6 @@ Actors:
       OperationName: RunCommand
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq: standalone-dsi-integration-test
+- When:
+    mongodb_setup:
+      $eq: standalone-dsi-integration-test
