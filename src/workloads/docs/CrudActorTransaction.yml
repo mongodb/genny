@@ -2,7 +2,7 @@ SchemaVersion: 2018-07-01
 Owner: "@10gen/dev-prod-tips"
 Description: |
   This workload provides an example of using the CrudActor with a transaction. The
-  behavior is largely the same, nesting operations inside the transaction block. 
+  behavior is largely the same, nesting operations inside the transaction block.
 
 Actors:
 - Name: BulkWriteInTransaction
