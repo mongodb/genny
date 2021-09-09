@@ -1,0 +1,159 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+
+description: |
+  TODO: This Actor does not exist yet. It will be implemented in PERF-2516.
+  The State Machine Crud Actor implements a FSM with crud operations. Choices are declared with
+  weights, which are converted into probabilities.
+
+  There is an initial state vector, with weight. Each actor instance will probabilistically and
+  independently choose it's initial state based on the weights.
+
+  Each state specifies a list of transitions. The next transition is picked probabilistically, based
+  on the transition weights. Each transition specifies a delay, thens executes a (possibly empty) set
+  of operations, before transitioning to the next state. The state itself may execute its own set of
+  operations.
+
+  By default the system will measure the latency to execute each set of operations (per transition
+  or per state), and each operation. The latencies associated with each transition and state are
+  tracked separately.
+
+  This example workload is a toy example modeling the state of a device. It has four states: On,
+  Off, Sleep, and Error, transitioning between those states. The workload does two things as it
+  executes. 1. It tracks it's current state in one document (update operations). 2. It counts the
+  number of transitions from state On to each of the other three states (also update operations).
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 100
+
+Actors:
+# Preload some documents
+- Name: SetupDemo
+  Type: Crud
+  Threads: 1
+  Database: StateTest
+  Phases:
+  - Repeat: 1
+    Collection: CrudDemo
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: insertOne
+          Document: {doc: 1, state: "Off"}
+        - WriteCommand: insertOne
+          Document: {stat: "OnOff", count: 0}
+        - WriteCommand: insertOne
+          Document: {stat: "OnSleep", count: 0}
+        - WriteCommand: insertOne
+          Document: {stat: "OnError", count: 0}
+    - &nop {Nop: true}
+    - *nop
+
+- Name: StateDemo
+  Type: CrudState
+  Threads: 1
+  Database: StateTest
+  Phases:
+  - *nop
+  - Duration: 30 seconds
+    Collection: CrudDemo
+    States:
+    - Name: "On"  # The device is on
+      Operations:
+      # A state can have (optional) a set of operations that execute upon entering the state. This
+      # state updates a specific document to indicate it is in state On.
+      - OperationName: updateOne
+        OperationCommand:
+          Filter: &filter {doc: 1}
+          Update:
+            $set: {state: "On"}
+
+      # Transitions specifies next states, delays, and operations. The On state can transition to
+      # each of the three other states
+      Transitions:
+      - To: "Off"  # Transition to this state
+        Weight: 1
+        # The delay is the time before firing the operations. It can be any generator. The time is
+        # in seconds. In this example it will take a uniform amount of time between 0 and 15 seconds
+        # to execute. The time should be a floating point number.
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+          # You can specify the time units. Seconds is the default value and may be ommitted. Valid
+          # choices are microseconds, milliseconds, seconds, minutes, hours
+          Units: seconds
+        Operations:
+        - OperationName: updateOne
+          OperationCommand:
+            Filter: {stat: "OnOff"}
+            Update:
+              $inc: {count: 1}
+      - To: "Sleep"
+        Weight: 2
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+        Operations:
+        - OperationName: updateOne
+          OperationCommand:
+            Filter: {stat: "OnSleep"}
+            Update:
+              $inc: {count: 1}
+      - To: "Error"
+        Weight: 0.2
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+        Operations:
+        - OperationName: updateOne
+          OperationCommand:
+            Filter: {stat: "OnError"}
+            Update:
+              $inc: {count: 1}
+
+    - Name: "Off"  # The device is Off
+      Operations:
+      - OperationName: updateOne
+        OperationCommand:
+          Filter: &filter {doc: 1}
+          Update:
+            $set: {state: "Off"}
+      Transitions:  # Can only go to On from Off
+      - To: "On"
+        Weight: 1
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+
+    - Name: Sleep
+      Operations:
+      - OperationName: updateOne
+        OperationCommand:
+          Filter: &filter {doc: 1}
+          Update:
+            $set: {state: "Sleep"}
+      Transitions:  # Can only go to On or Off from sleep
+      - To: "On"
+        Weight: 1
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+      - To: "Off"
+        Weight: 1
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+    - Name: Error
+      Operations:
+      - OperationName: updateOne
+        OperationCommand:
+          Filter: &filter {doc: 1}
+          Update:
+            $set: {state: "Error"}
+      Transitions:  # Turn off on error
+      - To: "Off"
+        Weight: 1
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+
+    # In this example we always start in the off State
+    InitialStates:
+    - "Off":
+        Weight: 1
