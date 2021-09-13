@@ -26,7 +26,7 @@ _print_diagnostics() {
     if [ -n "$_HAVE_PRINTED_DIAGNOSTICS" ]; then
         return
     fi
-    echo >&2 "If you're stuck, please reach out to the #workload-generation MongoDB slack channel and paste this output."
+    echo >&2 "If you're stuck, please reach out to the #performance-tooling-users MongoDB slack channel and paste this output."
     echo >&2 ""
     echo >&2 "  git rev-parse HEAD: $(git rev-parse HEAD)"
     echo >&2 "  uname -a:           $(uname -a)"

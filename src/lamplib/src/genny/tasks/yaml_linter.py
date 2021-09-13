@@ -39,7 +39,7 @@ def main(genny_repo_root: str):
         )
         sys.exit(1)
 
-    config_file_path = path.join(os.getcwd(), ".yamllint")
+    config_file_path = path.join(genny_repo_root, ".yamllint")
     yamllint_argv = ["--strict", "--config-file", config_file_path] + all_yamls
 
     SLOG.info(
