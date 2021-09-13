@@ -230,6 +230,7 @@ task_groups:
   - t_compile
   - t_python_test
   - t_lint_python
+  - t_lint_workloads
   - t_cmake_test
   - t_integration_test_single_node_replset
   - t_integration_test_three_node_replset
@@ -339,7 +340,6 @@ functions:
       binary: ./src/genny/run-genny
       args:
       - -v
-      # TODO: this fails right now - should show up in patch-build; need to remove this task and TODO as a ticket
       - lint-yaml
 
   ##
