@@ -618,11 +618,9 @@ cat << EOF
 
 Build and test ${actor_name} with the following command:
 
-    # TODO: these paths aren't right any more
-    ./scripts/lamp
-    ./scripts/lamp cmake-test
-    ./scripts/get-mongo-source.sh
-    ./scripts/lamp resmoke-test --suites src/resmokeconfig/genny_standalone.yml
+    ./run-genny install
+    ./run-genny cmake-test
+    ./run-genny resmoke-test --suites src/resmokeconfig/genny_standalone.yml
 
 The resmoke-test will fail because there is a "hidden" bug in the generated
 integration-test-case that you are expected to find as a part of reading through
@@ -630,7 +628,7 @@ the generated code.
 
 Run your workload as follows:
 
-    ./dist/bin/genny run \\
+    ./run-genny workload -- run \\
         --workload-file       ./src/workloads/docs/${actor_name}.yml \\
         --metrics-format      csv \\
         --metrics-output-file build/genny-metrics.csv \\
