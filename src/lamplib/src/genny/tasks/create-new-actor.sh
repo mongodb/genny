@@ -461,7 +461,10 @@ create_workload_yml() {
     actor_name="$1"
 cat << EOF > "$GENNY_REPO_ROOT/src/workloads/docs/${actor_name}.yml"
 SchemaVersion: 2018-07-01
-Owner: TODO put your github team name here e.g. @mongodb/stm
+Owner: TODO put your github team name here e.g. @10gen/dev-prod-tips
+Description: |
+  TODO describe your workload. For an example description, check out
+  src/workloads/selftests/GennyOverhead.yml.
 
 # TODO: delete this file or add a meaningful workload using or
 #       demonstrating your Actor
