@@ -156,7 +156,6 @@ class AutoRunBlock(NamedTuple):
     when: dict
     then_run: dict
 
-
 class Workload:
     """
     Represents a workload yaml file.
@@ -176,6 +175,7 @@ class Workload:
         self.is_modified = is_modified
 
         conts = reader.load(workspace_root, self.file_path)
+        SLOG.info(f"Running auto-tasks for workload: {self.file_path}")
 
         if "AutoRun" not in conts:
             return
