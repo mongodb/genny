@@ -18,6 +18,7 @@ from genny.tasks.auto_tasks import (
 
 SLOG = structlog.get_logger(__name__)
 
+
 class MockFile(NamedTuple):
     base_name: str
     modified: bool

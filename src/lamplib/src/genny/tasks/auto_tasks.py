@@ -156,6 +156,7 @@ class AutoRunBlock(NamedTuple):
     when: dict
     then_run: dict
 
+
 class Workload:
     """
     Represents a workload yaml file.
