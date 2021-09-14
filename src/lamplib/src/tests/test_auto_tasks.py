@@ -2,8 +2,10 @@ import json
 import shutil
 import unittest
 import tempfile
+import os
 from typing import NamedTuple, List, Optional
 from unittest.mock import MagicMock
+import structlog
 
 from genny.tasks.auto_tasks import (
     CurrentBuildInfo,
@@ -14,6 +16,7 @@ from genny.tasks.auto_tasks import (
     YamlReader,
 )
 
+SLOG = structlog.get_logger(__name__)
 
 class MockFile(NamedTuple):
     base_name: str
@@ -428,6 +431,39 @@ class AutoTasksTests(BaseTestClass):
             },
             to_file="./build/TaskJSON/Tasks.json",
         )
+
+
+def test_generate_all_tasks():
+    """This is a dry run of schedule_global_auto_tasks."""
+    genny_repo_root = os.environ.get("GENNY_REPO_ROOT", None)
+    workspace_root = "."
+    if not genny_repo_root:
+        raise Exception(
+            f"GENNY_REPO_ROOT env var {genny_repo_root} either not set or does not exist. "
+            f"This is set when you run through the 'run-genny' wrapper"
+        )
+    try:
+        reader = YamlReader()
+        build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
+        op = CLIOperation.create(
+            mode_name="all_tasks",
+            reader=reader,
+            genny_repo_root=genny_repo_root,
+            workspace_root=workspace_root,
+        )
+        lister = WorkloadLister(genny_repo_root=genny_repo_root, reader=reader)
+        repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
+        tasks = repo.tasks(op=op, build=build)
+
+        writer = ConfigWriter(op)
+        writer.write(tasks, False)
+    except Exception as e:
+        SLOG.error(
+            "'./run-genny auto-tasks --tasks all_tasks' is failing. "
+            "This is likely a user error in the auto_tasks syntax. "
+            "Refer to error msg for what needs to be fixed."
+        )
+        raise e
 
 
 if __name__ == "__main__":
