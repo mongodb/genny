@@ -131,7 +131,12 @@ class CLIOperation(NamedTuple):
 
 class CurrentBuildInfo:
     def __init__(self, reader: YamlReader, workspace_root: str):
-        self.conts = reader.load(workspace_root, "expansions.yml")
+        self.reader = reader
+        self.workspace_root = workspace_root
+        self.conts = self.expansions()
+
+    def expansions(self):
+        return self.reader.load(self.workspace_root, "expansions.yml")
 
     def has(self, key: str, acceptable_values: List[str]) -> bool:
         """

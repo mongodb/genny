@@ -5,6 +5,7 @@ import tempfile
 import os
 from typing import NamedTuple, List, Optional
 from unittest.mock import MagicMock
+from unittest.mock import patch
 import structlog
 
 from genny.tasks.auto_tasks import (
@@ -434,8 +435,9 @@ class AutoTasksTests(BaseTestClass):
         )
 
 
-def test_generate_all_tasks():
+def test_dry_run_all_tasks():
     """This is a dry run of schedule_global_auto_tasks."""
+
     genny_repo_root = os.environ.get("GENNY_REPO_ROOT", None)
     workspace_root = "."
     if not genny_repo_root:
@@ -444,20 +446,21 @@ def test_generate_all_tasks():
             f"This is set when you run through the 'run-genny' wrapper"
         )
     try:
-        reader = YamlReader()
-        build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
-        op = CLIOperation.create(
-            mode_name="all_tasks",
-            reader=reader,
-            genny_repo_root=genny_repo_root,
-            workspace_root=workspace_root,
-        )
-        lister = WorkloadLister(genny_repo_root=genny_repo_root, reader=reader)
-        repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
-        tasks = repo.tasks(op=op, build=build)
+        with patch.object(CurrentBuildInfo, "expansions", return_value={}):
+            reader = YamlReader()
+            build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
+            op = CLIOperation.create(
+                mode_name="all_tasks",
+                reader=reader,
+                genny_repo_root=genny_repo_root,
+                workspace_root=workspace_root,
+            )
+            lister = WorkloadLister(genny_repo_root=genny_repo_root, reader=reader)
+            repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
+            tasks = repo.tasks(op=op, build=build)
 
-        writer = ConfigWriter(op)
-        writer.write(tasks, False)
+            writer = ConfigWriter(op)
+            writer.write(tasks, False)
     except Exception as e:
         SLOG.error(
             "'./run-genny auto-tasks --tasks all_tasks' is failing. "
