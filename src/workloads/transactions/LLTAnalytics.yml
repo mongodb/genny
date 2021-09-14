@@ -31,14 +31,14 @@ GlobalDefaults:
     price: {^RandomDouble: {min: 0.0, max: 1000.0}}
     data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
     orders: {^Array: {of: {ts: { ^RandomDate: { min: "2011-01-01", max: "2021-01-01" }},
-                           quantity: { ^RandomInt: { min: 1, max: 100 } },
-                           unitPrice: { ^RandomDouble: {min: 0.0, max: 1000.0 } } },
+                          quantity: { ^RandomInt: { min: 1, max: 100 } },
+                          unitPrice: { ^RandomDouble: {min: 0.0, max: 1000.0 } } },
                       number: { ^RandomInt: { min: 0, max: 10 }} }}
 
   LLTIndexes: &LLTIndexes
-  - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
-  - keys: {price: 1, cuid: 1}            # Pc
-  - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
+    - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
+    - keys: {price: 1, cuid: 1}            # Pc
+    - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
 
   # Loader Config.
   LoadThreads: &LoadThreads 4
@@ -53,7 +53,7 @@ GlobalDefaults:
   PtcUpdateOperation: &PtcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {price: {'$gte': {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -67,7 +67,7 @@ GlobalDefaults:
   PcUpdateOperation: &PcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {'price': {'$gte': {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {'price': {'$gte' : {^RandomDouble: { min: 0.0, max: 500.0 }}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -81,7 +81,7 @@ GlobalDefaults:
   CpcUpdateOperation: &CpcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {'caid': {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Filter: {'caid':  {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -98,76 +98,76 @@ GlobalDefaults:
   SnapshotScannerLongDuration: &SnapshotScannerLongDuration 60 minutes
 
 ActorTemplates:
-- TemplateName: UpdateTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Short.Update.Baseline"}}
-    Type: CrudActor
-    Threads: *ThreadsValue
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [5]}}
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          GlobalRate: *GlobalRateValue
-          Threads: *ThreadsValue
-          CollectionCount: *CollectionCount
-          Database: *dbname
-          Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
-          Blocking: {^Parameter: {Name: "Blocking", Default: true}}
-          Operations:
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
+  - TemplateName: UpdateTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Short.Update.Baseline"}}
+      Type: CrudActor
+      Threads: *ThreadsValue
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "Active", Default: [5]}}
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            GlobalRate: *GlobalRateValue
+            Threads: *ThreadsValue
+            CollectionCount: *CollectionCount
+            Database: *dbname
+            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
+            Blocking:  {^Parameter: {Name: "Blocking", Default: yes}}
+            Operations:
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
 
-- TemplateName: ScanTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Short.Scan.Snapshot"}}
-    Type: CollectionScanner
-    Threads: *CollectionCount
-    CollectionCount: *CollectionCount
-    Database: *dbname
-    GenerateCollectionNames: true
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [7]}}  # [7]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
-          # ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
-          ScanType: snapshot
-          # ScanContinuous: true
-          # GenerateCollectionNames: true
-          AggregatePipeline:
-            {array: [{"$match":{"cuid":{"$gte":500}}},
-                     {"$unwind": "$orders"},
-                     {"$group": {"_id": "$ts", "total": {"$sum":{ $multiply: ["$orders.unitPrice", "$orders.quantity"] }}}},
-                     {"$sort": {"_id":1}}]
-            }
-          AggregateOptions:
-            BatchSize: 1000
-            Comment: {^Parameter: {Name: "Comment", Default: "Aggregate.Snapshot"}}
-            AllowDiskUse: true  # Naming convention follows c++ driver rather than mongo shell.
+  - TemplateName: ScanTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Short.Scan.Snapshot"}}
+      Type: CollectionScanner
+      Threads: *CollectionCount
+      CollectionCount: *CollectionCount
+      Database: *dbname
+      GenerateCollectionNames: true
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "Active", Default: [7]}}# [7]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
+            #ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
+            ScanType: snapshot
+            #ScanContinuous: true
+            # GenerateCollectionNames: true
+            AggregatePipeline:
+              {array: [{"$match":{"cuid":{"$gte":500}}},
+                {"$unwind": "$orders"},
+                {"$group": {"_id": "$ts", "total": {"$sum":{ $multiply: [ "$orders.unitPrice", "$orders.quantity" ] }}}},
+                {"$sort": {"_id":1}}]
+              }
+            AggregateOptions:
+              BatchSize: 1000
+              Comment: {^Parameter: {Name: "Comment", Default: "Aggregate.Snapshot"}}
+              AllowDiskUse: true # Naming convention follows c++ driver rather than mongo shell.  
 
 Clients:
   Default:
@@ -192,7 +192,7 @@ Actors:
           OperationName: RunCommand
           OperationCommand:
             setParameter: 1
-            transactionLifetimeLimitSeconds: 14400  # 4 Hours
+            transactionLifetimeLimitSeconds: 14400 # 4 Hours
 
 - Name: InitialLoad
   Type: Loader
@@ -280,12 +280,12 @@ Actors:
       Active: [7]
       Comment: SnapshotAggregateLong
       Duration: *SnapshotScannerLongDuration
-      # ScanDuration: *SnapshotScannerLongDuration
+      #ScanDuration: *SnapshotScannerLongDuration
 
-# AutoRun:
-#   Requires:
-#     mongodb_setup:
-#       - atlas
-#       - replica
-#       - replica-all-feature-flags
-#       - single-replica
+#AutoRun:
+#  Requires:
+#    mongodb_setup:
+#      - atlas
+#      - replica
+#      - replica-all-feature-flags
+#      - single-replica

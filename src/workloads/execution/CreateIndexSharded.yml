@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
-Description: |
-  TODO: TIG-3320
 
 Actors:
 - Name: EnableSharding
@@ -35,7 +33,7 @@ Actors:
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0  # Collection0 is the default collection populated by the Loader.
+        shardCollection: test.Collection0 # Collection0 is the default collection populated by the Loader.
         key:
           _id: hashed
   - *Nop
@@ -103,11 +101,11 @@ Actors:
         Duration: 5 minutes
 
 AutoRun:
-- When:
-  mongodb_setup:
-    $eq:
-    - shard
-    - shard-lite
-  branch_name:
-    $neq:
-    - v4.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard
+          - shard-lite
+      branch_name:
+        $neq:
+          - v4.0

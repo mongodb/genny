@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
+Owner: "@mongodb/stm"
 
 Description: |
 
@@ -20,12 +20,6 @@ Description: |
   Each iteration is craftered to take around 10s. More configurations
   can be added as needed, but unfortunately the "5 phases" building block
   can't be reused en masse because YAML doesn't support merging lists.
-
-  The primary metric recorded in this workload is the average duration
-  of each iteration.
-
-  This workload is intended to stress the Genny client itself, so should
-  be run with the smallest MongoDB setup.
 
 Actors:
 - Name: GennyOverhead100T
@@ -69,6 +63,6 @@ Actors:
     SleepAfter: 1 millisecond
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq: standalone
+  - When:
+      mongodb_setup:
+        $eq: standalone

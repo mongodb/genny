@@ -12,7 +12,7 @@ Description: |
 GlobalDefaults:
   NumDocsBase: &num_docs_base 95
   NumDocsAdded: &num_docs_added 2905
-  NumDocsTotal: &num_docs_total 3000  # Should be *num_docs_base + *num_docs_added
+  NumDocsTotal: &num_docs_total 3000 # Should be *num_docs_base + *num_docs_added
 
 Actors:
 - Name: CreateShardedCollections
@@ -55,16 +55,16 @@ Actors:
   Threads: 1
   Phases:
   - *Nop
-  # We want the size of 'Collection2' to be smaller than the other two collections for the queries
-  # where 'maxDepth' is not specified, so we first populate all three collections with the number of
-  # documents we want in 'Collection2' and then in the next phase add more to 'Collection0' and
+  # We want the size of 'Collection2' to be smaller than the other two collections for the queries 
+  # where 'maxDepth' is not specified, so we first populate all three collections with the number of 
+  # documents we want in 'Collection2' and then in the next phase add more to 'Collection0' and 
   # 'Collection1'.
   - Repeat: 1
     BatchSize: 1000
     Threads: 1
     DocumentCount: *num_docs_base
     Database: *Database
-    CollectionCount: 3  # Loader will populate 'Collection0', 'Collection1', and 'Collection2'.
+    CollectionCount: 3 # Loader will populate 'Collection0', 'Collection1', and 'Collection2'.
     Document:
       a: {^RandomInt: {min: 1, max: 100}}
       b: {^RandomInt: {min: 1, max: 100}}
@@ -74,7 +74,7 @@ Actors:
     Threads: 1
     DocumentCount: *num_docs_added
     Database: *Database
-    CollectionCount: 2  # Loader will add additional documents to 'Collection0' and 'Collection1'.
+    CollectionCount: 2 # Loader will add additional documents to 'Collection0' and 'Collection1'.
     Document:
       a: {^RandomInt: {min: 1, max: 100}}
       b: {^RandomInt: {min: 1, max: 100}}
@@ -108,29 +108,29 @@ Actors:
   - Repeat: 10
     Database: *Database
     Operations:
-    # The recursive targeted queries below work as follows: for each document X in Collection0
+    # The recursive targeted queries below work as follows: for each document X in Collection0 
     # we find any document Y in Collection0 where X's 'c' field (startWith) is equal to Y's 'b'
-    # (connectToField). Then, we look at Y's 'a' (connectFromField) value and find any document Z in
-    # Collection0 that has the same value for its 'b' (connectToField), and so on.
-    # Because the collection is sharded by 'b' the $graphLookup is targeted towards
+    # (connectToField). Then, we look at Y's 'a' (connectFromField) value and find any document Z in 
+    # Collection0 that has the same value for its 'b' (connectToField), and so on. 
+    # Because the collection is sharded by 'b' the $graphLookup is targeted towards 
     # specific shard(s).
 
     # Similarly, for the recursive untargeted queries below: for each document X in Collection0
-    # we find any document Y in Collection0 where X's 'c' value (startWith) is equal to Y's 'a'
+    # we find any document Y in Collection0 where X's 'c' value (startWith) is equal to Y's 'a' 
     # value (connectToField). Then, we look at Y's 'b' (connectFromField) and find any document Z
-    # in Collection0 that has the same value for its 'a' value (connectToField), and so on.
+    # in Collection0 that has the same value for its 'a' value (connectToField), and so on. 
     # Because the collection is sharded by 'b' and 'a' is the connectToField, the $graphLookup
     # is not targeted to any specific shard.
 
     # For the queries where the local collection is unsharded, the same flow as above applies except
     # we do the process for each document X in Collection1.
-
-    # It should be noted that the results of this test indicate that there is not much of a
+    
+    # It should be noted that the results of this test indicate that there is not much of a 
     # time difference between the different depth limited queries. One reason for this could be
     # that in an attempt to limit the result set size by starting with a field 'c' that has values
-    # in a smaller range, the cache fills up with most (if not all) relevant documents in only a
-    # few (relatively) rounds of recursion. This would explain the lack of difference between the
-    # targeted and untargeted queries, as well as the unsharded and sharded queries since the
+    # in a smaller range, the cache fills up with most (if not all) relevant documents in only a 
+    # few (relatively) rounds of recursion. This would explain the lack of difference between the 
+    # targeted and untargeted queries, as well as the unsharded and sharded queries since the 
     # unsharded case has a shared cache but the sharded case benefits from parallelism.
 
     # One other thing to note is that the results from the no recursion/depth limited cases cannot
@@ -145,10 +145,10 @@ Actors:
         pipeline:
           [{
             $graphLookup: {
-              from: "Collection0",
-              startWith: "$c",
-              connectFromField: "a",
-              connectToField: "b",
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "a", 
+              connectToField: "b", 
               as: "matches",
               maxDepth: 0
             }
@@ -165,10 +165,10 @@ Actors:
         pipeline:
           [{
             $graphLookup: {
-              from: "Collection0",
-              startWith: "$c",
-              connectFromField: "a",
-              connectToField: "b",
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "a", 
+              connectToField: "b", 
               as: "matches",
               maxDepth: 2
             }
@@ -185,18 +185,18 @@ Actors:
         pipeline:
           [{
             $graphLookup: {
-              from: "Collection0",
-              startWith: "$c",
-              connectFromField: "b",
-              connectToField: "a",
-              as: "matches",
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "b", 
+              connectToField: "a", 
+              as: "matches" ,
               maxDepth: 0
             }
           }]
         # To get meaningful results, the entire result set should fit in a single batch. This should
         # be possible since both collections are small.
         cursor: {batchSize: *num_docs_total}
-
+    
     # Untargeted $graphLookup from sharded collection to sharded collection, depth limited
     - OperationMetricsName: UntargetedGraphLookupShardedToShardedDepthLimited
       OperationName: RunCommand
@@ -205,10 +205,10 @@ Actors:
         pipeline:
           [{
             $graphLookup: {
-              from: "Collection0",
-              startWith: "$c",
-              connectFromField: "b",
-              connectToField: "a",
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "b", 
+              connectToField: "a", 
               as: "matches",
               maxDepth: 2
             }
@@ -225,10 +225,10 @@ Actors:
         pipeline:
           [{
             $graphLookup: {
-              from: "Collection0",
-              startWith: "$c",
-              connectFromField: "a",
-              connectToField: "b",
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "a", 
+              connectToField: "b", 
               as: "matches",
               maxDepth: 0
             }
@@ -245,10 +245,10 @@ Actors:
         pipeline:
           [{
             $graphLookup: {
-              from: "Collection0",
-              startWith: "$c",
-              connectFromField: "a",
-              connectToField: "b",
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "a", 
+              connectToField: "b", 
               as: "matches",
               maxDepth: 2
             }
@@ -265,10 +265,10 @@ Actors:
         pipeline:
           [{
             $graphLookup: {
-              from: "Collection0",
-              startWith: "$c",
-              connectFromField: "b",
-              connectToField: "a",
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "b", 
+              connectToField: "a", 
               as: "matches",
               maxDepth: 0
             }
@@ -276,7 +276,7 @@ Actors:
         # To get meaningful results, the entire result set should fit in a single batch. This should
         # be possible since both collections are small.
         cursor: {batchSize: *num_docs_total}
-
+    
     # Untargeted $graphLookup from unsharded collection to sharded collection, depth limited
     - OperationMetricsName: UntargetedGraphLookupUnshardedToShardedDepthLimited
       OperationName: RunCommand
@@ -285,10 +285,10 @@ Actors:
         pipeline:
           [{
             $graphLookup: {
-              from: "Collection0",
-              startWith: "$c",
-              connectFromField: "b",
-              connectToField: "a",
+              from: "Collection0", 
+              startWith: "$c", 
+              connectFromField: "b", 
+              connectToField: "a", 
               as: "matches",
               maxDepth: 2
             }
@@ -310,17 +310,17 @@ Actors:
         pipeline:
           [{
             $graphLookup: {
-              from: "Collection2",
-              startWith: "$c",
-              connectFromField: "a",
-              connectToField: "b",
+              from: "Collection2", 
+              startWith: "$c", 
+              connectFromField: "a", 
+              connectToField: "b", 
               as: "matches"
             }
           }]
         # To get meaningful results, the entire result set should fit in a single batch. This should
         # be possible since both collections are small.
         cursor: {batchSize: *num_docs_total}
-
+    
     # Untargeted $graphLookup from sharded collection to sharded collection, depth unlimited
     - OperationMetricsName: UntargetedGraphLookupShardedToShardedDepthUnlimited
       OperationName: RunCommand
@@ -329,17 +329,17 @@ Actors:
         pipeline:
           [{
             $graphLookup: {
-              from: "Collection2",
-              startWith: "$c",
-              connectFromField: "b",
-              connectToField: "a",
-              as: "matches"
+              from: "Collection2", 
+              startWith: "$c", 
+              connectFromField: "b", 
+              connectToField: "a", 
+              as: "matches" 
             }
           }]
         # To get meaningful results, the entire result set should fit in a single batch. This should
         # be possible since both collections are small.
         cursor: {batchSize: *num_docs_total}
-
+    
     # Targeted $graphLookup from unsharded collection to sharded collection, depth unlimited
     - OperationMetricsName: TargetedGraphLookupUnshardedToShardedDepthUnlimited
       OperationName: RunCommand
@@ -348,17 +348,17 @@ Actors:
         pipeline:
           [{
             $graphLookup: {
-              from: "Collection2",
-              startWith: "$c",
-              connectFromField: "a",
-              connectToField: "b",
+              from: "Collection2", 
+              startWith: "$c", 
+              connectFromField: "a", 
+              connectToField: "b", 
               as: "matches"
             }
           }]
         # To get meaningful results, the entire result set should fit in a single batch. This should
         # be possible since both collections are small.
         cursor: {batchSize: *num_docs_total}
-
+    
     # Untargeted $graphLookup from unsharded collection to sharded collection, depth unlimited
     - OperationMetricsName: UntargetedGraphLookupUnshardedToShardedDepthUnlimited
       OperationName: RunCommand
@@ -367,10 +367,10 @@ Actors:
         pipeline:
           [{
             $graphLookup: {
-              from: "Collection2",
-              startWith: "$c",
-              connectFromField: "b",
-              connectToField: "a",
+              from: "Collection2", 
+              startWith: "$c", 
+              connectFromField: "b", 
+              connectToField: "a", 
               as: "matches"
             }
           }]
@@ -379,6 +379,6 @@ Actors:
         cursor: {batchSize: *num_docs_total}
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq: shard-lite-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq: shard-lite-all-feature-flags

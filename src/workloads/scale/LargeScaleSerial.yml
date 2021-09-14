@@ -1,7 +1,4 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
-Description: |
-  TODO: TIG-3319
 
 Clients:
   Default:

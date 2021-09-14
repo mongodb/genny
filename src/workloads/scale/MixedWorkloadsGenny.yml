@@ -193,7 +193,7 @@ Actors:
       OnlyActiveInPhase: 2
 
 - ActorFromTemplate:
-    TemplateName: RemoveTemplate
+    TemplateName: RemoveTemplate 
     TemplateParameters:
       Name: Remove_16
       Threads: 16
@@ -230,7 +230,7 @@ Actors:
       OnlyActiveInPhase: 2
 
 - ActorFromTemplate:
-    TemplateName: InsertTemplate
+    TemplateName: InsertTemplate 
     TemplateParameters:
       Name: Insert_16
       Threads: 16
@@ -267,7 +267,7 @@ Actors:
       OnlyActiveInPhase: 2
 
 - ActorFromTemplate:
-    TemplateName: FindTemplate
+    TemplateName: FindTemplate 
     TemplateParameters:
       Name: Find_16
       Threads: 16
@@ -295,14 +295,14 @@ Actors:
       OnlyActiveInPhase: 10
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - atlas
-      - replica
-      - single-replica
-      - standalone
-      - replica-noflowcontrol
-      - replica-1dayhistory-15gbwtcache
-      - replica-maintenance-events
-      - replica-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - single-replica
+          - standalone
+          - replica-noflowcontrol
+          - replica-1dayhistory-15gbwtcache
+          - replica-maintenance-events
+          - replica-all-feature-flags

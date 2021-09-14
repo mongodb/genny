@@ -7,8 +7,6 @@
 
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
-Description: |
-  TODO: TIG-3318
 
 Clients:
   Default:
@@ -120,13 +118,13 @@ Actors:
     Limit: 20
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - atlas
-      - replica
-      - replica-noflowcontrol
-      - replica-1dayhistory-15gbwtcache
-      - replica-all-feature-flags
-      - single-replica
-      - standalone
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - replica-noflowcontrol
+          - replica-1dayhistory-15gbwtcache
+          - replica-all-feature-flags
+          - single-replica
+          - standalone

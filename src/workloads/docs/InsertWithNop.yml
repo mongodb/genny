@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
-Description: |
-  TODO: TIG-3318
 
 # Demonstrate the InsertRemove actor. The InsertRemove actor is a simple actor that inserts and then
 # removes the same document from a collection in a loop. Each instance of the actor uses a different

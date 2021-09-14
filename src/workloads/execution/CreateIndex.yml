@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
-Description: |
-  TODO: TIG-3322
 
 Actors:
 - Name: InsertData
@@ -61,13 +59,13 @@ Actors:
         Repeat: 5
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - atlas
-      - replica
-      - single-replica
-      - standalone
-    branch_name:
-      $neq:
-      - v4.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - single-replica
+          - standalone
+      branch_name:
+        $neq:
+          - v4.0

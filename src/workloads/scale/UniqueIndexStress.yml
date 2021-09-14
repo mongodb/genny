@@ -5,8 +5,6 @@
 
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
-Description: |
-  TODO: TIG-3318
 
 string_length: &string_length 10
 insert_threads: &insert_threads 1
