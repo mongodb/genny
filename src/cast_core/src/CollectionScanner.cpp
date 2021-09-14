@@ -14,7 +14,7 @@
 // limitations under the License.
 
 #include <cast_core/actors/CollectionScanner.hpp>
-#include <cast_core/actors/OptionsConversion.hpp>
+#include <crud_options/OptionsConversion.hpp>
 
 #include <chrono>
 #include <memory>

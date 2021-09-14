@@ -12,21 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# NB: this version number is duplicated in
-# src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
-project(gennylib VERSION 0.0.1 LANGUAGES CXX)
+project(crud_operations VERSION 0.0.1 LANGUAGES CXX)
 
 CreateGennyTargets(
-    NAME    gennylib
+    NAME    crud_operations
     TYPE    STATIC
     DEPENDS
-        yaml-cpp
-        loki
-        metrics
-        value_generators
-        crud_operations
+        gennylib
+        MongoCxx::bsoncxx
         Boost::boost
         Boost::log
-        MongoCxx::mongocxx
     TEST_DEPENDS    testlib
 )
