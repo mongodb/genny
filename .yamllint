@@ -1,6 +1,8 @@
 extends: default
 
 rules:
+  braces:
+    max-spaces-inside: 1
   colons:
     max-spaces-before: 0
     max-spaces-after: 1

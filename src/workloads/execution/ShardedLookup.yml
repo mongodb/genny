@@ -178,6 +178,6 @@ Actors:
         cursor: {batchSize: *NumDocs}
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq: shard-lite-all-feature-flags
+- When:
+  mongodb_setup:
+    $eq: shard-lite-all-feature-flags

@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
+Description: |
+  TODO: TIG-3324
 
 Actors:
 - Name: InsertData
@@ -18,7 +20,7 @@ Actors:
       t: {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}}
       x: {^RandomDouble: {distribution: normal, mean: 0, sigma: 3}}
       y: {^RandomDouble: {distribution: normal, mean: 1, sigma: 3}}
-      z: {^RandomString: {length: 1000}} # Unused field
+      z: {^RandomString: {length: 1000}}  # Unused field
   - Nop: true
   - Nop: true
 
@@ -48,116 +50,116 @@ Actors:
     - OperationMetricsName: Sum
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{
-              $setWindowFields: {
-                sortBy: {t: 1},
-                output: {
-                  sum: {
-                    $sum: "$x",
-                    window: {documents: ["unbounded", "current"]}
-                  }
+        aggregate: Collection0
+        pipeline:
+          [{
+            $setWindowFields: {
+              sortBy: {t: 1},
+              output: {
+                sum: {
+                  $sum: "$x",
+                  window: {documents: ["unbounded", "current"]}
                 }
               }
-            }]
-          cursor: {batchSize: *batchSize}
+            }
+          }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: Avg
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{
-              $setWindowFields: {
-                sortBy: {t: 1},
-                output: {
-                  avg: {
-                    $avg: "$x",
-                    window: {documents: ["unbounded", "current"]}
-                  }
+        aggregate: Collection0
+        pipeline:
+          [{
+            $setWindowFields: {
+              sortBy: {t: 1},
+              output: {
+                avg: {
+                  $avg: "$x",
+                  window: {documents: ["unbounded", "current"]}
                 }
               }
-            }]
-          cursor: {batchSize: *batchSize}
+            }
+          }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: StdDevPop
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{
-              $setWindowFields: {
-                sortBy: {t: 1},
-                output: {
-                  stdDevPop: {
-                    $stdDevPop: "$x",
-                    window: {documents: ["unbounded", "current"]}
-                  }
+        aggregate: Collection0
+        pipeline:
+          [{
+            $setWindowFields: {
+              sortBy: {t: 1},
+              output: {
+                stdDevPop: {
+                  $stdDevPop: "$x",
+                  window: {documents: ["unbounded", "current"]}
                 }
               }
-            }]
-          cursor: {batchSize: *batchSize}
+            }
+          }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: StdDevSamp
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{
-              $setWindowFields: {
-                sortBy: {t: 1},
-                output: {
-                  stdDevSamp: {
-                    $stdDevSamp: "$x",
-                    window: {documents: ["unbounded", "current"]}
-                  }
+        aggregate: Collection0
+        pipeline:
+          [{
+            $setWindowFields: {
+              sortBy: {t: 1},
+              output: {
+                stdDevSamp: {
+                  $stdDevSamp: "$x",
+                  window: {documents: ["unbounded", "current"]}
                 }
               }
-            }]
-          cursor: {batchSize: *batchSize}
+            }
+          }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: CovPop
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{
-              $setWindowFields: {
-                sortBy: {t: 1},
-                output: {
-                  covariancePop: {
-                    $covariancePop: ["$x", "$y"],
-                    window: {documents: ["unbounded", "current"]}
-                  }
+        aggregate: Collection0
+        pipeline:
+          [{
+            $setWindowFields: {
+              sortBy: {t: 1},
+              output: {
+                covariancePop: {
+                  $covariancePop: ["$x", "$y"],
+                  window: {documents: ["unbounded", "current"]}
                 }
               }
-            }]
-          cursor: {batchSize: *batchSize}
+            }
+          }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: CovSamp
       OperationName: RunCommand
       OperationCommand:
-          aggregate: Collection0
-          pipeline:
-            [{
-              $setWindowFields: {
-                sortBy: {t: 1},
-                output: {
-                  covarianceSamp: {
-                    $covarianceSamp: ["$x", "$y"],
-                    window: {documents: ["unbounded", "current"]}
-                  }
+        aggregate: Collection0
+        pipeline:
+          [{
+            $setWindowFields: {
+              sortBy: {t: 1},
+              output: {
+                covarianceSamp: {
+                  $covarianceSamp: ["$x", "$y"],
+                  window: {documents: ["unbounded", "current"]}
                 }
               }
-            }]
-          cursor: {batchSize: *batchSize}
+            }
+          }]
+        cursor: {batchSize: *batchSize}
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - standalone
-          - replica
-          - replica-all-feature-flags
-          - shard-lite
-      branch_name:
-        $neq:
-          - v4.0
-          - v4.2
-          - v4.4
+- When:
+  mongodb_setup:
+    $eq:
+    - standalone
+    - replica
+    - replica-all-feature-flags
+    - shard-lite
+  branch_name:
+    $neq:
+    - v4.0
+    - v4.2
+    - v4.4

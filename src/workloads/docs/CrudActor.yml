@@ -1,5 +1,8 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/stm"
+Owner: "@10gen/dev-prod-tips"
+Description: |
+  This is a demonstration of the CrudActor. It performs writes, updates, and drops
+  to demonstrate the actor.
 
 Clients:
   Default:
@@ -13,7 +16,7 @@ Actors:
 - Name: CrudActor
   Type: CrudActor
   Database: mydb
-  ClientName: SomeOtherPool # Which connection pool to use. Must be defined in Clients section.
+  ClientName: SomeOtherPool  # Which connection pool to use. Must be defined in Clients section.
   Phases:
   - Repeat: 10
     Collection: test
@@ -37,7 +40,7 @@ Actors:
         - {a: {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}}
         - {b: {^RandomInt: {min: 5, max: 15}}}
       ThrowOnFailure: false  # Whether to throw an exception if an operation fails
-#      RecordFailure: true  # If ThrowOnFailure is false, whether the failed operations should be recorded.
+      # RecordFailure: true  # If ThrowOnFailure is false, whether the failed operations should be recorded.
   - Repeat: 1
     Collection: test
     Operation:
@@ -52,23 +55,23 @@ Actors:
     # The collection names are generated from the current actor id mod CollectionCount.
     CollectionCount: 4
     Operations:
-      - OperationName: bulkWrite
-        OperationCommand:
-          WriteOperations:
-            - WriteCommand: insertOne
-              Document: {a: 1}
-            - WriteCommand: updateOne
-              Filter: {a: 1}
-              Update: {$set: {a: {^RandomInt: {min: 5, max: 15}}}}
-              Options:
-                WriteConcern:
-                  Level: majority
-                  TimeoutMillis: 5000
-      - OperationName: insertMany
-        OperationCommand:
-          Documents:
-            - {a: 1}
-            - {a: {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}}
-            - {b: {^RandomInt: {min: 5, max: 15}}}
-        ThrowOnFailure: false  # Whether to throw an exception if an operation fails
-#      RecordFailure: true  # If ThrowOnFailure is false, whether the failed operations should be recorded.
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: insertOne
+          Document: {a: 1}
+        - WriteCommand: updateOne
+          Filter: {a: 1}
+          Update: {$set: {a: {^RandomInt: {min: 5, max: 15}}}}
+          Options:
+            WriteConcern:
+              Level: majority
+              TimeoutMillis: 5000
+    - OperationName: insertMany
+      OperationCommand:
+        Documents:
+        - {a: 1}
+        - {a: {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}}
+        - {b: {^RandomInt: {min: 5, max: 15}}}
+      ThrowOnFailure: false  # Whether to throw an exception if an operation fails
+      # RecordFailure: true  # If ThrowOnFailure is false, whether the failed operations should be recorded.

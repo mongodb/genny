@@ -1,5 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@10gen/dev-prod-tips"
+Description: |
+  This workload demonstrates the general workload substitution utility. You can use "LoadConfig"
+  to load anything, even other workloads.
 
 LoadConfig:
   Path: "./HelloWorld-ActorTemplate.yml"

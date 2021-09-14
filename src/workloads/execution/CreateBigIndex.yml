@@ -2,6 +2,8 @@
 
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
+Description: |
+  TODO: TIG-3322
 
 Actors:
 
@@ -53,7 +55,7 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-    # Build an index on an integer field.
+  # Build an index on an integer field.
   - Repeat: 5
     Database: *db
     Operations:
@@ -70,7 +72,7 @@ Actors:
       OperationCommand:
         dropIndexes: Collection0
         index: random_int
-    # Build an index on a string field.
+  # Build an index on a string field.
   - Repeat: 5
     Database: *db
     Operations:
@@ -89,11 +91,11 @@ Actors:
         index: random_string
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - replica
-          - replica-all-feature-flags
-          - single-replica
-          - standalone
+- When:
+  mongodb_setup:
+    $eq:
+    - atlas
+    - replica
+    - replica-all-feature-flags
+    - single-replica
+    - standalone
