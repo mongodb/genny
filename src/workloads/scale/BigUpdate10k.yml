@@ -8,8 +8,6 @@
 
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
-Description: |
-  TODO: TIG-3318
 
 Clients:
   Default:

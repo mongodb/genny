@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
-Description: |
-  TODO: TIG-3319
 
 Clients:
   Default:
@@ -37,5 +35,5 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: insertOne
-          Document: {a: {^RandomInt: {min: 0, max: 1000}}}
+          Document: { a : {^RandomInt: {min: 0, max: 1000}}}
     GlobalRate: 1000 per 1 second

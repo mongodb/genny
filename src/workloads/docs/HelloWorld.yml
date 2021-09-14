@@ -1,8 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
-Description: |
-  This is an introductory workload that shows how to write a workload in Genny.
-  This workload writes a few messages to the screen.
+Owner: "@mongodb/stm"
 
 Actors:
 - Name: HelloWorld
@@ -27,12 +24,12 @@ Actors:
       Parameters:
         Repeat: 2
 
-# As an alternate phase syntax, use the following for an actor that
-# runs a total of 3 phases, active in phases named 0 and 2 and Nop for the rest:
-# Phases:
-#   OnlyActiveInPhases:
-#     Active: [0, 2]
-#     NopInPhasesUpTo: 2
-#     PhaseConfig:
-#       Message: Alternate Phase 1
-#       Repeat: 100
+  # As an alternate phase syntax, use the following for an actor that
+  # runs a total of 3 phases, active in phases named 0 and 2 and Nop for the rest:
+  # Phases:
+  #   OnlyActiveInPhases:
+  #     Active: [0, 2]
+  #     NopInPhasesUpTo: 2
+  #     PhaseConfig:
+  #       Message: Alternate Phase 1
+  #       Repeat: 100

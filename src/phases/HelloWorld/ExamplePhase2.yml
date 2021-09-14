@@ -1,6 +1,5 @@
+# Example to illustrate how PhaseConfig composition works.
 SchemaVersion: 2018-07-01
-Description: |
-  Example phase to illustrate how PhaseConfig composition works.
 
 UseMe:
   Message: Hello Phase 2

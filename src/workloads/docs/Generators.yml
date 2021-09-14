@@ -1,8 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
-Description: |
-  This workload exhibits various generators, performing insertions to show them off.
-  Follow the inline commentary to learn more about them.
+Owner: "@mongodb/stm"
 
 # This workload demonstrates all the current Document and Value Generators. It creates documents
 # that look like this (simple)
@@ -97,7 +94,7 @@ Actors:
             # increment generator ^Inc with parameters start (default 1), multiplier (default 0}, and step (default 1)
             # only non-default parameters should be specified
             # if you have multiple threads, you need to specify multiplier:
-            # it would be calculated as start + ActorId * multiplier + i * step
+            # it would be calculated as start + ActorId * multiplier + i * step 
             counter: {^Inc: {start: 1000}}
 
             # You can randomly choose objects. from is an array of values to pick from. Weigths is
@@ -134,7 +131,7 @@ Actors:
             # Default max is 2150-01-01. But you can specify a date greater than this value.
             #
             # min and max are evaluated once and max must be greater than min (so by extension max cannot be 1970-01-01).
-            # The generated date uses the extended json $date notation
+            # The generated date uses the extended json $date notation 
             # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
             #
             # RandomDate supports other generators as input (generators that produce string or numeric types):
@@ -175,7 +172,7 @@ Actors:
 
             # # As min must be less than max, care must be taken to ensure that the min value range is always less than the max value range.
             # # Other wise you might get unexpected results. For example the following should fail 25% of the time
-            # # (whenever 2100-05-31 is selected).
+            # # (whenever 2100-05-31 is selected). 
             # probablyNotWhatYouWant: {^RandomDate: {min: {^Choose: {from: ["2014-05-31", "2012-05-31", "2013-05-31", "2100-05-31"]}}, max: {^Now: {}} }}
 
         - WriteCommand: insertOne  # Nested Generators
@@ -212,8 +209,8 @@ Actors:
                                              cuid: { ^RandomInt: { min: 0, max: 100000 } },
                                              prod: { ^RandomInt: { min: 0, max: 10000 } },
                                              prid: { ^RandomDouble: { min: 0.0, max: 1000.0 } },
-                                             data: { ^Join: { array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}},
-                                       number: 10}}
+                                             data: { ^Join: { array: [ "aaaaaaaaaa", { ^FastRandomString: { length: { ^RandomInt: { min: 0, max: 10 } } } } ] } }},
+                                          number: 10}}
 
             # Large sequences of random strings can be expensive to generate.  FixedGeneratedValue
             # can be used to generate an array once during initialization for re-use
@@ -238,11 +235,11 @@ Actors:
     GlobalRate: 1 per 278 microseconds
     Collection: test
     Operations:
-    - OperationName: findOne
-      OperationCommand:
-        Filter:
-          roid: {^ObjectId: {^RandomString: {length: 24, alphabet: "0123456789ABCDEF"}}}
-          $where: {^FormatString: {format: "function() { sleep(%2.d); return true; }", withArgs: [{^Choose: {from: [0, 60], weights: [9, 1]}}]}}
+      - OperationName: findOne
+        OperationCommand:
+          Filter:
+            roid: {^ObjectId: {^RandomString: {length: 24, alphabet: "0123456789ABCDEF"}}}
+            $where: {^FormatString: {format: "function() { sleep(%2.d); return true; }", withArgs: [{^Choose: {from: [0, 60], weights: [9, 1]}}]}}
 
 
   - Repeat: 1

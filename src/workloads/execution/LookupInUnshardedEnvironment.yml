@@ -65,9 +65,9 @@ Actors:
             }
           }]
         cursor: {batchSize: *NumDocs}
-
+    
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica

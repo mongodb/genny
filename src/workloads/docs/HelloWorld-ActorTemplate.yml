@@ -1,8 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
-Description: |
-  This workload shows off the actor template utility, which can be used to create a general
-  actor template which can then be instantiated with parameters substituted.
+Owner: "@mongodb/stm"
 
 ActorTemplates:
 - TemplateName: HelloTemplate
@@ -11,19 +8,19 @@ ActorTemplates:
     Type: HelloWorld
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
-    - Message: Hello Phase 0 🐳
-      Duration: 50 milliseconds
-    - Message: Hello Phase 1 👬
-      Repeat: 100
-      # Actor templates work just fine with external phase configs, but it's recommended
-      # to avoid when possible. At that point writing a new actor may be simpler.
-      # You can always use `genny evaluate` on a workload yaml to see what it gets
-      # preprocessed into.
-    - LoadConfig:
-        Path: ../../phases/HelloWorld/ExamplePhase2.yml
-        Key: UseMe  # Only load the YAML structure from this top-level key.
-        Parameters:
-          Repeat: 2
+      - Message: Hello Phase 0 🐳
+        Duration: 50 milliseconds
+      - Message: Hello Phase 1 👬
+        Repeat: 100
+        # Actor templates work just fine with external phase configs, but it's recommended
+        # to avoid when possible. At that point writing a new actor may be simpler.
+        # You can always use `genny evaluate` on a workload yaml to see what it gets
+        # preprocessed into.
+      - LoadConfig:
+          Path: ../../phases/HelloWorld/ExamplePhase2.yml
+          Key: UseMe  # Only load the YAML structure from this top-level key.
+          Parameters:
+            Repeat: 2
 
 
 Actors:
@@ -43,13 +40,13 @@ Actors:
   Type: HelloWorld
   Threads: {^Parameter: {Name: "Threads", Default: 1}}
   Phases:
-  - Message: Hello Phase 0 🐳
-    Duration: 50 milliseconds
-  - Message: Hello Phase 1 👬
-    Repeat: 100
-  - LoadConfig:
-      Path: ../../phases/HelloWorld/ExamplePhase2.yml
-      Key: UseMe  # Only load the YAML structure from this top-level key.
-      Parameters:
-        Repeat: 2
+    - Message: Hello Phase 0 🐳
+      Duration: 50 milliseconds
+    - Message: Hello Phase 1 👬
+      Repeat: 100
+    - LoadConfig:
+        Path: ../../phases/HelloWorld/ExamplePhase2.yml
+        Key: UseMe  # Only load the YAML structure from this top-level key.
+        Parameters:
+          Repeat: 2
 

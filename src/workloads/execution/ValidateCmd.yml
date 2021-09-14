@@ -2,8 +2,6 @@
 
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
-Description: |
-  TODO: TIG-3322
 
 Actors:
 - Name: InsertData
@@ -35,7 +33,7 @@ Actors:
     - keys: {x: 1, y: 1}
     - keys: {x: 1, y: 1, b: 1}
     - keys: {arr: 1, z: 1}
-    - keys: {arr: 1, b: 1}
+    - keys: {arr: 1, b : 1}
     - keys: {a: "text"}
     - keys: {a: 1}
       options: {sparse: true}
@@ -58,6 +56,6 @@ Actors:
         validate: Collection0
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq: standalone
+  - When:
+      mongodb_setup:
+        $eq: standalone

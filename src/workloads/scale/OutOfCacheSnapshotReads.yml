@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Replication
-Description: |
-  TODO: TIG-3321
 
 Clients:
   Default:
@@ -78,6 +76,6 @@ Actors:
     ScanType: point-in-time
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq: replica-1dayhistory-15gbwtcache
+  - When:
+      mongodb_setup:
+        $eq: replica-1dayhistory-15gbwtcache

@@ -461,10 +461,7 @@ create_workload_yml() {
     actor_name="$1"
 cat << EOF > "$GENNY_REPO_ROOT/src/workloads/docs/${actor_name}.yml"
 SchemaVersion: 2018-07-01
-Owner: TODO put your github team name here e.g. @10gen/dev-prod-tips
-Description: |
-  TODO describe your workload. For an example description, check out
-  src/workloads/selftests/GennyOverhead.yml.
+Owner: TODO put your github team name here e.g. @mongodb/stm
 
 # TODO: delete this file or add a meaningful workload using or
 #       demonstrating your Actor
@@ -618,9 +615,11 @@ cat << EOF
 
 Build and test ${actor_name} with the following command:
 
-    ./run-genny install
-    ./run-genny cmake-test
-    ./run-genny resmoke-test --suites src/resmokeconfig/genny_standalone.yml
+    # TODO: these paths aren't right any more
+    ./scripts/lamp
+    ./scripts/lamp cmake-test
+    ./scripts/get-mongo-source.sh
+    ./scripts/lamp resmoke-test --suites src/resmokeconfig/genny_standalone.yml
 
 The resmoke-test will fail because there is a "hidden" bug in the generated
 integration-test-case that you are expected to find as a part of reading through
@@ -628,7 +627,7 @@ the generated code.
 
 Run your workload as follows:
 
-    ./run-genny workload -- run \\
+    ./dist/bin/genny run \\
         --workload-file       ./src/workloads/docs/${actor_name}.yml \\
         --metrics-format      csv \\
         --metrics-output-file build/genny-metrics.csv \\
