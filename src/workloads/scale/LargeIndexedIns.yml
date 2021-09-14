@@ -28,7 +28,7 @@ Actors:
     DocumentCount: 1000
     BatchSize: 1000
     Indexes:
-    - keys: {hash: 1, key: 1, string1: 1, string2: 1}
+    - keys: {hash : 1, key : 1, string1 : 1, string2 : 1}
     - keys: {key: 1}
     Document:
       _id: {^Inc: {start: 0}}
@@ -74,6 +74,6 @@ Actors:
           $inc: {a: 1}
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq: replica
+  - When:
+      mongodb_setup:
+        $eq: replica

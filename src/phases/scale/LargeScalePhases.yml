@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
-Description: |
-  TODO: TIG-3319
 
 # This is the set of shared phases for the Large Scale Workload Automation project.
 #
@@ -11,7 +9,7 @@ Description: |
 # This section contains definitions that are used in the following phases.
 GlobalDefaults:
   Random10KInt: &rand_10k_int {^RandomInt: {min: 0, max: 10000}}
-  Random1KInt: &rand_1k_int {^RandomInt: {min: 0, max: 1000}}
+  Random10KInt: &rand_1k_int {^RandomInt: {min: 0, max: 1000}}
   Random4ByteInt: &rand_4b_int {^RandomInt: {min: 0, max: 2147483647}}
   Random30String: &rand_30b_string {^RandomString: {length: 30}}
   Random130String: &rand_100b_string {^RandomString: {length: 100}}
@@ -30,15 +28,15 @@ GlobalDefaults:
     h: *rand_4b_int
     i: *rand_4b_int
   RollingIndexes: &RollingIndexes
-  - keys: {a: 1}
-  - keys: {b: 1}
-  - keys: {c: 1}
-  - keys: {d: 1}
-  - keys: {e: 1}
-  - keys: {f: 1}
-  - keys: {i: 1, g: 1}
-  - keys: {g: 1, h: 1}
-  - keys: {h: 1, i: 1}
+    - keys: {a: 1}
+    - keys: {b: 1}
+    - keys: {c: 1}
+    - keys: {d: 1}
+    - keys: {e: 1}
+    - keys: {f: 1}
+    - keys: {i: 1, g: 1}
+    - keys: {g: 1, h: 1}
+    - keys: {h: 1, i: 1}
 
   # Commonly used parameters.
   DatabaseParam: &DatabaseParam {^Parameter: {Name: "Database", Default: ""}}
@@ -155,7 +153,7 @@ HotDocumentUpdaterCmd:
     OperationCommand:
       WriteOperations:
       - WriteCommand: updateOne
-        Filter: {first: first}
+        Filter: {first : first}
         Update: {$set: {second: *rand_1k_int}}
   GlobalRate: *WritesParam
 
@@ -178,7 +176,7 @@ HotCollectionUpdaterCmd:
     OperationCommand:
       WriteOperations:
       - WriteCommand: insertOne
-        Document: { a: *rand_1k_int }
+        Document: { a : *rand_1k_int}
   GlobalRate: *WritesParam
 
 HotCollectionDeleterCmd:
@@ -251,8 +249,8 @@ SnapshotScannerAllCmd:
   Duration: *Duration
   Documents: 100000000000
   ScanType: snapshot
-  # GlobalRate: 1 per 24 hours   # CHANGE
-  # Note: using "2 per 1" hour kicks off two scans at the top of the hour!
+  #GlobalRate: 1 per 24 hours   # CHANGE
+  #Note: using "2 per 1" hour kicks off two scans at the top of the hour!
   GlobalRate: 1 per 30 minutes
 
 OplogTrailerCmd:

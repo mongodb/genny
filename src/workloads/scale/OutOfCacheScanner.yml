@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
-Description: |
-  TODO: TIG-3319
 
 Clients:
   Default:
@@ -56,6 +54,6 @@ Actors:
     ScanType: Standard
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq: single-replica-15gbwtcache
+  - When:
+      mongodb_setup:
+        $eq: single-replica-15gbwtcache

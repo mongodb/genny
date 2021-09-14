@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
-Description: |
-  TODO: TIG-3319
 
 Clients:
   Default:
@@ -82,13 +80,13 @@ Actors:
     Update: {$inc: {x1: 1}}
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - atlas
-      - replica
-      - replica-all-feature-flags
-      - single-replica
-      - single-replica-15gbwtcache
-      - shard
-      - standalone
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - replica-all-feature-flags
+          - single-replica
+          - single-replica-15gbwtcache
+          - shard
+          - standalone

@@ -1,8 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
-Description: |
-  TODO: TIG-3320
-
 Actors:
 - Name: CreateShardedCollection
   Type: AdminCommand
