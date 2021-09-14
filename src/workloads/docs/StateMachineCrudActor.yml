@@ -18,10 +18,13 @@ description: |
   or per state), and each operation. The latencies associated with each transition and state are
   tracked separately.
 
-  This example workload is a toy example modeling the state of a device. It has four states: On,
-  Off, Sleep, and Error, transitioning between those states. The workload does two things as it
-  executes. 1. It tracks it's current state in one document (update operations). 2. It counts the
-  number of transitions from state On to each of the other three states (also update operations).
+  This example workload is a toy example modeling the state of 5 smart phones. The model has four
+  states for each phone: On, Off, Sleep, and Error, and transitions between those states. In this
+  example, there is monitoring for the smart phones, and the database gets updated based on the
+  state of the phones and state changes. The workload (monitoring app) tracks the current phone state in
+  one document (update operations). Note that this is separate than the state machinery tracking of
+  state. The workload also counts the number of transitions from state On to each of
+  the other three states (also update operations).
 
 Clients:
   Default:
@@ -52,9 +55,9 @@ Actors:
     - &nop {Nop: true}
     - *nop
 
-- Name: StateDemo
-  Type: CrudState
-  Threads: 1
+- Name: StateSmartPhoneDemo
+  Type: Crud
+  Threads: 5
   Database: StateTest
   Phases:
   - *nop
