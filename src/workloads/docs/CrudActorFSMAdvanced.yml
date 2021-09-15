@@ -1,0 +1,186 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+
+description: |
+  This example extends CrudActorFSM.yml, with the addition of operations associated with
+  transitions, in addition to states. We have not implemented this functionality at this point, but
+  are adding this example definition in case someone wants the functionality at some future
+  point. It uses the CrudActor to implement a FSM. Choices are declared with weights that are
+  converted into probabilities.
+
+  There is an initial state vector, with weight. Each actor instance will probabilistically and
+  independently choose it's initial state based on the weights.
+
+  Each state specifies a list of transitions. The next transition is picked probabilistically, based
+  on the transition weights. Transitions may experience delay (sleepBefore, sleepAfter) before or
+  after executing a (possibly empty) set of operations, before transitioning to the next state. The
+  state itself may execute its own set of operations.
+
+  By default the system will measure the latency to execute each set of operations (per transition
+  or per state), and each operation. The latencies associated with each transition and state are
+  tracked separately.
+
+  This example workload is a toy example modeling the state of 5 smart phones. The model has four
+  states for each phone: On, Off, Sleep, and Error, and transitions between those states. In this
+  example, there is monitoring for the smart phones, and the database gets updated based on the
+  state of the phones and state changes. The workload (monitoring app) tracks the current phone state in
+  one document (update operations). Note that this is separate than the state machinery tracking of
+  state. The workload also counts the number of transitions from state On to each of
+  the other three states (also update operations).
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 100
+
+Actors:
+# Preload some documents
+- Name: SetupDemo
+  Type: Crud
+  Threads: 1
+  Database: StateTest
+  Phases:
+  - Repeat: 1
+    Collection: CrudDemo
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: insertOne
+          Document: {phoneID: 0, state: "Off"}
+        - WriteCommand: insertOne
+          Document: {phoneID: 1, state: "Off"}
+        - WriteCommand: insertOne
+          Document: {phoneID: 2, state: "Off"}
+        - WriteCommand: insertOne
+          Document: {phoneID: 3, state: "Off"}
+        - WriteCommand: insertOne
+          Document: {phoneID: 4, state: "Off"}
+        - WriteCommand: insertOne
+          Document: {stat: "OnOff", count: 0}
+        - WriteCommand: insertOne
+          Document: {stat: "OnSleep", count: 0}
+        - WriteCommand: insertOne
+          Document: {stat: "OnError", count: 0}
+    - &nop {Nop: true}
+    - *nop
+
+- Name: StateSmartPhoneDemo
+  Type: Crud
+  Threads: 5
+  Database: StateTest
+  Phases:
+  - *nop
+  - Duration: 30 seconds
+    Collection: CrudDemo
+    States:
+    - Name: "On"  # The device is on
+
+      # The states support the keywords Repeat, SleepBefore, SleepAfter, and Duration. These
+      # keywords behave the same as in Phase Control, but operate per state (i.e., per actor
+      # instance as it goes through the state machine.
+      Repeat: 1
+      Operations:
+      # A state can have (optional) a set of operations that execute upon entering the state. This
+      # state updates a specific document to indicate it is in state On.
+
+      # Note: Following the analogy to phases -- phases may be blocking or non-blocking. States are
+      # always non-blocking. When the phase ends, the state machine will finish any open operations,
+      # and then exit. It if is waiting for a delay, it will exit immediately. This is required as
+      # there may be states with long delays.
+      - OperationName: updateOne
+        OperationCommand:
+          Filter: &filter {phoneID: {^ActorID: {}}}
+          Update:
+            $set: {state: "On"}
+
+      # Transitions specifies next states, delays, and operations. The On state can transition to
+      # each of the three other states
+      Transitions:
+      - To: "Off"  # Transition to this state
+
+        # Transitions are probabilistically chosen based on weight. A transition with weight 2 is
+        # twice as likely to be picked as a transition with weight 1. Weights must be greater than
+        # 0.
+        Weight: 1
+
+        # Transitions also support the phase keywords of sleepBefore, sleepAfter, and repeat.
+        # ^TimeSpec is a proposed generator to randomly generate acceptable TimeSpecs with units. It
+        # accepts any valid int or double generator or constant for value.
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+
+        # TODO: REmove the transition operations
+        # In this advanced case, operations may also be associated with transitions.
+        Operations:
+        - OperationName: updateOne
+          OperationCommand:
+            Filter: {stat: "OnOff"}
+            Update:
+              $inc: {count: 1}
+      - To: "Sleep"
+        Weight: 2
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+        Operations:
+        - OperationName: updateOne
+          OperationCommand:
+            Filter: {stat: "OnSleep"}
+            Update:
+              $inc: {count: 1}
+      - To: "Error"
+        Weight: 0.2
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+        Operations:
+        - OperationName: updateOne
+          OperationCommand:
+            Filter: {stat: "OnError"}
+            Update:
+              $inc: {count: 1}
+
+    - Name: "Off"  # The device is Off
+      Operations:
+      - OperationName: updateOne
+        OperationCommand:
+          Filter: *filter
+          Update:
+            $set: {state: "Off"}
+      Transitions:  # Can only go to On from Off
+      - To: "On"
+        Weight: 1
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+
+    - Name: Sleep
+      Operations:
+      - OperationName: updateOne
+        OperationCommand:
+          Filter: *filter
+          Update:
+            $set: {state: "Sleep"}
+      Transitions:  # Can only go to On or Off from sleep
+      - To: "On"
+        Weight: 1
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+      - To: "Off"
+        Weight: 1
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+    - Name: Error
+      Operations:
+      - OperationName: updateOne
+        OperationCommand:
+          Filter: *filter
+          Update:
+            $set: {state: "Error"}
+      Transitions:  # Turn off on error
+      - To: "Off"
+        Weight: 1
+        Delay:
+          Delay: {^RandomDouble: {min: 0, max: 15}}
+
+    # In this example we always start in the off State
+    InitialStates:
+    - "Off":
+        Weight: 1

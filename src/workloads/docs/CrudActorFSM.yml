@@ -2,29 +2,27 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 
 description: |
-  TODO: This Actor does not exist yet. It will be implemented in PERF-2516.
-  The State Machine Crud Actor implements a FSM with crud operations. Choices are declared with
-  weights, which are converted into probabilities.
+  TODO: This functionality does not exist yet. It will be implemented in PERF-2516.  The Curd Actor
+  will support FSM definition, with operations associated with each states. Choices are declared
+  with weights that are converted into probabilities.
 
   There is an initial state vector, with weight. Each actor instance will probabilistically and
   independently choose it's initial state based on the weights.
 
   Each state specifies a list of transitions. The next transition is picked probabilistically, based
-  on the transition weights. Each transition specifies a delay, thens executes a (possibly empty) set
-  of operations, before transitioning to the next state. The state itself may execute its own set of
-  operations.
+  on the transition weights. Transitions may experience delay (sleepBefore), before changing the
+  state. The state has associated operations which execute while the FSM remains in that
+  state. (Question: what happens during the transition delay? I suggest nothing)
 
-  By default the system will measure the latency to execute each set of operations (per transition
-  or per state), and each operation. The latencies associated with each transition and state are
-  tracked separately.
+  By default the system will measure the latency to execute each set of operations associated with a
+  state, and each individual operation.
 
   This example workload is a toy example modeling the state of 5 smart phones. The model has four
   states for each phone: On, Off, Sleep, and Error, and transitions between those states. In this
   example, there is monitoring for the smart phones, and the database gets updated based on the
-  state of the phones and state changes. The workload (monitoring app) tracks the current phone state in
-  one document (update operations). Note that this is separate than the state machinery tracking of
-  state. The workload also counts the number of transitions from state On to each of
-  the other three states (also update operations).
+  state of the phones and state changes. The workload (monitoring app) tracks the current phone
+  state in one document per phone (update operations). Note that this is separate than the state
+  machinery tracking of state.
 
 Clients:
   Default:
@@ -54,12 +52,6 @@ Actors:
           Document: {phoneID: 3, state: "Off"}
         - WriteCommand: insertOne
           Document: {phoneID: 4, state: "Off"}
-        - WriteCommand: insertOne
-          Document: {stat: "OnOff", count: 0}
-        - WriteCommand: insertOne
-          Document: {stat: "OnSleep", count: 0}
-        - WriteCommand: insertOne
-          Document: {stat: "OnError", count: 0}
     - &nop {Nop: true}
     - *nop
 
@@ -74,9 +66,9 @@ Actors:
     States:
     - Name: "On"  # The device is on
 
-      # The states support the keywords Repeat, SleepBefore, SleepAfter, and Duration. These
-      # keywords behave the same as in Phase Control, but operate per state (i.e., per actor
-      # instance as it goes through the state machine.
+      # The states support the keywords Repeat, SleepBefore, SleepAfter, (local) Rate, and
+      # Duration. These keywords behave the same as in Phase Control, but operate per state (i.e.,
+      # per actor instance as it goes through the state machine.
       Repeat: 1
       Operations:
       # A state can have (optional) a set of operations that execute upon entering the state. This
@@ -86,6 +78,10 @@ Actors:
       # always non-blocking. When the phase ends, the state machine will finish any open operations,
       # and then exit. It if is waiting for a delay, it will exit immediately. This is required as
       # there may be states with long delays.
+      # Question: Should we support having a single fire operation with repeating operations? Here I
+      # could invent a case where the following operation is repeat 1, but there is another
+      # operation that repeats once a second while in this state. I don't know how to represent
+      # that.  
       - OperationName: updateOne
         OperationCommand:
           Filter: &filter {phoneID: {^ActorID: {}}}
@@ -107,35 +103,6 @@ Actors:
         # accepts any valid int or double generator or constant for value.
         SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
 
-        # TODO: REmove the transition operations
-        # In this advanced case, operations may also be associated with transitions.
-        Operations:
-        - OperationName: updateOne
-          OperationCommand:
-            Filter: {stat: "OnOff"}
-            Update:
-              $inc: {count: 1}
-      - To: "Sleep"
-        Weight: 2
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
-        Operations:
-        - OperationName: updateOne
-          OperationCommand:
-            Filter: {stat: "OnSleep"}
-            Update:
-              $inc: {count: 1}
-      - To: "Error"
-        Weight: 0.2
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
-        Operations:
-        - OperationName: updateOne
-          OperationCommand:
-            Filter: {stat: "OnError"}
-            Update:
-              $inc: {count: 1}
-
     - Name: "Off"  # The device is Off
       Operations:
       - OperationName: updateOne
@@ -146,8 +113,7 @@ Actors:
       Transitions:  # Can only go to On from Off
       - To: "On"
         Weight: 1
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
 
     - Name: Sleep
       Operations:
@@ -159,12 +125,11 @@ Actors:
       Transitions:  # Can only go to On or Off from sleep
       - To: "On"
         Weight: 1
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
       - To: "Off"
         Weight: 1
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+
     - Name: Error
       Operations:
       - OperationName: updateOne
@@ -175,8 +140,7 @@ Actors:
       Transitions:  # Turn off on error
       - To: "Off"
         Weight: 1
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
 
     # In this example we always start in the off State
     InitialStates:
