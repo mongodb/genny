@@ -45,7 +45,15 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: insertOne
-          Document: {doc: 1, state: "Off"}
+          Document: {phoneID: 0, state: "Off"}
+        - WriteCommand: insertOne
+          Document: {phoneID: 1, state: "Off"}
+        - WriteCommand: insertOne
+          Document: {phoneID: 2, state: "Off"}
+        - WriteCommand: insertOne
+          Document: {phoneID: 3, state: "Off"}
+        - WriteCommand: insertOne
+          Document: {phoneID: 4, state: "Off"}
         - WriteCommand: insertOne
           Document: {stat: "OnOff", count: 0}
         - WriteCommand: insertOne
@@ -65,12 +73,22 @@ Actors:
     Collection: CrudDemo
     States:
     - Name: "On"  # The device is on
+
+      # The states support the keywords Repeat, SleepBefore, SleepAfter, and Duration. These
+      # keywords behave the same as in Phase Control, but operate per state (i.e., per actor
+      # instance as it goes through the state machine.
+      Repeat: 1
       Operations:
       # A state can have (optional) a set of operations that execute upon entering the state. This
       # state updates a specific document to indicate it is in state On.
+
+      # Note: Following the analogy to phases -- phases may be blocking or non-blocking. States are
+      # always non-blocking. When the phase ends, the state machine will finish any open operations,
+      # and then exit. It if is waiting for a delay, it will exit immediately. This is required as
+      # there may be states with long delays.
       - OperationName: updateOne
         OperationCommand:
-          Filter: &filter {doc: 1}
+          Filter: &filter {phoneID: {^ActorID: {}}}
           Update:
             $set: {state: "On"}
 
@@ -78,15 +96,19 @@ Actors:
       # each of the three other states
       Transitions:
       - To: "Off"  # Transition to this state
+
+        # Transitions are probabilistically chosen based on weight. A transition with weight 2 is
+        # twice as likely to be picked as a transition with weight 1. Weights must be greater than
+        # 0.
         Weight: 1
-        # The delay is the time before firing the operations. It can be any generator. The time is
-        # in seconds. In this example it will take a uniform amount of time between 0 and 15 seconds
-        # to execute. The time should be a floating point number.
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
-          # You can specify the time units. Seconds is the default value and may be ommitted. Valid
-          # choices are microseconds, milliseconds, seconds, minutes, hours
-          Units: seconds
+
+        # Transitions also support the phase keywords of sleepBefore, sleepAfter, and repeat.
+        # ^TimeSpec is a proposed generator to randomly generate acceptable TimeSpecs with units. It
+        # accepts any valid int or double generator or constant for value.
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+
+        # TODO: REmove the transition operations
+        # In this advanced case, operations may also be associated with transitions.
         Operations:
         - OperationName: updateOne
           OperationCommand:
@@ -118,7 +140,7 @@ Actors:
       Operations:
       - OperationName: updateOne
         OperationCommand:
-          Filter: &filter {doc: 1}
+          Filter: *filter
           Update:
             $set: {state: "Off"}
       Transitions:  # Can only go to On from Off
@@ -131,7 +153,7 @@ Actors:
       Operations:
       - OperationName: updateOne
         OperationCommand:
-          Filter: &filter {doc: 1}
+          Filter: *filter
           Update:
             $set: {state: "Sleep"}
       Transitions:  # Can only go to On or Off from sleep
@@ -147,7 +169,7 @@ Actors:
       Operations:
       - OperationName: updateOne
         OperationCommand:
-          Filter: &filter {doc: 1}
+          Filter: *filter
           Update:
             $set: {state: "Error"}
       Transitions:  # Turn off on error
