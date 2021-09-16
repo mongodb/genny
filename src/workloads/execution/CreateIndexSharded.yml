@@ -104,10 +104,10 @@ Actors:
 
 AutoRun:
 - When:
-  mongodb_setup:
-    $eq:
-    - shard
-    - shard-lite
-  branch_name:
-    $neq:
-    - v4.0
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-lite
+    branch_name:
+      $neq:
+      - v4.0

@@ -92,10 +92,10 @@ Actors:
 
 AutoRun:
 - When:
-  mongodb_setup:
-    $eq:
-    - atlas
-    - replica
-    - replica-all-feature-flags
-    - single-replica
-    - standalone
+    mongodb_setup:
+      $eq:
+      - atlas
+      - replica
+      - replica-all-feature-flags
+      - single-replica
+      - standalone

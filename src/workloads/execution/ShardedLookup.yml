@@ -179,5 +179,5 @@ Actors:
 
 AutoRun:
 - When:
-  mongodb_setup:
-    $eq: shard-lite-all-feature-flags
+    mongodb_setup:
+      $eq: shard-lite-all-feature-flags

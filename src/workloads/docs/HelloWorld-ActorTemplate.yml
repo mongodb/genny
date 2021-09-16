@@ -52,4 +52,3 @@ Actors:
       Key: UseMe  # Only load the YAML structure from this top-level key.
       Parameters:
         Repeat: 2
-

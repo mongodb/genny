@@ -120,9 +120,9 @@ Actors:
 
 AutoRun:
 - When:
-  mongodb_setup:
-    $eq: standalone
-  branch_name:
-    $neq:
-    - v4.0
-    - v4.2
+    mongodb_setup:
+      $eq: standalone
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
