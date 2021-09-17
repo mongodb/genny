@@ -70,7 +70,7 @@ bsoncxx::document::value commandRequiringStepdownCompleted = []() {
 void runThenAwaitStepdown(mongocxx::database& database, bsoncxx::document::view& command) {
     try {
         database.run_command(command);
-        throw std::logic_error("Stepdown should throw operation exception");
+        BOOST_THROW_EXCEPTION(std::logic_error("Stepdown should throw operation exception"));
     } catch (mongocxx::operation_exception& exception) {
         if (!isNetworkError(exception)) {
             throw;
@@ -218,8 +218,8 @@ struct actor::RunCommand::PhaseConfig {
         auto actorType = actorContext["Type"].to<std::string>();
         auto database = context["Database"].maybe<std::string>().value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
-            throw InvalidConfigurationException(
-                "AdminCommands can only be run on the 'admin' database.");
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "AdminCommands can only be run on the 'admin' database."));
         }
 
         auto createOperation = [&](const Node& node) {

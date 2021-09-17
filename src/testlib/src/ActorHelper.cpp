@@ -33,7 +33,7 @@ ActorHelper::ActorHelper(const Node& config,
                          const std::string& uri,
                          v1::PoolManager::OnCommandStartCallback apmCallback) {
     if (tokenCount <= 0) {
-        throw InvalidConfigurationException("Must add a positive number of tokens");
+        BOOST_THROW_EXCEPTION(InvalidConfigurationException("Must add a positive number of tokens"));
     }
 
     _orchestrator = std::make_unique<genny::Orchestrator>();
@@ -53,7 +53,7 @@ ActorHelper::ActorHelper(const Node& config,
                          const std::string& uri,
                          v1::PoolManager::OnCommandStartCallback apmCallback) {
     if (tokenCount <= 0) {
-        throw InvalidConfigurationException("Must add a positive number of tokens");
+        BOOST_THROW_EXCEPTION(InvalidConfigurationException("Must add a positive number of tokens"));
     }
 
     _orchestrator = std::make_unique<genny::Orchestrator>();

@@ -16,6 +16,8 @@
 
 #include <sstream>
 
+#include <boost/throw_exception.hpp>
+
 namespace genny {
 
 Cast::Cast(Cast::List init) {
@@ -39,7 +41,7 @@ void Cast::add(const std::string_view& castName, std::shared_ptr<ActorProducer> 
         stream << "Failed to add '" << entry->name() << "' as '" << castName
                << "', a producer named '" << previousActorProducer->name()
                << "' was already added instead.";
-        throw std::domain_error(stream.str());
+        BOOST_THROW_EXCEPTION(std::domain_error(stream.str()));
     }
 }
 

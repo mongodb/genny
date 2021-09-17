@@ -46,7 +46,7 @@ WorkloadContext::WorkloadContext(const Node& node,
         validSchemaVersions.count(schemaVersion) != 1) {
         std::ostringstream errMsg;
         errMsg << "Invalid Schema Version: " << schemaVersion;
-        throw InvalidConfigurationException(errMsg.str());
+        BOOST_THROW_EXCEPTION(InvalidConfigurationException(errMsg.str()));
     }
 
     // Make sure we have a valid mongocxx instance happening here
@@ -98,7 +98,7 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
         std::ostringstream stream;
         stream << "Unable to construct actors: No producer for '" << name << "'." << std::endl;
         cast.streamProducersTo(stream);
-        throw InvalidConfigurationException(stream.str());
+        BOOST_THROW_EXCEPTION(InvalidConfigurationException(stream.str()));
     }
 
     for (auto&& actor : producer->produce(*actorContext)) {
@@ -138,7 +138,9 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
         if (!success) {
             // This should be impossible.
             // But invariants don't hurt we only call this during setup
-            throw std::logic_error("Already have DefaultRandom for Actor " + std::to_string(id));
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("Already have DefaultRandom for Actor " + std::to_string(id))
+            );
         }
     }
     return _rngRegistry[id];
@@ -159,7 +161,7 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
             std::ostringstream ss;
             ss << "Encountered a null/empty phase. "
                   "Every phase should have at least be an empty map.";
-            throw InvalidConfigurationException(ss.str());
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(ss.str()));
         }
         PhaseRangeSpec configuredRange = phase["Phase"].maybe<PhaseRangeSpec>().value_or(
             PhaseRangeSpec{IntegerSpec{lastPhaseNumber}});
@@ -170,7 +172,7 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
             if (!success) {
                 std::stringstream msg;
                 msg << "Duplicate phase " << rangeIndex;
-                throw InvalidConfigurationException(msg.str());
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(msg.str()));
             }
             lastPhaseNumber++;
         }

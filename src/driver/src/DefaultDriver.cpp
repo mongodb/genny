@@ -129,7 +129,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     } else if (options.workloadSourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
         yaml = YAML::Load(options.workloadSource);
     } else {
-        throw std::invalid_argument("Unrecognized workload source type.");
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Unrecognized workload source type."));
     }
 
     auto orchestrator = Orchestrator{};
@@ -267,8 +267,8 @@ boost::log::trivial::severity_level parseVerbosity(const std::string& level) {
         return boost::log::trivial::fatal;
     }
 
-    throw std::invalid_argument("Invalid verbosity level '" + level +
-                                "'. Need one of trace/debug/info/warning/error/fatal");
+    BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid verbosity level '" + level +
+                                "'. Need one of trace/debug/info/warning/error/fatal"));
 }
 
 }  // namespace

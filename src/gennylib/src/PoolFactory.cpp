@@ -128,14 +128,14 @@ struct PoolFactory::Config {
                 if (it == accessOptions.end()) {
                     std::ostringstream ss;
                     ss << "Attempted to set unknown access option '" << key << "'";
-                    throw InvalidConfigurationException(ss.str());
+                    BOOST_THROW_EXCEPTION(InvalidConfigurationException(ss.str()));
                 }
                 it->second = value;
                 return;
             }
         }
 
-        throw InvalidConfigurationException("Did not recognize OptionType in setter");
+        BOOST_THROW_EXCEPTION(InvalidConfigurationException("Did not recognize OptionType in setter"));
     }
 
     std::optional<std::string_view> get(OptionType type, const std::string& key) {
@@ -153,13 +153,13 @@ struct PoolFactory::Config {
                 if (it == accessOptions.end()) {
                     std::ostringstream ss;
                     ss << "Attempted to get unknown access option '" << key << "'";
-                    throw InvalidConfigurationException(ss.str());
+                    BOOST_THROW_EXCEPTION(InvalidConfigurationException(ss.str()));
                 }
                 return std::make_optional<std::string_view>(it->second);
             }
         }
 
-        throw InvalidConfigurationException("Did not recognize OptionType in getter");
+        BOOST_THROW_EXCEPTION(InvalidConfigurationException("Did not recognize OptionType in getter"));
     }
 
     bool getFlag(OptionType type, const std::string& key, bool defaultValue = false) {

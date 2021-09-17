@@ -40,7 +40,7 @@ Node::Type determineType(const YAML::Node node) {
         case YAML::NodeType::Map:
             return Node::Type::Map;
     }
-    throw std::logic_error("impossible");
+    BOOST_THROW_EXCEPTION(std::logic_error("impossible"));
 }
 
 // Like YAML::Load but throw more useful exception

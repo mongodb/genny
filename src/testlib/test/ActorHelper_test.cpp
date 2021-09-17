@@ -60,7 +60,7 @@ Actors:
     class CtorThrowingActor : public DummyActor {
     public:
         CtorThrowingActor(genny::ActorContext& ac) : DummyActor(ac) {
-            throw genny::InvalidConfigurationException("CTOR Barf");
+            BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException("CTOR Barf"));
         };
     };
 
@@ -95,7 +95,7 @@ Actors:
         genny::ActorHelper ah(config.root(), 1, {{"DummyActor", dummyProducer}});
         auto runFunc = [](const genny::WorkloadContext& wc) {};
         auto verifyFunc = [](const genny::WorkloadContext& wc) {
-            throw genny::InvalidConfigurationException("RUN Barf");
+            BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException("RUN Barf"));
         };
         REQUIRE_THROWS_WITH(ah.runAndVerify(runFunc, verifyFunc), Matches("RUN Barf"));
     }

@@ -554,7 +554,7 @@ struct TakesInt {
     int value;
     TakesInt(int x) : value{x} {
         if (x > 7) {
-            throw std::logic_error("Expected");
+            BOOST_THROW_EXCEPTION(std::logic_error("Expected"));
         }
     }
 };
