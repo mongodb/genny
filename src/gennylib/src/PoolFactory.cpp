@@ -135,7 +135,8 @@ struct PoolFactory::Config {
             }
         }
 
-        BOOST_THROW_EXCEPTION(InvalidConfigurationException("Did not recognize OptionType in setter"));
+        BOOST_THROW_EXCEPTION(
+            InvalidConfigurationException("Did not recognize OptionType in setter"));
     }
 
     std::optional<std::string_view> get(OptionType type, const std::string& key) {
@@ -159,7 +160,8 @@ struct PoolFactory::Config {
             }
         }
 
-        BOOST_THROW_EXCEPTION(InvalidConfigurationException("Did not recognize OptionType in getter"));
+        BOOST_THROW_EXCEPTION(
+            InvalidConfigurationException("Did not recognize OptionType in getter"));
     }
 
     bool getFlag(OptionType type, const std::string& key, bool defaultValue = false) {

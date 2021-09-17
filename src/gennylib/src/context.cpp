@@ -62,8 +62,9 @@ WorkloadContext::WorkloadContext(const Node& node,
                                 << " is deprecated in favor of ftdc.";
     }
 
-    auto metricsPath =
-        ((*this)["Metrics"]["Path"]).maybe<std::string>().value_or("build/WorkloadOutput/CedarMetrics");
+    auto metricsPath = ((*this)["Metrics"]["Path"])
+                           .maybe<std::string>()
+                           .value_or("build/WorkloadOutput/CedarMetrics");
 
     _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
 
@@ -139,8 +140,7 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
             // This should be impossible.
             // But invariants don't hurt we only call this during setup
             BOOST_THROW_EXCEPTION(
-                std::logic_error("Already have DefaultRandom for Actor " + std::to_string(id))
-            );
+                std::logic_error("Already have DefaultRandom for Actor " + std::to_string(id)));
         }
     }
     return _rngRegistry[id];

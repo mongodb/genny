@@ -76,7 +76,8 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
     auto entry = pool->try_acquire();
     if (!entry) {
         // TODO: better error handling
-        BOOST_THROW_EXCEPTION(InvalidConfigurationException("Failed to acquire an entry from the client pool."));
+        BOOST_THROW_EXCEPTION(
+            InvalidConfigurationException("Failed to acquire an entry from the client pool."));
     }
     return std::move(*entry);
 }

@@ -652,18 +652,17 @@ public:
         : _rng{generatorArgs.rng}, _format{node["format"].maybe<std::string>().value_or("")} {
         std::stringstream msg;
         if (!node["format"]) {
-            msg << "Malformed FormatString: format missing '" << _format << "'" << node
-                << "\n";
+            msg << "Malformed FormatString: format missing '" << _format << "'" << node << "\n";
         } else if (_format.empty()) {
-            msg << "Malformed FormatString: format cannot be empty '" << _format << "'"
-                << node << "\n";
+            msg << "Malformed FormatString: format cannot be empty '" << _format << "'" << node
+                << "\n";
         }
 
         if (!node["withArgs"]) {
             msg << "Malformed FormatString: withArgs missing." << node;
         } else if (!node["withArgs"].isSequence()) {
-            msg << "Malformed FormatString:  withArgs " << node.type()
-                << " not a sequence " << node;
+            msg << "Malformed FormatString:  withArgs " << node.type() << " not a sequence "
+                << node;
         }
 
         if (!msg.str().empty()) {

@@ -543,7 +543,8 @@ std::vector<std::string> distributeCollectionNames(size_t collectionCount,
     std::vector<std::string> collectionNames{};
     if ((threadCount > collectionCount && threadCount % collectionCount != 0) ||
         collectionCount % threadCount != 0) {
-        BOOST_THROW_EXCEPTION(std::invalid_argument("Thread count must be mutliple of database collection count"));
+        BOOST_THROW_EXCEPTION(
+            std::invalid_argument("Thread count must be mutliple of database collection count"));
     }
     int collectionsPerActor = threadCount > collectionCount ? 1 : collectionCount / threadCount;
     int collectionIndexStart = (actorId % collectionCount) * collectionsPerActor;

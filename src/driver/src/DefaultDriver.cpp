@@ -267,8 +267,9 @@ boost::log::trivial::severity_level parseVerbosity(const std::string& level) {
         return boost::log::trivial::fatal;
     }
 
-    BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid verbosity level '" + level +
-                                "'. Need one of trace/debug/info/warning/error/fatal"));
+    BOOST_THROW_EXCEPTION(
+        std::invalid_argument("Invalid verbosity level '" + level +
+                              "'. Need one of trace/debug/info/warning/error/fatal"));
 }
 
 }  // namespace
