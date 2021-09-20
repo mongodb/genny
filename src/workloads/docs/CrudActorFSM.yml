@@ -81,10 +81,10 @@ Actors:
       # Question: Should we support having a single fire operation with repeating operations? Here I
       # could invent a case where the following operation is repeat 1, but there is another
       # operation that repeats once a second while in this state. I don't know how to represent
-      # that.  
+      # that.
       - OperationName: updateOne
         OperationCommand:
-          Filter: &filter {phoneID: {^ActorID: {}}}
+          Filter: &filter {phoneID: {^ActorId: {}}}
           Update:
             $set: {state: "On"}
 

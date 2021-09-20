@@ -90,7 +90,7 @@ Actors:
       # there may be states with long delays.
       - OperationName: updateOne
         OperationCommand:
-          Filter: &filter {phoneID: {^ActorID: {}}}
+          Filter: &filter {phoneID: {^ActorId: {}}}
           Update:
             $set: {state: "On"}
 
@@ -119,8 +119,7 @@ Actors:
               $inc: {count: 1}
       - To: "Sleep"
         Weight: 2
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
         Operations:
         - OperationName: updateOne
           OperationCommand:
@@ -129,8 +128,7 @@ Actors:
               $inc: {count: 1}
       - To: "Error"
         Weight: 0.2
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
         Operations:
         - OperationName: updateOne
           OperationCommand:
@@ -148,8 +146,7 @@ Actors:
       Transitions:  # Can only go to On from Off
       - To: "On"
         Weight: 1
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
 
     - Name: Sleep
       Operations:
@@ -161,12 +158,10 @@ Actors:
       Transitions:  # Can only go to On or Off from sleep
       - To: "On"
         Weight: 1
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
       - To: "Off"
         Weight: 1
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
     - Name: Error
       Operations:
       - OperationName: updateOne
@@ -177,8 +172,7 @@ Actors:
       Transitions:  # Turn off on error
       - To: "Off"
         Weight: 1
-        Delay:
-          Delay: {^RandomDouble: {min: 0, max: 15}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
 
     # In this example we always start in the off State
     InitialStates:
