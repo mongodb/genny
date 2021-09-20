@@ -43,8 +43,6 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: insertOne
-          Document: {phoneID: 0, state: "Off"}
-        - WriteCommand: insertOne
           Document: {phoneID: 1, state: "Off"}
         - WriteCommand: insertOne
           Document: {phoneID: 2, state: "Off"}
