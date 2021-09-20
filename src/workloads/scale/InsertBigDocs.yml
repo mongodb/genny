@@ -2,6 +2,8 @@
 
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/replication"
+Description: |
+  TODO: TIG-3321
 
 Actors:
 
@@ -20,10 +22,10 @@ Actors:
       string0: {^FastRandomString: {length: 15000000}}
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - replica
-          - replica-all-feature-flags
-          - single-replica
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas
+      - replica
+      - replica-all-feature-flags
+      - single-replica

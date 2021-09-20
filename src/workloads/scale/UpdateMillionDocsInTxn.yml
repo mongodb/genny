@@ -5,6 +5,8 @@
 
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
+Description: |
+  TODO: TIG-3320
 
 Actors:
 - Name: Loader
@@ -48,7 +50,7 @@ Actors:
   - *Nop
   - MetricsName: TransactionUpdate
     Repeat: 5
-    Collection: &Coll Collection0 # This is the default collection populated by the Loader.
+    Collection: &Coll Collection0  # This is the default collection populated by the Loader.
     ThrowOnFailure: false  # Transactions are allowed to fail.
     RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
     Operations:
@@ -68,7 +70,7 @@ Actors:
           OperationCommand:
             WriteOperations:
             - WriteCommand: updateMany
-              Filter: {x: { $exists: true }} # This will match all documents in the collection.
+              Filter: {x: { $exists: true }}  # This will match all documents in the collection.
               Update: {$inc: {x: 1}}
             Options:
               Ordered: true

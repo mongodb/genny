@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/stm"
+Owner: "@10gen/dev-prod-tips"
 Description: |
   Does w:2 writes for a Phase followed
   by w:3 writes for a second Phase.
@@ -36,9 +36,9 @@ Actors:
           Timeout: 6000 milliseconds
 
 AutoRun:
-  - When:
-      infrastructure_provisioning:
-        $eq: replica
-    ThenRun:
-      - mongodb_setup: replica-delay-mixed
-      - mongodb_setup: replica
+- When:
+    infrastructure_provisioning:
+      $eq: replica
+  ThenRun:
+  - mongodb_setup: replica-delay-mixed
+  - mongodb_setup: replica
