@@ -50,6 +50,8 @@ Actors:
           Document: {phoneID: 3, state: "Off"}
         - WriteCommand: insertOne
           Document: {phoneID: 4, state: "Off"}
+        - WriteCommand: insertOne
+          Document: {phoneID: 5, state: "Off"}
     - &nop {Nop: true}
     - *nop
 
