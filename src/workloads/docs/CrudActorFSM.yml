@@ -2,7 +2,7 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 
 description: |
-  TODO: This functionality does not exist yet. It will be implemented in PERF-2516.  The Curd Actor
+  TODO: This functionality does not exist yet. It will be implemented in PERF-2516.  The Crud Actor
   will support FSM definition, with operations associated with each states. Choices are declared
   with weights that are converted into probabilities.
 
@@ -43,15 +43,15 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: insertOne
-          Document: {phoneID: 1, state: "Off"}
+          Document: {phoneID: 1, currentPhoneState: "PhoneIsOff"}
         - WriteCommand: insertOne
-          Document: {phoneID: 2, state: "Off"}
+          Document: {phoneID: 2, currentPhoneState: "PhoneIsOff"}
         - WriteCommand: insertOne
-          Document: {phoneID: 3, state: "Off"}
+          Document: {phoneID: 3, currentPhoneState: "PhoneIsOff"}
         - WriteCommand: insertOne
-          Document: {phoneID: 4, state: "Off"}
+          Document: {phoneID: 4, currentPhoneState: "PhoneIsOff"}
         - WriteCommand: insertOne
-          Document: {phoneID: 5, state: "Off"}
+          Document: {phoneID: 5, currentPhoneState: "PhoneIsOff"}
     - &nop {Nop: true}
     - *nop
 
@@ -70,23 +70,24 @@ Actors:
       # Duration. These keywords behave the same as in Phase Control, but operate per state (i.e.,
       # per actor instance as it goes through the state machine.
       Repeat: 1
-      Operations:
+
       # A state can have (optional) a set of operations that execute upon entering the state. This
       # state updates a specific document to indicate it is in state On.
 
       # Note: Following the analogy to phases -- phases may be blocking or non-blocking. States are
-      # always non-blocking. When the phase ends, the state machine will finish any open operations,
-      # and then exit. It if is waiting for a delay, it will exit immediately. This is required as
-      # there may be states with long delays.
-      # Question: Should we support having a single fire operation with repeating operations? Here I
-      # could invent a case where the following operation is repeat 1, but there is another
-      # operation that repeats once a second while in this state. I don't know how to represent
-      # that.
+      # always non-blocking, in the sense that any sleepBefore, SleepAfter delays will be
+      # interrupted to close the phase. However, any active operations will be finished.
+
+      # For example, this phase has a 30 second duration, making it blocking. When that 30 seconds
+      # end all the actors will end their phases. If an actor is in a sleepBefore or sleepAfter
+      # delay, it will exit the phase. If the actor is exucting a state's operations, it will
+      # complete those operations, and then exit the phase.
+      Operations:
       - OperationName: updateOne
         OperationCommand:
           Filter: &filter {phoneID: {^ActorId: {}}}
           Update:
-            $set: {state: "On"}
+            $set: {currentPhoneState: "PhoneIsOn"}
 
       # Transitions specifies next states, delays, and operations. The On state can transition to
       # each of the three other states
@@ -98,7 +99,12 @@ Actors:
         # 0.
         Weight: 1
 
-        # Transitions also support the phase keywords of sleepBefore, sleepAfter, and repeat.
+        # Transitions also support the phase keywords of sleepBefore, sleepAfter, and repeat.  For
+        # sleepBefore, the system is considered to remain in it's current state. If there is a
+        # repeating action, it will continue repeating until the transition fires.  For repeat, the
+        # operation is repeated immediately.  sleepAfter will not be supported for transitions with
+        # no operations.
+
         # ^TimeSpec is a proposed generator to randomly generate acceptable TimeSpecs with units. It
         # accepts any valid int or double generator or constant for value.
         SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
@@ -109,7 +115,7 @@ Actors:
         OperationCommand:
           Filter: *filter
           Update:
-            $set: {state: "Off"}
+            $set: {currentPhoneState: "PhoneIsOff"}
       Transitions:  # Can only go to On from Off
       - To: "On"
         Weight: 1
@@ -121,7 +127,7 @@ Actors:
         OperationCommand:
           Filter: *filter
           Update:
-            $set: {state: "Sleep"}
+            $set: {currentPhoneState: "PhoneIsSleeping"}
       Transitions:  # Can only go to On or Off from sleep
       - To: "On"
         Weight: 1
@@ -136,7 +142,7 @@ Actors:
         OperationCommand:
           Filter: *filter
           Update:
-            $set: {state: "Error"}
+            $set: {currentPhoneState: "PhoneIsInError"}
       Transitions:  # Turn off on error
       - To: "Off"
         Weight: 1

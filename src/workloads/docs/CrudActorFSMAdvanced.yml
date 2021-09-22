@@ -47,21 +47,21 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: insertOne
-          Document: {phoneID: 1, state: "Off"}
+          Document: {phoneID: 1, currentPhoneState: "PhoneIsOff"}
         - WriteCommand: insertOne
-          Document: {phoneID: 2, state: "Off"}
+          Document: {phoneID: 2, currentPhoneState: "PhoneIsOff"}
         - WriteCommand: insertOne
-          Document: {phoneID: 3, state: "Off"}
+          Document: {phoneID: 3, currentPhoneState: "PhoneIsOff"}
         - WriteCommand: insertOne
-          Document: {phoneID: 4, state: "Off"}
+          Document: {phoneID: 4, currentPhoneState: "PhoneIsOff"}
         - WriteCommand: insertOne
-          Document: {phoneID: 5, state: "Off"}
+          Document: {phoneID: 5, currentPhoneState: "PhoneIsOff"}
         - WriteCommand: insertOne
-          Document: {stat: "OnOff", count: 0}
+          Document: {statistic: "OnOff", count: 0}
         - WriteCommand: insertOne
-          Document: {stat: "OnSleep", count: 0}
+          Document: {statistic: "OnSleep", count: 0}
         - WriteCommand: insertOne
-          Document: {stat: "OnError", count: 0}
+          Document: {statistic: "OnError", count: 0}
     - &nop {Nop: true}
     - *nop
 
@@ -92,7 +92,7 @@ Actors:
         OperationCommand:
           Filter: &filter {phoneID: {^ActorId: {}}}
           Update:
-            $set: {state: "On"}
+            $set: {currentPhoneState: "PhoneIsOn"}
 
       # Transitions specifies next states, delays, and operations. The On state can transition to
       # each of the three other states
@@ -109,12 +109,11 @@ Actors:
         # accepts any valid int or double generator or constant for value.
         SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
 
-        # TODO: REmove the transition operations
         # In this advanced case, operations may also be associated with transitions.
         Operations:
         - OperationName: updateOne
           OperationCommand:
-            Filter: {stat: "OnOff"}
+            Filter: {statistic: "OnOff"}
             Update:
               $inc: {count: 1}
       - To: "Sleep"
@@ -123,7 +122,7 @@ Actors:
         Operations:
         - OperationName: updateOne
           OperationCommand:
-            Filter: {stat: "OnSleep"}
+            Filter: {statistic: "OnSleep"}
             Update:
               $inc: {count: 1}
       - To: "Error"
@@ -132,7 +131,7 @@ Actors:
         Operations:
         - OperationName: updateOne
           OperationCommand:
-            Filter: {stat: "OnError"}
+            Filter: {statistic: "OnError"}
             Update:
               $inc: {count: 1}
 
@@ -142,7 +141,7 @@ Actors:
         OperationCommand:
           Filter: *filter
           Update:
-            $set: {state: "Off"}
+            $set: {currentPhoneState: "PhoneIsOff"}
       Transitions:  # Can only go to On from Off
       - To: "On"
         Weight: 1
@@ -154,7 +153,7 @@ Actors:
         OperationCommand:
           Filter: *filter
           Update:
-            $set: {state: "Sleep"}
+            $set: {currentPhoneState: "PhoneIsSleeping"}
       Transitions:  # Can only go to On or Off from sleep
       - To: "On"
         Weight: 1
@@ -168,7 +167,7 @@ Actors:
         OperationCommand:
           Filter: *filter
           Update:
-            $set: {state: "Error"}
+            $set: {currentPhoneState: "PhoneIsInError"}
       Transitions:  # Turn off on error
       - To: "Off"
         Weight: 1
