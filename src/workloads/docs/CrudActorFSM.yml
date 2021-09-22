@@ -80,7 +80,7 @@ Actors:
 
       # For example, this phase has a 30 second duration, making it blocking. When that 30 seconds
       # end all the actors will end their phases. If an actor is in a sleepBefore or sleepAfter
-      # delay, it will exit the phase. If the actor is exucting a state's operations, it will
+      # delay, it will exit the phase. If the actor is executing a state's operations, it will
       # complete those operations, and then exit the phase.
       Operations:
       - OperationName: updateOne
