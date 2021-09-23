@@ -54,6 +54,7 @@ Actors:
       d: {^RandomInt: {min: 1, max: 600}}
       e: {^RandomInt: {min: 1, max: 600}}
       f: {^RandomInt: {min: 1, max: 30}}
+      g: {^RandomInt: {min: 1, max: 1500}}
       s: {^RandomString: {length: 3000}}
   - *Nop
   - *Nop
@@ -167,6 +168,23 @@ Actors:
             {$project: {s: 0, "matches.s": 0}}
           ]
         cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroOneToTwo
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$graphLookup: {
+              from: "Collection1",
+              startWith: "$g",
+              connectFromField: "g",
+              connectToField: "g",
+              as: "matches",
+              maxDepth: 0
+            }},
+            {$project: {s: 0, "matches.s": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
     - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroOneToFive
       OperationName: RunCommand
       OperationCommand:
@@ -201,12 +219,30 @@ Actors:
             {$project: {s: 0, "matches.s": 0}}
           ]
         cursor: {batchSize: *NumDocs}
-    - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroMatchOneToTenTargeted
+    - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroMatchAllShards
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
         pipeline:
           [
+            {$graphLookup: {
+              from: "Collection1",
+              startWith: "$c",
+              connectFromField: "c",
+              connectToField: "c",
+              as: "matches",
+              maxDepth: 0
+            }},
+            {$project: {s: 0, "matches.s": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroMatchSomeShards
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$match: {c: {$in: [1, 2, 3]}}},
             {$graphLookup: {
               from: "Collection1",
               startWith: "$c",
