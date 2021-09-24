@@ -225,6 +225,7 @@ Actors:
         aggregate: Collection0
         pipeline:
           [
+            {$match: {a: {$lte: 30}}},
             {$graphLookup: {
               from: "Collection1",
               startWith: "$c",
