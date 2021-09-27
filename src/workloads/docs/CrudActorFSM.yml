@@ -6,6 +6,9 @@ description: |
   will support FSM definition, with operations associated with each states. Choices are declared
   with weights that are converted into probabilities.
 
+  TODO: Remove this file from skipped dry run list when implemented
+  (src/lamplib/src/genny/tasks/dry_run.py)
+
   There is an initial state vector, with weight. Each actor instance will probabilistically and
   independently choose it's initial state based on the weights.
 
