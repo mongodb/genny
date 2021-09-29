@@ -1,7 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: |
-  TODO: TIG-3324
+Description: >
+  This workload sequentially issues the same query in various combinations of projection and index
+  presence.
 
 Actors:
 

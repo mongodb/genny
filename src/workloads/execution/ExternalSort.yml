@@ -1,7 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: |
-  TODO: TIG-3324
+Description: >
+  Measures the performance of sort operations that spill to disk. Each benchmarked operation
+  exercises the external sort algorithm by running a query that sorts a large collection without an
+  index. Using an 'executionStats' explain causes each command to run its execution plan until no
+  documents remain, which ensures that the sort algorithm executes in its entirety.
 
 Actors:
 - Name: InsertData
