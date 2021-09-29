@@ -3,10 +3,11 @@ Owner: "@mongodb/product-perf"
 
 description: |
   This example extends CrudActorFSM.yml, with the addition of operations associated with
-  transitions, in addition to states. We have not implemented this functionality at this point, but
-  are adding this example definition in case someone wants the functionality at some future
-  point. It uses the CrudActor to implement a FSM. Choices are declared with weights that are
-  converted into probabilities.
+  transitions, in addition to states. We have not implemented this functionality at this point, nor
+  have explicit plans to implement. As such, this example should be considered suggestive of future
+  functionality, but not prescriptive. We include this example definition in case someone wants the
+  functionality at some future point and to guide discussion. It uses the CrudActor to implement a
+  FSM. Choices are declared with weights that are converted into probabilities.
 
   TODO: Remove this file from skipped dry run list when implemented
   (src/lamplib/src/genny/tasks/dry_run.py)
@@ -50,21 +51,21 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: insertOne
-          Document: {phoneID: 1, currentPhoneState: "PhoneIsOff"}
+          Document: {phoneID: 1, currentPhoneState: PhoneIsOff}
         - WriteCommand: insertOne
-          Document: {phoneID: 2, currentPhoneState: "PhoneIsOff"}
+          Document: {phoneID: 2, currentPhoneState: PhoneIsOff}
         - WriteCommand: insertOne
-          Document: {phoneID: 3, currentPhoneState: "PhoneIsOff"}
+          Document: {phoneID: 3, currentPhoneState: PhoneIsOff}
         - WriteCommand: insertOne
-          Document: {phoneID: 4, currentPhoneState: "PhoneIsOff"}
+          Document: {phoneID: 4, currentPhoneState: PhoneIsOff}
         - WriteCommand: insertOne
-          Document: {phoneID: 5, currentPhoneState: "PhoneIsOff"}
+          Document: {phoneID: 5, currentPhoneState: PhoneIsOff}
         - WriteCommand: insertOne
-          Document: {statistic: "OnOff", count: 0}
+          Document: {statistic: OnOff, count: 0}
         - WriteCommand: insertOne
-          Document: {statistic: "OnSleep", count: 0}
+          Document: {statistic: OnSleep, count: 0}
         - WriteCommand: insertOne
-          Document: {statistic: "OnError", count: 0}
+          Document: {statistic: OnError, count: 0}
     - &nop {Nop: true}
     - *nop
 
@@ -95,7 +96,7 @@ Actors:
         OperationCommand:
           Filter: &filter {phoneID: {^ActorId: {}}}
           Update:
-            $set: {currentPhoneState: "PhoneIsOn"}
+            $set: {currentPhoneState: PhoneIsOn}
 
       # Transitions specifies next states, delays, and operations. The On state can transition to
       # each of the three other states
@@ -110,31 +111,31 @@ Actors:
         # Transitions also support the phase keywords of sleepBefore, sleepAfter, and repeat.
         # ^TimeSpec is a proposed generator to randomly generate acceptable TimeSpecs with units. It
         # accepts any valid int or double generator or constant for value.
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
 
         # In this advanced case, operations may also be associated with transitions.
         Operations:
         - OperationName: updateOne
           OperationCommand:
-            Filter: {statistic: "OnOff"}
+            Filter: {statistic: OnOff}
             Update:
               $inc: {count: 1}
-      - To: "Sleep"
+      - To: Sleep
         Weight: 2
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
         Operations:
         - OperationName: updateOne
           OperationCommand:
-            Filter: {statistic: "OnSleep"}
+            Filter: {statistic: OnSleep}
             Update:
               $inc: {count: 1}
-      - To: "Error"
+      - To: Error
         Weight: 0.2
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
         Operations:
         - OperationName: updateOne
           OperationCommand:
-            Filter: {statistic: "OnError"}
+            Filter: {statistic: OnError}
             Update:
               $inc: {count: 1}
 
@@ -144,11 +145,11 @@ Actors:
         OperationCommand:
           Filter: *filter
           Update:
-            $set: {currentPhoneState: "PhoneIsOff"}
+            $set: {currentPhoneState: PhoneIsOff}
       Transitions:  # Can only go to On from Off
       - To: "On"
         Weight: 1
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
 
     - Name: Sleep
       Operations:
@@ -156,25 +157,25 @@ Actors:
         OperationCommand:
           Filter: *filter
           Update:
-            $set: {currentPhoneState: "PhoneIsSleeping"}
+            $set: {currentPhoneState: PhoneIsSleeping}
       Transitions:  # Can only go to On or Off from sleep
       - To: "On"
         Weight: 1
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
       - To: "Off"
         Weight: 1
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
     - Name: Error
       Operations:
       - OperationName: updateOne
         OperationCommand:
           Filter: *filter
           Update:
-            $set: {currentPhoneState: "PhoneIsInError"}
+            $set: {currentPhoneState: PhoneIsInError}
       Transitions:  # Turn off on error
       - To: "Off"
         Weight: 1
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
 
     # In this example we always start in the off State
     InitialStates:

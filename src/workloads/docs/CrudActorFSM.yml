@@ -46,15 +46,15 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: insertOne
-          Document: {phoneID: 1, currentPhoneState: "PhoneIsOff"}
+          Document: {phoneID: 1, currentPhoneState: PhoneIsOff}
         - WriteCommand: insertOne
-          Document: {phoneID: 2, currentPhoneState: "PhoneIsOff"}
+          Document: {phoneID: 2, currentPhoneState: PhoneIsOff}
         - WriteCommand: insertOne
-          Document: {phoneID: 3, currentPhoneState: "PhoneIsOff"}
+          Document: {phoneID: 3, currentPhoneState: PhoneIsOff}
         - WriteCommand: insertOne
-          Document: {phoneID: 4, currentPhoneState: "PhoneIsOff"}
+          Document: {phoneID: 4, currentPhoneState: PhoneIsOff}
         - WriteCommand: insertOne
-          Document: {phoneID: 5, currentPhoneState: "PhoneIsOff"}
+          Document: {phoneID: 5, currentPhoneState: PhoneIsOff}
     - &nop {Nop: true}
     - *nop
 
@@ -90,7 +90,7 @@ Actors:
         OperationCommand:
           Filter: &filter {phoneID: {^ActorId: {}}}
           Update:
-            $set: {currentPhoneState: "PhoneIsOn"}
+            $set: {currentPhoneState: PhoneIsOn}
 
       # Transitions specifies next states, delays, and operations. The On state can transition to
       # each of the three other states
@@ -102,15 +102,15 @@ Actors:
         # 0.
         Weight: 1
 
-        # Transitions also support the phase keywords of sleepBefore, sleepAfter, and repeat.  For
-        # sleepBefore, the system is considered to remain in it's current state. If there is a
-        # repeating action, it will continue repeating until the transition fires.  For repeat, the
-        # operation is repeated immediately.  sleepAfter will not be supported for transitions with
-        # no operations.
+        # Transitions also support the phase keyword sleepBefore.  For sleepBefore, the system is
+        # considered to remain in it's current state. If there is a repeating action in the state,
+        # it will continue repeating until the transition fires. The transition always respects the
+        # blocking behavior of the phase. If the phase ends during a sleepBefore, the transition is
+        # aborted.
 
         # ^TimeSpec is a proposed generator to randomly generate acceptable TimeSpecs with units. It
         # accepts any valid int or double generator or constant for value.
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
 
     - Name: "Off"  # The device is Off
       Operations:
@@ -118,11 +118,11 @@ Actors:
         OperationCommand:
           Filter: *filter
           Update:
-            $set: {currentPhoneState: "PhoneIsOff"}
+            $set: {currentPhoneState: PhoneIsOff}
       Transitions:  # Can only go to On from Off
       - To: "On"
         Weight: 1
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
 
     - Name: Sleep
       Operations:
@@ -130,14 +130,14 @@ Actors:
         OperationCommand:
           Filter: *filter
           Update:
-            $set: {currentPhoneState: "PhoneIsSleeping"}
+            $set: {currentPhoneState: PhoneIsSleeping}
       Transitions:  # Can only go to On or Off from sleep
       - To: "On"
         Weight: 1
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
       - To: "Off"
         Weight: 1
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
 
     - Name: Error
       Operations:
@@ -145,11 +145,11 @@ Actors:
         OperationCommand:
           Filter: *filter
           Update:
-            $set: {currentPhoneState: "PhoneIsInError"}
+            $set: {currentPhoneState: PhoneIsInError}
       Transitions:  # Turn off on error
       - To: "Off"
         Weight: 1
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: "seconds"}}
+        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
 
     # In this example we always start in the off State
     InitialStates:
