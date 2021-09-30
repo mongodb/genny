@@ -32,6 +32,7 @@
 #include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/conventions.hpp>
+#include <value_generators/DefaultRandom.hpp>
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
@@ -1132,6 +1133,17 @@ std::string getDbName(const PhaseContext& phaseContext) {
     return phaseDb ? *phaseDb : *actorDb;
 }
 
+// Represents one state in an FSM.
+struct State {
+    std::vector<std::unique_ptr<BaseOperation>> operations;
+    metrics::Operation metrics;
+    // Transitions are just next states with probabilities.
+    // There is an entry for every state, regardless of whether there is a transition.
+    // If we want to support multiple transitions to the same state (for different ops), then this
+    // will need to be re-written.
+    std::vector<double> transition_weights;
+};
+
 }  // namespace
 
 namespace genny::actor {
@@ -1164,6 +1176,8 @@ struct CrudActor::CollectionName {
 
 struct CrudActor::PhaseConfig {
     std::vector<std::unique_ptr<BaseOperation>> operations;
+    std::vector<std::unique_ptr<State>> states;
+    std::vector<double> initial_state_weights;
     metrics::Operation metrics;
     std::string dbName;
     CrudActor::CollectionName collectionName;
@@ -1206,23 +1220,55 @@ struct CrudActor::PhaseConfig {
                                    id);
         };
 
+        auto addState = [&](const Node& node) -> std::unique_ptr<State> {
+            BOOST_THROW_EXCEPTION(std::logic_error("Not implemented"));
+        };
         // Check if we have Operatopms or States. Through an error if we have both.
-        assert !(phaseContext["Operations"] and phaseContext["states"]) {}
-        operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
-            "Operation", "Operations", addOperation);
+        if (phaseContext["Operations"] and phaseContext["States"]) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "CrudActor has Operations and States at the same time."));
+        }
+        if (phaseContext["Operations"]) {
+            operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
+                "Operation", "Operations", addOperation);
+        } else if (phaseContext["States"]) {  // Parse out the states}
+            states = phaseContext.getPlural<std::unique_ptr<State>>("State", "States", addState);
+        } else {  // Throw a useful error}
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("CrudActor has neither Operations nor States "
+                                              "specified. Exactly one must be defined."));
+        }
     }
 };
 
 void CrudActor::run() {
+    int current_state = 0;
     for (auto&& config : _loop) {
         auto session = _client->start_session();
+        // TODO: If running without states, define a single state with the operations
+        if (!config->states.empty()) {
+            // pick the initial state for the phase
+            auto initial_distribution =
+                boost::random::discrete_distribution(config->initial_state_weights);
+            current_state = initial_distribution(_rng);
+        }
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
 
-            for (auto&& op : config->operations) {
-                op->run(session);
+            if (!config->states.empty()) {
+                // pick next state
+                auto distribution = boost::random::discrete_distribution(
+                    config->states[current_state]->transition_weights);
+                current_state = distribution(_rng);
+                // run the operations for the next state.
+                for (auto&& op : config->states[current_state]->operations) {
+                    op->run(session);
+                }
+            } else {
+                for (auto&& op : config->operations) {
+                    op->run(session);
+                }
             }
-
             metricsContext.success();
         }
     }
@@ -1232,7 +1278,8 @@ CrudActor::CrudActor(genny::ActorContext& context)
     : Actor(context),
       _client{std::move(
           context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
-      _loop{context, _client, CrudActor::id()} {}
+      _loop{context, _client, CrudActor::id()},
+      _rng{context.workload().getRNGForThread(CrudActor::id())} {}
 
 namespace {
 auto registerCrudActor = Cast::registerDefault<CrudActor>();
