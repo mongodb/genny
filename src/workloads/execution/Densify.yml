@@ -14,7 +14,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 10000
-    BatchSize: &batchSize 1000
+    BatchSize: &batchSize 30000 # Documents will be roughly 5 bytes in size, and we won't generate more than 30k documents, which is less than 1mb.
     Document:
       partitionKey: {^RandomInt: {min: 1, max: 100}}
       # Test a subset of units that have different characteristics.
@@ -72,7 +72,7 @@ Actors:
     Database: *db
     Operations:
 
-    # Metrics are grouped by the step unit they operate with (numiric, millisecond, hour, month).
+    # Metrics are grouped by the step unit they operate with (numeric, millisecond, hour, month).
     # Each group has a metric for each possible codepath (Partition/no partition, explicit/full/partitioned bounds).
 
     # Numeric metrics. 
