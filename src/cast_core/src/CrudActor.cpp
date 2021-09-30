@@ -1206,6 +1206,8 @@ struct CrudActor::PhaseConfig {
                                    id);
         };
 
+        // Check if we have Operatopms or States. Through an error if we have both.
+        assert !(phaseContext["Operations"] and phaseContext["states"]) {}
         operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
             "Operation", "Operations", addOperation);
     }
