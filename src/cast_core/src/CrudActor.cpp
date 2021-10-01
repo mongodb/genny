@@ -1135,13 +1135,19 @@ std::string getDbName(const PhaseContext& phaseContext) {
 
 // Represents one state in an FSM.
 struct State {
+
+public:
     std::vector<std::unique_ptr<BaseOperation>> operations;
-    metrics::Operation metrics;
+    //    metrics::Operation metrics;
     // Transitions are just next states with probabilities.
     // There is an entry for every state, regardless of whether there is a transition.
     // If we want to support multiple transitions to the same state (for different ops), then this
     // will need to be re-written.
+    std::string state_name;
     std::vector<double> transition_weights;
+    std::vector<int> transition_next_states;
+    // Combine the transition delay into a tuple with the next state in the vector above
+    // std::vector<> transition_delay; // this should be a time spec of some kind.
 };
 
 }  // namespace
@@ -1181,11 +1187,15 @@ struct CrudActor::PhaseConfig {
     metrics::Operation metrics;
     std::string dbName;
     CrudActor::CollectionName collectionName;
+    bool continue_current_state;
+
+    // min time of next operation
 
     PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id)
         : dbName{getDbName(phaseContext)},
           metrics{phaseContext.actor().operation("Crud", id)},
-          collectionName{phaseContext} {
+          collectionName{phaseContext},
+          continue_current_state{false} {
         auto name = collectionName.generateName(id);
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
             auto collection = (*client)[dbName][name];
@@ -1209,7 +1219,6 @@ struct CrudActor::PhaseConfig {
             // Node is convertible to bool but only explicitly so need to do the odd-looking
             // `? true : false` thing.
             const bool perPhaseMetrics = phaseContext["MetricsName"] ? true : false;
-
             auto createOperation = op->second;
             return createOperation(yamlCommand,
                                    onSession,
@@ -1220,8 +1229,24 @@ struct CrudActor::PhaseConfig {
                                    id);
         };
 
-        auto addState = [&](const Node& node) -> std::unique_ptr<State> {
-            BOOST_THROW_EXCEPTION(std::logic_error("Not implemented"));
+        auto addState =
+            [&](const Node& node,
+                const std::unordered_map<std::string, int> states) -> std::unique_ptr<State> {
+            //           State myState;
+            auto stateName = node["Name"].to<std::string>();
+            // Skipping repeat for now
+            // operations
+            auto stateOperations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
+                "Operation", "Operations", addOperation);
+            // Transitions
+            std::vector<double> weights;
+            std::vector<int> next_states;
+            for (auto [k, transitionYaml] : node["Transitions"]) {
+                weights.emplace_back(transitionYaml["Weight"].to<int>());
+                next_states.emplace_back(states.at(transitionYaml["To"].to<std::string>()));
+            }
+            return std::unique_ptr<State>(new State{
+                std::move(operations), stateName, std::move(weights), std::move(next_states)});
         };
         // Check if we have Operatopms or States. Through an error if we have both.
         if (phaseContext["Operations"] and phaseContext["States"]) {
@@ -1232,7 +1257,17 @@ struct CrudActor::PhaseConfig {
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOperation);
         } else if (phaseContext["States"]) {  // Parse out the states}
-            states = phaseContext.getPlural<std::unique_ptr<State>>("State", "States", addState);
+            // build the list of states, and then actuall process the states
+            int i = 0;
+            std::unordered_map<std::string, int> stateNames;
+            for (auto [k, state] : phaseContext["states"]) {
+                stateNames.at(state["name"].to<std::string>()) = i;
+                i++;
+            }
+            for (auto [k, state] : phaseContext["states"]) {
+                states.emplace_back(addState(state, stateNames));
+            }
+            // states = phaseContext.getPlural<std::unique_ptr<State>>("State", "States", addState);
         } else {  // Throw a useful error}
             BOOST_THROW_EXCEPTION(
                 InvalidConfigurationException("CrudActor has neither Operations nor States "
@@ -1243,27 +1278,37 @@ struct CrudActor::PhaseConfig {
 
 void CrudActor::run() {
     int current_state = 0;
+    int next_state = 0;
     for (auto&& config : _loop) {
         auto session = _client->start_session();
         // TODO: If running without states, define a single state with the operations
-        if (!config->states.empty()) {
+        if (!config->states.empty() and !config->continue_current_state) {
             // pick the initial state for the phase
             auto initial_distribution =
                 boost::random::discrete_distribution(config->initial_state_weights);
-            current_state = initial_distribution(_rng);
+            next_state = initial_distribution(_rng);
         }
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
 
             if (!config->states.empty()) {
-                // pick next state
-                auto distribution = boost::random::discrete_distribution(
-                    config->states[current_state]->transition_weights);
-                current_state = distribution(_rng);
+                // Simplifying Assumption -- one shot operations on state enter
+                // We are here to fire those operations, and then pick the next state.
+                // next todo: add in the delay after picking the next state
+                // next next todo: Add support for repeated operations in the state
+
+                // transition to the next state
+                current_state = next_state;
                 // run the operations for the next state.
                 for (auto&& op : config->states[current_state]->operations) {
                     op->run(session);
                 }
+                // pick next state
+                auto distribution = boost::random::discrete_distribution(
+                    config->states[current_state]->transition_weights);
+                next_state =
+                    config->states[current_state]->transition_next_states[distribution(_rng)];
+                // pick the delay for the next state
             } else {
                 for (auto&& op : config->operations) {
                     op->run(session);
