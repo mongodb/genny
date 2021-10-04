@@ -119,3 +119,6 @@ AutoRun:
       $eq:
       - atlas
       - replica
+    branch_name:
+      $neq:
+      - v4.0

@@ -1,5 +1,8 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/stm"
+Owner: "@10gen/dev-prod-tips"
+Description: |
+  This workload demonstrates the RunCommand actor, which can be used
+  to execute a command against the server.
 
 Actors:
 - Name: ServerStatusInsertFind
@@ -27,6 +30,6 @@ Actors:
       OperationName: RunCommand
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq: standalone-dsi-integration-test
+- When:
+    mongodb_setup:
+      $eq: standalone-dsi-integration-test

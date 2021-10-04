@@ -1,10 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
+Description: |
+  TODO: TIG-3322
 
-# Test workload to evaluate Storage Engine behavior when running in a 
+# Test workload to evaluate Storage Engine behavior when running in a
 # degraded replica set with or without eMRCf enabled.  A "degraded" replica
 # set here means one without an active majority of data bearing nodes.  I.e.,
-# a PSA set with the Secondary offline.  
+# a PSA set with the Secondary offline.
 
 # Currently the workload is split across several yml files because we need to script
 # some things between different parts.  This is the grow phase.  It churns our dataset
@@ -24,7 +26,7 @@ GlobalDefaults:
   RandomMediumString: &rand_medium_string {^RandomString: {length: {^RandomInt: {min: 160, max: 960}}}}
   RandomLargeString: &rand_large_string {^RandomString: {length: {^RandomInt: {min: 960, max: 4960}}}}
 
-  TestDB: &TestDB test # Name of test database
+  TestDB: &TestDB test  # Name of test database
 
   SmallDocCount: &small_doc_count 10000000
   LargeDocCount: &large_doc_count 1000000
@@ -44,12 +46,12 @@ GlobalDefaults:
 # a random key will target the oldest document with that key value, thus 1% of the dataset
 #
 # The secondary key (key2) is a random value selected from 1 to 1000.  It can be used (awkwardly)
-# to broaden the set of documents that a test targets.  For example, issuing a pair of operations 
+# to broaden the set of documents that a test targets.  For example, issuing a pair of operations
 # to random primary keys and one selecting key2 <= 500 and the other selecting key2 > 500 will
 # target two documents for each primary key value, thus targeting 2 documents for each key
 # value, or 2% of the population.
 
-Document: &small_doc
+SmallDocument: &small_doc
   key1: *small_doc_key
   key2: *rand_1k_int
   data1: *rand_4b_int
@@ -60,7 +62,7 @@ Document: &small_doc
   tag: *short_string
   payload: *rand_short_string
 
-Document: &large_doc
+LargeDocument: &large_doc
   key1: *large_doc_key
   key2: *rand_1k_int
   data1: *rand_4b_int
@@ -87,7 +89,7 @@ Actors:
   Type: CrudActor
   Database: *TestDB
   Threads: 10
-  Phases: 
+  Phases:
   - Repeat: 100000
     Threads: 10
     Collection: Collection0
@@ -112,22 +114,22 @@ Actors:
     Operations:
     - OperationName: findOne
       OperationCommand:
-        Filter: {$and: [ {key1: *small_doc_key}, {key2: {$gt: 500}} ] }
+        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 500}}]}
     - OperationName: updateOne
       OperationCommand:
-        Filter: {$and: [ {key1: *small_doc_key}, {key2: {$lte: 500}} ] }
+        Filter: {$and: [{key1: *small_doc_key}, {key2: {$lte: 500}}]}
         Update: {$set: {data1: *rand_4b_int}}
     - OperationName: findOne
       OperationCommand:
-        Filter: {$and: [ {key1: *small_doc_key}, {key2: {$lte: 500}} ] }
+        Filter: {$and: [{key1: *small_doc_key}, {key2: {$lte: 500}}]}
     - OperationName: updateOne
       OperationCommand:
-        Filter: {$and: [ {key1: *small_doc_key}, {key2: {$gt: 500}} ] }
+        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 500}}]}
         Update: {$set: {payload: *rand_short_string}}
   - {Nop: true}
   - {Nop: true}
 
-# 90/10 mix of reads/updates.  
+# 90/10 mix of reads/updates.
 - Name: ReadMostlyPhase
   Type: CrudActor
   Database: *TestDB
@@ -161,22 +163,22 @@ Actors:
     # a given primary key
     - OperationName: findOne
       OperationCommand:
-        Filter: {$and: [ {key1: *small_doc_key}, {key2: {$gt: 0}}, {key2: {$lte: 200}} ] }
+        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 0}}, {key2: {$lte: 200}}]}
     - OperationName: findOne
       OperationCommand:
-        Filter: {$and: [ {key1: *small_doc_key}, {key2: {$gt: 200}}, {key2: {$lte: 400}} ] }
+        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 200}}, {key2: {$lte: 400}}]}
     - OperationName: findOne
       OperationCommand:
-        Filter: {$and: [ {key1: *small_doc_key}, {key2: {$gt: 400}}, {key2: {$lte: 600}} ] }
+        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 400}}, {key2: {$lte: 600}}]}
     - OperationName: findOne
       OperationCommand:
-        Filter: {$and: [ {key1: *small_doc_key}, {key2: {$gt: 600}}, {key2: {$lte: 800}} ] }
+        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 600}}, {key2: {$lte: 800}}]}
     - OperationName: findOne
       OperationCommand:
-        Filter: {$and: [ {key1: *small_doc_key}, {key2: {$gt: 800}}, {key2: {$lte: 1000}} ] }
+        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 800}}, {key2: {$lte: 1000}}]}
   - {Nop: true}
 
-# Delete the same number of documents that we added, returning the database to the original 
+# Delete the same number of documents that we added, returning the database to the original
 # population (i.e., # of documents)
 - Name: DeletePhase
   Type: CrudActor
@@ -190,9 +192,9 @@ Actors:
     Threads: 10
     Collection: Collection0
     Operations:
-      - OperationName: deleteOne
-        OperationCommand: 
-          Filter: {key1: *small_doc_key}
+    - OperationName: deleteOne
+      OperationCommand:
+        Filter: {key1: *small_doc_key}
 
 # WARNING: Future versions of Genny won't support the cvs-ftdc metrics format.
 Metrics:
