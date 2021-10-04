@@ -90,6 +90,20 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericFullDensifyLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            range: {
+              bounds: "full", 
+              step: {^RandomInt: &largeStep {min: 7, max: 11}}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: NumericFullDensifyByPartitionSmallStep
       OperationName: RunCommand
       OperationCommand:
@@ -101,6 +115,21 @@ Actors:
             range: {
               bounds: "full", 
               step: {^RandomInt: *smallStep}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericFullDensifyByPartitionLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              bounds: "full", 
+              step: {^RandomInt: *largeStep}
             }
           }
         }]
@@ -120,6 +149,21 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericPartitionedDensifyByPartitionLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              bounds: "partition", 
+              step: {^RandomInt: *largeStep}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: NumericExplicitRangeDensifySmallStep
       OperationName: RunCommand
       OperationCommand:
@@ -129,6 +173,20 @@ Actors:
             field: "number", 
             range: {
               step: {^RandomInt: *smallStep}, 
+              bounds: [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericExplicitRangeDensifyLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            range: {
+              step: {^RandomInt: *largeStep}, 
               bounds: [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
             }
           }
@@ -149,64 +207,6 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-    - OperationMetricsName: NumericFullDensifyLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            range: {
-              bounds: "full", 
-              step: {^RandomInt: &largeStep {min: 7, max: 11}}
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: NumericFullDensifyByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              bounds: "full", 
-              step: {^RandomInt: *largeStep}
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: NumericPartitionedDensifyByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              bounds: "partition", 
-              step: {^RandomInt: *largeStep}
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: NumericExplicitRangeDensifyLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            range: {
-              step: {^RandomInt: *largeStep}, 
-              bounds: [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
     - OperationMetricsName: NumericExplicitRangeDensifyByPartitionLargeStep
       OperationName: RunCommand
       OperationCommand:
@@ -222,6 +222,7 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
+
     # Millisecond metrics. Dates are stored in milliseconds, so in theory, these metrics 
     # should be almost identical to the numeric case.
     - OperationMetricsName: MillisecondFullDensifySmallStep
@@ -234,6 +235,21 @@ Actors:
             range: {
               bounds: "full", 
               step: {^RandomInt: *smallStep}, 
+              unit: "millisecond"
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: MillisecondFullDensifyLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "milliseconds", 
+            range: {
+              bounds: "full", 
+              step: {^RandomInt: *largeStep}, 
               unit: "millisecond"
             }
           }
@@ -255,6 +271,22 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
+    - OperationMetricsName: MillisecondFullDensifyByPartitionLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "milliseconds", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              bounds: "full", 
+              step: {^RandomInt: *largeStep}, 
+              unit: "millisecond"
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: MillisecondPartitionedDensifyByPartitionSmallStep
       OperationName: RunCommand
       OperationCommand:
@@ -267,6 +299,22 @@ Actors:
               bounds: "partition",  
               unit: "millisecond", 
               step: {^RandomInt: *smallStep}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: MillisecondPartitionedDensifyByPartitionLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "milliseconds", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              bounds: "partition",  
+              unit: "millisecond", 
+              step: {^RandomInt: *largeStep}
             }
           }
         }]
@@ -289,6 +337,24 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
+    - OperationMetricsName: MillisecondExplicitRangeDensifyLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "milliseconds", 
+            range: {
+              step: {^RandomInt: *largeStep}, 
+              unit: "millisecond", 
+              bounds: [
+                {^RandomDate: {min: "2021-01-01T00:00:02.000Z", max: "2021-01-01T00:00:10.000Z"}}, 
+                {^RandomDate: {min: "2021-01-01T00:00:10.000Z", max: "2021-01-01T00:00:20.000Z"}}
+              ]
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: MillisecondExplicitRangeDensifyByPartitionSmallStep
       OperationName: RunCommand
       OperationCommand:
@@ -299,71 +365,6 @@ Actors:
             partitionByFields: ["partitionKey"], 
             range: {
               step: {^RandomInt: *smallStep}, 
-              unit: "millisecond", 
-              bounds: [
-                {^RandomDate: {min: "2021-01-01T00:00:02.000Z", max: "2021-01-01T00:00:10.000Z"}}, 
-                {^RandomDate: {min: "2021-01-01T00:00:10.000Z", max: "2021-01-01T00:00:20.000Z"}}
-              ]
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MillisecondFullDensifyLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "milliseconds", 
-            range: {
-              bounds: "full", 
-              step: {^RandomInt: *largeStep}, 
-              unit: "millisecond"
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MillisecondFullDensifyByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "milliseconds", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              bounds: "full", 
-              step: {^RandomInt: *largeStep}, 
-              unit: "millisecond"
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MillisecondPartitionedDensifyByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "milliseconds", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              bounds: "partition",  
-              unit: "millisecond", 
-              step: {^RandomInt: *largeStep}
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MillisecondExplicitRangeDensifyLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "milliseconds", 
-            range: {
-              step: {^RandomInt: *largeStep}, 
               unit: "millisecond", 
               bounds: [
                 {^RandomDate: {min: "2021-01-01T00:00:02.000Z", max: "2021-01-01T00:00:10.000Z"}}, 
@@ -410,6 +411,21 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
+    - OperationMetricsName: HourFullDensifyLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "hours", 
+            range: {
+              bounds: "full", 
+              step: {^RandomInt: *largeStep}, 
+              unit: "hour"
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: HourFullDensifyByPartitionSmallStep
       OperationName: RunCommand
       OperationCommand:
@@ -421,6 +437,22 @@ Actors:
             range: {
               bounds: "full", 
               step: {^RandomInt: *smallStep}, 
+              unit: "hour"
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: HourFullDensifyByPartitionLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "hours", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              bounds: "full", 
+              step: {^RandomInt: *largeStep}, 
               unit: "hour"
             }
           }
@@ -438,6 +470,22 @@ Actors:
               bounds: "partition", 
               unit: "hour", 
               step: {^RandomInt: *smallStep}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: HourPartitionedDensifyByPartitionLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "hours", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              bounds: "partition", 
+              unit: "hour", 
+              step: {^RandomInt: *largeStep}
             }
           }
         }]
@@ -460,6 +508,24 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
+    - OperationMetricsName: HourExplicitRangeDensifyLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "hours", 
+            range: {
+              step: {^RandomInt: *largeStep}, 
+              unit: "hour", 
+              bounds: [
+                {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, 
+                {^RandomDate: {min: "2023-01-01", max: "2025-01-02"}}
+              ]
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: HourExplicitRangeDensifyByPartitionSmallStep
       OperationName: RunCommand
       OperationCommand:
@@ -470,71 +536,6 @@ Actors:
             partitionByFields: ["partitionKey"], 
             range: {
               step: {^RandomInt: *smallStep}, 
-              unit: "hour", 
-              bounds: [
-                {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, 
-                {^RandomDate: {min: "2023-01-01", max: "2025-01-02"}}
-              ]
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: HourFullDensifyLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "hours", 
-            range: {
-              bounds: "full", 
-              step: {^RandomInt: *largeStep}, 
-              unit: "hour"
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: HourFullDensifyByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "hours", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              bounds: "full", 
-              step: {^RandomInt: *largeStep}, 
-              unit: "hour"
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: HourPartitionedDensifyByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "hours", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              bounds: "partition", 
-              unit: "hour", 
-              step: {^RandomInt: *largeStep}
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: HourExplicitRangeDensifyLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "hours", 
-            range: {
-              step: {^RandomInt: *largeStep}, 
               unit: "hour", 
               bounds: [
                 {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, 
@@ -583,6 +584,21 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
+    - OperationMetricsName: MonthFullDensifyLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "months", 
+            range: {
+              bounds: "full", 
+              step: {^RandomInt: *largeStep}, 
+              unit: "month"
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: MonthFullDensifyByPartitionSmallStep
       OperationName: RunCommand
       OperationCommand:
@@ -594,6 +610,22 @@ Actors:
             range: {
               bounds: "full", 
               step: {^RandomInt: *smallStep}, 
+              unit: "month"
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: MonthFullDensifyByPartitionLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "months", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              bounds: "full", 
+              step: {^RandomInt: *largeStep}, 
               unit: "month"
             }
           }
@@ -611,6 +643,22 @@ Actors:
               bounds: "partition", 
               unit: "month", 
               step: {^RandomInt: *smallStep}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: MonthPartitionedDensifyByPartitionLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "months", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              bounds: "partition", 
+              unit: "month", 
+              step: {^RandomInt: *largeStep}
             }
           }
         }]
@@ -633,6 +681,24 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
+    - OperationMetricsName: MonthExplicitRangeDensifyLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "months", 
+            range: {
+              step: {^RandomInt: *largeStep}, 
+              unit: "month", 
+              bounds: [
+                {^RandomDate: {min: "2500-01-01", max: "3500-01-01"}}, 
+                {^RandomDate: {min: "4000-01-01", max: "5500-01-01"}}
+              ]
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
     - OperationMetricsName: MonthExplicitRangeDensifyByPartitionSmallStep
       OperationName: RunCommand
       OperationCommand:
@@ -643,71 +709,6 @@ Actors:
             partitionByFields: ["partitionKey"], 
             range: {
               step: {^RandomInt: *smallStep}, 
-              unit: "month", 
-              bounds: [
-                {^RandomDate: {min: "2500-01-01", max: "3500-01-01"}}, 
-                {^RandomDate: {min: "4000-01-01", max: "5500-01-01"}}
-              ]
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MonthFullDensifyLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "months", 
-            range: {
-              bounds: "full", 
-              step: {^RandomInt: *largeStep}, 
-              unit: "month"
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MonthFullDensifyByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "months", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              bounds: "full", 
-              step: {^RandomInt: *largeStep}, 
-              unit: "month"
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MonthPartitionedDensifyByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "months", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              bounds: "partition", 
-              unit: "month", 
-              step: {^RandomInt: *largeStep}
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MonthExplicitRangeDensifyLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "months", 
-            range: {
-              step: {^RandomInt: *largeStep}, 
               unit: "month", 
               bounds: [
                 {^RandomDate: {min: "2500-01-01", max: "3500-01-01"}}, 
