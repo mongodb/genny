@@ -1,7 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload test tests the performance of the $densify stage with a numeric step. 
+  This workload test tests the performance of the $densify stage. With step intervals of
+  different date units.
 
 Actors:
 - Name: InsertData
@@ -60,7 +61,7 @@ Actors:
   - Repeat: 1
   - *Nop
 
-- Name: Densify
+- Name: DensifyHours
   Type: RunCommand
   Threads: 1
   Phases:
@@ -71,20 +72,19 @@ Actors:
     Database: *db
     Operations:
 
-    # Metrics are grouped by the step unit they operate with (numeric, millisecond, hour, month).
-    # Each group has a metric for each possible codepath (Partition/no partition, explicit/full/partitioned bounds).
-
-    # Numeric metrics. 
+    # Hour metrics. Hours are a constant number of milliseconds and so these metrics should also be 
+    # close to their numeric and millisecond counterparts.
     - OperationMetricsName: FullDensifySmallStep
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
         pipeline: [{
           $densify: {
-            field: "number", 
+            field: "hours", 
             range: {
               bounds: "full", 
-              step: &smallStep 3
+              step: &smallStep 3, 
+              unit: "hour"
             }
           }
         }]
@@ -95,10 +95,11 @@ Actors:
         aggregate: Collection0
         pipeline: [{
           $densify: {
-            field: "number", 
+            field: "hours", 
             range: {
               bounds: "full", 
-              step: &largeStep 8
+              step: &largeStep 8, 
+              unit: "hour"
             }
           }
         }]
@@ -109,11 +110,12 @@ Actors:
         aggregate: Collection0
         pipeline: [{
           $densify: {
-            field: "number", 
+            field: "hours", 
             partitionByFields: ["partitionKey"], 
             range: {
               bounds: "full", 
-              step: *smallStep
+              step: *smallStep, 
+              unit: "hour"
             }
           }
         }]
@@ -124,11 +126,12 @@ Actors:
         aggregate: Collection0
         pipeline: [{
           $densify: {
-            field: "number", 
+            field: "hours", 
             partitionByFields: ["partitionKey"], 
             range: {
               bounds: "full", 
-              step: *largeStep
+              step: *largeStep, 
+              unit: "hour"
             }
           }
         }]
@@ -139,10 +142,11 @@ Actors:
         aggregate: Collection0
         pipeline: [{
           $densify: {
-            field: "number", 
+            field: "hours", 
             partitionByFields: ["partitionKey"], 
             range: {
               bounds: "partition", 
+              unit: "hour", 
               step: *smallStep
             }
           }
@@ -154,10 +158,11 @@ Actors:
         aggregate: Collection0
         pipeline: [{
           $densify: {
-            field: "number", 
+            field: "hours", 
             partitionByFields: ["partitionKey"], 
             range: {
               bounds: "partition", 
+              unit: "hour", 
               step: *largeStep
             }
           }
@@ -169,10 +174,14 @@ Actors:
         aggregate: Collection0
         pipeline: [{
           $densify: {
-            field: "number", 
+            field: "hours", 
             range: {
               step: *smallStep, 
-              bounds: [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
+              unit: "hour", 
+              bounds: [
+                {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, 
+                {^RandomDate: {min: "2023-01-01", max: "2025-01-02"}}
+              ]
             }
           }
         }]
@@ -183,10 +192,14 @@ Actors:
         aggregate: Collection0
         pipeline: [{
           $densify: {
-            field: "number", 
+            field: "hours", 
             range: {
               step: *largeStep, 
-              bounds: [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
+              unit: "hour", 
+              bounds: [
+                {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, 
+                {^RandomDate: {min: "2023-01-01", max: "2025-01-02"}}
+              ]
             }
           }
         }]
@@ -197,11 +210,15 @@ Actors:
         aggregate: Collection0
         pipeline: [{
           $densify: {
-            field: "number", 
+            field: "hours", 
             partitionByFields: ["partitionKey"], 
             range: {
               step: *smallStep, 
-              bounds: [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
+              unit: "hour", 
+              bounds: [
+                {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, 
+                {^RandomDate: {min: "2023-01-01", max: "2025-01-02"}}
+              ]
             }
           }
         }]
@@ -212,16 +229,20 @@ Actors:
         aggregate: Collection0
         pipeline: [{
           $densify: {
-            field: "number", 
+            field: "hours", 
             partitionByFields: ["partitionKey"], 
             range: {
               step: *largeStep, 
-              bounds: [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
+              unit: "hour", 
+              bounds: [
+                {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, 
+                {^RandomDate: {min: "2023-01-01", max: "2025-01-02"}}
+              ]
             }
           }
         }]
         cursor: {batchSize: *batchSize}
-
+        
 AutoRun:
 - When:
     mongodb_setup:
