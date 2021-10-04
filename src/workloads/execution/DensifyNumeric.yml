@@ -1,0 +1,235 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload test tests the performance of the $densify stage with a numeric step. 
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10000
+    BatchSize: &batchSize 30000 # Documents will be roughly 5 bytes in size, and we won't generate more than 30k documents, which is less than 1mb.
+    Document:
+      partitionKey: {^RandomInt: {min: 1, max: 100}}
+      # Test a subset of units that have different characteristics.
+      number: {^RandomInt: {min: 0, max: 20000}} # Seperate codepath for numeric DensifyValues.
+      milliseconds: {^RandomDate: {min: "2021-01-01T00:00:00.000Z", max: "2021-01-01T00:00:20.000Z"}} # Most basic date unit.
+      hours: {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}} # Date unit with constant number of milliseconds.
+      months: {^RandomDate: {min: "2021-01-01", max: "4000-01-01"}} # Date unit with non-constant number of milliseconds.
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+
+# $densify stages always add a $sort on the field that is being densified, so this phase adds 
+# indexes on the date/number fields so that we aren't performing an in-memory sort.
+- Name: CreateIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes: 
+        - key: {number: 1}
+          name: number
+        - key: {milliseconds: 1}
+          name: milliseconds
+        - key: {hours: 1}
+          name: hours
+        - key: {months: 1}
+          name: months
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+
+- Name: Densify
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 10
+    Database: *db
+    Operations:
+
+    # Metrics are grouped by the step unit they operate with (numeric, millisecond, hour, month).
+    # Each group has a metric for each possible codepath (Partition/no partition, explicit/full/partitioned bounds).
+
+    # Numeric metrics. 
+    - OperationMetricsName: NumericFullDensifySmallStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            range: {
+              bounds: "full", 
+              step: {^RandomInt: &smallStep {min: 1, max: 3}}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericFullDensifyLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            range: {
+              bounds: "full", 
+              step: {^RandomInt: &largeStep {min: 7, max: 11}}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericFullDensifyByPartitionSmallStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              bounds: "full", 
+              step: {^RandomInt: *smallStep}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericFullDensifyByPartitionLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              bounds: "full", 
+              step: {^RandomInt: *largeStep}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericPartitionedDensifyByPartitionSmallStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              bounds: "partition", 
+              step: {^RandomInt: *smallStep}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericPartitionedDensifyByPartitionLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              bounds: "partition", 
+              step: {^RandomInt: *largeStep}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericExplicitRangeDensifySmallStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            range: {
+              step: {^RandomInt: *smallStep}, 
+              bounds: [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericExplicitRangeDensifyLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            range: {
+              step: {^RandomInt: *largeStep}, 
+              bounds: [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericExplicitRangeDensifyByPartitionSmallStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              step: {^RandomInt: *smallStep}, 
+              bounds: [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: NumericExplicitRangeDensifyByPartitionLargeStep
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: "number", 
+            partitionByFields: ["partitionKey"], 
+            range: {
+              step: {^RandomInt: *largeStep}, 
+              bounds: [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
