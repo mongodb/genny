@@ -41,12 +41,6 @@ Actors:
         indexes: 
         - key: {number: 1}
           name: number
-        - key: {milliseconds: 1}
-          name: milliseconds
-        - key: {hours: 1}
-          name: hours
-        - key: {months: 1}
-          name: months
   - *Nop
   - *Nop
 

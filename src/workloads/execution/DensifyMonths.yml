@@ -1,8 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload test tests the performance of the $densify stage. With step intervals of
-  different date units.
+  This workload test tests the performance of the $densify stage with month-long step intervals.
 
 Actors:
 - Name: InsertData
@@ -40,12 +39,6 @@ Actors:
       OperationCommand:
         createIndexes: Collection0
         indexes: 
-        - key: {number: 1}
-          name: number
-        - key: {milliseconds: 1}
-          name: milliseconds
-        - key: {hours: 1}
-          name: hours
         - key: {months: 1}
           name: months
   - *Nop
