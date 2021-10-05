@@ -35,11 +35,11 @@
 
 #include <bsoncxx/builder/stream/document.hpp>
 
-
 namespace genny::actor {
 
 /** @private */
 using index_type = std::pair<DocumentGenerator, std::optional<DocumentGenerator>>;
+using namespace bsoncxx;
 
 /** @private */
 struct MonotonicLoader::PhaseConfig {
@@ -89,15 +89,15 @@ void genny::actor::MonotonicLoader::run() {
                         // insert the next batch
                         int64_t numberToInsert =
                             std::min<int64_t>(config->batchSize, remainingInserts);
-                        auto docs = std::vector<bsoncxx::document::view_or_value>{};
+                        auto docs = std::vector<document::view_or_value>{};
                         docs.reserve(remainingInserts);
                         for (uint j = 0; j < numberToInsert; j++) {
                             auto tmpDoc = config->documentExpr();
-                            auto builder = bsoncxx::builder::stream::document();
+                            auto builder = builder::stream::document();
                             builder << "_id" << ++id_num;
-                            builder << bsoncxx::builder::concatenate(tmpDoc.view());
-                            bsoncxx::document::value newDoc = builder
-                                << bsoncxx::builder::stream::finalize;
+                            builder << builder::concatenate(tmpDoc.view());
+                            document::value newDoc = builder
+                                << builder::stream::finalize;
                             docs.push_back(std::move(newDoc));
                         }
                         {
@@ -109,27 +109,42 @@ void genny::actor::MonotonicLoader::run() {
                     }
                     totalOpCtx.success();
                 }
-                // For each index
+                // Make the index
+                bool _indexReq = false;
+                builder::stream::document builder{};
+                auto in_array = builder << "createIndexes" << collectionName
+                                        <<  "indexes" << builder::stream::open_array;
                 for (auto&& [keys, options] : config->indexes) {
-                    // Make the index
+                    _indexReq = true;
                     auto indexKey = keys();
-                    BOOST_LOG_TRIVIAL(debug)
-                        << "Building index " << bsoncxx::to_json(indexKey.view());
                     if (options) {
                         auto indexOptions = (*options)();
-                        BOOST_LOG_TRIVIAL(debug)
-                            << "With options " << bsoncxx::to_json(indexOptions.view());
-                        auto indexOpCtx = _indexBuild.start();
-                        collection.create_index(std::move(indexKey), std::move(indexOptions));
-                        indexOpCtx.success();
+                        in_array = in_array << builder::stream::open_document
+                                            << "key" << indexKey.view()
+                                            << builder::concatenate(indexOptions.view())
+                                            << builder::stream::close_document;
                     } else {
-                        auto indexOpCtx = _indexBuild.start();
-                        collection.create_index(std::move(indexKey));
-                        indexOpCtx.success();
+                        std::string index_name = "";
+                        for (auto field : indexKey.view()) {
+                            index_name = index_name + field.key().to_string();
+                        }
+                        in_array = in_array << builder::stream::open_document
+                                            << "key" << indexKey.view()
+                                            << "name" << index_name
+                                            << builder::stream::close_document;
                     }
                 }
+                auto after_array = in_array << builder::stream::close_array;
+                document::value doc = after_array << builder::stream::finalize;
+                if (_indexReq) {
+                    BOOST_LOG_TRIVIAL(debug)
+                            << "Building index" << to_json(doc.view());
+                    auto indexOpCtx = _indexBuild.start();
+                    config->database.run_command(doc.view());
+                    indexOpCtx.success();
+                }
+                BOOST_LOG_TRIVIAL(info) << "Done with load phase. All documents loaded";
             }
-            BOOST_LOG_TRIVIAL(info) << "Done with load phase. All documents loaded";
         }
     }
 }
