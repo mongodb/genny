@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 
-description: |
+Description: |
   This example extends CrudActorFSM.yml, with the addition of operations associated with
   transitions, in addition to states. We have not implemented this functionality at this point, nor
   have explicit plans to implement. As such, this example should be considered suggestive of future

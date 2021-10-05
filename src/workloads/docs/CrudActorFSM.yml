@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 
-description: |
+Description: |
   TODO: This functionality does not exist yet. It will be implemented in PERF-2516.  The Crud Actor
   will support FSM definition, with operations associated with each states. Choices are declared
   with weights that are converted into probabilities.
