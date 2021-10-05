@@ -240,7 +240,7 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - replica-all-feature-flags
+      - replica
     branch_name:
       $neq:
       - v4.0
