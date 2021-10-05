@@ -88,9 +88,9 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-        - shard
-        - shard-lite
-        - shard-lite-all-feature-flags
+      - shard
+      - shard-lite
+      - shard-lite-all-feature-flags
     branch_name:
       $neq:
-        - v4.0
+      - v4.0
