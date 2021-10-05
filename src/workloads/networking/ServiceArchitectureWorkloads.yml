@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/service-architecture"
+Description: |
+  TODO: TIG-3323
 
 Clients:
   Default:
@@ -70,10 +72,10 @@ Actors:
     Nop: true
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - replica
-          - replica-noflowcontrol
-          - replica-all-feature-flags
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas
+      - replica
+      - replica-noflowcontrol
+      - replica-all-feature-flags

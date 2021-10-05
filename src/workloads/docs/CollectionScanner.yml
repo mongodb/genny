@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
+Description: |
+  TODO: TIG-3319
 
 Actors:
 - Name: Loader
@@ -23,7 +25,7 @@ Actors:
     Document:
       a: {^RandomString: { length: 100 }}
     FindOptions:
-      Hint: a_1 # Currently only support the index name.
+      Hint: a_1  # Currently only support the index name.
       Comment: "Phase 1 loader"
   - {Nop: true}
   - {Nop: true}
@@ -63,7 +65,7 @@ Actors:
     GlobalRate: 10 per 30 seconds
     ScanType: standard
     # To peform an index scan use the Filter config.
-    Filter: {a : 1}
+    Filter: {a: 1}
   - Duration: 2 minutes
     # The Documents configuration specifies the max number of documents we
     # want to scan per scan loop. Once we hit this limit we exit the loop.
@@ -77,15 +79,15 @@ Actors:
     GlobalRate: 10 per 10 seconds
     # Count the frequency of each character in array field "a".
     AggregatePipeline:
-        {array: [{"$addFields":{"a":{"$map":{"input":{"$range":[0,{"$strLenCP":"$a"}]},"in":{"$substrCP":["$a","$$this",1]}}}}},
-                 {"$unwind": "$a"},
-                 {"$group": {"_id": "$a", "count": {"$sum":1}}},
-                 {"$sort": {"_id":1}},
-        ]}
+      {array: [{"$addFields": {"a": {"$map": {"input": {"$range": [0, {"$strLenCP": "$a"}]}, "in": {"$substrCP": ["$a", "$$this", 1]}}}}},
+               {"$unwind": "$a"},
+               {"$group": {"_id": "$a", "count": {"$sum":1}}},
+               {"$sort": {"_id":1}},
+      ]}
     AggregateOptions:
       BatchSize: 1000
       Comment: Aggregation to count char frequency
-      AllowDiskUse: true # Naming convention follows c++ driver rather than mongo shell.
+      AllowDiskUse: true  # Naming convention follows c++ driver rather than mongo shell.
 
 # A snapshot scanner begins a transaction prior to starting its scan
 # with read concern majority, which should pin the read for the

@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
+Description: |
+  TODO: TIG-3319
 
 Clients:
   Default:
@@ -40,7 +42,7 @@ Actors:
     - keys: {x7: 1}
     - keys: {x8: 1}
   - {Nop: true}
-      
+
 - Name: LongLivedIndexReader
   Type: MultiCollectionQuery
   Threads: 100

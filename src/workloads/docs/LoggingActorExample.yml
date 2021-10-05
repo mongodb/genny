@@ -1,7 +1,6 @@
 SchemaVersion: 2018-07-01
-Owner:  "@mongodb/stm"
-
-Description:
+Owner: "@10gen/dev-prod-tips"
+Description: |
   The LoggingActor exists so DSI and Evergreen don't quit
   your workload for not outputting anything to stdout.
   (They do this in case your workload has timed-out.) If
@@ -26,8 +25,8 @@ Description:
 Actors:
 - Name: LoggingActor
   Type: LoggingActor
-  Threads: 1 # must be 1
+  Threads: 1  # must be 1
   Phases:
   - Phase: 0
-    LogEvery: 15 minutes # TimeSpec
-    Blocking: None # must be Blocking:None
+    LogEvery: 15 minutes  # TimeSpec
+    Blocking: None  # must be Blocking:None
