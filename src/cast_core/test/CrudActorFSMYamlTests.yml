@@ -15,3 +15,8 @@ Tests:
     - A
     - B
   Error: '.*Configuration.*$'
+
+- Description: Neither States nor Operations
+  Phase:
+    Hi: There
+  Error: '.*Configuration.*$'

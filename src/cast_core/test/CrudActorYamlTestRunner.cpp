@@ -180,7 +180,7 @@ NodeSource createConfigurationYamlPhase(YAML::Node phase) {
     config["Actors"][0]["Database"] = DEFAULT_DB;
     config["Actors"][0]["Phases"][0]["Collection"] = DEFAULT_COLLECTION;
     for (auto iter : phase) {
-        config["Actors"][0][iter.first] = iter.second;
+        config["Actors"][0]["Phases"][0][iter.first] = iter.second;
     }
     return NodeSource{YAML::Dump(config), "operationsConfig"};
 }
