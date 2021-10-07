@@ -1,8 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  This workload sequentially issues the same query in various combinations of projection and index
-  presence.
+  This workload measures the performance of queries with rich filters. First, we issue a bunch of
+  plain queries with rich filters to get the performance baseline. After that, we issue the same
+  queries, but with projection. Finally, we create an index and issue the same queries with
+  projection, expecting that they will use this index.
 
 Actors:
 
