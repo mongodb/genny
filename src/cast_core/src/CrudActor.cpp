@@ -1277,12 +1277,25 @@ struct CrudActor::PhaseConfig {
                 stateNames.emplace(state["Name"].to<std::string>(), i);
                 i++;
             }
+            auto numStates = stateNames.size();
+            states.reserve(numStates);
             for (auto [k, state] : phaseContext["States"]) {
                 BOOST_LOG_TRIVIAL(debug) << "Adding state " << state;
                 states.emplace_back(addState(state, stateNames));
             }
+            // initial_state_weights.reserve(numStates);
+            initial_state_weights = std::vector<double>(numStates, 0);
+            // std::fill_n(initial_state_weights.begin(), numStates, 0);
+            for (auto [k, state] : phaseContext["InitialStates"]) {
+                initial_state_weights[stateNames[state["State"].to<std::string>()]] +=
+                    state["Weight"].to<double>();
+            }
+            BOOST_LOG_TRIVIAL(debug)
+                << "Length of initial state weights is " << initial_state_weights.size();
+            for (auto weight : initial_state_weights) {
+                BOOST_LOG_TRIVIAL(debug) << "Weight is " << weight;
+            }
             BOOST_LOG_TRIVIAL(debug) << "Done adding states";
-            // states = phaseContext.getPlural<std::unique_ptr<State>>("State", "States", addState);
         } else {  // Throw a useful error}
             BOOST_THROW_EXCEPTION(
                 InvalidConfigurationException("CrudActor has neither Operations nor States "
@@ -1304,7 +1317,6 @@ void CrudActor::run() {
             auto initial_distribution =
                 boost::random::discrete_distribution(config->initial_state_weights);
             next_state = initial_distribution(_rng);
-            std::cout << "Picking initial state " << next_state;
             BOOST_LOG_TRIVIAL(debug) << "Picking initial state " << next_state;
         }
         for (const auto&& _ : config) {

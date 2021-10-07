@@ -179,5 +179,5 @@ Actors:
 
     # In this example we always start in the off State
     InitialStates:
-    - "Off":
-        Weight: 1
+    - State: "Off"
+      Weight: 1

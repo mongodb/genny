@@ -36,7 +36,7 @@ Tests:
         OperationCommand:
           WriteOperations:
           - WriteCommand: insertOne
-            Document: { a: 1 }
+            Document: {a: 1 }
       Transitions:
       - To: Absorbing
         Weight: 1
@@ -51,7 +51,7 @@ Tests:
       - To: Absorbing
         Weight: 1
     InitialStates:
-    - First:
-        Weight: 1
+    - State: First
+      Weight: 1
   OutcomeData:
   - {a: 1}
