@@ -3,6 +3,9 @@ Owner: "@mongodb/query"
 Description: |
   This workload tests the performance of the $densify stage with a numeric step. The workload
   should be kept in sync with the other Densify[Unit] workloads in this directory.
+
+  Each densify workload has a metric to cover possible codepaths through the densify stage, namely
+  different bounds types and whether or not to generate documents along partitions.
   
   Since $densify is a new aggregation stage, there isn't a known "good" runtime for aggregations 
   that include it. Rather than comparing against a baseline initially, workloads with different 

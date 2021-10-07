@@ -3,7 +3,10 @@ Owner: "@mongodb/query"
 Description: |
   This workload tests the performance of the $densify stage with hour-long step intervals.
   The workload should be kept in sync with the other Densify[Unit] workloads in this directory.
-  
+
+  Each densify workload has a metric to cover possible codepaths through the densify stage, namely
+  different bounds types and whether or not to generate documents along partitions.
+ 
   Since $densify is a new aggregation stage, there isn't a known "good" runtime for aggregations 
   that include it. Rather than comparing against a baseline initially, workloads with different 
   options that generate similar numbers of documents will be compared to ensure that there isn't an
@@ -34,6 +37,7 @@ Description: |
     will be generated with every value within the range for each partition, so the higher the 
     cardinality, the more documents that will be generated. Specifying a `partitionByFields` will
     never decrease the number of documents generated, holding all other options equal. 
+
 Actors:
 - Name: InsertData
   Type: Loader
