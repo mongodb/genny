@@ -500,12 +500,13 @@ struct BulkWriteOperation : public BaseOperation {
                                  : _collection.create_bulk_write(_options);
         for (auto&& op : _writeOps) {
             auto writeModel = op->getModel();
+            BOOST_LOG_TRIVIAL(debug) << "Appending write model ";
             bulk.append(writeModel);
         }
 
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = bulk.execute();
-
+            BOOST_LOG_TRIVIAL(debug) << "After bulk.execute";
             size_t docs = 0;
             if (result) {
                 docs += result->modified_count();
@@ -1236,19 +1237,25 @@ struct CrudActor::PhaseConfig {
             auto stateName = node["Name"].to<std::string>();
             // Skipping repeat for now
             // operations
-            auto stateOperations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
+            BOOST_LOG_TRIVIAL(debug) << "Adding state " << stateName;
+            auto stateOperations = node.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOperation);
+            BOOST_LOG_TRIVIAL(debug)
+                << "Got operations for state. Number of operations: " << stateOperations.size();
             // Transitions
+            BOOST_LOG_TRIVIAL(debug) << "Got operations";
             std::vector<double> weights;
             std::vector<int> next_states;
             for (auto [k, transitionYaml] : node["Transitions"]) {
                 weights.emplace_back(transitionYaml["Weight"].to<int>());
+                BOOST_LOG_TRIVIAL(debug)
+                    << "Next state name is " << transitionYaml["To"].to<std::string>();
                 next_states.emplace_back(states.at(transitionYaml["To"].to<std::string>()));
             }
             return std::unique_ptr<State>(new State{
-                std::move(operations), stateName, std::move(weights), std::move(next_states)});
+                std::move(stateOperations), stateName, std::move(weights), std::move(next_states)});
         };
-        // Check if we have Operatopms or States. Through an error if we have both.
+        // Check if we have Operations or States. Through an error if we have both.
         if (phaseContext["Operations"] and phaseContext["States"]) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "CrudActor has Operations and States at the same time."));
@@ -1257,16 +1264,24 @@ struct CrudActor::PhaseConfig {
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOperation);
         } else if (phaseContext["States"]) {  // Parse out the states}
+            if (!phaseContext["InitialStates"]) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "CrudActor has States, but has not specified InitialStates"));
+            }
+            BOOST_LOG_TRIVIAL(debug) << "Adding states";
             // build the list of states, and then actuall process the states
             int i = 0;
             std::unordered_map<std::string, int> stateNames;
-            for (auto [k, state] : phaseContext["states"]) {
-                stateNames.at(state["name"].to<std::string>()) = i;
+            for (auto [k, state] : phaseContext["States"]) {
+                BOOST_LOG_TRIVIAL(debug) << "Adding state to state Names " << state;
+                stateNames.emplace(state["Name"].to<std::string>(), i);
                 i++;
             }
-            for (auto [k, state] : phaseContext["states"]) {
+            for (auto [k, state] : phaseContext["States"]) {
+                BOOST_LOG_TRIVIAL(debug) << "Adding state " << state;
                 states.emplace_back(addState(state, stateNames));
             }
+            BOOST_LOG_TRIVIAL(debug) << "Done adding states";
             // states = phaseContext.getPlural<std::unique_ptr<State>>("State", "States", addState);
         } else {  // Throw a useful error}
             BOOST_THROW_EXCEPTION(
@@ -1282,15 +1297,19 @@ void CrudActor::run() {
     for (auto&& config : _loop) {
         auto session = _client->start_session();
         // TODO: If running without states, define a single state with the operations
+        BOOST_LOG_TRIVIAL(debug) << "In CrudActor::run" << config->states.empty()
+                                 << config->continue_current_state;
         if (!config->states.empty() and !config->continue_current_state) {
             // pick the initial state for the phase
             auto initial_distribution =
                 boost::random::discrete_distribution(config->initial_state_weights);
             next_state = initial_distribution(_rng);
+            std::cout << "Picking initial state " << next_state;
+            BOOST_LOG_TRIVIAL(debug) << "Picking initial state " << next_state;
         }
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
-
+            BOOST_LOG_TRIVIAL(debug) << "In inner loop";
             if (!config->states.empty()) {
                 // Simplifying Assumption -- one shot operations on state enter
                 // We are here to fire those operations, and then pick the next state.
@@ -1300,7 +1319,12 @@ void CrudActor::run() {
                 // transition to the next state
                 current_state = next_state;
                 // run the operations for the next state.
+                BOOST_LOG_TRIVIAL(debug) << "Running operations for state " << current_state;
+                BOOST_LOG_TRIVIAL(debug)
+                    << "Number of operations: " << config->states[current_state]->operations.size();
+
                 for (auto&& op : config->states[current_state]->operations) {
+                    BOOST_LOG_TRIVIAL(debug) << "Running an operation";
                     op->run(session);
                 }
                 // pick next state
@@ -1308,6 +1332,7 @@ void CrudActor::run() {
                     config->states[current_state]->transition_weights);
                 next_state =
                     config->states[current_state]->transition_next_states[distribution(_rng)];
+                BOOST_LOG_TRIVIAL(debug) << "Choosing next state " << next_state;
                 // pick the delay for the next state
             } else {
                 for (auto&& op : config->operations) {
