@@ -2,7 +2,10 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 
 Description: |
-  Trivial tests of CRUD FSM functionality.
+  Trivial tests of CRUD FSM functionality without timing. This has 3 active states and one absorbing
+  state. It inserts a document every time it enters a state, and executes 10 transitions of each
+  state machine. All threads start in one of the first two states. You can track the progress by the
+  inserted documents. Each thread includes it's ActorId in the documents.
 
 Clients:
   Default:
