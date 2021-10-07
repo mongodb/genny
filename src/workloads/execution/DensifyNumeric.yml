@@ -39,201 +39,335 @@ Description: |
     never decrease the number of documents generated, holding all other options equal.
 
 
+GlobalDefaults:
+  dbname: &db test
+  MaxPhases: &MaxPhases 3
+
 Actors:
 - Name: InsertData
   Type: Loader
   Threads: 1
   Phases:
-  - Repeat: 1
-    Database: &db test
-    Threads: 1
-    CollectionCount: 1
-    DocumentCount: 10000
-    BatchSize: &batchSize 30000 
-    Document:
-      partitionKey: {^RandomInt: {min: 1, max: 100}}
-      # Test a subset of units that have different characteristics.
-      number: {^RandomInt: {min: 0, max: 20000}} # Seperate codepath for numeric DensifyValues.
-      milliseconds: {^RandomDate: {min: "2021-01-01T00:00:00.000Z", max: "2021-01-01T00:00:20.000Z"}} # Most basic date unit.
-      hours: {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}} # Date unit with constant number of milliseconds.
-      months: {^RandomDate: {min: "2021-01-01", max: "4000-01-01"}} # Date unit with non-constant number of milliseconds.
-    # $densify stages always add a $sort on the field that is being densified, so this phase adds 
-    # indexes on the date/number fields so that we aren't performing an in-memory sort.    
-    Indexes:
-    - keys: {number: 1}
-      options: {name: "numeric"}
-  - &Nop {Nop: true}
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 10000
+        BatchSize: &batchSize 30000 
+        Document:
+          partitionKey: {^RandomInt: {min: 1, max: 100}}
+          # Test a subset of units that have different characteristics.
+          number: {^RandomInt: {min: 0, max: 20000}} # Seperate codepath for numeric DensifyValues.
+          milliseconds: {^RandomDate: {min: "2021-01-01T00:00:00.000Z", max: "2021-01-01T00:00:20.000Z"}} # Most basic date unit.
+          hours: {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}} # Date unit with constant number of milliseconds.
+          months: {^RandomDate: {min: "2021-01-01", max: "4000-01-01"}} # Date unit with non-constant number of milliseconds.
+        # $densify stages always add a $sort on the field that is being densified, so this phase adds 
+        # indexes on the date/number fields so that we aren't performing an in-memory sort.    
+        Indexes:
+        - keys: {number: 1}
+          options: {name: "numeric"}
 
 - Name: Quiesce
   Type: QuiesceActor
   Threads: 1
   Database: *db
   Phases:
-  - *Nop
-  - Repeat: 1
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
 
-- Name: Densify
-  Type: RunCommand
+- Name: FullSmallStep
+  Type: CollectionScanner
   Threads: 1
+  Database: Collection0
   Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 10
-    Database: *db
-    Operations:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: 
+        ScanType: standard
+        Repeat: 10
+        AggregatePipeline:
+          {array: [
+          {
+            "$densify": {
+              "field": "number",
+              "range": {
+                "bounds": "full",
+                "step": 3
+              }
+            }
+          }
+        ]}
+        AggregateOptions:
+          BatchSize: 1000
+    
 
-    # Metrics are grouped by the step unit they operate with (numeric, millisecond, hour, month).
-    # Each group has a metric for each possible codepath (Partition/no partition, explicit/full/partitioned bounds).
+- Name: FullLargeStep
+  Type: CollectionScanner
+  Threads: 1
+  Database: Collection0
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: 
+        ScanType: standard
+        Repeat: 10
+        AggregatePipeline:
+          {array: [
+          {
+            "$densify": {
+              "field": "number",
+              "range": {
+                "bounds": "full",
+                "step": 8
+              }
+            }
+          }
+        ]}
+        AggregateOptions:
+          BatchSize: 1000
+    
 
-    # Numeric metrics. 
-    - OperationMetricsName: FullDensifySmallStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            range: {
-              bounds: "full", 
-              step: &smallStep 3
+- Name: FullByPartitionSmallStep
+  Type: CollectionScanner
+  Threads: 1
+  Database: Collection0
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: 
+        ScanType: standard
+        Repeat: 10
+        AggregatePipeline:
+          {array: [
+          {
+            "$densify": {
+              "field": "number",
+              "range": {
+                "bounds": "full",
+                "step": 3
+              },
+              "partitionByFields": [
+                "partitionKey"
+              ]
             }
           }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: FullDensifyLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            range: {
-              bounds: "full", 
-              step: &largeStep 8
+        ]}
+        AggregateOptions:
+          BatchSize: 1000
+    
+
+- Name: FullByPartitionLargeStep
+  Type: CollectionScanner
+  Threads: 1
+  Database: Collection0
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: 
+        ScanType: standard
+        Repeat: 10
+        AggregatePipeline:
+          {array: [
+          {
+            "$densify": {
+              "field": "number",
+              "range": {
+                "bounds": "full",
+                "step": 8
+              },
+              "partitionByFields": [
+                "partitionKey"
+              ]
             }
           }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: FullDensifyByPartitionSmallStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              bounds: "full", 
-              step: *smallStep
+        ]}
+        AggregateOptions:
+          BatchSize: 1000
+    
+
+- Name: PartitionedByPartitionSmallStep
+  Type: CollectionScanner
+  Threads: 1
+  Database: Collection0
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: 
+        ScanType: standard
+        Repeat: 10
+        AggregatePipeline:
+          {array: [
+          {
+            "$densify": {
+              "field": "number",
+              "range": {
+                "bounds": "partition",
+                "step": 3
+              },
+              "partitionByFields": [
+                "partitionKey"
+              ]
             }
           }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: FullDensifyByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              bounds: "full", 
-              step: *largeStep
+        ]}
+        AggregateOptions:
+          BatchSize: 1000
+    
+
+- Name: PartitionedByPartitionLargeStep
+  Type: CollectionScanner
+  Threads: 1
+  Database: Collection0
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: 
+        ScanType: standard
+        Repeat: 10
+        AggregatePipeline:
+          {array: [
+          {
+            "$densify": {
+              "field": "number",
+              "range": {
+                "bounds": "partition",
+                "step": 8
+              },
+              "partitionByFields": [
+                "partitionKey"
+              ]
             }
           }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: PartitionedDensifyByPartitionSmallStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              bounds: "partition", 
-              step: *smallStep
+        ]}
+        AggregateOptions:
+          BatchSize: 1000
+    
+
+- Name: ExplicitRangeSmallStep
+  Type: CollectionScanner
+  Threads: 1
+  Database: Collection0
+  Phases:
+    OnlyActiveInPhases:
+      Active: [8]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: 
+        ScanType: standard
+        Repeat: 10
+        AggregatePipeline:
+          {array: [
+          {
+            "$densify": {
+              "field": "number",
+              "range": {
+                "bounds": [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}],
+                "step": 3
+              }
             }
           }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: PartitionedDensifyByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              bounds: "partition", 
-              step: *largeStep
+        ]}
+        AggregateOptions:
+          BatchSize: 1000
+    
+
+- Name: ExplicitRangeLargeStep
+  Type: CollectionScanner
+  Threads: 1
+  Database: Collection0
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: 
+        ScanType: standard
+        Repeat: 10
+        AggregatePipeline:
+          {array: [
+          {
+            "$densify": {
+              "field": "number",
+              "range": {
+                "bounds": [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}],
+                "step": 8
+              }
             }
           }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: ExplicitRangeDensifySmallStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            range: {
-              step: *smallStep, 
-              bounds: &numericBounds [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
+        ]}
+        AggregateOptions:
+          BatchSize: 1000
+    
+
+- Name: ExplicitRangeByPartitionSmallStep
+  Type: CollectionScanner
+  Threads: 1
+  Database: Collection0
+  Phases:
+    OnlyActiveInPhases:
+      Active: [10]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: 
+        ScanType: standard
+        Repeat: 10
+        AggregatePipeline:
+          {array: [
+          {
+            "$densify": {
+              "field": "number",
+              "range": {
+                "bounds": [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}],
+                "step": 3
+              },
+              "partitionByFields": [
+                "partitionKey"
+              ]
             }
           }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: ExplicitRangeDensifyLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            range: {
-              step: *largeStep, 
-              bounds: *numericBounds
+        ]}
+        AggregateOptions:
+          BatchSize: 1000
+    
+
+- Name: ExplicitRangeByPartitionLargeStep
+  Type: CollectionScanner
+  Threads: 1
+  Database: Collection0
+  Phases:
+    OnlyActiveInPhases:
+      Active: [11]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: 
+        ScanType: standard
+        Repeat: 10
+        AggregatePipeline:
+          {array: [
+          {
+            "$densify": {
+              "field": "number",
+              "range": {
+                "bounds": [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}],
+                "step": 8
+              },
+              "partitionByFields": [
+                "partitionKey"
+              ]
             }
           }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: ExplicitRangeDensifyByPartitionSmallStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              step: *smallStep, 
-              bounds: *numericBounds
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: ExplicitRangeDensifyByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: "number", 
-            partitionByFields: ["partitionKey"], 
-            range: {
-              step: *largeStep, 
-              bounds: *numericBounds
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+        ]}
+        AggregateOptions:
+          BatchSize: 1000
 
 AutoRun:
 - When:
