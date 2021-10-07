@@ -1,0 +1,71 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+
+Description: |
+  Trivial tests of CRUD FSM functionality.
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 100
+
+Actors:
+- Name: FSM
+  Type: CrudActor
+  Threads: 5
+  Database: Test
+  Phases:
+  - Repeat: 10  # Run 10 state transition
+    Collection: Test
+    States:
+    - Name: First
+      Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+          - WriteCommand: insertOne
+            Document: {actor: {^ActorId: {}}, state: First}
+      Transitions: &transitions
+      - To: Absorbing
+        Weight: 1
+      - To: First
+        Weight: 1
+      - To: Second
+        Weight: 1
+      - To: Third
+        Weight: 1
+    - Name: Second
+      Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+          - WriteCommand: insertOne
+            Document: {actor: {^ActorId: {}}, state: Second}
+      Transitions: *transitions
+    - Name: Third
+      Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+          - WriteCommand: insertOne
+            Document: {actor: {^ActorId: {}}, state: Third}
+      Transitions: *transitions
+    - Name: Absorbing
+      Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: {a: 1}
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+          - WriteCommand: insertOne
+            Document: {actor: {^ActorId: {}}, state: Absorbing}
+
+      Transitions:
+      - To: Absorbing
+        Weight: 1
+    InitialStates:
+    - State: First
+      Weight: 1
+    - State: Second
+      Weight: 1
