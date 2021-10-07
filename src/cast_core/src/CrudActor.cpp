@@ -1256,11 +1256,11 @@ struct CrudActor::PhaseConfig {
                 std::move(stateOperations), stateName, std::move(weights), std::move(next_states)});
         };
         // Check if we have Operations or States. Through an error if we have both.
-        if (phaseContext["Operations"] and phaseContext["States"]) {
+        if (phaseContext["Operations"] && phaseContext["States"]) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "CrudActor has Operations and States at the same time."));
         }
-        if (phaseContext["Operations"]) {
+        if (phaseContext["Operations"] || phaseContext["Operation"]) {
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOperation);
         } else if (phaseContext["States"]) {  // Parse out the states}
