@@ -1,8 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests the performance of the $densify stage with a numeric step. The workload
-  should be kept in sync with the other Densify[Unit] workloads in this directory.
+  This workload tests the performance of the $densify stage with a numeric step.
+  The text of each Densify[Unit] workload is identical from from the Actors list to the end of the
+  file, with all workload-specific details defined as anchors under the GlobalDefaults key. Any
+  changes to the actors should make use of these anchors and be copy-pasted between the Densify[Unit]
+  workloads to keep them in sync.
 
   Each densify workload has a metric to cover possible codepaths through the densify stage, namely
   different bounds types and whether or not to generate documents along partitions.
@@ -41,7 +44,16 @@ Description: |
 
 GlobalDefaults:
   dbname: &db test
-  MaxPhases: &MaxPhases 3
+  MaxPhases: &MaxPhases 20
+  batchSize: &batchSize 5000
+  fieldName: &field "number"
+  unitName: &unit null
+  index: &index
+    keys: {number: 1}
+    options: {name: "numeric"}
+  smallStepSize: &smallStep 3
+  largeStepSize: &largeStep 8
+  explicitBounds: &bounds [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
 
 Actors:
 - Name: InsertData
@@ -57,7 +69,7 @@ Actors:
         Threads: 1
         CollectionCount: 1
         DocumentCount: 10000
-        BatchSize: &batchSize 30000 
+        BatchSize: *batchSize 
         Document:
           partitionKey: {^RandomInt: {min: 1, max: 100}}
           # Test a subset of units that have different characteristics.
@@ -68,8 +80,7 @@ Actors:
         # $densify stages always add a $sort on the field that is being densified, so this phase adds 
         # indexes on the date/number fields so that we aren't performing an in-memory sort.    
         Indexes:
-        - keys: {number: 1}
-          options: {name: "numeric"}
+        - *index
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -97,16 +108,16 @@ Actors:
           {array: [
           {
             "$densify": {
-              "field": "number",
+              "field": *field,
               "range": {
                 "bounds": "full",
-                "step": 3
+                "step": *smallStep
               }
             }
           }
         ]}
         AggregateOptions:
-          BatchSize: 1000
+          BatchSize: *batchSize
     
 
 - Name: FullLargeStep
@@ -124,16 +135,16 @@ Actors:
           {array: [
           {
             "$densify": {
-              "field": "number",
+              "field": *field,
               "range": {
                 "bounds": "full",
-                "step": 8
+                "step": *largeStep
               }
             }
           }
         ]}
         AggregateOptions:
-          BatchSize: 1000
+          BatchSize: *batchSize
     
 
 - Name: FullByPartitionSmallStep
@@ -151,10 +162,10 @@ Actors:
           {array: [
           {
             "$densify": {
-              "field": "number",
+              "field": *field,
               "range": {
                 "bounds": "full",
-                "step": 3
+                "step": *smallStep
               },
               "partitionByFields": [
                 "partitionKey"
@@ -163,7 +174,7 @@ Actors:
           }
         ]}
         AggregateOptions:
-          BatchSize: 1000
+          BatchSize: *batchSize
     
 
 - Name: FullByPartitionLargeStep
@@ -181,10 +192,10 @@ Actors:
           {array: [
           {
             "$densify": {
-              "field": "number",
+              "field": *field,
               "range": {
                 "bounds": "full",
-                "step": 8
+                "step": *largeStep
               },
               "partitionByFields": [
                 "partitionKey"
@@ -193,7 +204,7 @@ Actors:
           }
         ]}
         AggregateOptions:
-          BatchSize: 1000
+          BatchSize: *batchSize
     
 
 - Name: PartitionedByPartitionSmallStep
@@ -211,10 +222,10 @@ Actors:
           {array: [
           {
             "$densify": {
-              "field": "number",
+              "field": *field,
               "range": {
                 "bounds": "partition",
-                "step": 3
+                "step": *smallStep
               },
               "partitionByFields": [
                 "partitionKey"
@@ -223,7 +234,7 @@ Actors:
           }
         ]}
         AggregateOptions:
-          BatchSize: 1000
+          BatchSize: *batchSize
     
 
 - Name: PartitionedByPartitionLargeStep
@@ -241,10 +252,10 @@ Actors:
           {array: [
           {
             "$densify": {
-              "field": "number",
+              "field": *field,
               "range": {
                 "bounds": "partition",
-                "step": 8
+                "step": *largeStep
               },
               "partitionByFields": [
                 "partitionKey"
@@ -253,7 +264,7 @@ Actors:
           }
         ]}
         AggregateOptions:
-          BatchSize: 1000
+          BatchSize: *batchSize
     
 
 - Name: ExplicitRangeSmallStep
@@ -271,16 +282,16 @@ Actors:
           {array: [
           {
             "$densify": {
-              "field": "number",
+              "field": *field,
               "range": {
-                "bounds": [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}],
-                "step": 3
+                "bounds": *bounds,
+                "step": *smallStep
               }
             }
           }
         ]}
         AggregateOptions:
-          BatchSize: 1000
+          BatchSize: *batchSize
     
 
 - Name: ExplicitRangeLargeStep
@@ -298,16 +309,16 @@ Actors:
           {array: [
           {
             "$densify": {
-              "field": "number",
+              "field": *field,
               "range": {
-                "bounds": [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}],
-                "step": 8
+                "bounds": *bounds,
+                "step": *largeStep
               }
             }
           }
         ]}
         AggregateOptions:
-          BatchSize: 1000
+          BatchSize: *batchSize
     
 
 - Name: ExplicitRangeByPartitionSmallStep
@@ -325,10 +336,10 @@ Actors:
           {array: [
           {
             "$densify": {
-              "field": "number",
+              "field": *field,
               "range": {
-                "bounds": [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}],
-                "step": 3
+                "bounds": *bounds,
+                "step": *smallStep
               },
               "partitionByFields": [
                 "partitionKey"
@@ -337,7 +348,7 @@ Actors:
           }
         ]}
         AggregateOptions:
-          BatchSize: 1000
+          BatchSize: *batchSize
     
 
 - Name: ExplicitRangeByPartitionLargeStep
@@ -355,10 +366,10 @@ Actors:
           {array: [
           {
             "$densify": {
-              "field": "number",
+              "field": *field,
               "range": {
-                "bounds": [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}],
-                "step": 8
+                "bounds": *bounds,
+                "step": *largeStep
               },
               "partitionByFields": [
                 "partitionKey"
@@ -367,7 +378,7 @@ Actors:
           }
         ]}
         AggregateOptions:
-          BatchSize: 1000
+          BatchSize: *batchSize
 
 AutoRun:
 - When:
