@@ -433,6 +433,14 @@ public:
         return _currentPhase;
     }
 
+    /**
+     * Sleep for the duration, also waking up if the phase changes before the
+     * duration passes.
+     */
+    void sleepToPhaseEnd(Duration timeout) {
+        _orchestrator.sleepToPhaseEnd(timeout, _currentPhase);
+    }
+
 private:
     Orchestrator& _orchestrator;
     const PhaseNumber _currentPhase;
