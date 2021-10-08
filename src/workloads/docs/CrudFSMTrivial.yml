@@ -31,12 +31,17 @@ Actors:
       Transitions: &transitions
       - To: Absorbing
         Weight: 1
+        #        SleepBefore: &sleep {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
+        SleepBefore: &sleep {^TimeSpec: {value: 1, unit: seconds}}
       - To: First
         Weight: 1
+        SleepBefore: *sleep
       - To: Second
         Weight: 1
+        SleepBefore: *sleep
       - To: Third
         Weight: 1
+        SleepBefore: *sleep
     - Name: Second
       Operations:
       - OperationName: bulkWrite
@@ -67,6 +72,8 @@ Actors:
       Transitions:
       - To: Absorbing
         Weight: 1
+        SleepBefore: {^TimeSpec: {10000, unit: seconds}}
+
     InitialStates:
     - State: First
       Weight: 1

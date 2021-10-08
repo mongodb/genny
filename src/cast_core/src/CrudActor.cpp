@@ -1134,6 +1134,13 @@ std::string getDbName(const PhaseContext& phaseContext) {
     return phaseDb ? *phaseDb : *actorDb;
 }
 
+// struct RandomDuration {
+// public:
+//     getDuration();
+
+// private:
+// };
+
 // Represents one state in an FSM.
 struct State {
 
@@ -1147,8 +1154,10 @@ public:
     std::string state_name;
     std::vector<double> transition_weights;
     std::vector<int> transition_next_states;
-    // Combine the transition delay into a tuple with the next state in the vector above
-    // std::vector<> transition_delay; // this should be a time spec of some kind.
+    // Combine the transition delay into a tuple with the next state in the vector above when
+    // working
+    // starting with a Duration, but going to move towards a timespec generator
+    std::vector<Duration> transition_delay;  // this should be a time spec of some kind.
 };
 
 }  // namespace
@@ -1252,8 +1261,14 @@ struct CrudActor::PhaseConfig {
                     << "Next state name is " << transitionYaml["To"].to<std::string>();
                 next_states.emplace_back(states.at(transitionYaml["To"].to<std::string>()));
             }
-            return std::unique_ptr<State>(new State{
-                std::move(stateOperations), stateName, std::move(weights), std::move(next_states)});
+            auto size = next_states.size();
+            // TODO: Parse the input to make the sleepFor delays
+            return std::unique_ptr<State>(
+                new State{std::move(stateOperations),
+                          stateName,
+                          std::move(weights),
+                          std::move(next_states),
+                          std::move(std::vector<Duration>(size, std::chrono::seconds{1}))});
         };
         // Check if we have Operations or States. Through an error if we have both.
         if (phaseContext["Operations"] && phaseContext["States"]) {
@@ -1342,10 +1357,14 @@ void CrudActor::run() {
                 // pick next state
                 auto distribution = boost::random::discrete_distribution(
                     config->states[current_state]->transition_weights);
-                next_state =
-                    config->states[current_state]->transition_next_states[distribution(_rng)];
+                auto transition = distribution(_rng);
+                next_state = config->states[current_state]->transition_next_states[transition];
                 BOOST_LOG_TRIVIAL(debug) << "Choosing next state " << next_state;
-                // pick the delay for the next state
+                // Set the sleepBefore
+                BOOST_LOG_TRIVIAL(debug) << "Transition Delay length: "
+                                         << config->states[current_state]->transition_delay.size();
+                config.sleepToPhaseEnd(config->states[current_state]->transition_delay[transition]);
+                BOOST_LOG_TRIVIAL(debug) << "Called sleepToPhaseEnd";
             } else {
                 for (auto&& op : config->operations) {
                     op->run(session);
