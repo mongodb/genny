@@ -156,7 +156,6 @@ static const std::string kDefaultAlphabet = std::string{
 template <typename O>
 using Parser = std::function<O(const Node&, GeneratorArgs)>;
 
-const static boost::posix_time::ptime epoch{boost::gregorian::date(1970, 1, 1)};
 const static boost::posix_time::ptime max_date{boost::gregorian::date(2150, 1, 1)};
 
 // Pre-declaring all at once
