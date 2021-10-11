@@ -82,6 +82,16 @@ buildvariants:
   tasks:
   - name: tg_compile
 
+- name: ubuntu1604
+  display_name: Ubuntu 16.04
+  modules: [mongo]
+  expansions:
+    distro: ubuntu1604
+  run_on:
+  - ubuntu1604-large
+  tasks:
+  - name: tg_compile
+
 - name: ubuntu1804
   display_name: Ubuntu 18.04
   modules: [mongo]
@@ -89,6 +99,16 @@ buildvariants:
     distro: ubuntu1804
   run_on:
   - ubuntu1804-build
+  tasks:
+  - name: tg_compile
+
+- name: ubuntu2004
+  display_name: Ubuntu 20.04
+  modules: [mongo]
+  expansions:
+    distro: ubuntu2004
+  run_on:
+  - ubuntu2004-large
   tasks:
   - name: tg_compile
 
