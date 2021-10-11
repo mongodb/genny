@@ -1164,7 +1164,7 @@ public:
     // Combine the transition delay into a tuple with the next state in the vector above when
     // working
     // starting with a Duration, but going to move towards a timespec generator
-    std::vector<UniqueGenerator<int64_t>>
+    std::vector<UniqueGenerator<double>>
         transition_delay;  // this should be a time spec of some kind.
 };
 
@@ -1263,7 +1263,7 @@ struct CrudActor::PhaseConfig {
             BOOST_LOG_TRIVIAL(debug) << "Got operations";
             std::vector<double> weights;
             std::vector<int> next_states;
-            std::vector<UniqueGenerator<int64_t>> transition_delays;
+            std::vector<UniqueGenerator<double>> transition_delays;
             for (auto [k, transitionYaml] : node["Transitions"]) {
                 weights.emplace_back(transitionYaml["Weight"].to<int>());
                 BOOST_LOG_TRIVIAL(debug)
@@ -1274,8 +1274,8 @@ struct CrudActor::PhaseConfig {
                 // auto sleep_before = transitionYaml["SleepBefore"];
                 // auto time_spec = sleep_before["^TimeSpec"];
                 transition_delays.emplace_back(
-                    intGenerator(transitionYaml["SleepBefore"]["^TimeSpec"]["value"],
-                                 GeneratorArgs{phaseContext.rng(id), id}));
+                    doubleGenerator(transitionYaml["SleepBefore"]["^TimeSpec"]["value"],
+                                    GeneratorArgs{phaseContext.rng(id), id}));
 
 
                 // transition_delays.emplace_back(
@@ -1380,8 +1380,9 @@ void CrudActor::run() {
                 next_state = config->states[current_state]->transition_next_states[transition];
                 BOOST_LOG_TRIVIAL(debug) << "Choosing next state " << next_state;
                 // Set the sleepBefore
-                config.sleepToPhaseEnd(std::chrono::seconds(
-                    config->states[current_state]->transition_delay[transition]->evaluate()));
+                config.sleepToPhaseEnd(
+                    std::chrono::duration_cast<Duration>(std::chrono::duration<double>(
+                        config->states[current_state]->transition_delay[transition]->evaluate())));
                 BOOST_LOG_TRIVIAL(debug) << "Called sleepToPhaseEnd";
             } else {
                 for (auto&& op : config->operations) {
