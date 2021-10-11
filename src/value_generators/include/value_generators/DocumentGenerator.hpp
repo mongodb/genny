@@ -19,6 +19,11 @@
 #include <memory>
 #include <string>
 
+#include <boost/date_time.hpp>
+
+#include <bsoncxx/builder/basic/array.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/document/value.hpp>
 
 #include <gennylib/Node.hpp>
@@ -57,6 +62,35 @@ struct GeneratorArgs {
     ActorId actorId;
 };
 
+class Appendable {
+public:
+    virtual ~Appendable() = default;
+    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
+    virtual void append(bsoncxx::builder::basic::array& builder) = 0;
+};
+
+using UniqueAppendable = std::unique_ptr<Appendable>;
+
+template <class T>
+class Generator : public Appendable {
+public:
+    ~Generator() override = default;
+    virtual T evaluate() = 0;
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        builder.append(this->evaluate());
+    }
+};
+
+template <class T>
+using UniqueGenerator = std::unique_ptr<Generator<T>>;
+const static boost::posix_time::ptime epoch{boost::gregorian::date(1970, 1, 1)};
+
+
+UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorArgs);
+UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generatorArgs);
 
 class DocumentGenerator {
 public:

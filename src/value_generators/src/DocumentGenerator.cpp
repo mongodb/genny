@@ -34,33 +34,11 @@
 #include <bsoncxx/types/bson_value/view.hpp>
 
 
-namespace {
+namespace genny {
+// TODO: I had to move some stuff into namespace genny in order to expose it. I've moved everything
+// into namespace genny for now so that it will compile.
 
-class Appendable {
-public:
-    virtual ~Appendable() = default;
-    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
-    virtual void append(bsoncxx::builder::basic::array& builder) = 0;
-};
-
-using UniqueAppendable = std::unique_ptr<Appendable>;
 using bsoncxx::oid;
-
-template <class T>
-class Generator : public Appendable {
-public:
-    ~Generator() override = default;
-    virtual T evaluate() = 0;
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
-    }
-    void append(bsoncxx::builder::basic::array& builder) override {
-        builder.append(this->evaluate());
-    }
-};
-
-template <class T>
-using UniqueGenerator = std::unique_ptr<Generator<T>>;
 
 template <typename T>
 class ConstantAppender : public Generator<T> {
@@ -74,11 +52,6 @@ public:
 protected:
     T _value;
 };
-
-}  // namespace
-
-
-namespace genny {
 
 class DocumentGenerator::Impl : public Generator<bsoncxx::document::value> {
 public:
@@ -97,8 +70,6 @@ public:
 private:
     Entries _entries;
 };
-
-namespace {
 
 /**
  * Extract a required key from a node or barf if not there
@@ -161,10 +132,8 @@ const static boost::posix_time::ptime max_date{boost::gregorian::date(2150, 1, 1
 // Pre-declaring all at once
 // Documentation is at the implementations-site.
 int64_t parseStringToMillis(const std::string& datetime);
-UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
                                                            GeneratorArgs generatorArgs);
-UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
                                                            GeneratorArgs generatorArgs);
 UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs generatorArgs);
@@ -651,18 +620,17 @@ public:
         : _rng{generatorArgs.rng}, _format{node["format"].maybe<std::string>().value_or("")} {
         std::stringstream msg;
         if (!node["format"]) {
-            msg << "Malformed FormatString: format missing '" << _format << "'" << node
-                << "\n";
+            msg << "Malformed FormatString: format missing '" << _format << "'" << node << "\n";
         } else if (_format.empty()) {
-            msg << "Malformed FormatString: format cannot be empty '" << _format << "'"
-                << node << "\n";
+            msg << "Malformed FormatString: format cannot be empty '" << _format << "'" << node
+                << "\n";
         }
 
         if (!node["withArgs"]) {
             msg << "Malformed FormatString: withArgs missing." << node;
         } else if (!node["withArgs"].isSequence()) {
-            msg << "Malformed FormatString:  withArgs " << node.type()
-                << " not a sequence " << node;
+            msg << "Malformed FormatString:  withArgs " << node.type() << " not a sequence "
+                << node;
         }
 
         if (!msg.str().empty()) {
@@ -1326,6 +1294,7 @@ UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
     }
 }
 
+
 /**
  * @param node
  *   a top-level document value i.e. either a scalar or a `^RandomInt` value
@@ -1371,6 +1340,7 @@ UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generato
     }
     return std::make_unique<ConstantAppender<double>>(node.to<double>());
 }
+
 /**
  * @param node
  *   a top-level document value i.e. either a scalar or a `^String` value
@@ -1557,8 +1527,6 @@ UniqueGenerator<int64_t> dateGenerator(const Node& node,
     auto millis = (defaultTime - epoch).total_milliseconds();
     return std::make_unique<ConstantAppender<int64_t>>(millis);
 }
-
-}  // namespace
 
 // Kick the recursion into motion
 DocumentGenerator::DocumentGenerator(const Node& node, GeneratorArgs generatorArgs)

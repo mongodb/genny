@@ -33,6 +33,7 @@
 #include <gennylib/context.hpp>
 #include <gennylib/conventions.hpp>
 #include <value_generators/DefaultRandom.hpp>
+#include <value_generators/DocumentGenerator.hpp>
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
@@ -1141,6 +1142,12 @@ std::string getDbName(const PhaseContext& phaseContext) {
 // private:
 // };
 
+
+// represent a random delay
+// struct Delay {
+// public:
+//     UniqueGenerator<int64_t> number_generator;
+// }
 // Represents one state in an FSM.
 struct State {
 
@@ -1157,7 +1164,8 @@ public:
     // Combine the transition delay into a tuple with the next state in the vector above when
     // working
     // starting with a Duration, but going to move towards a timespec generator
-    std::vector<Duration> transition_delay;  // this should be a time spec of some kind.
+    std::vector<UniqueGenerator<int64_t>>
+        transition_delay;  // this should be a time spec of some kind.
 };
 
 }  // namespace
@@ -1255,14 +1263,23 @@ struct CrudActor::PhaseConfig {
             BOOST_LOG_TRIVIAL(debug) << "Got operations";
             std::vector<double> weights;
             std::vector<int> next_states;
-            std::vector<Duration> transition_delays;
+            std::vector<UniqueGenerator<int64_t>> transition_delays;
             for (auto [k, transitionYaml] : node["Transitions"]) {
                 weights.emplace_back(transitionYaml["Weight"].to<int>());
                 BOOST_LOG_TRIVIAL(debug)
                     << "Next state name is " << transitionYaml["To"].to<std::string>();
                 next_states.emplace_back(states.at(transitionYaml["To"].to<std::string>()));
+                // Parse out SleepBefore.
+                // SleepBefore: {^TimeSpec: {value: 1, unit: seconds}}
+                // auto sleep_before = transitionYaml["SleepBefore"];
+                // auto time_spec = sleep_before["^TimeSpec"];
                 transition_delays.emplace_back(
-                    transitionYaml["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{}));
+                    intGenerator(transitionYaml["SleepBefore"]["^TimeSpec"]["value"],
+                                 GeneratorArgs{phaseContext.rng(id), id}));
+
+
+                // transition_delays.emplace_back(
+                //     transitionYaml["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{}));
             }
             auto size = next_states.size();
             // TODO: Parse the input to make the sleepFor delays
@@ -1363,9 +1380,8 @@ void CrudActor::run() {
                 next_state = config->states[current_state]->transition_next_states[transition];
                 BOOST_LOG_TRIVIAL(debug) << "Choosing next state " << next_state;
                 // Set the sleepBefore
-                BOOST_LOG_TRIVIAL(debug) << "Transition Delay length: "
-                                         << config->states[current_state]->transition_delay.size();
-                config.sleepToPhaseEnd(config->states[current_state]->transition_delay[transition]);
+                config.sleepToPhaseEnd(std::chrono::seconds(
+                    config->states[current_state]->transition_delay[transition]->evaluate()));
                 BOOST_LOG_TRIVIAL(debug) << "Called sleepToPhaseEnd";
             } else {
                 for (auto&& op : config->operations) {
