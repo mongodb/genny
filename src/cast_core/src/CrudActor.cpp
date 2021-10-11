@@ -1135,20 +1135,75 @@ std::string getDbName(const PhaseContext& phaseContext) {
     return phaseDb ? *phaseDb : *actorDb;
 }
 
-// struct RandomDuration {
-// public:
-//     getDuration();
-
-// private:
-// };
-
-
+enum Units { NANOSECOND, MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR };
 // represent a random delay
-// struct Delay {
-// public:
-//     UniqueGenerator<int64_t> number_generator;
-// }
+class Delay {
+public:
+    Delay(const Node& node, GeneratorArgs args)
+        : number_generator{doubleGenerator(node["^TimeSpec"]["value"], args)} {
+        auto unit_string = node["^TimeSpec"]["units"].maybe<std::string>().value_or("seconds");
+
+        // Use string::find here so plurals get parsed correctly.
+        if (unit_string.find("nanosecond") == 0) {
+            units = NANOSECOND;
+        } else if (unit_string.find("microsecond") == 0) {
+            units = MICROSECOND;
+        } else if (unit_string.find("millisecond") == 0) {
+            units = MILLISECOND;
+        } else if (unit_string.find("second") == 0) {
+            units = SECOND;
+        } else if (unit_string.find("minute") == 0) {
+            units = MINUTE;
+        } else if (unit_string.find("hour") == 0) {
+            units = HOUR;
+        } else {
+            std::stringstream msg;
+            msg << "Invalid unit: " << unit_string << " for genny::TimeSpec field in config";
+            throw genny::InvalidConfigurationException(msg.str());
+        }
+    }
+
+    // Evaluate the generator to produce a random delay.
+    Duration evaluate() {
+        auto value = number_generator->evaluate();
+        switch (units) {
+            case NANOSECOND:
+                return (std::chrono::duration_cast<Duration>(
+                    std::chrono::duration<double, std::nano>(value)));
+                break;
+            case MICROSECOND:
+                return (std::chrono::duration_cast<Duration>(
+                    std::chrono::duration<double, std::nano>(value)));
+                break;
+            case MILLISECOND:
+                return (std::chrono::duration_cast<Duration>(
+                    std::chrono::duration<double, std::milli>(value)));
+                break;
+            case SECOND:
+                return (std::chrono::duration_cast<Duration>(std::chrono::duration<double>(value)));
+                break;
+            case MINUTE:
+                return (std::chrono::duration_cast<Duration>(
+                    std::chrono::duration<double, std::ratio<60>>(value)));
+                break;
+            case HOUR:
+                return (std::chrono::duration_cast<Duration>(
+                    std::chrono::duration<double, std::ratio<3600>>(value)));
+                break;
+        }
+    }
+
+private:
+    UniqueGenerator<double> number_generator;
+    Units units;
+};
 // Represents one state in an FSM.
+
+struct Transition {
+    int next_state;
+    Delay delay;
+};
+
 struct State {
 
 public:
@@ -1156,16 +1211,9 @@ public:
     //    metrics::Operation metrics;
     // Transitions are just next states with probabilities.
     // There is an entry for every state, regardless of whether there is a transition.
-    // If we want to support multiple transitions to the same state (for different ops), then this
-    // will need to be re-written.
     std::string state_name;
     std::vector<double> transition_weights;
-    std::vector<int> transition_next_states;
-    // Combine the transition delay into a tuple with the next state in the vector above when
-    // working
-    // starting with a Duration, but going to move towards a timespec generator
-    std::vector<UniqueGenerator<double>>
-        transition_delay;  // this should be a time spec of some kind.
+    std::vector<Transition> transitions;
 };
 
 }  // namespace
@@ -1230,9 +1278,9 @@ struct CrudActor::PhaseConfig {
             }
 
             // If the yaml specified MetricsName in the Phase block, then associate the metrics
-            // with the Phase; otherwise, associate with the Actor (e.g. all bulkWrite operations
-            // get recorded together across all Phases). The latter case (not specifying
-            // MetricsName) is legacy configuration-syntax.
+            // with the Phase; otherwise, associate with the Actor (e.g. all bulkWrite
+            // operations get recorded together across all Phases). The latter case (not
+            // specifying MetricsName) is legacy configuration-syntax.
             //
             // Node is convertible to bool but only explicitly so need to do the odd-looking
             // `? true : false` thing.
@@ -1262,32 +1310,17 @@ struct CrudActor::PhaseConfig {
             // Transitions
             BOOST_LOG_TRIVIAL(debug) << "Got operations";
             std::vector<double> weights;
-            std::vector<int> next_states;
-            std::vector<UniqueGenerator<double>> transition_delays;
+            std::vector<Transition> transitions;
             for (auto [k, transitionYaml] : node["Transitions"]) {
-                weights.emplace_back(transitionYaml["Weight"].to<int>());
+                weights.emplace_back(transitionYaml["Weight"].to<double>());
                 BOOST_LOG_TRIVIAL(debug)
                     << "Next state name is " << transitionYaml["To"].to<std::string>();
-                next_states.emplace_back(states.at(transitionYaml["To"].to<std::string>()));
-                // Parse out SleepBefore.
-                // SleepBefore: {^TimeSpec: {value: 1, unit: seconds}}
-                // auto sleep_before = transitionYaml["SleepBefore"];
-                // auto time_spec = sleep_before["^TimeSpec"];
-                transition_delays.emplace_back(
-                    doubleGenerator(transitionYaml["SleepBefore"]["^TimeSpec"]["value"],
-                                    GeneratorArgs{phaseContext.rng(id), id}));
-
-
-                // transition_delays.emplace_back(
-                //     transitionYaml["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{}));
+                transitions.emplace_back(Transition{
+                    states.at(transitionYaml["To"].to<std::string>()),
+                    Delay(transitionYaml["SleepBefore"], GeneratorArgs{phaseContext.rng(id), id})});
             }
-            auto size = next_states.size();
-            // TODO: Parse the input to make the sleepFor delays
-            return std::unique_ptr<State>(new State{std::move(stateOperations),
-                                                    stateName,
-                                                    std::move(weights),
-                                                    std::move(next_states),
-                                                    std::move(transition_delays)});
+            return std::unique_ptr<State>(new State{
+                std::move(stateOperations), stateName, std::move(weights), std::move(transitions)});
         };
         // Check if we have Operations or States. Through an error if we have both.
         if (phaseContext["Operations"] && phaseContext["States"]) {
@@ -1359,9 +1392,6 @@ void CrudActor::run() {
             if (!config->states.empty()) {
                 // Simplifying Assumption -- one shot operations on state enter
                 // We are here to fire those operations, and then pick the next state.
-                // next todo: add in the delay after picking the next state
-                // next next todo: Add support for repeated operations in the state
-
                 // transition to the next state
                 current_state = next_state;
                 // run the operations for the next state.
@@ -1377,12 +1407,11 @@ void CrudActor::run() {
                 auto distribution = boost::random::discrete_distribution(
                     config->states[current_state]->transition_weights);
                 auto transition = distribution(_rng);
-                next_state = config->states[current_state]->transition_next_states[transition];
+                next_state = config->states[current_state]->transitions[transition].next_state;
                 BOOST_LOG_TRIVIAL(debug) << "Choosing next state " << next_state;
                 // Set the sleepBefore
                 config.sleepToPhaseEnd(
-                    std::chrono::duration_cast<Duration>(std::chrono::duration<double>(
-                        config->states[current_state]->transition_delay[transition]->evaluate())));
+                    config->states[current_state]->transitions[transition].delay.evaluate());
                 BOOST_LOG_TRIVIAL(debug) << "Called sleepToPhaseEnd";
             } else {
                 for (auto&& op : config->operations) {
