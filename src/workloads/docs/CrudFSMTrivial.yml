@@ -32,7 +32,8 @@ Actors:
       - To: Absorbing
         Weight: 1
         #        SleepBefore: &sleep {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
-        SleepBefore: &sleep {^TimeSpec: {value: 1, unit: seconds}}
+        #SleepBefore: &sleep {^TimeSpec: {value: 1, unit: seconds}}
+        SleepBefore: &sleep 1 second
       - To: First
         Weight: 1
         SleepBefore: *sleep
@@ -72,7 +73,8 @@ Actors:
       Transitions:
       - To: Absorbing
         Weight: 1
-        SleepBefore: {^TimeSpec: {10000, unit: seconds}}
+        SleepBefore: 10 seconds
+        #        SleepBefore: {^TimeSpec: {10000, unit: seconds}}
 
     InitialStates:
     - State: First

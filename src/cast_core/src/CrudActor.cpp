@@ -1255,20 +1255,22 @@ struct CrudActor::PhaseConfig {
             BOOST_LOG_TRIVIAL(debug) << "Got operations";
             std::vector<double> weights;
             std::vector<int> next_states;
+            std::vector<Duration> transition_delays;
             for (auto [k, transitionYaml] : node["Transitions"]) {
                 weights.emplace_back(transitionYaml["Weight"].to<int>());
                 BOOST_LOG_TRIVIAL(debug)
                     << "Next state name is " << transitionYaml["To"].to<std::string>();
                 next_states.emplace_back(states.at(transitionYaml["To"].to<std::string>()));
+                transition_delays.emplace_back(
+                    transitionYaml["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{}));
             }
             auto size = next_states.size();
             // TODO: Parse the input to make the sleepFor delays
-            return std::unique_ptr<State>(
-                new State{std::move(stateOperations),
-                          stateName,
-                          std::move(weights),
-                          std::move(next_states),
-                          std::move(std::vector<Duration>(size, std::chrono::seconds{1}))});
+            return std::unique_ptr<State>(new State{std::move(stateOperations),
+                                                    stateName,
+                                                    std::move(weights),
+                                                    std::move(next_states),
+                                                    std::move(transition_delays)});
         };
         // Check if we have Operations or States. Through an error if we have both.
         if (phaseContext["Operations"] && phaseContext["States"]) {
