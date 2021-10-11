@@ -83,7 +83,6 @@ TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader - create records and add ind
                                             " { \"v\" : 2, \"key\" : { \"field2\" : 1 }, \"name\" : \"field2\" } ";
             INFO("Actual Response:   " << actual_response);
             INFO("Expected Response: " << expected_response);
-//            REQUIRE(actual_response.compare(expected_response) == 0);
             REQUIRE(actual_response == expected_response);
             auto count = db.collection("Collection0").count_documents(builder.view());
             REQUIRE(count == 10000);
