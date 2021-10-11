@@ -1,0 +1,77 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Run basic insert and find workload on a collection clustered by {_id: 1} .
+  Clustered collections are planned to mainly serve operations over the cluster
+  key such as monotonically increasing inserts, range queries and range deletions.
+
+Actors:
+
+# Phase 1: create collection
+- Name: Create
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        create: Collection0
+        clusteredIndex: {key: {_id: 1}, unique: true}
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+
+# Phase 2: insert. TODO Make multithreaded once TIG-2938 is resolved.
+- Name: Insert
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: &docCount 1000000
+    BatchSize: 1000
+    Document:
+      _id: {^Inc: {start: 0}}
+      a: {^RandomString: {length: 1024}}
+  - *Nop
+  - *Nop
+
+# Phase 3: Point _id lookups. TODO convert to range queries once TIG-3707 is implemented.
+- Name: Lookup
+  Type: CrudActor
+  Database: test
+  Threads: 16
+  Phases:
+  - *Nop
+  - *Nop
+  - Duration: 3 minutes
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+         Filter: {_id: {^RandomInt: {min: 0, max: *docCount}}}
+  - *Nop
+
+# Phase 4: Point deletion
+- Name: PointDeleter
+  Type: Deleter
+  Database: test
+  Threads: 16
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Duration: 3 minutes
+    Collection: Collection0
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-all-feature-flags
+      - shard-lite-all-feature-flags
