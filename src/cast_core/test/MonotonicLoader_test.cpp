@@ -24,7 +24,6 @@
 #include <testlib/helpers.hpp>
 #include <regex>
 #include <gennylib/context.hpp>
-#include<string.h>
 
 namespace genny {
 namespace {
@@ -33,7 +32,7 @@ namespace bson_stream = bsoncxx::builder::stream;
 using std::regex_search;
 using namespace bsoncxx;
 
-TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader successfully connects to a MongoDB instance.",
+TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader - create records and add indexes",
           "[standalone][single_node_replset][three_node_replset][sharded][MonotonicLoader]") {
 
     dropAllDatabases();
@@ -75,15 +74,17 @@ TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader successfully connects to a M
             builder << bson_stream::finalize;
             document::value doc = builder << "listIndexes" << "Collection0" << builder::stream::finalize;
             auto indexes = db.run_command(doc.view());
-            INFO("Collections Indexes: " << to_json(indexes.view()));
             auto outputString = to_json(indexes.view());
             std::cmatch matches;
             std::regex_search(const_cast<char*>(outputString.c_str()), matches, indexRegex);
             std::string actual_response(matches[1]);
-            std::string expected_response = " { \"v\" : 2, \"key\" : { \"_id\" : 1 }, \"name\" : \"_id_\" }, { \"v\" : 2, \"key\" : { \"field1\" : 1 }, \"name\" : \"field1\" }, { \"v\" : 2, \"key\" : { \"field2\" : 1 }, \"name\" : \"field2\" } ";
+            std::string expected_response = " { \"v\" : 2, \"key\" : { \"_id\" : 1 }, \"name\" : \"_id_\" }, "
+                                            "{ \"v\" : 2, \"key\" : { \"field1\" : 1 }, \"name\" : \"field1\" },"
+                                            " { \"v\" : 2, \"key\" : { \"field2\" : 1 }, \"name\" : \"field2\" } ";
             INFO("Actual Response:   " << actual_response);
             INFO("Expected Response: " << expected_response);
-            REQUIRE(actual_response.compare(expected_response) == 0);
+//            REQUIRE(actual_response.compare(expected_response) == 0);
+            REQUIRE(actual_response == expected_response);
             auto count = db.collection("Collection0").count_documents(builder.view());
             REQUIRE(count == 10000);
 
