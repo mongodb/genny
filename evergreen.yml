@@ -88,9 +88,9 @@ buildvariants:
   expansions:
     distro: ubuntu1604
   run_on:
-    - ubuntu1604-large
+  - ubuntu1604-large
   tasks:
-    - name: tg_compile
+  - name: tg_compile
 
 - name: ubuntu1804
   display_name: Ubuntu 18.04
@@ -108,9 +108,9 @@ buildvariants:
   expansions:
     distro: ubuntu2004
   run_on:
-    - ubuntu2004-large
+  - ubuntu2004-large
   tasks:
-    - name: tg_compile
+  - name: tg_compile
 
 - name: macos-1014
   display_name: macOS Mojave
