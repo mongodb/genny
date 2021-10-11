@@ -1197,15 +1197,14 @@ private:
     UniqueGenerator<double> number_generator;
     Units units;
 };
-// Represents one state in an FSM.
 
 struct Transition {
     int next_state;
     Delay delay;
 };
 
+// Represents one state in an FSM.
 struct State {
-
 public:
     std::vector<std::unique_ptr<BaseOperation>> operations;
     //    metrics::Operation metrics;
@@ -1261,7 +1260,7 @@ struct CrudActor::PhaseConfig {
         : dbName{getDbName(phaseContext)},
           metrics{phaseContext.actor().operation("Crud", id)},
           collectionName{phaseContext},
-          continue_current_state{false} {
+          continue_current_state{phaseContext["Continue"].maybe<bool>().value_or(false)} {
         auto name = collectionName.generateName(id);
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
             auto collection = (*client)[dbName][name];
