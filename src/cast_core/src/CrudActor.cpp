@@ -1140,7 +1140,7 @@ enum class Units { kNanosecond, kMicrosecond, kMillisecond, kSecond, kMinute, kH
 class Delay {
 public:
     Delay(const Node& node, GeneratorArgs args)
-        : number_generator{doubleGenerator(node["^TimeSpec"]["value"], args)} {
+        : numberGenerator{doubleGenerator(node["^TimeSpec"]["value"], args)} {
         auto unit_string = node["^TimeSpec"]["units"].maybe<std::string>().value_or("seconds");
 
         // Use string::find here so plurals get parsed correctly.
@@ -1165,7 +1165,7 @@ public:
 
     // Evaluate the generator to produce a random delay.
     Duration evaluate() {
-        auto value = number_generator->evaluate();
+        auto value = numberGenerator->evaluate();
         switch (units) {
             case Units::kNanosecond:
                 return (std::chrono::duration_cast<Duration>(
@@ -1194,12 +1194,12 @@ public:
     }
 
 private:
-    UniqueGenerator<double> number_generator;
+    UniqueGenerator<double> numberGenerator;
     Units units;
 };
 
 struct Transition {
-    int next_state;
+    int nextState;
     Delay delay;
 };
 
@@ -1208,15 +1208,15 @@ class State {
 public:
     std::vector<std::unique_ptr<BaseOperation>> operations;
     std::string state_name;
-    std::vector<double> transition_weights;
+    std::vector<double> transitionWeights;
     std::vector<Transition> transitions;
 };
 
 // Helper struct to encapsulate state based behavior
 struct StateConfig {
     std::vector<std::unique_ptr<State>> states;
-    std::vector<double> initial_state_weights;
-    bool continue_current_state;
+    std::vector<double> initialStateWeights;
+    bool continueCurrentState;
 };
 
 
@@ -1263,7 +1263,7 @@ struct CrudActor::PhaseConfig {
           metrics{phaseContext.actor().operation("Crud", id)},
           collectionName{phaseContext} {
 
-        stateConfig.continue_current_state = phaseContext["Continue"].maybe<bool>().value_or(false);
+        stateConfig.continueCurrentState = phaseContext["Continue"].maybe<bool>().value_or(false);
 
         auto name = collectionName.generateName(id);
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
@@ -1353,15 +1353,14 @@ struct CrudActor::PhaseConfig {
                 BOOST_LOG_TRIVIAL(debug) << "Adding state " << state;
                 stateConfig.states.emplace_back(addState(state, stateNames));
             }
-            // initial_state_weights.reserve(numStates);
-            stateConfig.initial_state_weights = std::vector<double>(numStates, 0);
+            stateConfig.initialStateWeights = std::vector<double>(numStates, 0);
             for (auto [k, state] : phaseContext["InitialStates"]) {
-                stateConfig.initial_state_weights[stateNames[state["State"].to<std::string>()]] +=
+                stateConfig.initialStateWeights[stateNames[state["State"].to<std::string>()]] +=
                     state["Weight"].to<double>();
             }
-            BOOST_LOG_TRIVIAL(debug) << "Length of initial state weights is "
-                                     << stateConfig.initial_state_weights.size();
-            for (auto weight : stateConfig.initial_state_weights) {
+            BOOST_LOG_TRIVIAL(debug)
+                << "Length of initial state weights is " << stateConfig.initialStateWeights.size();
+            for (auto weight : stateConfig.initialStateWeights) {
                 BOOST_LOG_TRIVIAL(debug) << "Weight is " << weight;
             }
             BOOST_LOG_TRIVIAL(debug) << "Done adding states";
@@ -1374,19 +1373,19 @@ struct CrudActor::PhaseConfig {
 };
 
 void CrudActor::run() {
-    int current_state = 0;
-    int next_state = 0;
+    int currentState = 0;
+    int nextState = 0;
     for (auto&& config : _loop) {
         auto session = _client->start_session();
         // TODO: If running without states, define a single state with the operations
         BOOST_LOG_TRIVIAL(debug) << "In CrudActor::run" << config->stateConfig.states.empty()
-                                 << config->stateConfig.continue_current_state;
-        if (!config->stateConfig.states.empty() and !config->stateConfig.continue_current_state) {
+                                 << config->stateConfig.continueCurrentState;
+        if (!config->stateConfig.states.empty() and !config->stateConfig.continueCurrentState) {
             // pick the initial state for the phase
             auto initial_distribution =
-                boost::random::discrete_distribution(config->stateConfig.initial_state_weights);
-            next_state = initial_distribution(_rng);
-            BOOST_LOG_TRIVIAL(debug) << "Picking initial state " << next_state;
+                boost::random::discrete_distribution(config->stateConfig.initialStateWeights);
+            nextState = initial_distribution(_rng);
+            BOOST_LOG_TRIVIAL(debug) << "Picking initial state " << nextState;
         }
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
@@ -1395,26 +1394,26 @@ void CrudActor::run() {
                 // Simplifying Assumption -- one shot operations on state enter
                 // We are here to fire those operations, and then pick the next state.
                 // transition to the next state
-                current_state = next_state;
+                currentState = nextState;
                 // run the operations for the next state.
-                BOOST_LOG_TRIVIAL(debug) << "Running operations for state " << current_state;
+                BOOST_LOG_TRIVIAL(debug) << "Running operations for state " << currentState;
                 BOOST_LOG_TRIVIAL(debug)
                     << "Number of operations: "
-                    << config->stateConfig.states[current_state]->operations.size();
+                    << config->stateConfig.states[currentState]->operations.size();
 
-                for (auto&& op : config->stateConfig.states[current_state]->operations) {
+                for (auto&& op : config->stateConfig.states[currentState]->operations) {
                     BOOST_LOG_TRIVIAL(debug) << "Running an operation";
                     op->run(session);
                 }
                 // pick next state
                 auto distribution = boost::random::discrete_distribution(
-                    config->stateConfig.states[current_state]->transition_weights);
+                    config->stateConfig.states[currentState]->transitionWeights);
                 auto transition = distribution(_rng);
-                next_state =
-                    config->stateConfig.states[current_state]->transitions[transition].next_state;
-                BOOST_LOG_TRIVIAL(debug) << "Choosing next state " << next_state;
+                nextState =
+                    config->stateConfig.states[currentState]->transitions[transition].nextState;
+                BOOST_LOG_TRIVIAL(debug) << "Choosing next state " << nextState;
                 // Set the sleepBefore
-                config.sleepNonBlocking(config->stateConfig.states[current_state]
+                config.sleepNonBlocking(config->stateConfig.states[currentState]
                                             ->transitions[transition]
                                             .delay.evaluate());
                 BOOST_LOG_TRIVIAL(debug) << "Called sleepToPhaseEnd";
