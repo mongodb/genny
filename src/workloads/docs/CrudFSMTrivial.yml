@@ -18,8 +18,7 @@ Actors:
   Threads: 5
   Database: Test
   Phases:
-  - #Repeat: 10  # Run 10 state transition
-    Duration: 10 seconds
+  - Duration: 10 seconds
     Collection: Test
     States:
     - Name: First
@@ -32,9 +31,7 @@ Actors:
       Transitions: &transitions
       - To: Absorbing
         Weight: 1
-        #        SleepBefore: &sleep {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
         SleepBefore: &sleep {^TimeSpec: {value: {^RandomDouble: {min: 1, max: 5}}, unit: seconds}}
-        #SleepBefore: &sleep 1 second
       - To: First
         Weight: 1
         SleepBefore: *sleep
@@ -74,7 +71,6 @@ Actors:
       Transitions:
       - To: Absorbing
         Weight: 1
-        #SleepBefore: 10 seconds
         SleepBefore: {^TimeSpec: {value: 100, unit: seconds}}
 
     InitialStates:
