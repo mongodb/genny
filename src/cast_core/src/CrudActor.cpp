@@ -1145,17 +1145,17 @@ public:
 
         // Use string::find here so plurals get parsed correctly.
         if (unit_string.find("nanosecond") == 0) {
-            units = kNanosecond;
+            units = Units::kNanosecond;
         } else if (unit_string.find("microsecond") == 0) {
-            units = kMicrosecond;
+            units = Units::kMicrosecond;
         } else if (unit_string.find("millisecond") == 0) {
-            units = kMillisecond;
+            units = Units::kMillisecond;
         } else if (unit_string.find("second") == 0) {
-            units = kSecond;
+            units = Units::kSecond;
         } else if (unit_string.find("minute") == 0) {
-            units = kMinute;
+            units = Units::kMinute;
         } else if (unit_string.find("hour") == 0) {
-            units = kHour;
+            units = Units::kHour;
         } else {
             std::stringstream msg;
             msg << "Invalid unit: " << unit_string << " for genny::TimeSpec field in config";
@@ -1167,26 +1167,26 @@ public:
     Duration evaluate() {
         auto value = number_generator->evaluate();
         switch (units) {
-            case kNanosecond:
+            case Units::kNanosecond:
                 return (std::chrono::duration_cast<Duration>(
                     std::chrono::duration<double, std::nano>(value)));
                 break;
-            case kMicrosecond:
+            case Units::kMicrosecond:
                 return (std::chrono::duration_cast<Duration>(
                     std::chrono::duration<double, std::nano>(value)));
                 break;
-            case kMillisecond:
+            case Units::kMillisecond:
                 return (std::chrono::duration_cast<Duration>(
                     std::chrono::duration<double, std::milli>(value)));
                 break;
-            case kSecond:
+            case Units::kSecond:
                 return (std::chrono::duration_cast<Duration>(std::chrono::duration<double>(value)));
                 break;
-            case kMinute:
+            case Units::kMinute:
                 return (std::chrono::duration_cast<Duration>(
                     std::chrono::duration<double, std::ratio<60>>(value)));
                 break;
-            case kHour:
+            case Units::kHour:
                 return (std::chrono::duration_cast<Duration>(
                     std::chrono::duration<double, std::ratio<3600>>(value)));
                 break;
