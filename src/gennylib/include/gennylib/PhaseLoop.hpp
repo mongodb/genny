@@ -72,7 +72,8 @@ public:
         : _minDuration{minDuration},
           // If it is a nop then should iterate 0 times.
           _minIterations{isNop ? IntegerSpec(0l) : minIterations},
-          _doesBlock{_minIterations || _minDuration} {
+          _doesBlock{_minIterations || _minDuration},
+          _sleepUntil{SteadyClock::now()} {
         if (minDuration && minDuration->count() < 0) {
             std::stringstream str;
             str << "Need non-negative duration. Gave " << minDuration->count() << " milliseconds";
@@ -182,6 +183,29 @@ public:
         return _doesBlock;
     }
 
+    // Set the minimum timepoint before continuning again
+    constexpr void setSleepUntil(SteadyClock::time_point SleepUntil) {
+        _sleepUntil = SleepUntil;
+    }
+
+    // Perform the sleep to get to specified timepoint, but ending phase if timepoint would be after
+    // the end of the phase.
+    void sleepForActor(Orchestrator& o,
+                       SteadyClock::time_point startedAt,
+                       int64_t currentIteration,
+                       const PhaseNumber pn) {
+        if (_sleepUntil > SteadyClock::now()) {
+            // if phase would end before delay, call await end
+            if (!o.continueRunning() ||
+                (doesBlockCompletion() ? isDone(startedAt, currentIteration, _sleepUntil)
+                                       : o.currentPhase() != pn)) {
+                o.awaitPhaseEnd(false);
+            }
+
+            o.sleepUntilOrPhaseEnd(_sleepUntil, pn);
+        }
+    }
+
     constexpr void sleepBefore(const Orchestrator& o, const PhaseNumber pn) const {
         _sleeper->before(o, pn);
     }
@@ -202,6 +226,7 @@ private:
     GlobalRateLimiter* _rateLimiter = nullptr;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
     std::optional<v1::Sleeper> _sleeper;
+    SteadyClock::time_point _sleepUntil;
 };
 
 
@@ -256,6 +281,8 @@ public:
             _iterationCheck->sleepBefore(*_orchestrator, _inPhase);
             _iterationCheck->limitRate(
                 _referenceStartingPoint, _currentIteration, *_orchestrator, _inPhase);
+            _iterationCheck->sleepForActor(
+                *_orchestrator, _referenceStartingPoint, _currentIteration, _inPhase);
         }
         // clang-format off
         return
@@ -434,11 +461,11 @@ public:
     }
 
     /**
-     * Sleep for the duration, also waking up if the phase changes before the
-     * duration passes.
+     * Set a sleep to be used in the iteration checker in the Phase Loop. Does not sleep
+     * immediately, but will not start the next iteration before this amount of time has passed.
      */
-    void sleepToPhaseEnd(Duration timeout) {
-        _orchestrator.sleepToPhaseEnd(timeout, _currentPhase);
+    void sleepNonBlocking(Duration timeout) {
+        _iterationCheck->setSleepUntil(SteadyClock::now() + timeout);
     }
 
 private:

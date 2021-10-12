@@ -1409,7 +1409,7 @@ void CrudActor::run() {
                 next_state = config->states[current_state]->transitions[transition].next_state;
                 BOOST_LOG_TRIVIAL(debug) << "Choosing next state " << next_state;
                 // Set the sleepBefore
-                config.sleepToPhaseEnd(
+                config.sleepNonBlocking(
                     config->states[current_state]->transitions[transition].delay.evaluate());
                 BOOST_LOG_TRIVIAL(debug) << "Called sleepToPhaseEnd";
             } else {
