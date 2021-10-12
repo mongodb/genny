@@ -1135,7 +1135,7 @@ std::string getDbName(const PhaseContext& phaseContext) {
     return phaseDb ? *phaseDb : *actorDb;
 }
 
-enum Units { NANOSECOND, MICROSECOND, MILLISECOND, SECOND, MINUTE, HOUR };
+enum class Units { kNanosecond, kMicrosecond, kMillisecond, kSecond, kMinute, kHour };
 // represent a random delay
 class Delay {
 public:
@@ -1145,17 +1145,17 @@ public:
 
         // Use string::find here so plurals get parsed correctly.
         if (unit_string.find("nanosecond") == 0) {
-            units = NANOSECOND;
+            units = kNanosecond;
         } else if (unit_string.find("microsecond") == 0) {
-            units = MICROSECOND;
+            units = kMicrosecond;
         } else if (unit_string.find("millisecond") == 0) {
-            units = MILLISECOND;
+            units = kMillisecond;
         } else if (unit_string.find("second") == 0) {
-            units = SECOND;
+            units = kSecond;
         } else if (unit_string.find("minute") == 0) {
-            units = MINUTE;
+            units = kMinute;
         } else if (unit_string.find("hour") == 0) {
-            units = HOUR;
+            units = kHour;
         } else {
             std::stringstream msg;
             msg << "Invalid unit: " << unit_string << " for genny::TimeSpec field in config";
@@ -1167,26 +1167,26 @@ public:
     Duration evaluate() {
         auto value = number_generator->evaluate();
         switch (units) {
-            case NANOSECOND:
+            case kNanosecond:
                 return (std::chrono::duration_cast<Duration>(
                     std::chrono::duration<double, std::nano>(value)));
                 break;
-            case MICROSECOND:
+            case kMicrosecond:
                 return (std::chrono::duration_cast<Duration>(
                     std::chrono::duration<double, std::nano>(value)));
                 break;
-            case MILLISECOND:
+            case kMillisecond:
                 return (std::chrono::duration_cast<Duration>(
                     std::chrono::duration<double, std::milli>(value)));
                 break;
-            case SECOND:
+            case kSecond:
                 return (std::chrono::duration_cast<Duration>(std::chrono::duration<double>(value)));
                 break;
-            case MINUTE:
+            case kMinute:
                 return (std::chrono::duration_cast<Duration>(
                     std::chrono::duration<double, std::ratio<60>>(value)));
                 break;
-            case HOUR:
+            case kHour:
                 return (std::chrono::duration_cast<Duration>(
                     std::chrono::duration<double, std::ratio<3600>>(value)));
                 break;
@@ -1204,12 +1204,9 @@ struct Transition {
 };
 
 // Represents one state in an FSM.
-struct State {
+class State {
 public:
     std::vector<std::unique_ptr<BaseOperation>> operations;
-    //    metrics::Operation metrics;
-    // Transitions are just next states with probabilities.
-    // There is an entry for every state, regardless of whether there is a transition.
     std::string state_name;
     std::vector<double> transition_weights;
     std::vector<Transition> transitions;
