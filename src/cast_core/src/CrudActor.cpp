@@ -1212,6 +1212,14 @@ public:
     std::vector<Transition> transitions;
 };
 
+// Helper struct to encapsulate state based behavior
+struct StateConfig {
+    std::vector<std::unique_ptr<State>> states;
+    std::vector<double> initial_state_weights;
+    bool continue_current_state;
+};
+
+
 }  // namespace
 
 namespace genny::actor {
@@ -1241,23 +1249,22 @@ struct CrudActor::CollectionName {
         return "Collection" + std::to_string(collectionNumber);
     }
 };
-
 struct CrudActor::PhaseConfig {
     std::vector<std::unique_ptr<BaseOperation>> operations;
-    std::vector<std::unique_ptr<State>> states;
-    std::vector<double> initial_state_weights;
     metrics::Operation metrics;
+    StateConfig stateConfig;
     std::string dbName;
     CrudActor::CollectionName collectionName;
-    bool continue_current_state;
 
     // min time of next operation
 
     PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id)
         : dbName{getDbName(phaseContext)},
           metrics{phaseContext.actor().operation("Crud", id)},
-          collectionName{phaseContext},
-          continue_current_state{phaseContext["Continue"].maybe<bool>().value_or(false)} {
+          collectionName{phaseContext} {
+
+        stateConfig.continue_current_state = phaseContext["Continue"].maybe<bool>().value_or(false);
+
         auto name = collectionName.generateName(id);
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
             auto collection = (*client)[dbName][name];
@@ -1341,21 +1348,20 @@ struct CrudActor::PhaseConfig {
                 i++;
             }
             auto numStates = stateNames.size();
-            states.reserve(numStates);
+            stateConfig.states.reserve(numStates);
             for (auto [k, state] : phaseContext["States"]) {
                 BOOST_LOG_TRIVIAL(debug) << "Adding state " << state;
-                states.emplace_back(addState(state, stateNames));
+                stateConfig.states.emplace_back(addState(state, stateNames));
             }
             // initial_state_weights.reserve(numStates);
-            initial_state_weights = std::vector<double>(numStates, 0);
-            // std::fill_n(initial_state_weights.begin(), numStates, 0);
+            stateConfig.initial_state_weights = std::vector<double>(numStates, 0);
             for (auto [k, state] : phaseContext["InitialStates"]) {
-                initial_state_weights[stateNames[state["State"].to<std::string>()]] +=
+                stateConfig.initial_state_weights[stateNames[state["State"].to<std::string>()]] +=
                     state["Weight"].to<double>();
             }
-            BOOST_LOG_TRIVIAL(debug)
-                << "Length of initial state weights is " << initial_state_weights.size();
-            for (auto weight : initial_state_weights) {
+            BOOST_LOG_TRIVIAL(debug) << "Length of initial state weights is "
+                                     << stateConfig.initial_state_weights.size();
+            for (auto weight : stateConfig.initial_state_weights) {
                 BOOST_LOG_TRIVIAL(debug) << "Weight is " << weight;
             }
             BOOST_LOG_TRIVIAL(debug) << "Done adding states";
@@ -1373,19 +1379,19 @@ void CrudActor::run() {
     for (auto&& config : _loop) {
         auto session = _client->start_session();
         // TODO: If running without states, define a single state with the operations
-        BOOST_LOG_TRIVIAL(debug) << "In CrudActor::run" << config->states.empty()
-                                 << config->continue_current_state;
-        if (!config->states.empty() and !config->continue_current_state) {
+        BOOST_LOG_TRIVIAL(debug) << "In CrudActor::run" << config->stateConfig.states.empty()
+                                 << config->stateConfig.continue_current_state;
+        if (!config->stateConfig.states.empty() and !config->stateConfig.continue_current_state) {
             // pick the initial state for the phase
             auto initial_distribution =
-                boost::random::discrete_distribution(config->initial_state_weights);
+                boost::random::discrete_distribution(config->stateConfig.initial_state_weights);
             next_state = initial_distribution(_rng);
             BOOST_LOG_TRIVIAL(debug) << "Picking initial state " << next_state;
         }
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
             BOOST_LOG_TRIVIAL(debug) << "In inner loop";
-            if (!config->states.empty()) {
+            if (!config->stateConfig.states.empty()) {
                 // Simplifying Assumption -- one shot operations on state enter
                 // We are here to fire those operations, and then pick the next state.
                 // transition to the next state
@@ -1393,21 +1399,24 @@ void CrudActor::run() {
                 // run the operations for the next state.
                 BOOST_LOG_TRIVIAL(debug) << "Running operations for state " << current_state;
                 BOOST_LOG_TRIVIAL(debug)
-                    << "Number of operations: " << config->states[current_state]->operations.size();
+                    << "Number of operations: "
+                    << config->stateConfig.states[current_state]->operations.size();
 
-                for (auto&& op : config->states[current_state]->operations) {
+                for (auto&& op : config->stateConfig.states[current_state]->operations) {
                     BOOST_LOG_TRIVIAL(debug) << "Running an operation";
                     op->run(session);
                 }
                 // pick next state
                 auto distribution = boost::random::discrete_distribution(
-                    config->states[current_state]->transition_weights);
+                    config->stateConfig.states[current_state]->transition_weights);
                 auto transition = distribution(_rng);
-                next_state = config->states[current_state]->transitions[transition].next_state;
+                next_state =
+                    config->stateConfig.states[current_state]->transitions[transition].next_state;
                 BOOST_LOG_TRIVIAL(debug) << "Choosing next state " << next_state;
                 // Set the sleepBefore
-                config.sleepNonBlocking(
-                    config->states[current_state]->transitions[transition].delay.evaluate());
+                config.sleepNonBlocking(config->stateConfig.states[current_state]
+                                            ->transitions[transition]
+                                            .delay.evaluate());
                 BOOST_LOG_TRIVIAL(debug) << "Called sleepToPhaseEnd";
             } else {
                 for (auto&& op : config->operations) {
