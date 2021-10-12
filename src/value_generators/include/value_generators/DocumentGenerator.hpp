@@ -62,6 +62,9 @@ struct GeneratorArgs {
     ActorId actorId;
 };
 
+
+// TODO: This code until the next todo are exposed to get intGenerator and doubleGenerator to work.
+// We otherwise do not want to expose them.
 class Appendable {
 public:
     virtual ~Appendable() = default;
@@ -88,6 +91,8 @@ template <class T>
 using UniqueGenerator = std::unique_ptr<Generator<T>>;
 const static boost::posix_time::ptime epoch{boost::gregorian::date(1970, 1, 1)};
 
+// TODO: The code from the previous todo are exposed to get intGenerator and doubleGenerator to
+// work. We otherwise do not want to expose them.
 
 UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generatorArgs);
