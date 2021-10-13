@@ -202,9 +202,9 @@ public:
                 return;  // don't sleep if the orchestrator says to stop
             }
             if (doesBlockCompletion() &&
-                (!_minDuration || (*_minDuration).value <= now - startedAt))
+                (_minDuration && (*_minDuration).value <= _sleepUntil - startedAt))
                 // Shorten the sleep until until duration.
-                _sleepUntil = (*_minDuration).value + now;
+                _sleepUntil = (*_minDuration).value + startedAt;
         }
 
         o.sleepUntilOrPhaseEnd(_sleepUntil, pn);
