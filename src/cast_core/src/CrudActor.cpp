@@ -1378,7 +1378,8 @@ void CrudActor::run() {
     for (auto&& config : _loop) {
         auto session = _client->start_session();
         // TODO: If running without states, define a single state with the operations
-        if (!config->stateConfig.states.empty() and !config->stateConfig.continueCurrentState) {
+        if (!config.isNop() && !config->stateConfig.states.empty() &&
+            !config->stateConfig.continueCurrentState) {
             // pick the initial state for the phase
             auto initial_distribution =
                 boost::random::discrete_distribution(config->stateConfig.initialStateWeights);
