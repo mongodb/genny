@@ -507,7 +507,6 @@ struct BulkWriteOperation : public BaseOperation {
 
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = bulk.execute();
-            BOOST_LOG_TRIVIAL(debug) << "After bulk.execute";
             size_t docs = 0;
             if (result) {
                 docs += result->modified_count();
@@ -1304,19 +1303,13 @@ struct CrudActor::PhaseConfig {
             auto stateName = node["Name"].to<std::string>();
             // Skipping repeat for now
             // operations
-            BOOST_LOG_TRIVIAL(debug) << "Adding state " << stateName;
             auto stateOperations = node.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOperation);
-            BOOST_LOG_TRIVIAL(debug)
-                << "Got operations for state. Number of operations: " << stateOperations.size();
             // Transitions
-            BOOST_LOG_TRIVIAL(debug) << "Got operations";
             std::vector<double> weights;
             std::vector<Transition> transitions;
             for (auto [k, transitionYaml] : node["Transitions"]) {
                 weights.emplace_back(transitionYaml["Weight"].to<double>());
-                BOOST_LOG_TRIVIAL(debug)
-                    << "Next state name is " << transitionYaml["To"].to<std::string>();
                 transitions.emplace_back(Transition{
                     states.at(transitionYaml["To"].to<std::string>()),
                     Delay(transitionYaml["SleepBefore"], GeneratorArgs{phaseContext.rng(id), id})});
@@ -1337,12 +1330,10 @@ struct CrudActor::PhaseConfig {
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOperation);
         } else if (phaseContext["States"]) {  // Parse out the states}
-            BOOST_LOG_TRIVIAL(debug) << "Adding states";
             // build the list of states, and then actuall process the states
             int i = 0;
             std::unordered_map<std::string, int> stateNames;
             for (auto [k, state] : phaseContext["States"]) {
-                BOOST_LOG_TRIVIAL(debug) << "Adding state to state Names " << state;
                 stateNames.emplace(state["Name"].to<std::string>(), i);
                 i++;
             }
@@ -1366,7 +1357,6 @@ struct CrudActor::PhaseConfig {
 
             stateConfig.states.reserve(numStates);
             for (auto [k, state] : phaseContext["States"]) {
-                BOOST_LOG_TRIVIAL(debug) << "Adding state " << state;
                 stateConfig.states.emplace_back(addState(state, stateNames));
             }
             stateConfig.initialStateWeights = std::vector<double>(numStates, 0);
@@ -1374,12 +1364,6 @@ struct CrudActor::PhaseConfig {
                 stateConfig.initialStateWeights[stateNames[state["State"].to<std::string>()]] +=
                     state["Weight"].to<double>();
             }
-            BOOST_LOG_TRIVIAL(debug)
-                << "Length of initial state weights is " << stateConfig.initialStateWeights.size();
-            for (auto weight : stateConfig.initialStateWeights) {
-                BOOST_LOG_TRIVIAL(debug) << "Weight is " << weight;
-            }
-            BOOST_LOG_TRIVIAL(debug) << "Done adding states";
         } else {  // Throw a useful error}
             BOOST_THROW_EXCEPTION(
                 InvalidConfigurationException("CrudActor has neither Operations nor States "
@@ -1394,31 +1378,24 @@ void CrudActor::run() {
     for (auto&& config : _loop) {
         auto session = _client->start_session();
         // TODO: If running without states, define a single state with the operations
-        BOOST_LOG_TRIVIAL(debug) << "In CrudActor::run" << config->stateConfig.states.empty()
-                                 << config->stateConfig.continueCurrentState;
         if (!config->stateConfig.states.empty() and !config->stateConfig.continueCurrentState) {
             // pick the initial state for the phase
             auto initial_distribution =
                 boost::random::discrete_distribution(config->stateConfig.initialStateWeights);
             nextState = initial_distribution(_rng);
-            BOOST_LOG_TRIVIAL(debug) << "Picking initial state " << nextState;
+            BOOST_LOG_TRIVIAL(debug) << "Actor " << id() << " picking initial state " << nextState;
         }
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
-            BOOST_LOG_TRIVIAL(debug) << "In inner loop";
             if (!config->stateConfig.states.empty()) {
                 // Simplifying Assumption -- one shot operations on state enter
                 // We are here to fire those operations, and then pick the next state.
                 // transition to the next state
                 currentState = nextState;
                 // run the operations for the next state.
-                BOOST_LOG_TRIVIAL(debug) << "Running operations for state " << currentState;
                 BOOST_LOG_TRIVIAL(debug)
-                    << "Number of operations: "
-                    << config->stateConfig.states[currentState]->operations.size();
-
+                    << "Actor " << id() << " running operations for state " << currentState;
                 for (auto&& op : config->stateConfig.states[currentState]->operations) {
-                    BOOST_LOG_TRIVIAL(debug) << "Running an operation";
                     op->run(session);
                 }
                 // pick next state
@@ -1427,12 +1404,11 @@ void CrudActor::run() {
                 auto transition = distribution(_rng);
                 nextState =
                     config->stateConfig.states[currentState]->transitions[transition].nextState;
-                BOOST_LOG_TRIVIAL(debug) << "Choosing next state " << nextState;
-                // Set the sleepBefore
+                BOOST_LOG_TRIVIAL(debug)
+                    << "Actor " << id() << " choosing next state " << nextState;
                 config.sleepNonBlocking(config->stateConfig.states[currentState]
                                             ->transitions[transition]
                                             .delay.evaluate());
-                BOOST_LOG_TRIVIAL(debug) << "Called sleepToPhaseEnd";
             } else {
                 for (auto&& op : config->operations) {
                     op->run(session);
