@@ -34,10 +34,7 @@
 #include <bsoncxx/types/bson_value/view.hpp>
 
 
-namespace genny {
-// TODO: I had to move some stuff into namespace genny in order to expose it. I've moved everything
-// into namespace genny for now so that it will compile.
-
+namespace {
 using bsoncxx::oid;
 
 class Appendable {
@@ -48,6 +45,9 @@ public:
 };
 
 using UniqueAppendable = std::unique_ptr<Appendable>;
+}  // namespace
+
+namespace genny {
 
 template <class T>
 class Generator : public Appendable {
@@ -61,7 +61,10 @@ public:
         builder.append(this->evaluate());
     }
 };
+}  // namespace genny
 
+namespace {
+using namespace genny;
 const static boost::posix_time::ptime epoch{boost::gregorian::date(1970, 1, 1)};
 
 template <typename T>
@@ -76,7 +79,9 @@ public:
 protected:
     T _value;
 };
+}  // namespace
 
+namespace genny {
 class DocumentGenerator::Impl : public Generator<bsoncxx::document::value> {
 public:
     using Entries = std::vector<std::pair<std::string, UniqueAppendable>>;
@@ -94,6 +99,9 @@ public:
 private:
     Entries _entries;
 };
+}  // namespace genny
+
+namespace {
 
 /**
  * Extract a required key from a node or barf if not there
@@ -1553,6 +1561,7 @@ UniqueGenerator<int64_t> dateGenerator(const Node& node,
     auto millis = (defaultTime - epoch).total_milliseconds();
     return std::make_unique<ConstantAppender<int64_t>>(millis);
 }
+}  // namespace
 
 // Kick the recursion into motion
 DocumentGenerator::DocumentGenerator(const Node& node, GeneratorArgs generatorArgs)
@@ -1576,6 +1585,7 @@ bsoncxx::document::value DocumentGenerator::evaluate() {
     return operator()();
 }
 
+namespace genny {
 // template <class T>
 // TypeGenerator<T>::TypeGenerator(const Node& node, GeneratorArgs generatorArgs) {}
 template <class T>

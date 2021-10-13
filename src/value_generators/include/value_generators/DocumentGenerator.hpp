@@ -19,11 +19,6 @@
 #include <memory>
 #include <string>
 
-#include <boost/date_time.hpp>
-
-#include <bsoncxx/builder/basic/array.hpp>
-#include <bsoncxx/builder/basic/document.hpp>
-#include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/document/value.hpp>
 
 #include <gennylib/Node.hpp>
