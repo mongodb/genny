@@ -40,6 +40,30 @@ namespace genny {
 
 using bsoncxx::oid;
 
+class Appendable {
+public:
+    virtual ~Appendable() = default;
+    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
+    virtual void append(bsoncxx::builder::basic::array& builder) = 0;
+};
+
+using UniqueAppendable = std::unique_ptr<Appendable>;
+
+template <class T>
+class Generator : public Appendable {
+public:
+    ~Generator() override = default;
+    virtual T evaluate() = 0;
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        builder.append(this->evaluate());
+    }
+};
+
+const static boost::posix_time::ptime epoch{boost::gregorian::date(1970, 1, 1)};
+
 template <typename T>
 class ConstantAppender : public Generator<T> {
 public:
@@ -132,8 +156,10 @@ const static boost::posix_time::ptime max_date{boost::gregorian::date(2150, 1, 1
 // Pre-declaring all at once
 // Documentation is at the implementations-site.
 int64_t parseStringToMillis(const std::string& datetime);
+UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
                                                            GeneratorArgs generatorArgs);
+UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
                                                            GeneratorArgs generatorArgs);
 UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs generatorArgs);
@@ -1550,4 +1576,27 @@ bsoncxx::document::value DocumentGenerator::evaluate() {
     return operator()();
 }
 
+// template <class T>
+// TypeGenerator<T>::TypeGenerator(const Node& node, GeneratorArgs generatorArgs) {}
+template <class T>
+T TypeGenerator<T>::evaluate() {
+    return (_impl->evaluate());
+}
+TypeGenerator<int64_t> makeIntGenerator(const Node& node, GeneratorArgs generatorArgs) {
+    return (TypeGenerator<int64_t>(std::move(intGenerator(node, generatorArgs))));
+}
+TypeGenerator<double> makeDoubleGenerator(const Node& node, GeneratorArgs generatorArgs) {
+    return (TypeGenerator<double>(std::move(doubleGenerator(node, generatorArgs))));
+}
+
+template <class T>
+TypeGenerator<T>::~TypeGenerator() = default;
+template <class T>
+TypeGenerator<T>::TypeGenerator(TypeGenerator<T>&&) noexcept = default;
+template <class T>
+TypeGenerator<T>& TypeGenerator<T>::operator=(TypeGenerator<T>&&) noexcept = default;
+
+// Force the compiler to build the following TypeGenerators
+template class TypeGenerator<double>;
+template class TypeGenerator<int64_t>;
 }  // namespace genny

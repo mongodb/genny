@@ -63,39 +63,36 @@ struct GeneratorArgs {
 };
 
 
-// TODO: This code until the next todo are exposed to get intGenerator and doubleGenerator to work.
-// We otherwise do not want to expose them.
-class Appendable {
-public:
-    virtual ~Appendable() = default;
-    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
-    virtual void append(bsoncxx::builder::basic::array& builder) = 0;
-};
-
-using UniqueAppendable = std::unique_ptr<Appendable>;
-
 template <class T>
-class Generator : public Appendable {
-public:
-    ~Generator() override = default;
-    virtual T evaluate() = 0;
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
-    }
-    void append(bsoncxx::builder::basic::array& builder) override {
-        builder.append(this->evaluate());
-    }
-};
+class Generator;
 
 template <class T>
 using UniqueGenerator = std::unique_ptr<Generator<T>>;
-const static boost::posix_time::ptime epoch{boost::gregorian::date(1970, 1, 1)};
 
-// TODO: The code from the previous todo are exposed to get intGenerator and doubleGenerator to
-// work. We otherwise do not want to expose them.
+template <class T>
+class TypeGenerator {
+public:
+    // if this works, pass in Node, phase context, and actor ID and just specialize the constructors
+    // Then replace the helper functions below with typedefs
+    explicit TypeGenerator(UniqueGenerator<T> impl) : _impl{std::move(impl)} {}
+    T evaluate();
 
-UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorArgs);
-UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generatorArgs);
+    // Moves are okay
+    TypeGenerator(TypeGenerator<T>&&) noexcept;
+    TypeGenerator<T>& operator=(TypeGenerator<T>&&) noexcept;
+
+    // But no copies
+    TypeGenerator(const TypeGenerator<T>&) = delete;
+    TypeGenerator& operator=(const TypeGenerator<T>&) = delete;
+
+    ~TypeGenerator();
+
+private:
+    UniqueGenerator<T> _impl;
+};
+
+TypeGenerator<int64_t> makeIntGenerator(const Node& node, GeneratorArgs generatorArgs);
+TypeGenerator<double> makeDoubleGenerator(const Node& node, GeneratorArgs generatorArgs);
 
 class DocumentGenerator {
 public:

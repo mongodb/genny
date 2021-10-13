@@ -1140,7 +1140,7 @@ enum class Units { kNanosecond, kMicrosecond, kMillisecond, kSecond, kMinute, kH
 class Delay {
 public:
     Delay(const Node& node, GeneratorArgs args)
-        : numberGenerator{doubleGenerator(node["^TimeSpec"]["value"], args)} {
+        : numberGenerator{makeDoubleGenerator(node["^TimeSpec"]["value"], args)} {
         auto unit_string = node["^TimeSpec"]["units"].maybe<std::string>().value_or("seconds");
 
         // Use string::find here so plurals get parsed correctly.
@@ -1165,7 +1165,7 @@ public:
 
     // Evaluate the generator to produce a random delay.
     Duration evaluate() {
-        auto value = numberGenerator->evaluate();
+        auto value = numberGenerator.evaluate();
         switch (units) {
             case Units::kNanosecond:
                 return (std::chrono::duration_cast<Duration>(
@@ -1194,7 +1194,7 @@ public:
     }
 
 private:
-    UniqueGenerator<double> numberGenerator;
+    TypeGenerator<double> numberGenerator;
     Units units;
 };
 
