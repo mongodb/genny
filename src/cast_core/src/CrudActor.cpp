@@ -1263,7 +1263,6 @@ struct CrudActor::PhaseConfig {
           metrics{phaseContext.actor().operation("Crud", id)},
           collectionName{phaseContext} {
 
-        stateConfig.continueCurrentState = phaseContext["Continue"].maybe<bool>().value_or(false);
 
         auto name = collectionName.generateName(id);
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
@@ -1331,13 +1330,13 @@ struct CrudActor::PhaseConfig {
                 "CrudActor has Operations and States at the same time."));
         }
         if (phaseContext["Operations"] || phaseContext["Operation"]) {
+            if (phaseContext["Continue"]) {
+                BOOST_THROW_EXCEPTION(
+                    InvalidConfigurationException("Continue option not valid if not using States"));
+            }
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOperation);
         } else if (phaseContext["States"]) {  // Parse out the states}
-            if (!phaseContext["InitialStates"]) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "CrudActor has States, but has not specified InitialStates"));
-            }
             BOOST_LOG_TRIVIAL(debug) << "Adding states";
             // build the list of states, and then actuall process the states
             int i = 0;
@@ -1348,6 +1347,23 @@ struct CrudActor::PhaseConfig {
                 i++;
             }
             auto numStates = stateNames.size();
+            stateConfig.continueCurrentState =
+                phaseContext["Continue"].maybe<bool>().value_or(false);
+            if (stateConfig.continueCurrentState) {
+                // Check that this isn't phase 0
+                auto myPhaseNumber = phaseContext.getPhaseNumber();
+                if (myPhaseNumber == 0) {
+                    BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                        "Crudctor has continue set for phase 0. Nothing to continue from."));
+                }
+                // TODO: check that the previous state has <= number of states as this one
+                // Need to access the previous phase config.
+
+            } else if (!phaseContext["InitialStates"]) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "CrudActor has States, but has not specified InitialStates"));
+            }
+
             stateConfig.states.reserve(numStates);
             for (auto [k, state] : phaseContext["States"]) {
                 BOOST_LOG_TRIVIAL(debug) << "Adding state " << state;
