@@ -194,17 +194,22 @@ public:
                        SteadyClock::time_point startedAt,
                        int64_t currentIteration,
                        const PhaseNumber pn) {
-        if (_sleepUntil > SteadyClock::now()) {
+        bool calledAwait = false;
+        auto now = SteadyClock::now();
+        if (_sleepUntil > now) {
             // if phase would end before delay, call await end
-            if (!o.continueRunning() ||
-                (doesBlockCompletion() ? isDone(startedAt, currentIteration, _sleepUntil)
-                                       : o.currentPhase() != pn)) {
-                o.awaitPhaseEnd(false);
+            if (!o.continueRunning()) {
+                return;  // don't sleep if the orchestrator says to stop
             }
-
-            o.sleepUntilOrPhaseEnd(_sleepUntil, pn);
+            if (doesBlockCompletion() &&
+                (!_minDuration || (*_minDuration).value <= now - startedAt))
+                // Shorten the sleep until until duration.
+                _sleepUntil = (*_minDuration).value + now;
         }
+
+        o.sleepUntilOrPhaseEnd(_sleepUntil, pn);
     }
+
 
     constexpr void sleepBefore(const Orchestrator& o, const PhaseNumber pn) const {
         _sleeper->before(o, pn);
