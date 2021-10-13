@@ -501,12 +501,12 @@ struct BulkWriteOperation : public BaseOperation {
                                  : _collection.create_bulk_write(_options);
         for (auto&& op : _writeOps) {
             auto writeModel = op->getModel();
-            BOOST_LOG_TRIVIAL(debug) << "Appending write model ";
             bulk.append(writeModel);
         }
 
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = bulk.execute();
+
             size_t docs = 0;
             if (result) {
                 docs += result->modified_count();
