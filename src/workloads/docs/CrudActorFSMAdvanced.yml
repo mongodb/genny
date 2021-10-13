@@ -66,11 +66,10 @@ Actors:
           Document: {statistic: OnSleep, count: 0}
         - WriteCommand: insertOne
           Document: {statistic: OnError, count: 0}
-    - &nop {Nop: true}
-    - *nop
+  - &nop {Nop: true}
 
 - Name: StateSmartPhoneDemo
-  Type: Crud
+  Type: CrudActor
   Threads: 5
   Database: StateTest
   Phases:

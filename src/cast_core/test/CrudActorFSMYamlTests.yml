@@ -14,6 +14,9 @@ Tests:
     States:
     - A
     - B
+    InitialStaes:
+    - State: A
+      Weight: 1
   Error: '.*has Operations and States.*$'
 
 - Description: Neither States nor Operations
@@ -27,7 +30,7 @@ Tests:
     - Name: First
   Error: '.*InitialStates.*$'
 
-- Description: Two states absorbing
+- Description: No initial states
   Phase:
     States:
     - Name: First
@@ -50,6 +53,59 @@ Tests:
       Transitions:
       - To: Absorbing
         Weight: 1
+  Error: '.*has not specified InitialStates$'
+
+- Description: Continue set on first state
+  Phase:
+    States:
+    - Name: First
+      Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+          - WriteCommand: insertOne
+            Document: {a: 1 }
+      Transitions:
+      - To: Absorbing
+        Weight: 1
+
+    - Name: Absorbing
+      Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: {a: 1}
+
+      Transitions:
+      - To: Absorbing
+        Weight: 1
+    Continue: true
+  Error: '.*has continue set for phase 0. Nothing to continue from.$'
+
+- Description: Two states absorbing
+  Phase:
+    States:
+    - Name: First
+      Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+          - WriteCommand: insertOne
+            Document: {a: 1 }
+      Transitions:
+      - To: Absorbing
+        Weight: 1
+        SleepBefore: &sleep {^TimeSpec: {value: {^RandomDouble: {min: 1, max: 5}}, unit: seconds}}
+
+    - Name: Absorbing
+      Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: {a: 1}
+
+      Transitions:
+      - To: Absorbing
+        Weight: 1
+        SleepBefore: *sleep
     InitialStates:
     - State: First
       Weight: 1

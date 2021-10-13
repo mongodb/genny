@@ -1345,7 +1345,7 @@ struct CrudActor::PhaseConfig {
                 auto myPhaseNumber = phaseContext.getPhaseNumber();
                 if (myPhaseNumber == 0) {
                     BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                        "Crudctor has continue set for phase 0. Nothing to continue from."));
+                        "CrudActor has continue set for phase 0. Nothing to continue from."));
                 }
                 // TODO: check that the previous state has <= number of states as this one
                 // Need to access the previous phase config.

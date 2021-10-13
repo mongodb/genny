@@ -194,19 +194,21 @@ public:
                        SteadyClock::time_point startedAt,
                        int64_t currentIteration,
                        const PhaseNumber pn) {
-        bool calledAwait = false;
         auto now = SteadyClock::now();
         if (_sleepUntil > now) {
             // if phase would end before delay, call await end
             if (!o.continueRunning()) {
                 return;  // don't sleep if the orchestrator says to stop
             }
-            if (doesBlockCompletion() &&
-                (_minDuration && (*_minDuration).value <= _sleepUntil - startedAt))
-                // Shorten the sleep until until duration.
-                _sleepUntil = (*_minDuration).value + startedAt;
+            if (doesBlockCompletion() && isDone(startedAt, currentIteration, _sleepUntil)) {
+                if (_minDuration) {  // Shorten the sleep until until duration. Add a 1 ms fudge
+                                     // factor
+                    _sleepUntil = (*_minDuration).value + startedAt + std::chrono::milliseconds(1);
+                } else {  // done for some other reason, don't sleepBefore
+                    _sleepUntil = now + std::chrono::milliseconds(1);
+                }
+            }
         }
-
         o.sleepUntilOrPhaseEnd(_sleepUntil, pn);
     }
 
@@ -221,8 +223,8 @@ public:
 
 private:
     // Debatable about whether this should also track the current iteration and
-    // referenceStartingPoint time (versus having those in the ActorPhaseIterator). BUT: even the
-    // .end() iterator needs an instance of this, so it's weird
+    // referenceStartingPoint time (versus having those in the ActorPhaseIterator). BUT: even
+    // the .end() iterator needs an instance of this, so it's weird
 
     const std::optional<TimeSpec> _minDuration;
     const std::optional<IntegerSpec> _minIterations;
@@ -470,6 +472,7 @@ public:
      * immediately, but will not start the next iteration before this amount of time has passed.
      */
     void sleepNonBlocking(Duration timeout) {
+        BOOST_LOG_TRIVIAL(debug) << "Calling sleepNonBlocking with timeout";
         _iterationCheck->setSleepUntil(SteadyClock::now() + timeout);
     }
 

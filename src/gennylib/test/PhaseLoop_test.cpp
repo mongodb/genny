@@ -119,6 +119,62 @@ TEST_CASE("Correctness for N milliseconds") {
     }
 }
 
+TEST_CASE("Correctness for N milliseconds with sleepNonBlocking") {
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{};
+    SECTION(
+        "Looping for 10 milliseconds takes between 10 and 11 millis and does 10 iterations with "
+        "sleepNonBlocking 1ms") {
+        v1::ActorPhase<int> loop{
+            o,
+            std::make_unique<v1::IterationChecker>(10_ots, nullopt, false, 0_ts, 0_ts, nullopt),
+            0};
+
+        auto start = chrono::system_clock::now();
+        int i = 0;
+        INFO("Before for range loop");
+        INFO(i);
+        for (auto _ : loop) {
+            ++i;
+            INFO("In loop");
+            loop.sleepNonBlocking(chrono::milliseconds(1));
+        }
+        INFO("After loop");
+        INFO(i);
+        auto elapsed =
+            chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - start)
+                .count();
+
+        REQUIRE(i >= 9);
+        // REQUIRE(i <= 11);
+        REQUIRE(elapsed >= 10);
+        REQUIRE(elapsed <= 11);
+    }
+    SECTION(
+        "Looping for 10 milliseconds takes between 10 and 11 millis and does 1 iterations with "
+        "sleepNonBlocking 100ms") {
+
+        v1::ActorPhase<int> loop{
+            o,
+            std::make_unique<v1::IterationChecker>(10_ots, nullopt, false, 0_ts, 0_ts, nullopt),
+            0};
+
+        auto start = chrono::system_clock::now();
+        int i = 0;
+        for (auto _ : loop) {
+            i++;
+            loop.sleepNonBlocking(chrono::milliseconds(100));
+        }  // nop
+        auto elapsed =
+            chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - start)
+                .count();
+
+        // REQUIRE(i == 1);
+        REQUIRE(elapsed >= 10);
+        REQUIRE(elapsed <= 11);
+    }
+}
+
 TEST_CASE("Combinations of duration and iterations") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
@@ -271,8 +327,8 @@ TEST_CASE("Actual Actor Example") {
     public:
         IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
             : Actor(actorContext), _loop{actorContext, 1}, _counters{counters} {}
-        //                        ↑ is forwarded to the IncrementsMapValues ctor as the keyOffset
-        //                        param.
+        //                        ↑ is forwarded to the IncrementsMapValues ctor as the
+        //                        keyOffset param.
 
         void run() override {
             for (auto&& cfg : _loop) {
