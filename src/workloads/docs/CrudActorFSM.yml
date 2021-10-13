@@ -35,7 +35,7 @@ Clients:
 Actors:
 # Preload some documents
 - Name: SetupDemo
-  Type: Crud
+  Type: CrudActor
   Threads: 1
   Database: StateTest
   Phases:
@@ -55,11 +55,10 @@ Actors:
           Document: {phoneID: 4, currentPhoneState: PhoneIsOff}
         - WriteCommand: insertOne
           Document: {phoneID: 5, currentPhoneState: PhoneIsOff}
-    - &nop {Nop: true}
-    - *nop
+  - &nop {Nop: true}
 
 - Name: StateSmartPhoneDemo
-  Type: Crud
+  Type: CrudActor
   Threads: 5
   Database: StateTest
   Phases:

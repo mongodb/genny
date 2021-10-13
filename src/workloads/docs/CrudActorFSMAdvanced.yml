@@ -40,7 +40,7 @@ Clients:
 Actors:
 # Preload some documents
 - Name: SetupDemo
-  Type: Crud
+  Type: CrudActor
   Threads: 1
   Database: StateTest
   Phases:

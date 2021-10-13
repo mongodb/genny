@@ -11,7 +11,7 @@ SLOG = structlog.get_logger(__name__)
 def dry_run_workload(
     yaml_file_path: str, is_darwin: bool, genny_repo_root: str, workspace_root: str
 ):
-    if os.path.basename(yaml_file_path) in ["CrudActorFSM.yml", "CrudActorFSMAdvanced.yml"]:
+    if os.path.basename(yaml_file_path) in ["CrudActorFSMAdvanced.yml"]:
         SLOG.info("Skipping dry run for workloads for future functionality.", file=yaml_file_path)
         return
     if os.path.basename(yaml_file_path) in [
