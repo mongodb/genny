@@ -1141,24 +1141,24 @@ class Delay {
 public:
     Delay(const Node& node, GeneratorArgs args)
         : numberGenerator{makeDoubleGenerator(node["^TimeSpec"]["value"], args)} {
-        auto unit_string = node["^TimeSpec"]["units"].maybe<std::string>().value_or("seconds");
+        auto unitString = node["^TimeSpec"]["units"].maybe<std::string>().value_or("seconds");
 
         // Use string::find here so plurals get parsed correctly.
-        if (unit_string.find("nanosecond") == 0) {
+        if (unitString.find("nanosecond") == 0) {
             units = Units::kNanosecond;
-        } else if (unit_string.find("microsecond") == 0) {
+        } else if (unitString.find("microsecond") == 0) {
             units = Units::kMicrosecond;
-        } else if (unit_string.find("millisecond") == 0) {
+        } else if (unitString.find("millisecond") == 0) {
             units = Units::kMillisecond;
-        } else if (unit_string.find("second") == 0) {
+        } else if (unitString.find("second") == 0) {
             units = Units::kSecond;
-        } else if (unit_string.find("minute") == 0) {
+        } else if (unitString.find("minute") == 0) {
             units = Units::kMinute;
-        } else if (unit_string.find("hour") == 0) {
+        } else if (unitString.find("hour") == 0) {
             units = Units::kHour;
         } else {
             std::stringstream msg;
-            msg << "Invalid unit: " << unit_string << " for genny::TimeSpec field in config";
+            msg << "Invalid unit: " << unitString << " for genny::TimeSpec field in config";
             throw genny::InvalidConfigurationException(msg.str());
         }
     }
