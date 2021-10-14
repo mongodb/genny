@@ -114,6 +114,9 @@ bool checkForDroppedCollections(mongocxx::database db) {
     using bsoncxx::builder::basic::make_document;
 
     auto res = db.run_command(make_document(kvp("serverStatus", 1)));
+    if (!res.view()["storageEngine"] || !res.view()["storageEngine"]["dropPendingIdents"]) {
+        return false;
+    }
     auto idents = res.view()["storageEngine"]["dropPendingIdents"];
 
     return idents.get_int64() != 0;
