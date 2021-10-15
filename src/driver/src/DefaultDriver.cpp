@@ -163,13 +163,13 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     std::atomic<DefaultDriver::OutcomeCode> outcomeCode = DefaultDriver::OutcomeCode::kSuccess;
 
     std::mutex reporting;
-    std::vector<std::unique_ptr<std::thread>> threads;
-    threads.reserve(workloadContext.actors().size());
+    auto threadsPtr = std::make_unique<std::vector<std::thread>>();
+    threadsPtr->reserve(workloadContext.actors().size());
     std::transform(cbegin(workloadContext.actors()),
                    cend(workloadContext.actors()),
-                   std::back_inserter(threads),
+                   std::back_inserter(*threadsPtr),
                    [&](const auto& actor) {
-                       return std::make_unique<std::thread>([&]() {
+                       return std::thread{[&]() {
                            {
                                auto ctx = startedActors.start();
                                ctx.addDocuments(1);
@@ -187,11 +187,11 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
                                std::lock_guard<std::mutex> lk{reporting};
                                ctx.success();
                            }
-                       });
+                       }};
                    });
 
-    for (auto& thread : threads)
-        thread->join();
+    for (auto& thread : *threadsPtr)
+        thread.join();
 
     if (metrics.getFormat().useCsv()) {
         const auto reporter = genny::metrics::Reporter{metrics};
