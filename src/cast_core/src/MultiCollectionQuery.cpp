@@ -27,6 +27,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <boost/log/trivial.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
@@ -61,7 +62,7 @@ struct MultiCollectionQuery::PhaseConfig {
     DocumentGenerator filterExpr;
 
     // uniform distribution random int for selecting collection
-    std::uniform_int_distribution<int64_t> uniformDistribution;
+    boost::random::uniform_int_distribution<int64_t> uniformDistribution;
     mongocxx::options::find options;
     std::optional<mongocxx::read_concern> readConcern;
 };

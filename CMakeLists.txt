@@ -57,6 +57,8 @@ if(NOT Boost_USE_STATIC_LIBS)
   add_definitions(-DBOOST_ALL_DYN_LINK)
 endif()
 
+# Prevent cmake from finding system boost instead of toolchain boost.
+set(Boost_NO_BOOST_CMAKE ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(

@@ -91,3 +91,6 @@ AutoRun:
       - shard
       - shard-lite
       - shard-lite-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
