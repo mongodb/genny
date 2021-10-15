@@ -1216,6 +1216,7 @@ struct StateConfig {
     std::vector<std::unique_ptr<State>> states;
     std::vector<double> initialStateWeights;
     bool continueCurrentState;
+    bool skipFirstOperations;
 };
 
 
@@ -1327,6 +1328,11 @@ struct CrudActor::PhaseConfig {
                 BOOST_THROW_EXCEPTION(
                     InvalidConfigurationException("Continue option not valid if not using States"));
             }
+            if (phaseContext["SkipFirstOperations"]) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "SkipFirstOperations option not valid if not using States"));
+            }
+
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOperation);
         } else if (phaseContext["States"]) {  // Parse out the states}
@@ -1340,6 +1346,8 @@ struct CrudActor::PhaseConfig {
             auto numStates = stateNames.size();
             stateConfig.continueCurrentState =
                 phaseContext["Continue"].maybe<bool>().value_or(false);
+            stateConfig.skipFirstOperations =
+                phaseContext["SkipFirstOperations"].maybe<bool>().value_or(false);
             if (stateConfig.continueCurrentState) {
                 // Check that this isn't phase 0
                 auto myPhaseNumber = phaseContext.getPhaseNumber();
@@ -1377,14 +1385,25 @@ void CrudActor::run() {
     int nextState = 0;
     for (auto&& config : _loop) {
         auto session = _client->start_session();
+        bool skip = false;
         // TODO: If running without states, define a single state with the operations
-        if (!config.isNop() && !config->stateConfig.states.empty() &&
-            !config->stateConfig.continueCurrentState) {
-            // pick the initial state for the phase
-            auto initial_distribution =
-                boost::random::discrete_distribution(config->stateConfig.initialStateWeights);
-            nextState = initial_distribution(_rng);
-            BOOST_LOG_TRIVIAL(debug) << "Actor " << id() << " picking initial state " << nextState;
+        if (!config.isNop() && !config->stateConfig.states.empty()) {
+            if (!config->stateConfig.continueCurrentState) {
+                // pick the initial state for the phase
+                auto initial_distribution =
+                    boost::random::discrete_distribution(config->stateConfig.initialStateWeights);
+                nextState = initial_distribution(_rng);
+                BOOST_LOG_TRIVIAL(debug)
+                    << "Actor " << id() << " picking initial state " << nextState;
+            } else {
+                // continue from the previous phase
+                nextState = currentState;
+                BOOST_LOG_TRIVIAL(debug)
+                    << "Actor " << id() << " continuing from previous state " << nextState;
+            }
+            if (config->stateConfig.skipFirstOperations) {
+                skip = true;
+            }
         }
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
@@ -1393,12 +1412,16 @@ void CrudActor::run() {
                 // We are here to fire those operations, and then pick the next state.
                 // transition to the next state
                 currentState = nextState;
-                // run the operations for the next state.
-                BOOST_LOG_TRIVIAL(debug)
-                    << "Actor " << id() << " running operations for state " << currentState;
-                for (auto&& op : config->stateConfig.states[currentState]->operations) {
-                    op->run(session);
-                }
+                // run the operations for the next state  unless  we have set to skip the first set
+                // of operations
+                if (!skip) {
+                    BOOST_LOG_TRIVIAL(debug)
+                        << "Actor " << id() << " running operations for state " << currentState;
+                    for (auto&& op : config->stateConfig.states[currentState]->operations) {
+                        op->run(session);
+                    }
+                } else
+                    skip = false;
                 // pick next state
                 auto distribution = boost::random::discrete_distribution(
                     config->stateConfig.states[currentState]->transitionWeights);

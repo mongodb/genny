@@ -18,9 +18,11 @@ Actors:
   Threads: 5
   Database: Test
   Phases:
-  - Duration: 10 seconds
+  - Repeat: 1
+    # This first phase should only do 1 operation per thread.
+    # The second phase continues from that state
     Collection: Test
-    States:
+    States: &states
     - Name: First
       Operations:
       - OperationName: bulkWrite
@@ -31,7 +33,7 @@ Actors:
       Transitions: &transitions
       - To: Absorbing
         Weight: 1
-        SleepBefore: &sleep {^TimeSpec: {value: {^RandomDouble: {min: 1, max: 5}}, unit: seconds}}
+        SleepBefore: &sleep {^TimeSpec: {value: 1, unit: seconds}}
       - To: First
         Weight: 1
         SleepBefore: *sleep
@@ -78,3 +80,8 @@ Actors:
       Weight: 1
     - State: Second
       Weight: 1
+  - Duration: 10 seconds
+    Collection: Test
+    Continue: true
+    SkipFirstOperations: true
+    States: *states
