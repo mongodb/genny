@@ -1,7 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: |
-  TODO: TIG-3324
+Description: >
+  This test exercises the behavior of multiple '$setWindowFields' stages, each with an
+  ["unbounded", "current"] window and a different window function.  Only a single pass over the data
+  is needed in this case. The workload consists of the following three phases: collection creation,
+  creation of an index on the timestamp field to avoid generating a sort of the documents and
+  running of the the cumulative window aggregations.
 
 Actors:
 - Name: InsertData

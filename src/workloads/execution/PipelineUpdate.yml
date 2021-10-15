@@ -1,7 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: |
-  TODO: TIG-3324
+Description: >
+  This workload runs both classic and pipeline-based updates. It records and monitors the metrics of
+  the two update types on documents of different sizes and shapes.
 
 Actors:
 - Name: InsertData

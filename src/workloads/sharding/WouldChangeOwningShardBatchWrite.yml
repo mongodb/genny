@@ -19,7 +19,7 @@ GlobalDefaults:
   Namespace: &Namespace test.Collection0
 
   DocumentCount: &DocumentCount 10000  # Number of documents to insert and modify.
-  BalancerWait: &BalancerWait "10 seconds"  # Wait out the 10 second delay between balancing rounds
+  BalancerWait: &BalancerWait "20 seconds"  # Wait out the 20 second delay between balancing rounds
   # with a little extra leeway for balancing to finish.
 
 Actors:
@@ -91,3 +91,6 @@ AutoRun:
       - shard
       - shard-lite
       - shard-lite-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
