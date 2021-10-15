@@ -1241,6 +1241,80 @@ struct StateConfig {
     std::vector<double> initialStateWeights;
     bool continueCurrentState;
     bool skipFirstOperations;
+
+    bool skip = false;
+    int currentState = 0;
+    int nextState = 0;
+
+    template<typename A>
+    void hasStates(PhaseContext& phaseContext, A&& addState) {
+        // Parse out the states}
+        // build the list of states, and then actuall process the states
+        int i = 0;
+        std::unordered_map<std::string, int> stateNames;
+        for (auto [k, state] : phaseContext["States"]) {
+            if (!state["Name"] || !state["Name"].isScalar()) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "Each state must have a name and it must be a string"));
+            }
+            stateNames.emplace(state["Name"].to<std::string>(), i);
+            i++;
+        }
+        auto numStates = stateNames.size();
+        continueCurrentState =
+            phaseContext["Continue"].maybe<bool>().value_or(false);
+        skipFirstOperations =
+            phaseContext["SkipFirstOperations"].maybe<bool>().value_or(false);
+        if (continueCurrentState) {
+            // Check that this isn't phase 0
+            auto myPhaseNumber = phaseContext.getPhaseNumber();
+            if (myPhaseNumber == 0) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "CrudActor has continue set for phase 0. Nothing to continue from."));
+            }
+            // TODO: check that the previous state has <= number of states as this one
+            // Need to access the previous phase config.
+
+        } else if (!phaseContext["InitialStates"]) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "CrudActor has States, but has not specified InitialStates"));
+        }
+
+        states.reserve(numStates);
+        for (auto [k, state] : phaseContext["States"]) {
+            states.emplace_back(addState(state, stateNames));
+        }
+        initialStateWeights = std::vector<double>(numStates, 0);
+        for (auto [k, state] : phaseContext["InitialStates"]) {
+            initialStateWeights[stateNames[state["State"].to<std::string>()]] +=
+                state["Weight"].to<double>();
+        }
+    }
+
+    bool active() const {
+        return states.empty();
+    }
+
+    void onNewPhase(bool nop, DefaultRandom& rng) {
+        _skip = false;
+        // TODO: If running without states, define a single state with the operations
+        if (!nop && !states.empty()) {
+            if (!config->stateConfig.continueCurrentState) {
+                // pick the initial state for the phase
+                auto initial_distribution =
+                    boost::random::discrete_distribution(config->stateConfig.initialStateWeights);
+                nextState = initial_distribution(rng);
+                BOOST_LOG_TRIVIAL(debug) << "Actor " << id() << " picking initial state " << nextState;
+            } else {
+                // continue from the previous phase
+                nextState = currentState;
+                BOOST_LOG_TRIVIAL(debug) << "Actor " << id() << " continuing from previous state " << nextState;
+            }
+            if (skipFirstOperations) {
+                _skip = true;
+            }
+        }
+    }
 };
 
 
@@ -1341,47 +1415,8 @@ struct CrudActor::PhaseConfig {
             BOOST_LOG_TRIVIAL(info) << "phaseContext" << " PLEASE DONT SHOW ME THIS OMG";
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOperation);
-        } else if (phaseContext["States"]) {  // Parse out the states}
-            // build the list of states, and then actuall process the states
-            int i = 0;
-            std::unordered_map<std::string, int> stateNames;
-            for (auto [k, state] : phaseContext["States"]) {
-                if (!state["Name"] || !state["Name"].isScalar()) {
-                    BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                        "Each state must have a name and it must be a string"));
-                }
-                stateNames.emplace(state["Name"].to<std::string>(), i);
-                i++;
-            }
-            auto numStates = stateNames.size();
-            stateConfig.continueCurrentState =
-                phaseContext["Continue"].maybe<bool>().value_or(false);
-            stateConfig.skipFirstOperations =
-                phaseContext["SkipFirstOperations"].maybe<bool>().value_or(false);
-            if (stateConfig.continueCurrentState) {
-                // Check that this isn't phase 0
-                auto myPhaseNumber = phaseContext.getPhaseNumber();
-                if (myPhaseNumber == 0) {
-                    BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                        "CrudActor has continue set for phase 0. Nothing to continue from."));
-                }
-                // TODO: check that the previous state has <= number of states as this one
-                // Need to access the previous phase config.
-
-            } else if (!phaseContext["InitialStates"]) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "CrudActor has States, but has not specified InitialStates"));
-            }
-
-            stateConfig.states.reserve(numStates);
-            for (auto [k, state] : phaseContext["States"]) {
-                stateConfig.states.emplace_back(addState(state, stateNames));
-            }
-            stateConfig.initialStateWeights = std::vector<double>(numStates, 0);
-            for (auto [k, state] : phaseContext["InitialStates"]) {
-                stateConfig.initialStateWeights[stateNames[state["State"].to<std::string>()]] +=
-                    state["Weight"].to<double>();
-            }
+        } else if (phaseContext["States"]) {
+            stateConfig.hasStates(phaseContext, addState);
         } else {  // Throw a useful error}
             BOOST_THROW_EXCEPTION(
                 InvalidConfigurationException("CrudActor has neither Operations nor States "
@@ -1391,33 +1426,12 @@ struct CrudActor::PhaseConfig {
 };
 
 void CrudActor::run() {
-    int currentState = 0;
-    int nextState = 0;
     for (auto&& config : _loop) {
         auto session = _client->start_session();
-        bool skip = false;
-        // TODO: If running without states, define a single state with the operations
-        if (!config.isNop() && !config->stateConfig.states.empty()) {
-            if (!config->stateConfig.continueCurrentState) {
-                // pick the initial state for the phase
-                auto initial_distribution =
-                    boost::random::discrete_distribution(config->stateConfig.initialStateWeights);
-                nextState = initial_distribution(_rng);
-                BOOST_LOG_TRIVIAL(debug)
-                    << "Actor " << id() << " picking initial state " << nextState;
-            } else {
-                // continue from the previous phase
-                nextState = currentState;
-                BOOST_LOG_TRIVIAL(debug)
-                    << "Actor " << id() << " continuing from previous state " << nextState;
-            }
-            if (config->stateConfig.skipFirstOperations) {
-                skip = true;
-            }
-        }
+        config->stateConfig.onNewPhase(config.isNop(), _rng);
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
-            if (!config->stateConfig.states.empty()) {
+            if (!config->stateConfig.active()) {
                 // Simplifying Assumption -- one shot operations on state enter
                 // We are here to fire those operations, and then pick the next state.
                 // transition to the next state
