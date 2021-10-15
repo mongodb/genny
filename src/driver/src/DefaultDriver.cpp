@@ -164,6 +164,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     std::mutex reporting;
     std::vector<std::unique_ptr<std::thread>> threads;
+    threads.reserve(workloadContext.actors().size());
     std::transform(cbegin(workloadContext.actors()),
                    cend(workloadContext.actors()),
                    std::back_inserter(threads),
