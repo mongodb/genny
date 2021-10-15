@@ -1206,9 +1206,37 @@ struct Transition {
 class State {
 public:
     std::vector<std::unique_ptr<BaseOperation>> operations;
-    std::string state_name;
+    std::string stateName;
     std::vector<double> transitionWeights;
     std::vector<Transition> transitions;
+
+    template<typename A>
+    State(const Node& node, const std::unordered_map<std::string, int>& states, PhaseContext& phaseContext,
+          ActorId id, A&& addOperation) {
+        this->operations = std::move(node.getPlural<std::unique_ptr<BaseOperation>>(
+            "Operation", "Operations", addOperation));
+
+        // Transitions
+        std::vector<double> weights;
+        std::vector<Transition> transitions;
+        for (const auto&& [k, transitionYaml] : node["Transitions"]) {
+            if (!transitionYaml["Weight"] || !transitionYaml["Weight"].isScalar()) {
+                BOOST_THROW_EXCEPTION(
+                    InvalidConfigurationException("Each transition must have a scalar weight"));
+            }
+            if (!transitionYaml["To"] || !transitionYaml["To"].isScalar()) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "Each transition must have a scalar 'To' entry"));
+            }
+            weights.emplace_back(transitionYaml["Weight"].to<double>());
+            transitions.emplace_back(Transition{
+                states.at(transitionYaml["To"].to<std::string>()),
+                Delay(transitionYaml["SleepBefore"], GeneratorArgs{phaseContext.rng(id), id})});
+        }
+        this->transitionWeights = std::move(weights);
+        this->transitions = std::move(transitions);
+        this->stateName = node["Name"].to<std::string>();
+    }
 };
 
 // Helper struct to encapsulate state based behavior
@@ -1296,33 +1324,12 @@ struct CrudActor::PhaseConfig {
         };
 
         auto addState =
-            [&](const Node& node,
-                const std::unordered_map<std::string, int> states) -> std::unique_ptr<State> {
-            //           State myState;
-            auto stateName = node["Name"].to<std::string>();
+            [&](const Node& stateNode,
+                const std::unordered_map<std::string, int>& states) -> std::unique_ptr<State> {
             // Skipping repeat for now
             // operations
-            auto stateOperations = node.getPlural<std::unique_ptr<BaseOperation>>(
-                "Operation", "Operations", addOperation);
-            // Transitions
-            std::vector<double> weights;
-            std::vector<Transition> transitions;
-            for (auto [k, transitionYaml] : node["Transitions"]) {
-                if (!transitionYaml["Weight"] || !transitionYaml["Weight"].isScalar()) {
-                    BOOST_THROW_EXCEPTION(
-                        InvalidConfigurationException("Each transition must have a scalar weight"));
-                }
-                if (!transitionYaml["To"] || !transitionYaml["To"].isScalar()) {
-                    BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                        "Each transition must have a scalar 'To' entry"));
-                }
-                weights.emplace_back(transitionYaml["Weight"].to<double>());
-                transitions.emplace_back(Transition{
-                    states.at(transitionYaml["To"].to<std::string>()),
-                    Delay(transitionYaml["SleepBefore"], GeneratorArgs{phaseContext.rng(id), id})});
-            }
-            return std::unique_ptr<State>(new State{
-                std::move(stateOperations), stateName, std::move(weights), std::move(transitions)});
+            return std::unique_ptr<State>(new State(stateNode, states, phaseContext, id, addOperation));
+//                std::move(stateOperations), stateName, std::move(weights), std::move(transitions)});
         };
         // Check if we have Operations or States. Through an error if we have both.
         if ((phaseContext["Operations"] || phaseContext["Operation"]) && phaseContext["States"]) {
@@ -1338,7 +1345,7 @@ struct CrudActor::PhaseConfig {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                     "SkipFirstOperations option not valid if not using States"));
             }
-
+            BOOST_LOG_TRIVIAL(info) << "phaseContext" << " PLEASE DONT SHOW ME THIS OMG";
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOperation);
         } else if (phaseContext["States"]) {  // Parse out the states}
