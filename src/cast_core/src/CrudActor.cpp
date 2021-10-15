@@ -1256,8 +1256,6 @@ struct CrudActor::PhaseConfig {
     std::string dbName;
     CrudActor::CollectionName collectionName;
 
-    // min time of next operation
-
     PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id)
         : dbName{getDbName(phaseContext)},
           metrics{phaseContext.actor().operation("Crud", id)},
@@ -1310,6 +1308,14 @@ struct CrudActor::PhaseConfig {
             std::vector<double> weights;
             std::vector<Transition> transitions;
             for (auto [k, transitionYaml] : node["Transitions"]) {
+                if (!transitionYaml["Weight"] || !transitionYaml["Weight"].isScalar()) {
+                    BOOST_THROW_EXCEPTION(
+                        InvalidConfigurationException("Each transition must have a scalar weight"));
+                }
+                if (!transitionYaml["To"] || !transitionYaml["To"].isScalar()) {
+                    BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                        "Each transition must have a scalar 'To' entry"));
+                }
                 weights.emplace_back(transitionYaml["Weight"].to<double>());
                 transitions.emplace_back(Transition{
                     states.at(transitionYaml["To"].to<std::string>()),
@@ -1319,7 +1325,7 @@ struct CrudActor::PhaseConfig {
                 std::move(stateOperations), stateName, std::move(weights), std::move(transitions)});
         };
         // Check if we have Operations or States. Through an error if we have both.
-        if (phaseContext["Operations"] && phaseContext["States"]) {
+        if ((phaseContext["Operations"] || phaseContext["Operation"]) && phaseContext["States"]) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "CrudActor has Operations and States at the same time."));
         }
@@ -1340,6 +1346,10 @@ struct CrudActor::PhaseConfig {
             int i = 0;
             std::unordered_map<std::string, int> stateNames;
             for (auto [k, state] : phaseContext["States"]) {
+                if (!state["Name"] || !state["Name"].isScalar()) {
+                    BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                        "Each state must have a name and it must be a string"));
+                }
                 stateNames.emplace(state["Name"].to<std::string>(), i);
                 i++;
             }
