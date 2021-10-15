@@ -1212,13 +1212,12 @@ public:
 
     template<typename A>
     State(const Node& node, const std::unordered_map<std::string, int>& states, PhaseContext& phaseContext,
-          ActorId id, A&& addOperation) {
-        this->operations = std::move(node.getPlural<std::unique_ptr<BaseOperation>>(
-            "Operation", "Operations", addOperation));
-
-        // Transitions
-        std::vector<double> weights;
-        std::vector<Transition> transitions;
+          ActorId id, A&& addOperation) :
+          operations{node.getPlural<std::unique_ptr<BaseOperation>>("Operation", "Operations", addOperation)},
+          stateName{node["Name"].to<std::string>()},
+          transitionWeights{},
+          transitions{}
+    {
         for (const auto&& [k, transitionYaml] : node["Transitions"]) {
             if (!transitionYaml["Weight"] || !transitionYaml["Weight"].isScalar()) {
                 BOOST_THROW_EXCEPTION(
@@ -1228,14 +1227,11 @@ public:
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                     "Each transition must have a scalar 'To' entry"));
             }
-            weights.emplace_back(transitionYaml["Weight"].to<double>());
+            transitionWeights.emplace_back(transitionYaml["Weight"].to<double>());
             transitions.emplace_back(Transition{
                 states.at(transitionYaml["To"].to<std::string>()),
                 Delay(transitionYaml["SleepBefore"], GeneratorArgs{phaseContext.rng(id), id})});
         }
-        this->transitionWeights = std::move(weights);
-        this->transitions = std::move(transitions);
-        this->stateName = node["Name"].to<std::string>();
     }
 };
 
@@ -1326,10 +1322,7 @@ struct CrudActor::PhaseConfig {
         auto addState =
             [&](const Node& stateNode,
                 const std::unordered_map<std::string, int>& states) -> std::unique_ptr<State> {
-            // Skipping repeat for now
-            // operations
-            return std::unique_ptr<State>(new State(stateNode, states, phaseContext, id, addOperation));
-//                std::move(stateOperations), stateName, std::move(weights), std::move(transitions)});
+            return std::make_unique<State>(stateNode, states, phaseContext, id, addOperation);
         };
         // Check if we have Operations or States. Through an error if we have both.
         if ((phaseContext["Operations"] || phaseContext["Operation"]) && phaseContext["States"]) {
