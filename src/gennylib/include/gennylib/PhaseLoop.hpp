@@ -170,9 +170,9 @@ public:
 
     constexpr bool isDone(SteadyClock::time_point startedAt,
                           int64_t currentIteration,
-                          SteadyClock::time_point now) {
-        return (!_minIterations || currentIteration >= (*_minIterations).value) &&
-            (!_minDuration || (*_minDuration).value <= now - startedAt);
+                          SteadyClock::time_point wouldBeDoneAtTime) {
+        return (!_minIterations || currentIteration >= _minIterations->value) &&
+        (!_minDuration || (*_minDuration).value <= wouldBeDoneAtTime - startedAt);
     }
 
     constexpr bool operator==(const IterationChecker& other) const {
@@ -194,20 +194,17 @@ public:
                        SteadyClock::time_point startedAt,
                        int64_t currentIteration,
                        const PhaseNumber pn) {
-        auto now = SteadyClock::now();
         if (!o.continueRunning())
             return;  // don't sleep if the orchestrator says to stop
+        auto now = SteadyClock::now();
         if (_sleepUntil <= now)
             return;
         // if phase would end before delay, call await end
         if (doesBlockCompletion() && isDone(startedAt, currentIteration, _sleepUntil)) {
-            if (_minDuration) {  // Shorten the sleep until until duration. Add a 1 ms fudge
-                                 // factor
-                _sleepUntil = (*_minDuration).value + startedAt + std::chrono::milliseconds(1);
-            } else {  // done for some other reason, don't sleepBefore
-                _sleepUntil = now + std::chrono::milliseconds(1);
-            }
+            _sleepUntil = (_minDuration ? (startedAt + _minDuration->value) // Shorten sleepUntil duration.
+                                        : now) + std::chrono::microseconds(100); // Arbitrary fudge-factor.
         }
+        // Don't block completion and wouldn't otherwise be done at _sleepUntil.
         o.sleepUntilOrPhaseEnd(_sleepUntil, pn);
     }
 
