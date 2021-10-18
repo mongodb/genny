@@ -1,0 +1,104 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of $graphLookup when both the local and foreign collections are
+  unsharded. When one of the collections is sharded, the pipeline should be moved to the
+  GraphLookup workload, so that this file can continue to be tested in an unsharded environment. We
+  may want to compare results across the two files, so the loading stage (and some queries) should
+  be kept as similar as possible.
+
+  The workload consists of the following phases:
+    1. Creating an empty sharded collection distributed across all shards in the cluster.
+    2. Populating collections with data.
+    3. Fsync.
+    4. Running $graphLookups.
+
+Actors:
+- Name: LoadGraphLookupData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    BatchSize: 3000
+    Threads: 1
+    DocumentCount: &NumDocs 3000
+    Database: &Database test
+    CollectionCount: 3  # Loader will populate 'Collection0' and 'Collection1'.
+    Document:
+      a: {^RandomInt: {min: 1, max: 100}}
+      b: {^RandomInt: {min: 1, max: 100}}
+      c: {^RandomInt: {min: 1, max: 10}}
+      matchOne: {^RandomInt: {min: 1, max: 3000}}
+      secondMatchOne: {^RandomInt: {min: 1, max: 3000}}
+      matchTwo: {^RandomInt: {min: 1, max: 1500}}
+      matchFive: {^RandomInt: {min: 1, max: 600}}
+      secondMatchFive: {^RandomInt: {min: 1, max: 600}}
+      matchTen: {^RandomInt: {min: 1, max: 300}}
+      matchOneHundred: {^RandomInt: {min: 1, max: 30}}
+  - &Nop {Nop: true}
+  - *Nop
+
+- Name: Quiesce
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        fsync: 1
+  - *Nop
+
+- Name: RunGraphLookups
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: GraphLookupUnshardedToUnshardedOneToFew
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$graphLookup: {
+              from: "Collection1",
+              startWith: "$matchOne",
+              connectFromField: "matchOne",
+              connectToField: "secondMatchOne",
+              as: "matches",
+              maxDepth: 1
+            }},
+            {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: GraphLookupUnshardedToUnshardedOneToMany
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$graphLookup: {
+              from: "Collection1",
+              startWith: "$matchFive",
+              connectFromField: "matchFive",
+              connectToField: "secondMatchFive",
+              as: "matches",
+              maxDepth: 1
+            }},
+            {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}
+          ]
+        cursor: {batchSize: *NumDocs}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - shard-lite
+      - shard-lite-all-feature-flags
