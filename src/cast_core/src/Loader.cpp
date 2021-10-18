@@ -30,11 +30,13 @@
 #include <gennylib/context.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
 
 namespace genny::actor {
 
 /** @private */
 using index_type = std::pair<DocumentGenerator, std::optional<DocumentGenerator>>;
+using namespace bsoncxx;
 
 /** @private */
 struct Loader::PhaseConfig {
@@ -142,24 +144,38 @@ void genny::actor::Loader::run() {
                     }
                     totalOpCtx.success();
                 }
-                // For each index
+                // Make the index
+                bool _indexReq = false;
+                builder::stream::document builder{};
+                auto indexCmd = builder << "createIndexes" << collectionName
+                                        <<  "indexes" << builder::stream::open_array;
                 for (auto&& [keys, options] : config->indexes) {
-                    // Make the index
+                    _indexReq = true;
                     auto indexKey = keys();
-                    BOOST_LOG_TRIVIAL(debug)
-                        << "Building index " << bsoncxx::to_json(indexKey.view());
                     if (options) {
                         auto indexOptions = (*options)();
-                        BOOST_LOG_TRIVIAL(debug)
-                            << "With options " << bsoncxx::to_json(indexOptions.view());
-                        auto indexOpCtx = _indexBuild.start();
-                        collection.create_index(std::move(indexKey), std::move(indexOptions));
-                        indexOpCtx.success();
+                        indexCmd = indexCmd << builder::stream::open_document
+                                                << "key" << indexKey.view()
+                                                << builder::concatenate(indexOptions.view())
+                                                << builder::stream::close_document;
                     } else {
-                        auto indexOpCtx = _indexBuild.start();
-                        collection.create_index(std::move(indexKey));
-                        indexOpCtx.success();
+                        std::string indexName = "";
+                        for (auto field : indexKey.view()) {
+                            indexName = indexName + field.key().to_string();
+                        }
+                        indexCmd = indexCmd << builder::stream::open_document
+                                                << "key" << indexKey.view()
+                                                << "name" << indexName
+                                                << builder::stream::close_document;
                     }
+                }
+                auto doc = indexCmd << builder::stream::close_array << builder::stream::finalize;
+                if (_indexReq) {
+                    BOOST_LOG_TRIVIAL(debug)
+                            << "Building index" << to_json(doc.view());
+                    auto indexOpCtx = _indexBuild.start();
+                    config->database.run_command(doc.view());
+                    indexOpCtx.success();
                 }
                 BOOST_LOG_TRIVIAL(info) << "Done with load phase. All " << config->numDocuments
                                         << " documents loaded into " << collectionName;
