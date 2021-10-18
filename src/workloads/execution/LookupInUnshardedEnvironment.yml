@@ -1,12 +1,16 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This test exercises $lookup in an unsharded environment.
+  This test exercises the behavior of $lookup when both the local and foreign collections are
+  unsharded. When one of the collections is sharded, the pipeline should be moved to the
+  Lookup workload, so that this file can continue to be tested in an unsharded environment. We may
+  want to compare results across the two files, so the loading stage (and some queries) should be
+  kept as similar as possible.
 
   The workload consists of the following phases:
     1. Populating collections with data.
     2. Fsync.
-    3. Running $lookup's with cacheable subpipeline prefixes.
+    3. Running $lookups.
 
 Actors:
 - Name: LoadInitialData
@@ -14,13 +18,14 @@ Actors:
   Threads: 1
   Phases:
   - Repeat: 1
-    BatchSize: 1000
+    BatchSize: 3000
     Threads: 1
     DocumentCount: &NumDocs 3000
     Database: &Database test
     CollectionCount: 2    # Loader will populate 'Collection0' and 'Collection1'.
     Document:
       key: {^RandomInt: {min: 1, max: 100}}
+      smallInt: {^RandomInt: {min: 1, max: 10}}
       int: {^RandomInt: {min: 1, max: 100}}
       str: {^RandomString: {length: 100}}
   - &Nop {Nop: true}
@@ -48,7 +53,7 @@ Actors:
   - Repeat: 10
     Database: *Database
     Operations:
-    - OperationMetricsName: LookupWithCachedPrefixUnshardedEnvironment
+    - OperationMetricsName: LookupWithCachedPrefixUnshardedToUnsharded
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -61,9 +66,42 @@ Actors:
                 {$group: {_id: {$sum: ["$int", 1]}}},
                 {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
               ],
-              as: matches
+              as: joined
             }
-          }]
+          },
+          {$project: {str: 0, "joined.str": 0}}]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: LookupOneToFewUnshardedToUnsharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$match: {int: {$lte: 4}}},
+            {$lookup: {
+              from: Collection1,
+              let: {int0: "$int"},
+              pipeline: [{$match: {$expr: {$eq: ["$$int0", "$int"]}}}],
+              as: "joined"
+            }},
+            {$project: {str: 0, "joined.str": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: LookupOneToManyUnshardedToUnsharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$match: {int: {$lte: 4}}},
+            {$lookup: {
+              from: Collection1,
+              let: {smallInt0: "$smallInt"},
+              pipeline: [{$match: {$expr: {$eq: ["$$smallInt0", "$smallInt"]}}}],
+              as: "joined"
+            }},
+            {$project: {str: 0, "joined.str": 0}}
+          ]
         cursor: {batchSize: *NumDocs}
 
 AutoRun:
@@ -71,3 +109,5 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
+      - shard-lite
+      - shard-lite-all-feature-flags
