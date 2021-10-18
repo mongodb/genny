@@ -1,0 +1,39 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 10 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  documents remain, which ensures that the query executes in its entirety.
+
+batchSize: &batchSize 101 # The default batch size.
+query10Date: &query10Date "1993-10-01"
+
+TPCHNormalizedQuery10:
+  Repeat: 1
+  Database: tpch
+  Operations:
+  - OperationMetricsName: Query10
+    OperationName: RunCommand
+    OperationCommand:
+      explain:
+        aggregate: orders
+        pipeline:
+          [
+            {$match: {$and:[
+            {$expr: {$gte: ["$o_orderdate", {$dateFromString: {dateString: {^Parameter: {Name: "Query10Date", Default: *query10Date}}}}]}},
+            {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: {^Parameter: {Name: "Query10Date", Default: *query10Date}}}}, unit: "month", amount: 3}}]}}]}},
+            {$lookup: {from: "lineitem", localField: "o_orderkey", foreignField: "l_orderkey", as: "lineitem", pipeline: [
+              {$match: {l_returnflag: "R"}}]}},
+            {$unwind: "$lineitem"},
+            {$lookup: {from: "customer", localField: "o_custkey", foreignField: "c_custkey", as: "customer", pipeline: [
+                {$lookup: { from: "nation", localField: "c_nationkey", foreignField: "n_nationkey", as: "nation"}},
+                {$unwind: "$nation"}]}},
+            {$unwind: "$customer"},
+            {$group: {_id: {c_custkey: "$customer.c_custkey", c_name: "$customer.c_name", c_acctbal: "$customer.c_acctbal", n_name: "$customer.nation.n_name", c_address: "$customer.c_address", c_phone: "$customer.c_phone", c_comment: "$customer.c_comment"}, revenue: {$sum: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]}}}},
+            {$project: {_id: 0, c_custkey: "$_id.c_custkey", c_name: "$_id.c_name", c_acctbal: "$_id.c_acctbal", n_name: "$_id.n_name", c_address: "$_id.c_address", c_phone: "$_id.c_phone", c_comment: "$_id.c_comment", revenue: 1}},
+            {$sort: {revenue: -1}},
+            {$limit: 20}
+          ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+      verbosity:
+        executionStats

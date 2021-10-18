@@ -1,0 +1,34 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 22 against the normalized schema for scale 1.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHNormalizedQuery22
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - LoadConfig:
+      Path: ../../../../phases/tpch/normalized/Q22.yml
+      Key: TPCHNormalizedQuery22
+      Parameters: # This is a hack, because yml parses these strings into ints before outputting the pipeline.
+        Query22CountryCode1: {$toString: "13"}
+        Query22CountryCode2: {$toString: "31"}
+        Query22CountryCode3: {$toString: "23"}
+        Query22CountryCode4: {$toString: "29"}
+        Query22CountryCode5: {$toString: "30"}
+        Query22CountryCode6: {$toString: "18"}
+        Query22CountryCode7: {$toString: "17"}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+  ThenRun:
+      - test_control: tpch

@@ -1,0 +1,44 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 5 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  documents remain, which ensures that the query executes in its entirety.
+
+batchSize: &batchSize 101 # The default batch size.
+query5Region: &query5Region "ASIA"
+query5Date: &query5Date "1994-01-01"
+
+TPCHNormalizedQuery5:
+  Repeat: 1
+  Database: tpch
+  Operations:
+  - OperationMetricsName: Query5
+    OperationName: RunCommand
+    OperationCommand:
+      explain:
+        aggregate: customer
+        pipeline:
+          [
+            {$lookup: { from: "orders",  localField: "c_custkey", foreignField: "o_custkey",  as: "orders", let: {c_nationkey: "$c_nationkey"}, pipeline: [
+            {$match: {$and: [
+              {$expr: {$gte: ["$o_orderdate", {$dateFromString: {dateString: {^Parameter: {Name: "Query5Date", Default: *query5Date}}}}]}},
+              {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: {^Parameter: {Name: "Query5Date", Default: *query5Date}}}}, unit: "year", amount: 1}}]}}]}},
+            {$lookup: {from: "lineitem", localField: "o_orderkey", foreignField: "l_orderkey", as: "lineitem", let: {c_nationkey: "$$c_nationkey"}, pipeline: [
+              {$lookup: {from: "supplier", localField: "l_suppkey", foreignField: "s_suppkey", as: "supplier", pipeline: [
+                {$match: {$expr: {$eq: ["$s_nationkey", "$$c_nationkey"]}}},
+                {$lookup: {from: "nation", localField: "s_nationkey", foreignField: "n_nationkey", as: "nation", pipeline: [
+                  {$lookup: {from: "region", localField: "n_regionkey", foreignField: "r_regionkey", as: "region", pipeline: [
+                    {$match: {r_name: {^Parameter: {Name: "Query5Region", Default: *query5Region}}}}]}},
+                  {$unwind: "$region"}]}},
+                {$unwind: "$nation"}]}},
+              {$unwind: "$supplier"}]}},
+            {$unwind: "$lineitem"}]}},
+            {$unwind: "$orders"},
+            {$group: {_id: "$orders.lineitem.supplier.nation.n_name", revenue: {$sum: {$multiply: ["$orders.lineitem.l_extendedprice", {$subtract: [1, "$orders.lineitem.l_discount"]}]}}}},
+            {$project: {_id: 0, n_name: "$_id", revenue: 1}},
+            {$sort: {revenue: -1}}
+          ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+      verbosity:
+        executionStats

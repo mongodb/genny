@@ -1,0 +1,57 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 22 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  documents remain, which ensures that the query executes in its entirety.
+
+batchSize: &batchSize 101 # The default batch size.
+# Sadly, using an array here parses as an array of numbers instead of as an array of strings.
+# To work around this, use separate parameters for each entry in the array.
+query22CountryCode1: &query22CountryCode1 "13"
+query22CountryCode2: &query22CountryCode2 "31"
+query22CountryCode3: &query22CountryCode3 "23"
+query22CountryCode4: &query22CountryCode4 "29"
+query22CountryCode5: &query22CountryCode5 "30"
+query22CountryCode6: &query22CountryCode6 "18"
+query22CountryCode7: &query22CountryCode7 "17"
+
+TPCHNormalizedQuery22:
+  Repeat: 1
+  Database: tpch
+  Operations:
+  - OperationMetricsName: Query22
+    OperationName: RunCommand
+    OperationCommand:
+      explain:
+        aggregate: customer
+        pipeline:
+          [
+            {$lookup: {from: "orders", localField: "c_custkey", foreignField: "o_custkey", as: "custsale"}},
+            {$unwind: {path: "$custsale", preserveNullAndEmptyArrays: true}},
+            {$addFields: {cntrycode: { $substr: ["$c_phone", 0, 2]}}},
+            {$match: {$and: [{$expr: {$in: ["$cntrycode", [
+              {^Parameter: {Name: "Query22CountryCode1", Default: *query22CountryCode1}},
+              {^Parameter: {Name: "Query22CountryCode2", Default: *query22CountryCode2}},
+              {^Parameter: {Name: "Query22CountryCode3", Default: *query22CountryCode3}},
+              {^Parameter: {Name: "Query22CountryCode4", Default: *query22CountryCode4}},
+              {^Parameter: {Name: "Query22CountryCode5", Default: *query22CountryCode5}},
+              {^Parameter: {Name: "Query22CountryCode6", Default: *query22CountryCode6}},
+              {^Parameter: {Name: "Query22CountryCode7", Default: *query22CountryCode7}},
+              ]]}}, {custsale: null}, {$expr: {$gt: ["$c_acctbal", 0.00]}}]}},
+            {$facet: {
+              customer: [
+                {$project: {cntrycode: 1, c_acctbal: 1}}],
+              "avg(c_acctbal)": [
+                {$group: {_id: {}, value: {$avg: "$c_acctbal"}}},
+                {$project: {_id: 0}}]}},
+            {$unwind: "$avg(c_acctbal)"},
+            {$unwind: "$customer"},
+            {$match: {$expr: {$gt: ["$customer.c_acctbal", "$avg(c_acctbal).value"]}}},
+            {$group: {_id: "$customer.cntrycode", numcust: {$count: {}},  totacctbal: {$sum: "$customer.c_acctbal"}}},
+            {$project: {_id: 0, cntrycode: "$_id", numcust: 1, totacctbal: 1}},
+            {$sort: {cntrycode: 1}}
+          ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+      verbosity:
+        executionStats

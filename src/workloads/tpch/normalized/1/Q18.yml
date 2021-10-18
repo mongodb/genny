@@ -1,0 +1,28 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 18 against the normalized schema for scale 1.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHNormalizedQuery18
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - LoadConfig:
+      Path: ../../../../phases/tpch/normalized/Q18.yml
+      Key: TPCHNormalizedQuery18
+      Parameters:
+        Query18Quantity: 300
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+  ThenRun:
+      - test_control: tpch

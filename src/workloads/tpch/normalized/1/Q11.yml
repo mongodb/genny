@@ -1,0 +1,30 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 11 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  documents remain, which ensures that the query executes in its entirety.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHNormalizedQuery11
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - LoadConfig:
+      Path: ../../../../phases/tpch/normalized/Q11.yml
+      Key: TPCHNormalizedQuery11
+      Parameters:
+        Query11Nation: "GERMANY"
+        Query11Fraction: 0.0001
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+  ThenRun:
+      - test_control: tpch

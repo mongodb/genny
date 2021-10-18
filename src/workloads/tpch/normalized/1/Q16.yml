@@ -1,0 +1,30 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 16 against the normalized schema for scale 1.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHNormalizedQuery16
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - LoadConfig:
+      Path: ../../../../phases/tpch/normalized/Q16.yml
+      Key: TPCHNormalizedQuery16
+      Parameters:
+        Query16Brand: "Brand#45"
+        Query16Type: "^MEDIUM POLISHED.*"
+        Query16Sizes: [49, 14, 23, 45, 19, 3, 36, 9]
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+  ThenRun:
+      - test_control: tpch
