@@ -32,8 +32,8 @@ namespace bson_stream = bsoncxx::builder::stream;
 using std::regex_search;
 using namespace bsoncxx;
 
-TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader - create records and add indexes",
-          "[standalone][single_node_replset][three_node_replset][sharded][MonotonicLoader]") {
+TEST_CASE_METHOD(MongoTestFixture, "Loader - create records and add indexes",
+          "[standalone][single_node_replset-1][three_node_replset][sharded][Loader]") {
 
     dropAllDatabases();
     auto db = client.database("mydb");
@@ -41,8 +41,8 @@ TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader - create records and add ind
     NodeSource nodes = NodeSource(R"(
         SchemaVersion: 2018-07-01
         Actors:
-        - Name: MonotonicLoader
-          Type: MonotonicLoader
+        - Name: Loader
+          Type: Loader
           Threads: 1
           Phases:
           - Repeat: 1

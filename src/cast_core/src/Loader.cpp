@@ -147,30 +147,29 @@ void genny::actor::Loader::run() {
                 // Make the index
                 bool _indexReq = false;
                 builder::stream::document builder{};
-                auto in_array = builder << "createIndexes" << collectionName
+                auto indexCmd = builder << "createIndexes" << collectionName
                                         <<  "indexes" << builder::stream::open_array;
                 for (auto&& [keys, options] : config->indexes) {
                     _indexReq = true;
                     auto indexKey = keys();
                     if (options) {
                         auto indexOptions = (*options)();
-                        in_array = in_array << builder::stream::open_document
-                                            << "key" << indexKey.view()
-                                            << builder::concatenate(indexOptions.view())
-                                            << builder::stream::close_document;
+                        indexCmd = indexCmd << builder::stream::open_document
+                                                << "key" << indexKey.view()
+                                                << builder::concatenate(indexOptions.view())
+                                                << builder::stream::close_document;
                     } else {
-                        std::string index_name = "";
+                        std::string indexName = "";
                         for (auto field : indexKey.view()) {
-                            index_name = index_name + field.key().to_string();
+                            indexName = indexName + field.key().to_string();
                         }
-                        in_array = in_array << builder::stream::open_document
-                                            << "key" << indexKey.view()
-                                            << "name" << index_name
-                                            << builder::stream::close_document;
+                        indexCmd = indexCmd << builder::stream::open_document
+                                                << "key" << indexKey.view()
+                                                << "name" << indexName
+                                                << builder::stream::close_document;
                     }
                 }
-                auto after_array = in_array << builder::stream::close_array;
-                document::value doc = after_array << builder::stream::finalize;
+                auto doc = indexCmd << builder::stream::close_array << builder::stream::finalize;
                 if (_indexReq) {
                     BOOST_LOG_TRIVIAL(debug)
                             << "Building index" << to_json(doc.view());
