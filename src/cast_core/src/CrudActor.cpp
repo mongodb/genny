@@ -1242,9 +1242,11 @@ struct StateConfig {
     bool continueCurrentState;
     bool skipFirstOperations;
 
-    bool skip = false;
+    bool _skip = false;
     int currentState = 0;
     int nextState = 0;
+
+    ActorId actorId;
 
     template<typename A>
     void hasStates(PhaseContext& phaseContext, A&& addState) {
@@ -1291,6 +1293,7 @@ struct StateConfig {
         }
     }
 
+    [[nodiscard]]
     bool active() const {
         return states.empty();
     }
@@ -1299,16 +1302,16 @@ struct StateConfig {
         _skip = false;
         // TODO: If running without states, define a single state with the operations
         if (!nop && !states.empty()) {
-            if (!config->stateConfig.continueCurrentState) {
+            if (!continueCurrentState) {
                 // pick the initial state for the phase
                 auto initial_distribution =
-                    boost::random::discrete_distribution(config->stateConfig.initialStateWeights);
+                    boost::random::discrete_distribution(initialStateWeights);
                 nextState = initial_distribution(rng);
-                BOOST_LOG_TRIVIAL(debug) << "Actor " << id() << " picking initial state " << nextState;
+                BOOST_LOG_TRIVIAL(debug) << "Actor " << actorId << " picking initial state " << nextState;
             } else {
                 // continue from the previous phase
                 nextState = currentState;
-                BOOST_LOG_TRIVIAL(debug) << "Actor " << id() << " continuing from previous state " << nextState;
+                BOOST_LOG_TRIVIAL(debug) << "Actor " << actorId << " continuing from previous state " << nextState;
             }
             if (skipFirstOperations) {
                 _skip = true;
@@ -1359,6 +1362,8 @@ struct CrudActor::PhaseConfig {
           metrics{phaseContext.actor().operation("Crud", id)},
           collectionName{phaseContext} {
 
+        // TODO: proper ctor
+        stateConfig.actorId = id;
 
         auto name = collectionName.generateName(id);
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
@@ -1435,26 +1440,27 @@ void CrudActor::run() {
                 // Simplifying Assumption -- one shot operations on state enter
                 // We are here to fire those operations, and then pick the next state.
                 // transition to the next state
-                currentState = nextState;
+                config->stateConfig.currentState = config->stateConfig.nextState;
+
                 // run the operations for the next state  unless  we have set to skip the first set
                 // of operations
-                if (!skip) {
+                if (!config->stateConfig._skip) {
                     BOOST_LOG_TRIVIAL(debug)
-                        << "Actor " << id() << " running operations for state " << currentState;
-                    for (auto&& op : config->stateConfig.states[currentState]->operations) {
+                    << "Actor " << id() << " running operations for state " << config->stateConfig.currentState;
+                    for (auto&& op : config->stateConfig.states[config->stateConfig.currentState]->operations) {
                         op->run(session);
                     }
                 } else
-                    skip = false;
+                    config->stateConfig._skip = false;
                 // pick next state
                 auto distribution = boost::random::discrete_distribution(
-                    config->stateConfig.states[currentState]->transitionWeights);
+                    config->stateConfig.states[config->stateConfig.currentState]->transitionWeights);
                 auto transition = distribution(_rng);
-                nextState =
-                    config->stateConfig.states[currentState]->transitions[transition].nextState;
+                config->stateConfig.nextState =
+                    config->stateConfig.states[config->stateConfig.currentState]->transitions[transition].nextState;
                 BOOST_LOG_TRIVIAL(debug)
-                    << "Actor " << id() << " choosing next state " << nextState;
-                config.sleepNonBlocking(config->stateConfig.states[currentState]
+                    << "Actor " << id() << " choosing next state " << config->stateConfig.nextState;
+                config.sleepNonBlocking(config->stateConfig.states[config->stateConfig.currentState]
                                             ->transitions[transition]
                                             .delay.evaluate());
             } else {
