@@ -1310,9 +1310,9 @@ struct StateConfig {
         return states[currentState]->transitions[transition].delay.evaluate();
     }
 
-    [[nodiscard]]
-    int pickNext(DefaultRandom& rng) {
-        auto distribution = boost::random::discrete_distribution(states[currentState]->transitionWeights);
+    [[nodiscard]] int pickNext(DefaultRandom& rng) {
+        auto distribution =
+            boost::random::discrete_distribution(states[currentState]->transitionWeights);
         auto transition = distribution(rng);
         nextState = states[currentState]->transitions[transition].nextState;
         return transition;
