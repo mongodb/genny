@@ -1298,6 +1298,26 @@ struct StateConfig {
         return states.empty();
     }
 
+    void advanceState() {
+        currentState = nextState;
+    }
+
+    auto& operations() {
+        return states[currentState]->operations;
+    }
+
+    auto transitionDelay(int transition) {
+        return states[currentState]->transitions[transition].delay.evaluate();
+    }
+
+    [[nodiscard]]
+    int pickNext(DefaultRandom& rng) {
+        auto distribution = boost::random::discrete_distribution(states[currentState]->transitionWeights);
+        auto transition = distribution(rng);
+        nextState = states[currentState]->transitions[transition].nextState;
+        return transition;
+    }
+
     void onNewPhase(bool nop, DefaultRandom& rng) {
         _skip = false;
         // TODO: If running without states, define a single state with the operations
@@ -1443,34 +1463,23 @@ void CrudActor::run() {
                 // Simplifying Assumption -- one shot operations on state enter
                 // We are here to fire those operations, and then pick the next state.
                 // transition to the next state
-                config->stateConfig.currentState = config->stateConfig.nextState;
+                config->stateConfig.advanceState();
 
                 // run the operations for the next state  unless  we have set to skip the first set
                 // of operations
                 if (!config->stateConfig._skip) {
                     BOOST_LOG_TRIVIAL(debug) << "Actor " << id() << " running operations for state "
                                              << config->stateConfig.currentState;
-                    for (auto&& op :
-                         config->stateConfig.states[config->stateConfig.currentState]->operations) {
+                    for (auto&& op : config->stateConfig.operations()) {
                         op->run(session);
                     }
                 } else
                     config->stateConfig._skip = false;
                 // pick next state
-                auto distribution = boost::random::discrete_distribution(
-                    config->stateConfig.states[config->stateConfig.currentState]
-                        ->transitionWeights);
-                auto transition = distribution(_rng);
-                config->stateConfig.nextState =
-                    config->stateConfig.states[config->stateConfig.currentState]
-                        ->transitions[transition]
-                        .nextState;
+                auto transition = config->stateConfig.pickNext(_rng);
                 BOOST_LOG_TRIVIAL(debug)
                     << "Actor " << id() << " choosing next state " << config->stateConfig.nextState;
-                config.sleepNonBlocking(
-                    config->stateConfig.states[config->stateConfig.currentState]
-                        ->transitions[transition]
-                        .delay.evaluate());
+                config.sleepNonBlocking(config->stateConfig.transitionDelay(transition));
             } else {
                 for (auto&& op : config->operations) {
                     op->run(session);
