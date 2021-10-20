@@ -1210,22 +1210,25 @@ public:
     std::vector<double> transitionWeights;
     std::vector<Transition> transitions;
 
-    template<typename A>
-    State(const Node& node, const std::unordered_map<std::string, int>& states, PhaseContext& phaseContext,
-          ActorId id, A&& addOperation) :
-          operations{node.getPlural<std::unique_ptr<BaseOperation>>("Operation", "Operations", addOperation)},
+    template <typename A>
+    State(const Node& node,
+          const std::unordered_map<std::string, int>& states,
+          PhaseContext& phaseContext,
+          ActorId id,
+          A&& addOperation)
+        : operations{node.getPlural<std::unique_ptr<BaseOperation>>(
+              "Operation", "Operations", addOperation)},
           stateName{node["Name"].to<std::string>()},
           transitionWeights{},
-          transitions{}
-    {
+          transitions{} {
         for (const auto&& [k, transitionYaml] : node["Transitions"]) {
             if (!transitionYaml["Weight"] || !transitionYaml["Weight"].isScalar()) {
                 BOOST_THROW_EXCEPTION(
                     InvalidConfigurationException("Each transition must have a scalar weight"));
             }
             if (!transitionYaml["To"] || !transitionYaml["To"].isScalar()) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "Each transition must have a scalar 'To' entry"));
+                BOOST_THROW_EXCEPTION(
+                    InvalidConfigurationException("Each transition must have a scalar 'To' entry"));
             }
             transitionWeights.emplace_back(transitionYaml["Weight"].to<double>());
             transitions.emplace_back(Transition{
@@ -1248,7 +1251,7 @@ struct StateConfig {
 
     ActorId actorId;
 
-    template<typename A>
+    template <typename A>
     void hasStates(PhaseContext& phaseContext, A&& addState) {
         // Parse out the states}
         // build the list of states, and then actuall process the states
@@ -1263,10 +1266,8 @@ struct StateConfig {
             i++;
         }
         auto numStates = stateNames.size();
-        continueCurrentState =
-            phaseContext["Continue"].maybe<bool>().value_or(false);
-        skipFirstOperations =
-            phaseContext["SkipFirstOperations"].maybe<bool>().value_or(false);
+        continueCurrentState = phaseContext["Continue"].maybe<bool>().value_or(false);
+        skipFirstOperations = phaseContext["SkipFirstOperations"].maybe<bool>().value_or(false);
         if (continueCurrentState) {
             // Check that this isn't phase 0
             auto myPhaseNumber = phaseContext.getPhaseNumber();
@@ -1293,8 +1294,7 @@ struct StateConfig {
         }
     }
 
-    [[nodiscard]]
-    bool active() const {
+    [[nodiscard]] bool active() const {
         return states.empty();
     }
 
@@ -1307,11 +1307,13 @@ struct StateConfig {
                 auto initial_distribution =
                     boost::random::discrete_distribution(initialStateWeights);
                 nextState = initial_distribution(rng);
-                BOOST_LOG_TRIVIAL(debug) << "Actor " << actorId << " picking initial state " << nextState;
+                BOOST_LOG_TRIVIAL(debug)
+                    << "Actor " << actorId << " picking initial state " << nextState;
             } else {
                 // continue from the previous phase
                 nextState = currentState;
-                BOOST_LOG_TRIVIAL(debug) << "Actor " << actorId << " continuing from previous state " << nextState;
+                BOOST_LOG_TRIVIAL(debug)
+                    << "Actor " << actorId << " continuing from previous state " << nextState;
             }
             if (skipFirstOperations) {
                 _skip = true;
@@ -1417,7 +1419,8 @@ struct CrudActor::PhaseConfig {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                     "SkipFirstOperations option not valid if not using States"));
             }
-            BOOST_LOG_TRIVIAL(info) << "phaseContext" << " PLEASE DONT SHOW ME THIS OMG";
+            BOOST_LOG_TRIVIAL(info) << "phaseContext"
+                                    << " PLEASE DONT SHOW ME THIS OMG";
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOperation);
         } else if (phaseContext["States"]) {
@@ -1445,24 +1448,29 @@ void CrudActor::run() {
                 // run the operations for the next state  unless  we have set to skip the first set
                 // of operations
                 if (!config->stateConfig._skip) {
-                    BOOST_LOG_TRIVIAL(debug)
-                    << "Actor " << id() << " running operations for state " << config->stateConfig.currentState;
-                    for (auto&& op : config->stateConfig.states[config->stateConfig.currentState]->operations) {
+                    BOOST_LOG_TRIVIAL(debug) << "Actor " << id() << " running operations for state "
+                                             << config->stateConfig.currentState;
+                    for (auto&& op :
+                         config->stateConfig.states[config->stateConfig.currentState]->operations) {
                         op->run(session);
                     }
                 } else
                     config->stateConfig._skip = false;
                 // pick next state
                 auto distribution = boost::random::discrete_distribution(
-                    config->stateConfig.states[config->stateConfig.currentState]->transitionWeights);
+                    config->stateConfig.states[config->stateConfig.currentState]
+                        ->transitionWeights);
                 auto transition = distribution(_rng);
                 config->stateConfig.nextState =
-                    config->stateConfig.states[config->stateConfig.currentState]->transitions[transition].nextState;
+                    config->stateConfig.states[config->stateConfig.currentState]
+                        ->transitions[transition]
+                        .nextState;
                 BOOST_LOG_TRIVIAL(debug)
                     << "Actor " << id() << " choosing next state " << config->stateConfig.nextState;
-                config.sleepNonBlocking(config->stateConfig.states[config->stateConfig.currentState]
-                                            ->transitions[transition]
-                                            .delay.evaluate());
+                config.sleepNonBlocking(
+                    config->stateConfig.states[config->stateConfig.currentState]
+                        ->transitions[transition]
+                        .delay.evaluate());
             } else {
                 for (auto&& op : config->operations) {
                     op->run(session);

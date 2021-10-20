@@ -172,7 +172,7 @@ public:
                           int64_t currentIteration,
                           SteadyClock::time_point wouldBeDoneAtTime) {
         return (!_minIterations || currentIteration >= _minIterations->value) &&
-        (!_minDuration || (*_minDuration).value <= wouldBeDoneAtTime - startedAt);
+            (!_minDuration || (*_minDuration).value <= wouldBeDoneAtTime - startedAt);
     }
 
     constexpr bool operator==(const IterationChecker& other) const {
@@ -201,8 +201,10 @@ public:
             return;
         // if phase would end before delay, call await end
         if (doesBlockCompletion() && isDone(startedAt, currentIteration, _sleepUntil)) {
-            _sleepUntil = (_minDuration ? (startedAt + _minDuration->value) // Shorten sleepUntil duration.
-                                        : now) + std::chrono::microseconds(100); // Arbitrary fudge-factor.
+            _sleepUntil =
+                (_minDuration ? (startedAt + _minDuration->value)  // Shorten sleepUntil duration.
+                              : now) +
+                std::chrono::microseconds(100);  // Arbitrary fudge-factor.
         }
         // Don't block completion and wouldn't otherwise be done at _sleepUntil.
         o.sleepUntilOrPhaseEnd(_sleepUntil, pn);
