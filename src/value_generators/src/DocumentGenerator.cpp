@@ -982,6 +982,37 @@ private:
     const UniqueGenerator<int64_t> _nTimesGen;
 };
 
+/** `{^Object: {key: ..., value: ..., number: 2}` */
+class ObjectGenerator : public Generator<bsoncxx::document::value> {
+public:
+    ObjectGenerator(const Node& node,
+                   GeneratorArgs generatorArgs,
+                   std::map<std::string, Parser<UniqueAppendable>> parsers)
+        : _rng{generatorArgs.rng},
+          _node{node},
+          _generatorArgs{generatorArgs},
+          _keyGen{stringGenerator(node["key"], generatorArgs)},
+          _valueGen{valueGenerator<false, UniqueAppendable>(node["value"], generatorArgs, parsers)},
+          _nTimesGen{intGenerator(extract(node, "number", "^Object"), generatorArgs)} {}
+
+    bsoncxx::document::value evaluate() override {
+        bsoncxx::builder::basic::document builder;
+        auto times = _nTimesGen->evaluate();
+        for (int i = 0; i < times; ++i) {
+            _valueGen->append(_keyGen->evaluate(), builder);
+        }
+        return builder.extract();
+    }
+
+private:
+    DefaultRandom& _rng;
+    const Node& _node;
+    const GeneratorArgs& _generatorArgs;
+    const UniqueGenerator<std::string> _keyGen;
+    const UniqueAppendable _valueGen;
+    const UniqueGenerator<int64_t> _nTimesGen;
+};
+
 
 class IncGenerator : public Generator<int64_t> {
 public:
@@ -1172,6 +1203,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^Array",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
+     }},
+    {"^Object",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<ObjectGenerator>(node, generatorArgs, allParsers);
      }},
     {"^Cycle",
      [](const Node& node, GeneratorArgs generatorArgs) {

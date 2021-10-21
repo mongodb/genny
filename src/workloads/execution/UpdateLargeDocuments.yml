@@ -1,0 +1,78 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: TODO
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 10
+
+Actors:
+
+# Phases:
+# 1. Insert data with large documents roughly resembling buckets for time-series collection
+# 2. Fsync
+# 3. Perform very simple update
+
+- Name: InsertData
+  Type: Loader
+  # Loader doesn't support multiple threads for a single collection.
+  # TODO: TIG-2938 Use multiple threads to speedup insertion.
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &DB test
+    Threads: 1
+    CollectionCount: 1  # Collection name will be Collection0, this is not configurable.
+    DocumentCount: &DocumentCount 100
+    BatchSize: 100
+    Document:
+      _id: {^Inc: {start: 0}}
+      data: {^Object: {
+        key: {^FastRandomString: {length: { ^RandomInt: { min: 1, max: 10 }}}},
+        value: {^Object: {
+          key: {^FastRandomString: {length: { ^RandomInt: { min: 1, max: 3 }}}},
+          value: { ^RandomInt: { min: 1, max: 10 }},
+          number: 100
+        }},
+        number: 1000
+      }}
+      a: 0
+  - &Nop {Nop: true}
+  - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *DB
+  Phases:
+  - *Nop
+  - Repeat: 1
+  - *Nop
+
+- Name: PerformUpdates
+  Type: CrudActor
+  Database: *DB
+  ClientName: Default
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1000
+    Threads: 50
+    Duration: 3 minutes
+    Collection: Collection0
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {_id: { ^RandomInt: { min: 0, max: *DocumentCount } }}
+        Update: {$set: {a: { ^RandomInt: { min: 0, max: 10000000 }}}}
+        Options:
+            WriteConcern:
+              Level: majority
+
+# TODO Configure which variants to run.
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
