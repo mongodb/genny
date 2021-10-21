@@ -2,23 +2,19 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 
 Description: |
-  TODO: This functionality does not exist yet. It will be implemented in PERF-2516.  The Crud Actor
-  will support FSM definition, with operations associated with each states. Choices are declared
-  with weights that are converted into probabilities.
-
-  TODO: Remove this file from skipped dry run list when implemented
-  (src/lamplib/src/genny/tasks/dry_run.py)
-
-  There is an initial state vector, with weight. Each actor instance will probabilistically and
-  independently choose it's initial state based on the weights.
+  Example workload demonstrating FSM support in CrudActor. The CrudActor supports finite state
+  machines, with states and transitions.
 
   Each state specifies a list of transitions. The next transition is picked probabilistically, based
   on the transition weights. Transitions may experience delay (sleepBefore), before changing the
   state. The state has associated operations which execute while the FSM remains in that
-  state. (Question: what happens during the transition delay? I suggest nothing)
+  state.
 
   By default the system will measure the latency to execute each set of operations associated with a
   state, and each individual operation.
+
+  There is an initial state vector, with weights. Each actor instance will probabilistically and
+  independently choose its initial state based on the weights.
 
   This example workload is a toy example modeling the state of 5 smart phones. The model has four
   states for each phone: On, Off, Sleep, and Error, and transitions between those states. In this
@@ -68,22 +64,19 @@ Actors:
     States:
     - Name: "On"  # The device is on
 
-      # The states support the keywords Repeat, SleepBefore, SleepAfter, (local) Rate, and
-      # Duration. These keywords behave the same as in Phase Control, but operate per state (i.e.,
-      # per actor instance as it goes through the state machine.
-      Repeat: 1
-
       # A state can have (optional) a set of operations that execute upon entering the state. This
-      # state updates a specific document to indicate it is in state On.
+      # state updates a specific document to indicate it is in state On. Currently, the operations
+      # are executed exactly once. In the future, we may add support for duration, repeat, etc to
+      # match general phase loop semantics.
 
       # Note: Following the analogy to phases -- phases may be blocking or non-blocking. States are
-      # always non-blocking, in the sense that any sleepBefore, SleepAfter delays will be
-      # interrupted to close the phase. However, any active operations will be finished.
+      # always non-blocking, in the sense that any sleepBefore delays will be interrupted to close
+      # the phase. However, any active operations will be finished.
 
       # For example, this phase has a 30 second duration, making it blocking. When that 30 seconds
-      # end all the actors will end their phases. If an actor is in a sleepBefore or sleepAfter
-      # delay, it will exit the phase. If the actor is executing a state's operations, it will
-      # complete those operations, and then exit the phase.
+      # end all the actors will end their phases. If an actor is in a sleepBefore, it will still
+      # exit the phase. If the actor is executing a state's operations, it will complete those
+      # operations, and then exit the phase.
       Operations:
       - OperationName: updateOne
         OperationCommand:
@@ -102,13 +95,17 @@ Actors:
         Weight: 1
 
         # Transitions also support the phase keyword sleepBefore.  For sleepBefore, the system is
-        # considered to remain in it's current state. If there is a repeating action in the state,
-        # it will continue repeating until the transition fires. The transition always respects the
+        # considered to remain in it's current state.
+
+        # In the future, if the state supports repeating action, the operations should continue
+        # repeating until the transition fires. The transition always respects the
         # blocking behavior of the phase. If the phase ends during a sleepBefore, the transition is
         # aborted.
 
         # ^TimeSpec is a proposed generator to randomly generate acceptable TimeSpecs with units. It
-        # accepts any valid int or double generator or constant for value.
+        # accepts any valid int or double generator or constant for value. It currently only works
+        # in the CrudActor (no other actors). Transitions only support SleepBefore. They do not
+        # support the SleepAfter keyword at this time.
         SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
 
     - Name: "Off"  # The device is Off
