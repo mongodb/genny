@@ -36,7 +36,7 @@
 
 namespace genny {
 
-const int DROPPED_COLLECTION_RETRIES = 1000;
+const int DROPPED_COLLECTION_RETRIES = 20;
 
 namespace {
 
@@ -129,9 +129,9 @@ bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client,
     int retries = 0;
     while (checkForDroppedCollections(db) && retries < DROPPED_COLLECTION_RETRIES) {
         BOOST_LOG_TRIVIAL(debug)
-            << "Sleeping 1 second while waiting for collection to finish dropping.";
+            << "Sleeping 5 second while waiting for collection to finish dropping.";
         retries++;
-        sleepContext.sleep_for(std::chrono::seconds(1));
+        sleepContext.sleep_for(std::chrono::seconds(5));
     }
     if (retries >= DROPPED_COLLECTION_RETRIES) {
         BOOST_LOG_TRIVIAL(error) << "Timeout on waiting for collections to drop. "
