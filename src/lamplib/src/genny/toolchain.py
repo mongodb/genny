@@ -156,8 +156,14 @@ def toolchain_info(
 class ToolchainDownloader(Downloader):
     # These build IDs are from the genny-toolchain Evergreen task.
     # https://evergreen.mongodb.com/waterfall/genny-toolchain
+    # Find a compile task (for any build variant) and modify the URL:
+    # genny_toolchain_amazon2_t_compile_cf1c50fab5291cd583a5036dc9ade265bca165a3_21_10_20_20_05_26
+    # =>                                cf1c50fab5291cd583a5036dc9ade265bca165a3_21_10_20_20_05_26
+    # If we were 💅 we could do the string logic here in python, but we're not that fancy.
+    #
+    
 
-    TOOLCHAIN_BUILD_ID = "f7a0f971ecdd70afd376ec827a211588633aabc8_21_09_30_14_30_22"
+    TOOLCHAIN_BUILD_ID = "cf1c50fab5291cd583a5036dc9ade265bca165a3_21_10_20_20_05_26"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
     TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
