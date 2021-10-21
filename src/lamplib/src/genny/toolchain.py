@@ -161,7 +161,6 @@ class ToolchainDownloader(Downloader):
     # =>                                cf1c50fab5291cd583a5036dc9ade265bca165a3_21_10_20_20_05_26
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
-    
 
     TOOLCHAIN_BUILD_ID = "cf1c50fab5291cd583a5036dc9ade265bca165a3_21_10_20_20_05_26"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
