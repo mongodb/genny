@@ -1245,11 +1245,13 @@ struct StateConfig {
     bool continueCurrentState;
     bool skipFirstOperations;
 
-    bool _skip = false;
+    bool skip = false;
     int currentState = 0;
     int nextState = 0;
 
     ActorId actorId;
+
+    explicit StateConfig(ActorId actorId) : actorId{actorId} {}
 
     template <typename A>
     void hasStates(PhaseContext& phaseContext, A&& addState) {
@@ -1319,7 +1321,7 @@ struct StateConfig {
     }
 
     void onNewPhase(bool nop, DefaultRandom& rng) {
-        _skip = false;
+        skip = false;
         // TODO: If running without states, define a single state with the operations
         if (!nop && !states.empty()) {
             if (!continueCurrentState) {
@@ -1336,7 +1338,7 @@ struct StateConfig {
                     << "Actor " << actorId << " continuing from previous state " << nextState;
             }
             if (skipFirstOperations) {
-                _skip = true;
+                skip = true;
             }
         }
     }
@@ -1379,52 +1381,60 @@ struct CrudActor::PhaseConfig {
     std::string dbName;
     CrudActor::CollectionName collectionName;
 
+    std::unique_ptr<BaseOperation> addAnOperation(const Node& node,
+                                                  mongocxx::pool::entry& client,
+                                                  const std::string& name,
+                                                  PhaseContext& phaseContext,
+                                                  ActorId id) const {
+        auto collection = (*client)[dbName][name];
+        auto& yamlCommand = node["OperationCommand"];
+        auto opName = node["OperationName"].to<std::string>();
+        auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
+
+        auto opConstructors = getOpConstructors();
+        // Grab the appropriate Operation struct defined by 'OperationName'.
+        auto op = opConstructors.find(opName);
+        if (op == opConstructors.end()) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException("Operation '" + opName +
+                                                                "' not supported in Crud Actor."));
+        }
+
+        // If the yaml specified MetricsName in the Phase block, then associate the metrics
+        // with the Phase; otherwise, associate with the Actor (e.g. all bulkWrite
+        // operations get recorded together across all Phases). The latter case (not
+        // specifying MetricsName) is legacy configuration-syntax.
+        //
+        // Node is convertible to bool but only explicitly so need to do the odd-looking
+        // `? true : false` thing.
+        const bool perPhaseMetrics = phaseContext["MetricsName"] ? true : false;
+        auto opCreator = op->second;
+
+        return opCreator(yamlCommand,
+                         onSession,
+                         collection,
+                         perPhaseMetrics ? phaseContext.operation(opName, id)
+                                         : phaseContext.actor().operation(opName, id),
+                         phaseContext,
+                         id);
+    }
+
     PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id)
         : dbName{getDbName(phaseContext)},
           metrics{phaseContext.actor().operation("Crud", id)},
+          stateConfig{id},
           collectionName{phaseContext} {
 
-        // TODO: proper ctor
-        stateConfig.actorId = id;
-
+        // We use addOperation and addState as lambda args to getPlural, so we h
         auto name = collectionName.generateName(id);
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
-            auto collection = (*client)[dbName][name];
-            auto& yamlCommand = node["OperationCommand"];
-            auto opName = node["OperationName"].to<std::string>();
-            auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
-
-            auto opConstructors = getOpConstructors();
-            // Grab the appropriate Operation struct defined by 'OperationName'.
-            auto op = opConstructors.find(opName);
-            if (op == opConstructors.end()) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "Operation '" + opName + "' not supported in Crud Actor."));
-            }
-
-            // If the yaml specified MetricsName in the Phase block, then associate the metrics
-            // with the Phase; otherwise, associate with the Actor (e.g. all bulkWrite
-            // operations get recorded together across all Phases). The latter case (not
-            // specifying MetricsName) is legacy configuration-syntax.
-            //
-            // Node is convertible to bool but only explicitly so need to do the odd-looking
-            // `? true : false` thing.
-            const bool perPhaseMetrics = phaseContext["MetricsName"] ? true : false;
-            auto createOperation = op->second;
-            return createOperation(yamlCommand,
-                                   onSession,
-                                   collection,
-                                   perPhaseMetrics ? phaseContext.operation(opName, id)
-                                                   : phaseContext.actor().operation(opName, id),
-                                   phaseContext,
-                                   id);
+            return this->addAnOperation(node, client, name, phaseContext, id);
         };
-
         auto addState =
             [&](const Node& stateNode,
                 const std::unordered_map<std::string, int>& states) -> std::unique_ptr<State> {
             return std::make_unique<State>(stateNode, states, phaseContext, id, addOperation);
         };
+
         // Check if we have Operations or States. Through an error if we have both.
         if ((phaseContext["Operations"] || phaseContext["Operation"]) && phaseContext["States"]) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
@@ -1445,7 +1455,7 @@ struct CrudActor::PhaseConfig {
                 "Operation", "Operations", addOperation);
         } else if (phaseContext["States"]) {
             stateConfig.hasStates(phaseContext, addState);
-        } else {  // Throw a useful error}
+        } else {  // Throw a useful error
             BOOST_THROW_EXCEPTION(
                 InvalidConfigurationException("CrudActor has neither Operations nor States "
                                               "specified. Exactly one must be defined."));
@@ -1467,14 +1477,14 @@ void CrudActor::run() {
 
                 // run the operations for the next state  unless  we have set to skip the first set
                 // of operations
-                if (!config->stateConfig._skip) {
+                if (!config->stateConfig.skip) {
                     BOOST_LOG_TRIVIAL(debug) << "Actor " << id() << " running operations for state "
                                              << config->stateConfig.currentState;
                     for (auto&& op : config->stateConfig.operations()) {
                         op->run(session);
                     }
                 } else
-                    config->stateConfig._skip = false;
+                    config->stateConfig.skip = false;
                 // pick next state
                 auto transition = config->stateConfig.pickNext(_rng);
                 BOOST_LOG_TRIVIAL(debug)
