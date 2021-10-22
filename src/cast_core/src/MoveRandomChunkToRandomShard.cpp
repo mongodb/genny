@@ -70,8 +70,7 @@ void MoveRandomChunkToRandomShard::run() {
                     << bsoncxx::builder::stream::finalize;
                 auto numChunks = configDatabase["chunks"].count_documents(chunksFilter.view());
                 // The collection must have been sharded and must have at least one chunk;
-                boost::random::uniform_int_distribution<int64_t> chunkUniformDistribution(
-                    0, (int)numChunks - 1);
+                boost::random::uniform_int_distribution<int64_t> chunkUniformDistribution(0, (int)numChunks - 1);
                 mongocxx::options::find chunkFindOptions;
                 auto chunkSort = bsoncxx::builder::stream::document()
                     << "lastmod" << 1 << bsoncxx::builder::stream::finalize;
@@ -92,8 +91,7 @@ void MoveRandomChunkToRandomShard::run() {
                 bsoncxx::document::value shardFilter = bsoncxx::builder::stream::document()
                     << "_id" << notEqualDoc.view() << bsoncxx::builder::stream::finalize;
                 auto numShards = configDatabase["shards"].count_documents(shardFilter.view());
-                boost::random::uniform_int_distribution<int64_t> shardUniformDistribution(
-                    0, (int)numShards - 1);
+                boost::random::uniform_int_distribution<int64_t> shardUniformDistribution(0, (int)numShards - 1);
                 mongocxx::options::find shardFindOptions;
                 auto shardSort = bsoncxx::builder::stream::document()
                     << "_id" << 1 << bsoncxx::builder::stream::finalize;
