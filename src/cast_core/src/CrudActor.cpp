@@ -1269,6 +1269,10 @@ struct StateConfig {
         // Parse out the states.
         // Build the list of states, and then actually process the states.
 
+        if (!phaseContext["States"]) {
+            return;
+        }
+
         int i = 0;
         std::unordered_map<std::string, int> stateNames;
         for (auto [k, state] : phaseContext["States"]) {
@@ -1394,7 +1398,7 @@ struct CrudActor::PhaseConfig {
     std::string dbName;
     CrudActor::CollectionName collectionName;
 
-    std::unique_ptr<BaseOperation> addAnOperation(const Node& node,
+    std::unique_ptr<BaseOperation> addOperation(const Node& node,
                                                   mongocxx::pool::entry& client,
                                                   const std::string& name,
                                                   PhaseContext& phaseContext,
@@ -1417,9 +1421,8 @@ struct CrudActor::PhaseConfig {
         // operations get recorded together across all Phases). The latter case (not
         // specifying MetricsName) is legacy configuration-syntax.
         //
-        // Node is convertible to bool but only explicitly so need to do the odd-looking
-        // `? true : false` thing.
-        const bool perPhaseMetrics = phaseContext["MetricsName"] ? true : false;
+        // Node is convertible to bool but only explicitly.
+        const bool perPhaseMetrics = bool(phaseContext["MetricsName"]);
         auto opCreator = op->second;
 
         return opCreator(yamlCommand,
@@ -1438,9 +1441,10 @@ struct CrudActor::PhaseConfig {
           collectionName{phaseContext} {
 
         auto name = collectionName.generateName(id);
-        auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
-            return this->addAnOperation(node, client, name, phaseContext, id);
+        auto addOpCallback = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
+            return addOperation(node, client, name, phaseContext, id);
         };
+        stateConfig.hasStates(addOpCallback);
 
         // Check if we have Operations or States. Through an error if we have both.
         if ((phaseContext["Operations"] || phaseContext["Operation"]) && phaseContext["States"]) {
@@ -1459,10 +1463,8 @@ struct CrudActor::PhaseConfig {
             BOOST_LOG_TRIVIAL(info) << "phaseContext"
                                     << " PLEASE DONT SHOW ME THIS OMG";
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
-                "Operation", "Operations", addOperation);
-        } else if (phaseContext["States"]) {
-            stateConfig.hasStates(addOperation);
-        } else {  // Throw a useful error
+                "Operation", "Operations", addOpCallback);
+        } else if (! phaseContext["States"]){  // Throw a useful error
             BOOST_THROW_EXCEPTION(
                 InvalidConfigurationException("CrudActor has neither Operations nor States "
                                               "specified. Exactly one must be defined."));
