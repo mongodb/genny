@@ -1230,7 +1230,11 @@ public:
                 BOOST_THROW_EXCEPTION(
                     InvalidConfigurationException("Each transition must have a scalar 'To' entry"));
             }
-            transitionWeights.emplace_back(transitionYaml["Weight"].to<double>());
+
+            // Doing emplace_back with the .to<double> doesn't compile on linux
+            // for crazy, unknown reasons.
+            double weight = transitionYaml["Weight"].to<double>();
+            transitionWeights.push_back(weight);
             transitions.emplace_back(Transition{
                 states.at(transitionYaml["To"].to<std::string>()),
                 Delay(transitionYaml["SleepBefore"], GeneratorArgs{phaseContext.rng(id), id})});
