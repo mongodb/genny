@@ -1239,21 +1239,22 @@ public:
 };
 
 // Helper struct to encapsulate state based behavior
-struct StateConfig {
+struct StateMachine {
     PhaseContext& phaseContext;
 
     std::vector<State> states;
     std::vector<double> initialStateWeights;
+
     bool continueCurrentState;
     bool skipFirstOperations;
-
     bool skip;
+
     int currentState;
     int nextState;
 
     ActorId actorId;
 
-    explicit StateConfig(PhaseContext& phaseContext, ActorId actorId)
+    explicit StateMachine(PhaseContext& phaseContext, ActorId actorId)
         : phaseContext{phaseContext},
           states{},
           initialStateWeights{},
@@ -1265,9 +1266,12 @@ struct StateConfig {
           actorId{actorId} {}
 
     template <typename F>
-    void hasStates(F&& addOperation) {
-        // Parse out the states.
-        // Build the list of states, and then actually process the states.
+    void setup(F&& addOperation) {
+        // Check if we have Operations or States. Through an error if we have both.
+        if ((phaseContext["Operations"] || phaseContext["Operation"]) && phaseContext["States"]) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "CrudActor has Operations and States at the same time."));
+        }
 
         if (!phaseContext["States"]) {
             return;
@@ -1291,7 +1295,7 @@ struct StateConfig {
             auto myPhaseNumber = phaseContext.getPhaseNumber();
             if (myPhaseNumber == 0) {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "CrudActor has continue set for phase 0. Nothing to continue from."));
+                    "CrudActor has continue set for Phase 0. Nothing to continue from."));
             }
             // TODO: check that the previous state has <= number of states as this one
             // Need to access the previous phase config.
@@ -1306,6 +1310,7 @@ struct StateConfig {
             states.emplace_back<State>(
                 {stateNode, stateNames, phaseContext, actorId, addOperation});
         }
+
         initialStateWeights = std::vector<double>(numStates, 0);
         for (auto [k, state] : phaseContext["InitialStates"]) {
             initialStateWeights[stateNames[state["State"].to<std::string>()]] +=
@@ -1329,7 +1334,10 @@ struct StateConfig {
         // Simplifying Assumption -- one shot operations on state enter
         // We are here to fire those operations, and then pick the next state.
         // transition to the next state
-        advanceState();
+        currentState = nextState;
+
+        BOOST_LOG_TRIVIAL(debug) << "Actor " << actorId << " running in state " << currentState;
+
 
         // run the operations for the next state  unless  we have set to skip the first set
         // of operations
@@ -1339,26 +1347,24 @@ struct StateConfig {
             for (auto&& op : operations()) {
                 op->run(session);
             }
-        } else
+        } else {
             skip = false;
-        // pick next state
+        }
+
         auto transition = pickNext(rng);
-        BOOST_LOG_TRIVIAL(debug) << "Actor " << actorId << " choosing next state " << nextState;
-        return {transitionDelay(transition)};
+        auto delay = transitionDelay(transition);
+
+        return {delay};
     }
 
     [[nodiscard]] bool active() const {
-        return states.empty();
-    }
-
-    void advanceState() {
-        currentState = nextState;
+        return !states.empty();
     }
 
     [[nodiscard]] int pickNext(DefaultRandom& rng) {
         auto distribution =
             boost::random::discrete_distribution(states[currentState].transitionWeights);
-        auto transition = distribution(rng);
+        int transition = distribution(rng);
         nextState = states[currentState].transitions[transition].nextState;
         return transition;
     }
@@ -1420,7 +1426,7 @@ struct CrudActor::CollectionName {
 struct CrudActor::PhaseConfig {
     std::vector<std::unique_ptr<BaseOperation>> operations;
     metrics::Operation metrics;
-    StateConfig stateConfig;
+    StateMachine fsm;
     std::string dbName;
     CrudActor::CollectionName collectionName;
 
@@ -1463,20 +1469,15 @@ struct CrudActor::PhaseConfig {
     PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id)
         : dbName{getDbName(phaseContext)},
           metrics{phaseContext.actor().operation("Crud", id)},
-          stateConfig{phaseContext, id},
+          fsm{phaseContext, id},
           collectionName{phaseContext} {
 
         auto name = collectionName.generateName(id);
         auto addOpCallback = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
             return addOperation(node, client, name, phaseContext, id);
         };
-        stateConfig.hasStates(addOpCallback);
+        fsm.setup(addOpCallback);
 
-        // Check if we have Operations or States. Through an error if we have both.
-        if ((phaseContext["Operations"] || phaseContext["Operation"]) && phaseContext["States"]) {
-            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                "CrudActor has Operations and States at the same time."));
-        }
         if (phaseContext["Operations"] || phaseContext["Operation"]) {
             if (phaseContext["Continue"]) {
                 BOOST_THROW_EXCEPTION(
@@ -1486,8 +1487,6 @@ struct CrudActor::PhaseConfig {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                     "SkipFirstOperations option not valid if not using States"));
             }
-            BOOST_LOG_TRIVIAL(info) << "phaseContext"
-                                    << " PLEASE DONT SHOW ME THIS OMG";
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOpCallback);
         } else if (!phaseContext["States"]) {  // Throw a useful error
@@ -1501,13 +1500,13 @@ struct CrudActor::PhaseConfig {
 void CrudActor::run() {
     for (auto&& config : _loop) {
         auto session = _client->start_session();
-        // More of this logic could be moved into stateConfig.
-        config->stateConfig.onNewPhase(config.isNop(), _rng);
+        config->fsm.onNewPhase(config.isNop(), _rng);
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
-            if (auto delay = config->stateConfig.run(session, _rng)) {
+            if (auto delay = config->fsm.run(session, _rng); delay) {
                 config.sleepNonBlocking(*delay);
             } else {
+                BOOST_LOG_TRIVIAL(debug) << "Actor " << id() << " running regular (non-fsm)";
                 for (auto&& op : config->operations) {
                     op->run(session);
                 }
