@@ -13,8 +13,11 @@ SLOG = structlog.get_logger(__name__)
 
 
 def main_genny_runner(
-    genny_args: List[str], genny_repo_root: str, cleanup_metrics: bool, workspace_root: str,
-    hang: bool = False
+    genny_args: List[str],
+    genny_repo_root: str,
+    cleanup_metrics: bool,
+    workspace_root: str,
+    hang: bool = False,
 ):
     """
     Intended to be the main entry point for running Genny.
@@ -53,7 +56,10 @@ def main_genny_runner(
 
         if hang:
             import time
-            SLOG.info("Debug mode. Poplar is running. Start cedar_core on your own. Ctrl+C here when done.")
+
+            SLOG.info(
+                "Debug mode. Poplar is running. Start cedar_core on your own. Ctrl+C here when done."
+            )
             while True:
                 time.sleep(10)
 

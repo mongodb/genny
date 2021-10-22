@@ -258,10 +258,13 @@ def workload(ctx: click.Context, genny_args: List[str]):
         cleanup_metrics=True,
     )
 
+
 @cli.command(
     name="debug",
-    help=("Useful when running genny_core with a debugger. "
-          "Does all the poplar/curator stuff but then hangs indefinitely."),
+    help=(
+        "Useful when running genny_core with a debugger. "
+        "Does all the poplar/curator stuff but then hangs indefinitely."
+    ),
 )
 @click.pass_context
 def run_debug(ctx: click.Context):
