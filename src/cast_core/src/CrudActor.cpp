@@ -1240,23 +1240,35 @@ public:
 
 // Helper struct to encapsulate state based behavior
 struct StateConfig {
-    std::vector<std::unique_ptr<State>> states;
+    PhaseContext& phaseContext;
+
+    std::vector<State> states;
     std::vector<double> initialStateWeights;
     bool continueCurrentState;
     bool skipFirstOperations;
 
-    bool skip = false;
-    int currentState = 0;
-    int nextState = 0;
+    bool skip;
+    int currentState;
+    int nextState;
 
     ActorId actorId;
 
-    explicit StateConfig(ActorId actorId) : actorId{actorId} {}
+    explicit StateConfig(PhaseContext& phaseContext, ActorId actorId)
+        : phaseContext{phaseContext},
+          states{},
+          initialStateWeights{},
+          continueCurrentState{phaseContext["Continue"].maybe<bool>().value_or(false)},
+          skipFirstOperations{phaseContext["SkipFirstOperations"].maybe<bool>().value_or(false)},
+          skip{false},
+          currentState{0},
+          nextState{0},
+          actorId{actorId} {}
 
-    template <typename A>
-    void hasStates(PhaseContext& phaseContext, A&& addState) {
-        // Parse out the states}
-        // build the list of states, and then actuall process the states
+    template <typename F>
+    void hasStates(F&& addOperation) {
+        // Parse out the states.
+        // Build the list of states, and then actually process the states.
+
         int i = 0;
         std::unordered_map<std::string, int> stateNames;
         for (auto [k, state] : phaseContext["States"]) {
@@ -1267,9 +1279,9 @@ struct StateConfig {
             stateNames.emplace(state["Name"].to<std::string>(), i);
             i++;
         }
+
         auto numStates = stateNames.size();
-        continueCurrentState = phaseContext["Continue"].maybe<bool>().value_or(false);
-        skipFirstOperations = phaseContext["SkipFirstOperations"].maybe<bool>().value_or(false);
+
         if (continueCurrentState) {
             // Check that this isn't phase 0
             auto myPhaseNumber = phaseContext.getPhaseNumber();
@@ -1286,8 +1298,9 @@ struct StateConfig {
         }
 
         states.reserve(numStates);
-        for (auto [k, state] : phaseContext["States"]) {
-            states.emplace_back(addState(state, stateNames));
+        for (auto [k, stateNode] : phaseContext["States"]) {
+            states.emplace_back<State>(
+                {stateNode, stateNames, phaseContext, actorId, addOperation});
         }
         initialStateWeights = std::vector<double>(numStates, 0);
         for (auto [k, state] : phaseContext["InitialStates"]) {
@@ -1305,18 +1318,18 @@ struct StateConfig {
     }
 
     auto& operations() {
-        return states[currentState]->operations;
+        return states[currentState].operations;
     }
 
     auto transitionDelay(int transition) {
-        return states[currentState]->transitions[transition].delay.evaluate();
+        return states[currentState].transitions[transition].delay.evaluate();
     }
 
     [[nodiscard]] int pickNext(DefaultRandom& rng) {
         auto distribution =
-            boost::random::discrete_distribution(states[currentState]->transitionWeights);
+            boost::random::discrete_distribution(states[currentState].transitionWeights);
         auto transition = distribution(rng);
-        nextState = states[currentState]->transitions[transition].nextState;
+        nextState = states[currentState].transitions[transition].nextState;
         return transition;
     }
 
@@ -1421,18 +1434,12 @@ struct CrudActor::PhaseConfig {
     PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id)
         : dbName{getDbName(phaseContext)},
           metrics{phaseContext.actor().operation("Crud", id)},
-          stateConfig{id},
+          stateConfig{phaseContext, id},
           collectionName{phaseContext} {
 
-        // We use addOperation and addState as lambda args to getPlural, so we h
         auto name = collectionName.generateName(id);
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
             return this->addAnOperation(node, client, name, phaseContext, id);
-        };
-        auto addState =
-            [&](const Node& stateNode,
-                const std::unordered_map<std::string, int>& states) -> std::unique_ptr<State> {
-            return std::make_unique<State>(stateNode, states, phaseContext, id, addOperation);
         };
 
         // Check if we have Operations or States. Through an error if we have both.
@@ -1454,7 +1461,7 @@ struct CrudActor::PhaseConfig {
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOperation);
         } else if (phaseContext["States"]) {
-            stateConfig.hasStates(phaseContext, addState);
+            stateConfig.hasStates(addOperation);
         } else {  // Throw a useful error
             BOOST_THROW_EXCEPTION(
                 InvalidConfigurationException("CrudActor has neither Operations nor States "
@@ -1466,6 +1473,7 @@ struct CrudActor::PhaseConfig {
 void CrudActor::run() {
     for (auto&& config : _loop) {
         auto session = _client->start_session();
+        // More of this logic could be moved into stateConfig.
         config->stateConfig.onNewPhase(config.isNop(), _rng);
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
