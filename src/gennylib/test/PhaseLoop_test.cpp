@@ -131,14 +131,19 @@ TEST_CASE("Correctness for N milliseconds with sleepNonBlocking") {
                 std::make_unique<v1::IterationChecker>(10_ots, nullopt, false, 0_ts, 0_ts, nullopt),
                 0};
 
+            o.awaitPhaseStart(true, 1);
+
+            int i = 0;
             auto start = chrono::system_clock::now();
             for (auto _ : loop) {
                 loop.sleepNonBlocking(chrono::milliseconds(1));
+                ++i;
             }
             auto elapsed =
                 chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - start)
                     .count();
 
+            REQUIRE(i == 10);
             REQUIRE(elapsed >= 10);
             REQUIRE(elapsed <= 11);
         }
@@ -152,14 +157,19 @@ TEST_CASE("Correctness for N milliseconds with sleepNonBlocking") {
             std::make_unique<v1::IterationChecker>(10_ots, nullopt, false, 0_ts, 0_ts, nullopt),
             0};
 
+        o.awaitPhaseStart(true, 1);
+
+        int i = 0;
         auto start = chrono::system_clock::now();
         for (auto _ : loop) {
             loop.sleepNonBlocking(chrono::milliseconds(100));
+            ++i;
         }  // nop
         auto elapsed =
             chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - start)
                 .count();
 
+        REQUIRE(i == 1);
         REQUIRE(elapsed >= 10);
         REQUIRE(elapsed <= 11);
     }
