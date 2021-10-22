@@ -470,7 +470,6 @@ public:
      * immediately, but will not start the next iteration before this amount of time has passed.
      */
     void sleepNonBlocking(Duration timeout) {
-        BOOST_LOG_TRIVIAL(debug) << "Calling sleepNonBlocking with timeout";
         _iterationCheck->setSleepUntil(SteadyClock::now() + timeout);
     }
 
