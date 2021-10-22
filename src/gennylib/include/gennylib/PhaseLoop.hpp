@@ -203,8 +203,7 @@ public:
         if (doesBlockCompletion() && isDone(startedAt, currentIteration, _sleepUntil)) {
             _sleepUntil =
                 (_minDuration ? (startedAt + _minDuration->value)  // Shorten sleepUntil duration.
-                              : now) +
-                std::chrono::microseconds(100);  // Arbitrary fudge-factor.
+                              : now);
         }
         // Don't block completion and wouldn't otherwise be done at _sleepUntil.
         o.sleepUntilOrPhaseEnd(_sleepUntil, pn);
