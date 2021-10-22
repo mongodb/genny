@@ -1267,7 +1267,7 @@ struct StateMachine {
 
     template <typename F>
     void setup(F&& addOperation) {
-        // Check if we have Operations or States. Through an error if we have both.
+        // Check if we have Operations or States. Throw an error if we have both.
         if ((phaseContext["Operations"] || phaseContext["Operation"]) && phaseContext["States"]) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "CrudActor has Operations and States at the same time."));
@@ -1503,6 +1503,7 @@ void CrudActor::run() {
         config->fsm.onNewPhase(config.isNop(), _rng);
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
+            // std::optionals (like `delay`) convert to boolean true iff their value is present.
             if (auto delay = config->fsm.run(session, _rng); delay) {
                 config.sleepNonBlocking(*delay);
             } else {
