@@ -50,9 +50,8 @@ struct LoggingActor::PhaseConfig {
         const auto now = metrics::clock::now();
         const auto duration = now - last;
         if (duration >= logEvery.value) {
-            BOOST_LOG_TRIVIAL(info)
-                << "Phase still progressing ("
-                << std::chrono::duration_cast<std::chrono::seconds>(now - started).count() << "s)";
+            BOOST_LOG_TRIVIAL(info) << "Phase still progressing (" <<
+                std::chrono::duration_cast<std::chrono::seconds>(now - started).count() << "s)";
             last = now;
         }
     }
