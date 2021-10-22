@@ -1313,20 +1313,46 @@ struct StateConfig {
         }
     }
 
-    [[nodiscard]] bool active() const {
-        return states.empty();
-    }
-
-    void advanceState() {
-        currentState = nextState;
-    }
-
     auto& operations() {
         return states[currentState].operations;
     }
 
     auto transitionDelay(int transition) {
         return states[currentState].transitions[transition].delay.evaluate();
+    }
+
+    template <typename S>
+    std::optional<Duration> run(S& session, DefaultRandom& rng) {
+        if (!active()) {
+            return std::nullopt;
+        }
+        // Simplifying Assumption -- one shot operations on state enter
+        // We are here to fire those operations, and then pick the next state.
+        // transition to the next state
+        advanceState();
+
+        // run the operations for the next state  unless  we have set to skip the first set
+        // of operations
+        if (!skip) {
+            BOOST_LOG_TRIVIAL(debug)
+                << "Actor " << actorId << " running operations for state " << currentState;
+            for (auto&& op : operations()) {
+                op->run(session);
+            }
+        } else
+            skip = false;
+        // pick next state
+        auto transition = pickNext(rng);
+        BOOST_LOG_TRIVIAL(debug) << "Actor " << actorId << " choosing next state " << nextState;
+        return {transitionDelay(transition)};
+    }
+
+    [[nodiscard]] bool active() const {
+        return states.empty();
+    }
+
+    void advanceState() {
+        currentState = nextState;
     }
 
     [[nodiscard]] int pickNext(DefaultRandom& rng) {
@@ -1399,10 +1425,10 @@ struct CrudActor::PhaseConfig {
     CrudActor::CollectionName collectionName;
 
     std::unique_ptr<BaseOperation> addOperation(const Node& node,
-                                                  mongocxx::pool::entry& client,
-                                                  const std::string& name,
-                                                  PhaseContext& phaseContext,
-                                                  ActorId id) const {
+                                                mongocxx::pool::entry& client,
+                                                const std::string& name,
+                                                PhaseContext& phaseContext,
+                                                ActorId id) const {
         auto collection = (*client)[dbName][name];
         auto& yamlCommand = node["OperationCommand"];
         auto opName = node["OperationName"].to<std::string>();
@@ -1464,7 +1490,7 @@ struct CrudActor::PhaseConfig {
                                     << " PLEASE DONT SHOW ME THIS OMG";
             operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
                 "Operation", "Operations", addOpCallback);
-        } else if (! phaseContext["States"]){  // Throw a useful error
+        } else if (!phaseContext["States"]) {  // Throw a useful error
             BOOST_THROW_EXCEPTION(
                 InvalidConfigurationException("CrudActor has neither Operations nor States "
                                               "specified. Exactly one must be defined."));
@@ -1479,27 +1505,8 @@ void CrudActor::run() {
         config->stateConfig.onNewPhase(config.isNop(), _rng);
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
-            if (!config->stateConfig.active()) {
-                // Simplifying Assumption -- one shot operations on state enter
-                // We are here to fire those operations, and then pick the next state.
-                // transition to the next state
-                config->stateConfig.advanceState();
-
-                // run the operations for the next state  unless  we have set to skip the first set
-                // of operations
-                if (!config->stateConfig.skip) {
-                    BOOST_LOG_TRIVIAL(debug) << "Actor " << id() << " running operations for state "
-                                             << config->stateConfig.currentState;
-                    for (auto&& op : config->stateConfig.operations()) {
-                        op->run(session);
-                    }
-                } else
-                    config->stateConfig.skip = false;
-                // pick next state
-                auto transition = config->stateConfig.pickNext(_rng);
-                BOOST_LOG_TRIVIAL(debug)
-                    << "Actor " << id() << " choosing next state " << config->stateConfig.nextState;
-                config.sleepNonBlocking(config->stateConfig.transitionDelay(transition));
+            if (auto delay = config->stateConfig.run(session, _rng)) {
+                config.sleepNonBlocking(*delay);
             } else {
                 for (auto&& op : config->operations) {
                     op->run(session);
