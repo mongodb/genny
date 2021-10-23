@@ -55,12 +55,19 @@ TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader - create records and add ind
             Document: {
                 field1: {^RandomInt: {min: 0, max: 100}},
                 field2: {^RandomInt: {min: 0, max: 100}},
+                field3: {^RandomInt: {min: 0, max: 100}},
+                field4: {^RandomInt: {min: 0, max: 100}},
             }
             Indexes:
-            - keys: {field1: 1}
             - keys: {field1: 1, field2: 1}
             - keys: {field2: 1}
               options: {name: "a_index", sparse: true}
+            - keys: {field1: 1}
+              options: {sparse: true}
+            - keys: {field3: 1, field4: 1}
+              options: {sparse: true}
+            - keys: {field3: 4}
+              options: {sparse: true, expireAfterSeconds: 3600}
 
     )",
     __FILE__);
@@ -80,12 +87,19 @@ TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader - create records and add ind
             std::cmatch matches;
             std::regex_search(const_cast<char*>(outputString.c_str()), matches, indexRegex);
             std::string actual_response(matches[1]);
-            std::string expected_response = " { \"v\" : 2, \"key\" : { \"_id\" : 1 }, \"name\" : \"_id_\" }, "
-                                            "{ \"v\" : 2, \"key\" : { \"field1\" : 1 }, \"name\" : \"field1\" }, "
-                                            "{ \"v\" : 2, \"key\" : { \"field1\" : 1, \"field2\" : 1 }, "
-                                            "\"name\" : \"field1field2\" },"
-                                            " { \"v\" : 2, \"key\" : { \"field2\" : 1 }, \"name\" : \"a_index\","
-                                            " \"sparse\" : true } ";
+            auto expected_response = " { \"v\" : 2, \"key\" : { \"_id\" : 1 }, "
+                                     "\"name\" : \"_id_\" }, "
+                                     "{ \"v\" : 2, \"key\" : { \"field1\" : 1, \"field2\" : 1 }, "
+                                     "\"name\" : \"field1field2\" },"
+                                     " { \"v\" : 2, \"key\" : { \"field2\" : 1 },"
+                                     " \"name\" : \"a_index\", \"sparse\" : true },"
+                                     " { \"v\" : 2, \"key\" : { \"field1\" : 1 }, "
+                                     "\"name\" : \"field1\", \"sparse\" : true },"
+                                     " { \"v\" : 2, \"key\" : { \"field3\" : 1, \"field4\" : 1 }, "
+                                     "\"name\" : \"field3field4\", \"sparse\" : true },"
+                                     " { \"v\" : 2, \"key\" : { \"field3\" : 4 }, "
+                                     "\"name\" : \"field3\", \"sparse\" : true, "
+                                     "\"expireAfterSeconds\" : 3600 } ";
             INFO("Actual Response:   " << actual_response);
             INFO("Expected Response: " << expected_response);
             REQUIRE(actual_response == expected_response);

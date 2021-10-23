@@ -119,10 +119,30 @@ void genny::actor::MonotonicLoader::run() {
                     auto indexKey = keys();
                     if (options) {
                         auto indexOptions = (*options)();
-                        indexCmd = indexCmd << builder::stream::open_document
-                                            << "key" << indexKey.view()
-                                            << builder::concatenate(indexOptions.view())
-                                            << builder::stream::close_document;
+                        bool nameOptionFound = false;
+                        for (auto field : indexOptions.view()) {
+                            if (field.key().to_string() == "name") {
+                                nameOptionFound = true;
+                                break;
+                            }
+                        }
+                        if (nameOptionFound) {
+                            indexCmd = indexCmd << builder::stream::open_document
+                                                << "key" << indexKey.view()
+                                                << builder::concatenate(indexOptions.view())
+                                                << builder::stream::close_document;
+                        } else {
+                            std::string indexName = "";
+                            for (auto field : indexKey.view()) {
+                                indexName = indexName + field.key().to_string();
+                            }
+                            indexCmd = indexCmd << builder::stream::open_document
+                                                << "key" << indexKey.view()
+                                                << "name" << indexName
+                                                << builder::concatenate(indexOptions.view())
+                                                << builder::stream::close_document;
+
+                        }
                     } else {
                         std::string index_name = "";
                         for (auto field : indexKey.view()) {
