@@ -122,26 +122,32 @@ TEST_CASE("Correctness for N milliseconds") {
 TEST_CASE("Correctness for N milliseconds with sleepNonBlocking") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
+    o.awaitPhaseStart(true, 1);
     SECTION(
         "Looping for 10 milliseconds takes between 10 and 11 millis and does 10 iterations with "
         "sleepNonBlocking 1ms") {
-        {
-            v1::ActorPhase<int> loop{
-                o,
-                std::make_unique<v1::IterationChecker>(10_ots, nullopt, false, 0_ts, 0_ts, nullopt),
-                0};
+        v1::ActorPhase<int> loop{
+            o,
+            std::make_unique<v1::IterationChecker>(10_ots, nullopt, false, 0_ts, 0_ts, nullopt),
+            0};
 
-            auto start = chrono::system_clock::now();
-            for (auto _ : loop) {
-                loop.sleepNonBlocking(chrono::milliseconds(1));
-            }
-            auto elapsed =
-                chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - start)
-                    .count();
-
-            REQUIRE(elapsed >= 10);
-            REQUIRE(elapsed <= 11);
+        auto start = chrono::system_clock::now();
+        int i = 0;
+        INFO(i);
+        for (auto _ : loop) {
+            ++i;
+            loop.sleepNonBlocking(chrono::milliseconds(1));
         }
+        INFO("After loop");
+        INFO(i);
+        auto elapsed =
+            chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - start)
+                .count();
+
+        REQUIRE(i >= 8);
+        REQUIRE(i <= 12);
+        REQUIRE(elapsed >= 10);
+        REQUIRE(elapsed <= 11);
     }
     SECTION(
         "Looping for 10 milliseconds takes between 10 and 11 millis and does 1 iterations with "
@@ -153,13 +159,16 @@ TEST_CASE("Correctness for N milliseconds with sleepNonBlocking") {
             0};
 
         auto start = chrono::system_clock::now();
+        int i = 0;
         for (auto _ : loop) {
+            i++;
             loop.sleepNonBlocking(chrono::milliseconds(100));
         }  // nop
         auto elapsed =
             chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - start)
                 .count();
 
+        REQUIRE(i == 1);
         REQUIRE(elapsed >= 10);
         REQUIRE(elapsed <= 11);
     }
