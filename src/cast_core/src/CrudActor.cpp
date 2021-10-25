@@ -1282,7 +1282,7 @@ struct StateMachine {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                     "Each state must have a name and it must be a string"));
             }
-            stateNames.emplace(state["Name"].to<std::string>(), i);
+            stateNames.emplace(state["Name"].template to<std::string>(), i);
             i++;
         }
 
@@ -1311,8 +1311,8 @@ struct StateMachine {
 
         initialStateWeights = std::vector<double>(numStates, 0);
         for (auto [k, state] : phaseContext["InitialStates"]) {
-            initialStateWeights[stateNames[state["State"].to<std::string>()]] +=
-                state["Weight"].to<double>();
+            initialStateWeights[stateNames[state["State"].template to<std::string>()]] +=
+                state["Weight"].template to<double>();
         }
     }
 
