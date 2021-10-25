@@ -56,9 +56,14 @@ def main_genny_runner(
 
         if hang:
             import time
+            import shlex
 
             SLOG.info(
-                "Debug mode. Poplar is running. Start cedar_core on your own. Ctrl+C here when done."
+                "Debug mode. Poplar is running. "
+                "Start genny_core (./build/src/driver/genny_core or ./dist/bin/genny_core) "
+                "on your own with the fully processed workload file."
+                f"\n\n    {shlex.join(cmd)}\n\n"
+                "Ctrl+C here when done."
             )
             while True:
                 time.sleep(10)
