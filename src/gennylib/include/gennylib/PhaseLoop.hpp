@@ -184,8 +184,8 @@ public:
     }
 
     // Set the minimum timepoint before continuning again
-    constexpr void setSleepUntil(SteadyClock::time_point SleepUntil) {
-        _sleepUntil = SleepUntil;
+    constexpr void setSleepUntil(SteadyClock::time_point sleepUntil) {
+        _sleepUntil = sleepUntil;
     }
 
     // Perform the sleep to get to specified timepoint, but ending phase if timepoint would be after
