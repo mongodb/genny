@@ -1219,7 +1219,7 @@ public:
         : operations{node.getPlural<std::unique_ptr<BaseOperation>>(
               "Operation", "Operations", addOperation)},
           stateName{node["Name"].to<std::string>()} {
-        for (const auto [k, transitionYaml] : node["Transitions"]) {
+        for (const auto&& [k, transitionYaml] : node["Transitions"]) {
             if (!transitionYaml["Weight"] || !transitionYaml["Weight"].isScalar()) {
                 BOOST_THROW_EXCEPTION(
                     InvalidConfigurationException("Each transition must have a scalar weight"));
