@@ -1228,9 +1228,9 @@ public:
                 BOOST_THROW_EXCEPTION(
                     InvalidConfigurationException("Each transition must have a scalar 'To' entry"));
             }
-            transitionWeights.emplace_back(transitionYaml["Weight"].to<double>());
+            transitionWeights.emplace_back(transitionYaml["Weight"].template to<double>());
             transitions.emplace_back(Transition{
-                states.at(transitionYaml["To"].to<std::string>()),
+                states.at(transitionYaml["To"].template to<std::string>()),
                 Delay(transitionYaml["SleepBefore"], GeneratorArgs{phaseContext.rng(id), id})});
         }
     }
