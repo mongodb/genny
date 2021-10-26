@@ -15,9 +15,42 @@
 #ifndef HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 #define HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 
+#include <vector>
+#include <future>
+#include <functional>
+
 namespace genny {
 
 using ActorId = unsigned int;
+
+class TaskList {
+public:
+
+    /**
+     * Add a task to the task list.
+     *
+     * @param t
+     *   a function to execute
+     * @return a shared future containing the result of the task
+     */
+    template<typename T>
+    std::shared_future<T> addTask(std::function<T()> t) {
+        std::shared_future fut = std::async(std::launch::deferred, t);
+        _tasks.emplace_back([=](){ 
+            fut.wait();
+        });
+        return fut;
+    }
+
+    void runAllTasks() {
+        for (auto&& task : _tasks) {
+            task();
+        }
+    }
+
+private:
+    std::vector<std::function<void()>> _tasks;
+};
 
 class ActorContext;
 
@@ -85,6 +118,13 @@ public:
      */
     virtual void run() = 0;
 
+    /*
+     * This should be invoked by the driver right before calling run() but
+     * after the context has been constructed to resolve startup-related
+     * futures.
+     */
+    void runStartupTasks();
+
     /**
      * @return the id for the Actor. Each Actor should
      * have a unique id. This is used for metrics reporting and other purposes.
@@ -96,7 +136,9 @@ public:
 
 private:
     ActorId _id;
+    TaskList _startupTasks;
 };
+
 
 }  // namespace genny
 

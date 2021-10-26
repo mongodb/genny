@@ -17,6 +17,7 @@
 #include <memory>
 #include <set>
 #include <sstream>
+#include <future>
 
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
@@ -107,8 +108,10 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
     return actors;
 }
 
-mongocxx::pool::entry WorkloadContext::client(const std::string& name, size_t instance) {
-    return _poolManager.client(name, instance, this->_node);
+std::shared_future<mongocxx::pool::entry> WorkloadContext::client(TaskList tasks, const std::string& name, size_t instance) {
+    return tasks.addTask<mongocxx::pool::entry>([=]() { 
+        return _poolManager.client(name, instance, this->_node);
+    });
 }
 
 GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name, const RateSpec& spec) {
