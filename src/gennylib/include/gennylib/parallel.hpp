@@ -24,9 +24,10 @@ namespace genny {
 
     template<typename IteratorT, typename BinaryOperation>
     void parallelRun(IteratorT begin, IteratorT end, BinaryOperation op) {
-        std::vector<std::thread> threads;
-        std::transform(begin, end, std::back_inserter(threads), op);
-        for (auto& thread : threads) {
+        auto threadsPtr = std::make_unique<std::vector<std::thread>>();
+        threadsPtr->reserve(std::distance(begin, end));
+        std::transform(begin, end, std::back_inserter(*threadsPtr), op);
+        for (auto& thread : *threadsPtr) {
             thread.join();
         }
     }

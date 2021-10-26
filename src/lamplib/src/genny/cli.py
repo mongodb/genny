@@ -260,6 +260,30 @@ def workload(ctx: click.Context, genny_args: List[str]):
 
 
 @cli.command(
+    name="debug",
+    help=(
+        "Useful when running genny_core with a debugger. "
+        "Does all the poplar/curator stuff but then hangs indefinitely."
+    ),
+)
+@click.argument("genny_args", nargs=-1)
+@click.pass_context
+def run_debug(ctx: click.Context, genny_args: List[str]):
+    from genny.tasks import genny_runner
+
+    ctx.ensure_object(dict)
+    ctx.obj["GENNY_ARGS"] = genny_args
+
+    genny_runner.main_genny_runner(
+        hang=True,
+        genny_args=genny_args,
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        cleanup_metrics=True,
+    )
+
+
+@cli.command(
     name="dry-run-workloads",
     help=(
         "Iterates over all yaml files src/workloads and asserts that "
