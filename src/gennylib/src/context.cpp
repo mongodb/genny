@@ -143,7 +143,7 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
 
     std::lock_guard<std::mutex> lk(_rngLock);
     if (auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
-        auto [it, success] = _rngRegistry.try_emplace(id, _rngSeed + id);
+        auto [it, success] = _rngRegistry.try_emplace(id, _rngSeed + std::hash<long>{}(id));
         if (!success) {
             // This should be impossible.
             // But invariants don't hurt we only call this during setup
