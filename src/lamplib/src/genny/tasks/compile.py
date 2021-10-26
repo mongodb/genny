@@ -91,7 +91,10 @@ def compile_all(
         linux_distro=linux_distro,
         ignore_toolchain_version=ignore_toolchain_version,
     )
-    compile_cmd = [build_system, "-C", "build"]
+    cmd_base = [build_system]
+    if build_system == "make":
+        cmd_base.append("-j8")
+    compile_cmd = [*cmd_base, "-C", "build"]
     run_command(
         cmd=compile_cmd,
         env=toolchain_info.toolchain_env,
