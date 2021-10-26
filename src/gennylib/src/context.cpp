@@ -23,6 +23,7 @@
 #include <mongocxx/uri.hpp>
 
 #include <gennylib/Cast.hpp>
+#include <gennylib/parallel.hpp>
 #include <gennylib/v1/Sleeper.hpp>
 #include <metrics/metrics.hpp>
 
@@ -79,22 +80,16 @@ WorkloadContext::WorkloadContext(const Node& node,
     }
 
     std::mutex actorsLock;
-    std::vector<std::thread> threads;
-    std::transform(cbegin(_actorContexts),
+    parallelRun(cbegin(_actorContexts),
                    cend(_actorContexts),
-                   std::back_inserter(threads),
                    [&](const auto& actorContext) {
                        return std::thread{[&]() {
-
                            for (auto&& actor : _constructActors(cast, actorContext)) {
                                std::lock_guard<std::mutex> lk(actorsLock);
                                _actors.push_back(std::move(actor));
                            }
                        }};
                    });
-
-    for (auto& thread : threads)
-        thread.join();
 
     _done = true;
 }

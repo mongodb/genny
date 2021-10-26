@@ -31,6 +31,7 @@
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
+#include <gennylib/parallel.hpp>
 
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
@@ -163,11 +164,9 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     std::atomic<DefaultDriver::OutcomeCode> outcomeCode = DefaultDriver::OutcomeCode::kSuccess;
 
     std::mutex reporting;
-    std::vector<std::thread> threads;
-    std::transform(cbegin(workloadContext.actors()),
-                   cend(workloadContext.actors()),
-                   std::back_inserter(threads),
-                   [&](const auto& actor) {
+    parallelRun(cbegin(workloadContext.actors()),
+                    cend(workloadContext.actors()),
+                    [&](const auto& actor) {
                        return std::thread{[&]() {
                            {
                                auto ctx = startedActors.start();
@@ -188,9 +187,6 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
                            }
                        }};
                    });
-
-    for (auto& thread : threads)
-        thread.join();
 
     if (metrics.getFormat().useCsv()) {
         const auto reporter = genny::metrics::Reporter{metrics};
