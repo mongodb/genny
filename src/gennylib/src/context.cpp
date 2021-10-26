@@ -29,6 +29,8 @@
 
 namespace genny {
 
+// Default value selected from random.org, by selecting 2 random numbers
+// between 1 and 10^9 and concatenating.
 auto RNG_SEED_BASE = 269849313357703264;
 
 WorkloadContext::WorkloadContext(const Node& node,
@@ -70,9 +72,7 @@ WorkloadContext::WorkloadContext(const Node& node,
 
     _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
 
-    // Default value selected from random.org, by selecting 2 random numbers
-    // between 1 and 10^9 and concatenating.
-    _rng = (*this)["RandomSeed"].maybe<long>().value_or(RNG_SEED_BASE);
+    _rngSeed = (*this)["RandomSeed"].maybe<long>().value_or(RNG_SEED_BASE);
 
     // Make a bunch of actor contexts
     for (const auto& [k, actor] : (*this)["Actors"]) {
@@ -143,7 +143,7 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
 
     std::lock_guard<std::mutex> lk(_rngLock);
     if (auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
-        auto [it, success] = _rngRegistry.try_emplace(id, _rng + id);
+        auto [it, success] = _rngRegistry.try_emplace(id, _rngSeed + id);
         if (!success) {
             // This should be impossible.
             // But invariants don't hurt we only call this during setup
