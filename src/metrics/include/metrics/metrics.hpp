@@ -263,6 +263,7 @@ public:
      * Assumes the count is constant across phases for a given (actor, operation).
      */
     std::size_t getWorkerCount(const std::string& actorName, const std::string& opName) const {
+        // TODO: Can make this better /safer as part of the pre-run phase.
         return (_ops.at(actorName).at(opName)).size();
     }
 
