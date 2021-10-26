@@ -296,7 +296,7 @@ private:
     }
 
     // Must be a shared ptr to keep the registry moveable.
-    std::shared_ptr<std::mutex> _opLock = std::make_shared<std::mutex>();
+    std::unique_ptr<std::mutex> _opLock = std::make_unique<std::mutex>();
     std::unique_ptr<GrpcClient> _grpcClient;
     OperationsMap _ops;
     MetricsFormat _format;
