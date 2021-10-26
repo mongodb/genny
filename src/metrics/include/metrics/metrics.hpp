@@ -140,6 +140,7 @@ private:
     inline static report_time_point _reportTimeStarted = report_clock_type::now();
 };
 
+
 /**
  * Supports recording a number of types of Time-Series Values:
  *
@@ -203,6 +204,7 @@ public:
                                       ActorId actorId,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt,
                                       bool internal = false) {
+        std::lock_guard<std::mutex> lk(*getOpLock());
         StreamPtr stream = nullptr;
 
         auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
@@ -225,6 +227,7 @@ public:
                                       double_t percentage,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt,
                                       bool internal = false) {
+        std::lock_guard<std::mutex> lk(*getOpLock());
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
@@ -290,6 +293,12 @@ private:
             str << '.' << *phase;
         }
         return str.str();
+    }
+
+    // Workaround for lack of static member initialization in headers.
+    std::shared_ptr<std::mutex> getOpLock() {
+        static auto opLock = std::make_shared<std::mutex>();
+        return opLock;
     }
 
     std::unique_ptr<GrpcClient> _grpcClient;

@@ -286,6 +286,7 @@ private:
     std::atomic<ActorId> _nextActorId{1};
 
     std::unordered_map<ActorId, DefaultRandom> _rngRegistry;
+    std::mutex _rngLock;
 
     std::unordered_map<std::string, std::unique_ptr<GlobalRateLimiter>> _rateLimiters;
 };

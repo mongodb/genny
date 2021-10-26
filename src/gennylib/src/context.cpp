@@ -69,21 +69,32 @@ WorkloadContext::WorkloadContext(const Node& node,
 
     _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
 
+    // Default value selected from random.org, by selecting 2 random numbers
+    // between 1 and 10^9 and concatenating.
+    _rng = (*this)["RandomSeed"].maybe<long>().value_or(RNG_SEED_BASE);
 
     // Make a bunch of actor contexts
     for (const auto& [k, actor] : (*this)["Actors"]) {
         _actorContexts.emplace_back(std::make_unique<genny::ActorContext>(actor, *this));
     }
 
-    // Default value selected from random.org, by selecting 2 random numbers
-    // between 1 and 10^9 and concatenating.
-    _rng = (*this)["RandomSeed"].maybe<long>().value_or(RNG_SEED_BASE);
+    std::mutex actorsLock;
+    std::vector<std::thread> threads;
+    std::transform(cbegin(_actorContexts),
+                   cend(_actorContexts),
+                   std::back_inserter(threads),
+                   [&](const auto& actorContext) {
+                       return std::thread{[&]() {
 
-    for (auto& actorContext : _actorContexts) {
-        for (auto&& actor : _constructActors(cast, actorContext)) {
-            _actors.push_back(std::move(actor));
-        }
-    }
+                           for (auto&& actor : _constructActors(cast, actorContext)) {
+                               std::lock_guard<std::mutex> lk(actorsLock);
+                               _actors.push_back(std::move(actor));
+                           }
+                       }};
+                   });
+
+    for (auto& thread : threads)
+        thread.join();
 
     _done = true;
 }
@@ -135,6 +146,8 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
     if (this->isDone()) {
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot create RNGs after setup"));
     }
+
+    std::lock_guard<std::mutex> lk(_rngLock);
     if (auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
         auto [it, success] = _rngRegistry.try_emplace(id, _rng + id);
         if (!success) {
