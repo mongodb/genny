@@ -80,8 +80,7 @@ WorkloadContext::WorkloadContext(const Node& node,
     }
 
     std::mutex actorsLock;
-    parallelRun(cbegin(_actorContexts),
-                   cend(_actorContexts),
+    parallelRun(_actorContexts,
                    [&](const auto& actorContext) {
                        return std::thread{[&]() {
                            for (auto&& actor : _constructActors(cast, actorContext)) {

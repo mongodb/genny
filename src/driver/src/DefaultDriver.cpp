@@ -164,8 +164,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     std::atomic<DefaultDriver::OutcomeCode> outcomeCode = DefaultDriver::OutcomeCode::kSuccess;
 
     std::mutex reporting;
-    parallelRun(cbegin(workloadContext.actors()),
-                cend(workloadContext.actors()),
+    parallelRun(workloadContext.actors(),
                 [&](const auto& actor) {
                     return std::thread{[&]() {
                        {
