@@ -204,7 +204,7 @@ public:
                                       ActorId actorId,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt,
                                       bool internal = false) {
-        std::lock_guard<std::mutex> lk(*getOpLock());
+        std::lock_guard<std::mutex> lk(*_opLock);
         StreamPtr stream = nullptr;
 
         auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
@@ -227,7 +227,7 @@ public:
                                       double_t percentage,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt,
                                       bool internal = false) {
-        std::lock_guard<std::mutex> lk(*getOpLock());
+        std::lock_guard<std::mutex> lk(*_opLock);
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
@@ -295,12 +295,8 @@ private:
         return str.str();
     }
 
-    // Workaround for lack of static member initialization in headers.
-    std::shared_ptr<std::mutex> getOpLock() {
-        static auto opLock = std::make_shared<std::mutex>();
-        return opLock;
-    }
-
+    // Must be a shared ptr to keep the registry moveable.
+    std::shared_ptr<std::mutex> _opLock = std::make_shared<std::mutex>();
     std::unique_ptr<GrpcClient> _grpcClient;
     OperationsMap _ops;
     MetricsFormat _format;
