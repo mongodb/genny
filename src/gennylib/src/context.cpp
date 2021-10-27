@@ -108,8 +108,10 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
     return actors;
 }
 
-std::shared_future<mongocxx::pool::entry> WorkloadContext::client(TaskList tasks, const std::string& name, size_t instance) {
+std::future<mongocxx::pool::entry> WorkloadContext::client(TaskQueue tasks, const std::string& name, size_t instance) {
     return tasks.addTask<mongocxx::pool::entry>([=]() { 
+        // TODO: Add assertion that we aren't resolving before the workload context has
+        // finished constructing.
         return _poolManager.client(name, instance, this->_node);
     });
 }

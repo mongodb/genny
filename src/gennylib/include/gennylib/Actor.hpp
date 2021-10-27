@@ -15,7 +15,7 @@
 #ifndef HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 #define HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 
-#include <vector>
+#include <queue>
 #include <future>
 #include <functional>
 
@@ -23,7 +23,7 @@ namespace genny {
 
 using ActorId = unsigned int;
 
-class TaskList {
+class TaskQueue {
 public:
 
     /**
@@ -34,22 +34,26 @@ public:
      * @return a shared future containing the result of the task
      */
     template<typename T>
-    std::shared_future<T> addTask(std::function<T()> t) {
-        std::shared_future fut = std::async(std::launch::deferred, t);
-        _tasks.emplace_back([=](){ 
-            fut.wait();
+    std::future<T> addTask(std::function<T()> t) {
+        std::shared_ptr<std::promise<T>> p;
+        _tasks.push([=](){ 
+            p->set_value(t());
         });
-        return fut;
+        return p->get_future();
     }
 
+    /**
+     * Run all the tasks in the task list.
+     */
     void runAllTasks() {
-        for (auto&& task : _tasks) {
-            task();
+        while (!_tasks.empty()) {
+            _tasks.front()();
+            _tasks.pop();
         }
     }
 
 private:
-    std::vector<std::function<void()>> _tasks;
+    std::queue<std::function<void()>> _tasks;
 };
 
 class ActorContext;
@@ -133,10 +137,11 @@ public:
     virtual ActorId id() const {
         return _id;
     }
+protected:
+    TaskQueue _startupTasks;
 
 private:
     ActorId _id;
-    TaskList _startupTasks;
 };
 
 
