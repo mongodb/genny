@@ -110,8 +110,10 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
 
 std::future<mongocxx::pool::entry> WorkloadContext::client(TaskQueue tasks, const std::string& name, size_t instance) {
     return tasks.addTask<mongocxx::pool::entry>([=]() { 
-        // TODO: Add assertion that we aren't resolving before the workload context has
-        // finished constructing.
+        if (!_done) {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("Cannot resolve client pool during workload context construction. Pool name: " + name));
+        }
         return _poolManager.client(name, instance, this->_node);
     });
 }
