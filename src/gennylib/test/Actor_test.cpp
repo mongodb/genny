@@ -76,10 +76,11 @@ TEST_CASE("TaskQueue stores and resolves tasks") {
     REQUIRE(res2.isResolved());
     REQUIRE(!res3.isResolved());
 
+    sideEffect1 = "resolved tasks aren't rerun";
     testQueue.runAllTasks();
 
     // The futures are ready; the container is resolved.
-    REQUIRE(sideEffect1 == "caused side effect 1!");
+    REQUIRE(sideEffect1 == "resolved tasks aren't rerun");
     REQUIRE(sideEffect2 == "caused side effect 2!");
     REQUIRE(sideEffect3 == "caused side effect 3!");
     REQUIRE(res1.isResolved());
