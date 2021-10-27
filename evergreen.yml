@@ -62,6 +62,16 @@ buildvariants:
   tasks:
   - name: tg_compile_and_test_with_server
 
+- name: archlinux
+  display_name: Arch Linux
+  modules: [mongo]
+  expansions:
+    distro: archlinux
+  run_on:
+  - archlinux-large
+  tasks:
+  - name: tg_compile
+
 - name: rhel70
   display_name: RHEL 7
   modules: [mongo]
