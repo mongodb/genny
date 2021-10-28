@@ -95,7 +95,7 @@ public:
     void run() override;
 
 private:
-    mongocxx::pool::entry _client;
+    TaskResult<mongocxx::pool::entry> _client;
 
     /** @private */
     struct PhaseConfig;

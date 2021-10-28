@@ -51,13 +51,9 @@ public:
         return resultValue || *ready; // From a user perspective, a ready future is resolved.
     }
 
-    /**
-     * Chained arrow operator that resolves the underlying value
-     * before allowing access.
-     */
-    T& operator->() {
+    T* operator->() {
         resolve();
-        return *resultValue;
+        return resultValue.get();
     }
 
     T& operator*() {
