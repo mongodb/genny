@@ -1498,7 +1498,9 @@ struct CrudActor::PhaseConfig {
 void CrudActor::run() {
     for (auto&& config : _loop) {
         auto session = _client->start_session();
-        config->fsm.onNewPhase(config.isNop(), _rng);
+        if (!config.isNop()) {
+            config->fsm.onNewPhase(config.isNop(), _rng);
+        }
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
             // std::optionals (like `delay`) convert to boolean true iff their value is present.

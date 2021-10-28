@@ -19,6 +19,7 @@ Actors:
   Threads: 5
   Database: Test
   Phases:
+  - {Nop: true}
   - Repeat: 1
     # This first phase should only do 1 operation per thread.
     # The second phase continues from that state
