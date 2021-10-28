@@ -34,6 +34,9 @@ public:
     TaskResult(std::shared_ptr<std::future<T>> futureIn, std::shared_ptr<bool> readyIn) :
         resultFuture{futureIn}, ready{readyIn} {}
 
+    TaskResult(TaskResult&&) = default;
+    TaskResult& operator=(TaskResult&&) = default;
+
     TaskResult(const TaskResult&) = delete;
     TaskResult& operator=(const TaskResult&) = delete;
 
@@ -57,17 +60,32 @@ public:
         return *resultValue;
     }
 
+    T& operator*() {
+        resolve();
+        return *resultValue;
+    }
+
 private:
 
     std::shared_ptr<std::future<T>> resultFuture;
     std::shared_ptr<bool> ready;
     std::unique_ptr<T> resultValue;
+
 };
+
 
 class TaskQueue {
 public:
+    /**
+     * The return value for tasks that don't need to return anything.
+     * (We can't store void in the template.)
+     */
+    using NoReturn = std::tuple<>;
 
     TaskQueue() = default; 
+    TaskQueue(TaskQueue&&) = default;
+    TaskQueue& operator=(TaskQueue&&) = default;
+
     TaskQueue(const TaskQueue&) = delete;
     TaskQueue& operator=(const TaskQueue&) = delete;
 
@@ -93,6 +111,16 @@ public:
             }
         });
         return TaskResult<T>(fut, ready);
+    }
+
+    /**
+     * Overload of addTask for void functions.
+     */
+    void addTask(std::function<void()> t) {
+        addTask<NoReturn>([=]() {
+            t();
+            return NoReturn();
+        });
     }
 
     /**

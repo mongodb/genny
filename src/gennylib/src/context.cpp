@@ -111,6 +111,23 @@ mongocxx::pool::entry WorkloadContext::client(const std::string& name, size_t in
     return _poolManager.client(name, instance, this->_node);
 }
 
+TaskResult<mongocxx::pool::entry> WorkloadContext::clientDeferred(TaskQueue& tasks, const std::string& name, size_t instance) {
+    return tasks.addTask<mongocxx::pool::entry>([=]() {
+        if (!this->isDone()) {
+            std::stringstream msg;
+            msg << "Cannot resolve client during workload context construction."
+                << " Pool name tried: " << name << ". If a client is absolutely"
+                << " needed during context initialization, use the non-deferred"
+                << " client method of the context object. Note that the non-deferred"
+                << " API serializes construction and slows down actor startup for"
+                << " massively-parallel workloads.";
+            BOOST_THROW_EXCEPTION(
+                std::logic_error(msg.str()));
+        }
+        return _poolManager.client(name, instance, this->_node);
+    });
+}
+
 GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name, const RateSpec& spec) {
     if (this->isDone()) {
         BOOST_THROW_EXCEPTION(

@@ -86,6 +86,4 @@ TEST_CASE("TaskQueue stores and resolves tasks") {
     REQUIRE(res1.isResolved());
     REQUIRE(res2.isResolved());
     REQUIRE(res3.isResolved());
-
-
 }
