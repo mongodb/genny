@@ -24,7 +24,6 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
-#include <future>
 
 #include <boost/noncopyable.hpp>
 #include <boost/throw_exception.hpp>
@@ -199,12 +198,10 @@ public:
      *   which instance of the pool to use
      * @return
      *   a pool from the given MongoDB connection-pool. Pools are created on-demand.
-     *   The client is located inside a shared future that should be resolved by the driver
-     *   before the first phase.
      * @throws
      *   InvalidConfigurationException if no connections available.
      */
-    std::shared_future<mongocxx::pool::entry> client(TaskList tasks, const std::string& name = "Default", size_t instance = 0);
+    mongocxx::pool::entry client(const std::string& name = "Default", size_t instance = 0);
 
     /**
      * Get states that can be shared across actors using the same WorkloadContext.
@@ -408,13 +405,10 @@ public:
 
     /**
      * @return a pool from the "default" MongoDB connection-pool.
-     * The client is located inside a shared future that should be resolved by the driver
-     * before the first phase.
-     *
      * @throws InvalidConfigurationException if no connections available.
      */
     template <class... Args>
-    std::shared_future<mongocxx::pool::entry> client(Args&&... args) {
+    mongocxx::pool::entry client(Args&&... args) {
         return this->_workload->client(std::forward<Args>(args)...);
     }
 

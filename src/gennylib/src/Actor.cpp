@@ -20,9 +20,4 @@
 
 namespace genny {
 Actor::Actor(ActorContext& context) : _id{context.workload().nextActorId()} {}
-
-void Actor::runStartupTasks() {
-    _startupTasks.runAllTasks();
-}
-
 }  // namespace genny

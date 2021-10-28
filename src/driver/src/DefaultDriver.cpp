@@ -59,7 +59,6 @@ void runActor(Actor&& actor,
     auto guard = Loki::MakeGuard([&]() { orchestrator.abort(); });
 
     try {
-        actor->runStartupTasks();
         actor->run();
     } catch (const boost::exception& x) {
         BOOST_LOG_TRIVIAL(error) << "Unexpected boost::exception: "
