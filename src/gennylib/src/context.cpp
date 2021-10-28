@@ -23,10 +23,15 @@
 #include <mongocxx/uri.hpp>
 
 #include <gennylib/Cast.hpp>
+#include <gennylib/parallel.hpp>
 #include <gennylib/v1/Sleeper.hpp>
 #include <metrics/metrics.hpp>
 
 namespace genny {
+
+// Default value selected from random.org, by selecting 2 random numbers
+// between 1 and 10^9 and concatenating.
+auto RNG_SEED_BASE = 269849313357703264;
 
 WorkloadContext::WorkloadContext(const Node& node,
                                  Orchestrator& orchestrator,
@@ -67,21 +72,23 @@ WorkloadContext::WorkloadContext(const Node& node,
 
     _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
 
+    _rngSeed = (*this)["RandomSeed"].maybe<long>().value_or(RNG_SEED_BASE);
 
     // Make a bunch of actor contexts
     for (const auto& [k, actor] : (*this)["Actors"]) {
         _actorContexts.emplace_back(std::make_unique<genny::ActorContext>(actor, *this));
     }
 
-    // Default value selected from random.org, by selecting 2 random numbers
-    // between 1 and 10^9 and concatenating.
-    _rng.seed((*this)["RandomSeed"].maybe<long>().value_or(269849313357703264));
-
-    for (auto& actorContext : _actorContexts) {
-        for (auto&& actor : _constructActors(cast, actorContext)) {
-            _actors.push_back(std::move(actor));
-        }
-    }
+    std::mutex actorsLock;
+    parallelRun(_actorContexts,
+                   [&](const auto& actorContext) {
+                       return std::thread{[&]() {
+                           for (auto&& actor : _constructActors(cast, actorContext)) {
+                               std::lock_guard<std::mutex> lk(actorsLock);
+                               _actors.push_back(std::move(actor));
+                           }
+                       }};
+                   });
 
     _done = true;
 }
@@ -133,8 +140,10 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
     if (this->isDone()) {
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot create RNGs after setup"));
     }
+
+    std::lock_guard<std::mutex> lk(_rngLock);
     if (auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
-        auto [it, success] = _rngRegistry.try_emplace(id, _rng());
+        auto [it, success] = _rngRegistry.try_emplace(id, _rngSeed + std::hash<long>{}(id));
         if (!success) {
             // This should be impossible.
             // But invariants don't hurt we only call this during setup

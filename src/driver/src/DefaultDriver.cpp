@@ -31,6 +31,7 @@
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
+#include <gennylib/parallel.hpp>
 
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
@@ -163,35 +164,28 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     std::atomic<DefaultDriver::OutcomeCode> outcomeCode = DefaultDriver::OutcomeCode::kSuccess;
 
     std::mutex reporting;
-    auto threadsPtr = std::make_unique<std::vector<std::thread>>();
-    threadsPtr->reserve(workloadContext.actors().size());
-    std::transform(cbegin(workloadContext.actors()),
-                   cend(workloadContext.actors()),
-                   std::back_inserter(*threadsPtr),
-                   [&](const auto& actor) {
-                       return std::thread{[&]() {
-                           {
-                               auto ctx = startedActors.start();
-                               ctx.addDocuments(1);
+    parallelRun(workloadContext.actors(),
+                [&](const auto& actor) {
+                    return std::thread{[&]() {
+                       {
+                           auto ctx = startedActors.start();
+                           ctx.addDocuments(1);
 
-                               std::lock_guard<std::mutex> lk{reporting};
-                               ctx.success();
-                           }
+                           std::lock_guard<std::mutex> lk{reporting};
+                           ctx.success();
+                       }
 
-                           runActor(actor, outcomeCode, orchestrator);
+                       runActor(actor, outcomeCode, orchestrator);
 
-                           {
-                               auto ctx = finishedActors.start();
-                               ctx.addDocuments(1);
+                       {
+                           auto ctx = finishedActors.start();
+                           ctx.addDocuments(1);
 
-                               std::lock_guard<std::mutex> lk{reporting};
-                               ctx.success();
-                           }
-                       }};
-                   });
-
-    for (auto& thread : *threadsPtr)
-        thread.join();
+                           std::lock_guard<std::mutex> lk{reporting};
+                           ctx.success();
+                       }
+                   }};
+               });
 
     if (metrics.getFormat().useCsv()) {
         const auto reporter = genny::metrics::Reporter{metrics};
