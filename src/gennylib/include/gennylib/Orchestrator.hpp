@@ -25,6 +25,8 @@
 
 namespace genny {
 
+using SteadyClock = std::chrono::steady_clock;
+
 class Orchestrator;
 
 using OrchestratorCB = std::function<void(const Orchestrator*)>;
@@ -108,6 +110,12 @@ public:
      * duration passes.
      */
     void sleepToPhaseEnd(Duration timeout, const PhaseNumber pn);
+
+    /**
+     * Sleep until at most deadline, also waking up if the phase changes before the
+     * duration passes.
+     */
+    void sleepUntilOrPhaseEnd(SteadyClock::time_point deadline, const PhaseNumber pn);
 
 private:
     mutable std::shared_mutex _mutex;

@@ -178,4 +178,21 @@ void Orchestrator::sleepToPhaseEnd(Duration timeout, const PhaseNumber pn) {
     }
 }
 
+void Orchestrator::sleepUntilOrPhaseEnd(std::chrono::time_point<SteadyClock> deadline,
+                                        const PhaseNumber pn) {
+    using SteadyClock = std::chrono::steady_clock;
+
+    reader lock{_mutex};
+
+    // While loop to handle spurious wakeups.
+    while (this->_current == pn && state != State::PhaseEnded) {
+        const auto waitTimeout = deadline - SteadyClock::now();
+        // If we've already passed the timeout then exit.
+        if (waitTimeout < Duration::zero()) {
+            return;
+        }
+        _phaseChange.wait_for(lock, waitTimeout);
+    }
+}
+
 }  // namespace genny

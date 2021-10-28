@@ -32,6 +32,8 @@
 #include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/conventions.hpp>
+#include <value_generators/DefaultRandom.hpp>
+#include <value_generators/DocumentGenerator.hpp>
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
@@ -1132,6 +1134,264 @@ std::string getDbName(const PhaseContext& phaseContext) {
     return phaseDb ? *phaseDb : *actorDb;
 }
 
+enum class Units { kNanosecond, kMicrosecond, kMillisecond, kSecond, kMinute, kHour };
+// represent a random delay
+class Delay {
+public:
+    Delay(const Node& node, GeneratorArgs args)
+        : numberGenerator{makeDoubleGenerator(node["^TimeSpec"]["value"], args)} {
+        auto unitString = node["^TimeSpec"]["units"].maybe<std::string>().value_or("seconds");
+
+        // Use string::find here so plurals get parsed correctly.
+        if (unitString.find("nanosecond") == 0) {
+            units = Units::kNanosecond;
+        } else if (unitString.find("microsecond") == 0) {
+            units = Units::kMicrosecond;
+        } else if (unitString.find("millisecond") == 0) {
+            units = Units::kMillisecond;
+        } else if (unitString.find("second") == 0) {
+            units = Units::kSecond;
+        } else if (unitString.find("minute") == 0) {
+            units = Units::kMinute;
+        } else if (unitString.find("hour") == 0) {
+            units = Units::kHour;
+        } else {
+            std::stringstream msg;
+            msg << "Invalid unit: " << unitString << " for genny::TimeSpec field in config";
+            throw genny::InvalidConfigurationException(msg.str());
+        }
+    }
+
+    // Evaluate the generator to produce a random delay.
+    Duration evaluate() {
+        auto value = numberGenerator.evaluate();
+        switch (units) {
+            case Units::kNanosecond:
+                return (std::chrono::duration_cast<Duration>(
+                    std::chrono::duration<double, std::nano>(value)));
+                break;
+            case Units::kMicrosecond:
+                return (std::chrono::duration_cast<Duration>(
+                    std::chrono::duration<double, std::nano>(value)));
+                break;
+            case Units::kMillisecond:
+                return (std::chrono::duration_cast<Duration>(
+                    std::chrono::duration<double, std::milli>(value)));
+                break;
+            case Units::kSecond:
+                return (std::chrono::duration_cast<Duration>(std::chrono::duration<double>(value)));
+                break;
+            case Units::kMinute:
+                return (std::chrono::duration_cast<Duration>(
+                    std::chrono::duration<double, std::ratio<60>>(value)));
+                break;
+            case Units::kHour:
+                return (std::chrono::duration_cast<Duration>(
+                    std::chrono::duration<double, std::ratio<3600>>(value)));
+                break;
+        }
+    }
+
+private:
+    TypeGenerator<double> numberGenerator;
+    Units units;
+};
+
+struct Transition {
+    int nextState;
+    Delay delay;
+};
+
+// Represents one state in an FSM.
+class State {
+public:
+    std::vector<std::unique_ptr<BaseOperation>> operations;
+    std::string stateName;
+    std::vector<double> transitionWeights;
+    std::vector<Transition> transitions;
+
+    template <typename A>
+    State(const Node& node,
+          const std::unordered_map<std::string, int>& states,
+          PhaseContext& phaseContext,
+          ActorId id,
+          A&& addOperation)
+        : operations{node.getPlural<std::unique_ptr<BaseOperation>>(
+              "Operation", "Operations", addOperation)},
+          stateName{node["Name"].to<std::string>()} {
+        for (const auto&& [k, transitionYaml] : node["Transitions"]) {
+            if (!transitionYaml["Weight"] || !transitionYaml["Weight"].isScalar()) {
+                BOOST_THROW_EXCEPTION(
+                    InvalidConfigurationException("Each transition must have a scalar weight"));
+            }
+            if (!transitionYaml["To"] || !transitionYaml["To"].isScalar()) {
+                BOOST_THROW_EXCEPTION(
+                    InvalidConfigurationException("Each transition must have a scalar 'To' entry"));
+            }
+            transitionWeights.emplace_back(transitionYaml["Weight"].template to<double>());
+            transitions.emplace_back(Transition{
+                states.at(transitionYaml["To"].template to<std::string>()),
+                Delay(transitionYaml["SleepBefore"], GeneratorArgs{phaseContext.rng(id), id})});
+        }
+    }
+};
+
+// Helper struct to encapsulate state based behavior
+struct StateMachine {
+    PhaseContext& phaseContext;
+
+    std::vector<State> states;
+    std::vector<double> initialStateWeights;
+
+    bool continueCurrentState;
+    bool skipFirstOperations;
+    bool skip;
+
+    int currentState;
+    int nextState;
+
+    ActorId actorId;
+
+    explicit StateMachine(PhaseContext& phaseContext, ActorId actorId)
+        : phaseContext{phaseContext},
+          states{},
+          initialStateWeights{},
+          continueCurrentState{phaseContext["Continue"].maybe<bool>().value_or(false)},
+          skipFirstOperations{phaseContext["SkipFirstOperations"].maybe<bool>().value_or(false)},
+          skip{false},
+          currentState{0},
+          nextState{0},
+          actorId{actorId} {}
+
+    template <typename F>
+    void setup(F&& addOperation) {
+        // Check if we have Operations or States. Throw an error if we have both.
+        if ((phaseContext["Operations"] || phaseContext["Operation"]) && phaseContext["States"]) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "CrudActor has Operations and States at the same time."));
+        }
+
+        if (!phaseContext["States"]) {
+            return;
+        }
+
+        int i = 0;
+        std::unordered_map<std::string, int> stateNames;
+        for (auto [k, state] : phaseContext["States"]) {
+            if (!state["Name"] || !state["Name"].isScalar()) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "Each state must have a name and it must be a string"));
+            }
+            stateNames.emplace(state["Name"].template to<std::string>(), i);
+            i++;
+        }
+
+        auto numStates = stateNames.size();
+
+        if (continueCurrentState) {
+            // Check that this isn't phase 0
+            auto myPhaseNumber = phaseContext.getPhaseNumber();
+            if (myPhaseNumber == 0) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "CrudActor has continue set for Phase 0. Nothing to continue from."));
+            }
+            // TODO: check that the previous state has <= number of states as this one
+            // Need to access the previous phase config.
+
+        } else if (!phaseContext["InitialStates"]) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "CrudActor has States, but has not specified InitialStates"));
+        }
+
+        states.reserve(numStates);
+        for (auto [k, stateNode] : phaseContext["States"]) {
+            states.emplace_back<State>(
+                {stateNode, stateNames, phaseContext, actorId, addOperation});
+        }
+
+        initialStateWeights = std::vector<double>(numStates, 0);
+        for (auto [k, state] : phaseContext["InitialStates"]) {
+            initialStateWeights[stateNames[state["State"].template to<std::string>()]] +=
+                state["Weight"].template to<double>();
+        }
+    }
+
+    auto& operations() {
+        return states[currentState].operations;
+    }
+
+    auto transitionDelay(int transition) {
+        return states[currentState].transitions[transition].delay.evaluate();
+    }
+
+    template <typename S>
+    std::optional<Duration> run(S& session, DefaultRandom& rng) {
+        if (!active()) {
+            return std::nullopt;
+        }
+        // Simplifying Assumption -- one shot operations on state enter
+        // We are here to fire those operations, and then pick the next state.
+        // transition to the next state
+        currentState = nextState;
+
+        BOOST_LOG_TRIVIAL(debug) << "Actor " << actorId << " running in state " << currentState;
+
+
+        // run the operations for the next state  unless  we have set to skip the first set
+        // of operations
+        if (!skip) {
+            BOOST_LOG_TRIVIAL(debug)
+                << "Actor " << actorId << " running operations for state " << currentState;
+            for (auto&& op : operations()) {
+                op->run(session);
+            }
+        } else {
+            skip = false;
+        }
+
+        auto transition = pickNext(rng);
+        auto delay = transitionDelay(transition);
+
+        return {delay};
+    }
+
+    [[nodiscard]] bool active() const {
+        return !states.empty();
+    }
+
+    [[nodiscard]] int pickNext(DefaultRandom& rng) {
+        auto distribution =
+            boost::random::discrete_distribution(states[currentState].transitionWeights);
+        int transition = distribution(rng);
+        nextState = states[currentState].transitions[transition].nextState;
+        return transition;
+    }
+
+    void onNewPhase(bool nop, DefaultRandom& rng) {
+        skip = false;
+        // TODO: If running without states, define a single state with the operations
+        if (!nop && !states.empty()) {
+            if (!continueCurrentState) {
+                // pick the initial state for the phase
+                auto initial_distribution =
+                    boost::random::discrete_distribution(initialStateWeights);
+                nextState = initial_distribution(rng);
+                BOOST_LOG_TRIVIAL(debug)
+                    << "Actor " << actorId << " picking initial state " << nextState;
+            } else {
+                // continue from the previous phase
+                nextState = currentState;
+                BOOST_LOG_TRIVIAL(debug)
+                    << "Actor " << actorId << " continuing from previous state " << nextState;
+            }
+            if (skipFirstOperations) {
+                skip = true;
+            }
+        }
+    }
+};
+
+
 }  // namespace
 
 namespace genny::actor {
@@ -1161,66 +1421,95 @@ struct CrudActor::CollectionName {
         return "Collection" + std::to_string(collectionNumber);
     }
 };
-
 struct CrudActor::PhaseConfig {
     std::vector<std::unique_ptr<BaseOperation>> operations;
     metrics::Operation metrics;
+    StateMachine fsm;
     std::string dbName;
     CrudActor::CollectionName collectionName;
+
+    std::unique_ptr<BaseOperation> addOperation(const Node& node,
+                                                mongocxx::pool::entry& client,
+                                                const std::string& name,
+                                                PhaseContext& phaseContext,
+                                                ActorId id) const {
+        auto collection = (*client)[dbName][name];
+        auto& yamlCommand = node["OperationCommand"];
+        auto opName = node["OperationName"].to<std::string>();
+        auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
+
+        auto opConstructors = getOpConstructors();
+        // Grab the appropriate Operation struct defined by 'OperationName'.
+        auto op = opConstructors.find(opName);
+        if (op == opConstructors.end()) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException("Operation '" + opName +
+                                                                "' not supported in Crud Actor."));
+        }
+
+        // If the yaml specified MetricsName in the Phase block, then associate the metrics
+        // with the Phase; otherwise, associate with the Actor (e.g. all bulkWrite
+        // operations get recorded together across all Phases). The latter case (not
+        // specifying MetricsName) is legacy configuration-syntax.
+        //
+        // Node is convertible to bool but only explicitly.
+        const bool perPhaseMetrics = bool(phaseContext["MetricsName"]);
+        auto opCreator = op->second;
+
+        return opCreator(yamlCommand,
+                         onSession,
+                         collection,
+                         perPhaseMetrics ? phaseContext.operation(opName, id)
+                                         : phaseContext.actor().operation(opName, id),
+                         phaseContext,
+                         id);
+    }
 
     PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id)
         : dbName{getDbName(phaseContext)},
           metrics{phaseContext.actor().operation("Crud", id)},
+          fsm{phaseContext, id},
           collectionName{phaseContext} {
+
         auto name = collectionName.generateName(id);
-        auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
-            auto collection = (*client)[dbName][name];
-            auto& yamlCommand = node["OperationCommand"];
-            auto opName = node["OperationName"].to<std::string>();
-            auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
-
-            auto opConstructors = getOpConstructors();
-            // Grab the appropriate Operation struct defined by 'OperationName'.
-            auto op = opConstructors.find(opName);
-            if (op == opConstructors.end()) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "Operation '" + opName + "' not supported in Crud Actor."));
-            }
-
-            // If the yaml specified MetricsName in the Phase block, then associate the metrics
-            // with the Phase; otherwise, associate with the Actor (e.g. all bulkWrite operations
-            // get recorded together across all Phases). The latter case (not specifying
-            // MetricsName) is legacy configuration-syntax.
-            //
-            // Node is convertible to bool but only explicitly so need to do the odd-looking
-            // `? true : false` thing.
-            const bool perPhaseMetrics = phaseContext["MetricsName"] ? true : false;
-
-            auto createOperation = op->second;
-            return createOperation(yamlCommand,
-                                   onSession,
-                                   collection,
-                                   perPhaseMetrics ? phaseContext.operation(opName, id)
-                                                   : phaseContext.actor().operation(opName, id),
-                                   phaseContext,
-                                   id);
+        auto addOpCallback = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
+            return addOperation(node, client, name, phaseContext, id);
         };
+        fsm.setup(addOpCallback);
 
-        operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
-            "Operation", "Operations", addOperation);
+        if (phaseContext["Operations"] || phaseContext["Operation"]) {
+            if (phaseContext["Continue"]) {
+                BOOST_THROW_EXCEPTION(
+                    InvalidConfigurationException("Continue option not valid if not using States"));
+            }
+            if (phaseContext["SkipFirstOperations"]) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "SkipFirstOperations option not valid if not using States"));
+            }
+            operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
+                "Operation", "Operations", addOpCallback);
+        } else if (!phaseContext["States"]) {  // Throw a useful error
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("CrudActor has neither Operations nor States "
+                                              "specified. Exactly one must be defined."));
+        }
     }
 };
 
 void CrudActor::run() {
     for (auto&& config : _loop) {
         auto session = _client->start_session();
+        config->fsm.onNewPhase(config.isNop(), _rng);
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
-
-            for (auto&& op : config->operations) {
-                op->run(session);
+            // std::optionals (like `delay`) convert to boolean true iff their value is present.
+            if (auto delay = config->fsm.run(session, _rng); delay) {
+                config.sleepNonBlocking(*delay);
+            } else {
+                BOOST_LOG_TRIVIAL(debug) << "Actor " << id() << " running regular (non-fsm)";
+                for (auto&& op : config->operations) {
+                    op->run(session);
+                }
             }
-
             metricsContext.success();
         }
     }
@@ -1230,7 +1519,8 @@ CrudActor::CrudActor(genny::ActorContext& context)
     : Actor(context),
       _client{std::move(
           context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
-      _loop{context, _client, CrudActor::id()} {}
+      _loop{context, _client, CrudActor::id()},
+      _rng{context.workload().getRNGForThread(CrudActor::id())} {}
 
 namespace {
 auto registerCrudActor = Cast::registerDefault<CrudActor>();

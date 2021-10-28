@@ -40,7 +40,7 @@ Clients:
 Actors:
 # Preload some documents
 - Name: SetupDemo
-  Type: Crud
+  Type: CrudActor
   Threads: 1
   Database: StateTest
   Phases:
@@ -66,11 +66,10 @@ Actors:
           Document: {statistic: OnSleep, count: 0}
         - WriteCommand: insertOne
           Document: {statistic: OnError, count: 0}
-    - &nop {Nop: true}
-    - *nop
+  - &nop {Nop: true}
 
 - Name: StateSmartPhoneDemo
-  Type: Crud
+  Type: CrudActor
   Threads: 5
   Database: StateTest
   Phases:
@@ -179,5 +178,5 @@ Actors:
 
     # In this example we always start in the off State
     InitialStates:
-    - "Off":
-        Weight: 1
+    - State: "Off"
+      Weight: 1
