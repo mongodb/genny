@@ -101,7 +101,6 @@ private:
     struct PhaseConfig;
     struct CollectionName;
     PhaseLoop<PhaseConfig> _loop;
-    genny::DefaultRandom& _rng;
 };
 
 }  // namespace genny::actor
