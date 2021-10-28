@@ -19,80 +19,27 @@
 #include <future>
 #include <functional>
 
-#include <boost/log/trivial.hpp>
-
 namespace genny {
 
 using ActorId = unsigned int;
 
-/**
- * Owner of a Tasks's future and result. Automatically resolves on access.
- */
-template<typename T>
-class TaskResult {
-public:
-    TaskResult(std::shared_ptr<std::future<T>> futureIn, std::shared_ptr<bool> readyIn) :
-        resultFuture{futureIn}, ready{readyIn} {}
-
-    TaskResult(const TaskResult&) = delete;
-    TaskResult& operator=(const TaskResult&) = delete;
-
-    void resolve() {
-        if (!resultValue) {
-            resultValue = std::make_unique<T>(std::move(resultFuture->get()));
-            *ready = true;
-        }
-    }
-
-    bool isResolved() {
-        return resultValue || *ready; // From a user perspective, a ready future is resolved.
-    }
-
-    /**
-     * Chained arrow operator that resolves the underlying value
-     * before allowing access.
-     */
-    T& operator->() {
-        resolve();
-        return *resultValue;
-    }
-
-private:
-
-    std::shared_ptr<std::future<T>> resultFuture;
-    std::shared_ptr<bool> ready;
-    std::unique_ptr<T> resultValue;
-};
-
 class TaskQueue {
 public:
-
-    TaskQueue() = default; 
-    TaskQueue(const TaskQueue&) = delete;
-    TaskQueue& operator=(const TaskQueue&) = delete;
 
     /**
      * Add a task to the task list.
      *
      * @param t
-     *   a function to execute, returning a value to be stored
-     * @return a TaskResult containing the result of the task
+     *   a function to execute
+     * @return a shared future containing the result of the task
      */
     template<typename T>
-    TaskResult<T> addTask(std::function<T()> t) {
-        // We use a sharing so we can resolve on-command.
-        // Copy-constructor deletion in the TaskQueue and TaskResult
-        // prevents this from proliferating, only the lambda and the
-        // result own it.
-        std::shared_ptr<std::future<T>> fut = std::make_shared<std::future<T>>(std::async(std::launch::deferred, t));
-        std::shared_ptr<bool> ready = std::make_shared<bool>(false);
+    std::future<T> addTask(std::function<T()> t) {
+        std::shared_ptr<std::promise<T>> p;
         _tasks.push([=](){ 
-            if (!(*ready)) {
-                fut->wait();
-                *ready = true;
-            }
+            p->set_value(t());
         });
-        return TaskResult<T>(fut, ready);
+        return p->get_future();
     }
 
     /**

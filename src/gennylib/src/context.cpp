@@ -17,6 +17,7 @@
 #include <memory>
 #include <set>
 #include <sstream>
+#include <future>
 
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
@@ -107,8 +108,14 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
     return actors;
 }
 
-mongocxx::pool::entry WorkloadContext::client(const std::string& name, size_t instance) {
-    return _poolManager.client(name, instance, this->_node);
+std::future<mongocxx::pool::entry> WorkloadContext::client(TaskQueue tasks, const std::string& name, size_t instance) {
+    return tasks.addTask<mongocxx::pool::entry>([=]() { 
+        if (!_done) {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("Cannot resolve client pool during workload context construction. Pool name: " + name));
+        }
+        return _poolManager.client(name, instance, this->_node);
+    });
 }
 
 GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name, const RateSpec& spec) {
