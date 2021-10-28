@@ -33,34 +33,26 @@ namespace genny::actor {
 
 /** @private */
 struct InsertRemove::PhaseConfig {
-    PhaseConfig(TaskQueue& startupTasks,
-                TaskResult<mongocxx::database>&& db,
+    PhaseConfig(mongocxx::database db,
                 const std::string collection_name,
                 genny::DefaultRandom& rng,
                 int id)
-        : database{std::move(db)},
-          collection{startupTasks.addTask<mongocxx::collection>([&, collection_name]() {
-                  return (*database)[collection_name];
-               })
-          },
+        : database{db},
+          collection{db[collection_name]},
           myDoc(bsoncxx::builder::stream::document{} << "_id" << id
                                                      << bsoncxx::builder::stream::finalize) {}
 
     PhaseConfig(PhaseContext& context,
-                TaskQueue& startupTasks,
                 genny::DefaultRandom& rng,
-                TaskResult<mongocxx::pool::entry>& client,
+                mongocxx::pool::entry& client,
                 int id)
-        : PhaseConfig(startupTasks,
-                      startupTasks.addTask<mongocxx::database>([&]() {
-                          return (**client)[context["Database"].to<std::string>()];
-                      }),
+        : PhaseConfig((*client)[context["Database"].to<std::string>()],
                       context["Collection"].to<std::string>(),
                       rng,
                       id) {}
 
-    TaskResult<mongocxx::database> database;
-    TaskResult<mongocxx::collection> collection;
+    mongocxx::database database;
+    mongocxx::collection collection;
     bsoncxx::document::value myDoc;
 };
 
@@ -72,14 +64,14 @@ void InsertRemove::run() {
             // First we insert
             auto insertCtx = _insert.start();
             auto view = config->myDoc.view();
-            (*config->collection).insert_one(view);
+            config->collection.insert_one(view);
             insertCtx.addBytes(view.length());
             insertCtx.addDocuments(1);
             insertCtx.success();
 
             // Then we remove
             auto removeCtx = _remove.start();
-            auto results = (*config->collection).delete_many(config->myDoc.view());
+            auto results = config->collection.delete_many(config->myDoc.view());
             removeCtx.addDocuments(1);
             removeCtx.success();
         }
@@ -91,8 +83,8 @@ InsertRemove::InsertRemove(genny::ActorContext& context)
       _rng{context.workload().getRNGForThread(InsertRemove::id())},
       _insert{context.operation("Insert", InsertRemove::id())},
       _remove{context.operation("Remove", InsertRemove::id())},
-      _client{std::move(context.clientDeferred(_startupTasks))},
-      _loop{context, _startupTasks, _rng, _client, InsertRemove::id()} {}
+      _client{std::move(context.client())},
+      _loop{context, _rng, _client, InsertRemove::id()} {}
 
 namespace {
 auto registerInsertRemove = genny::Cast::registerDefault<genny::actor::InsertRemove>();

@@ -203,9 +203,6 @@ public:
      */
     mongocxx::pool::entry client(const std::string& name = "Default", size_t instance = 0);
 
-
-    TaskResult<mongocxx::pool::entry> clientDeferred(TaskQueue& tasks, const std::string& name = "Default", size_t instance = 0);
-
     /**
      * Get states that can be shared across actors using the same WorkloadContext.
      *
@@ -413,11 +410,6 @@ public:
     template <class... Args>
     mongocxx::pool::entry client(Args&&... args) {
         return this->_workload->client(std::forward<Args>(args)...);
-    }
-
-    template <class... Args>
-    TaskResult<mongocxx::pool::entry> clientDeferred(Args&&... args) {
-        return this->_workload->clientDeferred(std::forward<Args>(args)...);
     }
 
     /**
