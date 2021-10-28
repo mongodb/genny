@@ -7,14 +7,11 @@ from genny.toolchain import toolchain_info
 
 SLOG = structlog.get_logger(__name__)
 
-""" A list of files to ignore. They are in WIP, not relevant etc..."""
-WIP_YML_FILES = ["CrudActorFSMAdvanced.yml"]
-
 
 def dry_run_workload(
     yaml_file_path: str, is_darwin: bool, genny_repo_root: str, workspace_root: str
 ):
-    if os.path.basename(yaml_file_path) in WIP_YML_FILES:
+    if os.path.basename(yaml_file_path) in ["CrudActorFSM.yml", "CrudActorFSMAdvanced.yml"]:
         SLOG.info("Skipping dry run for workloads for future functionality.", file=yaml_file_path)
         return
     if os.path.basename(yaml_file_path) in [
