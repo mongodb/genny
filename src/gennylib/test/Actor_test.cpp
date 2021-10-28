@@ -66,9 +66,7 @@ TEST_CASE("TaskQueue stores and resolves tasks") {
     REQUIRE(res2.isResolved());
     REQUIRE(!res3.isResolved());
 
-    // The arrow operator does not "drill down" since it returns the
-    // actual unique_ptr itself.
-    REQUIRE((*res1)->size() == 4);
+    REQUIRE(res1->size() == 4);
 
     // We accessed 1, causing the future to resolve / execute.
     REQUIRE(sideEffect1 == "caused side effect 1!");
