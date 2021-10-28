@@ -35,7 +35,6 @@
 
 
 namespace {
-using bsoncxx::oid;
 
 class Appendable {
 public:
@@ -45,9 +44,7 @@ public:
 };
 
 using UniqueAppendable = std::unique_ptr<Appendable>;
-}  // namespace
-
-namespace genny {
+using bsoncxx::oid;
 
 template <class T>
 class Generator : public Appendable {
@@ -61,11 +58,9 @@ public:
         builder.append(this->evaluate());
     }
 };
-}  // namespace genny
 
-namespace {
-using namespace genny;
-const static boost::posix_time::ptime epoch{boost::gregorian::date(1970, 1, 1)};
+template <class T>
+using UniqueGenerator = std::unique_ptr<Generator<T>>;
 
 template <typename T>
 class ConstantAppender : public Generator<T> {
@@ -79,9 +74,12 @@ public:
 protected:
     T _value;
 };
+
 }  // namespace
 
+
 namespace genny {
+
 class DocumentGenerator::Impl : public Generator<bsoncxx::document::value> {
 public:
     using Entries = std::vector<std::pair<std::string, UniqueAppendable>>;
@@ -99,7 +97,6 @@ public:
 private:
     Entries _entries;
 };
-}  // namespace genny
 
 namespace {
 
@@ -159,6 +156,7 @@ static const std::string kDefaultAlphabet = std::string{
 template <typename O>
 using Parser = std::function<O(const Node&, GeneratorArgs)>;
 
+const static boost::posix_time::ptime epoch{boost::gregorian::date(1970, 1, 1)};
 const static boost::posix_time::ptime max_date{boost::gregorian::date(2150, 1, 1)};
 
 // Pre-declaring all at once
@@ -654,17 +652,18 @@ public:
         : _rng{generatorArgs.rng}, _format{node["format"].maybe<std::string>().value_or("")} {
         std::stringstream msg;
         if (!node["format"]) {
-            msg << "Malformed FormatString: format missing '" << _format << "'" << node << "\n";
-        } else if (_format.empty()) {
-            msg << "Malformed FormatString: format cannot be empty '" << _format << "'" << node
+            msg << "Malformed FormatString: format missing '" << _format << "'" << node
                 << "\n";
+        } else if (_format.empty()) {
+            msg << "Malformed FormatString: format cannot be empty '" << _format << "'"
+                << node << "\n";
         }
 
         if (!node["withArgs"]) {
             msg << "Malformed FormatString: withArgs missing." << node;
         } else if (!node["withArgs"].isSequence()) {
-            msg << "Malformed FormatString:  withArgs " << node.type() << " not a sequence "
-                << node;
+            msg << "Malformed FormatString:  withArgs " << node.type()
+                << " not a sequence " << node;
         }
 
         if (!msg.str().empty()) {
@@ -1328,7 +1327,6 @@ UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
     }
 }
 
-
 /**
  * @param node
  *   a top-level document value i.e. either a scalar or a `^RandomInt` value
@@ -1374,7 +1372,6 @@ UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generato
     }
     return std::make_unique<ConstantAppender<double>>(node.to<double>());
 }
-
 /**
  * @param node
  *   a top-level document value i.e. either a scalar or a `^String` value
@@ -1561,6 +1558,7 @@ UniqueGenerator<int64_t> dateGenerator(const Node& node,
     auto millis = (defaultTime - epoch).total_milliseconds();
     return std::make_unique<ConstantAppender<int64_t>>(millis);
 }
+
 }  // namespace
 
 // Kick the recursion into motion
@@ -1585,28 +1583,4 @@ bsoncxx::document::value DocumentGenerator::evaluate() {
     return operator()();
 }
 
-namespace genny {
-// template <class T>
-// TypeGenerator<T>::TypeGenerator(const Node& node, GeneratorArgs generatorArgs) {}
-template <class T>
-T TypeGenerator<T>::evaluate() {
-    return (_impl->evaluate());
-}
-TypeGenerator<int64_t> makeIntGenerator(const Node& node, GeneratorArgs generatorArgs) {
-    return (TypeGenerator<int64_t>(std::move(intGenerator(node, generatorArgs))));
-}
-TypeGenerator<double> makeDoubleGenerator(const Node& node, GeneratorArgs generatorArgs) {
-    return (TypeGenerator<double>(std::move(doubleGenerator(node, generatorArgs))));
-}
-
-template <class T>
-TypeGenerator<T>::~TypeGenerator() = default;
-template <class T>
-TypeGenerator<T>::TypeGenerator(TypeGenerator<T>&&) noexcept = default;
-template <class T>
-TypeGenerator<T>& TypeGenerator<T>::operator=(TypeGenerator<T>&&) noexcept = default;
-
-// Force the compiler to build the following TypeGenerators
-template class TypeGenerator<double>;
-template class TypeGenerator<int64_t>;
 }  // namespace genny

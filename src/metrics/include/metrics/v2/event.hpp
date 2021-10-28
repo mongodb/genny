@@ -258,8 +258,7 @@ public:
 
         if (!status.ok()) {
             std::ostringstream os;
-            os << "Collector " << _name << " status not okay: " << status.error_message()
-               << " in cwd " << boost::filesystem::current_path();
+            os << "Collector " << _name << " status not okay: " << status.error_message();
             BOOST_THROW_EXCEPTION(PoplarRequestError(os.str()));
         }
     }

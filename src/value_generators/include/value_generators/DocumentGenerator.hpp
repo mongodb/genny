@@ -58,37 +58,6 @@ struct GeneratorArgs {
 };
 
 
-template <class T>
-class Generator;
-
-template <class T>
-using UniqueGenerator = std::unique_ptr<Generator<T>>;
-
-template <class T>
-class TypeGenerator {
-public:
-    // if this works, pass in Node, phase context, and actor ID and just specialize the constructors
-    // Then replace the helper functions below with typedefs
-    explicit TypeGenerator(UniqueGenerator<T> impl) : _impl{std::move(impl)} {}
-    T evaluate();
-
-    // Moves are okay
-    TypeGenerator(TypeGenerator<T>&&) noexcept;
-    TypeGenerator<T>& operator=(TypeGenerator<T>&&) noexcept;
-
-    // But no copies
-    TypeGenerator(const TypeGenerator<T>&) = delete;
-    TypeGenerator& operator=(const TypeGenerator<T>&) = delete;
-
-    ~TypeGenerator();
-
-private:
-    UniqueGenerator<T> _impl;
-};
-
-TypeGenerator<int64_t> makeIntGenerator(const Node& node, GeneratorArgs generatorArgs);
-TypeGenerator<double> makeDoubleGenerator(const Node& node, GeneratorArgs generatorArgs);
-
 class DocumentGenerator {
 public:
     explicit DocumentGenerator(const Node& node, PhaseContext& phaseContext, ActorId id);
