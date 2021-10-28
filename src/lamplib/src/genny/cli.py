@@ -398,17 +398,13 @@ def create_new_actor(ctx: click.Context, actor_name: str):
 
 
 @cli.command(
-    "generate-uuid-tag",
-    help=(
-        "Generate a random UUID tag for headers."
-    ),
+    "generate-uuid-tag", help=("Generate a random UUID tag for headers."),
 )
 @click.pass_context
 def generate_uuid_tag(ctx: click.Context):
     from genny.tasks import generate_uuid_tag
 
-    generate_uuid_tag.run_generate_uuid_tag(
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
+    generate_uuid_tag.run_generate_uuid_tag(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
 
 
 @cli.command(
