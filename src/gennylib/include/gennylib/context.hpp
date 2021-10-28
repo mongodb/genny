@@ -204,7 +204,7 @@ public:
      * @throws
      *   InvalidConfigurationException if no connections available.
      */
-    std::future<mongocxx::pool::entry> client(TaskQueue tasks, const std::string& name = "Default", size_t instance = 0);
+    std::shared_future<mongocxx::pool::entry> client(TaskList tasks, const std::string& name = "Default", size_t instance = 0);
 
     /**
      * Get states that can be shared across actors using the same WorkloadContext.
@@ -414,7 +414,7 @@ public:
      * @throws InvalidConfigurationException if no connections available.
      */
     template <class... Args>
-    std::future<mongocxx::pool::entry> client(Args&&... args) {
+    std::shared_future<mongocxx::pool::entry> client(Args&&... args) {
         return this->_workload->client(std::forward<Args>(args)...);
     }
 
