@@ -123,6 +123,8 @@ GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name, cons
         BOOST_THROW_EXCEPTION(
             std::logic_error("Cannot create rate-limiters after setup. Name tried: " + name));
     }
+
+    std::lock_guard<std::mutex> lk(_limiterLock);
     if (_rateLimiters.count(name) == 0) {
         _rateLimiters.emplace(std::make_pair(name, std::make_unique<GlobalRateLimiter>(spec)));
     }
@@ -141,9 +143,12 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot create RNGs after setup"));
     }
 
+    bool success = false;
+
     std::lock_guard<std::mutex> lk(_rngLock);
     if (auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
-        auto [it, success] = _rngRegistry.try_emplace(id, _rngSeed + std::hash<long>{}(id));
+        auto [it, returnedSuccess] = _rngRegistry.try_emplace(id, _rngSeed + std::hash<long>{}(id));
+        success = returnedSuccess;
         if (!success) {
             // This should be impossible.
             // But invariants don't hurt we only call this during setup

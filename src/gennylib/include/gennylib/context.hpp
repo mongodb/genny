@@ -289,6 +289,7 @@ private:
     std::mutex _rngLock;
 
     std::unordered_map<std::string, std::unique_ptr<GlobalRateLimiter>> _rateLimiters;
+    std::mutex _limiterLock;
 };
 
 // For some reason need to decl this; see impl below

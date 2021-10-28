@@ -152,6 +152,7 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
 
 
 void Orchestrator::addPrePhaseStartHook(const OrchestratorCB& f) {
+    writer lock{_mutex};
     _prePhaseHooks.push_back(f);
 }
 
