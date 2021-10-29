@@ -1,0 +1,89 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+
+Description: |
+  Trivial tests of CRUD FSM functionality without timing. See CrudActorFSM.yml for documentation on
+  the functionality. This has 3 active states and one absorbing state. It inserts a document every
+  time it enters a state, and executes 10 transitions of each state machine. All threads start in
+  one of the first two states. You can track the progress by the inserted documents. Each thread
+  includes it's ActorId in the documents.
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 100
+
+Actors:
+- Name: FSM
+  Type: CrudActor
+  Threads: 5
+  Database: Test
+  Phases:
+  - {Nop: true}
+  - Repeat: 1
+    # This first phase should only do 1 operation per thread.
+    # The second phase continues from that state
+    Collection: Test
+    States: &states
+    - Name: First
+      Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+          - WriteCommand: insertOne
+            Document: {actor: {^ActorId: {}}, state: First}
+      Transitions: &transitions
+      - To: Absorbing
+        Weight: 1
+        SleepBefore: &sleep {^TimeSpec: {value: 1, unit: seconds}}
+      - To: First
+        Weight: 1
+        SleepBefore: *sleep
+      - To: Second
+        Weight: 1
+        SleepBefore: *sleep
+      - To: Third
+        Weight: 1
+        SleepBefore: *sleep
+    - Name: Second
+      Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+          - WriteCommand: insertOne
+            Document: {actor: {^ActorId: {}}, state: Second}
+      Transitions: *transitions
+    - Name: Third
+      Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+          - WriteCommand: insertOne
+            Document: {actor: {^ActorId: {}}, state: Third}
+      Transitions: *transitions
+    - Name: Absorbing
+      Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: {a: 1}
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+          - WriteCommand: insertOne
+            Document: {actor: {^ActorId: {}}, state: Absorbing}
+
+      Transitions:
+      - To: Absorbing
+        Weight: 1
+        SleepBefore: {^TimeSpec: {value: 100, unit: seconds}}
+
+    InitialStates:
+    - State: First
+      Weight: 1
+    - State: Second
+      Weight: 1
+  - Duration: 10 seconds
+    Collection: Test
+    Continue: true
+    SkipFirstOperations: true
+    States: *states
