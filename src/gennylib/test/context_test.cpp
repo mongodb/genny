@@ -136,16 +136,19 @@ Actors:
         std::atomic_int calls = 0;
         auto foobar = genny::testing::toDocumentBson("foo: bar");
 
+        auto fromDocListAssert = false;
         auto fromDocList = std::make_shared<OpProducer>([&](ActorContext& a) {
             for (const auto&& [k, doc] : a["docs"]) {
                 auto docgen = doc.to<DocumentGenerator>(a, 0);
-                REQUIRE(docgen().view() == foobar.view());
+                fromDocListAssert = docgen().view() == foobar.view();
                 ++calls;
             }
         });
+
+        auto fromDocAssert = false;
         auto fromDoc = std::make_shared<OpProducer>([&](ActorContext& a) {
             auto docgen = a["doc"].to<DocumentGenerator>(a, 0);
-            REQUIRE(docgen().view() == foobar.view());
+            fromDocAssert = docgen().view() == foobar.view();
             ++calls;
         });
 
@@ -161,6 +164,8 @@ Actors:
         auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast2); };
         test();
 
+        REQUIRE(fromDocListAssert);
+        REQUIRE(fromDocAssert);
         REQUIRE(calls == 2);
     }
 
