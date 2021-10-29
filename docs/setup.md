@@ -2,9 +2,20 @@
 
 Here're the steps to get Genny up and running locally:
 
+0.  Ensure you have a suitable platform. Genny supports the following platforms:
+    - Ubuntu 20.04, 18.04, 16.04
+    - Arch Linux
+    - RHEL 8, 7, 6.2
+    - Amazon Linux 2
+    - macOS
+
+    If you attempt to install Genny on an unsupported platform, compile isn't
+    guaranteed to succeed. If you would like to add support for a platform,
+    please file a `TIG` ticket.
+
 1.  Install the development tools for your OS.
 
-    -   Ubuntu 18.04: `sudo apt install build-essential`
+    -   Ubuntu 18.04/20.04: `sudo apt install build-essential`
     -   Red Hat/CentOS 7/Amazon Linux 2:
         `sudo yum groupinstall "Development Tools"`
     -   Arch: `apk add bash clang gcc musl-dev linux-headers`
