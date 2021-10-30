@@ -38,7 +38,7 @@
 namespace genny::actor {
 
 /** @private */
-using index_type = std::pair<DocumentGenerator, std::optional<DocumentGenerator>>;
+using index_type = std::tuple<DocumentGenerator, std::optional<DocumentGenerator>, std::string>;
 using namespace bsoncxx;
 
 /** @private */
@@ -54,8 +54,15 @@ struct MonotonicLoader::PhaseConfig {
           collectionOffset{numCollections * thread} {
         auto& indexNodes = context["Indexes"];
         for (auto [k, indexNode] : indexNodes) {
-            indexes.emplace_back(indexNode["keys"].to<DocumentGenerator>(context, id),
-                                 indexNode["options"].maybe<DocumentGenerator>(context, id));
+            std::string indexName = "";
+            for (auto [key, value] : indexNode["keys"]) {
+                indexName = indexName + key.toString();
+            }
+            indexes.emplace_back(
+                indexNode["keys"].to<DocumentGenerator>(context, id),
+                indexNode["options"].maybe<DocumentGenerator>(context, id),
+                indexNode["options"]["name"].maybe<std::string>().value_or(indexName)
+            );
         }
         if (thread == context["Threads"].to<int>() - 1) {
             // Pick up any extra collections left over by the division
@@ -114,43 +121,21 @@ void genny::actor::MonotonicLoader::run() {
                 builder::stream::document builder{};
                 auto indexCmd = builder << "createIndexes" << collectionName
                                         <<  "indexes" << builder::stream::open_array;
-                for (auto&& [keys, options] : config->indexes) {
+                for (auto&& [keys, options, indexName] : config->indexes) {
                     _indexReq = true;
                     auto indexKey = keys();
                     if (options) {
                         auto indexOptions = (*options)();
-                        bool nameOptionFound = false;
-                        for (auto field : indexOptions.view()) {
-                            if (field.key().to_string() == "name") {
-                                nameOptionFound = true;
-                                break;
-                            }
-                        }
-                        if (nameOptionFound) {
-                            indexCmd = indexCmd << builder::stream::open_document
-                                                << "key" << indexKey.view()
-                                                << builder::concatenate(indexOptions.view())
-                                                << builder::stream::close_document;
-                        } else {
-                            std::string indexName = "";
-                            for (auto field : indexKey.view()) {
-                                indexName = indexName + field.key().to_string();
-                            }
-                            indexCmd = indexCmd << builder::stream::open_document
-                                                << "key" << indexKey.view()
-                                                << "name" << indexName
-                                                << builder::concatenate(indexOptions.view())
-                                                << builder::stream::close_document;
-
-                        }
-                    } else {
-                        std::string index_name = "";
-                        for (auto field : indexKey.view()) {
-                            index_name = index_name + field.key().to_string();
-                        }
                         indexCmd = indexCmd << builder::stream::open_document
                                             << "key" << indexKey.view()
-                                            << "name" << index_name
+                                            << "name" << indexName
+                                            << builder::concatenate(indexOptions.view())
+                                            << builder::stream::close_document;
+
+                    } else {
+                        indexCmd = indexCmd << builder::stream::open_document
+                                            << "key" << indexKey.view()
+                                            << "name" << indexName
                                             << builder::stream::close_document;
                     }
                 }
