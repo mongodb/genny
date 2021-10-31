@@ -15,10 +15,16 @@
 #ifndef HEADER_5129031F_B241_46DD_8285_64596CB0C155_INCLUDED
 #define HEADER_5129031F_B241_46DD_8285_64596CB0C155_INCLUDED
 
+#include <boost/throw_exception.hpp>
+#include <boost/exception/exception.hpp>
+#include <boost/log/trivial.hpp>
+
 #include <algorithm>
 #include <iterator>
+#include <variant>
 #include <thread>
 #include <vector>
+#include <deque>
 
 namespace genny {
 
@@ -26,9 +32,25 @@ namespace genny {
     void parallelRun(IterableT& iterable, BinaryOperation op) {
         auto threadsPtr = std::make_unique<std::vector<std::thread>>();
         threadsPtr->reserve(std::distance(cbegin(iterable), cend(iterable)));
-        std::transform(cbegin(iterable), cend(iterable), std::back_inserter(*threadsPtr), op);
+        std::deque<std::exception_ptr> caughtExceptions;
+        std::mutex exceptLock;
+        std::transform(cbegin(iterable), cend(iterable), std::back_inserter(*threadsPtr),
+                [&](const typename IterableT::value_type& value) {
+                    return std::thread{[&]() {
+                        try {
+                            op(value);
+                        } catch(...) {
+                            const std::lock_guard<std::mutex> lock(exceptLock);
+                            caughtExceptions.push_back(std::current_exception());
+                        }
+                    }};
+                });
+
         for (auto& thread : *threadsPtr) {
             thread.join();
+        }
+        for (auto&& exc : caughtExceptions) {
+            std::rethrow_exception(exc);
         }
     }
 
