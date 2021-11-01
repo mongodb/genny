@@ -70,13 +70,14 @@ class WorkloadLister:
     Separate from the Repo class for easier testing.
     """
 
-    def __init__(self, genny_repo_root: str, reader: YamlReader):
+    def __init__(self, workspace_root: str, genny_repo_root: str, reader: YamlReader):
+        self.workspace_root = workspace_root
         self.genny_repo_root = genny_repo_root
         self._expansions = None
         self.reader = reader
 
     def all_workload_files(self) -> Set[str]:
-        pattern = os.path.join(self.genny_repo_root, "src", "workloads", "**", "*.yml")
+        pattern = os.path.join(self.workspace_root, "src", "*", "workloads", "**", "*.yml")
         return {*glob.glob(pattern)}
 
     def modified_workload_files(self) -> Set[str]:
@@ -485,7 +486,9 @@ def main(mode_name: str, genny_repo_root: str, workspace_root: str) -> None:
         genny_repo_root=genny_repo_root,
         workspace_root=workspace_root,
     )
-    lister = WorkloadLister(genny_repo_root=genny_repo_root, reader=reader)
+    lister = WorkloadLister(
+        workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader
+    )
     repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
     tasks = repo.tasks(op=op, build=build)
 

@@ -455,7 +455,9 @@ def test_dry_run_all_tasks():
                 genny_repo_root=genny_repo_root,
                 workspace_root=workspace_root,
             )
-            lister = WorkloadLister(genny_repo_root=genny_repo_root, reader=reader)
+            lister = WorkloadLister(
+                workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader
+            )
             repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
             tasks = repo.tasks(op=op, build=build)
 
