@@ -42,6 +42,7 @@ TEST_CASE("Parallel runner runs op") {
 
     REQUIRE(expected.size() == newIntegers.size());
     for (int i = 0; i < expected.size(); i++) {
+        // The order of elements in newIntegers is nondeterministic.
         REQUIRE(std::find(newIntegers.begin(), newIntegers.end(),
                     expected[i]) != newIntegers.end());
     }
