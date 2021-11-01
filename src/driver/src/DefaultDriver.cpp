@@ -166,25 +166,23 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     std::mutex reporting;
     parallelRun(workloadContext.actors(),
                 [&](const auto& actor) {
-                    return std::thread{[&]() {
-                       {
-                           auto ctx = startedActors.start();
-                           ctx.addDocuments(1);
+                   {
+                       auto ctx = startedActors.start();
+                       ctx.addDocuments(1);
 
-                           std::lock_guard<std::mutex> lk{reporting};
-                           ctx.success();
-                       }
+                       std::lock_guard<std::mutex> lk{reporting};
+                       ctx.success();
+                   }
 
-                       runActor(actor, outcomeCode, orchestrator);
+                   runActor(actor, outcomeCode, orchestrator);
 
-                       {
-                           auto ctx = finishedActors.start();
-                           ctx.addDocuments(1);
+                   {
+                       auto ctx = finishedActors.start();
+                       ctx.addDocuments(1);
 
-                           std::lock_guard<std::mutex> lk{reporting};
-                           ctx.success();
-                       }
-                   }};
+                       std::lock_guard<std::mutex> lk{reporting};
+                       ctx.success();
+                   }
                });
 
     if (metrics.getFormat().useCsv()) {
