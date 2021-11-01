@@ -77,7 +77,7 @@ class WorkloadLister:
         self.reader = reader
 
     def all_workload_files(self) -> Set[str]:
-        pattern = os.path.join(self.workspace_root, "src", "*", "workloads", "**", "*.yml")
+        pattern = os.path.join(self.workspace_root, "src", "*", "src", "workloads", "**", "*.yml")
         return {*glob.glob(pattern)}
 
     def modified_workload_files(self) -> Set[str]:
@@ -178,6 +178,7 @@ class Workload:
     """The list of `When/ThenRun` blocks, if present"""
 
     def __init__(self, workspace_root: str, file_path: str, is_modified: bool, reader: YamlReader):
+        self.workspace_root = workspace_root
         self.file_path = file_path
         self.is_modified = is_modified
 
@@ -211,7 +212,7 @@ class Workload:
 
     @property
     def relative_path(self) -> str:
-        return self.file_path.split("src/workloads/")[1]
+        return self.file_path.replace(self.workspace_root, ".")
 
     def generate_requested_tasks(self, then_run) -> List[GeneratedTask]:
         """
