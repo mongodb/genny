@@ -163,10 +163,11 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     std::atomic<DefaultDriver::OutcomeCode> outcomeCode = DefaultDriver::OutcomeCode::kSuccess;
 
     std::mutex reporting;
-    std::vector<std::thread> threads;
+    auto threadsPtr = std::make_unique<std::vector<std::thread>>();
+    threadsPtr->reserve(workloadContext.actors().size());
     std::transform(cbegin(workloadContext.actors()),
                    cend(workloadContext.actors()),
-                   std::back_inserter(threads),
+                   std::back_inserter(*threadsPtr),
                    [&](const auto& actor) {
                        return std::thread{[&]() {
                            {
@@ -189,7 +190,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
                        }};
                    });
 
-    for (auto& thread : threads)
+    for (auto& thread : *threadsPtr)
         thread.join();
 
     if (metrics.getFormat().useCsv()) {
