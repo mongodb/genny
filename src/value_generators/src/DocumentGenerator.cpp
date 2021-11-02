@@ -460,7 +460,6 @@ protected:
     std::vector<int64_t> _weights;
 };
 
-
 // This is a a more specific version of ChooseGenerator that produces strings. It is only used
 // within the JoinGenerator.
 class ChooseStringGenerator : public Generator<std::string> {
@@ -1345,6 +1344,11 @@ UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorA
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ActorIdIntGenerator>(node, generatorArgs);
          }},
+        // There are other things of type Generator<int64_t>. Not sure if they should be here or not
+        {"^Inc",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<IncGenerator>(node, generatorArgs);
+         }},
     };
 
     if (auto parserPair = extractKnownParser(node, generatorArgs, intParsers)) {
@@ -1415,7 +1419,6 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
              return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers);
          }},
     };
-
     if (auto parserPair = extractKnownParser(node, generatorArgs, stringParsers)) {
         // known parser type
         return parserPair->first(node[parserPair->second], generatorArgs);
