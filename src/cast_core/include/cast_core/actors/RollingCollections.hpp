@@ -23,9 +23,44 @@
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/parallel.hpp>
 
 namespace genny::actor {
+template <typename T>
+struct AtomicDeque {
+    std::deque<T> _deque;
+    std::mutex _mutex;
+    auto&& front() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _deque.front();
+    }
+    template <typename... Args>
+    auto&& emplace_back(Args... args) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _deque.emplace_back(std::forward<Args>(args)...);
+    }
+    auto&& back() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _deque.back();
+    }
+    auto&& at(size_t pos) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _deque.at(pos);
+    }
+    void pop_front() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _deque.pop_front();
+        return;
+    }
+    size_t size() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _deque.size();
+    }
+    bool empty() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _deque.empty();
+    }
+};
+
 /**
  * This actor provides a rolling collection functionality, it has 4 operations:
  * Setup: Creates an initial set of collections and creates documents within them.

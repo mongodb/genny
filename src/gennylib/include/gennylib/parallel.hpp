@@ -54,57 +54,6 @@ namespace genny {
         }
     }
 
-template <typename T>
-struct AtomicContainer {
-    T _container;
-    std::mutex _mutex;
-    auto&& front() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _container.front();
-    }
-    template <typename... Args>
-    auto&& emplace_back(Args... args) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _container.emplace_back(std::forward<Args>(args)...);
-    }
-    void push_back(const T& value) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _container.emplace_back(value);
-    }
-    void push_back(T&& value) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _container.emplace_back(std::move(value));
-    }
-    auto&& back() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _container.back();
-    }
-    auto&& at(size_t pos) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _container.at(pos);
-    }
-    void pop_front() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _container.pop_front();
-        return;
-    }
-    size_t size() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _container.size();
-    }
-    bool empty() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _container.empty();
-    }
-};
-
-template <typename T>
-using AtomicDeque = AtomicContainer<std::deque<T>>;
-
-template <typename T>
-using AtomicVector = AtomicContainer<std::vector<T>>;
-
-
 } // namespace genny::v1
 
 #endif // HEADER_5129031F_B241_46DD_8285_64596CB0C155_INCLUDED
