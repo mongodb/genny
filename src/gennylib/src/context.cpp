@@ -79,12 +79,10 @@ WorkloadContext::WorkloadContext(const Node& node,
         _actorContexts.emplace_back(std::make_unique<genny::ActorContext>(actor, *this));
     }
 
-    std::mutex actorsLock;
     parallelRun(_actorContexts,
                    [&](const auto& actorContext) {
                        auto rawActorVec = _constructActors(cast, actorContext);
                        for (auto&& actor : *rawActorVec) {
-                           std::lock_guard<std::mutex> lk(actorsLock);
                            _actors.push_back(std::move(actor));
                        }
                    });
