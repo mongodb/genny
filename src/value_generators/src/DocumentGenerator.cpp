@@ -460,20 +460,6 @@ protected:
     std::vector<int64_t> _weights;
 };
 
-// This is a wrapper generator. It wraps an int generator to generate strings.
-class StringIntGenerator : public Generator<std::string> {
-public:
-    StringIntGenerator(const Node& node, GeneratorArgs generatorArgs)
-        : gen{std::move(intGenerator(node, generatorArgs))} {}
-
-    std::string evaluate() {
-        return (std::to_string(gen->evaluate()));
-    }
-
-protected:
-    UniqueGenerator<int64_t> gen;
-};
-
 // This is a a more specific version of ChooseGenerator that produces strings. It is only used
 // within the JoinGenerator.
 class ChooseStringGenerator : public Generator<std::string> {
@@ -1431,18 +1417,6 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
         {"^FormatString",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers);
-         }},
-        {"^RandomInt",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<StringIntGenerator>(node, generatorArgs);
-         }},
-        {"^ActorId",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<StringIntGenerator>(node, generatorArgs);
-         }},
-        {"^Inc",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<StringIntGenerator>(node, generatorArgs);
          }},
     };
     if (auto parserPair = extractKnownParser(node, generatorArgs, stringParsers)) {
