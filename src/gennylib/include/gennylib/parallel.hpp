@@ -65,9 +65,8 @@ namespace genny {
  * Data structure that wrap STL containers and are thread-safe.
  */
 template <typename T>
-struct AtomicContainer {
-    T _container;
-    mutable std::mutex _mutex;
+class AtomicContainer {
+public:   
     using value_type = typename T::value_type;
 
     auto&& front() {
@@ -110,11 +109,11 @@ struct AtomicContainer {
         return _container.empty();
     }
 
-    typename T::const_reference operator[](size_t pos) const {
+    const auto& operator[](size_t pos) const {
         //std::lock_guard<std::mutex> lock(_mutex);
         return _container[pos];
     }
-    typename T::reference operator[](size_t pos) {
+    auto& operator[](size_t pos) {
         //std::lock_guard<std::mutex> lock(_mutex);
         return _container[pos];
     }
@@ -149,6 +148,10 @@ struct AtomicContainer {
         //std::lock_guard<std::mutex> lock(_mutex);
         return _container.cend();
     }
+
+private:
+    T _container;
+    mutable std::mutex _mutex;
 };
 
 template <typename T>
