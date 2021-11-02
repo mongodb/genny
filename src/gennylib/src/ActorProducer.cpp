@@ -18,14 +18,14 @@
 
 namespace genny {
 
-ActorVector ParallelizedActorProducer::produce(ActorContext& context) {
-    ActorVector out;
+std::unique_ptr<ActorVector> ParallelizedActorProducer::produce(ActorContext& context) {
+    auto out = std::make_unique<ActorVector>();
 
     auto threads = context["Threads"].maybe<int>().value_or(1);
     for (decltype(threads) i = 0; i < threads; ++i) {
-        produceInto(out, context);
+        produceInto(*out, context);
     }
-    return out;
+    return std::move(out);
 }
 
 }  // namespace genny

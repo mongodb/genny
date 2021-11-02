@@ -61,7 +61,7 @@ public:
         return _name;
     }
 
-    virtual ActorVector produce(ActorContext&) = 0;
+    virtual std::unique_ptr<ActorVector> produce(ActorContext&) = 0;
 
 private:
     std::string_view _name;
@@ -73,7 +73,7 @@ public:
     using ActorProducer::ActorProducer;
 
     virtual void produceInto(ActorVector& out, ActorContext& context) = 0;
-    ActorVector produce(ActorContext& context) override;
+    std::unique_ptr<ActorVector> produce(ActorContext& context) override;
 };
 
 /** @private */

@@ -18,6 +18,8 @@
 #include <memory>
 #include <vector>
 
+#include <gennylib/parallel.hpp>
+
 namespace genny {
 
 struct Actor;
@@ -25,7 +27,7 @@ struct Actor;
 /**
  * A convenience typedef for the return value from ActorProducer.
  */
-using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
+using ActorVector = AtomicVector<std::unique_ptr<Actor>>;
 
 
 }  // namespace genny

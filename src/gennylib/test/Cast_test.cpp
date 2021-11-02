@@ -89,11 +89,11 @@ class MyProducer : public ActorProducer {
 public:
     MyProducer(const std::string_view& name) : ActorProducer(name) {}
 
-    ActorVector produce(ActorContext& context) override {
-        ActorVector out;
+    std::unique_ptr<ActorVector> produce(ActorContext& context) override {
+        auto out = std::make_unique<ActorVector>();
         // two!
-        out.emplace_back(std::make_unique<MyActor>(context));
-        out.emplace_back(std::make_unique<MyActor>(context));
+        out->emplace_back(std::make_unique<MyActor>(context));
+        out->emplace_back(std::make_unique<MyActor>(context));
         return out;
     }
 };

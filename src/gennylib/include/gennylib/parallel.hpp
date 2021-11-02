@@ -28,6 +28,12 @@
 
 namespace genny {
 
+    /**
+     * Given iterable, run op in one thread per element of iterable, passing
+     * a reference to the element for each execution.
+     *
+     * Any exception thrown in any thread is gathered and rethrown in the calling thread.
+     */
     template<typename IterableT, typename BinaryOperation>
     void parallelRun(IterableT& iterable, BinaryOperation op) {
         auto threadsPtr = std::make_unique<std::vector<std::thread>>();
@@ -54,10 +60,15 @@ namespace genny {
         }
     }
 
+/**
+ * Data structure that wrap STL containers and are thread-safe.
+ */
 template <typename T>
 struct AtomicContainer {
     T _container;
-    std::mutex _mutex;
+    mutable std::mutex _mutex;
+    using value_type = typename T::value_type;
+
     auto&& front() {
         std::lock_guard<std::mutex> lock(_mutex);
         return _container.front();
@@ -67,13 +78,14 @@ struct AtomicContainer {
         std::lock_guard<std::mutex> lock(_mutex);
         return _container.emplace_back(std::forward<Args>(args)...);
     }
-    void push_back(const T& value) {
+
+    void push_back(const typename T::value_type& value) {
         std::lock_guard<std::mutex> lock(_mutex);
-        _container.emplace_back(value);
+        _container.push_back(value);
     }
-    void push_back(T&& value) {
+    void push_back(typename T::value_type&& value) {
         std::lock_guard<std::mutex> lock(_mutex);
-        _container.emplace_back(std::move(value));
+        _container.push_back(std::move(value));
     }
     auto&& back() {
         std::lock_guard<std::mutex> lock(_mutex);
@@ -88,13 +100,53 @@ struct AtomicContainer {
         _container.pop_front();
         return;
     }
-    size_t size() {
+    size_t size() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _container.size();
     }
-    bool empty() {
-        std::lock_guard<std::mutex> lock(_mutex);
+    bool empty() const {
+        //std::lock_guard<std::mutex> lock(_mutex);
         return _container.empty();
+    }
+
+    typename T::const_reference operator[](size_t pos) const {
+        //std::lock_guard<std::mutex> lock(_mutex);
+        return _container[pos];
+    }
+    typename T::reference operator[](size_t pos) {
+        //std::lock_guard<std::mutex> lock(_mutex);
+        return _container[pos];
+    }
+
+    /**
+     * Returns iterators to the underlying container. This is useful
+     * in a single-threaded context, but remember that this bypasses
+     * the locks and is thread-unsafe if there are writes from either
+     * the iterator or other threads.
+     */
+    typename T::iterator begin() {
+        //std::lock_guard<std::mutex> lock(_mutex);
+        return _container.begin();
+    }
+    typename T::const_iterator begin() const {
+        //std::lock_guard<std::mutex> lock(_mutex);
+        return _container.begin();
+    }
+    typename T::const_iterator cbegin() const {
+        //std::lock_guard<std::mutex> lock(_mutex);
+        return _container.cbegin();
+    }
+    typename T::iterator end() {
+        //std::lock_guard<std::mutex> lock(_mutex);
+        return _container.end();
+    }
+    typename T::const_iterator end() const {
+        //std::lock_guard<std::mutex> lock(_mutex);
+        return _container.end();
+    }
+    typename T::const_iterator cend() const {
+        //std::lock_guard<std::mutex> lock(_mutex);
+        return _container.cend();
     }
 };
 

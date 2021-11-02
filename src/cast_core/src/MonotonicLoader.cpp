@@ -145,13 +145,13 @@ MonotonicLoader::MonotonicLoader(genny::ActorContext& context, uint thread)
 class MonotonicLoaderProducer : public genny::ActorProducer {
 public:
     MonotonicLoaderProducer(const std::string_view& name) : ActorProducer(name) {}
-    genny::ActorVector produce(genny::ActorContext& context) {
+    std::unique_ptr<genny::ActorVector> produce(genny::ActorContext& context) {
         if (context["Type"].to<std::string>() != "MonotonicLoader") {
             return {};
         }
-        genny::ActorVector out;
+        auto out = std::make_unique<genny::ActorVector>();
         for (uint i = 0; i < context["Threads"].to<int>(); ++i) {
-            out.emplace_back(std::make_unique<genny::actor::MonotonicLoader>(context, i));
+            out->emplace_back(std::make_unique<genny::actor::MonotonicLoader>(context, i));
         }
         return out;
     }

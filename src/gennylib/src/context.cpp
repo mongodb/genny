@@ -82,7 +82,8 @@ WorkloadContext::WorkloadContext(const Node& node,
     std::mutex actorsLock;
     parallelRun(_actorContexts,
                    [&](const auto& actorContext) {
-                       for (auto&& actor : _constructActors(cast, actorContext)) {
+                       auto rawActorVec = _constructActors(cast, actorContext);
+                       for (auto&& actor : *rawActorVec) {
                            std::lock_guard<std::mutex> lk(actorsLock);
                            _actors.push_back(std::move(actor));
                        }
@@ -91,9 +92,9 @@ WorkloadContext::WorkloadContext(const Node& node,
     _done = true;
 }
 
-ActorVector WorkloadContext::_constructActors(const Cast& cast,
+std::unique_ptr<ActorVector> WorkloadContext::_constructActors(const Cast& cast,
                                               const std::unique_ptr<ActorContext>& actorContext) {
-    auto actors = ActorVector{};
+    auto actors = std::make_unique<ActorVector>();
     auto name = (*actorContext)["Type"].to<std::string>();
 
     std::shared_ptr<ActorProducer> producer;
@@ -106,8 +107,9 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
         throw InvalidConfigurationException(stream.str());
     }
 
-    for (auto&& actor : producer->produce(*actorContext)) {
-        actors.emplace_back(std::forward<std::unique_ptr<Actor>>(actor));
+    auto rawVec = producer->produce(*actorContext);
+    for (auto&& actor : *rawVec) {
+        actors->emplace_back(std::forward<std::unique_ptr<Actor>>(actor));
     }
     return actors;
 }
