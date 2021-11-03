@@ -181,8 +181,8 @@ public:
      * Get a WorkloadContext-unique ActorId
      * @return The next sequential id
      */
-    ActorId nextActorId() {
-        return _nextActorId++;
+    ActorId claimActorIds(size_t numIds) {
+        return _nextWorkloadActorId.fetch_add(numIds);
     }
 
     /**
@@ -283,7 +283,7 @@ private:
     //
     // We start at 1 because, if we send ID 0 to Poplar, the field
     // gets used as a monotonically-increasing value.
-    std::atomic<ActorId> _nextActorId{1};
+    std::atomic<ActorId> _nextWorkloadActorId{1};
 
     std::unordered_map<ActorId, DefaultRandom> _rngRegistry;
     std::mutex _rngLock;
@@ -330,6 +330,8 @@ public:
     ActorContext(const Node& node, WorkloadContext& workloadContext)
         : v1::HasNode{node}, _workload{&workloadContext}, _phaseContexts{} {
         _phaseContexts = constructPhaseContexts(_node, this);
+        auto threads = (*this)["Threads"].maybe<int>().value_or(1);
+        _nextActorId = this->workload().claimActorIds(threads);
     }
 
     // no copy or move
@@ -337,6 +339,13 @@ public:
     void operator=(ActorContext&) = delete;
     ActorContext(ActorContext&&) = delete;
     void operator=(ActorContext&&) = delete;
+
+    /**
+     * @return the next actor id
+     */
+    ActorId nextActorId() {
+        return _nextActorId++;
+    }
 
     /**
      * @return top-level workload configuration
@@ -433,6 +442,8 @@ private:
 
     WorkloadContext* _workload;
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
+
+    std::atomic<ActorId> _nextActorId;
 };
 
 /**
