@@ -81,8 +81,7 @@ WorkloadContext::WorkloadContext(const Node& node,
 
     parallelRun(_actorContexts,
                    [&](const auto& actorContext) {
-                       auto rawActorVec = _constructActors(cast, actorContext);
-                       for (auto&& actor : *rawActorVec) {
+                       for (auto&& actor : _constructActors(cast, actorContext)) {
                            _actors.push_back(std::move(actor));
                        }
                    });
