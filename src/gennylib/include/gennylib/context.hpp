@@ -272,7 +272,6 @@ private:
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     ActorVector _actors;
-    long _rngSeed;
 
     // Indicate that we are doing building the context. This is used to gate certain methods that
     // should not be called after construction.
@@ -285,8 +284,9 @@ private:
     // gets used as a monotonically-increasing value.
     std::atomic<ActorId> _nextWorkloadActorId{1};
 
-    std::unordered_map<ActorId, DefaultRandom> _rngRegistry;
-    std::mutex _rngLock;
+    std::mutex _rngLock; // Use for all the rng stuff below.
+    std::vector<DefaultRandom> _rngRegistry;
+    DefaultRandom _seedGenerator;
 
     std::unordered_map<std::string, std::unique_ptr<GlobalRateLimiter>> _rateLimiters;
     std::mutex _limiterLock;

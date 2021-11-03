@@ -72,7 +72,7 @@ WorkloadContext::WorkloadContext(const Node& node,
 
     _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
 
-    _rngSeed = (*this)["RandomSeed"].maybe<long>().value_or(RNG_SEED_BASE);
+    _seedGenerator.seed((*this)["RandomSeed"].maybe<long>().value_or(RNG_SEED_BASE));
 
     // Make a bunch of actor contexts
     for (const auto& [k, actor] : (*this)["Actors"]) {
@@ -141,17 +141,15 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
 
     bool success = false;
 
+    // Because IDs start at 1.
+    size_t idIndex = id - 1;
     std::lock_guard<std::mutex> lk(_rngLock);
-    if (auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
-        auto [it, returnedSuccess] = _rngRegistry.try_emplace(id, _rngSeed + std::hash<long>{}(id));
-        success = returnedSuccess;
-        if (!success) {
-            // This should be impossible.
-            // But invariants don't hurt we only call this during setup
-            throw std::logic_error("Already have DefaultRandom for Actor " + std::to_string(id));
+    if (_rngRegistry.size()-1 < idIndex) {
+        for (int i = _rngRegistry.size()-1; i <= idIndex; i++) {
+            _rngRegistry.emplace_back(_seedGenerator());
         }
     }
-    return _rngRegistry[id];
+    return _rngRegistry[idIndex];
 }
 
 // Helper method to convert Phases:[...] to PhaseContexts
