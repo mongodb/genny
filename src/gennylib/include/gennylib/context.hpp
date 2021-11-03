@@ -261,7 +261,7 @@ private:
     friend class PhaseContext;
 
     // helper methods used during construction
-    static std::unique_ptr<ActorVector> _constructActors(const Cast& cast,
+    static ActorVector _constructActors(const Cast& cast,
                                         const std::unique_ptr<ActorContext>& contexts);
 
     metrics::Registry _registry;

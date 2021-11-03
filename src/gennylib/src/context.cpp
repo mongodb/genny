@@ -90,9 +90,9 @@ WorkloadContext::WorkloadContext(const Node& node,
     _done = true;
 }
 
-std::unique_ptr<ActorVector> WorkloadContext::_constructActors(const Cast& cast,
+ActorVector WorkloadContext::_constructActors(const Cast& cast,
                                               const std::unique_ptr<ActorContext>& actorContext) {
-    auto actors = std::make_unique<ActorVector>();
+    auto actors = ActorVector{};
     auto name = (*actorContext)["Type"].to<std::string>();
 
     std::shared_ptr<ActorProducer> producer;
@@ -105,9 +105,8 @@ std::unique_ptr<ActorVector> WorkloadContext::_constructActors(const Cast& cast,
         throw InvalidConfigurationException(stream.str());
     }
 
-    auto rawVec = producer->produce(*actorContext);
-    for (auto&& actor : *rawVec) {
-        actors->emplace_back(std::forward<std::unique_ptr<Actor>>(actor));
+    for (auto&& actor : producer->produce(*actorContext)) {
+        actors.emplace_back(std::forward<std::unique_ptr<Actor>>(actor));
     }
     return actors;
 }

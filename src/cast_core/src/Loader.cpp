@@ -179,14 +179,14 @@ Loader::Loader(genny::ActorContext& context, uint thread, size_t totalThreads)
 class LoaderProducer : public genny::ActorProducer {
 public:
     LoaderProducer(const std::string_view& name) : ActorProducer(name) {}
-    std::unique_ptr<genny::ActorVector> produce(genny::ActorContext& context) {
+    genny::ActorVector produce(genny::ActorContext& context) {
         if (context["Type"].to<std::string>() != "Loader") {
             return {};
         }
-        auto out = std::make_unique<genny::ActorVector>();
+        genny::ActorVector out;
         uint totalThreads = context["Threads"].to<int>();
         for (uint i = 0; i < totalThreads; ++i) {
-            out->emplace_back(std::make_unique<genny::actor::Loader>(context, i, totalThreads));
+            out.emplace_back(std::make_unique<genny::actor::Loader>(context, i, totalThreads));
         }
         return out;
     }

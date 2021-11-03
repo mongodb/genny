@@ -87,17 +87,17 @@ void gives(const string& yaml, OutV expect, Args... args) {
 struct NopProducer : public ActorProducer {
     NopProducer() : ActorProducer("Nop") {}
 
-    std::unique_ptr<ActorVector> produce(ActorContext& context) override {
-        return std::make_unique<ActorVector>();
+    ActorVector produce(ActorContext& context) override {
+        return {};
     }
 };
 
 struct OpProducer : public ActorProducer {
     OpProducer(std::function<void(ActorContext&)> op) : ActorProducer("Op"), _op(op) {}
 
-    std::unique_ptr<ActorVector> produce(ActorContext& context) override {
+    ActorVector produce(ActorContext& context) override {
         _op(context);
-        return std::make_unique<ActorVector>();
+        return {};
     }
 
     std::function<void(ActorContext&)> _op;
@@ -253,11 +253,11 @@ Actors:
         struct SomeListProducer : public ActorProducer {
             using ActorProducer::ActorProducer;
 
-            std::unique_ptr<ActorVector> produce(ActorContext& context) override {
+            ActorVector produce(ActorContext& context) override {
                 REQUIRE(context.workload()["Actors"][0]["SomeList"][0].to<int>() == 100);
                 REQUIRE(context["SomeList"][0].to<int>() == 100);
                 ++calls;
-                return std::make_unique<ActorVector>();
+                return ActorVector{};
             }
 
             int calls = 0;
@@ -266,11 +266,11 @@ Actors:
         struct CountProducer : public ActorProducer {
             using ActorProducer::ActorProducer;
 
-            std::unique_ptr<ActorVector> produce(ActorContext& context) override {
+            ActorVector produce(ActorContext& context) override {
                 REQUIRE(context.workload()["Actors"][1]["Count"].to<int>() == 7);
                 REQUIRE(context["Count"].to<int>() == 7);
                 ++calls;
-                return std::make_unique<ActorVector>();
+                return ActorVector{};
             }
 
             int calls = 0;

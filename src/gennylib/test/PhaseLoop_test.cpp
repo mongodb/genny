@@ -246,9 +246,9 @@ template <typename ActorT>
 struct CounterProducer : public ActorProducer {
     using ActorProducer::ActorProducer;
 
-    std::unique_ptr<ActorVector> produce(ActorContext& actorContext) override {
-        auto out = std::make_unique<ActorVector>();
-        out->emplace_back(std::make_unique<ActorT>(actorContext, counters));
+    ActorVector produce(ActorContext& actorContext) override {
+        ActorVector out;
+        out.emplace_back(std::make_unique<ActorT>(actorContext, counters));
         return out;
     }
 
