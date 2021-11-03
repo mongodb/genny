@@ -19,6 +19,7 @@
 #include <string_view>
 
 #include <gennylib/ActorVector.hpp>
+#include <gennylib/Actor.hpp>
 
 namespace genny {
 
@@ -61,7 +62,17 @@ public:
         return _name;
     }
 
-    virtual ActorVector produce(ActorContext&) = 0;
+    /**
+     * Called in the single thread prior to parallel construction to
+     * claim the actor IDs this producer is responsible for and store
+     * the context.
+     */
+    virtual void claimActorContext(ActorContext& context) = 0;
+
+    /**
+     * Produce using the claimed context.
+     */
+    virtual ActorVector produce() = 0;
 
 private:
     std::string_view _name;
@@ -72,8 +83,14 @@ class ParallelizedActorProducer : public ActorProducer {
 public:
     using ActorProducer::ActorProducer;
 
-    virtual void produceInto(ActorVector& out, ActorContext& context) = 0;
-    ActorVector produce(ActorContext& context) override;
+    virtual void produceInto(ActorVector& out, ActorContext& context, ActorId id) = 0;
+    void claimActorContext(ActorContext& context) override;
+    ActorVector produce() override;
+
+private:
+    int _threads;
+    std::atomic<ActorId> _nextActorId;
+    ActorContext* _context = nullptr;
 };
 
 /** @private */
@@ -83,8 +100,8 @@ public:
     using ParallelizedActorProducer::ParallelizedActorProducer;
     DefaultActorProducer() : DefaultActorProducer{ActorT::defaultName()} {}
 
-    void produceInto(ActorVector& out, ActorContext& context) override {
-        out.emplace_back(std::make_unique<ActorT>(context));
+    void produceInto(ActorVector& out, ActorContext& context, ActorId id) override {
+        out.emplace_back(std::make_unique<ActorT>(context, id));
     }
 };
 

@@ -54,8 +54,8 @@ void HelloWorld::run() {
     }
 }
 
-HelloWorld::HelloWorld(genny::ActorContext& context)
-    : Actor(context),
+HelloWorld::HelloWorld(genny::ActorContext& context, ActorId id)
+    : Actor(context, id),
       _helloCounter{WorkloadContext::getActorSharedState<HelloWorld, HelloWorldCounter>()},
       _loop{context, HelloWorld::id()} {}
 

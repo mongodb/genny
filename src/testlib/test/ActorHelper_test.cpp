@@ -29,7 +29,7 @@ using Catch::Matchers::Matches;
 TEST_CASE("Actor Helper") {
     class DummyActor : public genny::Actor {
     public:
-        DummyActor(genny::ActorContext& ac) : Actor(ac){};
+        DummyActor(genny::ActorContext& ac, genny::ActorId id) : Actor(ac, id){};
 
         void run() override {
             BOOST_LOG_TRIVIAL(info) << "In the run method of DummyActor";
@@ -59,7 +59,7 @@ Actors:
 
     class CtorThrowingActor : public DummyActor {
     public:
-        CtorThrowingActor(genny::ActorContext& ac) : DummyActor(ac) {
+        CtorThrowingActor(genny::ActorContext& ac, genny::ActorId id) : DummyActor(ac, id) {
             throw genny::InvalidConfigurationException("CTOR Barf");
         };
     };

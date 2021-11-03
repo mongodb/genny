@@ -168,8 +168,8 @@ void genny::actor::Loader::run() {
     }
 }
 
-Loader::Loader(genny::ActorContext& context, uint thread, size_t totalThreads)
-    : Actor(context),
+Loader::Loader(genny::ActorContext& context, ActorId id, uint thread, size_t totalThreads)
+    : Actor(context, id),
       _totalBulkLoad{context.operation("TotalBulkInsert", Loader::id())},
       _individualBulkLoad{context.operation("IndividualBulkInsert", Loader::id())},
       _indexBuild{context.operation("IndexBuild", Loader::id())},
@@ -179,17 +179,26 @@ Loader::Loader(genny::ActorContext& context, uint thread, size_t totalThreads)
 class LoaderProducer : public genny::ActorProducer {
 public:
     LoaderProducer(const std::string_view& name) : ActorProducer(name) {}
-    genny::ActorVector produce(genny::ActorContext& context) {
-        if (context["Type"].to<std::string>() != "Loader") {
+    void claimActorContext(ActorContext& context) {
+        _totalThreads = context["Threads"].to<int>();
+        _nextActorId = context.workload().claimActorIds(_totalThreads);
+        _context = &context;
+    }
+    genny::ActorVector produce() {
+        if ((*_context)["Type"].to<std::string>() != "Loader") {
             return {};
         }
         genny::ActorVector out;
-        uint totalThreads = context["Threads"].to<int>();
-        for (uint i = 0; i < totalThreads; ++i) {
-            out.emplace_back(std::make_unique<genny::actor::Loader>(context, i, totalThreads));
+        for (uint i = 0; i < _totalThreads; ++i) {
+            out.emplace_back(std::make_unique<genny::actor::Loader>(*_context, _nextActorId++, i, _totalThreads));
         }
         return out;
     }
+
+private:
+    std::atomic<ActorId> _nextActorId;
+    int _totalThreads;
+    ActorContext* _context;
 };
 
 namespace {

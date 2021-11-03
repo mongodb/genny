@@ -40,7 +40,7 @@ namespace genny::actor {
 class InsertRemove : public Actor {
 
 public:
-    explicit InsertRemove(ActorContext& context);
+    explicit InsertRemove(ActorContext& context, ActorId id);
     ~InsertRemove() override = default;
 
     static std::string_view defaultName() {

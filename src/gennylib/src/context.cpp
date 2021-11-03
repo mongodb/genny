@@ -79,9 +79,26 @@ WorkloadContext::WorkloadContext(const Node& node,
         _actorContexts.emplace_back(std::make_unique<genny::ActorContext>(actor, *this));
     }
 
-    parallelRun(_actorContexts,
-                   [&](const auto& actorContext) {
-                       for (auto&& actor : _constructActors(cast, actorContext)) {
+    std::vector<std::shared_ptr<ActorProducer>> producers;
+    // Make a bunch of producers
+    for (auto&& actorContext : _actorContexts) {
+        auto name = (*actorContext)["Type"].to<std::string>();
+        std::shared_ptr<ActorProducer> producer;
+        try {
+            producer = cast.getProducer(name);
+        } catch (const std::out_of_range&) {
+            std::ostringstream stream;
+            stream << "Unable to construct actors: No producer for '" << name << "'." << std::endl;
+            cast.streamProducersTo(stream);
+            throw InvalidConfigurationException(stream.str());
+        }
+        producer->claimActorContext(*actorContext);
+        producers.push_back(producer);
+    }
+
+    parallelRun(producers,
+                   [&](auto actorProducer) {
+                       for (auto&& actor : _constructActors(actorProducer)) {
                            _actors.push_back(std::move(actor));
                        }
                    });
@@ -89,22 +106,9 @@ WorkloadContext::WorkloadContext(const Node& node,
     _done = true;
 }
 
-ActorVector WorkloadContext::_constructActors(const Cast& cast,
-                                              const std::unique_ptr<ActorContext>& actorContext) {
+ActorVector WorkloadContext::_constructActors(std::shared_ptr<ActorProducer>& producer) {
     auto actors = ActorVector{};
-    auto name = (*actorContext)["Type"].to<std::string>();
-
-    std::shared_ptr<ActorProducer> producer;
-    try {
-        producer = cast.getProducer(name);
-    } catch (const std::out_of_range&) {
-        std::ostringstream stream;
-        stream << "Unable to construct actors: No producer for '" << name << "'." << std::endl;
-        cast.streamProducersTo(stream);
-        throw InvalidConfigurationException(stream.str());
-    }
-
-    for (auto&& actor : producer->produce(*actorContext)) {
+    for (auto&& actor : producer->produce()) {
         actors.emplace_back(std::forward<std::unique_ptr<Actor>>(actor));
     }
     return actors;

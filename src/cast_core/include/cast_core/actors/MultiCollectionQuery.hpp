@@ -34,7 +34,7 @@ namespace genny::actor {
 class MultiCollectionQuery : public Actor {
 
 public:
-    explicit MultiCollectionQuery(ActorContext& context);
+    explicit MultiCollectionQuery(ActorContext& context, ActorId id);
     ~MultiCollectionQuery() override = default;
 
     static std::string_view defaultName() {

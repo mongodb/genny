@@ -42,7 +42,7 @@ public:
      * Construct a HelloWorld.
      * @param context represents the `Actor` block.
      */
-    explicit HelloWorld(ActorContext& context);
+    explicit HelloWorld(ActorContext& context, ActorId id);
 
     /** Destruct */
     ~HelloWorld() override = default;

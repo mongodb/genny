@@ -41,7 +41,7 @@ namespace genny::actor {
 class QuiesceActor : public Actor {
 
 public:
-    explicit QuiesceActor(ActorContext& context);
+    explicit QuiesceActor(ActorContext& context, ActorId id);
     ~QuiesceActor() = default;
 
     void run() override;

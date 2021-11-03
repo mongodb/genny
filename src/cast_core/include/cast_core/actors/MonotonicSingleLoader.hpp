@@ -62,7 +62,7 @@ namespace genny::actor {
  */
 class MonotonicSingleLoader : public Actor {
 public:
-    explicit MonotonicSingleLoader(ActorContext& context);
+    explicit MonotonicSingleLoader(ActorContext& context, ActorId id);
     ~MonotonicSingleLoader() = default;
 
     void run() override;

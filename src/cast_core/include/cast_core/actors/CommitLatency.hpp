@@ -35,7 +35,7 @@ namespace genny::actor {
 class CommitLatency : public Actor {
 
 public:
-    explicit CommitLatency(ActorContext& context);
+    explicit CommitLatency(ActorContext& context, ActorId id);
     ~CommitLatency() = default;
 
     static std::string_view defaultName() {

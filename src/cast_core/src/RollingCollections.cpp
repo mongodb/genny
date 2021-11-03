@@ -464,8 +464,8 @@ void RollingCollections::run() {
     }
 }
 
-RollingCollections::RollingCollections(genny::ActorContext& context)
-    : Actor{context},
+RollingCollections::RollingCollections(genny::ActorContext& context, ActorId id)
+    : Actor{context, id},
       _client{context.client()},
       _collectionNames{
           WorkloadContext::getActorSharedState<RollingCollections, RollingCollectionNames>()},

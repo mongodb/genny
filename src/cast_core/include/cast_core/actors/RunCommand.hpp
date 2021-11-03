@@ -58,7 +58,7 @@ namespace genny::actor {
  */
 class RunCommand : public Actor {
 public:
-    explicit RunCommand(ActorContext& context);
+    explicit RunCommand(ActorContext& context, ActorId id);
     ~RunCommand() override = default;
 
     static std::string_view defaultName() {

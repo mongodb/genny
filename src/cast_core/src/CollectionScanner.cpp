@@ -513,8 +513,8 @@ void CollectionScanner::run() {
     }
 }
 
-CollectionScanner::CollectionScanner(genny::ActorContext& context)
-    : Actor{context},
+CollectionScanner::CollectionScanner(genny::ActorContext& context, ActorId id)
+    : Actor{context, id},
       _totalInserts{context.operation("Insert", CollectionScanner::id())},
       _client{context.client()},
       _index{WorkloadContext::getActorSharedState<CollectionScanner, ActorCounter>().fetch_add(1)},

@@ -79,7 +79,7 @@ std::atomic_int calls = 0;
 
 class MyActor : public Actor {
 public:
-    MyActor(ActorContext& context) : Actor(context) {}
+    MyActor(ActorContext& context, ActorId id) : Actor(context, id) {}
     void run() override {
         ++calls;
     }
@@ -89,13 +89,21 @@ class MyProducer : public ActorProducer {
 public:
     MyProducer(const std::string_view& name) : ActorProducer(name) {}
 
-    ActorVector produce(ActorContext& context) override {
+    void claimActorContext(ActorContext& context) override {
+
+        _nextActorId = context.workload().claimActorIds(2);
+        _context = &context;
+    }
+    ActorVector produce() override {
         ActorVector out;
         // two!
-        out.emplace_back(std::make_unique<MyActor>(context));
-        out.emplace_back(std::make_unique<MyActor>(context));
+        out.emplace_back(std::make_unique<MyActor>(*_context, _nextActorId++));
+        out.emplace_back(std::make_unique<MyActor>(*_context, _nextActorId++));
         return out;
     }
+private:
+    std::atomic<ActorId> _nextActorId;
+    ActorContext* _context;
 };
 
 TEST_CASE("Can register a new ActorProducer") {

@@ -87,7 +87,10 @@ void gives(const string& yaml, OutV expect, Args... args) {
 struct NopProducer : public ActorProducer {
     NopProducer() : ActorProducer("Nop") {}
 
-    ActorVector produce(ActorContext& context) override {
+    
+    void claimActorContext(ActorContext& context) override {}
+
+    ActorVector produce() override {
         return {};
     }
 };
@@ -95,10 +98,16 @@ struct NopProducer : public ActorProducer {
 struct OpProducer : public ActorProducer {
     OpProducer(std::function<void(ActorContext&)> op) : ActorProducer("Op"), _op(op) {}
 
-    ActorVector produce(ActorContext& context) override {
-        _op(context);
+    void claimActorContext(ActorContext& context) override {
+        _context = &context;
+    }
+
+    ActorVector produce() override {
+        _op(*_context);
         return {};
     }
+
+    ActorContext* _context;
 
     std::function<void(ActorContext&)> _op;
 };
@@ -253,26 +262,35 @@ Actors:
         struct SomeListProducer : public ActorProducer {
             using ActorProducer::ActorProducer;
 
-            ActorVector produce(ActorContext& context) override {
-                REQUIRE(context.workload()["Actors"][0]["SomeList"][0].to<int>() == 100);
-                REQUIRE(context["SomeList"][0].to<int>() == 100);
+            void claimActorContext(ActorContext& context) override {
+                _context = &context;
+            }
+
+            ActorVector produce() override {
+                REQUIRE(_context->workload()["Actors"][0]["SomeList"][0].to<int>() == 100);
+                REQUIRE((*_context)["SomeList"][0].to<int>() == 100);
                 ++calls;
                 return ActorVector{};
             }
 
+            ActorContext* _context;
             int calls = 0;
         };
 
         struct CountProducer : public ActorProducer {
             using ActorProducer::ActorProducer;
 
-            ActorVector produce(ActorContext& context) override {
-                REQUIRE(context.workload()["Actors"][1]["Count"].to<int>() == 7);
-                REQUIRE(context["Count"].to<int>() == 7);
+            void claimActorContext(ActorContext& context) override {
+                _context = &context;
+            }
+            ActorVector produce() override {
+                REQUIRE(_context->workload()["Actors"][1]["Count"].to<int>() == 7);
+                REQUIRE((*_context)["Count"].to<int>() == 7);
                 ++calls;
                 return ActorVector{};
             }
 
+            ActorContext* _context;
             int calls = 0;
         };
 
@@ -479,8 +497,8 @@ TEST_CASE("Actors Share WorkloadContext State") {
     public:
         struct InsertCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
 
-        DummyInsert(ActorContext& actorContext)
-            : Actor(actorContext),
+        DummyInsert(ActorContext& actorContext, ActorId id)
+            : Actor(actorContext, id),
               _loop{actorContext},
               _iCounter{WorkloadContext::getActorSharedState<DummyInsert, InsertCounter>()} {}
 
@@ -504,8 +522,8 @@ TEST_CASE("Actors Share WorkloadContext State") {
 
     class DummyFind : public Actor {
     public:
-        DummyFind(ActorContext& actorContext)
-            : Actor(actorContext),
+        DummyFind(ActorContext& actorContext, ActorId id)
+            : Actor(actorContext, id),
               _loop{actorContext},
               _iCounter{
                   WorkloadContext::getActorSharedState<DummyInsert, DummyInsert::InsertCounter>()} {

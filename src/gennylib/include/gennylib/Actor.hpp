@@ -65,8 +65,11 @@ public:
      *
      * @param context source for configs. The top-level config has `Actors: [{Type: Foo}]`.
      * The ActorContext exposes each of the `{Type: Foo}` maps.
+     *
+     * @param id the globally unique identifier for this actor.
+     *
      */
-    explicit Actor(ActorContext& context);
+    explicit Actor(ActorContext& context, ActorId id);
 
     /**
      * Destruct an Actor.

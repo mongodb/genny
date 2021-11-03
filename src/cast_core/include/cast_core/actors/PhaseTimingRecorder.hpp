@@ -43,7 +43,7 @@ namespace genny::v1::actor {
 class PhaseTimingRecorder : public Actor {
 
 public:
-    explicit PhaseTimingRecorder(ActorContext& context);
+    explicit PhaseTimingRecorder(ActorContext& context, ActorId id);
     ~PhaseTimingRecorder() = default;
 
     void run() override;
