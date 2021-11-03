@@ -83,8 +83,8 @@ void MultiCollectionUpdate::run() {
     }
 }
 
-MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context, ActorId id)
-    : Actor(context, id),
+MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
+    : Actor(context),
       _client{std::move(context.client())},
       _loop{context, _client, MultiCollectionUpdate::id()} {}
 

@@ -44,7 +44,7 @@ public:
     struct RollingCollectionNames
         : genny::WorkloadContext::ShareableState<AtomicDeque<std::string>> {};
 
-    explicit RollingCollections(ActorContext& context, ActorId id);
+    explicit RollingCollections(ActorContext& context);
     ~RollingCollections() = default;
     void run() override;
 

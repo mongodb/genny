@@ -42,7 +42,7 @@ class RandomSampler : public Actor {
     struct ActorCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
 
 public:
-    explicit RandomSampler(ActorContext& context, ActorId id);
+    explicit RandomSampler(ActorContext& context);
     ~RandomSampler() = default;
     void run() override;
     static std::string_view defaultName() {

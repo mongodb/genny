@@ -48,8 +48,8 @@ void PhaseTimingRecorder::run() {
     }
 }
 
-PhaseTimingRecorder::PhaseTimingRecorder(genny::ActorContext& context, ActorId id)
-    : Actor{context, id},
+PhaseTimingRecorder::PhaseTimingRecorder(genny::ActorContext& context)
+    : Actor{context},
       _phaseOp{context.operation("Phase", PhaseTimingRecorder::id(), true)},
       _orchestrator{context.orchestrator()} {}
 

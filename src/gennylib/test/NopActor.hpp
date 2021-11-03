@@ -24,7 +24,7 @@ namespace genny::actor {
 
 class NopActor : public Actor {
 public:
-    explicit NopActor(ActorContext& c, ActorId id) : Actor(c, id), _loop{c} {}
+    explicit NopActor(ActorContext& c) : Actor(c), _loop{c} {}
 
     void run() override {
         for (auto&& p : _loop) {

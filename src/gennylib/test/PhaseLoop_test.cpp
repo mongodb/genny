@@ -246,18 +246,12 @@ template <typename ActorT>
 struct CounterProducer : public ActorProducer {
     using ActorProducer::ActorProducer;
 
-    void claimActorContext(ActorContext& context) override {
-        _context = &context;
-        _nextActorId = context.workload().claimActorIds(1);
-    }
-    ActorVector produce() override {
+    ActorVector produce(ActorContext& actorContext) override {
         ActorVector out;
-        out.emplace_back(std::make_unique<ActorT>(*_context, _nextActorId++, counters));
+        out.emplace_back(std::make_unique<ActorT>(actorContext, counters));
         return out;
     }
 
-    ActorContext* _context;
-    std::atomic<ActorId> _nextActorId;
     std::unordered_map<int, int> counters;
 };
 
@@ -275,8 +269,8 @@ TEST_CASE("Actual Actor Example") {
         std::unordered_map<int, int>& _counters;
 
     public:
-        IncrementsMapValues(ActorContext& actorContext, ActorId id, std::unordered_map<int, int>& counters)
-            : Actor(actorContext, id), _loop{actorContext, 1}, _counters{counters} {}
+        IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
+            : Actor(actorContext), _loop{actorContext, 1}, _counters{counters} {}
         //                        ↑ is forwarded to the IncrementsMapValues ctor as the keyOffset
         //                        param.
 
@@ -322,9 +316,8 @@ TEST_CASE("Actual Actor Example") {
         class IncrementsMapValuesWithNop : public IncrementsMapValues {
         public:
             IncrementsMapValuesWithNop(ActorContext& actorContext,
-                                       ActorId id,
                                        std::unordered_map<int, int>& counters)
-                : IncrementsMapValues(actorContext, id, counters) {}
+                : IncrementsMapValues(actorContext, counters) {}
 
             void run() override {
                 for (auto&& cfg : _loop) {

@@ -178,11 +178,11 @@ public:
     }
 
     /**
-     * Claim a batch of WorkloadContext-unique IDs.
-     * @return The starting ID of the claimed space.
+     * Get a WorkloadContext-unique ActorId
+     * @return The next sequential id
      */
-    ActorId claimActorIds(size_t numOfIds) {
-        return _nextActorId.fetch_add(numOfIds);
+    ActorId nextActorId() {
+        return _nextActorId++;
     }
 
     /**
@@ -261,7 +261,8 @@ private:
     friend class PhaseContext;
 
     // helper methods used during construction
-    static ActorVector _constructActors(std::shared_ptr<ActorProducer>& producer);
+    static ActorVector _constructActors(const Cast& cast,
+                                        const std::unique_ptr<ActorContext>& contexts);
 
     metrics::Registry _registry;
     Orchestrator* _orchestrator;

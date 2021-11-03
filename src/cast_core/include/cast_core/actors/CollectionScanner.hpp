@@ -44,7 +44,7 @@ public:
     // Tracks how many instances of this Actor are currently running.
     struct RunningActorCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
 
-    explicit CollectionScanner(ActorContext& context, ActorId id);
+    explicit CollectionScanner(ActorContext& context);
     ~CollectionScanner() = default;
     void run() override;
     static std::string_view defaultName() {

@@ -134,8 +134,8 @@ class IncActor : public Actor {
 public:
     struct IncCounter : WorkloadContext::ShareableState<std::atomic_int64_t> {};
 
-    IncActor(genny::ActorContext& ac, ActorId id)
-        : Actor(ac, id),
+    IncActor(genny::ActorContext& ac)
+        : Actor(ac),
           _loop{ac},
           _counter{WorkloadContext::getActorSharedState<IncActor, IncCounter>()} {
         _counter.store(0);

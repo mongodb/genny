@@ -29,7 +29,7 @@ namespace genny::actor {
  */
 class LoggingActor : public Actor {
 public:
-    explicit LoggingActor(ActorContext& context, ActorId id);
+    explicit LoggingActor(ActorContext& context);
     ~LoggingActor() override = default;
     void run() override;
     static std::string_view defaultName() {

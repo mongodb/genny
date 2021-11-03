@@ -85,7 +85,7 @@ public:
     class Operation;
 
 public:
-    explicit CrudActor(ActorContext& context, ActorId id);
+    explicit CrudActor(ActorContext& context);
     ~CrudActor() = default;
 
     static std::string_view defaultName() {

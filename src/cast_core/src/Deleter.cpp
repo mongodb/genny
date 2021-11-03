@@ -66,8 +66,8 @@ void Deleter::run() {
     }
 }
 
-Deleter::Deleter(genny::ActorContext& context, ActorId id )
-    : Actor{context, id},
+Deleter::Deleter(genny::ActorContext& context)
+    : Actor{context},
       _client{context.client()},
       _loop{context, (*_client)[context["Database"].to<std::string>()], Deleter::id()} {}
 

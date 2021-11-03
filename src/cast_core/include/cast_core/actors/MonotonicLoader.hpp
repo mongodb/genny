@@ -43,7 +43,7 @@ namespace genny::actor {
 class MonotonicLoader : public Actor {
 
 public:
-    explicit MonotonicLoader(ActorContext& context, ActorId id, uint thread);
+    explicit MonotonicLoader(ActorContext& context, uint thread);
     ~MonotonicLoader() override = default;
 
     static std::string_view defaultName() {

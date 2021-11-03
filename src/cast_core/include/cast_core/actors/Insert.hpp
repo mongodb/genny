@@ -34,7 +34,7 @@ namespace genny::actor {
 class Insert : public genny::Actor {
 
 public:
-    explicit Insert(ActorContext& context, ActorId id);
+    explicit Insert(ActorContext& context);
     ~Insert() override = default;
 
     static std::string_view defaultName() {

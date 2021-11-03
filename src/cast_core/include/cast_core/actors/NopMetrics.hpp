@@ -37,7 +37,7 @@ namespace genny::actor {
 class NopMetrics : public Actor {
 
 public:
-    explicit NopMetrics(ActorContext& context, ActorId id);
+    explicit NopMetrics(ActorContext& context);
     ~NopMetrics() = default;
 
     void run() override;

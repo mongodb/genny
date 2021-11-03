@@ -134,8 +134,8 @@ void genny::actor::MonotonicLoader::run() {
     }
 }
 
-MonotonicLoader::MonotonicLoader(genny::ActorContext& context, ActorId id, uint thread)
-    : Actor(context, id),
+MonotonicLoader::MonotonicLoader(genny::ActorContext& context, uint thread)
+    : Actor(context),
       _totalBulkLoad{context.operation("TotalBulkInsert", MonotonicLoader::id())},
       _individualBulkLoad{context.operation("IndividualBulkInsert", MonotonicLoader::id())},
       _indexBuild{context.operation("IndexBuild", MonotonicLoader::id())},
@@ -145,27 +145,16 @@ MonotonicLoader::MonotonicLoader(genny::ActorContext& context, ActorId id, uint 
 class MonotonicLoaderProducer : public genny::ActorProducer {
 public:
     MonotonicLoaderProducer(const std::string_view& name) : ActorProducer(name) {}
-    void claimActorContext(ActorContext& context) {
-        _totalThreads = context["Threads"].to<int>();
-        _nextActorId = context.workload().claimActorIds(_totalThreads);
-        _context = &context;
-    }
-
-    genny::ActorVector produce() {
-        if ((*_context)["Type"].to<std::string>() != "MonotonicLoader") {
+    genny::ActorVector produce(genny::ActorContext& context) {
+        if (context["Type"].to<std::string>() != "MonotonicLoader") {
             return {};
         }
         genny::ActorVector out;
-        for (uint i = 0; i < _totalThreads; ++i) {
-            out.emplace_back(std::make_unique<genny::actor::MonotonicLoader>(*_context, _nextActorId++, i));
+        for (uint i = 0; i < context["Threads"].to<int>(); ++i) {
+            out.emplace_back(std::make_unique<genny::actor::MonotonicLoader>(context, i));
         }
         return out;
     }
-
-private:
-    std::atomic<ActorId> _nextActorId;
-    int _totalThreads;
-    ActorContext* _context;
 };
 
 namespace {

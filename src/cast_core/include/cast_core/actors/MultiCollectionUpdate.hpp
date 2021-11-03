@@ -36,7 +36,7 @@ namespace genny::actor {
 class MultiCollectionUpdate : public Actor {
 
 public:
-    explicit MultiCollectionUpdate(ActorContext& context, ActorId id);
+    explicit MultiCollectionUpdate(ActorContext& context);
     ~MultiCollectionUpdate() override = default;
 
     static std::string_view defaultName() {

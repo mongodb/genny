@@ -44,7 +44,7 @@ namespace genny::actor {
  */
 class MoveRandomChunkToRandomShard : public Actor {
 public:
-    explicit MoveRandomChunkToRandomShard(ActorContext& context, ActorId id);
+    explicit MoveRandomChunkToRandomShard(ActorContext& context);
     ~MoveRandomChunkToRandomShard() = default;
 
     void run() override;

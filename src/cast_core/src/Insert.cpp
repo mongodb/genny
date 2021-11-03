@@ -57,8 +57,8 @@ void Insert::run() {
     }
 }
 
-Insert::Insert(genny::ActorContext& context, ActorId id)
-    : Actor(context, id),
+Insert::Insert(genny::ActorContext& context)
+    : Actor(context),
       _insert{context.operation("Insert", Insert::id())},
       _client{std::move(context.client())},
       _loop{context, (*_client)[context["Database"].to<std::string>()], Insert::id()} {}

@@ -18,17 +18,12 @@
 
 namespace genny {
 
-void ParallelizedActorProducer::claimActorContext(ActorContext& context) {
-    _threads = context["Threads"].maybe<int>().value_or(1);
-    _nextActorId = context.workload().claimActorIds(_threads);
-    _context = &context;
-}
-
-ActorVector ParallelizedActorProducer::produce() {
+ActorVector ParallelizedActorProducer::produce(ActorContext& context) {
     ActorVector out;
 
-    for (int i = 0; i < _threads; ++i) {
-        produceInto(out, *_context, _nextActorId);
+    auto threads = context["Threads"].maybe<int>().value_or(1);
+    for (decltype(threads) i = 0; i < threads; ++i) {
+        produceInto(out, context);
     }
     return out;
 }

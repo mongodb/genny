@@ -37,7 +37,7 @@ namespace genny::actor {
  */
 class Deleter : public Actor {
 public:
-    explicit Deleter(ActorContext& context, ActorId id);
+    explicit Deleter(ActorContext& context);
     ~Deleter() = default;
     void run() override;
 

@@ -100,8 +100,8 @@ void MonotonicSingleLoader::run() {
     }
 }
 
-MonotonicSingleLoader::MonotonicSingleLoader(genny::ActorContext& context, ActorId id)
-    : Actor{context, id},
+MonotonicSingleLoader::MonotonicSingleLoader(genny::ActorContext& context)
+    : Actor{context},
       _client{context.client()},
       _totalBulkLoad{context.operation("TotalBulkInsert", MonotonicSingleLoader::id())},
       _individualBulkLoad{context.operation("IndividualBulkInsert", MonotonicSingleLoader::id())},

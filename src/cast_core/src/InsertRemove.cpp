@@ -78,8 +78,8 @@ void InsertRemove::run() {
     }
 }
 
-InsertRemove::InsertRemove(genny::ActorContext& context, ActorId id)
-    : Actor(context, id),
+InsertRemove::InsertRemove(genny::ActorContext& context)
+    : Actor(context),
       _rng{context.workload().getRNGForThread(InsertRemove::id())},
       _insert{context.operation("Insert", InsertRemove::id())},
       _remove{context.operation("Remove", InsertRemove::id())},
