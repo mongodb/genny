@@ -139,7 +139,7 @@ Actors:
         auto fromDocListAssert = false;
         auto fromDocList = std::make_shared<OpProducer>([&](ActorContext& a) {
             for (const auto&& [k, doc] : a["docs"]) {
-                auto docgen = doc.to<DocumentGenerator>(a, 0);
+                auto docgen = doc.to<DocumentGenerator>(a, 1);
                 fromDocListAssert = docgen().view() == foobar.view();
                 ++calls;
             }
@@ -147,7 +147,7 @@ Actors:
 
         auto fromDocAssert = false;
         auto fromDoc = std::make_shared<OpProducer>([&](ActorContext& a) {
-            auto docgen = a["doc"].to<DocumentGenerator>(a, 0);
+            auto docgen = a["doc"].to<DocumentGenerator>(a, 1);
             fromDocAssert = docgen().view() == foobar.view();
             ++calls;
         });

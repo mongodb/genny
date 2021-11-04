@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <boost/log/trivial.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -269,6 +270,13 @@ private:
 
     v1::PoolManager _poolManager;
 
+    // Actors should always be constructed in a single-threaded context.
+    // That said, atomic integral types are very cheap to work with.
+    //
+    // We start at 1 because, if we send ID 0 to Poplar, the field
+    // gets used as a monotonically-increasing value.
+    std::atomic<ActorId> _nextWorkloadActorId{1};
+
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     ActorVector _actors;
@@ -276,13 +284,6 @@ private:
     // Indicate that we are doing building the context. This is used to gate certain methods that
     // should not be called after construction.
     bool _done = false;
-
-    // Actors should always be constructed in a single-threaded context.
-    // That said, atomic integral types are very cheap to work with.
-    //
-    // We start at 1 because, if we send ID 0 to Poplar, the field
-    // gets used as a monotonically-increasing value.
-    std::atomic<ActorId> _nextWorkloadActorId{1};
 
     std::mutex _rngLock; // Use for all the rng stuff below.
     std::vector<DefaultRandom> _rngRegistry;

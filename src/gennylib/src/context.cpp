@@ -139,13 +139,15 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot create RNGs after setup"));
     }
 
-    bool success = false;
+    if (id < 1) {
+        BOOST_THROW_EXCEPTION(std::logic_error("ActorId must be 1 or greater."));
+    }
 
     // Because IDs start at 1.
     size_t idIndex = id - 1;
     std::lock_guard<std::mutex> lk(_rngLock);
-    if (_rngRegistry.size()-1 < idIndex) {
-        for (int i = _rngRegistry.size()-1; i <= idIndex; i++) {
+    if (_rngRegistry.empty() || _rngRegistry.size()-1 < idIndex) {
+        for (size_t i = _rngRegistry.size(); i <= idIndex; i++) {
             _rngRegistry.emplace_back(_seedGenerator());
         }
     }
