@@ -14,7 +14,6 @@
 
 #include <atomic>
 #include <mutex>
-#include <string_view>
 #include <thread>
 
 #include <bsoncxx/array/view.hpp>
@@ -36,7 +35,7 @@
 
 namespace genny {
 
-const int DROPPED_COLLECTION_RETRIES = 20;
+const int DROPPED_COLLECTION_RETRIES = 1000;
 
 namespace {
 
@@ -129,9 +128,9 @@ bool CheckForDroppedCollections(v1::Topology& topology, std::string dbName, Slee
             int retries = 0;
             while (checkCollections(db) && retries < DROPPED_COLLECTION_RETRIES) {
                 BOOST_LOG_TRIVIAL(debug)
-                    << "Sleeping 5 second while waiting for collection to finish dropping.";
+                    << "Sleeping 1 second while waiting for collection to finish dropping.";
                 retries++;
-                _sleepContext.sleep_for(std::chrono::seconds(5));
+                _sleepContext.sleep_for(std::chrono::seconds(1));
             }
             if (retries >= DROPPED_COLLECTION_RETRIES) {
                 BOOST_LOG_TRIVIAL(error) << "Timeout on waiting for collections to drop. "
