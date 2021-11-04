@@ -38,6 +38,7 @@ TEST_CASE("Parallel runner runs op") {
 
     std::vector<int> expected = {6, 7, 8, 9, 10};
 
+    std::lock_guard<AtomicVector<int>> newLock(newIntegers);
     REQUIRE(expected.size() == newIntegers.size());
     for (int i = 0; i < expected.size(); i++) {
         // The order of elements in newIntegers is nondeterministic.
