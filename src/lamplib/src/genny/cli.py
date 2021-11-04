@@ -212,12 +212,19 @@ def clean(ctx: click.Context) -> None:
 
 
 @cli.command(name="cmake-test", help="Run genny's C++ unit tests.")
+@click.option(
+    "-r",
+    "--regex",
+    required=False,
+    default=None,
+    help=("Regex to match against tests."),
+)
 @click.pass_context
-def cmake_test(ctx: click.Context) -> None:
+def cmake_test(ctx: click.Context, regex: str) -> None:
     from genny.tasks import run_tests
 
     run_tests.cmake_test(
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"], regex=regex
     )
 
 

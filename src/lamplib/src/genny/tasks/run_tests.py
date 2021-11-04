@@ -69,7 +69,7 @@ def _run_command_with_sentinel_report(
         )
 
 
-def cmake_test(genny_repo_root: str, workspace_root: str):
+def cmake_test(genny_repo_root: str, workspace_root: str, regex: str = None):
     info = toolchain.toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     workdir = os.path.join(genny_repo_root, "build")
 
@@ -82,6 +82,11 @@ def cmake_test(genny_repo_root: str, workspace_root: str):
         "--label-exclude",
         "(standalone|sharded|single_node_replset|three_node_replset|benchmark)",
     ]
+
+    if regex is not None:
+        ctest_cmd += [
+            "--tests-regex",
+            regex]
 
     def cmd_func() -> bool:
         output: cmd_runner.RunCommandOutput = cmd_runner.run_command(
