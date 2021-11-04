@@ -26,15 +26,13 @@
 #include <testlib/helpers.hpp>
 
 using namespace genny;
-
+using Catch::Matchers::Matches;
 
 TEST_CASE("Parallel runner runs op") {
     std::vector<int> integers = {1, 2, 3, 4, 5};
-    std::vector<int> newIntegers;
-    std::mutex integerLock;
+    AtomicVector<int> newIntegers;
     parallelRun(integers,
                [&](const auto& integer) {
-                   std::lock_guard<std::mutex> lk(integerLock);
                    newIntegers.push_back(integer + 5);
                });
 
@@ -46,4 +44,15 @@ TEST_CASE("Parallel runner runs op") {
         REQUIRE(std::find(newIntegers.begin(), newIntegers.end(),
                     expected[i]) != newIntegers.end());
     }
+}
+
+TEST_CASE("Parallel runner reraises exceptions") {
+    std::vector<int> integers = {1, 2, 3, 4, 5};
+    auto test = [&]() {
+        parallelRun(integers,
+                   [&](const auto& integer) {
+                       throw std::logic_error("This should be reraised.");
+                   });
+    };
+    REQUIRE_THROWS_WITH(test(), Matches("This should be reraised."));
 }
