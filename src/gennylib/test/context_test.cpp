@@ -289,6 +289,7 @@ Actors:
 
         REQUIRE(someListProducer->calls == 1);
         REQUIRE(countProducer->calls == 1);
+        std::lock_guard<const ActorVector> actorsLock(context.actors());
         REQUIRE(std::distance(context.actors().begin(), context.actors().end()) == 0);
     }
 

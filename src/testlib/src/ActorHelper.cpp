@@ -84,6 +84,7 @@ void ActorHelper::runAndVerify(ActorHelper::FuncWithContext&& runnerFunc,
 
 void ActorHelper::doRunThreaded(const WorkloadContext& wl) {
     std::vector<std::thread> threads;
+    std::lock_guard<const ActorVector> actorsLock(wl.actors());
     std::transform(cbegin(wl.actors()),
                    cend(wl.actors()),
                    std::back_inserter(threads),

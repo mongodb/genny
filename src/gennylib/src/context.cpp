@@ -81,7 +81,9 @@ WorkloadContext::WorkloadContext(const Node& node,
 
     parallelRun(_actorContexts,
                    [&](const auto& actorContext) {
-                       for (auto&& actor : _constructActors(cast, actorContext)) {
+                       auto rawActors = _constructActors(cast, actorContext);
+                       std::lock_guard<ActorVector> vecGuard(rawActors);
+                       for (auto&& actor : rawActors) {
                            _actors.push_back(std::move(actor));
                        }
                    });
@@ -104,7 +106,9 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
         throw InvalidConfigurationException(stream.str());
     }
 
-    for (auto&& actor : producer->produce(*actorContext)) {
+    auto rawActors = producer->produce(*actorContext);
+    std::lock_guard<ActorVector> vecGuard(rawActors);
+    for (auto&& actor : rawActors) {
         actors.emplace_back(std::forward<std::unique_ptr<Actor>>(actor));
     }
     return actors;

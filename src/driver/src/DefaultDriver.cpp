@@ -153,6 +153,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
+    std::lock_guard<const ActorVector> actorLock(workloadContext.actors());
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
 
