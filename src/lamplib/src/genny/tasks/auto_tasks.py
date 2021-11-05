@@ -70,23 +70,34 @@ class WorkloadLister:
     Separate from the Repo class for easier testing.
     """
 
-    def __init__(self, genny_repo_root: str, reader: YamlReader):
+    def __init__(self, workspace_root: str, genny_repo_root: str, reader: YamlReader):
+        self.workspace_root = workspace_root
         self.genny_repo_root = genny_repo_root
         self._expansions = None
         self.reader = reader
 
     def all_workload_files(self) -> Set[str]:
-        pattern = os.path.join(self.genny_repo_root, "src", "workloads", "**", "*.yml")
+        pattern = os.path.join(self.workspace_root, "src", "*", "src", "workloads", "**", "*.yml")
         return {*glob.glob(pattern)}
 
     def modified_workload_files(self) -> Set[str]:
         """Relies on git to find files in src/workloads modified versus origin/master"""
+        src_path = os.path.join(self.workspace_root, "src")
+        all_repo_directories = {
+            path for path in os.listdir(src_path) if os.path.isdir(os.path.join(src_path, path))
+        }
         command = (
             "git diff --name-only --diff-filter=AMR "
             "$(git merge-base HEAD origin/master) -- src/workloads/"
         )
-        lines = run_command(cmd=[command], cwd=self.genny_repo_root, shell=True, check=True).stdout
-        return {os.path.join(self.genny_repo_root, line) for line in lines if line.endswith(".yml")}
+        modified_workloads = set()
+        for repo_directory in all_repo_directories:
+            repo_path = os.path.join(src_path, repo_directory)
+            lines = run_command(cmd=[command], cwd=repo_path, shell=True, check=True).stdout
+            modified_workloads.update(
+                {os.path.join(repo_path, line) for line in lines if line.endswith(".yml")}
+            )
+        return modified_workloads
 
 
 class OpName(enum.Enum):
@@ -177,6 +188,7 @@ class Workload:
     """The list of `When/ThenRun` blocks, if present"""
 
     def __init__(self, workspace_root: str, file_path: str, is_modified: bool, reader: YamlReader):
+        self.workspace_root = workspace_root
         self.file_path = file_path
         self.is_modified = is_modified
 
@@ -210,7 +222,7 @@ class Workload:
 
     @property
     def relative_path(self) -> str:
-        return self.file_path.split("src/workloads/")[1]
+        return self.file_path.replace(self.workspace_root, ".")
 
     def generate_requested_tasks(self, then_run) -> List[GeneratedTask]:
         """
@@ -351,6 +363,9 @@ class Repo:
     def all_workloads(self) -> List[Workload]:
         all_files = self.lister.all_workload_files()
         modified = self.lister.modified_workload_files()
+        for fpath in all_files:
+            if fpath in modified:
+                print(f"Path->{fpath}")
         return [
             Workload(
                 workspace_root=self.workspace_root,
@@ -485,7 +500,9 @@ def main(mode_name: str, genny_repo_root: str, workspace_root: str) -> None:
         genny_repo_root=genny_repo_root,
         workspace_root=workspace_root,
     )
-    lister = WorkloadLister(genny_repo_root=genny_repo_root, reader=reader)
+    lister = WorkloadLister(
+        workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader
+    )
     repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
     tasks = repo.tasks(op=op, build=build)
 

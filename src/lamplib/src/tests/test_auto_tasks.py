@@ -48,7 +48,7 @@ class MockReader(YamlReader):
 
 class BaseTestClass(unittest.TestCase):
     def setUp(self):
-        self.workspace_root = tempfile.mkdtemp()
+        self.workspace_root = "."
 
     def cleanUp(self):
         shutil.rmtree(self.workspace_root)
@@ -59,7 +59,7 @@ class BaseTestClass(unittest.TestCase):
         # Create "dumb" mocks.
         lister: WorkloadLister = MagicMock(name="lister", spec=WorkloadLister, instance=True)
         reader: YamlReader = MockReader(given_files)
-
+        genny_repo_root = os.path.join(self.workspace_root, "/src/genny")
         # Make them smarter.
         lister.all_workload_files.return_value = [
             v.base_name
@@ -74,9 +74,9 @@ class BaseTestClass(unittest.TestCase):
         ]
 
         # And send them off into the world.
-        build = CurrentBuildInfo(reader, workspace_root=".")
+        build = CurrentBuildInfo(reader, workspace_root=self.workspace_root)
         op = CLIOperation.create(
-            and_mode, reader, genny_repo_root=".", workspace_root=self.workspace_root
+            and_mode, reader, genny_repo_root=genny_repo_root, workspace_root=self.workspace_root
         )
         repo = Repo(lister, reader, workspace_root=self.workspace_root)
         tasks = repo.tasks(op, build)
@@ -106,11 +106,30 @@ def expansions_mock(exp_vars) -> MockFile:
 class AutoTasksTests(BaseTestClass):
     def test_all_tasks(self):
         expansions = expansions_mock({"mongodb_setup": "matches"})
-        empty_unmodified = MockFile(
-            base_name="src/workloads/scale/EmptyUnmodified.yml", modified=False, yaml_conts={}
+        empty_genny_unmodified = MockFile(
+            base_name="src/genny/src/workloads/scale/EmptyUnmodified.yml",
+            modified=False,
+            yaml_conts={},
         )
-        multi_modified = MockFile(
-            base_name="src/workloads/src/Multi.yml",
+        empty_other_unmodified = MockFile(
+            base_name="src/other/src/workloads/scale/EmptyUnmodifiedOther.yml",
+            modified=False,
+            yaml_conts={},
+        )
+        multi_modified_genny = MockFile(
+            base_name="src/genny/src/workloads/src/Multi.yml",
+            modified=True,
+            yaml_conts={
+                "AutoRun": [
+                    {
+                        "When": {"mongodb_setup": {"$eq": "matches"}},
+                        "ThenRun": [{"mongodb_setup": "a"}, {"arb_bootstrap_key": "b"}],
+                    }
+                ]
+            },
+        )
+        multi_modified_other = MockFile(
+            base_name="src/other/src/workloads/src/MultiOther.yml",
             modified=True,
             yaml_conts={
                 "AutoRun": [
@@ -123,7 +142,13 @@ class AutoTasksTests(BaseTestClass):
         )
 
         self.assert_result(
-            given_files=[expansions, empty_unmodified, multi_modified],
+            given_files=[
+                expansions,
+                empty_genny_unmodified,
+                empty_other_unmodified,
+                multi_modified_genny,
+                multi_modified_other,
+            ],
             and_mode="all_tasks",
             then_writes={
                 "tasks": [
@@ -135,7 +160,21 @@ class AutoTasksTests(BaseTestClass):
                                 "func": "f_run_dsi_workload",
                                 "vars": {
                                     "test_control": "empty_unmodified",
-                                    "auto_workload_path": "scale/EmptyUnmodified.yml",
+                                    "auto_workload_path": "src/genny/src/workloads/scale/EmptyUnmodified.yml",
+                                },
+                            },
+                        ],
+                        "priority": 5,
+                    },
+                    {
+                        "name": "empty_unmodified_other",
+                        "commands": [
+                            TIMEOUT_COMMAND,
+                            {
+                                "func": "f_run_dsi_workload",
+                                "vars": {
+                                    "test_control": "empty_unmodified_other",
+                                    "auto_workload_path": "src/other/src/workloads/scale/EmptyUnmodifiedOther.yml",
                                 },
                             },
                         ],
@@ -149,7 +188,7 @@ class AutoTasksTests(BaseTestClass):
                                 "func": "f_run_dsi_workload",
                                 "vars": {
                                     "test_control": "multi_a",
-                                    "auto_workload_path": "src/Multi.yml",
+                                    "auto_workload_path": "src/genny/src/workloads/src/Multi.yml",
                                     "mongodb_setup": "a",
                                 },
                             },
@@ -164,7 +203,37 @@ class AutoTasksTests(BaseTestClass):
                                 "func": "f_run_dsi_workload",
                                 "vars": {
                                     "test_control": "multi_b",
-                                    "auto_workload_path": "src/Multi.yml",
+                                    "auto_workload_path": "src/genny/src/workloads/src/Multi.yml",
+                                    "arb_bootstrap_key": "b",  # test that arb bootstrap_key works
+                                },
+                            },
+                        ],
+                        "priority": 5,
+                    },
+                    {
+                        "name": "multi_other_a",
+                        "commands": [
+                            TIMEOUT_COMMAND,
+                            {
+                                "func": "f_run_dsi_workload",
+                                "vars": {
+                                    "test_control": "multi_other_a",
+                                    "auto_workload_path": "src/other/src/workloads/src/MultiOther.yml",
+                                    "mongodb_setup": "a",
+                                },
+                            },
+                        ],
+                        "priority": 5,
+                    },
+                    {
+                        "name": "multi_other_b",
+                        "commands": [
+                            TIMEOUT_COMMAND,
+                            {
+                                "func": "f_run_dsi_workload",
+                                "vars": {
+                                    "test_control": "multi_other_b",
+                                    "auto_workload_path": "src/other/src/workloads/src/MultiOther.yml",
                                     "arb_bootstrap_key": "b",  # test that arb bootstrap_key works
                                 },
                             },
@@ -455,7 +524,9 @@ def test_dry_run_all_tasks():
                 genny_repo_root=genny_repo_root,
                 workspace_root=workspace_root,
             )
-            lister = WorkloadLister(genny_repo_root=genny_repo_root, reader=reader)
+            lister = WorkloadLister(
+                workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader
+            )
             repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
             tasks = repo.tasks(op=op, build=build)
 
