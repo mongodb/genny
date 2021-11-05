@@ -363,9 +363,6 @@ class Repo:
     def all_workloads(self) -> List[Workload]:
         all_files = self.lister.all_workload_files()
         modified = self.lister.modified_workload_files()
-        for fpath in all_files:
-            if fpath in modified:
-                print(f"Path->{fpath}")
         return [
             Workload(
                 workspace_root=self.workspace_root,

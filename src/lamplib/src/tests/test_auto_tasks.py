@@ -1,7 +1,6 @@
 import json
 import shutil
 import unittest
-import tempfile
 import os
 from typing import NamedTuple, List, Optional
 from unittest.mock import MagicMock
