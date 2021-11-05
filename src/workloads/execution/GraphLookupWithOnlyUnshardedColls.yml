@@ -7,6 +7,8 @@ Description: |
   may want to compare results across the two files, so the loading stage (and some queries) should
   be kept as similar as possible.
 
+  Note: this workload runs on replica sets and sharded clusters.
+
   The workload consists of the following phases:
     1. Creating an empty sharded collection distributed across all shards in the cluster.
     2. Populating collections with data.

@@ -6,12 +6,16 @@ Description: |
   LookupInUnshardedEnvironment workload, so the query can be tested on replica sets as well. We may
   want to compare results across the two files, so the loading stage (and some queries) should be
   kept as similar as possible.
+  
+  Note: this workload runs only on sharded clusters.
 
   The workload consists of the following phases:
     1. Creating empty sharded collections distributed across all shards in the cluster.
     2. Populating collections with data.
     3. Fsync.
-    4. Running targeted and untargeted $lookups.
+    4. Running $lookups. This includes but is not limited to cases where the top-level pipelines are
+       targeted and untargeted, the subpipelines are targeted and untargeted, and the subpipelines
+       have cacheable prefixes.
 
 GlobalDefaults:
   ShardedColl0: &ShardedColl0 Collection0
