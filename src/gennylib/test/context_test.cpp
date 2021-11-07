@@ -254,25 +254,33 @@ Actors:
             using ActorProducer::ActorProducer;
 
             ActorVector produce(ActorContext& context) override {
-                REQUIRE(context.workload()["Actors"][0]["SomeList"][0].to<int>() == 100);
-                REQUIRE(context["SomeList"][0].to<int>() == 100);
+                workloadAssert =
+                    context.workload()["Actors"][0]["SomeList"][0].to<int>() == 100;
+                actorAssert = 
+                    context["SomeList"][0].to<int>() == 100;
                 ++calls;
                 return ActorVector{};
             }
 
             int calls = 0;
+
+            // Because Catch2 isn't thread-safe.
+            bool workloadAssert = false;
+            bool actorAssert = false;
         };
 
         struct CountProducer : public ActorProducer {
             using ActorProducer::ActorProducer;
 
             ActorVector produce(ActorContext& context) override {
-                REQUIRE(context.workload()["Actors"][1]["Count"].to<int>() == 7);
-                REQUIRE(context["Count"].to<int>() == 7);
+                actorAssert = context.workload()["Actors"][1]["Count"].to<int>() == 7;
+                workloadAssert = context["Count"].to<int>() == 7;
                 ++calls;
                 return ActorVector{};
             }
 
+            bool workloadAssert = false;
+            bool actorAssert = false;
             int calls = 0;
         };
 
@@ -287,8 +295,14 @@ Actors:
 
         auto context = WorkloadContext{yaml, orchestrator, mongoUri.data(), twoActorCast};
 
+
         REQUIRE(someListProducer->calls == 1);
+        REQUIRE(someListProducer->workloadAssert);
+        REQUIRE(someListProducer->actorAssert);
+
         REQUIRE(countProducer->calls == 1);
+        REQUIRE(countProducer->workloadAssert);
+        REQUIRE(countProducer->actorAssert);
         std::lock_guard<const ActorVector> actorsLock(context.actors());
         REQUIRE(std::distance(context.actors().begin(), context.actors().end()) == 0);
     }
