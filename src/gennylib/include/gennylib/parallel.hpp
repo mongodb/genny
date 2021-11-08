@@ -219,7 +219,6 @@ void parallelRun(IterableT& iterable, BinaryOperation op) {
     auto threadsPtr = std::make_unique<std::vector<std::thread>>();
     threadsPtr->reserve(std::distance(cbegin(iterable), cend(iterable)));
     AtomicDeque<std::exception_ptr> caughtExceptions;
-    std::mutex exceptLock;
     std::transform(cbegin(iterable), cend(iterable), std::back_inserter(*threadsPtr),
             [&](const typename IterableT::value_type& value) {
                 return std::thread{[&]() {
