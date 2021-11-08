@@ -148,15 +148,13 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
         BOOST_THROW_EXCEPTION(std::logic_error("ActorId must be 1 or greater."));
     }
 
-    // Because IDs start at 1.
-    size_t idIndex = id - 1;
     std::lock_guard<std::mutex> lk(_rngLock);
-    if (_rngRegistry.empty() || _rngRegistry.size()-1 < idIndex) {
-        for (size_t i = _rngRegistry.size(); i <= idIndex; i++) {
-            _rngRegistry.emplace_back(_seedGenerator());
-        }
+    // _nextWorkloadActorId will be higher than all active actor ids
+    for (int i = _rngRegistry.size(); i <= _nextWorkloadActorId; i++) {
+        _rngRegistry.emplace_back(_seedGenerator());
     }
-    return _rngRegistry[idIndex];
+
+    return _rngRegistry[id - 1];
 }
 
 // Helper method to convert Phases:[...] to PhaseContexts

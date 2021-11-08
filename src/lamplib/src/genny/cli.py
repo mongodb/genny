@@ -305,12 +305,15 @@ def run_debug(ctx: click.Context, genny_args: List[str]):
         "constructor validates configuration at constructor time."
     ),
 )
+@click.option(
+    "-w", "--workload", required=False, default=None, help=("Workload to dry-run."),
+)
 @click.pass_context
-def dry_run_workloads(ctx: click.Context):
+def dry_run_workloads(ctx: click.Context, workload: str):
     from genny.tasks import dry_run
 
     dry_run.dry_run_workloads(
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"], given_workload=workload
     )
 
 
