@@ -313,7 +313,9 @@ def dry_run_workloads(ctx: click.Context, workload: str):
     from genny.tasks import dry_run
 
     dry_run.dry_run_workloads(
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"], given_workload=workload
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        given_workload=workload,
     )
 
 
