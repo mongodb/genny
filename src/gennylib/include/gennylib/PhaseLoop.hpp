@@ -72,7 +72,8 @@ public:
         : _minDuration{minDuration},
           // If it is a nop then should iterate 0 times.
           _minIterations{isNop ? IntegerSpec(0l) : minIterations},
-          _doesBlock{_minIterations || _minDuration} {
+          _doesBlock{_minIterations || _minDuration},
+          _sleepUntil{SteadyClock::now()} {
         if (minDuration && minDuration->count() < 0) {
             std::stringstream str;
             str << "Need non-negative duration. Gave " << minDuration->count() << " milliseconds";
@@ -169,9 +170,9 @@ public:
 
     constexpr bool isDone(SteadyClock::time_point startedAt,
                           int64_t currentIteration,
-                          SteadyClock::time_point now) {
-        return (!_minIterations || currentIteration >= (*_minIterations).value) &&
-            (!_minDuration || (*_minDuration).value <= now - startedAt);
+                          SteadyClock::time_point wouldBeDoneAtTime) {
+        return (!_minIterations || currentIteration >= _minIterations->value) &&
+            (!_minDuration || (*_minDuration).value <= wouldBeDoneAtTime - startedAt);
     }
 
     constexpr bool operator==(const IterationChecker& other) const {
@@ -181,6 +182,33 @@ public:
     constexpr bool doesBlockCompletion() const {
         return _doesBlock;
     }
+
+    // Set the minimum timepoint before continuning again
+    constexpr void setSleepUntil(SteadyClock::time_point sleepUntil) {
+        _sleepUntil = sleepUntil;
+    }
+
+    // Perform the sleep to get to specified timepoint, but ending phase if timepoint would be after
+    // the end of the phase.
+    void sleepForActor(Orchestrator& o,
+                       SteadyClock::time_point startedAt,
+                       int64_t currentIteration,
+                       const PhaseNumber pn) {
+        if (!o.continueRunning())
+            return;  // don't sleep if the orchestrator says to stop
+        auto now = SteadyClock::now();
+        if (_sleepUntil <= now)
+            return;
+        // if phase would end before delay, call await end
+        if (doesBlockCompletion() && isDone(startedAt, currentIteration, _sleepUntil)) {
+            _sleepUntil =
+                (_minDuration ? (startedAt + _minDuration->value)  // Shorten sleepUntil duration.
+                              : now);
+        }
+        // Don't block completion and wouldn't otherwise be done at _sleepUntil.
+        o.sleepUntilOrPhaseEnd(_sleepUntil, pn);
+    }
+
 
     constexpr void sleepBefore(const Orchestrator& o, const PhaseNumber pn) const {
         _sleeper->before(o, pn);
@@ -192,8 +220,8 @@ public:
 
 private:
     // Debatable about whether this should also track the current iteration and
-    // referenceStartingPoint time (versus having those in the ActorPhaseIterator). BUT: even the
-    // .end() iterator needs an instance of this, so it's weird
+    // referenceStartingPoint time (versus having those in the ActorPhaseIterator). BUT: even
+    // the .end() iterator needs an instance of this, so it's weird
 
     const std::optional<TimeSpec> _minDuration;
     const std::optional<IntegerSpec> _minIterations;
@@ -202,6 +230,7 @@ private:
     GlobalRateLimiter* _rateLimiter = nullptr;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
     std::optional<v1::Sleeper> _sleeper;
+    SteadyClock::time_point _sleepUntil;
 };
 
 
@@ -256,6 +285,8 @@ public:
             _iterationCheck->sleepBefore(*_orchestrator, _inPhase);
             _iterationCheck->limitRate(
                 _referenceStartingPoint, _currentIteration, *_orchestrator, _inPhase);
+            _iterationCheck->sleepForActor(
+                *_orchestrator, _referenceStartingPoint, _currentIteration, _inPhase);
         }
         // clang-format off
         return
@@ -431,6 +462,14 @@ public:
 
     PhaseNumber phaseNumber() const {
         return _currentPhase;
+    }
+
+    /**
+     * Set a sleep to be used in the iteration checker in the Phase Loop. Does not sleep
+     * immediately, but will not start the next iteration before this amount of time has passed.
+     */
+    void sleepNonBlocking(Duration timeout) {
+        _iterationCheck->setSleepUntil(SteadyClock::now() + timeout);
     }
 
 private:

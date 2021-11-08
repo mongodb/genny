@@ -33,7 +33,7 @@ namespace {
 //
 // Cute convenience operators -
 //  100_uis   gives optional<IntegerSpec> holding 100
-//  100_ts  gives optional<TimeSpec>   holding 100
+//  100_ts     gives optional<TimeSpec>   holding 100
 //
 // These are copy/pasta in PhaseLoop_test and orchestrator_test. Refactor.
 optional<IntegerSpec> operator""_uis(unsigned long long v) {
@@ -114,6 +114,61 @@ TEST_CASE("Correctness for N milliseconds") {
             chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - start)
                 .count();
 
+        REQUIRE(elapsed >= 10);
+        REQUIRE(elapsed <= 11);
+    }
+}
+
+TEST_CASE("Correctness for N milliseconds with sleepNonBlocking") {
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{};
+    o.awaitPhaseStart(true, 1);
+    SECTION(
+        "Looping for 10 milliseconds takes between 10 and 11 millis and does 10 iterations with "
+        "sleepNonBlocking 1ms") {
+        v1::ActorPhase<int> loop{
+            o,
+            std::make_unique<v1::IterationChecker>(10_ots, nullopt, false, 0_ts, 0_ts, nullopt),
+            0};
+
+        auto start = chrono::system_clock::now();
+        int i = 0;
+        INFO(i);
+        for (auto _ : loop) {
+            ++i;
+            loop.sleepNonBlocking(chrono::milliseconds(1));
+        }
+        INFO("After loop");
+        INFO(i);
+        auto elapsed =
+            chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - start)
+                .count();
+
+        REQUIRE(i >= 8);
+        REQUIRE(i <= 12);
+        REQUIRE(elapsed >= 10);
+        REQUIRE(elapsed <= 11);
+    }
+    SECTION(
+        "Looping for 10 milliseconds takes between 10 and 11 millis and does 1 iterations with "
+        "sleepNonBlocking 100ms") {
+
+        v1::ActorPhase<int> loop{
+            o,
+            std::make_unique<v1::IterationChecker>(10_ots, nullopt, false, 0_ts, 0_ts, nullopt),
+            0};
+
+        auto start = chrono::system_clock::now();
+        int i = 0;
+        for (auto _ : loop) {
+            i++;
+            loop.sleepNonBlocking(chrono::milliseconds(100));
+        }  // nop
+        auto elapsed =
+            chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - start)
+                .count();
+
+        REQUIRE(i == 1);
         REQUIRE(elapsed >= 10);
         REQUIRE(elapsed <= 11);
     }
@@ -271,8 +326,8 @@ TEST_CASE("Actual Actor Example") {
     public:
         IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
             : Actor(actorContext), _loop{actorContext, 1}, _counters{counters} {}
-        //                        ↑ is forwarded to the IncrementsMapValues ctor as the keyOffset
-        //                        param.
+        //                        ↑ is forwarded to the IncrementsMapValues ctor as the
+        //                        keyOffset param.
 
         void run() override {
             for (auto&& cfg : _loop) {

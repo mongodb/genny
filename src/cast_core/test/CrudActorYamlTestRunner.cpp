@@ -164,6 +164,26 @@ NodeSource createConfigurationYaml(YAML::Node operations) {
     return NodeSource{YAML::Dump(config), "operationsConfig"};
 }
 
+// Unlike the previous function, this takes everything in phase, and puts it into the Phase, not
+// just operations.
+NodeSource createConfigurationYamlPhase(YAML::Node phase) {
+    YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Phases:
+            - Repeat: 1
+          Metrics:
+            Format: csv
+          )");
+    config["Actors"][0]["Database"] = DEFAULT_DB;
+    config["Actors"][0]["Phases"][0]["Collection"] = DEFAULT_COLLECTION;
+    for (auto iter : phase) {
+        config["Actors"][0]["Phases"][0][iter.first] = iter.second;
+    }
+    return NodeSource{YAML::Dump(config), "operationsConfig"};
+}
 void requireAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node tcase) {
     if (auto ocd = tcase["OutcomeData"]; ocd) {
         requireCounts(client, ocd);
@@ -188,6 +208,7 @@ struct CrudActorTestCase {
     explicit CrudActorTestCase(YAML::Node node)
         : description{node["Description"].as<std::string>()},
           operations{node["Operations"]},
+          phase{node["Phase"]},
           runMode{convertRunMode(node)},
           error{node["Error"]},
           tcase{node} {}
@@ -198,7 +219,8 @@ struct CrudActorTestCase {
             auto events = ApmEvents{};
             auto apmCallback = makeApmCallback(events);
 
-            auto config = createConfigurationYaml(operations);
+            auto config =
+                (phase ? createConfigurationYamlPhase(phase) : createConfigurationYaml(operations));
             {
                 std::stringstream str;
                 str << config.root();
@@ -256,6 +278,7 @@ struct CrudActorTestCase {
     RunMode runMode = RunMode::kNormal;
     std::string description;
     YAML::Node operations;
+    YAML::Node phase;
     YAML::Node tcase;
 };
 
@@ -281,5 +304,11 @@ TEST_CASE("CrudActor YAML Tests",
 
     genny::testing::runTestCaseYaml<genny::testing::CrudActorTestCase>(
         "/src/cast_core/test/CrudActorYamlTests.yml");
+}
+TEST_CASE("CrudActor YAML FSM Tests",
+          "[standalone][single_node_replset][three_node_replset][CrudActor]") {
+
+    genny::testing::runTestCaseYaml<genny::testing::CrudActorTestCase>(
+        "/src/cast_core/test/CrudActorFSMYamlTests.yml");
 }
 }  // namespace
