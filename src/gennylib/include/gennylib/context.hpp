@@ -282,6 +282,7 @@ private:
     // should not be called after construction.
     bool _done = false;
 
+    // Deque instead of vector to prevent references from being deleted when reallocating.
     AtomicDeque<DefaultRandom> _rngRegistry;
     DefaultRandom _seedGenerator;
 
