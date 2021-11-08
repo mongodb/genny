@@ -29,38 +29,6 @@
 
 namespace genny {
 
-    /**
-     * Given iterable, run op in one thread per element of iterable, passing
-     * a reference to the element for each execution.
-     *
-     * Any exception thrown in any thread is gathered and rethrown in the calling thread.
-     */
-    template<typename IterableT, typename BinaryOperation>
-    void parallelRun(IterableT& iterable, BinaryOperation op) {
-        auto threadsPtr = std::make_unique<std::vector<std::thread>>();
-        threadsPtr->reserve(std::distance(cbegin(iterable), cend(iterable)));
-        std::deque<std::exception_ptr> caughtExceptions;
-        std::mutex exceptLock;
-        std::transform(cbegin(iterable), cend(iterable), std::back_inserter(*threadsPtr),
-                [&](const typename IterableT::value_type& value) {
-                    return std::thread{[&]() {
-                        try {
-                            op(value);
-                        } catch(...) {
-                            const std::lock_guard<std::mutex> lock(exceptLock);
-                            caughtExceptions.push_back(std::current_exception());
-                        }
-                    }};
-                });
-
-        for (auto& thread : *threadsPtr) {
-            thread.join();
-        }
-        for (auto&& exc : caughtExceptions) {
-            std::rethrow_exception(exc);
-        }
-    }
-
 /**
  * Data structure that wraps STL containers and is thread-safe for insertions.
  *
@@ -238,6 +206,40 @@ using AtomicDeque = AtomicContainer<std::deque<T>>;
 template <typename T>
 using AtomicVector = AtomicContainer<std::vector<T>>;
 
+
+
+/**
+ * Given iterable, run op in one thread per element of iterable, passing
+ * a reference to the element for each execution.
+ *
+ * Any exception thrown in any thread is gathered and rethrown in the calling thread.
+ */
+template<typename IterableT, typename BinaryOperation>
+void parallelRun(IterableT& iterable, BinaryOperation op) {
+    auto threadsPtr = std::make_unique<std::vector<std::thread>>();
+    threadsPtr->reserve(std::distance(cbegin(iterable), cend(iterable)));
+    AtomicDeque<std::exception_ptr> caughtExceptions;
+    std::mutex exceptLock;
+    std::transform(cbegin(iterable), cend(iterable), std::back_inserter(*threadsPtr),
+            [&](const typename IterableT::value_type& value) {
+                return std::thread{[&]() {
+                    try {
+                        op(value);
+                    } catch(...) {
+                        caughtExceptions.push_back(std::current_exception());
+                    }
+                }};
+            });
+
+    for (auto& thread : *threadsPtr) {
+        thread.join();
+    }
+
+    std::lock_guard<AtomicDeque<std::exception_ptr>> excLock(caughtExceptions);
+    for (auto&& exc : caughtExceptions) {
+        std::rethrow_exception(exc);
+    }
+}
 
 } // namespace genny::v1
 
