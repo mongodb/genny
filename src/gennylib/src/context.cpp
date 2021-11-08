@@ -148,9 +148,8 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
         BOOST_THROW_EXCEPTION(std::logic_error("ActorId must be 1 or greater."));
     }
 
-    std::lock_guard<std::mutex> lk(_rngLock);
-    // _nextWorkloadActorId will be higher than all active actor ids
-    for (int i = _rngRegistry.size(); i <= _nextWorkloadActorId; i++) {
+    std::lock_guard<AtomicDeque<DefaultRandom>> lk(_rngRegistry);
+    for (auto i = _rngRegistry.size(); i < id; i++) {
         _rngRegistry.emplace_back(_seedGenerator());
     }
 

@@ -285,8 +285,7 @@ private:
     // should not be called after construction.
     bool _done = false;
 
-    std::mutex _rngLock; // Use for all the rng stuff below.
-    std::vector<DefaultRandom> _rngRegistry;
+    AtomicDeque<DefaultRandom> _rngRegistry;
     DefaultRandom _seedGenerator;
 
     std::unordered_map<std::string, std::unique_ptr<GlobalRateLimiter>> _rateLimiters;
