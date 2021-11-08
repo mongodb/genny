@@ -1,6 +1,8 @@
 import structlog
 import os
+import sys
 import shutil
+import subprocess
 
 from typing import Callable, TypeVar, Tuple, Optional
 
@@ -69,19 +71,30 @@ def _run_command_with_sentinel_report(
         )
 
 
-def cmake_test(genny_repo_root: str, workspace_root: str):
+def cmake_test(
+    genny_repo_root: str, workspace_root: str, regex: str = None, repeat_until_fail: int = 1
+):
     info = toolchain.toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     workdir = os.path.join(genny_repo_root, "build")
 
     xunit_dir = os.path.join(workspace_root, "build", "XUnitXML")
     os.makedirs(xunit_dir, exist_ok=True)
 
+    print("repeat until fail: ", str(repeat_until_fail))
     ctest_cmd = [
         "ctest",
-        "--verbose",
+        "--schedule-random",
+        "--output-on-failure",
+        "--parallel",
+        "4",
+        "--repeat-until-fail",
+        str(repeat_until_fail),
         "--label-exclude",
         "(standalone|sharded|single_node_replset|three_node_replset|benchmark)",
     ]
+
+    if regex is not None:
+        ctest_cmd += ["--tests-regex", regex]
 
     def cmd_func() -> bool:
         output: cmd_runner.RunCommandOutput = cmd_runner.run_command(
@@ -89,9 +102,13 @@ def cmake_test(genny_repo_root: str, workspace_root: str):
         )
         return output.returncode == 0
 
-    _run_command_with_sentinel_report(
-        cmd_func=cmd_func, workspace_root=workspace_root, genny_repo_root=genny_repo_root
-    )
+    try:
+        _run_command_with_sentinel_report(
+            cmd_func=cmd_func, workspace_root=workspace_root, genny_repo_root=genny_repo_root
+        )
+
+    except subprocess.CalledProcessError:
+        sys.exit(1)
 
 
 def benchmark_test(genny_repo_root: str, workspace_root: str):

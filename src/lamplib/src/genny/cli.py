@@ -212,12 +212,25 @@ def clean(ctx: click.Context) -> None:
 
 
 @cli.command(name="cmake-test", help="Run genny's C++ unit tests.")
+@click.option(
+    "-g", "--regex", required=False, default=None, help=("Regex to match against tests."),
+)
+@click.option(
+    "-r",
+    "--repeat-until-fail",
+    required=False,
+    default=1,
+    help=("Repeat each test this many times until failing. Default is 1."),
+)
 @click.pass_context
-def cmake_test(ctx: click.Context) -> None:
+def cmake_test(ctx: click.Context, regex: str, repeat_until_fail: int) -> None:
     from genny.tasks import run_tests
 
     run_tests.cmake_test(
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        regex=regex,
+        repeat_until_fail=repeat_until_fail,
     )
 
 
@@ -292,12 +305,17 @@ def run_debug(ctx: click.Context, genny_args: List[str]):
         "constructor validates configuration at constructor time."
     ),
 )
+@click.option(
+    "-w", "--workload", required=False, default=None, help=("Workload to dry-run."),
+)
 @click.pass_context
-def dry_run_workloads(ctx: click.Context):
+def dry_run_workloads(ctx: click.Context, workload: str):
     from genny.tasks import dry_run
 
     dry_run.dry_run_workloads(
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], workspace_root=ctx.obj["WORKSPACE_ROOT"]
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        given_workload=workload,
     )
 
 
@@ -395,6 +413,16 @@ def create_new_actor(ctx: click.Context, actor_name: str):
     create_new_actor.run_create_new_actor(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], actor_name=actor_name,
     )
+
+
+@cli.command(
+    "generate-uuid-tag", help=("Generate a random UUID tag for headers."),
+)
+@click.pass_context
+def generate_uuid_tag(ctx: click.Context):
+    from genny.tasks import generate_uuid_tag
+
+    generate_uuid_tag.run_generate_uuid_tag(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
 
 
 @cli.command(
