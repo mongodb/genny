@@ -71,7 +71,7 @@ Actors:
               as: joined
             }
           },
-          {$project: {str: 0, "joined.str": 0}}]
+           {$project: {str: 0, "joined.str": 0}}]
         cursor: {batchSize: *NumDocs}
     - OperationMetricsName: LookupOneToFewUnshardedToUnsharded
       OperationName: RunCommand

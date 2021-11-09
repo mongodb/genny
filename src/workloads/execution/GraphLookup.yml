@@ -93,7 +93,7 @@ Actors:
     DocumentCount: *num_docs_added
     Database: *Database
     CollectionCount: 2  # Loader will add additional documents to 'Collection0' and 'Collection1'.
-    Document: *Document # Documents will have the same schema.
+    Document: *Document  # Documents will have the same schema.
   - *Nop
   - *Nop
 
@@ -189,7 +189,7 @@ Actors:
               maxDepth: 2
             }},
             {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}
-         ]
+          ]
         # To get meaningful results, the entire result set should fit in a single batch. This should
         # be possible since both collections are small.
         cursor: {batchSize: *num_docs_total}
@@ -231,7 +231,7 @@ Actors:
               maxDepth: 2
             }},
             {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}
-         ]
+          ]
         # To get meaningful results, the entire result set should fit in a single batch. This should
         # be possible since both collections are small.
         cursor: {batchSize: *num_docs_total}

@@ -6,7 +6,7 @@ Description: |
   LookupWithOnlyUnshardedColls workload, so the query can be tested on replica sets as well. We may
   want to compare results across the two files, so the loading stage (and some queries) should be
   kept as similar as possible.
-  
+
   Note: this workload runs only on sharded clusters.
 
   The workload consists of the following phases:
@@ -191,7 +191,7 @@ Actors:
               as: joined
             }
           },
-          {$project: {str: 0, "joined.str": 0}}]
+           {$project: {str: 0, "joined.str": 0}}]
         cursor: {batchSize: *NumDocs}
     - OperationMetricsName: LookupWithCachedPrefixUnshardedToSharded
       OperationName: RunCommand
@@ -209,7 +209,7 @@ Actors:
               as: joined
             }
           },
-          {$project: {str: 0, "joined.str": 0}}]
+           {$project: {str: 0, "joined.str": 0}}]
         cursor: {batchSize: *NumDocs}
     - OperationMetricsName: LookupWithCachedPrefixShardedToUnsharded
       OperationName: RunCommand
@@ -227,7 +227,7 @@ Actors:
               as: joined
             }
           },
-          {$project: {str: 0, "joined.str": 0}}]
+           {$project: {str: 0, "joined.str": 0}}]
         cursor: {batchSize: *NumDocs}
     - OperationMetricsName: LookupMatchAllShardsShardedToUnsharded
       OperationName: RunCommand
