@@ -982,7 +982,7 @@ private:
     const UniqueGenerator<int64_t> _nTimesGen;
 };
 
-/** `{^Object: {key: ..., value: ..., number: 2}` */
+/** `{^Object: {key: {^RandomString: {length: 10}}, value: {^Inc: {}}, number: 10}` */
 class ObjectGenerator : public Generator<bsoncxx::document::value> {
 public:
     ObjectGenerator(const Node& node,

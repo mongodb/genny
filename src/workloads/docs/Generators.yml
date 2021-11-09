@@ -215,6 +215,9 @@ Actors:
                                              data: { ^Join: { array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}},
                                        number: 10}}
 
+            # Generate an object with 10 key-value pairs using the specified generator for each key and value.
+            randomObject: {^Object: {key: {^RandomString: {length: 10}}, value: {^RandomString: {length: 10}}, number: 10}}
+
             # Large sequences of random strings can be expensive to generate.  FixedGeneratedValue
             # can be used to generate an array once during initialization for re-use
             fixedLargeArray: {^FixedGeneratedValue: {fromGenerator: {^Array: {of: {^RandomString: {length: 22}}, number: 20000}}}}
