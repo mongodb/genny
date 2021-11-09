@@ -105,6 +105,10 @@ bool CheckForDroppedCollections(v1::Topology& topology, std::string dbName, Slee
             _successAcc = checkCollectionsTestDB(client);
         }
 
+//        void onBeforeShardedCluster(const v1::ShardedDescription& desc) override {
+//
+//        }
+
         bool success() {
             return _successAcc;
         }

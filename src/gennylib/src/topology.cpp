@@ -49,6 +49,16 @@ void ReplSetDescription::accept(TopologyVisitor& v) {
     v.onAfterReplSet(*this);
 }
 
+void ConfigSvrDescription::accept(TopologyVisitor& v) {
+    v.onBeforeConfigSvr(*this);
+    for (int i = 0; i < nodes.size() - 1; i++) {
+        nodes[i].accept(v);
+        v.onBetweenMongods(*this);
+    }
+    nodes[nodes.size() - 1].accept(v);
+    v.onAfterConfigSvr(*this);
+}
+
 void ShardedDescription::accept(TopologyVisitor& v) {
     v.onBeforeShardedCluster(*this);
     configsvr.accept(v);
@@ -122,9 +132,14 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
         return;
     }
 
+    std::unique_ptr<ReplSetDescription> desc;
+    if (res.view()["setName"].get_utf8().value == "configSet") {
+        desc = std::make_unique<ConfigSvrDescription>();
+    } else {
+        desc = std::make_unique<ReplSetDescription>();
+    }
     auto primary = res.view()["primary"];
 
-    std::unique_ptr<ReplSetDescription> desc = std::make_unique<ReplSetDescription>();
     desc->primaryUri = nameToUri(std::string(primary.get_utf8().value));
 
     auto hosts = res.view()["hosts"];
@@ -148,7 +163,6 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
             desc->nodes.push_back(memberDesc);
         }
     }
-
     this->_topologyDesc.reset(desc.release());
 }
 
@@ -161,19 +175,27 @@ void Topology::findConnectedNodesViaMongos(DBConnection& connection) {
         ReplSetDescription replSet;
     };
 
+    class ConfigSvrRetriever : public TopologyVisitor {
+    public:
+        void onBeforeConfigSvr(const ConfigSvrDescription& desc) override {
+            configSvr = desc;
+        }
+        ConfigSvrDescription configSvr;
+    };
+
     mongocxx::uri baseUri(_factory.makeUri());
 
     std::unique_ptr<ShardedDescription> desc = std::make_unique<ShardedDescription>();
-    ReplSetRetriever retriever;
+    ReplSetRetriever replSetRetriever;
+    ConfigSvrRetriever configSvrRetriever;
 
     // Config Server
     auto shardMap = connection.runAdminCommand("getShardMap");
     std::string configServerConn(shardMap.view()["map"]["config"].get_utf8().value);
     auto configConnection = connection.makePeer(nameToUri(configServerConn));
     Topology configTopology(*configConnection);
-    configTopology.accept(retriever);
-    desc->configsvr = retriever.replSet;
-    desc->configsvr.configsvr = true;
+    configTopology.accept(configSvrRetriever);
+    desc->configsvr = configSvrRetriever.configSvr;
 
     // Shards
     auto shardListRes = connection.runAdminCommand("listShards");
@@ -182,8 +204,8 @@ void Topology::findConnectedNodesViaMongos(DBConnection& connection) {
         std::string shardConn(shard["host"].get_utf8().value);
         auto shardConnection = connection.makePeer(nameToUri(shardConn));
         Topology shardTopology(*shardConnection);
-        shardTopology.accept(retriever);
-        desc->shards.push_back(retriever.replSet);
+        shardTopology.accept(replSetRetriever);
+        desc->shards.push_back(replSetRetriever.replSet);
     }
 
     // Mongos
@@ -233,9 +255,6 @@ void ToJsonVisitor::onBetweenMongoses(const ShardedDescription&) {
 }
 
 void ToJsonVisitor::onBeforeReplSet(const ReplSetDescription& desc) {
-    if (desc.configsvr) {
-        _result << "configsvr: ";
-    }
     _result << "{primaryUri: " << desc.primaryUri << ", nodes: [";
 }
 void ToJsonVisitor::onAfterReplSet(const ReplSetDescription&) {
@@ -264,6 +283,13 @@ void ToJsonVisitor::onBeforeMongoses(const ShardedDescription&) {
 }
 void ToJsonVisitor::onAfterMongoses(const ShardedDescription&) {
     _result << "]";
+}
+
+void ToJsonVisitor::onBeforeConfigSvr(const ConfigSvrDescription& desc){
+    _result << "configsvr: {primaryUri: " << desc.primaryUri << ", nodes: [";
+}
+void ToJsonVisitor::onAfterConfigSvr(const ConfigSvrDescription&){
+    _result << "]}";
 }
 
 std::string ToJsonVisitor::str() {
