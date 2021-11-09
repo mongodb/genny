@@ -16,9 +16,6 @@
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/types.hpp>
-#include <memory>
-#include <optional>
-#include <string>
 
 #include <gennylib/v1/Topology.hpp>
 
@@ -27,12 +24,26 @@
 
 namespace genny::v1 {
 
+enum class ClusterType {
+    standalone,
+    replSetMember,
+    configSvrMember
+};
+
 TopologyVisitor::~TopologyVisitor() {}
 
 TopologyDescription::~TopologyDescription() {}
 
 void MongodDescription::accept(TopologyVisitor& v) {
-    v.onMongod(*this);
+    if (clusterType == ClusterType::standalone) {
+        v.onStandaloneMongod(*this);
+    }
+    else if (clusterType == ClusterType::replSetMember) {
+        v.onReplSetMongod(*this);
+    }
+    else {
+        v.onConfigSvrMongod(*this);
+    }
 }
 
 void MongosDescription::accept(TopologyVisitor& v) {
@@ -127,13 +138,15 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
     auto res = connection.runAdminCommand("isMaster");
     if (!res.view()["setName"]) {
         std::unique_ptr<MongodDescription> desc = std::make_unique<MongodDescription>();
+        desc->clusterType = ClusterType::standalone;
         desc->mongodUri = connection.uri();
         this->_topologyDesc.reset(desc.release());
         return;
     }
 
     std::unique_ptr<ReplSetDescription> desc;
-    if (res.view()["setName"].get_utf8().value == "configSet") {
+    auto setName = res.view()["setName"].get_utf8().value;
+    if (setName == "configSet") {
         desc = std::make_unique<ConfigSvrDescription>();
     } else {
         desc = std::make_unique<ReplSetDescription>();
@@ -148,6 +161,12 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
         for (auto member : hosts_view) {
             MongodDescription memberDesc;
             memberDesc.mongodUri = nameToUri(std::string(member.get_utf8().value));
+            if (setName == "configSet") {
+                memberDesc.clusterType = ClusterType::configSvrMember;
+            } else {
+                memberDesc.clusterType = ClusterType::replSetMember;
+            }
+
             desc->nodes.push_back(memberDesc);
         }
     }
@@ -160,6 +179,11 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
         for (auto member : passives_view) {
             MongodDescription memberDesc;
             memberDesc.mongodUri = std::string(member.get_utf8().value);
+            if (setName == "configSet") {
+                memberDesc.clusterType = ClusterType::configSvrMember;
+            } else {
+                memberDesc.clusterType = ClusterType::replSetMember;
+            }
             desc->nodes.push_back(memberDesc);
         }
     }
@@ -240,8 +264,14 @@ void ToJsonVisitor::onBeforeTopology(const TopologyDescription&) {
     _result.clear();
 }
 
-void ToJsonVisitor::onMongod(const MongodDescription& desc) {
-    _result << "{mongodUri: " << desc.mongodUri << "}";
+void ToJsonVisitor::onStandaloneMongod(const MongodDescription& desc) {
+    _result << "{standaloneMongodUri: " << desc.mongodUri << "}";
+}
+void ToJsonVisitor::onReplSetMongod(const MongodDescription& desc) {
+    _result << "{replSetMemberMongodUri: " << desc.mongodUri << "}";
+}
+void ToJsonVisitor::onConfigSvrMongod(const MongodDescription& desc) {
+    _result << "{configSvrMemberMongodUri: " << desc.mongodUri << "}";
 }
 void ToJsonVisitor::onBetweenMongods(const ReplSetDescription&) {
     _result << ", ";

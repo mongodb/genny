@@ -33,6 +33,8 @@ class ReplSetDescription;
 class ConfigSvrDescription;
 class ShardedDescription;
 
+enum class ClusterType;
+
 /**
  * Inherit from TopologyVisitor and override particular visit methods
  * to implement an algorithm that operates on a cluster. Pass the visitor
@@ -47,7 +49,10 @@ public:
     virtual void onBeforeTopology(const TopologyDescription&) {}
     virtual void onAfterTopology(const TopologyDescription&) {}
 
-    virtual void onMongod(const MongodDescription&) {}
+    virtual void onStandaloneMongod(const MongodDescription&) {}
+    virtual void onReplSetMongod(const MongodDescription&) {}
+    virtual void onConfigSvrMongod(const MongodDescription&) {}
+
     virtual void onMongos(const MongosDescription&) {}
 
     virtual void onBeforeReplSet(const ReplSetDescription&) {}
@@ -86,6 +91,7 @@ struct TopologyDescription {
 };
 
 struct MongodDescription : public TopologyDescription {
+    ClusterType clusterType;
     std::string mongodUri;
 
     void accept(TopologyVisitor& v) override;
@@ -183,7 +189,9 @@ class ToJsonVisitor : public TopologyVisitor {
 public:
     void onBeforeTopology(const TopologyDescription&) override;
 
-    void onMongod(const MongodDescription& desc) override;
+    void onStandaloneMongod(const MongodDescription& desc) override;
+    void onReplSetMongod(const MongodDescription& desc) override;
+    void onConfigSvrMongod(const MongodDescription& desc) override;
     void onBetweenMongods(const ReplSetDescription& desc) override;
 
     void onMongos(const MongosDescription& desc) override;

@@ -20,6 +20,7 @@
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/types.hpp>
+#include <bsoncxx/json.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/database.hpp>
 #include <mongocxx/uri.hpp>
@@ -105,9 +106,10 @@ bool CheckForDroppedCollections(v1::Topology& topology, std::string dbName, Slee
             _successAcc = checkCollectionsTestDB(client);
         }
 
-//        void onBeforeShardedCluster(const v1::ShardedDescription& desc) override {
-//
-//        }
+        void onStandaloneMongod(const v1::MongodDescription& desc) override {
+            mongocxx::client client(mongocxx::uri(desc.mongodUri));
+            _successAcc = checkCollectionsTestDB(client);
+        }
 
         bool success() {
             return _successAcc;
@@ -119,9 +121,6 @@ bool CheckForDroppedCollections(v1::Topology& topology, std::string dbName, Slee
             using bsoncxx::builder::basic::make_document;
 
             auto res = db.run_command(make_document(kvp("serverStatus", 1)));
-            if (!res.view()["storageEngine"] || !res.view()["storageEngine"]["dropPendingIdents"]) {
-                return false;
-            }
             auto idents = res.view()["storageEngine"]["dropPendingIdents"];
 
             return idents.get_int64() != 0;
@@ -130,6 +129,7 @@ bool CheckForDroppedCollections(v1::Topology& topology, std::string dbName, Slee
         bool checkCollectionsTestDB(mongocxx::client& client) {
             auto db = client.database(_dbName);
             int retries = 0;
+
             while (checkCollections(db) && retries < DROPPED_COLLECTION_RETRIES) {
                 BOOST_LOG_TRIVIAL(debug)
                     << "Sleeping 1 second while waiting for collection to finish dropping.";
@@ -158,7 +158,7 @@ bool CheckForDroppedCollections(v1::Topology& topology, std::string dbName, Slee
 
 void doFsync(v1::Topology& topology) {
     class DoFsyncVisitor : public v1::TopologyVisitor {
-        void onMongod(const v1::MongodDescription& desc) override {
+        void onMongod(const v1::MongodDescription& desc) {
             using bsoncxx::builder::basic::kvp;
             using bsoncxx::builder::basic::make_document;
 
@@ -166,6 +166,16 @@ void doFsync(v1::Topology& topology) {
             auto admin = client["admin"];
             admin.run_command(make_document(kvp("fsync", 1)));
         }
+
+        void onStandaloneMongod(const v1::MongodDescription& desc) override {
+            onMongod(desc);
+        };
+        void onReplSetMongod(const v1::MongodDescription& desc) override {
+            onMongod(desc);
+        };
+        void onConfigSvrMongod(const v1::MongodDescription& desc) override {
+            onMongod(desc);
+        };
     };
     DoFsyncVisitor v;
     topology.accept(v);
