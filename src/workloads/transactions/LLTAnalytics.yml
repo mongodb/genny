@@ -37,8 +37,14 @@ GlobalDefaults:
 
   LLTIndexes: &LLTIndexes
   - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
+    options:
+      name: price_1_ts_1_cuid_1
   - keys: {price: 1, cuid: 1}            # Pc
+    options:
+      name: price_1_cuid_1
   - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
+    options:
+      name: caid_1_price_1_cuid_1
 
   # Loader Config.
   LoadThreads: &LoadThreads 4
