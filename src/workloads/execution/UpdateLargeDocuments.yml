@@ -67,8 +67,8 @@ Actors:
         Filter: {_id: { ^RandomInt: { min: 0, max: *DocumentCount } }}
         Update: {$set: {a: { ^RandomInt: { min: 0, max: 10000000 }}}}
         Options:
-            WriteConcern:
-              Level: majority
+          WriteConcern:
+          Level: majority
 
 # TODO Configure which variants to run.
 AutoRun:
