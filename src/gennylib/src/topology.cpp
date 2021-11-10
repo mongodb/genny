@@ -14,6 +14,7 @@
 
 #include <boost/log/trivial.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/json.hpp>
 #include <bsoncxx/types.hpp>
 
 #include <gennylib/v1/Topology.hpp>
