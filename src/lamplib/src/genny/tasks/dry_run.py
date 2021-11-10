@@ -41,11 +41,14 @@ def dry_run_workload(
     )
 
 
-def dry_run_workloads(genny_repo_root: str, workspace_root: str):
+def dry_run_workloads(genny_repo_root: str, workspace_root: str, given_workload: str = None):
     info = toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
 
-    glob_pattern = os.path.join(genny_repo_root, "src", "workloads", "*", "*.yml")
-    workloads = glob.glob(glob_pattern)
+    if given_workload is not None:
+        workloads = [given_workload]
+    else:
+        glob_pattern = os.path.join(genny_repo_root, "src", "workloads", "*", "*.yml")
+        workloads = glob.glob(glob_pattern)
     curr = 0
     for workload in workloads:
         SLOG.info("Checking workload", workload=workload, index=curr, of_how_many=len(workloads))
