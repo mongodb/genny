@@ -14,7 +14,6 @@
 
 #include <boost/log/trivial.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
-#include <bsoncxx/json.hpp>
 #include <bsoncxx/types.hpp>
 
 #include <gennylib/v1/Topology.hpp>
@@ -37,11 +36,9 @@ TopologyDescription::~TopologyDescription() {}
 void MongodDescription::accept(TopologyVisitor& v) {
     if (clusterType == ClusterType::standalone) {
         v.onStandaloneMongod(*this);
-    }
-    else if (clusterType == ClusterType::replSetMember) {
+    } else if (clusterType == ClusterType::replSetMember) {
         v.onReplSetMongod(*this);
-    }
-    else {
+    } else {
         v.onConfigSvrMongod(*this);
     }
 }
