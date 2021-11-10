@@ -262,4 +262,20 @@ TEST_CASE("PoolFactory behavior") {
         REQUIRE((manager.instanceCount() ==
                  std::unordered_map<std::string, size_t>({{"Foo", 2}, {"Bar", 1}})));
     }
+    SECTION("Make DNS seed list connection uri pools") {
+        constexpr auto kSourceUri = "mongodb+srv://test.mongodb.net";
+
+        auto factory = genny::v1::PoolFactory(kSourceUri);
+
+        auto factoryUri = factory.makeUri();
+        auto expectedUri = [&]() { return kSourceUri + std::string{"/?appName=Genny"}; };
+        REQUIRE(factoryUri == expectedUri());
+
+        auto pool = factory.makePool();
+        REQUIRE(pool);
+
+        // We should be able to get more from the same factory
+        auto extraPool = factory.makePool();
+        REQUIRE(extraPool);
+    }
 }
