@@ -37,8 +37,8 @@ GlobalDefaults:
   # has a wide range of distinct values to choose from. It could be even larger.
   ShardKeyValueMax: &ShardKeyValueMax 24_000
 
-  ReadRate: &ReadRate 1 per 105 microseconds # 9524/second
-  WriteRate: &WriteRate 1 per 2000 microseconds # 500/second
+  ReadRate: &ReadRate 1 per 105 microseconds  # 9524/second
+  WriteRate: &WriteRate 1 per 2000 microseconds  # 500/second
 
   ReadOperations: &ReadOperations
   - OperationName: findOne
