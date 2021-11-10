@@ -37,6 +37,9 @@ GlobalDefaults:
   # has a wide range of distinct values to choose from. It could be even larger.
   ShardKeyValueMax: &ShardKeyValueMax 6000
 
+  ReadRate: &ReadRate 1 per 500 microseconds # 2000/second
+  WriteRate: &WriteRate 1 per 500 microseconds # 2000/second
+
   ReadOperations: &ReadOperations
   - OperationName: findOne
     OperationCommand:
@@ -47,12 +50,6 @@ GlobalDefaults:
     OperationCommand:
       Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
       Update: {$inc: {counter: 1}}
-      OperationOptions:
-        # w:majority is used here as a way to limit the write load so that the resharding
-        # coordinator successfully commits the operation by itself. TODO: Use GlobalRate instead to
-        # limit the write load after TIG-3028 adds support for using GlobalRate with Blocking:None.
-        WriteConcern:
-          Level: "majority"
 
 Clients:
   Default:
@@ -135,14 +132,17 @@ Actors:
   - *Nop
   - MetricsName: BeforeResharding
     Duration: 1 minute
+    GlobalRate: *ReadRate
     Collection: *Collection
     Operations: *ReadOperations
   - MetricsName: DuringResharding
     Blocking: None
+    GlobalRate: *ReadRate
     Collection: *Collection
     Operations: *ReadOperations
   - MetricsName: AfterResharding
     Duration: 1 minute
+    GlobalRate: *ReadRate
     Collection: *Collection
     Operations: *ReadOperations
 
@@ -155,14 +155,17 @@ Actors:
   - *Nop
   - MetricsName: BeforeResharding
     Duration: 1 minute
+    GlobalRate: *WriteRate
     Collection: *Collection
     Operations: *WriteOperations
   - MetricsName: DuringResharding
     Blocking: None
+    GlobalRate: *WriteRate
     Collection: *Collection
     Operations: *WriteOperations
   - MetricsName: AfterResharding
     Duration: 1 minute
+    GlobalRate: *WriteRate
     Collection: *Collection
     Operations: *WriteOperations
 
