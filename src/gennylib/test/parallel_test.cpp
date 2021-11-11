@@ -56,7 +56,15 @@ TEST_CASE("Parallel runner reraises exceptions") {
                        throw std::logic_error("This should be reraised.");
                    });
     };
-    REQUIRE_THROWS_WITH(test(), Matches("This should be reraised."));
+    REQUIRE_THROWS_WITH(test(), Contains("This should be reraised."));
+
+    auto exceptionsCaught = 0;
+    try {
+        test();
+    } catch (ParallelException& e) {
+        exceptionsCaught = e.exceptions().size();
+    }
+    REQUIRE(exceptionsCaught == integers.size());
 }
 
 TEST_CASE("AtomicContainer throws if iterating without holding lock") {

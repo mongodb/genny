@@ -17,6 +17,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/exception.hpp>
+#include <boost/core/noncopyable.hpp>
 #include <boost/log/trivial.hpp>
 
 #include <algorithm>
@@ -42,22 +43,26 @@ class AtomicContainer {
 public:   
     using value_type = typename T::value_type;
 
-
     AtomicContainer() = default;
     AtomicContainer(const AtomicContainer& rhs) {
         std::lock_guard<lock_t> lock(rhs._mutex);
+        _assertNotForciblyHeld();
         this->_container = rhs._container;
     }
+
     AtomicContainer(AtomicContainer&& rhs) {
         std::lock_guard<lock_t> lock(rhs._mutex);
+        _assertNotForciblyHeld();
         this->_container = std::move(rhs._container);
     }
 
     AtomicContainer<T>& operator=(const AtomicContainer& rhs) {
         std::lock_guard<lock_t> lock(rhs._mutex);
+        _assertNotForciblyHeld();
         this->_container = rhs._container;
         return *this;
     }
+
     AtomicContainer<T>& operator=(AtomicContainer&& rhs) {
         std::lock_guard<lock_t> lock(rhs._mutex);
         this->_container = std::move(rhs._container);
@@ -120,10 +125,7 @@ public:
         // Paranoidly hold the lock here in case there are shenanigans
         // between the flag flip and the unlock.
         std::lock_guard<lock_t> lock(_mutex);
-        if (_forciblyHeld) {
-            BOOST_THROW_EXCEPTION(
-                std::logic_error("Cannot forcibly hold AtomicContainer lock multiple times."));
-        }
+        _assertNotForciblyHeld();
         _mutex.lock();
         _forciblyHeld = true;
     }
@@ -194,6 +196,13 @@ private:
                 std::logic_error(ss.str()));
         }
     }
+
+    void _assertNotForciblyHeld() const {
+        if (_forciblyHeld) {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("Cannot forcibly hold AtomicContainer lock multiple times."));
+        }
+    }
     using lock_t = std::recursive_mutex;
     mutable bool _forciblyHeld = false;
     T _container;
@@ -206,6 +215,43 @@ using AtomicDeque = AtomicContainer<std::deque<T>>;
 template <typename T>
 using AtomicVector = AtomicContainer<std::vector<T>>;
 
+class ParallelException : public std::exception {
+    public:
+        ParallelException() {}
+
+        void addException(std::exception_ptr exc) {
+            _caughtExceptions.push_back(exc);
+        }
+
+        bool empty() {
+            return _caughtExceptions.empty();
+        }
+
+        AtomicDeque<std::exception_ptr>& exceptions() {
+            return _caughtExceptions;
+        }
+
+        const char* what() const noexcept override {
+            if (!_caughtExceptions.empty()) {
+                std::stringstream ss;
+                ss << "Error in parallel execution. First exception's what(): ";
+
+                // We cannot just call what() through the exception pointer, unfortunately.
+                try {
+                    std::rethrow_exception(_caughtExceptions[0]);
+                } catch (const std::exception& e) {
+                    ss << e.what();
+                }
+
+                message = ss.str();
+            }
+            return message.c_str();
+        }
+
+    private:
+        AtomicDeque<std::exception_ptr> _caughtExceptions;
+        mutable std::string message = "No exception given? This shouldn't have been thrown.";
+};
 
 
 /**
@@ -218,14 +264,14 @@ template<typename IterableT, typename BinaryOperation>
 void parallelRun(IterableT& iterable, BinaryOperation op) {
     auto threadsPtr = std::make_unique<std::vector<std::thread>>();
     threadsPtr->reserve(std::distance(cbegin(iterable), cend(iterable)));
-    AtomicDeque<std::exception_ptr> caughtExceptions;
+    ParallelException caughtExc;
     std::transform(cbegin(iterable), cend(iterable), std::back_inserter(*threadsPtr),
             [&](const typename IterableT::value_type& value) {
                 return std::thread{[&]() {
                     try {
                         op(value);
                     } catch(...) {
-                        caughtExceptions.push_back(std::current_exception());
+                        caughtExc.addException(std::current_exception());
                     }
                 }};
             });
@@ -234,9 +280,8 @@ void parallelRun(IterableT& iterable, BinaryOperation op) {
         thread.join();
     }
 
-    std::lock_guard<AtomicDeque<std::exception_ptr>> excLock(caughtExceptions);
-    for (auto&& exc : caughtExceptions) {
-        std::rethrow_exception(exc);
+    if (!caughtExc.empty()) {
+        BOOST_THROW_EXCEPTION(caughtExc);
     }
 }
 
