@@ -65,7 +65,8 @@ struct Loader::PhaseConfig {
             for (auto [k, indexNode] : indexNodes) {
                 std::string indexName = "";
                 for (auto [key, value] : indexNode["keys"]) {
-                    indexName = indexName + key.toString();
+                    auto key_value = key.toString() + "_" + value.to<std::string>();
+                    indexName = indexName.empty() ? key_value : indexName + "_" + key_value;
                 }
                 indexes.emplace_back(
                     indexNode["keys"].to<DocumentGenerator>(context, id),
