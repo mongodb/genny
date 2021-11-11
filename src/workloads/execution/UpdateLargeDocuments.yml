@@ -1,11 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  This workload measures the performance of large document updates in a replica set. First, it
-  inserts documents with large embedded objects, containing 100k fields each. Then it runs a series
-  of simple updates. Each update is setting only one field and has write concern "majority". The
-  output of this workload is ops/sec, indicating how many of these simple updates were finished in a
-  period of time.
+  This workload measures the performance of updating large documents in a replica set. First, it
+  inserts large documents, each containing 100 nested objects with 1K fields inside of them. Then it
+  runs a series of simple updates. Each update is setting only one field and has write concern
+  "majority". The output of this workload is ops/sec, indicating how many of these simple updates
+  were finished in a period of time.
 
 Clients:
   Default:
@@ -34,16 +34,17 @@ Actors:
     Document:
       _id: {^Inc: {start: 0}}
       data: {^Object: {
-        key: {^FastRandomString: {length: { ^RandomInt: { min: 1, max: 10 }}}},
-        value: {^Object: {
-          key: {^FastRandomString: {length: { ^RandomInt: { min: 1, max: 3 }}}},
-          value: { ^RandomInt: { min: 1, max: 10 }},
-          number: 100
-        }},
-        number: 1000
+        withNEntries: 1000,
+        havingKeys: {^FastRandomString: {length: { ^RandomInt: { min: 1, max: 10 }}}},
+        andValues: {^Object: {
+          withNEntries: 100,
+          havingKeys: {^FastRandomString: {length: { ^RandomInt: { min: 1, max: 3 }}}},
+          andValues: { ^RandomInt: { min: 1, max: 10 }}
+        }}
       }}
       a: 0
   - &Nop {Nop: true}
+  - *Nop
   - *Nop
 
 - Name: Quiesce
@@ -53,6 +54,7 @@ Actors:
   Phases:
   - *Nop
   - Repeat: 1
+  - *Nop
   - *Nop
 
 - Name: PerformUpdates
@@ -74,10 +76,24 @@ Actors:
         Options:
           WriteConcern:
           Level: majority
+  - Repeat: 1000
+    Threads: 1
+    Duration: 3 minutes
+    Collection: Collection0
+    Operations:
+    - OperationName: updateMany
+      OperationCommand:
+        Filter: {}
+        Update: {$set: {a: { ^RandomInt: { min: 0, max: 10000000 }}}}
+        Options:
+          WriteConcern:
+          Level: majority
 
-# TODO Configure which variants to run.
 AutoRun:
 - When:
     mongodb_setup:
       $eq:
       - replica
+      - replica-all-feature-flags
+      - shard-lite
+      - shard-lite-all-feature-flags

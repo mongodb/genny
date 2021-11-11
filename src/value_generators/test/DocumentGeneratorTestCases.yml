@@ -161,6 +161,22 @@ Tests:
             "data" : "aaaaaaaaaaoEtN" }}
         ]}
 
+  - Name: Object Generator
+    GivenTemplate:
+      a: {^Object: {withNEntries: 10, havingKeys: {^RandomString: {length: 10}}, andValues: {^Inc: {}}}}
+    ThenReturns:
+      - a:
+          JGBEV0zQZI: { "$numberLong": "1" }
+          eNbthBtmrZ: { "$numberLong": "2" }
+          Odzj7TUCi+: { "$numberLong": "3" }
+          SD6jA6Y+bp: { "$numberLong": "4" }
+          kmFT2CuKVC: { "$numberLong": "5" }
+          AFFXQ8ULbz: { "$numberLong": "6" }
+          Naqsr/zBMQ: { "$numberLong": "7" }
+          AzUNSxcpt0: { "$numberLong": "8" }
+          xYYXCh/Ybl: { "$numberLong": "9" }
+          EHcmXZX/d4: { "$numberLong": "10" }
+
   - Name: one RandomInt
     GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: 10000000010}}}
     ThenReturns: [{a: 10000000001}, {a: 10000000001}, {a: 10000000000}]

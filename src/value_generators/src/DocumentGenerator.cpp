@@ -982,7 +982,7 @@ private:
     const UniqueGenerator<int64_t> _nTimesGen;
 };
 
-/** `{^Object: {key: {^RandomString: {length: 10}}, value: {^Inc: {}}, number: 10}` */
+/** `{^Object: {withNEntries: 10, havingKeys: {^Foo}, andValues: {^Bar}}` */
 class ObjectGenerator : public Generator<bsoncxx::document::value> {
 public:
     ObjectGenerator(const Node& node,
@@ -991,9 +991,9 @@ public:
         : _rng{generatorArgs.rng},
           _node{node},
           _generatorArgs{generatorArgs},
-          _keyGen{stringGenerator(node["key"], generatorArgs)},
-          _valueGen{valueGenerator<false, UniqueAppendable>(node["value"], generatorArgs, parsers)},
-          _nTimesGen{intGenerator(extract(node, "number", "^Object"), generatorArgs)} {}
+          _keyGen{stringGenerator(node["havingKeys"], generatorArgs)},
+          _valueGen{valueGenerator<false, UniqueAppendable>(node["andValues"], generatorArgs, parsers)},
+          _nTimesGen{intGenerator(extract(node, "withNEntries", "^Object"), generatorArgs)} {}
 
     bsoncxx::document::value evaluate() override {
         bsoncxx::builder::basic::document builder;
