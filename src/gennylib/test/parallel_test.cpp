@@ -67,7 +67,7 @@ TEST_CASE("Parallel runner reraises exceptions") {
     REQUIRE(exceptionsCaught == integers.size());
 }
 
-TEST_CASE("AtomicContainer throws if iterating without holding lock") {
+/*TEST_CASE("AtomicContainer throws if iterating without holding lock") {
     AtomicVector<int> integers;
     integers.push_back(6);
     integers.push_back(7);
@@ -96,7 +96,7 @@ TEST_CASE("AtomicContainer throws if iterating without holding lock") {
     REQUIRE(newIntegers.size() == 2);
     REQUIRE(newIntegers[0] == 7);
     REQUIRE(newIntegers[1] == 8);
-}
+}*/
 
 TEST_CASE("AtomicContainer locks when used") {
     using namespace std::chrono_literals;

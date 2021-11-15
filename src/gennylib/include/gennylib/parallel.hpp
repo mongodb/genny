@@ -49,20 +49,17 @@ public:
         _assertNotForciblyHeld();
         this->_container = rhs._container;
     }
-
     AtomicContainer(AtomicContainer&& rhs) {
         std::lock_guard<lock_t> lock(rhs._mutex);
         _assertNotForciblyHeld();
         this->_container = std::move(rhs._container);
     }
-
     AtomicContainer<T>& operator=(const AtomicContainer& rhs) {
         std::lock_guard<lock_t> lock(rhs._mutex);
         _assertNotForciblyHeld();
         this->_container = rhs._container;
         return *this;
     }
-
     AtomicContainer<T>& operator=(AtomicContainer&& rhs) {
         std::lock_guard<lock_t> lock(rhs._mutex);
         this->_container = std::move(rhs._container);
@@ -90,23 +87,17 @@ public:
         std::lock_guard<lock_t> lock(_mutex);
         return _container.back();
     }
-    auto&& at(size_t pos) {
-        std::lock_guard<lock_t> lock(_mutex);
-        return _container.at(pos);
-    }
+
     void pop_front() {
         std::lock_guard<lock_t> lock(_mutex);
         _container.pop_front();
         return;
     }
-    size_t size() const {
-        std::lock_guard<lock_t> lock(_mutex);
-        return _container.size();
-    }
-    bool empty() const {
+    
+    /*bool empty() const {
         std::lock_guard<lock_t> lock(_mutex);
         return _container.empty();
-    }
+    }*/
 
     const auto& operator[](size_t pos) const {
         std::lock_guard<lock_t> lock(_mutex);
@@ -135,6 +126,11 @@ public:
         std::lock_guard<lock_t> lock(_mutex);
         _forciblyHeld = false;
         _mutex.unlock();
+    }
+
+    size_t size() const {
+        std::lock_guard<lock_t> lock(_mutex);
+        return _container.size();
     }
 
     /**
@@ -216,41 +212,73 @@ template <typename T>
 using AtomicVector = AtomicContainer<std::vector<T>>;
 
 class ParallelException : public std::exception {
-    public:
-        ParallelException() {}
+public:
 
-        void addException(std::exception_ptr exc) {
-            _caughtExceptions.push_back(exc);
+    ParallelException(std::deque<std::exception_ptr>&& exceptions) {
+        _caughtExceptions = std::move(exceptions);
+        if (_caughtExceptions.empty()) {
+            std::logic_error("Tried to construct ParallelException, but no exceptions were given.");
+        }
+        std::stringstream ss;
+        ss << "Error in parallel execution. First exception's what(): ";
+
+        // We cannot just call what() through the exception pointer, unfortunately.
+        try {
+            std::rethrow_exception(_caughtExceptions[0]);
+        } catch (const std::exception& e) {
+            ss << e.what();
+        } catch (...) {
+            throw std::logic_error("ParallelException constructed with unknown exception.");
         }
 
-        bool empty() {
-            return _caughtExceptions.empty();
+        _message = ss.str();
+    }
+
+    std::deque<std::exception_ptr>& exceptions() {
+        return _caughtExceptions;
+    }
+
+    const char* what() const noexcept override {
+        return _message.c_str();
+    }
+
+private:
+    std::deque<std::exception_ptr> _caughtExceptions;
+    std::string _message = "No exception? This shouldn't have been constructed and thrown.";
+};
+
+/*
+ * Thread-safe collector for exceptions during parallel execution.
+ */
+class ExceptionBucket {
+public:
+    ExceptionBucket() = default;
+
+    /*
+     * Add an exception to the bucket.
+     */
+    void addException(std::exception_ptr exc) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _caughtExceptions.push_back(exc);
+    }
+
+    /*
+     * If possible, exctract a ParallelException from the bucket.
+     */
+    std::optional<ParallelException> extractExceptions() {
+        std::optional<ParallelException> opt = std::nullopt;
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (_caughtExceptions.empty()) {
+            opt = std::move(_caughtExceptions);
+            // Put this back into a valid state just in case someone wants to use it.
+            _caughtExceptions = std::deque<std::exception_ptr>();
         }
+        return std::move(opt);
+    }
 
-        AtomicDeque<std::exception_ptr>& exceptions() {
-            return _caughtExceptions;
-        }
-
-        const char* what() const noexcept override {
-            if (!_caughtExceptions.empty()) {
-                std::stringstream ss;
-                ss << "Error in parallel execution. First exception's what(): ";
-
-                // We cannot just call what() through the exception pointer, unfortunately.
-                try {
-                    std::rethrow_exception(_caughtExceptions[0]);
-                } catch (const std::exception& e) {
-                    ss << e.what();
-                }
-
-                message = ss.str();
-            }
-            return message.c_str();
-        }
-
-    private:
-        AtomicDeque<std::exception_ptr> _caughtExceptions;
-        mutable std::string message = "No exception given? This shouldn't have been thrown.";
+private:
+    mutable std::mutex _mutex;
+    std::deque<std::exception_ptr> _caughtExceptions;
 };
 
 
@@ -264,7 +292,7 @@ template<typename IterableT, typename BinaryOperation>
 void parallelRun(IterableT& iterable, BinaryOperation op) {
     auto threadsPtr = std::make_unique<std::vector<std::thread>>();
     threadsPtr->reserve(std::distance(cbegin(iterable), cend(iterable)));
-    ParallelException caughtExc;
+    ExceptionBucket caughtExc;
     std::transform(cbegin(iterable), cend(iterable), std::back_inserter(*threadsPtr),
             [&](const typename IterableT::value_type& value) {
                 return std::thread{[&]() {
@@ -280,8 +308,10 @@ void parallelRun(IterableT& iterable, BinaryOperation op) {
         thread.join();
     }
 
-    if (!caughtExc.empty()) {
-        BOOST_THROW_EXCEPTION(caughtExc);
+    auto parallelExc = caughtExc.extractExceptions();
+
+    if (parallelExc) {
+        BOOST_THROW_EXCEPTION(*parallelExc);
     }
 }
 
