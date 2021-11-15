@@ -30,57 +30,60 @@
 
 namespace genny {
 
-/**
- * Class that represents a bundle of exceptions thrown together after
- * ending parallel execution.
- */
-class ParallelException : public std::exception {
-public:
 
-    ParallelException(std::deque<std::exception_ptr>&& exceptions) {
-        _caughtExceptions = std::move(exceptions);
-        if (_caughtExceptions.empty()) {
-            std::logic_error("Tried to construct ParallelException, but no exceptions were given.");
-        }
-        std::stringstream ss;
-        ss << "Error in parallel execution. First exception's what(): ";
-
-        // We cannot just call what() through the exception pointer, unfortunately.
-        try {
-            std::rethrow_exception(_caughtExceptions[0]);
-        } catch (const std::exception& e) {
-            ss << e.what();
-        } catch (...) {
-            throw std::logic_error("ParallelException constructed with unknown exception.");
-        }
-
-        _message = ss.str();
-    }
-
-    /*
-     * Get the exceptions held by this ParallelException.
-     */
-    std::deque<std::exception_ptr>& exceptions() {
-        return _caughtExceptions;
-    }
-
-    const char* what() const noexcept override {
-        return _message.c_str();
-    }
-
-private:
-    std::deque<std::exception_ptr> _caughtExceptions;
-    std::string _message = "No exception? This shouldn't have been constructed and thrown.";
-};
 
 /*
  * Thread-safe collector for exceptions during parallel execution.
  */
 class ExceptionBucket {
 public:
+
     ExceptionBucket() = default;
 
-    /*
+    /**
+     * Class that represents a bundle of exceptions thrown together after
+     * ending parallel execution.
+     */
+    class ParallelException : public std::exception {
+    public:
+
+        ParallelException(std::deque<std::exception_ptr>&& exceptions) : _caughtExceptions{std::move(exceptions)} {
+            if (_caughtExceptions.empty()) {
+                std::logic_error("Tried to construct ParallelException, but no exceptions were given.");
+            }
+            std::stringstream ss;
+            ss << "Error in parallel execution. First exception's what(): ";
+
+            // We cannot just call what() through the exception pointer, unfortunately.
+            try {
+                std::rethrow_exception(_caughtExceptions[0]);
+            } catch (const std::exception& e) {
+                ss << e.what();
+            } catch (...) {
+                throw std::logic_error("ParallelException constructed with unknown exception.");
+            }
+
+            _message = ss.str();
+        }
+
+        /*
+         * Get the exceptions held by this ParallelException.
+         */
+        std::deque<std::exception_ptr>& exceptions() {
+            return _caughtExceptions;
+        }
+
+        const char* what() const noexcept override {
+            return _message.c_str();
+        }
+
+    private:
+        std::deque<std::exception_ptr> _caughtExceptions;
+        std::string _message = "No exception? This shouldn't have been constructed and thrown.";
+    };
+
+
+    /**
      * Add an exception to the bucket.
      */
     void addException(std::exception_ptr exc) {
@@ -88,8 +91,22 @@ public:
         _caughtExceptions.push_back(exc);
     }
 
-    /*
-     * If possible, exctract a ParallelException from the bucket.
+    
+    /**
+     * If any exceptions were caught, throw them
+     * as a ParallelException.
+     */
+    void throwIfExceptions() {
+        auto parallelExc = extractExceptions();
+        if (parallelExc) {
+            BOOST_THROW_EXCEPTION(*parallelExc);
+        }
+    }
+
+private:
+
+    /**
+     * If possible, exctract a ParallelException from the bucket. This "resets" it.
      */
     std::optional<ParallelException> extractExceptions() {
         std::optional<ParallelException> opt = std::nullopt;
@@ -103,7 +120,6 @@ public:
         return std::move(opt);
     }
 
-private:
     mutable std::mutex _mutex;
     std::deque<std::exception_ptr> _caughtExceptions;
 };
@@ -134,11 +150,7 @@ void parallelRun(IterableT& iterable, BinaryOperation op) {
     for (auto& thread : *threadsPtr) {
         thread.join();
     }
-
-    auto parallelExc = caughtExc.extractExceptions();
-    if (parallelExc) {
-        BOOST_THROW_EXCEPTION(*parallelExc);
-    }
+    caughtExc.throwIfExceptions();
 }
 
 } // namespace genny::v1

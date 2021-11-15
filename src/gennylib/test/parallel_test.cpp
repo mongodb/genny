@@ -61,7 +61,7 @@ TEST_CASE("Parallel runner reraises exceptions") {
     auto exceptionsCaught = 0;
     try {
         test();
-    } catch (ParallelException& e) {
+    } catch (ExceptionBucket::ParallelException& e) {
         exceptionsCaught = e.exceptions().size();
     }
     REQUIRE(exceptionsCaught == integers.size());
