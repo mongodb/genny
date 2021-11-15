@@ -31,7 +31,10 @@ TEST_CASE("Topology visitor traverses nodes correctly") {
 
     class TestVisitor : public TopologyVisitor {
     public:
-        virtual void onMongod(const MongodDescription& desc) override {
+        virtual void onStandaloneMongod(const MongodDescription& desc) override {
+            names.push_back(desc.mongodUri);
+        }
+        virtual void onReplSetMongod(const MongodDescription& desc) override {
             names.push_back(desc.mongodUri);
         }
         // Mongos falls back to default nop-visit.
@@ -118,7 +121,7 @@ TEST_CASE("Topology maps the cluster correctly") {
 
         ToJsonVisitor visitor;
         topology.accept(visitor);
-        auto expected = "{mongodUri: testUri}";
+        auto expected = "{standaloneMongodUri: testUri}";
         REQUIRE(expected == visitor.str());
     }
 
@@ -158,9 +161,9 @@ TEST_CASE("Topology maps the cluster correctly") {
         stringstream expected;
         expected
             << "{primaryUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny, "
-            << "nodes: [{mongodUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny}, "
-            << "{mongodUri: mongodb://host2:port2/?appName=Genny}, "
-            << "{mongodUri: mongodb://host3:port3/?appName=Genny}]}";
+            << "nodes: [{replSetMemberMongodUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny}, "
+            << "{replSetMemberMongodUri: mongodb://host2:port2/?appName=Genny}, "
+            << "{replSetMemberMongodUri: mongodb://host3:port3/?appName=Genny}]}";
 
         REQUIRE(expected.str() == visitor.str());
     }
@@ -264,10 +267,10 @@ TEST_CASE("Topology maps the cluster correctly") {
         stringstream expected;
         expected
             << "{configsvr: {primaryUri: mongodb://testConfigHost:testConfigPort/?appName=Genny, "
-            << "nodes: [{mongodUri: mongodb://testConfigHost:testConfigPort/?appName=Genny}]} "
+            << "nodes: [{configSvrMemberMongodUri: mongodb://testConfigHost:testConfigPort/?appName=Genny}]} "
             << "shards: [{primaryUri: mongodb://shardNode1:shardPort1/?appName=Genny, "
-            << "nodes: [{mongodUri: mongodb://shardNode1:shardPort1/?appName=Genny}, "
-            << "{mongodUri: mongodb://shardNode2:shardPort2/?appName=Genny}]}],  "
+            << "nodes: [{replSetMemberMongodUri: mongodb://shardNode1:shardPort1/?appName=Genny}, "
+            << "{replSetMemberMongodUri: mongodb://shardNode2:shardPort2/?appName=Genny}]}],  "
             << "mongoses: [{mongosUri: mongodb://testmongosuri:11111/?appName=Genny}]}";
 
         REQUIRE(expected.str() == visitor.str());
