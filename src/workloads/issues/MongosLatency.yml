@@ -26,8 +26,8 @@ GlobalDefaults:
   Collection: &col Collection0
   FullName: &fullname test.Collection0
 
-  ClassId: &classId { ^ObjectId: { ^FormatString: { "format": "c%04x%s", "withArgs": [ { ^RandomInt: { min: 0, max: 200 } }, { ^RandomString: { length: 19, alphabet: b } } ] } } }
-  StudentId: &studentId { ^ObjectId: { ^FormatString: { "format": "%04x%s", "withArgs": [ { ^RandomInt: { min: 0, max: 30 } }, { ^RandomString: { length: 20, alphabet: b } } ] } } }
+  ClassId: &classId {^ObjectId: {^FormatString: {"format": "c%04x%s", "withArgs":[{^RandomInt: {min: 0, max: 200}}, {^RandomString: {length: 19, alphabet: b}}]}}}
+  StudentId: &studentId {^ObjectId: {^FormatString: {"format": "%04x%s", "withArgs": [{^RandomInt: {min: 0, max: 30}}, {^RandomString: {length: 20, alphabet: b}}]}}}
 
   Student: &student
     classId: *classId
@@ -38,19 +38,19 @@ GlobalDefaults:
   FindOperation: &FindOperation
     OperationName: findOne
     OperationCommand:
-      Filter: { classId: *classId , studentId: *studentId }
+      Filter: {classId: *classId, studentId: *studentId}
       projection: {classId: 1, studentId: 1, connectedTime: 1, lastPing: 1, _id: 1}
 
   UpdateOperation: &UpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: { classId: *classId , studentId: *studentId }
+      Filter: {classId: *classId, studentId: *studentId}
       Update: {$currentDate: {connectedTime: true, lastPing: true}}
       OnSession: true
 
   LoggerPhase: &LoggerPhase
-    LogEvery: 10 second # TimeSpec
-    Blocking: None # must be Blocking:None
+    LogEvery: 10 second  # TimeSpec
+    Blocking: None  # must be Blocking:None
 
   Nop: &Nop
     {Nop: true}
@@ -108,9 +108,9 @@ Actors:
     BatchSize: 1000
     Document: *student
     Indexes:
-      - keys: { classId: 1, studentId: 1 }
-      - keys: { classId: 1, studentId: 1, connectedTime: 1, lastPing: 1, _id: 1  }
-      - keys: { classId: 1, lastPing: 1 }
+    - keys: {classId: 1, studentId: 1}
+    - keys: {classId: 1, studentId: 1, connectedTime: 1, lastPing: 1, _id: 1}
+    - keys: {classId: 1, lastPing: 1}
   - *Nop
   - *Nop
   - *Nop
@@ -127,10 +127,10 @@ Actors:
   - Repeat: 1
     Database: admin
     Operations:
-      - OperationMetricsName: DisableBalancer
-        OperationName: AdminCommand
-        OperationCommand:
-          balancerStop: 1
+    - OperationMetricsName: DisableBalancer
+      OperationName: AdminCommand
+      OperationCommand:
+        balancerStop: 1
   - *Nop
   - *Nop
 
@@ -147,11 +147,11 @@ Actors:
     Database: config
     Collection: settings
     Operations:
-      - OperationName: updateOne
-        OperationCommand:
-          Filter: {_id: 'autosplit'}
-          Update: {$set: {enabled: false}}
-          UpdateOptions: {upsert: true, writeConcern: {w: 'majority', wtimeout: 30000}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {_id: 'autosplit'}
+        Update: {$set: {enabled: false}}
+        UpdateOptions: {upsert: true, writeConcern: {w: 'majority', wtimeout: 30000}}
   - *Nop
 
 
@@ -160,63 +160,63 @@ Actors:
   Database: *db
   Threads: &threads 270
   Phases:
-    - *Nop
-    - *Nop
-    - *Nop
-    - *Nop
-    - *Nop
-    - *Nop
-    - Duration: 60 minutes
-      SleepAfter: 1 seconds
-      Threads: *threads
-      Collection: *col
-      Operations:
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
-        - *FindOperation
-        - *UpdateOperation
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Duration: 60 minutes
+    SleepAfter: 1 seconds
+    Threads: *threads
+    Collection: *col
+    Operations:
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
+    - *FindOperation
+    - *UpdateOperation
 
 
 # to avoid connection closing
 - Name: LoggingActor
   Type: LoggingActor
-  Threads: 1 # must be 1
+  Threads: 1  # must be 1
   Phases:
   - *LoggerPhase
   - *LoggerPhase
@@ -227,7 +227,7 @@ Actors:
   - *LoggerPhase
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas-shard
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas-shard
