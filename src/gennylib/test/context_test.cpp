@@ -303,7 +303,6 @@ Actors:
         REQUIRE(countProducer->calls == 1);
         REQUIRE(countProducer->workloadAssert);
         REQUIRE(countProducer->actorAssert);
-        std::lock_guard<const ActorVector> actorsLock(context.actors());
         REQUIRE(std::distance(context.actors().begin(), context.actors().end()) == 0);
     }
 
@@ -684,6 +683,6 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
     SECTION("Incorrect type value inputted") {
         auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
         REQUIRE_THROWS_WITH(
-            test(), Matches(R"(Unable to construct actors: No producer for 'Bar'(.*\n*)*)"));
+            test(), Catch::Contains("Unable to construct actors: No producer for 'Bar'"));
     }
 }

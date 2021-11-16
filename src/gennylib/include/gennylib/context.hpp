@@ -283,7 +283,8 @@ private:
     bool _done = false;
 
     // Deque instead of vector to prevent references from being deleted when reallocating.
-    AtomicDeque<DefaultRandom> _rngRegistry;
+    std::deque<DefaultRandom> _rngRegistry;
+    std::mutex _rngLock;
     DefaultRandom _seedGenerator;
 
     std::unordered_map<std::string, std::unique_ptr<GlobalRateLimiter>> _rateLimiters;

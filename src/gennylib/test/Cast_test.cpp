@@ -54,7 +54,6 @@ public:
     }
 
     void run() {
-        std::lock_guard<const ActorVector> actorLock(_workloadContext.actors());
         for (auto&& actor : _workloadContext.actors()) {
             actor->run();
         }

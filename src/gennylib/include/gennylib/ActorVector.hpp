@@ -29,6 +29,8 @@ struct Actor;
  */
 using ActorVector = std::vector<std::unique_ptr<Actor>>;
 
+using ActorBucket = ParallelBucket<std::unique_ptr<Actor>>;
+
 
 }  // namespace genny
 

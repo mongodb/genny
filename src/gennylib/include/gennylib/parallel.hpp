@@ -41,9 +41,17 @@ public:
     /**
      * Add an item to the bucket.
      */
-    void addItem(T item) {
+    /*void addItem(T item) {
         std::lock_guard<std::mutex> lock(_mutex);
         _items.push_back(item);
+    }*/
+
+    /**
+     * Add an item to the bucket.
+     */
+    void addItem(T&& item) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _items.push_back(std::move(item));
     }
 
     /**
@@ -59,7 +67,7 @@ public:
     
 private:
     mutable std::mutex _mutex;
-    std::vector<std::exception_ptr> _items;
+    std::vector<T> _items;
 };
 
 /*
@@ -116,8 +124,8 @@ public:
     /**
      * Add an exception to the bucket.
      */
-    void addException(std::exception_ptr exc) {
-        _caughtExceptions.addItem(exc);
+    void addException(std::exception_ptr&& exc) {
+        _caughtExceptions.addItem(std::move(exc));
     }
 
     
@@ -153,7 +161,7 @@ void parallelRun(IterableT& iterable, BinaryOperation op) {
                     try {
                         op(value);
                     } catch(...) {
-                        caughtExc.addException(std::current_exception());
+                        caughtExc.addException(std::move(std::current_exception()));
                     }
                 }};
             });

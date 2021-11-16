@@ -80,15 +80,16 @@ WorkloadContext::WorkloadContext(const Node& node,
         _actorContexts.emplace_back(std::make_unique<genny::ActorContext>(actor, *this));
     }
 
+    ActorBucket bucket;
     parallelRun(_actorContexts,
                    [&](const auto& actorContext) {
                        auto rawActors = _constructActors(cast, actorContext);
-                       std::lock_guard<ActorVector> vecGuard(rawActors);
                        for (auto&& actor : rawActors) {
-                           _actors.push_back(std::move(actor));
+                           bucket.addItem(std::move(actor));
                        }
                    });
 
+    _actors = std::move(bucket.extractItems());
     _done = true;
 }
 
@@ -108,7 +109,6 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
     }
 
     auto rawActors = producer->produce(*actorContext);
-    std::lock_guard<ActorVector> vecGuard(rawActors);
     for (auto&& actor : rawActors) {
         actors.emplace_back(std::forward<std::unique_ptr<Actor>>(actor));
     }
@@ -148,7 +148,8 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
         BOOST_THROW_EXCEPTION(std::logic_error("ActorId must be 1 or greater."));
     }
 
-    std::lock_guard<AtomicDeque<DefaultRandom>> lk(_rngRegistry);
+    // Create RNGs for all ids up to our own.
+    std::lock_guard<std::mutex> lk(_rngLock);
     for (auto i = _rngRegistry.size(); i < id; i++) {
         _rngRegistry.emplace_back(_seedGenerator());
     }
