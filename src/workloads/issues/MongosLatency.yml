@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  This workload was created to reproduce the issue described in HELP-25757 / SERVER-58997. The goal
+  This workload was created to reproduce the issue described in SERVER-58997. The goal
   is to induce periods of latency in the MongoS processes that are not caused by the MongoD processes.
 
   The reproduction comprises of:
