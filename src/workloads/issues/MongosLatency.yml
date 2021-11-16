@@ -4,7 +4,7 @@ Description: |
   This workload was created to reproduce the issue described in HELP-25757 / SERVER-58997. The goal
   is to induce periods of latency in the MongoS processes that are not caused by the MongoD processes.
 
-  The repo comprises of:
+  The reproduction comprises of:
     * A sharded collection of 6000 documents with 4 indexes.
     * The collection is sharded on the _id field.
     * A workphase of 270 threads that runs for 60 minutes. Each CrudActor thread
@@ -26,8 +26,8 @@ GlobalDefaults:
   Collection: &col Collection0
   FullName: &fullname test.Collection0
 
-  ClassId: &classId {^ObjectId: {^FormatString: {"format": "c%04x%s", "withArgs":[{^RandomInt: {min: 0, max: 200}}, {^RandomString: {length: 19, alphabet: b}}]}}}
-  StudentId: &studentId {^ObjectId: {^FormatString: {"format": "%04x%s", "withArgs": [{^RandomInt: {min: 0, max: 30}}, {^RandomString: {length: 20, alphabet: b}}]}}}
+  ClassId: &classId {^ObjectId: {^FormatString: {"format": "c%04xbbbbbbbbbbbbbbbbbbb", "withArgs":[{^RandomInt: {min: 0, max: 200}}]}}}
+  StudentId: &studentId {^ObjectId: {^FormatString: {"format": "%04xbbbbbbbbbbbbbbbbbbbb", "withArgs": [{^RandomInt: {min: 0, max: 30}}]}}}
 
   Student: &student
     classId: *classId
