@@ -14,7 +14,6 @@
 
 #include <atomic>
 #include <mutex>
-#include <string_view>
 #include <thread>
 
 #include <bsoncxx/array/view.hpp>
@@ -94,9 +93,71 @@ bool waitOplog(v1::Topology& topology) {
     return waitVisitor.success();
 }
 
+bool CheckForDroppedCollections(v1::Topology& topology, std::string dbName, SleepContext sleepContext) {
+    class CheckForDroppedCollectionsVisitor : public v1::TopologyVisitor {
+    public:
+        CheckForDroppedCollectionsVisitor(std::string dbName, SleepContext sleepContext)
+            : _dbName{dbName},
+              _sleepContext{sleepContext} {}
+
+        void onBeforeReplSet(const v1::ReplSetDescription& desc) override {
+            mongocxx::client client(mongocxx::uri(desc.primaryUri));
+            _successAcc = checkCollectionsTestDB(client);
+        }
+
+        void onStandaloneMongod(const v1::MongodDescription& desc) override {
+            mongocxx::client client(mongocxx::uri(desc.mongodUri));
+            _successAcc = checkCollectionsTestDB(client);
+        }
+
+        bool success() {
+            return _successAcc;
+        }
+
+    private:
+        bool checkCollections(mongocxx::database db) {
+            using bsoncxx::builder::basic::kvp;
+            using bsoncxx::builder::basic::make_document;
+
+            auto res = db.run_command(make_document(kvp("serverStatus", 1)));
+            auto idents = res.view()["storageEngine"]["dropPendingIdents"];
+
+            return idents.get_int64() != 0;
+        }
+
+        bool checkCollectionsTestDB(mongocxx::client& client) {
+            auto db = client.database(_dbName);
+            int retries = 0;
+
+            while (checkCollections(db) && retries < DROPPED_COLLECTION_RETRIES) {
+                BOOST_LOG_TRIVIAL(debug)
+                    << "Sleeping 1 second while waiting for collection to finish dropping.";
+                retries++;
+                _sleepContext.sleep_for(std::chrono::seconds(1));
+            }
+            if (retries >= DROPPED_COLLECTION_RETRIES) {
+                BOOST_LOG_TRIVIAL(error) << "Timeout on waiting for collections to drop. "
+                                         << "Tried " << retries << " >= " << DROPPED_COLLECTION_RETRIES
+                                         << " max.";
+                return false;
+            }
+            return true;
+        }
+
+        bool _successAcc = true;
+        std::string _dbName;
+        SleepContext _sleepContext;
+    };
+
+    CheckForDroppedCollectionsVisitor CheckForDroppedCollectionsVisitor(dbName, sleepContext);
+    topology.accept(CheckForDroppedCollectionsVisitor);
+
+    return CheckForDroppedCollectionsVisitor.success();
+}
+
 void doFsync(v1::Topology& topology) {
     class DoFsyncVisitor : public v1::TopologyVisitor {
-        void onMongod(const v1::MongodDescription& desc) override {
+        void onMongod(const v1::MongodDescription& desc) {
             using bsoncxx::builder::basic::kvp;
             using bsoncxx::builder::basic::make_document;
 
@@ -104,39 +165,19 @@ void doFsync(v1::Topology& topology) {
             auto admin = client["admin"];
             admin.run_command(make_document(kvp("fsync", 1)));
         }
+
+        void onStandaloneMongod(const v1::MongodDescription& desc) override {
+            onMongod(desc);
+        };
+        void onReplSetMongod(const v1::MongodDescription& desc) override {
+            onMongod(desc);
+        };
+        void onConfigSvrMongod(const v1::MongodDescription& desc) override {
+            onMongod(desc);
+        };
     };
     DoFsyncVisitor v;
     topology.accept(v);
-}
-
-bool checkForDroppedCollections(mongocxx::database db) {
-    using bsoncxx::builder::basic::kvp;
-    using bsoncxx::builder::basic::make_document;
-
-    auto res = db.run_command(make_document(kvp("serverStatus", 1)));
-    auto idents = res.view()["storageEngine"]["dropPendingIdents"];
-
-    return idents.get_int64() != 0;
-}
-
-bool checkForDroppedCollectionsTestDB(mongocxx::pool::entry& client,
-                                      const std::string& dbName,
-                                      const SleepContext& sleepContext) {
-    auto db = client->database(dbName);
-    int retries = 0;
-    while (checkForDroppedCollections(db) && retries < DROPPED_COLLECTION_RETRIES) {
-        BOOST_LOG_TRIVIAL(debug)
-            << "Sleeping 1 second while waiting for collection to finish dropping.";
-        retries++;
-        sleepContext.sleep_for(std::chrono::seconds(1));
-    }
-    if (retries >= DROPPED_COLLECTION_RETRIES) {
-        BOOST_LOG_TRIVIAL(error) << "Timeout on waiting for collections to drop. "
-                                 << "Tried " << retries << " >= " << DROPPED_COLLECTION_RETRIES
-                                 << " max.";
-        return false;
-    }
-    return true;
 }
 
 }  // anonymous namespace
@@ -159,7 +200,7 @@ bool quiesce(mongocxx::pool::entry& client,
         bool waitOplogSuccess = waitOplog(topology);
         doFsync(topology);
         bool checkDroppedCollectionSuccess =
-            checkForDroppedCollectionsTestDB(client, dbName, sleepContext);
+            CheckForDroppedCollections(topology, dbName, sleepContext);
         success = waitOplogSuccess && checkDroppedCollectionSuccess;
     } else {
         // We are waiting for another thread to do the quiesce.

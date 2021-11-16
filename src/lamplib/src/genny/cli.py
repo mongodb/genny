@@ -220,7 +220,9 @@ def clean(ctx: click.Context) -> None:
     "--repeat-until-fail",
     required=False,
     default=1,
-    help=("Repeat each test this many times until failing. Default is 1."),
+    help=(
+        "Repeat this many times, unless a test fails. Default is 1. This is useful for flaky tests."
+    ),
 )
 @click.pass_context
 def cmake_test(ctx: click.Context, regex: str, repeat_until_fail: int) -> None:

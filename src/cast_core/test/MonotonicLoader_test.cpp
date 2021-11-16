@@ -59,7 +59,10 @@ TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader - create records and add ind
                 field4: {^RandomInt: {min: 0, max: 100}},
             }
             Indexes:
+            - keys: {field1: 1, field2: -1}
+            - keys: {field1: -1, field2: -1}
             - keys: {field1: 1, field2: 1}
+            - keys: {field2: 1, field1: 1}
             - keys: {field2: 1}
               options: {name: "a_index", sparse: true}
             - keys: {field1: 1}
@@ -89,16 +92,22 @@ TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader - create records and add ind
             std::string actual_response(matches[1]);
             auto expected_response = " { \"v\" : 2, \"key\" : { \"_id\" : 1 }, "
                                      "\"name\" : \"_id_\" }, "
+                                     "{ \"v\" : 2, \"key\" : { \"field1\" : 1, \"field2\" : -1 }, "
+                                     "\"name\" : \"field1_1_field2_-1\" }, "
+                                     "{ \"v\" : 2, \"key\" : { \"field1\" : -1, \"field2\" : -1 }, "
+                                     "\"name\" : \"field1_-1_field2_-1\" }, "
                                      "{ \"v\" : 2, \"key\" : { \"field1\" : 1, \"field2\" : 1 }, "
-                                     "\"name\" : \"field1field2\" },"
+                                     "\"name\" : \"field1_1_field2_1\" }, "
+                                     "{ \"v\" : 2, \"key\" : { \"field2\" : 1, \"field1\" : 1 }, "
+                                     "\"name\" : \"field2_1_field1_1\" },"
                                      " { \"v\" : 2, \"key\" : { \"field2\" : 1 },"
                                      " \"name\" : \"a_index\", \"sparse\" : true },"
                                      " { \"v\" : 2, \"key\" : { \"field1\" : 1 }, "
-                                     "\"name\" : \"field1\", \"sparse\" : true },"
+                                     "\"name\" : \"field1_1\", \"sparse\" : true },"
                                      " { \"v\" : 2, \"key\" : { \"field3\" : 1, \"field4\" : 1 }, "
-                                     "\"name\" : \"field3field4\", \"sparse\" : true },"
+                                     "\"name\" : \"field3_1_field4_1\", \"sparse\" : true },"
                                      " { \"v\" : 2, \"key\" : { \"field3\" : 4 }, "
-                                     "\"name\" : \"field3\", \"sparse\" : true, "
+                                     "\"name\" : \"field3_4\", \"sparse\" : true, "
                                      "\"expireAfterSeconds\" : 3600 } ";
             INFO("Actual Response:   " << actual_response);
             INFO("Expected Response: " << expected_response);

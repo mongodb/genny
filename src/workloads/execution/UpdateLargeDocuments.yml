@@ -1,0 +1,99 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: >
+  This workload measures the performance of updating large documents in a replica set. First, it
+  inserts large documents, each containing 100 nested objects with 1K fields inside of them. Then it
+  runs a series of simple updates. Each update is setting only one field and has write concern
+  "majority". The output of this workload is ops/sec, indicating how many of these simple updates
+  were finished in a period of time.
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 10
+
+Actors:
+
+# Phases:
+# 1. Insert data with large documents roughly resembling buckets for time-series collection
+# 2. Fsync
+# 3. Perform very simple update
+
+- Name: InsertData
+  Type: Loader
+  # Loader doesn't support multiple threads for a single collection.
+  # TODO: TIG-2938 Use multiple threads to speedup insertion.
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &DB test
+    Threads: 1
+    CollectionCount: 1  # Collection name will be Collection0, this is not configurable.
+    DocumentCount: &DocumentCount 100
+    BatchSize: 100
+    Document:
+      _id: {^Inc: {start: 0}}
+      data: {^Object: {
+        withNEntries: 1000,
+        havingKeys: {^FastRandomString: {length: { ^RandomInt: { min: 1, max: 10 }}}},
+        andValues: {^Object: {
+          withNEntries: 100,
+          havingKeys: {^FastRandomString: {length: { ^RandomInt: { min: 1, max: 3 }}}},
+          andValues: { ^RandomInt: { min: 1, max: 10 }}
+        }}
+      }}
+      a: 0
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *DB
+  Phases:
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+
+- Name: PerformUpdates
+  Type: CrudActor
+  Database: *DB
+  ClientName: Default
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1000
+    Threads: 50
+    Duration: 3 minutes
+    Collection: Collection0
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {_id: { ^RandomInt: { min: 0, max: *DocumentCount } }}
+        Update: {$set: {a: { ^RandomInt: { min: 0, max: 10000000 }}}}
+        Options:
+          WriteConcern:
+          Level: majority
+  - Repeat: 1000
+    Threads: 1
+    Duration: 3 minutes
+    Collection: Collection0
+    Operations:
+    - OperationName: updateMany
+      OperationCommand:
+        Filter: {}
+        Update: {$set: {a: { ^RandomInt: { min: 0, max: 10000000 }}}}
+        Options:
+          WriteConcern:
+          Level: majority
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-all-feature-flags
+      - shard-lite
+      - shard-lite-all-feature-flags

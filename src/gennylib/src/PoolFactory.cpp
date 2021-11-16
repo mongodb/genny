@@ -31,7 +31,7 @@ namespace genny::v1 {
 /** @private */
 struct PoolFactory::Config {
     Config(std::string_view uri) {
-        const auto protocolRegex = std::regex("^(mongodb://|mongodb+srv://)?(([^:@]*):([^@]*)@)?");
+        const auto protocolRegex = std::regex("^(mongodb://|mongodb\\+srv://)?(([^:@]*):([^@]*)@)?");
         const auto hostRegex = std::regex("^,?([^:,/]+(:[0-9]+)?)");
         const auto dbRegex = std::regex("^/([^?]*)\\??");
         const auto queryRegex = std::regex("^&?([^=&]*)=([^&]*)");

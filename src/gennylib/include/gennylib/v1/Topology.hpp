@@ -30,7 +30,10 @@ class TopologyDescription;
 class MongodDescription;
 class MongosDescription;
 class ReplSetDescription;
+class ConfigSvrDescription;
 class ShardedDescription;
+
+enum class ClusterType;
 
 /**
  * Inherit from TopologyVisitor and override particular visit methods
@@ -46,7 +49,10 @@ public:
     virtual void onBeforeTopology(const TopologyDescription&) {}
     virtual void onAfterTopology(const TopologyDescription&) {}
 
-    virtual void onMongod(const MongodDescription&) {}
+    virtual void onStandaloneMongod(const MongodDescription&) {}
+    virtual void onReplSetMongod(const MongodDescription&) {}
+    virtual void onConfigSvrMongod(const MongodDescription&) {}
+
     virtual void onMongos(const MongosDescription&) {}
 
     virtual void onBeforeReplSet(const ReplSetDescription&) {}
@@ -71,6 +77,10 @@ public:
     virtual void onAfterMongoses(const ShardedDescription&) {}
     virtual void onBetweenMongoses(const ShardedDescription&) {}
 
+    // Called before/after visiting configsvrs.
+    virtual void onBeforeConfigSvr(const ConfigSvrDescription&) {}
+    virtual void onAfterConfigSvr(const ConfigSvrDescription&) {}
+
     virtual ~TopologyVisitor() = 0;
 };
 
@@ -81,6 +91,7 @@ struct TopologyDescription {
 };
 
 struct MongodDescription : public TopologyDescription {
+    ClusterType clusterType;
     std::string mongodUri;
 
     void accept(TopologyVisitor& v) override;
@@ -94,14 +105,17 @@ struct MongosDescription : public TopologyDescription {
 
 struct ReplSetDescription : public TopologyDescription {
     std::string primaryUri;
-    bool configsvr = false;
     std::vector<MongodDescription> nodes;
 
     void accept(TopologyVisitor& v) override;
 };
 
+struct ConfigSvrDescription : public ReplSetDescription {
+    void accept(TopologyVisitor& v) override;
+};
+
 struct ShardedDescription : public TopologyDescription {
-    ReplSetDescription configsvr;
+    ConfigSvrDescription configsvr;
     std::vector<ReplSetDescription> shards;
     std::vector<MongosDescription> mongoses;
 
@@ -175,7 +189,9 @@ class ToJsonVisitor : public TopologyVisitor {
 public:
     void onBeforeTopology(const TopologyDescription&) override;
 
-    void onMongod(const MongodDescription& desc) override;
+    void onStandaloneMongod(const MongodDescription& desc) override;
+    void onReplSetMongod(const MongodDescription& desc) override;
+    void onConfigSvrMongod(const MongodDescription& desc) override;
     void onBetweenMongods(const ReplSetDescription& desc) override;
 
     void onMongos(const MongosDescription& desc) override;
@@ -185,6 +201,9 @@ public:
 
     void onBeforeShardedCluster(const ShardedDescription&) override;
     void onAfterShardedCluster(const ShardedDescription&) override;
+
+    void onBeforeConfigSvr(const ConfigSvrDescription&) override;
+    void onAfterConfigSvr(const ConfigSvrDescription&) override;
 
     void onBeforeShards(const ShardedDescription&) override;
     void onBetweenShards(const ShardedDescription&) override;

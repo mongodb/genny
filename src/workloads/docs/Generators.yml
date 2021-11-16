@@ -215,6 +215,11 @@ Actors:
                                              data: { ^Join: { array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}},
                                        number: 10}}
 
+            # Generate an object with 10 key-value pairs using the specified generator for each key and value.
+            # Note: the default alphabet used by RandomString is fine for key names.
+            # But see https://docs.mongodb.com/manual/core/dot-dollar-considerations/#std-label-crud-concepts-dot-dollar-considerations if other generators are used for the names.
+            randomObject: {^Object: {withNEntries: 10, havingKeys: {^RandomString: {length: 10}}, andValues: {^RandomString: {length: 10}}}}
+
             # Large sequences of random strings can be expensive to generate.  FixedGeneratedValue
             # can be used to generate an array once during initialization for re-use
             fixedLargeArray: {^FixedGeneratedValue: {fromGenerator: {^Array: {of: {^RandomString: {length: 22}}, number: 20000}}}}
