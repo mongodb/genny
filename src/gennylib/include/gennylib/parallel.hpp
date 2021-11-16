@@ -29,6 +29,39 @@
 
 namespace genny {
 
+/**
+ * Class that can collect items in a thread-safe way, and then allows "extracting" the
+ * contents as a std::vector, usually in a single-threaded context after parallel execution.
+ */
+template <typename T>
+class ParallelBucket {
+public:
+    ParallelBucket() = default;
+
+    /**
+     * Add an item to the bucket.
+     */
+    void addItem(T item) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _items.push_back(item);
+    }
+
+    /**
+     * Extract items from the bucket. This "resets" it.
+     */
+    std::vector<T> extractItems() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        auto temp = std::move(_items);
+        // Put this back into a valid state just in case someone wants to use it.
+        _items = std::vector<T>();
+        return std::move(temp);
+    }
+    
+private:
+    mutable std::mutex _mutex;
+    std::vector<std::exception_ptr> _items;
+};
+
 /*
  * Thread-safe collector for exceptions during parallel execution.
  */
@@ -44,7 +77,7 @@ public:
     class ParallelException : public std::exception {
     public:
 
-        ParallelException(std::deque<std::exception_ptr>&& exceptions) : _caughtExceptions{std::move(exceptions)} {
+        ParallelException(std::vector<std::exception_ptr>&& exceptions) : _caughtExceptions{std::move(exceptions)} {
             if (_caughtExceptions.empty()) {
                 std::logic_error("Tried to construct ParallelException, but no exceptions were given.");
             }
@@ -66,7 +99,7 @@ public:
         /*
          * Get the exceptions held by this ParallelException.
          */
-        std::deque<std::exception_ptr>& exceptions() {
+        std::vector<std::exception_ptr>& exceptions() {
             return _caughtExceptions;
         }
 
@@ -75,7 +108,7 @@ public:
         }
 
     private:
-        std::deque<std::exception_ptr> _caughtExceptions;
+        std::vector<std::exception_ptr> _caughtExceptions;
         std::string _message = "No exception? This shouldn't have been constructed and thrown.";
     };
 
@@ -84,8 +117,7 @@ public:
      * Add an exception to the bucket.
      */
     void addException(std::exception_ptr exc) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _caughtExceptions.push_back(exc);
+        _caughtExceptions.addItem(exc);
     }
 
     
@@ -94,31 +126,14 @@ public:
      * as a ParallelException.
      */
     void throwIfExceptions() {
-        auto parallelExc = extractExceptions();
-        if (parallelExc) {
-            BOOST_THROW_EXCEPTION(*parallelExc);
+        auto excVec = _caughtExceptions.extractItems();
+        if (!excVec.empty()) {
+            BOOST_THROW_EXCEPTION(ParallelException(std::move(excVec)));
         }
     }
 
 private:
-
-    /**
-     * If possible, exctract a ParallelException from the bucket. This "resets" it.
-     */
-    std::optional<ParallelException> extractExceptions() {
-        std::optional<ParallelException> opt = std::nullopt;
-        std::lock_guard<std::mutex> lock(_mutex);
-
-        if (!_caughtExceptions.empty()) {
-            opt = std::move(_caughtExceptions);
-            // Put this back into a valid state just in case someone wants to use it.
-            _caughtExceptions = std::deque<std::exception_ptr>();
-        }
-        return std::move(opt);
-    }
-
-    mutable std::mutex _mutex;
-    std::deque<std::exception_ptr> _caughtExceptions;
+    ParallelBucket<std::exception_ptr> _caughtExceptions;
 };
 
 /**

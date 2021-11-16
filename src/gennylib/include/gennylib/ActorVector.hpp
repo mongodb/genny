@@ -27,7 +27,7 @@ struct Actor;
 /**
  * A convenience typedef for the return value from ActorProducer.
  */
-using ActorVector = AtomicVector<std::unique_ptr<Actor>>;
+using ActorVector = std::vector<std::unique_ptr<Actor>>;
 
 
 }  // namespace genny
