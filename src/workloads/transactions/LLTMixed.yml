@@ -1,5 +1,4 @@
 SchemaVersion: 2018-07-01
-SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
   Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload.
