@@ -42,7 +42,7 @@ std::string findRepoRoot() {
             std::stringstream msg;
             msg << "Cannot find '" << ROOT_FILE << "' in path from  GENNY_REPO_ROOT env var '"
                 << rootEnvVar << "'";
-            throw std::invalid_argument(msg.str());
+            BOOST_THROW_EXCEPTION(std::invalid_argument(msg.str()));
         }
         return rootEnvVar;
     }
@@ -69,7 +69,7 @@ std::string findRepoRoot() {
         if (curr == fileSystemRoot) {
             std::stringstream msg;
             msg << "Cannot find '" << ROOT_FILE << "' in '" << start << "'";
-            throw std::invalid_argument(msg.str());
+            BOOST_THROW_EXCEPTION(std::invalid_argument(msg.str()));
         }
     }
 

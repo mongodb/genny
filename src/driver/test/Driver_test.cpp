@@ -108,7 +108,7 @@ struct Fails : public genny::Actor {
                     auto x = SomeException{};
                     BOOST_THROW_EXCEPTION(x);
                 } else if (config->mode == "StdException") {
-                    throw std::exception{};
+                    BOOST_THROW_EXCEPTION(std::exception{});
                 } else {
                     BOOST_LOG_TRIVIAL(error) << "Bad Mode " << config->mode;
                     std::terminate();

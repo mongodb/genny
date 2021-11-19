@@ -26,22 +26,22 @@ public:
         if (!_givenTemplate) {
             std::stringstream msg;
             msg << "Need GivenTemplate in '" << toString(node) << "'";
-            throw std::invalid_argument(msg.str());
+            BOOST_THROW_EXCEPTION(std::invalid_argument(msg.str()));
         }
         if (_thenReturns && _expectedExceptionMessage) {
             std::stringstream msg;
             msg << "Can't have ThenReturns and ThenThrows in '" << toString(node) << "'";
-            throw std::invalid_argument(msg.str());
+            BOOST_THROW_EXCEPTION(std::invalid_argument(msg.str()));
         }
         if (_thenExecuteAndIgnore && _expectedExceptionMessage) {
             std::stringstream msg;
             msg << "Can't have ThenExecuteAndIgnore and ThenThrows in '" << toString(node) << "'";
-            throw std::invalid_argument(msg.str());
+            BOOST_THROW_EXCEPTION(std::invalid_argument(msg.str()));
         }
         if (_thenReturns && _thenExecuteAndIgnore) {
             std::stringstream msg;
             msg << "Can't have ThenReturns and ThenExecuteAndIgnore in '" << toString(node) << "'";
-            throw std::invalid_argument(msg.str());
+            BOOST_THROW_EXCEPTION(std::invalid_argument(msg.str()));
         }
 
 
@@ -49,7 +49,7 @@ public:
             if (!_thenReturns.IsSequence()) {
                 std::stringstream msg;
                 msg << "ThenReturns must be list in '" << toString(node) << "'";
-                throw std::invalid_argument(msg.str());
+                BOOST_THROW_EXCEPTION(std::invalid_argument(msg.str()));
             }
             _runMode = RunMode::kExpectReturn;
             return;
@@ -66,7 +66,7 @@ public:
         std::stringstream msg;
         msg << "Need one of ThenReturns, ThenExecuteAndIgnore or ThenThrows'" << toString(node)
             << "'";
-        throw std::invalid_argument(msg.str());
+        BOOST_THROW_EXCEPTION(std::invalid_argument(msg.str()));
     }
 
     static NodeSource toNode(YAML::Node node) {

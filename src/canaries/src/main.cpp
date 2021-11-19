@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
     else {
         std::ostringstream stm;
         stm << "Unknown task name: " << opts._task;
-        throw InvalidConfigurationException(stm.str());
+        BOOST_THROW_EXCEPTION(InvalidConfigurationException(stm.str()));
     }
 
     std::cout << "Total duration for " << opts._task << ":" << std::endl;

@@ -203,13 +203,13 @@ struct PhaseRangeSpec {
             std::stringstream msg;
             msg << "Invalid start value for genny::PhaseRangeSpec: '" << s.value << "'."
                 << " The value must be of type 'u_int32_t";
-            throw genny::InvalidConfigurationException(msg.str());
+            BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException(msg.str()));
         }
         if (!(e.value >= 0 && e.value <= UINT_MAX)) {
             std::stringstream msg;
             msg << "Invalid end value for genny::PhaseRangeSpec: '" << e.value << "'."
                 << " The value must be of type 'u_int32_t";
-            throw genny::InvalidConfigurationException(msg.str());
+            BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException(msg.str()));
         }
     }
     PhaseRangeSpec(genny::IntegerSpec s) : PhaseRangeSpec(s, s) {}
