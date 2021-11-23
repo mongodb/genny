@@ -199,6 +199,15 @@ class ToolchainDownloader(Downloader):
             self.ignore_toolchain_version or self._check_toolchain_githash()
         )
 
+    def _fetch_and_install_impl(self):
+        # TODO TIG-3606 revaluate if this is the right way to do this.
+        if not self._can_ignore() and self._check_toolchain_githash():
+            tarball = os.path.join(self._install_dir, self._name + ".tgz")
+            if os.path.isfile(tarball):
+                os.remove(tarball)
+
+        super()._fetch_and_install_impl()
+
     def _check_toolchain_githash(self):
         res = "".join(
             run_command(cmd=["git", "rev-parse", "HEAD"], cwd=self.result_dir, check=True).stdout
