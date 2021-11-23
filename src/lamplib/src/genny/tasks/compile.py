@@ -47,12 +47,12 @@ def cmake(
     # We set both the prefix path and the toolchain file here as a hack to allow cmake
     # to find both shared and static libraries. vcpkg doesn't natively support a project
     # using both.
-    cmake_prefix_paths = [os.path.join(
-        toolchain_info.toolchain_dir, f"installed/x64-{toolchain_info.triplet_os}-dynamic",
-    ),
-    os.path.join(
-        toolchain_info.toolchain_dir, f"installed/x64-{toolchain_info.triplet_os}",
-    )]
+    cmake_prefix_paths = [
+        os.path.join(
+            toolchain_info.toolchain_dir, f"installed/x64-{toolchain_info.triplet_os}-dynamic",
+        ),
+        os.path.join(toolchain_info.toolchain_dir, f"installed/x64-{toolchain_info.triplet_os}",),
+    ]
 
     cmake_toolchain_file = os.path.join(
         toolchain_info.toolchain_dir, "scripts/buildsystems/vcpkg.cmake"
