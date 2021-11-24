@@ -201,10 +201,9 @@ class ToolchainDownloader(Downloader):
 
     def _fetch_and_install_impl(self):
         # TODO TIG-3606 revaluate if this is the right way to do this.
-        if not self._can_ignore() and self._check_toolchain_githash():
-            tarball = os.path.join(self._install_dir, self._name + ".tgz")
-            if os.path.isfile(tarball):
-                os.remove(tarball)
+        tarball = os.path.join(self._install_dir, self._name + ".tgz")
+        if os.path.isfile(tarball):
+            os.remove(tarball)
 
         super()._fetch_and_install_impl()
 
