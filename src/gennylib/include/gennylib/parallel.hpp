@@ -27,7 +27,6 @@
 #include <mutex>
 #include <vector>
 #include <deque>
-#include <sstream>
 
 namespace genny {
 
