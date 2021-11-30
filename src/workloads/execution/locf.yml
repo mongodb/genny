@@ -1,7 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  Add description
+  This workload tests the performance of $locf. The benchmark operations test int, double,
+  string and randomized data types. There is a test without partitions, with a single
+  partition, and with multiple partitions for each data type.
 
 Actors:
 - Name: InsertData
@@ -13,14 +15,25 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 10000
-    BatchSize: &batchSize 1000
+    BatchSize: &batchSize 100
     Document:
       part1: {^Choose: {from: [1, 2, 3, 4]}}
       part2: {^Choose: {from: [1, 2, 3, 4]}}
-      temp: {^Choose: {from: [
+      integer: {^Choose: {from: [
         {^RandomInt: {min: -100, max: 100}},
         null], weights: [2, 8]}}
-      double: {^RandomDouble: { min: 0.0, max: 500.0 }}
+      double: {^Choose: {from: [
+        {^RandomDouble: { min: 0.0, max: 500.0 }},
+        null], weights: [2,8]}}
+      string: {^Choose: {from: [
+        {^RandomString: {length: 15}}, 
+        null], weights: [2,8]}}
+      randomType: {^Choose: {from: [
+        {^RandomInt: {min: -100, max: 100}}, 
+        {^RandomDouble: { min: 0.0, max: 500.0 }}, 
+        {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, 
+        {^RandomString: {length: 15}}, 
+        null], weights: [1, 1, 1, 1, 5]}}
   - Nop: true
   - Nop: true
 
@@ -42,50 +55,187 @@ Actors:
   - Repeat: 10
     Database: *db
     Operations:
-    # Without parition
-    - OperationMetricsName: FirstCommand
+    - OperationMetricsName: TestIntWithoutPartition
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
         pipeline: [{
-          $fill: {
-              output: {
-                temp: {
-                  method: "locf"}
-                  },
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            output: {
+                integer: {
+                  $locf: "$integer"}
+                  }
           }
         }]
         cursor: {batchSize: *batchSize}
-      # First partition
-      # Partitions too big to fit in memory, must allow external sort
-    - OperationMetricsName: SecondCommand
+    - OperationMetricsName: TestDoubleWithoutPartition
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
         pipeline: [{
-          $fill: {
-              output: {
-                temp: {
-                  method: "locf"}
-                  },
-              partitionByFields: ["part1"], 
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            output: {
+                double: {
+                  $locf: "$double"}
+                  }
           }
         }]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
-      # Second partition
-      # Partitions too big to fit in memory, must allow external sort
-    - OperationMetricsName: ThirdCommand
+    - OperationMetricsName: TestStringWithoutPartition
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
         pipeline: [{
-          $fill: {
-              output: {
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            output: {
+                string: {
+                  $locf: "$string"}
+                  }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+    - OperationMetricsName: TestRandomTypeWithoutPartition
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            output: {
+                randomType: {
+                  $locf: "$randomType"}
+                  }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: TestIntWithSinglePartition
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            partitionBy: "$part1",
+            output: {
+                integer: {
+                  $locf: "$integer"}
+                  }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+    - OperationMetricsName: TestDoubleWithSinglePartition
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            partitionBy: "$part1",
+            output: {
                 double: {
-                  method: "locf"}
-                  },
-              partitionByFields: ["part2"], 
+                  $locf: "$double"}
+                  }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+    - OperationMetricsName: TestStringWithSinglePartition
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            partitionBy: "$part1",
+            output: {
+                string: {
+                  $locf: "$string"}
+                  }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+    - OperationMetricsName: TestRandomTypeWithSinglePartition
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            partitionBy: "$part1",
+            output: {
+                randomType: {
+                  $locf: "$randomType"}
+                  }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: TestIntWithMultiplePartitions
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            partitionBy: {part1: "$part1", part2: "$part2"},
+            output: {
+                integer: {
+                  $locf: "$integer"}
+                  }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+    - OperationMetricsName: TestDoubleWithMultiplePartitions
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            partitionBy: {part1: "$part1", part2: "$part2"},
+            output: {
+                double: {
+                  $locf: "$double"}
+                  }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+    - OperationMetricsName: TestStringWithMultiplePartitions
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            partitionBy: {part1: "$part1", part2: "$part2"},
+            output: {
+                string: {
+                  $locf: "$string"}
+                  }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+    - OperationMetricsName: TestRandomTypeWithMultiplePartitions
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            partitionBy: {part1: "$part1", part2: "$part2"},
+            output: {
+                randomType: {
+                  $locf: "$randomType"}
+                  }
           }
         }]
         cursor: {batchSize: *batchSize}
