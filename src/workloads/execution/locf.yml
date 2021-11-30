@@ -46,7 +46,7 @@ Actors:
   - Repeat: 1
   - Nop: true
 
-- Name: SetWindowFieldsUnbounded
+- Name: locf
   Type: RunCommand
   Threads: 1
   Phases:
