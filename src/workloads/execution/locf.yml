@@ -1,0 +1,106 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  Add description
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10000
+    BatchSize: &batchSize 1000
+    Document:
+      part1: {^Choose: {from: [1, 2, 3, 4]}}
+      part2: {^Choose: {from: [1, 2, 3, 4]}}
+      temp: {^Choose: {from: [
+        {^RandomInt: {min: -100, max: 100}},
+        null], weights: [2, 8]}}
+      double: {^RandomDouble: { min: 0.0, max: 500.0 }}
+  - Nop: true
+  - Nop: true
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+
+- Name: SetWindowFieldsUnbounded
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
+    # Without parition
+    - OperationMetricsName: FirstCommand
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $fill: {
+              output: {
+                temp: {
+                  method: "locf"}
+                  },
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+      # First partition
+      # Partitions too big to fit in memory, must allow external sort
+    - OperationMetricsName: SecondCommand
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $fill: {
+              output: {
+                temp: {
+                  method: "locf"}
+                  },
+              partitionByFields: ["part1"], 
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+      # Second partition
+      # Partitions too big to fit in memory, must allow external sort
+    - OperationMetricsName: ThirdCommand
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $fill: {
+              output: {
+                double: {
+                  method: "locf"}
+                  },
+              partitionByFields: ["part2"], 
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq: 
+        - standalone
+        - replica
+        - replica-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
