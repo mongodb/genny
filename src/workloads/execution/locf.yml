@@ -1,9 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests the performance of $locf. The benchmark operations test int, double,
-  string and randomized data types. There is a test without partitions, with a single
-  partition, and with multiple partitions for each data type.
+  This workload tests the performance of $locf. The benchmark operations test numeric,
+  string, date and randomized data types. There is a test without partitions, with a 
+  single partition, and with multiple partitions for each data type.
 
 Actors:
 - Name: InsertData
@@ -19,15 +19,16 @@ Actors:
     Document:
       part1: {^Choose: {from: [1, 2, 3, 4]}}
       part2: {^Choose: {from: [1, 2, 3, 4]}}
-      integer: {^Choose: {from: [
-        {^RandomInt: {min: -100, max: 100}},
-        null], weights: [2, 8]}}
-      double: {^Choose: {from: [
+      numeric: {^Choose: {from: [
+        {^RandomInt: {min: -100, max: 100}}, 
         {^RandomDouble: { min: 0.0, max: 500.0 }},
-        null], weights: [2,8]}}
+        null], weights: [1, 1, 8]}}
       string: {^Choose: {from: [
         {^RandomString: {length: 15}}, 
         null], weights: [2,8]}}
+      date: {^Choose: {from: [
+        {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, 
+        null], weights: [2, 8]}}
       randomType: {^Choose: {from: [
         {^RandomInt: {min: -100, max: 100}}, 
         {^RandomDouble: { min: 0.0, max: 500.0 }}, 
@@ -55,7 +56,7 @@ Actors:
   - Repeat: 10
     Database: *db
     Operations:
-    - OperationMetricsName: TestIntWithoutPartition
+    - OperationMetricsName: TestNumericWithoutPartition
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -63,13 +64,13 @@ Actors:
           $setWindowFields: {
             sortBy: {_id: 1},
             output: {
-                integer: {
-                  $locf: "$integer"}
+                numeric: {
+                  $locf: "$numeric"}
                   }
           }
         }]
         cursor: {batchSize: *batchSize}
-    - OperationMetricsName: TestDoubleWithoutPartition
+    - OperationMetricsName: TestDateWithoutPartition
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -77,13 +78,12 @@ Actors:
           $setWindowFields: {
             sortBy: {_id: 1},
             output: {
-                double: {
-                  $locf: "$double"}
+                date: {
+                  $locf: "$date"}
                   }
           }
         }]
         cursor: {batchSize: *batchSize}
-        allowDiskUse: true
     - OperationMetricsName: TestStringWithoutPartition
       OperationName: RunCommand
       OperationCommand:
@@ -98,7 +98,6 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-        allowDiskUse: true
     - OperationMetricsName: TestRandomTypeWithoutPartition
       OperationName: RunCommand
       OperationCommand:
@@ -113,7 +112,7 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-    - OperationMetricsName: TestIntWithSinglePartition
+    - OperationMetricsName: TestNumericWithSinglePartition
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -122,14 +121,14 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: "$part1",
             output: {
-                integer: {
-                  $locf: "$integer"}
+                numeric: {
+                  $locf: "$numeric"}
                   }
           }
         }]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
-    - OperationMetricsName: TestDoubleWithSinglePartition
+    - OperationMetricsName: TestDateWithSinglePartition
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -138,8 +137,8 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: "$part1",
             output: {
-                double: {
-                  $locf: "$double"}
+                date: {
+                  $locf: "$date"}
                   }
           }
         }]
@@ -176,7 +175,8 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-    - OperationMetricsName: TestIntWithMultiplePartitions
+        allowDiskUse: true
+    - OperationMetricsName: TestNumericWithMultiplePartitions
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -185,14 +185,14 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: {part1: "$part1", part2: "$part2"},
             output: {
-                integer: {
-                  $locf: "$integer"}
+                numeric: {
+                  $locf: "$numeric"}
                   }
           }
         }]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
-    - OperationMetricsName: TestDoubleWithMultiplePartitions
+    - OperationMetricsName: TestDateWithMultiplePartitions
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -201,8 +201,8 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: {part1: "$part1", part2: "$part2"},
             output: {
-                double: {
-                  $locf: "$double"}
+                date: {
+                  $locf: "$date"}
                   }
           }
         }]
