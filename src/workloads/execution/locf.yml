@@ -47,7 +47,7 @@ Actors:
   - Repeat: 1
   - Nop: true
 
-- Name: locf
+- Name: Locf
   Type: RunCommand
   Threads: 1
   Phases:
@@ -109,6 +109,24 @@ Actors:
                 randomType: {
                   $locf: "$randomType"}
                   }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: TestMultipleOutputWithoutPartition
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            output: {
+                numeric: {
+                  $locf: "$numeric"},
+                string: {
+                  $locf: "$string"}, 
+                date: {
+                  $locf: "$date"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -240,6 +258,27 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
+    - OperationMetricsName: TestMultipleOutputWithMultiplePartitions
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $setWindowFields: {
+            sortBy: {_id: 1},
+            partitionBy: {part1: "$part1", part2: "$part2"},
+            output: {
+                randomType: {
+                  $locf: "$randomType"},
+                string: {
+                  $locf: "$string"},
+                date: {
+                  $locf: "$date"}
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+
 
 AutoRun:
 - When:
@@ -247,7 +286,6 @@ AutoRun:
       $eq: 
         - standalone
         - replica
-        - replica-all-feature-flags
     branch_name:
       $neq:
       - v4.0
