@@ -6,11 +6,11 @@ Description: |
 GlobalDefaults:
   # Start: The following block gets updated for the other configurations.
   # db.stats() for the llt database:
-  #	 * totalSize:    13.7  GiB
-  #	 * storageSize:   3    GiB
-  #	 * indexSize:    10.7  GiB
-  #	 * dataSize:      5.75 GiB
-  #	 * avgObjSize:  117
+  # * totalSize:    13.7  GiB.
+  # * storageSize:   3    GiB.
+  # * indexSize:    10.7  GiB.
+  # * dataSize:      5.75 GiB.
+  # * avgObjSize:  117 Bytes.
   InitialDocumentCount: &InitialNumDocs 6600000
   SecondaryDocumentCount: &SecondaryNumDocs 6600000
   GlobalRateValue: &GlobalRateValue 1 per 1250 microsecond
@@ -325,7 +325,7 @@ Actors:
             setParameter: 1
             transactionLifetimeLimitSeconds: 14400  # 4 Hours
 
-  # Guard Against timeout for no output.
+# Guard Against timeout for no output.
 - Name: LoggingActor
   Type: LoggingActor
   Threads: 1
