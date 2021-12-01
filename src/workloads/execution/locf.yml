@@ -2,7 +2,7 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
   This workload tests the performance of $locf. The benchmark operations test numeric,
-  string, date and randomized data types. There is a test without partitions, with a 
+  string, date and randomized data types. There is a test without partitions, with a
   single partition, and with multiple partitions for each data type.
 
 Actors:
@@ -20,20 +20,20 @@ Actors:
       part1: {^Choose: {from: [1, 2, 3, 4]}}
       part2: {^Choose: {from: [1, 2, 3, 4]}}
       numeric: {^Choose: {from: [
-        {^RandomInt: {min: -100, max: 100}}, 
+        {^RandomInt: {min: -100, max: 100}},
         {^RandomDouble: { min: 0.0, max: 500.0 }},
         null], weights: [1, 1, 8]}}
       string: {^Choose: {from: [
-        {^RandomString: {length: 15}}, 
+        {^RandomString: {length: 15}},
         null], weights: [2,8]}}
       date: {^Choose: {from: [
-        {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, 
+        {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}},
         null], weights: [2, 8]}}
       randomType: {^Choose: {from: [
-        {^RandomInt: {min: -100, max: 100}}, 
-        {^RandomDouble: { min: 0.0, max: 500.0 }}, 
-        {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, 
-        {^RandomString: {length: 15}}, 
+        {^RandomInt: {min: -100, max: 100}},
+        {^RandomDouble: { min: 0.0, max: 500.0 }},
+        {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}},
+        {^RandomString: {length: 15}},
         null], weights: [1, 1, 1, 1, 5]}}
   - Nop: true
   - Nop: true
@@ -64,9 +64,9 @@ Actors:
           $setWindowFields: {
             sortBy: {_id: 1},
             output: {
-                numeric: {
-                  $locf: "$numeric"}
-                  }
+              numeric: {
+                $locf: "$numeric"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -78,9 +78,9 @@ Actors:
           $setWindowFields: {
             sortBy: {_id: 1},
             output: {
-                date: {
-                  $locf: "$date"}
-                  }
+              date: {
+                $locf: "$date"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -92,9 +92,9 @@ Actors:
           $setWindowFields: {
             sortBy: {_id: 1},
             output: {
-                string: {
-                  $locf: "$string"}
-                  }
+              string: {
+                $locf: "$string"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -106,9 +106,9 @@ Actors:
           $setWindowFields: {
             sortBy: {_id: 1},
             output: {
-                randomType: {
-                  $locf: "$randomType"}
-                  }
+              randomType: {
+                $locf: "$randomType"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -120,12 +120,12 @@ Actors:
           $setWindowFields: {
             sortBy: {_id: 1},
             output: {
-                numeric: {
-                  $locf: "$numeric"},
-                string: {
-                  $locf: "$string"}, 
-                date: {
-                  $locf: "$date"}
+              numeric: {
+                $locf: "$numeric"},
+              string: {
+                $locf: "$string"},
+              date: {
+                $locf: "$date"}
             }
           }
         }]
@@ -139,9 +139,9 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: "$part1",
             output: {
-                numeric: {
-                  $locf: "$numeric"}
-                  }
+              numeric: {
+                $locf: "$numeric"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -155,9 +155,9 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: "$part1",
             output: {
-                date: {
-                  $locf: "$date"}
-                  }
+              date: {
+                $locf: "$date"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -171,9 +171,9 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: "$part1",
             output: {
-                string: {
-                  $locf: "$string"}
-                  }
+              string: {
+                $locf: "$string"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -187,9 +187,9 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: "$part1",
             output: {
-                randomType: {
-                  $locf: "$randomType"}
-                  }
+              randomType: {
+                $locf: "$randomType"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -203,9 +203,9 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: {part1: "$part1", part2: "$part2"},
             output: {
-                numeric: {
-                  $locf: "$numeric"}
-                  }
+              numeric: {
+                $locf: "$numeric"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -219,9 +219,9 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: {part1: "$part1", part2: "$part2"},
             output: {
-                date: {
-                  $locf: "$date"}
-                  }
+              date: {
+                $locf: "$date"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -235,9 +235,9 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: {part1: "$part1", part2: "$part2"},
             output: {
-                string: {
-                  $locf: "$string"}
-                  }
+              string: {
+                $locf: "$string"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -251,9 +251,9 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: {part1: "$part1", part2: "$part2"},
             output: {
-                randomType: {
-                  $locf: "$randomType"}
-                  }
+              randomType: {
+                $locf: "$randomType"}
+            }
           }
         }]
         cursor: {batchSize: *batchSize}
@@ -267,12 +267,12 @@ Actors:
             sortBy: {_id: 1},
             partitionBy: {part1: "$part1", part2: "$part2"},
             output: {
-                randomType: {
-                  $locf: "$randomType"},
-                string: {
-                  $locf: "$string"},
-                date: {
-                  $locf: "$date"}
+              randomType: {
+                $locf: "$randomType"},
+              string: {
+                $locf: "$string"},
+              date: {
+                $locf: "$date"}
             }
           }
         }]
@@ -283,8 +283,8 @@ Actors:
 AutoRun:
 - When:
     mongodb_setup:
-      $eq: 
-        - standalone
+      $eq:
+      - standalone
         - replica
     branch_name:
       $neq:
