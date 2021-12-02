@@ -466,7 +466,6 @@ Actors:
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
 
-
 AutoRun:
 - When:
     mongodb_setup:
