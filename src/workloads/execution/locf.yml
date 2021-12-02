@@ -65,21 +65,21 @@ Actors:
   - Nop: true
   - Repeat: 1
   - Nop: true
+  - Repeat: 1
   - Nop: true
+  - Repeat: 1
   - Nop: true
+  - Repeat: 1
   - Nop: true
+  - Repeat: 1
   - Nop: true
+  - Repeat: 1
   - Nop: true
+  - Repeat: 1
   - Nop: true
+  - Repeat: 1
   - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - Repeat: 1
   - Nop: true
 
 - Name: LocfNumericWithoutPartition
@@ -122,31 +122,6 @@ Actors:
   - Nop: true
   - Nop: true
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-
 - Name: LocfRandomTypeWithoutPartition
   Type: RunCommand
   Threads: 1
@@ -173,31 +148,6 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
   - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Repeat: 1
   - Nop: true
   - Nop: true
   - Nop: true
@@ -256,32 +206,6 @@ Actors:
   - Nop: true
   - Nop: true
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-
-
 - Name: LocfDateWithSinglePartition
   Type: RunCommand
   Threads: 1
@@ -314,31 +238,6 @@ Actors:
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Repeat: 1
   - Nop: true
   - Nop: true
   - Nop: true
@@ -383,31 +282,6 @@ Actors:
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Repeat: 1
   - Nop: true
   - Nop: true
   - Nop: true
@@ -462,31 +336,6 @@ Actors:
   - Nop: true
   - Nop: true
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-
 - Name: LocfStringWithMultiplePartitions
   Type: RunCommand
   Threads: 1
@@ -525,31 +374,6 @@ Actors:
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Repeat: 1
   - Nop: true
   - Nop: true
   - Nop: true
@@ -594,31 +418,6 @@ Actors:
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - Nop: true
-  - Nop: true
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Repeat: 1
   - Nop: true
 
 - Name: LocfMultipleOutputWithMultiplePartitions
