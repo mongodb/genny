@@ -80,7 +80,6 @@ def cmake_test(
     xunit_dir = os.path.join(workspace_root, "build", "XUnitXML")
     os.makedirs(xunit_dir, exist_ok=True)
 
-    print("repeat until fail: ", str(repeat_until_fail))
     ctest_cmd = [
         "ctest",
         "--schedule-random",

@@ -179,8 +179,11 @@ public:
     }
 
     /**
-     * Get a WorkloadContext-unique ActorId
-     * @return The next sequential id
+     * Claim a set of WorkloadContext-unique ActorIds.
+     * The caller is expected to use actorIds from
+     * the returned value (inclusive), to the returned
+     * value + numIds (exclusive).
+     * @return The first id owned by the caller.
      */
     ActorId claimActorIds(size_t numIds) {
         return _nextWorkloadActorId.fetch_add(numIds);
