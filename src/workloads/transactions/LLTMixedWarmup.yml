@@ -1,21 +1,25 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload. This version of the tests is less 
-  stressful (in terms of fitting into RAM) and has warmup phases.  
+  Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload.
 
 GlobalDefaults:
   # Start: The following block gets updated for the other configurations.
-  # In-memory: Database size works out about 12GB.
-  InitialDocumentCount: &InitialNumDocs 10000000
-  SecondaryDocumentCount: &SecondaryNumDocs 10000000
+  # db.stats() for the llt database:
+  # * totalSize:    13.7  GiB.
+  # * storageSize:   3    GiB.
+  # * indexSize:    10.7  GiB.
+  # * dataSize:      5.75 GiB.
+  # * avgObjSize:  117 Bytes.
+  InitialDocumentCount: &InitialNumDocs 6600000
+  SecondaryDocumentCount: &SecondaryNumDocs 6600000
   GlobalRateValue: &GlobalRateValue 1 per 1250 microsecond
   ThreadsValue: &ThreadsValue 16
   # End: The previous block gets updated for the other configurations.
 
   # These values should match those are the top of LLTPhases.yml
   dbname: &dbname llt
-  MaxPhases: &MaxPhases 20
+  MaxPhases: &MaxPhases 25
 
   # The Sample Document Shape.
   Document: &Doc
@@ -28,8 +32,14 @@ GlobalDefaults:
 
   LLTIndexes: &LLTIndexes
   - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
+    options:
+      name: price_1_ts_1_cuid_1
   - keys: {price: 1, cuid: 1}            # Pc
+    options:
+      name: price_1_cuid_1
   - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
+    options:
+      name: caid_1_price_1_cuid_1
 
   # Loader Config.
   LoadThreads: &LoadThreads 4
@@ -160,7 +170,7 @@ ActorTemplates:
     Threads: *ThreadsValue
     Phases:
       OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [5]}}
+        Active: {^Parameter: {Name: "Active", Default: [9]}}
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           GlobalRate: *GlobalRateValue
@@ -185,7 +195,7 @@ ActorTemplates:
     Threads: *ThreadsValue
     Phases:
       OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [5]}}
+        Active: {^Parameter: {Name: "Active", Default: [9]}}
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           GlobalRate: *GlobalRateValue
@@ -210,7 +220,7 @@ ActorTemplates:
     Threads: *ThreadsValue
     Phases:
       OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [5]}}
+        Active: {^Parameter: {Name: "Active", Default: [9]}}
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           GlobalRate: *GlobalRateValue
@@ -235,7 +245,7 @@ ActorTemplates:
     Threads: *ThreadsValue
     Phases:
       OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [5]}}
+        Active: {^Parameter: {Name: "Active", Default: [9]}}
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           GlobalRate: *GlobalRateValue
@@ -264,7 +274,7 @@ ActorTemplates:
     GenerateCollectionNames: true
     Phases:
       OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [7]}}  # [7]
+        Active: {^Parameter: {Name: "Active", Default: [12]}}
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
@@ -284,7 +294,19 @@ Clients:
       socketTimeoutMS: -1
       maxPoolSize: 2000
 
-# Odd phases do operations, even phases quiesce.
+# Phases:
+# PhaseNumber % 3 == 0: Perform a task (and LoggingActor)
+#    0: SetTransactionLifetimeLimit
+#    3: Initial Document Load
+#    6: Secondary Document Load
+#    9: Short Baseline
+#   12: Short Benchmark / Snapshot
+#   15: Medium Baseline
+#   18: Medium Benchmark / Snapshot
+#   21: Long Baseline
+#   24: Long Benchmark / Snapshot
+# PhaseNumber % 3 == 1: Quiesce
+# PhaseNumber % 3 == 2: Warmup
 Actors:
 # Ensure that transactionLifetimeLimitSeconds supports all the possible ScanDurations.
 # i.e. greater than SnapshotScannerLongDuration.
@@ -303,12 +325,52 @@ Actors:
             setParameter: 1
             transactionLifetimeLimitSeconds: 14400  # 4 Hours
 
+# Guard Against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0, 3, 6, 9, 12, 15, 18, 21, 24]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LogEvery: 15 minutes
+        Blocking: None
+
+- Name: QuiescePhase
+  Type: QuiesceActor
+  Threads: 1
+  Database: *dbname
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1, 4, 7, 10, 13, 16, 19, 22, 25]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+
+- Name: WarmUp
+  Type: CollectionScanner
+  Threads: *CollectionCount
+  CollectionCount: *CollectionCount
+  Database: *dbname
+  GenerateCollectionNames: true
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2, 5, 8, 11, 14, 17, 20, 23]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        ScanType: standard
+        GenerateCollectionNames: true
+        Repeat: 1
+        FindOptions:
+          Comment: "WarmUp CollectionScanner"
+
 - Name: InitialLoad
   Type: Loader
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [1]
+      Active: [3]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Threads: *LoadThreads
@@ -325,7 +387,7 @@ Actors:
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [3]
+      Active: [6]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Threads: *LoadThreads
@@ -335,29 +397,6 @@ Actors:
         Document: *Doc
         DocumentCount: *SecondaryNumDocs
         BatchSize: *LoadBatchSize
-
-- Name: QuiescePhase
-  Type: QuiesceActor
-  Threads: 1
-  Database: *dbname
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0, 2, 4, 6, 8, 10, 12, 14, 16]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-
-# Guard Against timeout for no output.
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1, 3, 5, 7, 9, 11, 13, 15]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        LogEvery: 15 minutes
-        Blocking: None
 
 # Naming Conventions:
 # Operation.Duration.Load_level.Operation.Type_of_test
@@ -390,28 +429,28 @@ Actors:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Short.Insert.Benchmark
-      Active: [7]
+      Active: [12]
       Blocking: none
 
 - ActorFromTemplate:
     TemplateName: QueryTemplate
     TemplateParameters:
       Name: Short.Query.Benchmark
-      Active: [7]
+      Active: [12]
       Blocking: none
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Short.Update.Benchmark
-      Active: [7]
+      Active: [12]
       Blocking: none
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Short.Remove.Benchmark
-      Active: [7]
+      Active: [12]
       Blocking: none
 
 ## A thread per collection doing a scan.
@@ -419,42 +458,42 @@ Actors:
     TemplateName: ScanTemplate
     TemplateParameters:
       Name: Short.Scan.Snapshot
-      Active: [7]
+      Active: [12]
       Comment: SnapshotScannerShort
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Medium.Insert.Baseline
-      Active: [9]
+      Active: [15]
       Duration: *SnapshotScannerMediumDuration
 
 - ActorFromTemplate:
     TemplateName: QueryTemplate
     TemplateParameters:
       Name: Medium.Query.Baseline
-      Active: [9]
+      Active: [15]
       Duration: *SnapshotScannerMediumDuration
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Medium.Update.Baseline
-      Active: [9]
+      Active: [15]
       Duration: *SnapshotScannerMediumDuration
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Medium.Remove.Baseline
-      Active: [9]
+      Active: [15]
       Duration: *SnapshotScannerMediumDuration
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Medium.Insert.Benchmark
-      Active: [11]
+      Active: [18]
       Blocking: none
       Duration: *SnapshotScannerMediumDuration
 
@@ -462,7 +501,7 @@ Actors:
     TemplateName: QueryTemplate
     TemplateParameters:
       Name: Medium.Query.Benchmark
-      Active: [11]
+      Active: [18]
       Blocking: none
       Duration: *SnapshotScannerMediumDuration
 
@@ -470,7 +509,7 @@ Actors:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Medium.Update.Benchmark
-      Active: [11]
+      Active: [18]
       Blocking: none
       Duration: *SnapshotScannerMediumDuration
 
@@ -478,7 +517,7 @@ Actors:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Medium.Remove.Benchmark
-      Active: [11]
+      Active: [18]
       Blocking: none
       Duration: *SnapshotScannerMediumDuration
 
@@ -487,7 +526,7 @@ Actors:
     TemplateName: ScanTemplate
     TemplateParameters:
       Name: Medium.Scan.Snapshot
-      Active: [11]
+      Active: [18]
       Comment: SnapshotScannerMedium
       Duration: *SnapshotScannerMediumDuration
       ScanDuration: *SnapshotScannerMediumDuration
@@ -496,35 +535,35 @@ Actors:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Long.Insert.Baseline
-      Active: [13]
+      Active: [21]
       Duration: *SnapshotScannerLongDuration
 
 - ActorFromTemplate:
     TemplateName: QueryTemplate
     TemplateParameters:
       Name: Long.Query.Baseline
-      Active: [13]
+      Active: [21]
       Duration: *SnapshotScannerLongDuration
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Long.Update.Baseline
-      Active: [13]
+      Active: [21]
       Duration: *SnapshotScannerLongDuration
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Long.Remove.Baseline
-      Active: [13]
+      Active: [21]
       Duration: *SnapshotScannerLongDuration
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Long.Insert.Benchmark
-      Active: [15]
+      Active: [24]
       Blocking: none
       Duration: *SnapshotScannerLongDuration
 
@@ -532,7 +571,7 @@ Actors:
     TemplateName: QueryTemplate
     TemplateParameters:
       Name: Long.Query.Benchmark
-      Active: [15]
+      Active: [24]
       Blocking: none
       Duration: *SnapshotScannerLongDuration
 
@@ -540,7 +579,7 @@ Actors:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Long.Update.Benchmark
-      Active: [15]
+      Active: [24]
       Blocking: none
       Duration: *SnapshotScannerLongDuration
 
@@ -548,7 +587,7 @@ Actors:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Long.Remove.Benchmark
-      Active: [15]
+      Active: [24]
       Blocking: none
       Duration: *SnapshotScannerLongDuration
 
@@ -557,7 +596,7 @@ Actors:
     TemplateName: ScanTemplate
     TemplateParameters:
       Name: Long.Scan.Snapshot
-      Active: [15]
+      Active: [24]
       Comment: SnapshotScannerLong
       Duration: *SnapshotScannerLongDuration
       ScanDuration: *SnapshotScannerLongDuration
