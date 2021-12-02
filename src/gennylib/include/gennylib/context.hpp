@@ -183,11 +183,15 @@ public:
      * The caller is expected to use actorIds from
      * the returned value (inclusive), to the returned
      * value + numIds (exclusive).
-     * @return The nirst id owned by the caller.
+     *
+     * Not thread-safe.
+     *
+     * @return The first id owned by the caller.
      */
     ActorId claimActorIds(size_t numIds) {
-        _constructRngsToId(numIds);
-        return _nextWorkloadActorId.fetch_add(numIds);
+        auto toReturn = _nextWorkloadActorId.fetch_add(numIds);
+        _constructRngsToId(_nextWorkloadActorId);
+        return toReturn;
     }
 
     /**
