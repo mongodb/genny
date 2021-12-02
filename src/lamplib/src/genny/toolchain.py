@@ -200,6 +200,9 @@ class ToolchainDownloader(Downloader):
         )
 
     def _fetch_and_install_impl(self):
+        # Remove the local copy of the tarball if it exists. If we don't
+        # do this, toolchain upgrades can fail if a previous install was
+        # interrupted.
         tarball = os.path.join(self._install_dir, self._name + ".tgz")
         if os.path.isfile(tarball):
             os.remove(tarball)
