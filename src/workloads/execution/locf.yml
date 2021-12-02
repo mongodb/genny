@@ -1,7 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests the performance of $locf. The benchmark operations test numeric,
+  This workload tests the performance of $locf. $locf stands for "Last Observed Carry Forward".
+  If there is a nullish value at the evaluated expression, it is replaced in the output field by the
+  last non-nullish value. Otherwise the value is simply copied over. The benchmark operations test numeric,
   string, date and randomized data types. There is a test without partitions, with a
   single partition, and with multiple partitions for each data type.
 
@@ -25,7 +27,7 @@ Actors:
         null], weights: [1, 1, 8]}}
       string: {^Choose: {from: [
         {^RandomString: {length: 15}},
-        null], weights: [2, 8]}}
+        null], weights: [1, 4]}}
       date: {^Choose: {from: [
         {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}},
         null], weights: [2, 8]}}
@@ -37,6 +39,23 @@ Actors:
         null], weights: [1, 1, 1, 1, 5]}}
   - Nop: true
   - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -46,8 +65,24 @@ Actors:
   - Nop: true
   - Repeat: 1
   - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
 
-- Name: Locf
+- Name: LocfNumericWithoutPartition
   Type: RunCommand
   Threads: 1
   Phases:
@@ -70,34 +105,59 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-    - OperationMetricsName: TestDateWithoutPartition
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            output: {
-              date: {
-                $locf: "$date"}
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: TestStringWithoutPartition
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            output: {
-              string: {
-                $locf: "$string"}
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: LocfRandomTypeWithoutPartition
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
     - OperationMetricsName: TestRandomTypeWithoutPartition
       OperationName: RunCommand
       OperationCommand:
@@ -112,6 +172,59 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: LocfMultipleOutputWithoutPartition
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
     - OperationMetricsName: TestMultipleOutputWithoutPartition
       OperationName: RunCommand
       OperationCommand:
@@ -130,22 +243,60 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-    - OperationMetricsName: TestNumericWithSinglePartition
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            partitionBy: "$part1",
-            output: {
-              numeric: {
-                $locf: "$numeric"}
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+
+- Name: LocfDateWithSinglePartition
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
     - OperationMetricsName: TestDateWithSinglePartition
       OperationName: RunCommand
       OperationCommand:
@@ -162,22 +313,59 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
-    - OperationMetricsName: TestStringWithSinglePartition
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            partitionBy: "$part1",
-            output: {
-              string: {
-                $locf: "$string"}
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: LocfRandomTypeWithSinglePartition
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
     - OperationMetricsName: TestRandomTypeWithSinglePartition
       OperationName: RunCommand
       OperationCommand:
@@ -194,31 +382,72 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
-    - OperationMetricsName: TestNumericWithMultiplePartitions
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: LocfMultipleOutputWithSinglePartition
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
+    - OperationMetricsName: TestMultipleOutputWithSinglePartition
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
         pipeline: [{
           $setWindowFields: {
             sortBy: {_id: 1},
-            partitionBy: {part1: "$part1", part2: "$part2"},
+            partitionBy: "$part1",
             output: {
-              numeric: {
-                $locf: "$numeric"}
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
-    - OperationMetricsName: TestDateWithMultiplePartitions
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            partitionBy: {part1: "$part1", part2: "$part2"},
-            output: {
+              randomType: {
+                $locf: "$randomType"},
+              string: {
+                $locf: "$string"},
               date: {
                 $locf: "$date"}
             }
@@ -226,6 +455,59 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: LocfStringWithMultiplePartitions
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
     - OperationMetricsName: TestStringWithMultiplePartitions
       OperationName: RunCommand
       OperationCommand:
@@ -242,6 +524,59 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: LocfRandomTypeWithMultiplePartitions
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
     - OperationMetricsName: TestRandomTypeWithMultiplePartitions
       OperationName: RunCommand
       OperationCommand:
@@ -258,6 +593,59 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
+  - Nop: true
+  - Nop: true
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+
+- Name: LocfMultipleOutputWithMultiplePartitions
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
     - OperationMetricsName: TestMultipleOutputWithMultiplePartitions
       OperationName: RunCommand
       OperationCommand:
@@ -285,7 +673,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
-        - replica
+      - replica
     branch_name:
       $neq:
       - v4.0
