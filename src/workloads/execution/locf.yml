@@ -5,7 +5,12 @@ Description: |
   If there is a nullish value at the evaluated expression, it is replaced in the output field by the
   last non-nullish value. Otherwise the value is simply copied over. The benchmark operations test numeric,
   string, date and randomized data types. There is a test without partitions, with a
-  single partition, and with multiple partitions for each data type.
+  single partition, and with multiple partitions for each data type. Partitions require carry forward
+  to be done individually on each partition, which requires additional tracking and may make queries
+  slower.
+
+  To learn more about partitions, please check out the docs here:
+  https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/
 
 Actors:
 - Name: InsertData
@@ -61,25 +66,11 @@ Actors:
   Threads: 1
   Database: *db
   Phases:
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
+    OnlyActiveInPhases:
+      Active: [1, 3, 5, 7, 9, 11, 13, 15, 17]
+      NopInPhasesUpTo: 19
+      PhaseConfig:
+        Repeat: 1
 
 - Name: LocfNumericWithoutPartition
   Type: RunCommand
