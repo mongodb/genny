@@ -199,16 +199,6 @@ class ToolchainDownloader(Downloader):
             self.ignore_toolchain_version or self._check_toolchain_githash()
         )
 
-    def _fetch_and_install_impl(self):
-        # Remove the local copy of the tarball if it exists. If we don't
-        # do this, toolchain upgrades can fail if a previous install was
-        # interrupted.
-        tarball = os.path.join(self._install_dir, self._name + ".tgz")
-        if os.path.isfile(tarball):
-            os.remove(tarball)
-
-        super()._fetch_and_install_impl()
-
     def _check_toolchain_githash(self):
         res = "".join(
             run_command(cmd=["git", "rev-parse", "HEAD"], cwd=self.result_dir, check=True).stdout
