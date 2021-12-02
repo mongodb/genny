@@ -1,7 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload.
+  Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload. This version of the tests is less
+  stressful (in terms of fitting into RAM) and has warmup phases.
 
 GlobalDefaults:
   # Start: The following block gets updated for the other configurations.
