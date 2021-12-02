@@ -183,9 +183,10 @@ public:
      * The caller is expected to use actorIds from
      * the returned value (inclusive), to the returned
      * value + numIds (exclusive).
-     * @return The first id owned by the caller.
+     * @return The nirst id owned by the caller.
      */
     ActorId claimActorIds(size_t numIds) {
+        _constructRngsToId(numIds);
         return _nextWorkloadActorId.fetch_add(numIds);
     }
 
@@ -268,6 +269,8 @@ private:
     static ActorVector _constructActors(const Cast& cast,
                                         const std::unique_ptr<ActorContext>& contexts);
 
+    void _constructRngsToId(ActorId id);
+
     metrics::Registry _registry;
     Orchestrator* _orchestrator;
 
@@ -287,7 +290,6 @@ private:
 
     // Deque instead of vector to prevent references from being deleted when reallocating.
     std::deque<DefaultRandom> _rngRegistry;
-    std::mutex _rngLock;
     DefaultRandom _seedGenerator;
 
     std::unordered_map<std::string, std::unique_ptr<GlobalRateLimiter>> _rateLimiters;

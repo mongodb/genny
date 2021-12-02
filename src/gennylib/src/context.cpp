@@ -148,13 +148,14 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
         BOOST_THROW_EXCEPTION(std::logic_error("ActorId must be 1 or greater."));
     }
 
-    // Create RNGs for all ids up to our own.
-    std::lock_guard<std::mutex> lk(_rngLock);
+    return _rngRegistry[id - 1];
+}
+
+// Helper method that constructs all the IDs up to the given ID.
+void WorkloadContext::_constructRngsToId(ActorId id) {
     for (auto i = _rngRegistry.size(); i < id; i++) {
         _rngRegistry.emplace_back(_seedGenerator());
     }
-
-    return _rngRegistry[id - 1];
 }
 
 // Helper method to convert Phases:[...] to PhaseContexts
