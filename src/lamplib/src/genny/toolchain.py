@@ -200,7 +200,6 @@ class ToolchainDownloader(Downloader):
         )
 
     def _fetch_and_install_impl(self):
-        # TODO TIG-3606 revaluate if this is the right way to do this.
         tarball = os.path.join(self._install_dir, self._name + ".tgz")
         if os.path.isfile(tarball):
             os.remove(tarball)
