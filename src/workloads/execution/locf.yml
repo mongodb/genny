@@ -55,7 +55,6 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
-  - Nop: true
 
 - Name: Quiesce
   Type: QuiesceActor
