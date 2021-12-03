@@ -66,11 +66,25 @@ Actors:
   Threads: 1
   Database: *db
   Phases:
-    OnlyActiveInPhases:
-      Active: [1, 3, 5, 7, 9, 11, 13, 15, 17]
-      NopInPhasesUpTo: 19
-      PhaseConfig:
-        Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
 
 - Name: LocfNumericWithoutPartition
   Type: RunCommand
@@ -78,7 +92,7 @@ Actors:
   Phases:
   - Nop: true
   - Nop: true
-  - Repeat: 10
+  - Duration: 30 seconds
     Database: *db
     Operations:
     - OperationMetricsName: TestNumericWithoutPartition
@@ -120,7 +134,7 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
-  - Repeat: 10
+  - Duration: 30 seconds
     Database: *db
     Operations:
     - OperationMetricsName: TestRandomTypeWithoutPartition
@@ -162,7 +176,7 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
-  - Repeat: 10
+  - Duration: 30 seconds
     Database: *db
     Operations:
     - OperationMetricsName: TestMultipleOutputWithoutPartition
@@ -208,7 +222,7 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
-  - Repeat: 10
+  - Duration: 30 seconds
     Database: *db
     Operations:
     - OperationMetricsName: TestDateWithSinglePartition
@@ -252,7 +266,7 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
-  - Repeat: 10
+  - Duration: 30 seconds
     Database: *db
     Operations:
     - OperationMetricsName: TestRandomTypeWithSinglePartition
@@ -296,7 +310,7 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
-  - Repeat: 10
+  - Duration: 30 seconds
     Database: *db
     Operations:
     - OperationMetricsName: TestMultipleOutputWithSinglePartition
@@ -344,7 +358,7 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
-  - Repeat: 10
+  - Duration: 30 seconds
     Database: *db
     Operations:
     - OperationMetricsName: TestStringWithMultiplePartitions
@@ -388,7 +402,7 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
-  - Repeat: 10
+  - Duration: 30 seconds
     Database: *db
     Operations:
     - OperationMetricsName: TestRandomTypeWithMultiplePartitions
@@ -432,7 +446,7 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
-  - Repeat: 10
+  - Duration: 30 seconds
     Database: *db
     Operations:
     - OperationMetricsName: TestMultipleOutputWithMultiplePartitions
