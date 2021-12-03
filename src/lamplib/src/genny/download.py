@@ -97,8 +97,8 @@ class Downloader:
         tarball = os.path.join(self._install_dir, self._name + ".tgz")
         if os.path.isfile(tarball):
             os.remove(tarball)
-        if os.path.exists(self._install_dir):
-            shutil.rmtree(self._install_dir)
+        if os.path.exists(self.result_dir):
+            shutil.rmtree(self.result_dir)
 
         url = self._get_url()
         SLOG.debug("Downloading", name=self._name, url=url)
