@@ -184,7 +184,7 @@ tasks:
       - -v
       - resmoke-test
       - --suites
-      - ../..src/genny/src/resmokeconfig/genny_single_node_replset.yml
+      - ../../src/genny/src/resmokeconfig/genny_single_node_replset.yml
 
 - name: t_integration_test_three_node_replset
   commands:
