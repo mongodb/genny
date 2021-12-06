@@ -332,12 +332,12 @@ def resmoke_test(
 
     cmd = [
         resmoke_python,
-        os.path.join(mongo_repo_path, "buildscripts", "resmoke.py"),
+        os.path.join("buildscripts", "resmoke.py"),
         "run",
         "--suite",
         suites,
         "--configDir",
-        os.path.join(mongo_repo_path, "buildscripts", "resmokeconfig"),
+        os.path.join("buildscripts", "resmokeconfig"),
         "--mongod",
         mongod,
         "--mongo",
@@ -351,7 +351,7 @@ def resmoke_test(
         env["CTEST_OUTPUT_ON_FAILURE"] = "1"
         cmd_runner.run_command(
             cmd=cmd,
-            cwd=workspace_root,
+            cwd=mongo_repo_path,
             env=env,
             capture=False,
             # If we're create_new_actor_test we don't want
