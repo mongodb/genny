@@ -28,9 +28,9 @@ Actors:
       part1: {^Choose: {from: [1, 2, 3, 4]}}
       part2: {^Choose: {from: [1, 2, 3, 4]}}
       sortDateField: {^RandomDate: {
-        min: {^Inc: {start: 0, multiplier: 1, step: 1}}, 
+        min: {^Inc: {start: 0, multiplier: 1, step: 1}},
         max: {^Inc: {start: 1, multiplier: 1, step: 1}}
-        }
+      }
       }
       sortField: {^Inc: {start: 0}}
       integer: {^Choose: {from: [
