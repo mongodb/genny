@@ -178,8 +178,6 @@ class CuratorDownloader(Downloader):
     # These build IDs are from the Curator Evergreen task.
     # https://evergreen.mongodb.com/waterfall/curator
 
-    # Note that DSI also downloads Curator, the location is specified in defaults.yml.
-    # Please try to keep the two versions consistent.
     CURATOR_VERSION = "3df28d2514d4c4de7c903d027e43f3ee48bf8ec1"
 
     def __init__(
