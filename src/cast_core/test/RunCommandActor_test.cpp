@@ -257,8 +257,8 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )");
         NodeSource ns{YAML::Dump(config), ""};
-        REQUIRE_THROWS_AS(ActorHelper(ns.root(), 1, MongoTestFixture::connectionUri().to_string()),
-                          InvalidKeyException);
+        REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1, MongoTestFixture::connectionUri().to_string()), 
+                Catch::Contains("Plural 'Operations' must be a sequence type"));
     }
 
     SECTION("Insert a single document using the 'Operation' key name.") {
@@ -349,8 +349,8 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )");
         NodeSource ns{YAML::Dump(config), ""};
-        REQUIRE_THROWS_AS(ActorHelper(ns.root(), 1, MongoTestFixture::connectionUri().to_string()),
-                          InvalidKeyException);
+        REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1, MongoTestFixture::connectionUri().to_string()), 
+                Catch::Contains("Either 'Operation' or 'Operations' required."));
     }
 
     SECTION("Database should default to 'admin' when not specified in the the config.") {
@@ -489,9 +489,9 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )",
                           "");
-        REQUIRE_THROWS_AS(
-            ActorHelper(config.root(), 1, MongoTestFixture::connectionUri().to_string()),
-            InvalidConfigurationException);
+
+        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1, MongoTestFixture::connectionUri().to_string()), 
+                Catch::Contains("AdminCommands can only be run on the 'admin' database"));
     }
 }
 
@@ -592,9 +592,8 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )",
                           "");
-        REQUIRE_THROWS_AS(
-            ActorHelper(config.root(), 1, MongoTestFixture::connectionUri().to_string()),
-            InvalidKeyException);
+        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1, MongoTestFixture::connectionUri().to_string()), 
+                Catch::Contains("Can't have both 'Operation' and 'Operations'."));
     }
 }
 
