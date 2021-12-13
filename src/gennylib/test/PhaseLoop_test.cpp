@@ -484,7 +484,7 @@ TEST_CASE("Actual Actor Example") {
                 ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
                 ah.run();
             }()),
-            Catch::Matches("Value for genny::IntegerSpec can't be negative: -10 from config: -10"));
+            Catch::Contains("Value for genny::IntegerSpec can't be negative: -10 from config: -10"));
     }
 
     SECTION("SleepAfter and GlobalRate") {
@@ -509,7 +509,7 @@ TEST_CASE("Actual Actor Example") {
                                 ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
                                 ah.run();
                             }()),
-                            Catch::Matches(R"(GlobalRate must \*not\* be specified alongside .*)"));
+                            Catch::Contains("GlobalRate must *not* be specified alongside"));
     }
 
     SECTION("SleepBefore = 0") {
@@ -557,6 +557,6 @@ TEST_CASE("Actual Actor Example") {
                                 ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
                                 ah.run();
                             }()),
-                            Catch::Matches(".*Must specify 'Blocking: None'.*"));
+                            Catch::Contains("Must specify 'Blocking: None'"));
     }
 }

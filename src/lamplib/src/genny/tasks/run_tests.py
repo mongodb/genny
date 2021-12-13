@@ -163,10 +163,10 @@ def _check_create_new_actor_test_report(workspace_root: str) -> Callable[[str], 
 # See the logic in _setup_resmoke.
 # These are the "Binaries" evergreen artifact URLs for mongodb-mongo compile tasks.
 # The binaries must be compatible with the version of the mongo repo checked out in use for resmoke,
-# which is the sha "298d4d6bbb9980b74bded06241067fe6771bef68" mentioned below.
+# which is the sha "cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3" mentioned below.
 _canned_artifacts = {
-    "osx": "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/macos/298d4d6bbb9980b74bded06241067fe6771bef68/binaries/mongo-mongodb_mongo_master_macos_298d4d6bbb9980b74bded06241067fe6771bef68_20_10_22_00_55_19.tgz",
-    "amazon2": "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/amazon2/298d4d6bbb9980b74bded06241067fe6771bef68/binaries/mongo-mongodb_mongo_master_amazon2_298d4d6bbb9980b74bded06241067fe6771bef68_20_10_22_00_55_19.tgz",
+    "osx": "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/macos/cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3/binaries/mongo-mongodb_mongo_master_macos_cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3_21_12_03_09_47_48.tgz",
+    "amazon2": "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/amazon/cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3/binaries/mongo-mongodb_mongo_master_amazon_cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3_21_12_03_09_47_48.tgz",
 }
 
 
@@ -204,7 +204,7 @@ def _setup_resmoke(
         cmd_runner.run_command(
             # If changing this sha, you may need to use later binaries
             # in the _canned_artifacts dict.
-            cmd=["git", "checkout", "298d4d6bbb9980b74bded06241067fe6771bef68"],
+            cmd=["git", "checkout", "cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3"],
             cwd=mongo_repo_path,
             check=True,
             capture=False,
@@ -332,12 +332,12 @@ def resmoke_test(
 
     cmd = [
         resmoke_python,
-        os.path.join(mongo_repo_path, "buildscripts", "resmoke.py"),
+        os.path.join("buildscripts", "resmoke.py"),
         "run",
         "--suite",
         suites,
         "--configDir",
-        os.path.join(mongo_repo_path, "buildscripts", "resmokeconfig"),
+        os.path.join("buildscripts", "resmokeconfig"),
         "--mongod",
         mongod,
         "--mongo",
@@ -351,7 +351,7 @@ def resmoke_test(
         env["CTEST_OUTPUT_ON_FAILURE"] = "1"
         cmd_runner.run_command(
             cmd=cmd,
-            cwd=workspace_root,
+            cwd=mongo_repo_path,
             env=env,
             capture=False,
             # If we're create_new_actor_test we don't want

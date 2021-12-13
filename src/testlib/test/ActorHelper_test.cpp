@@ -24,7 +24,7 @@
 #include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
 
-using Catch::Matchers::Matches;
+using Catch::Matchers::Contains;
 
 TEST_CASE("Actor Helper") {
     class DummyActor : public genny::Actor {
@@ -54,7 +54,7 @@ Actors:
         auto test = [&]() {
             genny::ActorHelper ah(config.root(), -1, {{"DummyActor", dummyProducer}});
         };
-        REQUIRE_THROWS_WITH(test(), Matches("Must add a positive number of tokens"));
+        REQUIRE_THROWS_WITH(test(), Contains("Must add a positive number of tokens"));
     }
 
     class CtorThrowingActor : public DummyActor {
@@ -78,7 +78,7 @@ Actors:
         auto test = [&]() {
             genny::ActorHelper ah(config.root(), 1, {{"DummyActor", dummyProducer}});
         };
-        REQUIRE_THROWS_WITH(test(), Matches("CTOR Barf"));
+        REQUIRE_THROWS_WITH(test(), Contains("CTOR Barf"));
     }
 
     SECTION("Barfs if Actor runAndVerify() barfs") {
@@ -97,6 +97,6 @@ Actors:
         auto verifyFunc = [](const genny::WorkloadContext& wc) {
             throw genny::InvalidConfigurationException("RUN Barf");
         };
-        REQUIRE_THROWS_WITH(ah.runAndVerify(runFunc, verifyFunc), Matches("RUN Barf"));
+        REQUIRE_THROWS_WITH(ah.runAndVerify(runFunc, verifyFunc), Contains("RUN Barf"));
     }
 }

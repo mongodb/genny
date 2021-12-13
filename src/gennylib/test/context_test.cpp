@@ -136,16 +136,19 @@ Actors:
         std::atomic_int calls = 0;
         auto foobar = genny::testing::toDocumentBson("foo: bar");
 
+        auto fromDocListAssert = false;
         auto fromDocList = std::make_shared<OpProducer>([&](ActorContext& a) {
             for (const auto&& [k, doc] : a["docs"]) {
-                auto docgen = doc.to<DocumentGenerator>(a, 0);
-                REQUIRE(docgen().view() == foobar.view());
+                auto docgen = doc.to<DocumentGenerator>(a, 1);
+                fromDocListAssert = docgen().view() == foobar.view();
                 ++calls;
             }
         });
+
+        auto fromDocAssert = false;
         auto fromDoc = std::make_shared<OpProducer>([&](ActorContext& a) {
-            auto docgen = a["doc"].to<DocumentGenerator>(a, 0);
-            REQUIRE(docgen().view() == foobar.view());
+            auto docgen = a["doc"].to<DocumentGenerator>(a, 1);
+            fromDocAssert = docgen().view() == foobar.view();
             ++calls;
         });
 
@@ -161,6 +164,8 @@ Actors:
         auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast2); };
         test();
 
+        REQUIRE(fromDocListAssert);
+        REQUIRE(fromDocAssert);
         REQUIRE(calls == 2);
     }
 
@@ -249,25 +254,33 @@ Actors:
             using ActorProducer::ActorProducer;
 
             ActorVector produce(ActorContext& context) override {
-                REQUIRE(context.workload()["Actors"][0]["SomeList"][0].to<int>() == 100);
-                REQUIRE(context["SomeList"][0].to<int>() == 100);
+                workloadAssert =
+                    context.workload()["Actors"][0]["SomeList"][0].to<int>() == 100;
+                actorAssert = 
+                    context["SomeList"][0].to<int>() == 100;
                 ++calls;
                 return ActorVector{};
             }
 
             int calls = 0;
+
+            // Because Catch2 isn't thread-safe.
+            bool workloadAssert = false;
+            bool actorAssert = false;
         };
 
         struct CountProducer : public ActorProducer {
             using ActorProducer::ActorProducer;
 
             ActorVector produce(ActorContext& context) override {
-                REQUIRE(context.workload()["Actors"][1]["Count"].to<int>() == 7);
-                REQUIRE(context["Count"].to<int>() == 7);
+                actorAssert = context.workload()["Actors"][1]["Count"].to<int>() == 7;
+                workloadAssert = context["Count"].to<int>() == 7;
                 ++calls;
                 return ActorVector{};
             }
 
+            bool workloadAssert = false;
+            bool actorAssert = false;
             int calls = 0;
         };
 
@@ -282,8 +295,14 @@ Actors:
 
         auto context = WorkloadContext{yaml, orchestrator, mongoUri.data(), twoActorCast};
 
+
         REQUIRE(someListProducer->calls == 1);
+        REQUIRE(someListProducer->workloadAssert);
+        REQUIRE(someListProducer->actorAssert);
+
         REQUIRE(countProducer->calls == 1);
+        REQUIRE(countProducer->workloadAssert);
+        REQUIRE(countProducer->actorAssert);
         REQUIRE(std::distance(context.actors().begin(), context.actors().end()) == 0);
     }
 
@@ -664,6 +683,6 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
     SECTION("Incorrect type value inputted") {
         auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
         REQUIRE_THROWS_WITH(
-            test(), Matches(R"(Unable to construct actors: No producer for 'Bar'(.*\n*)*)"));
+            test(), Catch::Contains("Unable to construct actors: No producer for 'Bar'"));
     }
 }
