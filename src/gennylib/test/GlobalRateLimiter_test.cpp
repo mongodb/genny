@@ -215,7 +215,6 @@ Actors:
         t.join();
 
         const auto state = getCurState();
-        BOOST_LOG_TRIVIAL(error) << "state: " << state;
         
         // We may run the GlobalRate ops more or fewer, based on the randomness of thread
         // wakeup times coinciding with phase endings for non-blocking operations.
