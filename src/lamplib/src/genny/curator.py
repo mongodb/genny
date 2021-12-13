@@ -103,6 +103,10 @@ def _cleanup_metrics():
     )
 
 
+def _create_metrics():
+    os.makedirs(_METRICS_PATH, exist_ok=True)
+
+
 def export(workspace_root: str, genny_repo_root: str, input_path: str, output_path: str = None):
     args = _get_export_args(
         workspace_root=workspace_root,
@@ -129,7 +133,7 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
 
     if cleanup_metrics:
         _cleanup_metrics()
-
+    _create_metrics()
     SLOG.info("Starting poplar grpc in the background.", command=args, cwd=workspace_root)
 
     prior_cwd = os.getcwd()

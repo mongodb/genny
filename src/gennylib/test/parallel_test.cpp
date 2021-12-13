@@ -57,12 +57,4 @@ TEST_CASE("Parallel runner reraises exceptions") {
                    });
     };
     REQUIRE_THROWS_WITH(test(), Contains("This should be reraised."));
-
-    auto exceptionsCaught = 0;
-    try {
-        test();
-    } catch (ExceptionBucket::ParallelException& e) {
-        exceptionsCaught = e.exceptions().size();
-    }
-    REQUIRE(exceptionsCaught == integers.size());
 }
