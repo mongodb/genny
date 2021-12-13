@@ -79,7 +79,7 @@ cluster configurations are defined in `src/resmokeconfig`.
 
 ```sh
 # Example:
-./run-genny resmoke-test --suite src/resmokeconfig/genny_standalone.yml
+./run-genny resmoke-test --suites src/resmokeconfig/genny_standalone.yml
 ```
 
 Each yaml configuration file will only run tests that are associated
