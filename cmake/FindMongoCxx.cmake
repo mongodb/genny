@@ -13,9 +13,6 @@
 # limitations under the License.
 
 find_package(libmongocxx REQUIRED)
-find_package(libbsoncxx REQUIRED)
-include_directories(${LIBMONGOCXX_INCLUDE_DIR})
-include_directories(${LIBBSONCXX_INCLUDE_DIR})
 
 # Make a target for bsoncxx
 add_library(MongoCxx::bsoncxx SHARED IMPORTED GLOBAL)
