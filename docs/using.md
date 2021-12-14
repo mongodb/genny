@@ -37,7 +37,7 @@ If running locally you can use the `export` command that Genny provides to expor
 For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
 
 ```sh
-./run-genny export build/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
+./run-genny export build/WorkloadOutput/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
 ```
 
 
