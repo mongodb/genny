@@ -14,7 +14,6 @@
 
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 cmake_policy(VERSION 3.13)
-cmake_policy(SET CMP0110 OLD)
 
 # NB: this version number is duplicated in
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
@@ -64,7 +63,7 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(
         Boost
-        1.75
+        1.68
         REQUIRED
         COMPONENTS
         filesystem
