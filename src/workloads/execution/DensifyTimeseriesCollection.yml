@@ -1,10 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests the performance of $densify in timeseries collections.
-  If there is a nullish value in the output field, $fill replaces
-  the null value with either the last non-nullish value (in case of $locf)
-  or the interpolated value (in case of $linearFill).
+  This workload tests the performance of $densify stage with a numeric step
+  in timeseries collections.
 
 GlobalDefaults:
   dbname: &db test
