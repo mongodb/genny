@@ -29,12 +29,16 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
+  - Nop: true
+  - Nop: true
 
 - Name: Quiesce
   Type: QuiesceActor
   Threads: 1
   Database: *db
   Phases:
+  - Nop: true
+  - Repeat: 1
   - Nop: true
   - Repeat: 1
   - Nop: true
@@ -86,6 +90,8 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
+  - Nop: true
+  - Nop: true
 
 - Name: LocfSingleOutput
   Type: RunCommand
@@ -112,6 +118,8 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
+  - Nop: true
+  - Nop: true
   - Nop: true
   - Nop: true
   - Nop: true
@@ -146,6 +154,8 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
+  - Nop: true
+  - Nop: true
   - Nop: true
   - Nop: true
   - Nop: true
@@ -185,6 +195,8 @@ Actors:
         cursor: {batchSize: *batchSize}
   - Nop: true
   - Nop: true
+  - Nop: true
+  - Nop: true
 
 - Name: LinearFillMultipleOutputsWithMultiplePartitions
   Type: RunCommand
@@ -216,6 +228,48 @@ Actors:
                 method: "linear"},
               double: {
                 method: "linear"},
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+  - Nop: true
+  - Nop: true
+
+- Name: MixedMethodsMultipleOutputsWithMultiplePartitions
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Duration: 30 seconds
+    Database: *db
+    Operations:
+    - OperationMetricsName: TestMultipleOutputsWithMultiplePartitions
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *coll
+        pipeline: [{
+          $fill: {
+            partitionBy: {part1: "$part1", part2: "$part2"},
+            sortBy: {timestamp: 1},
+            output: {
+              numeric: {
+                method: "linear"},
+              double: {
+                method: "linear"},
+              string: {
+                method: "locf"
+              }
             }
           }
         }]
