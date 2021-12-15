@@ -14,7 +14,7 @@ GlobalDefaults:
     options: {name: "numeric"}
   smallStepSize: &smallStep {^RandomInt: {min: 3, max: 3}}
   largeStepSize: &largeStep {^RandomInt: {min: 8, max: 8}}
-  explicitBounds: &bounds [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 40000}}]
+  explicitBounds: &bounds [{^RandomInt: {min: 1000, max: 50000}}, {^RandomInt: {min: 10000, max: 20000}}]
   nop: &Nop {Nop: true}
 
 Actors:
