@@ -29,57 +29,57 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         {create: &coll Collection0, timeseries: {timeField: "timestamp", metaField: "numeric"}}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: Quiesce
   Type: QuiesceActor
   Threads: 1
   Database: *db
   Phases:
-  - Nop: true
+  - *Nop
   - Repeat: 1
-  - Nop: true
+  - *Nop
   - Repeat: 1
-  - Nop: true
+  - *Nop
   - Repeat: 1
-  - Nop: true
+  - *Nop
   - Repeat: 1
-  - Nop: true
+  - *Nop
   - Repeat: 1
-  - Nop: true
+  - *Nop
   - Repeat: 1
-  - Nop: true
+  - *Nop
   - Repeat: 1
-  - Nop: true
+  - *Nop
   - Repeat: 1
-  - Nop: true
+  - *Nop
   - Repeat: 1
-  - Nop: true
+  - *Nop
 
 
 - Name: InsertData
   Type: Loader
   Threads: 1
   Phases:
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
   - Repeat: 1
     Database: *db
     Collection: *coll
@@ -96,31 +96,31 @@ Actors:
     # indexes on the date/number fields so that we aren't performing an in-memory sort.
     Indexes:
     - *index
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: DensifyFullSmallStep
   Type: RunCommand
   Threads: 1
   Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
@@ -138,31 +138,31 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: DensifyFullLargeStep
   Type: RunCommand
   Threads: 1
   Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
@@ -180,31 +180,31 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: DensifyFullByPartitionSmallStep
   Type: RunCommand
   Threads: 1
   Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
@@ -223,31 +223,31 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: DensifyFullByPartitionLargeStep
   Type: RunCommand
   Threads: 1
   Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
@@ -266,31 +266,31 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: DensifyExplicitRangeSmallStep
   Type: RunCommand
   Threads: 1
   Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
@@ -308,31 +308,31 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: DensifyExplicitRangeLargeStep
   Type: RunCommand
   Threads: 1
   Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
@@ -350,31 +350,31 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: DensifyExplicitRangeByPartitionSmallStep
   Type: RunCommand
   Threads: 1
   Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
@@ -393,31 +393,31 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
 
 - Name: DensifyExplicitRangeByPartitionLargeStep
   Type: RunCommand
   Threads: 1
   Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
