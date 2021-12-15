@@ -12,9 +12,12 @@ GlobalDefaults:
   index: &index
     keys: {numeric: 1}
     options: {name: "numeric"}
+  # smallStep is always 3, we have to use the int generator to explicitly encode it as an integer
+  # so as not to crash the server (with error code 5876900).
   smallStepSize: &smallStep {^RandomInt: {min: 3, max: 3}}
+  # largeStep is always 8, can see reasoning above. 
   largeStepSize: &largeStep {^RandomInt: {min: 8, max: 8}}
-  explicitBounds: &bounds [{^RandomInt: {min: 1000, max: 50000}}, {^RandomInt: {min: 10000, max: 20000}}]
+  explicitBounds: &bounds [{^RandomInt: {min: 1000, max: 5000}}, {^RandomInt: {min: 10000, max: 20000}}]
   nop: &Nop {Nop: true}
 
 Actors:
