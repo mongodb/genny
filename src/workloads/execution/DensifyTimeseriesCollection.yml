@@ -382,8 +382,9 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
+      - standalone
       - replica
-      - replica-all-feature-flags
+      - single-replica
     branch_name:
       $neq:
       - v4.0
