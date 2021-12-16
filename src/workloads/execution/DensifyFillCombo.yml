@@ -2,11 +2,15 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
   This workload tests the performance of queries that combine $densify and $fill stages.
+  $densify creates new documents to eliminate the gaps in the "timestamp" or "numeric"
+  fields. The other fields in these generates documents however, will be missing.
+  $fill set values for the output field (in the context of this workload,
+  "toFillRandomType" or "toFillNumeric") when the value is null or missing.
 
 GlobalDefaults:
   dbname: &db test
   batchSize: &batchSize 30000
-  fieldName: &field "numeric"
+  fieldName: &field "timestamp"
   index: &index
     keys: {numeric: 1}
     options: {name: "numeric"}
@@ -14,28 +18,66 @@ GlobalDefaults:
   nop: &Nop {Nop: true}
 
 Actors:
-- Name: InsertData
-  Type: Loader
+- Name: CreateTimeSeriesCollection
+  Type: RunCommand
   Threads: 1
   Phases:
   - Repeat: 1
     Database: *db
+    Operation:
+      OperationMetricsName: CreateTimeSeriesCollection
+      OperationName: RunCommand
+      OperationCommand:
+        {create: &coll Collection0, timeseries: {timeField: "timestamp", metaField: "numeric"}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: *db
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 10000
+    DocumentCount: 100
     BatchSize: *batchSize
     Document:
       partitionKey: {^RandomInt: {min: 1, max: 100}}
+      timestamp: {^RandomDate: {min: "2021-01-01T00:00:00.000Z", max: "2021-01-01T00:00:20.000Z"}}
       toFillRandomType: {^Choose: {from: [
         {^RandomInt: {min: -100, max: 100}},
         {^RandomDouble: { min: 0.0, max: 500.0 }},
         {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}},
         {^RandomString: {length: 15}}, null], weights: [1, 1, 1, 1, 6]}}
-      numeric: {^RandomInt: {min: 0, max: 2000}}
+      toFillNumeric: {^Choose: {from: [
+        {^RandomInt: {min: -1000, max: 1000}},
+        {^RandomDouble: { min: 0.0, max: 2000.0 }}]}}
+      numeric: {^Inc: {start: 0, multiplier: 1, step: 6}}
     # $densify stages always add a $sort on the field that is being densified, so this phase adds
     # indexes on the date/number fields so that we aren't performing an in-memory sort.
     Indexes:
     - *index
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -55,17 +97,57 @@ Actors:
   - *Nop
   - Repeat: 1
   - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
 
-- Name: DensifyFillWithoutPartition
+
+- Name: IncreaseInternalQueryMaxAllowedDensifyDocs
   Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operation:
+      OperationMetricsName: internalQueryMaxAllowedDensifyDocs
+      OperationName: RunCommand
+      OperationCommand:
+        setParameter: 1
+        internalQueryMaxAllowedDensifyDocs: 100000
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: DensifyTimestampFillWithoutPartition
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
-    - OperationMetricsName: TestDensifyFillWithoutPartition
+    - OperationMetricsName: TestDensifyTimestampFillWithoutPartition
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -74,7 +156,8 @@ Actors:
             field: *field,
             range: {
               bounds: "full",
-              step: *smallStep
+              step: *smallStep,
+              unit: "millisecond"
             }
           },
           $fill: {
@@ -89,8 +172,12 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
-- Name: DensifyFillWithPartition
+- Name: DensifyTimestampFillWithPartition
   Type: RunCommand
   Threads: 1
   Phases:
@@ -98,10 +185,14 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
-    - OperationMetricsName: TestDensifyFillWithPartition
+    - OperationMetricsName: TestDensifyTimestampFillWithPartition
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
@@ -110,7 +201,8 @@ Actors:
             field: *field,
             range: {
               bounds: "partition",
-              step: *smallStep
+              step: *smallStep,
+              unit: "millisecond"
             },
             partitionByFields: ["partitionKey"]
           },
@@ -125,8 +217,12 @@ Actors:
         allowDiskUse: true
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
-- Name: DensifyFillFullBoundsWithPartition
+- Name: DensifyNumericFillWithPartition
   Type: RunCommand
   Threads: 1
   Phases:
@@ -136,29 +232,124 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
-    - OperationMetricsName: TestDensifyFillFullBoundsWithPartition
+    - OperationMetricsName: TestDensifyNumericFillWithPartition
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
         pipeline: [
           $densify: {
-            field: *field,
+            field: "numeric",
             range: {
-              bounds: "full",
-              step: *smallStep
+              bounds: "partition",
+              step: *smallStep,
             },
             partitionByFields: ["partitionKey"]
           },
           $fill: {
             output: {
-              toFillRandomType: {
-                method: "locf"
-              }
+              toFillRandomType: {method: "locf"},
             },
             partitionByFields: ["partitionKey"]
+          }
+        ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: DensifyNumericLinearFillNumeric
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Duration: 30 seconds
+    Database: *db
+    Operations:
+    - OperationMetricsName: TestDensifyNumericLinearFillNumeric
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [
+          $densify: {
+            field: "numeric",
+            range: {
+              bounds: "full",
+              step: *smallStep
+            },
+          },
+          $fill: {
+            sortBy: {numeric: 1},
+            output: {
+              toFillRandomNumeric: {
+                method: "linear"
+              }
+            },
+          }
+        ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+  - *Nop
+  - *Nop
+
+- Name: DensifyTimestampFillValue
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Duration: 30 seconds
+    Database: *db
+    Operations:
+    - OperationMetricsName: TestDensifyNumericLinearFillNumeric
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [
+          $densify: {
+            field: "numeric",
+            range: {
+              bounds: "full",
+              step: *smallStep
+            },
+          },
+          $fill: {
+            output: {
+              toFillRandomType: {
+                value: "0"
+              },
+            },
           }
         ]
         cursor: {batchSize: *batchSize}
