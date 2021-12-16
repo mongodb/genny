@@ -1,7 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
 Description: |
-  TODO: TIG-3319
+  A workload which creates 2 databases a "cold" database which is scanned periodically and a "hot"
+  database which is read continuously throughout the workload. The intention is that the hot
+  database is large enough that it fills WiredTiger's cache and the WiredTiger cache takes up most
+  of the system memory so the operating system cache is also not big enough for the cold database.
+  Thus the cold data must be read directly from disk. The read latency by the RandomSampler is
+  recorded at all times.
 
 Clients:
   Default:
