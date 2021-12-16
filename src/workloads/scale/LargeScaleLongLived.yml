@@ -1,7 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
 Description: |
-  TODO: TIG-3319
+  This workload consists of two phases intended to test the basic long lived reader writer actors
+  created for the large scale workload automation project. It creates a databse with 10K collections
+  and 10 indexes per collection. It reads at 15K op/s and writes at 5K op/s.
 
 Clients:
   Default:

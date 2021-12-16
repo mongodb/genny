@@ -1,7 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
 Description: |
-  TODO: TIG-3319
+  An workload to test/document the random sampler actor which samples records in a set of
+  collections using the aggregation pipeline sample function.
 
 Clients:
   Default:

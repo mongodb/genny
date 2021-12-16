@@ -1,7 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
 Description: |
-  TODO: TIG-3319
+  A workload to test/document the HotDocumentUpdater actor which updates a specified document in a
+  specified collection.
 
 Clients:
   Default:
