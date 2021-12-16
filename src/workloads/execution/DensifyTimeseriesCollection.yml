@@ -8,14 +8,13 @@ GlobalDefaults:
   dbname: &db test
   batchSize: &batchSize 30000
   fieldName: &field "numeric"
-  unitName: &unit null
   index: &index
     keys: {numeric: 1}
     options: {name: "numeric"}
   # smallStep is always 3, we have to use the int generator to explicitly encode it as an integer
   # so as not to crash the server (with error code 5876900).
   smallStepSize: &smallStep {^RandomInt: {min: 3, max: 3}}
-  # largeStep is always 8, can see reasoning above. 
+  # largeStep is always 8, can see reasoning above.
   largeStepSize: &largeStep {^RandomInt: {min: 8, max: 8}}
   explicitBounds: &bounds [{^RandomInt: {min: 1000, max: 5000}}, {^RandomInt: {min: 10000, max: 20000}}]
   nop: &Nop {Nop: true}
@@ -32,8 +31,6 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         {create: &coll Collection0, timeseries: {timeField: "timestamp", metaField: "numeric"}}
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -73,8 +70,6 @@ Actors:
   - *Nop
   - Repeat: 1
   - *Nop
-  - Repeat: 1
-  - *Nop
 
 
 - Name: InsertData
@@ -92,15 +87,13 @@ Actors:
     BatchSize: *batchSize
     Document:
       partitionKey: {^RandomInt: {min: 1, max: 100}}
-      timestamp: {^RandomDate: {}}
+      timestamp: {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}
       # Test a subset of units that have different characteristics.
       numeric: {^RandomInt: {min: 0, max: 20000}}  # Seperate codepath for numeric DensifyValues.
     # $densify stages always add a $sort on the field that is being densified, so this phase adds
     # indexes on the date/number fields so that we aren't performing an in-memory sort.
     Indexes:
     - *index
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -136,13 +129,11 @@ Actors:
             field: *field,
             range: {
               bounds: "full",
-              step: *smallStep
+              step: *smallStep,
             }
           }
         }]
         cursor: {batchSize: *batchSize}
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -178,97 +169,13 @@ Actors:
             field: *field,
             range: {
               bounds: "full",
-              step: *largeStep
+              step: *smallStep,
             }
           }
         }]
         cursor: {batchSize: *batchSize}
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: DensifyFullByPartitionSmallStep
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 30 seconds
-    Database: *db
-    Operations:
-    - OperationMetricsName: FullByPartitionSmallStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: *field,
-            partitionByFields: ["partitionKey"],
-            range: {
-              bounds: "full",
-              step: *smallStep
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: DensifyFullByPartitionLargeStep
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 30 seconds
-    Database: *db
-    Operations:
-    - OperationMetricsName: FullByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: *field,
-            partitionByFields: ["partitionKey"],
-            range: {
-              bounds: "full",
-              step: *largeStep
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
   - *Nop
   - *Nop
   - *Nop
@@ -290,10 +197,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
@@ -306,11 +209,13 @@ Actors:
             field: *field,
             range: {
               step: *smallStep,
-              bounds: *bounds
+              bounds: *bounds,
             }
           }
         }]
         cursor: {batchSize: *batchSize}
+  - *Nop
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -332,10 +237,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
   - Duration: 30 seconds
     Database: *db
     Operations:
@@ -347,7 +248,7 @@ Actors:
           $densify: {
             field: *field,
             range: {
-              step: *largeStep,
+              step: *smallStep,
               bounds: *bounds
             }
           }
@@ -357,15 +258,13 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
 
 - Name: DensifyExplicitRangeByPartitionSmallStep
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -398,6 +297,8 @@ Actors:
         cursor: {batchSize: *batchSize}
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
 
 - Name: DensifyExplicitRangeByPartitionLargeStep
   Type: RunCommand
@@ -417,6 +318,42 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - Duration: 30 seconds
+    Database: *db
+    Operations:
+    - OperationMetricsName: DensifyTimestamp
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{
+          $densify: {
+            field: *field,
+            range: {
+              step: *smallStep,
+              bounds: "full"
+            }
+          }
+        }]
+        cursor: {batchSize: *batchSize}
+  - *Nop
+  - *Nop
+
+- Name: DensifyTimestamp
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -424,17 +361,18 @@ Actors:
   - Duration: 30 seconds
     Database: *db
     Operations:
-    - OperationMetricsName: ExplicitRangeByPartitionLargeStep
+    - OperationMetricsName: DensifyTimestamp
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
         pipeline: [{
           $densify: {
-            field: *field,
+            field: "timestamp",
             partitionByFields: ["partitionKey"],
             range: {
-              step: *largeStep,
-              bounds: *bounds
+              step: *smallStep,
+              unit: "hour",
+              bounds: "full"
             }
           }
         }]
