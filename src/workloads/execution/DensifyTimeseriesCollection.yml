@@ -368,7 +368,6 @@ Actors:
         pipeline: [{
           $densify: {
             field: "timestamp",
-            partitionByFields: ["partitionKey"],
             range: {
               step: *smallStep,
               unit: "hour",
