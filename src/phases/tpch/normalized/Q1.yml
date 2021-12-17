@@ -4,7 +4,7 @@ Description: |
   Run TPC-H query 1 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 query1Delta: &query1Delta -90
 
 TPCHNormalizedQuery1:
@@ -18,9 +18,7 @@ TPCHNormalizedQuery1:
         aggregate: lineitem
         pipeline:
           [
-            {$match: {$expr: {$lte:
-              ["$l_shipdate", {$dateAdd: {startDate:
-                {$dateFromString: {dateString: "1998-12-01"}}, unit: "day", amount: {^Parameter: {Name: "Query1Delta", Default: *query1Delta}}}}]}}},
+            {$match: {$expr: {$lte: ["$l_shipdate", {$dateAdd: {startDate: {$dateFromString: {dateString: "1998-12-01"}}, unit: "day", amount: {^Parameter: {Name: "Query1Delta", Default: *query1Delta}}}}]}}},
             {$group: {
               _id: {l_returnflag: "$l_returnflag", l_linestatus: "$l_linestatus"},
               sum_qty: {$sum: "$l_quantity"},
@@ -37,20 +35,20 @@ TPCHNormalizedQuery1:
               avg_price: {$avg: "$l_extendedprice"},
               avg_disc: {$avg: "$l_discount"},
               count_order: {$count: {}}}},
-          {$project: {
-            _id: 0,
-            l_returnflag: "$_id.l_returnflag",
-            l_linestatus: "$_id.l_linestatus",
-            sum_qty: 1,
-            sum_base_price: 1,
-            sum_disc_price: 1,
-            sum_charge: 1,
-            avg_qty: 1,
-            avg_price: 1,
-            avg_disc: 1,
-            count_order: 1}},
-          {$sort: {l_returnflag: 1, l_linestatus: 1}},
-        ]
+            {$project: {
+              _id: 0,
+              l_returnflag: "$_id.l_returnflag",
+              l_linestatus: "$_id.l_linestatus",
+              sum_qty: 1,
+              sum_base_price: 1,
+              sum_disc_price: 1,
+              sum_charge: 1,
+              avg_qty: 1,
+              avg_price: 1,
+              avg_disc: 1,
+              count_order: 1}},
+            {$sort: {l_returnflag: 1, l_linestatus: 1}},
+          ]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
       verbosity:

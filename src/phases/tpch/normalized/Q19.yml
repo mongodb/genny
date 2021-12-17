@@ -4,7 +4,7 @@ Description: |
   Run TPC-H query 19 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 
 query19Brand1: &query19Brand1 "Brand#12"
 query19Quantity1: &query19Quantity1 1
@@ -24,21 +24,26 @@ TPCHNormalizedQuery19:
         aggregate: lineitem
         pipeline:
           [
-            {$lookup: {from: "part", let: {l_quantity: "$l_quantity", l_shipmode: "$l_shipmode",  l_shipinstruct: "$l_shipinstruct"}, localField: "l_partkey", foreignField: "p_partkey", as: "part", pipeline: [
-            {$match: {$or: [{$and: [{p_brand: {^Parameter: {Name: "Query19Brand1", Default: *query19Brand1}}}, {p_container: {$in: ["SM CASE", "SM BOX", "SM PACK", "SM PKG"]}},
+            {$lookup: {from: "part", let: {l_quantity: "$l_quantity", l_shipmode: "$l_shipmode", l_shipinstruct: "$l_shipinstruct"}, localField: "l_partkey", foreignField: "p_partkey", as: "part", pipeline: [
+              {$match: {$or: [
+                {$and: [
+                  {p_brand: {^Parameter: {Name: "Query19Brand1", Default: *query19Brand1}}},
+                  {p_container: {$in: ["SM CASE", "SM BOX", "SM PACK", "SM PKG"]}},
                   {$expr: {$gte: ["$$l_quantity", {^Parameter: {Name: "Query19Quantity1", Default: *query19Quantity1}}]}},
                   {$expr: {$lte: ["$$l_quantity", {$add: [{^Parameter: {Name: "Query19Quantity1", Default: *query19Quantity1}}, 10]}]}},
                   {p_size: {$gte: 1}}, {p_size: {$lte: 5}},
                   {$expr: {$in: ["$$l_shipmode", ["AIR", "AIR REG"]]}},
                   {$expr: {$eq: ["$$l_shipinstruct", "DELIVER IN PERSON"]}}]},
-                {$and: [{p_brand: {^Parameter: {Name: "Query19Brand2", Default: *query19Brand2}}},
+                {$and: [
+                  {p_brand: {^Parameter: {Name: "Query19Brand2", Default: *query19Brand2}}},
                   {p_container: {$in: ["MED BAG", "MED BOX", "MED PKG", "MED PACK"]}},
                   {$expr: {$gte: ["$$l_quantity", {^Parameter: {Name: "Query19Quantity2", Default: *query19Quantity2}}]}},
                   {$expr: {$lte: ["$$l_quantity", {$add: [{^Parameter: {Name: "Query19Quantity2", Default: *query19Quantity2}}, 10]}]}},
                   {p_size: {$gte: 1}}, {p_size: {$lte: 10}},
                   {$expr: {$in: ["$$l_shipmode", ["AIR", "AIR REG"]]}},
                   {$expr: {$eq: ["$$l_shipinstruct", "DELIVER IN PERSON"]}}]},
-                {$and: [{p_brand: {^Parameter: {Name: "Query19Brand3", Default: *query19Brand3}}},
+                {$and: [
+                  {p_brand: {^Parameter: {Name: "Query19Brand3", Default: *query19Brand3}}},
                   {p_container: {$in: ["LG CASE", "LG BOX", "LG PACK", "LG PKG"]}},
                   {$expr: {$gte: ["$$l_quantity", {^Parameter: {Name: "Query19Quantity3", Default: *query19Quantity3}}]}},
                   {$expr: {$lte: ["$$l_quantity", {$add: [{^Parameter: {Name: "Query19Quantity3", Default: *query19Quantity3}}, 10]}]}},

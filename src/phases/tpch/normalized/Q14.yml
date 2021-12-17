@@ -4,7 +4,7 @@ Description: |
   Run TPC-H query 14 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 query14Date: &query14Date "1995-09-01"
 
 TPCHNormalizedQuery14:
@@ -30,25 +30,21 @@ TPCHNormalizedQuery14:
             {$group: {
               _id: {},
               promo_price_total: {
-                  $sum: {
-                    $cond: {
-                      if: {
-                        $cond: {
-                            if: {
-                                $regexMatch: {
-                                    input: "$part.p_type",
-                                    regex: "^PROMO.*$",
-                                    options: "si"}},
-                            then: 1,
-                            else: 0}},
-                      then: {$multiply: ["$l_extendedprice", {$subtract: [1, "$l_discount"]}]},
-                      else: 0}}},
-              price_total:
-                {$sum: {$multiply: ["$l_extendedprice", {$subtract: [1, "$l_discount"]}]}}}},
-            {$project: {
-              _id: 0,
-              promo_revenue:
-                {$multiply: [100.00, {$divide: ["$promo_price_total", "$price_total"]}]}}},
+                $sum: {
+                  $cond: {
+                    if: {
+                      $cond: {
+                        if: {
+                          $regexMatch: {
+                            input: "$part.p_type",
+                            regex: "^PROMO.*$",
+                            options: "si"}},
+                        then: 1,
+                        else: 0}},
+                    then: {$multiply: ["$l_extendedprice", {$subtract: [1, "$l_discount"]}]},
+                    else: 0}}},
+              price_total: {$sum: {$multiply: ["$l_extendedprice", {$subtract: [1, "$l_discount"]}]}}}},
+            {$project: {_id: 0, promo_revenue: {$multiply: [100.00, {$divide: ["$promo_price_total", "$price_total"]}]}}},
           ]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true

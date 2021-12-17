@@ -4,7 +4,7 @@ Description: |
   Run TPC-H query 15 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 query15Date: &query15Date "1996-01-01"
 
 TPCHNormalizedQuery15:
@@ -23,15 +23,15 @@ TPCHNormalizedQuery15:
               {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: {^Parameter: {Name: "Query15Date", Default: *query15Date}}}}]}},
               {$expr: {
                 $lt: [
-                    "$l_shipdate",
-                    {$dateAdd: {startDate: {$dateFromString: {dateString: {^Parameter: {Name: "Query15Date", Default: *query15Date}}}}, unit: "month", amount: 3}}
+                  "$l_shipdate",
+                  {$dateAdd: {startDate: {$dateFromString: {dateString: {^Parameter: {Name: "Query15Date", Default: *query15Date}}}}, unit: "month", amount: 3}}
                 ]}}]}},
           {$group: {
             _id: "$l_suppkey",
             total_revenue:
-                {$sum: {$multiply: ["$l_extendedprice", {$subtract: [1, "$l_discount"]}]}}}},
+              {$sum: {$multiply: ["$l_extendedprice", {$subtract: [1, "$l_discount"]}]}}}},
           {$project: {_id: 0, supplier_no: "$_id", total_revenue: 1}},
-      ]
+        ]
   - OperationMetricsName: Query15
     OperationName: RunCommand
     OperationCommand:
@@ -39,27 +39,19 @@ TPCHNormalizedQuery15:
         aggregate: revenue
         pipeline:
           [
-            {$group: {
-                _id: "$total_revenue",
-                supplier_no: {$push: "$supplier_no"},
-            }},
+            {$group: {_id: "$total_revenue", supplier_no: {$push: "$supplier_no"}}},
             {$sort: {_id: -1}},
             {$limit: 1},
             {$unwind: "$supplier_no"},
             {$project: {_id: 0, total_revenue: "$_id", supplier_no: 1}},
-            {$lookup: {
-                from: "supplier",
-                localField: "supplier_no",
-                foreignField: "s_suppkey",
-                as: "supplier"
-            }},
+            {$lookup: {from: "supplier", localField: "supplier_no", foreignField: "s_suppkey", as: "supplier"}},
             {$unwind: "$supplier"},
             {$project: {
-                s_suppkey: "$supplier.s_suppkey",
-                s_name: "$supplier.s_name",
-                s_address: "$supplier.s_address",
-                s_phone: "$supplier.s_phone",
-                total_revenue: 1
+              s_suppkey: "$supplier.s_suppkey",
+              s_name: "$supplier.s_name",
+              s_address: "$supplier.s_address",
+              s_phone: "$supplier.s_phone",
+              total_revenue: 1
             }},
           ]
         cursor: {batchSize: *batchSize}

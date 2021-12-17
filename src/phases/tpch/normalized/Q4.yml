@@ -4,7 +4,7 @@ Description: |
   Run TPC-H query 4 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 query4Date: &query4Date "1993-07-01"
 
 TPCHNormalizedQuery4:

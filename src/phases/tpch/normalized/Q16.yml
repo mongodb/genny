@@ -4,10 +4,10 @@ Description: |
   Run TPC-H query 16 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 
 query16Brand: &query16Brand "Brand#45"
-query16Type: &query16Type "^MEDIUM POLISHED.*" # ^${type}.*$"
+query16Type: &query16Type "^MEDIUM POLISHED.*"  # ^${type}.*$"
 query16Sizes: &query16Sizes [49, 14, 23, 45, 19, 3, 36, 9]
 
 TPCHNormalizedQuery16:
@@ -35,10 +35,7 @@ TPCHNormalizedQuery16:
               from: "supplier",
               localField: "partsupp.ps_suppkey",
               foreignField: "s_suppkey",
-              pipeline: [
-                {$match: {$expr: 
-                    {$cond: {if: {$regexMatch: {input: "$s_comment", regex: "^.*Customer.*Complaints.*$", options: "si"}}, then: 1, else: 0}}
-                }}],
+              pipeline: [{$match: {$expr: {$cond: {if: {$regexMatch: {input: "$s_comment", regex: "^.*Customer.*Complaints.*$", options: "si"}}, then: 1, else: 0}}}}],
               as: "supplier"}},
             {$match: {supplier: {$eq: []}}},
             {$group: {
@@ -62,4 +59,4 @@ TPCHNormalizedQuery16:
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
       verbosity:
-          executionStats
+        executionStats

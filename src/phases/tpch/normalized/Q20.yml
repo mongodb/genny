@@ -4,10 +4,10 @@ Description: |
   Run TPC-H query 20 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 
 query20Nation: &query20Nation "CANADA"
-query20Color: &query20Color "^forest.*$" # "^${color}.*$"
+query20Color: &query20Color "^forest.*$"  # "^${color}.*$"
 query20Date: &query20Date "1994-01-01"
 
 TPCHNormalizedQuery20:
@@ -30,9 +30,10 @@ TPCHNormalizedQuery20:
             {$unwind: "$part"},
             {$match: {"part.p_name": {$regex: {^Parameter: {Name: "Query20Color", Default: *query20Color}}, $options: "si"}}},
             {$lookup: {from: "lineitem", localField: "partsupp.ps_partkey", foreignField: "l_partkey", let: {s_suppkey: "$s_suppkey"}, as: "lineitem", pipeline: [
-              {$match: {$and: [{$expr: {$eq: ["$$s_suppkey", "$l_suppkey"]}},
+              {$match: {$and: [
+                {$expr: {$eq: ["$$s_suppkey", "$l_suppkey"]}},
                 {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: {^Parameter: {Name: "Query20Date", Default: *query20Date}}}}]}},
-                {$expr: {$lt: ["$l_shipdate",  {$dateAdd: {startDate: {$dateFromString: {dateString: {^Parameter: {Name: "Query20Date", Default: *query20Date}}}}, unit: "year", amount: 1}}]}}]}},
+                {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {$dateFromString: {dateString: {^Parameter: {Name: "Query20Date", Default: *query20Date}}}}, unit: "year", amount: 1}}]}}]}},
               {$group: {_id: {}, quantity: {$sum: "$l_quantity"}}},
               {$project: {_id: 0, quantity: {$multiply: ["$quantity", 0.5]}}}]}},
             {$unwind: "$lineitem"},

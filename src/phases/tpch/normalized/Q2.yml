@@ -3,10 +3,10 @@ Owner: "@mongodb/product-query"
 Description: |
   Run TPC-H query 2 against the normalized schema.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 
 query2Size: &query2Size 15
-query2Type: &query2Type "^.*BRASS$" # ^.*{type}$"
+query2Type: &query2Type "^.*BRASS$"  # ^.*{type}$"
 query2Region: &query2Region "EUROPE"
 
 TPCHNormalizedQuery2:

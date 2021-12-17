@@ -24,4 +24,4 @@ AutoRun:
       $eq:
       - standalone
   ThenRun:
-      - test_control: tpch
+  - test_control: tpch

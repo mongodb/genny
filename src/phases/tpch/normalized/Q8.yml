@@ -4,7 +4,7 @@ Description: |
   Run TPC-H query 8 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 
 query8Type: &query8Type "ECONOMY ANODIZED STEEL"
 query8Region: &query8Region "AMERICA"
@@ -40,9 +40,12 @@ TPCHNormalizedQuery8:
             {$lookup: {from: "region", localField: "n1.n_regionkey", foreignField: "r_regionkey", as: "region"}},
             {$unwind: "$region"},
             {$match: {"region.r_name": {$eq: {^Parameter: {Name: "Query8Region", Default: *query8Region}}}}},
-            {$project: {o_year: {$year: "$orders.o_orderdate"},
-              volume: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [{$literal: 1}, "$lineitem.l_discount"]}]}, nation: "$n2.n_name", }},
-            {$group: {_id: "$o_year", total_volume: {$sum: "$volume"},
+            {$project: {
+              o_year: {$year: "$orders.o_orderdate"},
+              volume: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [{$literal: 1}, "$lineitem.l_discount"]}]},
+              nation: "$n2.n_name"}},
+            {$group: {
+              _id: "$o_year", total_volume: {$sum: "$volume"},
               nation_volume: {$sum: {$cond: { if: {$eq: ["$nation", {^Parameter: {Name: "Query8Nation", Default: *query8Nation}}]}, then: "$volume", else: 0}}}}},
             {$project: {_id: 0, o_year: "$_id", mkt_share: {$divide: ["$nation_volume", "$total_volume"]}}},
             {$sort: {o_year: 1}}

@@ -4,7 +4,7 @@ Description: |
   Run TPC-H query 12 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 
 query12ShipMode1: &query12ShipMode1 "MAIL"
 query12ShipMode2: &query12ShipMode2 "SHIP"
@@ -30,8 +30,7 @@ TPCHNormalizedQuery12:
                 {$expr: {$lt: [
                   "$l_receiptdate",
                   {$dateAdd: {startDate: {$dateFromString: {dateString: {^Parameter: {Name: "Query12Date", Default: *query12Date}}}}, unit: "year", amount: 1}}]}}]}},
-            {$lookup:
-              {from: "orders", localField: "l_orderkey", foreignField: "o_orderkey", as: "orders"}},
+            {$lookup: {from: "orders", localField: "l_orderkey", foreignField: "o_orderkey", as: "orders"}},
             {$unwind: "$orders"},
             {$group: {
               _id: "$l_shipmode",
@@ -63,4 +62,4 @@ TPCHNormalizedQuery12:
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
       verbosity:
-          executionStats
+        executionStats

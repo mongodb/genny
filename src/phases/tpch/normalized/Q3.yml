@@ -3,7 +3,7 @@ Owner: "@mongodb/product-query"
 Description: |
   Run TPC-H query 3 against the normalized schema.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 
 query3Segment: &query3Segment "BUILDING"
 query3Date: &query3Date "1995-03-15"
@@ -20,14 +20,14 @@ TPCHNormalizedQuery3:
         pipeline:
           [
             {$match: {$expr: {$eq: ["$c_mktsegment", {^Parameter: {Name: "Query3Segment", Default: *query3Segment}}]}}},
-            {$lookup: {from: "orders", localField: "c_custkey", foreignField: "o_custkey", pipeline: [
+            {$lookup: {from: "orders", localField: "c_custkey", foreignField: "o_custkey", as: "orders", pipeline: [
               {$match: {$expr: {$lt: ["$o_orderdate", {$dateFromString: {dateString: {^Parameter: {Name: "Query3Date", Default: *query3Date}}}}]}}},
-              {$project: {o_orderdate: 1, o_shippriority: 1, o_orderkey: 1}}], as: "orders"}},
-              {$unwind: "$orders"},
-              {$lookup: {from: "lineitem", localField: "orders.o_orderkey", foreignField: "l_orderkey", pipeline: [
-                {$match: {$expr: {$gt: ["$l_shipdate", {$dateFromString: {dateString: {^Parameter: {Name: "Query3Date", Default: *query3Date}}}}]}}}], as: "lineitem"}},
-                {$unwind: "$lineitem"},
-                {$group: {_id: { l_orderkey: "$lineitem.l_orderkey", o_orderdate: "$orders.o_orderdate", o_shippriority: "$orders.o_shippriority"}, revenue: {$sum: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]}}}},
+              {$project: {o_orderdate: 1, o_shippriority: 1, o_orderkey: 1}}]}},
+            {$unwind: "$orders"},
+            {$lookup: {from: "lineitem", localField: "orders.o_orderkey", foreignField: "l_orderkey", as: "lineitem", pipeline: [
+              {$match: {$expr: {$gt: ["$l_shipdate", {$dateFromString: {dateString: {^Parameter: {Name: "Query3Date", Default: *query3Date}}}}]}}}]}},
+            {$unwind: "$lineitem"},
+            {$group: {_id: { l_orderkey: "$lineitem.l_orderkey", o_orderdate: "$orders.o_orderdate", o_shippriority: "$orders.o_shippriority"}, revenue: {$sum: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]}}}},
             {$project: {_id: 0, l_orderkey: "$_id.l_orderkey", o_orderdate: "$_id.o_orderdate", o_shippriority: "$_id.o_shippriority", revenue: 1}},
             {$sort: {revenue: -1, o_orderdate: 1}},
             {$limit: 10}

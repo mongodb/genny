@@ -16,7 +16,7 @@ Actors:
   - LoadConfig:
       Path: ../../../../phases/tpch/normalized/Q22.yml
       Key: TPCHNormalizedQuery22
-      Parameters: # This is a hack, because yml parses these strings into ints before outputting the pipeline.
+      Parameters:  # This is a hack, because yml parses these strings into ints before outputting the pipeline.
         Query22CountryCode1: {$toString: "13"}
         Query22CountryCode2: {$toString: "31"}
         Query22CountryCode3: {$toString: "23"}
@@ -31,4 +31,4 @@ AutoRun:
       $eq:
       - standalone
   ThenRun:
-      - test_control: tpch
+  - test_control: tpch

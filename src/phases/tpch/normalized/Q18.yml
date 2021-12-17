@@ -4,7 +4,7 @@ Description: |
   Run TPC-H query 18 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 query18Quantity: &query18Quantity 300
 
 TPCHNormalizedQuery18:
@@ -31,8 +31,8 @@ TPCHNormalizedQuery18:
             {$project: {_id: 0, o_orderkey: "$_id.o_orderkey", c_custkey: "$_id.c_custkey", c_name: "$_id.c_name", o_orderdate: "$_id.o_orderdate", o_totalprice: "$_id.o_totalprice", "sum(l_quantity)": 1}},
             {$sort: {o_totalprice: -1, o_orderdate: 1}},
             {$limit: 100}
-        ]
+          ]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
       verbosity:
-          executionStats
+        executionStats

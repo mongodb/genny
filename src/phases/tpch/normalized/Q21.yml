@@ -3,7 +3,7 @@ Owner: "@mongodb/product-query"
 Description: |
   Run TPC-H query 21 against the normalized schema.
 
-batchSize: &batchSize 101 # The default batch size.
+batchSize: &batchSize 101  # The default batch size.
 query21Nation: &query21Nation "SAUDI ARABIA"
 
 TPCHNormalizedQuery21:

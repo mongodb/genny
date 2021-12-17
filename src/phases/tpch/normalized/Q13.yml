@@ -4,8 +4,8 @@ Description: |
   Run TPC-H query 13 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101 # The default batch size.
-query13Regex: &query13Regex "^.*special.*requests.*$" # `^.*${query13Word1}.*${query13Word2}.*$`
+batchSize: &batchSize 101  # The default batch size.
+query13Regex: &query13Regex "^.*special.*requests.*$"  # `^.*${query13Word1}.*${query13Word2}.*$`
 
 TPCHNormalizedQuery13:
   Repeat: 1
