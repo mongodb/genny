@@ -113,8 +113,14 @@ int64_t GetMoreActor::_runCursorCommand(mongocxx::database& db,
     cursorResponse = response.view()["cursor"].get_document();
     auto cursorId = cursorResponse["id"].get_int64();
 
-    // TODO: Update stats.
-    // cursorResponse[cursorResultsField].get_array().value;
+    auto results = cursorResponse[cursorResultsField].get_array().value;
+    for (auto&& elem : results) {
+        auto numBytes = elem.get_document().value.length();
+        requestMetricsCtx.addDocuments(1);
+        requestMetricsCtx.addBytes(numBytes);
+        overallMetricsCtx.addDocuments(1);
+        overallMetricsCtx.addBytes(numBytes);
+    }
 
     return cursorId;
 }
