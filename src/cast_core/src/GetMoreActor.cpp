@@ -68,21 +68,11 @@ void GetMoreActor::run() {
                 initialCursorCmd = config->initialCommandExpr();
                 collectionName = initialCursorCmd.view().cbegin()->get_utf8().value;
 
-                bsoncxx::document::view_or_value response;
-                bsoncxx::document::view cursorResponse;
-                try {
-                    response = config->db.run_command(initialCursorCmd.view());
-                } catch (const mongocxx::operation_exception& ex) {
-                    initialCmdCtx.failure();
-                    overallCursorCtx.failure();
-                    BOOST_THROW_EXCEPTION(MongoException(ex, initialCursorCmd.view()));
-                }
-
-                cursorResponse = response.view()["cursor"].get_document();
-                cursorId = cursorResponse["id"].get_int64();
-
-                // TODO: Update stats.
-                // cursorResponse["firstBatch"].get_array().value;
+                cursorId = _runCursorCommand(config->db,
+                                             initialCursorCmd.view(),
+                                             "firstBatch",
+                                             initialCmdCtx,
+                                             overallCursorCtx);
 
                 initialCmdCtx.success();
             }
@@ -94,21 +84,8 @@ void GetMoreActor::run() {
             while (cursorId != 0LL) {
                 auto getMoreCmdCtx = _individualGetMore.start();
 
-                bsoncxx::document::view_or_value response;
-                bsoncxx::document::view cursorResponse;
-                try {
-                    response = config->db.run_command(getMoreCmd.view());
-                } catch (const mongocxx::operation_exception& ex) {
-                    getMoreCmdCtx.failure();
-                    overallCursorCtx.failure();
-                    BOOST_THROW_EXCEPTION(MongoException(ex, getMoreCmd.view()));
-                }
-
-                cursorResponse = response.view()["cursor"].get_document();
-                cursorId = cursorResponse["id"].get_int64();
-
-                // TODO: Update stats.
-                // cursorResponse["nextBatch"].get_array().value;
+                cursorId = _runCursorCommand(
+                    config->db, getMoreCmd.view(), "nextBatch", getMoreCmdCtx, overallCursorCtx);
 
                 getMoreCmdCtx.success();
             }
@@ -116,6 +93,30 @@ void GetMoreActor::run() {
             overallCursorCtx.success();
         }
     }
+}
+
+int64_t GetMoreActor::_runCursorCommand(mongocxx::database& db,
+                                        bsoncxx::document::view cmdRequest,
+                                        bsoncxx::stdx::string_view cursorResultsField,
+                                        metrics::OperationContext& requestMetricsCtx,
+                                        metrics::OperationContext& overallMetricsCtx) {
+    bsoncxx::document::view_or_value response;
+    bsoncxx::document::view cursorResponse;
+    try {
+        response = db.run_command(cmdRequest);
+    } catch (const mongocxx::operation_exception& ex) {
+        requestMetricsCtx.failure();
+        overallMetricsCtx.failure();
+        BOOST_THROW_EXCEPTION(MongoException(ex, cmdRequest));
+    }
+
+    cursorResponse = response.view()["cursor"].get_document();
+    auto cursorId = cursorResponse["id"].get_int64();
+
+    // TODO: Update stats.
+    // cursorResponse[cursorResultsField].get_array().value;
+
+    return cursorId;
 }
 
 GetMoreActor::GetMoreActor(genny::ActorContext& context)

@@ -68,6 +68,12 @@ private:
     /** @private */
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
+
+    static int64_t _runCursorCommand(mongocxx::database& db,
+                                     bsoncxx::document::view cmdRequest,
+                                     bsoncxx::stdx::string_view cursorResultsField,
+                                     metrics::OperationContext& requestMetricsCtx,
+                                     metrics::OperationContext& overallMetricsCtx);
 };
 
 }  // namespace genny::actor
