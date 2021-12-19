@@ -1,7 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
 Description: |
-  TODO: TIG-3319
+  The model workload for the large scale workload automation project. It consists of a 150GB cold
+  database which is scanned by the snapshot scanner and a number of hot db collections and rolling
+  db collections. It is expected to be written at a rate of 10K writes per second and read at 1K
+  reads per second.
 
 # This is the "model" workload for the Large Scale Workload Automation project.
 # At present, it is set up to run the basic workload, but will evolve.
