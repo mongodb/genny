@@ -1,7 +1,6 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
 Description: |
-  An example large scale workload file created to prove that such a thing was possible.
+  TODO: TIG-3318
 
 Clients:
   Default:
