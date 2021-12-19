@@ -1,17 +1,15 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
 Description: |
-  TODO: TIG-3322
+  Test workload to evaluate Storage Engine behavior when running in a
+  degraded replica set with or without eMRCf enabled.  A "degraded" replica
+  set here means one without an active majority of data bearing nodes.  I.e.,
+  a PSA set with the Secondary offline.
 
-# Test workload to evaluate Storage Engine behavior when running in a
-# degraded replica set with or without eMRCf enabled.  A "degraded" replica
-# set here means one without an active majority of data bearing nodes.  I.e.,
-# a PSA set with the Secondary offline.
-
-# Currently the workload is split across several yml files because we need to script
-# some things between different parts.  This is the population phase.  It starts with
-# an empty database and populates it with an initial set of documents.  We create a mix
-# of small (50-200 byte) and large (200-1000 byte) documents in a 10:1 ratio.
+  Currently the workload is split across several yml files because we need to script
+  some things between different parts.  This is the population phase.  It starts with
+  an empty database and populates it with an initial set of documents.  We create a mix
+  of small (50-200 byte) and large (200-1000 byte) documents in a 10:1 ratio.
 
 # This section contains shared definitions that are used in the workload.
 # These defaults should match the similar declarations in the yml files for the other

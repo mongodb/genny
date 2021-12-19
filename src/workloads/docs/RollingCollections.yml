@@ -1,7 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
 Description: |
-  TODO: TIG-3319
+  A workload to test/document the RollingCollections actor which has two modes of operation. A
+  "Setup" operation which creates CollectionWindowSize collections and populates them with
+  DocumentCount documents and a "Manage" operation which creates and drops a collection per
+  iteration.
+
+  This actor is intended to create a rolling window of collections.
 
 Actors:
 - Name: Setup
