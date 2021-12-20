@@ -28,22 +28,39 @@
 namespace genny::actor {
 
 /**
- * TODO: Add a description.
+ * An actor for running cursor commands until they are exhausted.
+ *
+ * Supported server commands which return a cursor include:
+ *   - find
+ *   - aggregate
+ *   - listIndexes
+ *
+ * Refer to the MongoDB Manual for documentation on their respective command
+ * syntaxes.
+ *
+ * The GetMoreBatchSize parameter is optional. Omitting it will cause the server
+ * to use its default batch size for the cursor. The initial batch size is
+ * configurable through the InitialCursorCommand using the appropriate command
+ * syntax.
+ *
+ * InitialCursorCommand accepts generators and they will be re-evaluated for
+ * each new cursor.
  *
  * ```yaml
  * SchemaVersion: 2018-07-01
  * Actors:
- * - Name: LoadInitialData
+ * - Name:
  *   Type: GetMoreActor
- *   Threads: 100
  *   Phases:
  *   - Repeat: 1
- *     Database: test
- *     Collection: mycoll
- *     BatchSize: 1000
- *     DocumentCount: 100000
- *     Document: {field: {^RandomInt: {min: 0, max: 100}}}
+ *     Database: mydb
+ *     InitialCursorCommand:
+ *       find: mycoll
+ *       batchSize: 1
+ *     GetMoreBatchSize: 2
  * ```
+ *
+ * See docs/GetMoreActor.yml for additional examples.
  *
  * Owner: @mongodb/sharding
  */

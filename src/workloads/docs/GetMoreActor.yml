@@ -1,28 +1,56 @@
 SchemaVersion: 2018-07-01
-Owner: TODO put your github team name here e.g. @10gen/dev-prod-tips
+Owner: "@mongodb/sharding"
 Description: |
-  TODO describe your workload. For an example description, check out
-  src/workloads/selftests/GennyOverhead.yml.
 
-# TODO: delete this file or add a meaningful workload using or
-#       demonstrating your Actor
-#
-# For more information on how to configure Repeat/Duration/*
-# see extended example file
-# `src/workloads/docs/HelloWorld-MultiplePhases.yml`
+  This workload demonstrates using the GetMoreActor to repeatedly run a collection scan using both
+  the find and aggregate commands.
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+
+  Database: &Database test
+  Collection: &Collection Collection0
 
 Actors:
-- Name: GetMoreActor
-  Type: GetMoreActor
+- Name: LoadInitialData
+  Type: MonotonicSingleLoader
   Threads: 100
+  Phases:
+  - Repeat: 1
+    Database: *Database
+    Collection: *Collection
+    BatchSize: 1000
+    DocumentCount: 100_000
+    Document: {x: {^RandomInt: {min: 0, max: 100}}}
+  - *Nop
+  - *Nop
+
+- Name: CollectionScanFind
+  Type: GetMoreActor
+  Threads: 2
   Database: test
   Phases:
-  - Phase: 0
-    Repeat: 1e3 # used by PhaesLoop
-    # below used by PhaseConfig in GetMoreActor.cpp
-    Collection: test
-    Document: {foo: {^RandomInt: {min: 0, max: 100}}}
-  - Phase: 1
-    Duration: 5 seconds
-    Collection: test
-    Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
+  - *Nop
+  - Repeat: 5
+    Database: *Database
+    InitialCursorCommand:
+      find: *Collection
+      batchSize: 101
+    GetMoreBatchSize: 2000
+  - *Nop
+
+- Name: CollectionScanAggregate
+  Type: GetMoreActor
+  Threads: 2
+  Database: test
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 5
+    Database: *Database
+    InitialCursorCommand:
+      aggregate: *Collection
+      pipeline: []
+      cursor:
+        batchSize: 101
+    GetMoreBatchSize: 2000
