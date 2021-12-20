@@ -128,6 +128,37 @@ TEST_CASE_METHOD(MongoTestFixture,
         auto expectedFilter = BasicBson::make_document(BasicBson::kvp("x", int64_t(3)));
         REQUIRE(events[0].command["filter"].get_document().value == expectedFilter);
     }
+
+    SECTION("Can use aggregate command") {
+        NodeSource yaml = NodeSource(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Name: GetMoreActor_AggregateCommand
+              Type: GetMoreActor
+              Phases:
+              - Repeat: 1
+                Database: mydb
+                InitialCursorCommand:
+                  aggregate: mycoll
+                  pipeline: []
+                  cursor:
+                    batchSize: 1
+                GetMoreBatchSize: 2
+        )",
+                                     __FILE__);
+
+        auto events = ApmEvents{};
+        auto apmCallback = makeApmCallback(events);
+        genny::ActorHelper ah(
+            yaml.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
+
+        ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+
+        REQUIRE(events.size() == 3U);
+        REQUIRE(events[0].command_name == "aggregate");
+        REQUIRE(events[1].command_name == "getMore");
+        REQUIRE(events[2].command_name == "getMore");
+    }
 }
 
 }  // namespace
