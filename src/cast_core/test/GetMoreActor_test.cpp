@@ -30,6 +30,17 @@ namespace {
 using namespace genny::testing;
 namespace BasicBson = bsoncxx::builder::basic;
 
+void runFirstActorAndReportExceptions(const genny::WorkloadContext& wc) {
+    try {
+        wc.actors()[0]->run();
+    } catch (const boost::exception& ex) {
+        auto diagInfo = boost::diagnostic_information(ex);
+        FAIL(diagInfo);
+    } catch (const std::exception& ex) {
+        FAIL(ex.what());
+    }
+}
+
 TEST_CASE_METHOD(MongoTestFixture,
                  "GetMoreActor",
                  "[single_node_replset][three_node_replset][sharded][GetMoreActor]") {
@@ -63,7 +74,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         genny::ActorHelper ah(
             yaml.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
 
-        ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+        ah.run(runFirstActorAndReportExceptions);
 
         REQUIRE(events.size() == 3U);
         REQUIRE(events[0].command_name == "find");
@@ -91,7 +102,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         genny::ActorHelper ah(
             yaml.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
 
-        ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+        ah.run(runFirstActorAndReportExceptions);
 
         REQUIRE(events.size() == 2U);
         REQUIRE(events[0].command_name == "find");
@@ -118,7 +129,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         genny::ActorHelper ah(
             yaml.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
 
-        ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+        ah.run(runFirstActorAndReportExceptions);
 
         REQUIRE(events.size() == 1U);
         REQUIRE(events[0].command_name == "find");
@@ -152,7 +163,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         genny::ActorHelper ah(
             yaml.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
 
-        ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+        ah.run(runFirstActorAndReportExceptions);
 
         REQUIRE(events.size() == 3U);
         REQUIRE(events[0].command_name == "aggregate");
