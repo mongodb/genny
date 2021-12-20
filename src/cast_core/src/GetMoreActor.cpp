@@ -43,14 +43,14 @@ struct GetMoreActor::PhaseConfig {
 
     mongocxx::database db;
     DocumentGenerator initialCommandExpr;
-    int64_t batchSize;
+    std::optional<int64_t> batchSize;
 };
 
 GetMoreActor::PhaseConfig::PhaseConfig(PhaseContext& phaseContext,
                                        mongocxx::pool::entry& client,
                                        ActorId id)
     : db{client->database(phaseContext["Database"].to<std::string>())},
-      batchSize{phaseContext["GetMoreBatchSize"].to<IntegerSpec>()},
+      batchSize{phaseContext["GetMoreBatchSize"].maybe<IntegerSpec>()},
       initialCommandExpr{
           phaseContext["InitialCursorCommand"].to<DocumentGenerator>(phaseContext, id)} {}
 
@@ -77,9 +77,15 @@ void GetMoreActor::run() {
                 initialCmdCtx.success();
             }
 
-            auto getMoreCmd = bsoncxx::builder::basic::make_document(
-                bsoncxx::builder::basic::kvp("getMore", cursorId),
-                bsoncxx::builder::basic::kvp("collection", collectionName));
+            auto getMoreCmd = [&] {
+                bsoncxx::builder::basic::document builder;
+                builder.append(bsoncxx::builder::basic::kvp("getMore", cursorId));
+                builder.append(bsoncxx::builder::basic::kvp("collection", collectionName));
+                if (config->batchSize) {
+                    builder.append(bsoncxx::builder::basic::kvp("batchSize", *config->batchSize));
+                }
+                return builder.extract();
+            }();
 
             while (cursorId != 0LL) {
                 auto getMoreCmdCtx = _individualGetMore.start();
