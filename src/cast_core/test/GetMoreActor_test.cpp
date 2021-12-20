@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/builder/basic/kvp.hpp>
 
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -27,6 +28,7 @@
 namespace genny {
 namespace {
 using namespace genny::testing;
+namespace BasicBson = bsoncxx::builder::basic;
 
 TEST_CASE_METHOD(MongoTestFixture,
                  "GetMoreActor",
@@ -37,7 +39,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     auto db = client.database("mydb");
     auto collection = db.collection("mycoll");
     for (int i = 0; i < 4; ++i) {
-        collection.insert_one(bsoncxx::builder::basic::make_document());
+        collection.insert_one(BasicBson::make_document());
     }
 
     SECTION("Will retrieve batches until cursor is exhausted") {
@@ -94,6 +96,37 @@ TEST_CASE_METHOD(MongoTestFixture,
         REQUIRE(events.size() == 2U);
         REQUIRE(events[0].command_name == "find");
         REQUIRE(events[1].command_name == "getMore");
+    }
+
+    SECTION("Can use generators in InitialCursorCommand") {
+        NodeSource yaml = NodeSource(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Name: GetMoreActor_UseGenerator
+              Type: GetMoreActor
+              Phases:
+              - Repeat: 1
+                Database: mydb
+                InitialCursorCommand:
+                  find: mycoll
+                  filter: {x: {^RandomInt: {min: 3, max: 3}}}
+        )",
+                                     __FILE__);
+
+        auto events = ApmEvents{};
+        auto apmCallback = makeApmCallback(events);
+        genny::ActorHelper ah(
+            yaml.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
+
+        ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+
+        REQUIRE(events.size() == 1U);
+        REQUIRE(events[0].command_name == "find");
+
+        INFO("command := " << bsoncxx::to_json(events[0].command));
+
+        auto expectedFilter = BasicBson::make_document(BasicBson::kvp("x", int64_t(3)));
+        REQUIRE(events[0].command["filter"].get_document().value == expectedFilter);
     }
 }
 
