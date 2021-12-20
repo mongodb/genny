@@ -42,6 +42,11 @@ struct GetMoreActor::PhaseConfig {
     PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id);
 
     mongocxx::database db;
+    // The getMore command must be run using the same logical session as the one which originally
+    // established the cursor. The driver would normally take care of this automatically for its
+    // find() and aggregate() cursor returning methods but we've effectively reimplemented those
+    // ourselves.
+    mongocxx::client_session session;
     DocumentGenerator initialCommandExpr;
     std::optional<int64_t> batchSize;
 };
@@ -50,6 +55,11 @@ GetMoreActor::PhaseConfig::PhaseConfig(PhaseContext& phaseContext,
                                        mongocxx::pool::entry& client,
                                        ActorId id)
     : db{client->database(phaseContext["Database"].to<std::string>())},
+      session{[&] {
+          mongocxx::options::client_session sessionOptions;
+          sessionOptions.causal_consistency(false);
+          return client->start_session(sessionOptions);
+      }()},
       batchSize{phaseContext["GetMoreBatchSize"].maybe<IntegerSpec>()},
       initialCommandExpr{
           phaseContext["InitialCursorCommand"].to<DocumentGenerator>(phaseContext, id)} {}
@@ -63,17 +73,13 @@ void GetMoreActor::run() {
 
             auto overallCursorCtx = _overallCursor.start();
 
-            mongocxx::options::client_session sessionOptions;
-            sessionOptions.causal_consistency(false);
-            mongocxx::client_session session = _client->start_session(sessionOptions);
-
             {
                 auto initialCmdCtx = _initialRequest.start();
                 initialCursorCmd = config->initialCommandExpr();
                 collectionName = initialCursorCmd.view().cbegin()->get_utf8().value;
 
                 cursorId = _runCursorCommand(config->db,
-                                             session,
+                                             config->session,
                                              initialCursorCmd.view(),
                                              "firstBatch",
                                              initialCmdCtx,
@@ -96,7 +102,7 @@ void GetMoreActor::run() {
                 auto getMoreCmdCtx = _individualGetMore.start();
 
                 cursorId = _runCursorCommand(config->db,
-                                             session,
+                                             config->session,
                                              getMoreCmd.view(),
                                              "nextBatch",
                                              getMoreCmdCtx,
