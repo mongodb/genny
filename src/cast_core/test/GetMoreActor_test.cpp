@@ -29,35 +29,71 @@ namespace {
 using namespace genny::testing;
 
 TEST_CASE_METHOD(MongoTestFixture,
-                 "GetMoreActor supports running find command",
-                 "[standalone][single_node_replset][three_node_replset][sharded][GetMoreActor]") {
+                 "GetMoreActor",
+                 "[single_node_replset][three_node_replset][sharded][GetMoreActor]") {
 
-    NodeSource config = NodeSource(R"(
-        SchemaVersion: 2018-07-01
-        Actors:
-        - Name: GetMoreActor
-          Type: GetMoreActor
-          Phases:
-          - Repeat: 1
-            Database: mydb
-            InitialCursorCommand:
-              find: mycoll
-    )",
-                                   __FILE__);
+    dropAllDatabases();
 
+    auto db = client.database("mydb");
+    auto collection = db.collection("mycoll");
+    for (int i = 0; i < 4; ++i) {
+        collection.insert_one(bsoncxx::builder::basic::make_document());
+    }
 
-    SECTION("Succeeds when collection is empty") {
-        dropAllDatabases();
+    SECTION("Will retrieve batches until cursor is exhausted") {
+        NodeSource yaml = NodeSource(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Name: GetMoreActor_MultipleBatches
+              Type: GetMoreActor
+              Phases:
+              - Repeat: 1
+                Database: mydb
+                InitialCursorCommand:
+                  find: mycoll
+                  batchSize: 1
+                GetMoreBatchSize: 2
+        )",
+                                     __FILE__);
 
         auto events = ApmEvents{};
         auto apmCallback = makeApmCallback(events);
         genny::ActorHelper ah(
-            config.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
+            yaml.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
 
         ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
-        REQUIRE(events.size() == 1U);
+        REQUIRE(events.size() == 3U);
         REQUIRE(events[0].command_name == "find");
+        REQUIRE(events[1].command_name == "getMore");
+        REQUIRE(events[2].command_name == "getMore");
+    }
+
+    SECTION("Can omit GetMoreBatchSize") {
+        NodeSource yaml = NodeSource(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Name: GetMoreActor_OmitGetMoreBatchSize
+              Type: GetMoreActor
+              Phases:
+              - Repeat: 1
+                Database: mydb
+                InitialCursorCommand:
+                  find: mycoll
+                  batchSize: 0
+        )",
+                                     __FILE__);
+
+        auto events = ApmEvents{};
+        auto apmCallback = makeApmCallback(events);
+        genny::ActorHelper ah(
+            yaml.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
+
+        ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+
+        REQUIRE(events.size() == 2U);
+        REQUIRE(events[0].command_name == "find");
+        REQUIRE(events[1].command_name == "getMore");
     }
 }
 
