@@ -60,7 +60,6 @@ struct CollectionScanner::PhaseConfig {
     std::optional<DocumentGenerator> filterExpr;
     std::vector<mongocxx::database> databases;
     std::optional<SteadyClock::time_point> stopPhase;
-    bool skipFirstLoop = false;
     metrics::Operation scanOperation;
     metrics::Operation exceptionsCaught;
     metrics::Operation transientExceptions;
@@ -86,7 +85,6 @@ struct CollectionScanner::PhaseConfig {
                 int threads,
                 bool generateCollectionNames)
         : databases{},
-          skipFirstLoop{context["SkipFirstLoop"].maybe<bool>().value_or(false)},
           filterExpr{context["Filter"].maybe<DocumentGenerator>(context, actor->id())},
           scanOperation{context.operation("Scan", actor->id())},
           exceptionsCaught{context.operation("ExceptionsCaught", actor->id())},
@@ -424,11 +422,6 @@ void CollectionScanner::run() {
                 auto session = _client->start_session({});
                 _client->database("admin").run_command(session, make_document(kvp("ping", 1)));
                 readClusterTime = session.operation_time();
-                continue;
-            }
-            if (config->skipFirstLoop) {
-                config->skipFirstLoop = false;
-                std::this_thread::sleep_for(std::chrono::seconds{1});
                 continue;
             }
             _runningActorCounter++;

@@ -23,6 +23,7 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
 
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
@@ -37,33 +38,34 @@ namespace genny::actor {
 
 struct RandomSampler::PhaseConfig {
     std::vector<mongocxx::collection> collections;
-    boost::random::uniform_int_distribution<> integerDistribution;
+    boost::random::uniform_int_distribution<> collectionDistribution;
+    boost::random::uniform_int_distribution<> documentDistribution;
     /*
      * Two separate trackers as we want to be able to observe the impact
      * of the collection scanner on the read throughput.
      */
     metrics::Operation readOperation;
     metrics::Operation readWithScanOperation;
-    mongocxx::pipeline pipeline{};
 
     PhaseConfig(PhaseContext& context,
                 const RandomSampler* actor,
                 const mongocxx::database& db,
                 int collectionCount,
-                int threads)
+                int threads,
+                int documentCount)
         : readOperation{context.operation("Read", actor->id())},
           readWithScanOperation{context.operation("ReadWithScan", actor->id())} {
-        // Construct basic pipeline for retrieving 10 random records.
-        pipeline.sample(10);
 
         // Distribute the collections among the actors.
         for (const auto& collectionName :
              distributeCollectionNames(collectionCount, threads, actor->_index)) {
             collections.push_back(db[collectionName]);
         }
-        // Setup the int distribution.
-        integerDistribution =
+        // Setup the int distributions.
+        collectionDistribution =
             boost::random::uniform_int_distribution(0, (int)collections.size() - 1);
+        documentDistribution =
+            boost::random::uniform_int_distribution(0, documentCount - 1);
     }
 };
 
@@ -73,12 +75,14 @@ void RandomSampler::run() {
             auto statTracker = _activeCollectionScannerInstances > 0
                 ? config->readWithScanOperation.start()
                 : config->readOperation.start();
-            int index = config->collections.size() > 1 ? config->integerDistribution(_random) : 0;
-            auto cursor = config->collections[index].aggregate(config->pipeline,
-                                                               mongocxx::options::aggregate{});
-            for (auto doc : cursor) {
+            int collId = config->collections.size() > 1 ? config->collectionDistribution(_random) : 0;
+            int recordId = config->documentDistribution(_random);
+            auto maybeResult = config->collections[collId].find_one(bsoncxx::builder::stream::document{} << "_id" << recordId << bsoncxx::builder::stream::finalize);
+            if (maybeResult) {
                 statTracker.addDocuments(1);
-                statTracker.addBytes(doc.length());
+                statTracker.addBytes(maybeResult->view().length());
+            } else {
+                throw std::domain_error("expected to find document: " + std::to_string(recordId));
             }
             statTracker.success();
         }
@@ -97,7 +101,8 @@ RandomSampler::RandomSampler(genny::ActorContext& context)
             this,
             (*_client)[context["Database"].to<std::string>()],
             context["CollectionCount"].to<IntegerSpec>(),
-            context["Threads"].to<IntegerSpec>()} {}
+            context["Threads"].to<IntegerSpec>(),
+            context["DocumentCount"].to<IntegerSpec>()} {}
 
 namespace {
 auto registerRandomSampler = Cast::registerDefault<RandomSampler>();

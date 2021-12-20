@@ -40,8 +40,6 @@ Actors:
   - {Nop: true}
   - {Nop: true}
   - Duration: 2 minutes
-    # Optionally skip the first iteration of the collection scanner
-    SkipFirstLoop: true
     # This flag will assume the collection names have been created
     # by the Loader actor and try to use them automatically.
     # Additionally it allows the collections being scanned to be
