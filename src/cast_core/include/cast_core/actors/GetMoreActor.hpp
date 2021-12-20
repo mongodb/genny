@@ -87,6 +87,7 @@ private:
     PhaseLoop<PhaseConfig> _loop;
 
     static int64_t _runCursorCommand(mongocxx::database& db,
+                                     const mongocxx::client_session& session,
                                      bsoncxx::document::view cmdRequest,
                                      bsoncxx::stdx::string_view cursorResultsField,
                                      metrics::OperationContext& requestMetricsCtx,

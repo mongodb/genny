@@ -63,12 +63,17 @@ void GetMoreActor::run() {
 
             auto overallCursorCtx = _overallCursor.start();
 
+            mongocxx::options::client_session sessionOptions;
+            sessionOptions.causal_consistency(false);
+            mongocxx::client_session session = _client->start_session(sessionOptions);
+
             {
                 auto initialCmdCtx = _initialRequest.start();
                 initialCursorCmd = config->initialCommandExpr();
                 collectionName = initialCursorCmd.view().cbegin()->get_utf8().value;
 
                 cursorId = _runCursorCommand(config->db,
+                                             session,
                                              initialCursorCmd.view(),
                                              "firstBatch",
                                              initialCmdCtx,
@@ -90,8 +95,12 @@ void GetMoreActor::run() {
             while (cursorId != 0LL) {
                 auto getMoreCmdCtx = _individualGetMore.start();
 
-                cursorId = _runCursorCommand(
-                    config->db, getMoreCmd.view(), "nextBatch", getMoreCmdCtx, overallCursorCtx);
+                cursorId = _runCursorCommand(config->db,
+                                             session,
+                                             getMoreCmd.view(),
+                                             "nextBatch",
+                                             getMoreCmdCtx,
+                                             overallCursorCtx);
 
                 getMoreCmdCtx.success();
             }
@@ -102,6 +111,7 @@ void GetMoreActor::run() {
 }
 
 int64_t GetMoreActor::_runCursorCommand(mongocxx::database& db,
+                                        const mongocxx::client_session& session,
                                         bsoncxx::document::view cmdRequest,
                                         bsoncxx::stdx::string_view cursorResultsField,
                                         metrics::OperationContext& requestMetricsCtx,
@@ -109,7 +119,7 @@ int64_t GetMoreActor::_runCursorCommand(mongocxx::database& db,
     bsoncxx::document::view_or_value response;
     bsoncxx::document::view cursorResponse;
     try {
-        response = db.run_command(cmdRequest);
+        response = db.run_command(session, cmdRequest);
     } catch (const mongocxx::operation_exception& ex) {
         requestMetricsCtx.failure();
         overallMetricsCtx.failure();
