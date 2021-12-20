@@ -46,7 +46,6 @@ struct RandomSampler::PhaseConfig {
      */
     metrics::Operation readOperation;
     metrics::Operation readWithScanOperation;
-    mongocxx::pipeline pipeline{};
 
     PhaseConfig(PhaseContext& context,
                 const RandomSampler* actor,
@@ -56,8 +55,6 @@ struct RandomSampler::PhaseConfig {
                 int documentCount)
         : readOperation{context.operation("Read", actor->id())},
           readWithScanOperation{context.operation("ReadWithScan", actor->id())} {
-        // Construct basic pipeline for retrieving 10 random records.
-        pipeline.sample(10);
 
         // Distribute the collections among the actors.
         for (const auto& collectionName :
@@ -80,12 +77,12 @@ void RandomSampler::run() {
                 : config->readOperation.start();
             int collId = config->collections.size() > 1 ? config->collectionDistribution(_random) : 0;
             int recordId = config->documentDistribution(_random);
-            auto maybe_result = config->collections[collId].find_one(bsoncxx::builder::stream::document{} << "_id" << recordId << bsoncxx::builder::stream::finalize);
-            if (maybe_result) {
+            auto maybeResult = config->collections[collId].find_one(bsoncxx::builder::stream::document{} << "_id" << recordId << bsoncxx::builder::stream::finalize);
+            if (maybeResult) {
                 statTracker.addDocuments(1);
-                statTracker.addBytes(maybe_result->view().length());
+                statTracker.addBytes(maybeResult->view().length());
             } else {
-                throw;
+                throw std::domain_error("expected to find document: " + std::to_string(recordId));
             }
             statTracker.success();
         }
