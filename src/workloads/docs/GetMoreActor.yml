@@ -11,6 +11,11 @@ GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
 
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 104
+
 Actors:
 - Name: LoadInitialData
   Type: MonotonicSingleLoader
