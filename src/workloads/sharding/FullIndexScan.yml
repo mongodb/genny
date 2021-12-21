@@ -1,0 +1,39 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: |
+  Inserts 100GB of data into a test.Collection0 collection.
+
+  The motivation for splitting it out the data loading into its own workload is to make it easier
+  to experiment with the FullIndexScan workload which only does reads.
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+
+  Database: &Database test
+  # Collection0 is the default collection populated by the MonotonicSingleLoader.
+  Collection: &Collection Collection0
+  Namespace: &Namespace test.Collection0
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 1
+
+Actors:
+- Name: FullIndexScan
+  Type: GetMoreActor
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *Database
+    InitialCursorCommand:
+      find: *Collection
+      hint: _id_
+
+# Guard against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+  - LogEvery: 15 minutes
+    Blocking: None
