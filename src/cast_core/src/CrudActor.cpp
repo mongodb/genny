@@ -1455,8 +1455,11 @@ struct CrudActor::PhaseConfig {
         // Node is convertible to bool but only explicitly.
         const bool perPhaseMetrics = bool(phaseContext["MetricsName"]);
         auto opCreator = op->second;
+
         // Special case if we have set MetricsName at the phase level, and OperationMetricsName on
-        // the operation.
+        // the operation. Ideally the operation constructors would directly support this
+        // functionality, and be common to all actors. At the time this was added, it was
+        // non-trivial to do so in a non-breaking fashion.
         if (auto metricsName = phaseContext["MetricsName"].maybe<std::string>())
             if (opName != metricName) {
                 std::ostringstream stm;
