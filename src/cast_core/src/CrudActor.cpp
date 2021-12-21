@@ -1436,7 +1436,7 @@ struct CrudActor::PhaseConfig {
         auto collection = (*client)[dbName][name];
         auto& yamlCommand = node["OperationCommand"];
         auto opName = node["OperationName"].to<std::string>();
-        auto metricName = node["OperationMetricsName"].maybe<std::string>().value_or(opName);
+        auto metricsName = node["OperationMetricsName"].maybe<std::string>().value_or(opName);
         auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
 
         auto opConstructors = getOpConstructors();
@@ -1456,28 +1456,28 @@ struct CrudActor::PhaseConfig {
         const bool perPhaseMetrics = bool(phaseContext["MetricsName"]);
         auto opCreator = op->second;
 
-        // Special case if we have set MetricsName at the phase level, and OperationMetricsName on
-        // the operation. Ideally the operation constructors would directly support this
-        // functionality, and be common to all actors. At the time this was added, it was
-        // non-trivial to do so in a non-breaking fashion.
-        if (auto metricsName = phaseContext["MetricsName"].maybe<std::string>())
-            if (opName != metricName) {
-                std::ostringstream stm;
-                stm << *metricsName << "." << metricName;
+        if (auto metricsName = phaseContext["MetricsName"].maybe<std::string>();
+            metricsName && metricsName != opName) {
+            // Special case if we have set MetricsName at the phase level, and OperationMetricsName
+            // on the operation. Ideally the operation constructors would directly support this
+            // functionality, and be common to all actors. At the time this was added, it was
+            // non-trivial to do so in a non-breaking fashion.
+            std::ostringstream stm;
+            stm << *metricsName << "." << metricsName;
 
-                return opCreator(yamlCommand,
-                                 onSession,
-                                 collection,
-                                 phaseContext.actor().operation(stm.str(), id),
-                                 phaseContext,
-                                 id);
-            }
+            return opCreator(yamlCommand,
+                             onSession,
+                             collection,
+                             phaseContext.actor().operation(stm.str(), id),
+                             phaseContext,
+                             id);
+        }
 
         return opCreator(yamlCommand,
                          onSession,
                          collection,
-                         perPhaseMetrics ? phaseContext.operation(metricName, id)
-                                         : phaseContext.actor().operation(metricName, id),
+                         perPhaseMetrics ? phaseContext.operation(metricsName, id)
+                                         : phaseContext.actor().operation(metricsName, id),
                          phaseContext,
                          id);
     }
