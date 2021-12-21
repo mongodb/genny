@@ -12,10 +12,15 @@ GlobalDefaults:
   batchSize: &batchSize 30000
   fieldName: &field "timestamp"
   index: &index
-    keys: {numeric: 1}
-    options: {name: "numeric"}
-  smallStepSize: &smallStep {^RandomInt: {min: 3, max: 3}}
+    keys: {timestamp: 1}
+    options: {name: "timestamp"}
+  stepSize: &step {^RandomInt: {min: 10, max: 10}}
   nop: &Nop {Nop: true}
+  explicitBounds: &bounds [
+    {^RandomDate: {min: "2021-01-01T00:00:02.000Z", max: "2021-01-01T00:00:10.000Z"}},
+    {^RandomDate: {min: "2021-01-01T00:00:10.000Z", max: "2021-01-01T00:00:20.000Z"}}
+  ]
+  numericBounds: &numericBounds [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 30000}}]
 
 Actors:
 - Name: CreateTimeSeriesCollection
@@ -54,10 +59,10 @@ Actors:
     Database: *db
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 100
+    DocumentCount: 10000
     BatchSize: *batchSize
     Document:
-      partitionKey: {^RandomInt: {min: 1, max: 100}}
+      partitionKey: {^RandomInt: {min: 1, max: 10}}
       timestamp: {^RandomDate: {min: "2021-01-01T00:00:00.000Z", max: "2021-01-01T00:00:20.000Z"}}
       toFillRandomType: {^Choose: {from: [
         {^RandomInt: {min: -100, max: 100}},
@@ -69,7 +74,7 @@ Actors:
         {^RandomDouble: { min: 0.0, max: 2000.0 }}]}}
       numeric: {^Inc: {start: 0, multiplier: 1, step: 6}}
     # $densify stages always add a $sort on the field that is being densified, so this phase adds
-    # indexes on the date/number fields so that we aren't performing an in-memory sort.
+    # indexes on the timestamp field so that we aren't performing an in-memory sort.
     Indexes:
     - *index
   - *Nop
@@ -155,8 +160,8 @@ Actors:
           $densify: {
             field: *field,
             range: {
-              bounds: "full",
-              step: *smallStep,
+              bounds: *bounds,
+              step: *step,
               unit: "millisecond"
             }
           },
@@ -201,7 +206,7 @@ Actors:
             field: *field,
             range: {
               bounds: "partition",
-              step: *smallStep,
+              step: *step,
               unit: "millisecond"
             },
             partitionByFields: ["partitionKey"]
@@ -248,7 +253,7 @@ Actors:
             field: "numeric",
             range: {
               bounds: "partition",
-              step: *smallStep,
+              step: *step,
             },
             partitionByFields: ["partitionKey"]
           },
@@ -293,8 +298,8 @@ Actors:
           $densify: {
             field: "numeric",
             range: {
-              bounds: "full",
-              step: *smallStep
+              bounds: *numericBounds,
+              step: *step
             },
           },
           $fill: {
@@ -340,8 +345,8 @@ Actors:
           $densify: {
             field: "numeric",
             range: {
-              bounds: "full",
-              step: *smallStep
+              bounds: *numericBounds,
+              step: *step
             },
           },
           $fill: {
