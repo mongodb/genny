@@ -1436,6 +1436,7 @@ struct CrudActor::PhaseConfig {
         auto collection = (*client)[dbName][name];
         auto& yamlCommand = node["OperationCommand"];
         auto opName = node["OperationName"].to<std::string>();
+        auto opMetricsName = node["OperationMetricsName"].maybe<std::string>().value_or(opName);
         auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
 
         auto opConstructors = getOpConstructors();
@@ -1455,11 +1456,28 @@ struct CrudActor::PhaseConfig {
         const bool perPhaseMetrics = bool(phaseContext["MetricsName"]);
         auto opCreator = op->second;
 
+        if (auto metricsName = phaseContext["MetricsName"].maybe<std::string>();
+            metricsName && opMetricsName != opName) {
+            // Special case if we have set MetricsName at the phase level, and OperationMetricsName
+            // on the operation. Ideally the operation constructors would directly support this
+            // functionality, and be common to all actors. At the time this was added, it was
+            // non-trivial to do so in a non-breaking fashion.
+            std::ostringstream stm;
+            stm << *metricsName << "." << opMetricsName;
+
+            return opCreator(yamlCommand,
+                             onSession,
+                             collection,
+                             phaseContext.actor().operation(stm.str(), id),
+                             phaseContext,
+                             id);
+        }
+
         return opCreator(yamlCommand,
                          onSession,
                          collection,
-                         perPhaseMetrics ? phaseContext.operation(opName, id)
-                                         : phaseContext.actor().operation(opName, id),
+                         perPhaseMetrics ? phaseContext.operation(opMetricsName, id)
+                                         : phaseContext.actor().operation(opMetricsName, id),
                          phaseContext,
                          id);
     }
