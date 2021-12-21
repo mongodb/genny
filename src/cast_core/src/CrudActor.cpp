@@ -1455,6 +1455,20 @@ struct CrudActor::PhaseConfig {
         // Node is convertible to bool but only explicitly.
         const bool perPhaseMetrics = bool(phaseContext["MetricsName"]);
         auto opCreator = op->second;
+        // Special case if we have set MetricsName at the phase level, and OperationMetricsName on
+        // the operation.
+        if (auto metricsName = phaseContext["MetricsName"].maybe<std::string>())
+            if (opName != metricName) {
+                std::ostringstream stm;
+                stm << *metricsName << "." << metricName;
+
+                return opCreator(yamlCommand,
+                                 onSession,
+                                 collection,
+                                 phaseContext.actor().operation(stm.str(), id),
+                                 phaseContext,
+                                 id);
+            }
 
         return opCreator(yamlCommand,
                          onSession,

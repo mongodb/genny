@@ -52,11 +52,13 @@ Actors:
             Level: majority
   - Repeat: 10
     Threads: 8
+    MetricsName: Phase3
     # Generate names from Collection0 to Collection<CollectionCount -1>.
     # The collection names are generated from the current actor id mod CollectionCount.
     CollectionCount: 4
     Operations:
     - OperationName: bulkWrite
+      OperationMetricsName: OtherInsertAndUpdate
       OperationCommand:
         WriteOperations:
         - WriteCommand: insertOne
