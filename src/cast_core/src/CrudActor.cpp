@@ -1436,6 +1436,7 @@ struct CrudActor::PhaseConfig {
         auto collection = (*client)[dbName][name];
         auto& yamlCommand = node["OperationCommand"];
         auto opName = node["OperationName"].to<std::string>();
+        auto metricName = node["OperationMetricsName"].maybe<std::string>().value_or(opName);
         auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
 
         auto opConstructors = getOpConstructors();
@@ -1458,8 +1459,8 @@ struct CrudActor::PhaseConfig {
         return opCreator(yamlCommand,
                          onSession,
                          collection,
-                         perPhaseMetrics ? phaseContext.operation(opName, id)
-                                         : phaseContext.actor().operation(opName, id),
+                         perPhaseMetrics ? phaseContext.operation(metricName, id)
+                                         : phaseContext.actor().operation(metricName, id),
                          phaseContext,
                          id);
     }

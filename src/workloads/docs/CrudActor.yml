@@ -22,6 +22,7 @@ Actors:
     Collection: test
     Operations:
     - OperationName: bulkWrite
+      OperationMetricsName: InsertAndUpdate  # This overrides the default metric name of bulkWrite
       OperationCommand:
         WriteOperations:
         - WriteCommand: insertOne
