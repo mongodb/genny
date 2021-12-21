@@ -316,7 +316,7 @@ Actors:
   - *Nop
   - *Nop
 
-- Name: DensifyTimestampFillValue
+- Name: DensifyTimestampFillArbitraryValue
   Type: RunCommand
   Threads: 1
   Phases:
@@ -337,7 +337,7 @@ Actors:
   - Duration: 30 seconds
     Database: *db
     Operations:
-    - OperationMetricsName: TestDensifyNumericLinearFillNumeric
+    - OperationMetricsName: TestDensifyNumericFillArbitraryValue
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
