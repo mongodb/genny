@@ -166,14 +166,24 @@ def compile_and_install(
         sanitizer=sanitizer,
         cmake_args=cmake_args,
     )
-    compile_all(
-        genny_repo_root=genny_repo_root,
-        workspace_root=workspace_root,
-        build_system=build_system,
-        os_family=os_family,
-        linux_distro=linux_distro,
-        ignore_toolchain_version=ignore_toolchain_version,
-    )
+
+    try:
+        compile_all(
+            genny_repo_root=genny_repo_root,
+            workspace_root=workspace_root,
+            build_system=build_system,
+            os_family=os_family,
+            linux_distro=linux_distro,
+            ignore_toolchain_version=ignore_toolchain_version,
+        )
+
+    except subprocess.CalledProcessError as ex:
+        SLOG.critical("Genny compile has failed. This is sometimes caused by having an old mongodbtoolchain. To update: curl -o toolchain_installer.sh http://mongodbtoolchain.build.10gen.cc/installer.sh && bash toolchain_installer.sh")
+        raise
+
+    except:
+        raise
+
     install(
         genny_repo_root=genny_repo_root,
         workspace_root=workspace_root,
