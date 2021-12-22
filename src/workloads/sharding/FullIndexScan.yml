@@ -11,13 +11,22 @@ GlobalDefaults:
 
   Database: &Database test
   # Collection0 is the default collection populated by the MonotonicSingleLoader.
-  Collection: &Collection Collection0
-  Namespace: &Namespace test.Collection0
+  CollectionToRead: &CollectionToRead Collection0
+  NamespaceToRead: &Namespace test.Collection0
+  CollectionToWrite: &CollectionToWrite OtherCollection
+
+  # Note that the exact document size may exceed ApproxDocumentSize because of field names and other
+  # fields in the document.
+  ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
+  ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
+
+  ValueMin: &ValueMin 1
+  ValueMax: &ValueMax 480_000
 
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 1
+      maxPoolSize: 2
 
 Actors:
 - Name: FullIndexScan
@@ -27,8 +36,25 @@ Actors:
   - Repeat: 1
     Database: *Database
     InitialCursorCommand:
-      find: *Collection
+      find: *CollectionToRead
       hint: _id_
+
+- Name: Insert
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+  - Blocking: None
+    GlobalRate: 1 per 500 microseconds  # 2000/second
+    Collection: *CollectionToWrite
+    Operation:
+      OperationName: insertOne
+      OperationCommand:
+        Document:
+          oldKey: {^RandomInt: {min: *ValueMin, max: *ValueMax}}
+          newKey: {^RandomInt: {min: *ValueMin, max: *ValueMax}}
+          counter: 0
+          padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
 
 # Guard against timeout for no output.
 - Name: LoggingActor
