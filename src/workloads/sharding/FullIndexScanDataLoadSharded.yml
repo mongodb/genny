@@ -29,7 +29,7 @@ GlobalDefaults:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 100
+      maxPoolSize: 101
 
 Actors:
 - Name: CreateShardedCollection
