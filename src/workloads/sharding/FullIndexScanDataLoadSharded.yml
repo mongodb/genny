@@ -1,0 +1,78 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: |
+  Inserts 960GB of data into a sharded test.Collection0 collection.
+
+  The motivation for splitting it out the data loading into its own workload is to make it easier
+  to experiment with the FullIndexScan workload which only does reads.
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+
+  Database: &Database test
+  # Collection0 is the default collection populated by the MonotonicSingleLoader.
+  Collection: &Collection Collection0
+  Namespace: &Namespace test.Collection0
+
+  # Note that the exact document size may exceed ApproxDocumentSize because of field names and other
+  # fields in the document.
+  ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
+  ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
+  DocumentCount: &DocumentCount 640_000_000  # for an approximate total of 960GB
+  NumChunks: &NumChunks 4800                 # with approximately 50MB per chunk
+
+  ShardKeyValueMin: &ShardKeyValueMin 1
+  # We use 100x the number of chunks so that the $sample aggregation to choose the new split points
+  # has a wide range of distinct values to choose from. It could be even larger.
+  ShardKeyValueMax: &ShardKeyValueMax 480_000
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 100
+
+Actors:
+- Name: CreateShardedCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *Database
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: *Namespace
+        # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
+        # the shards.
+        key: {oldKey: hashed}
+        numInitialChunks: *NumChunks
+  - *Nop
+
+- Name: LoadInitialData
+  Type: MonotonicSingleLoader
+  Threads: 100
+  Phases:
+  - *Nop
+  - Repeat: 1
+    BatchSize: 1000
+    DocumentCount: *DocumentCount
+    Database: *Database
+    Document:
+      oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+      newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+      counter: 0
+      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
+
+# Guard against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+  - *Nop
+  - LogEvery: 15 minutes
+    Blocking: None

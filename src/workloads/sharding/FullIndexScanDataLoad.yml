@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 Description: |
-  Inserts 100GB of data into a test.Collection0 collection.
+  Inserts 240GB of data into a test.Collection0 collection.
 
   The motivation for splitting it out the data loading into its own workload is to make it easier
   to experiment with the FullIndexScan workload which only does reads.
