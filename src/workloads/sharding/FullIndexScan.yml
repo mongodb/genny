@@ -26,7 +26,7 @@ GlobalDefaults:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 2
+      maxPoolSize: 101
 
 Actors:
 - Name: FullIndexScan
@@ -52,11 +52,11 @@ Actors:
 
 - Name: Insert
   Type: CrudActor
-  Threads: 1
+  Threads: 100
   Database: *Database
   Phases:
   - Blocking: None
-    GlobalRate: 1 per 500 microseconds  # 2000/second
+    GlobalRate: 1 per 250 microseconds  # 4000/second
     Collection: *CollectionToWrite
     Operation:
       OperationName: insertOne
