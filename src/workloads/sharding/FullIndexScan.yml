@@ -36,7 +36,16 @@ Actors:
   - Repeat: 1
     Database: *Database
     InitialCursorCommand:
-      find: *CollectionToRead
+      aggregate: *CollectionToRead
+      pipeline:
+      - $replaceWith:
+          $mergeObjects:
+          - $$ROOT
+          - $arrayToObject:
+              $concatArrays:
+              - - k: {$literal: $sortKey}
+                  v: [$$ROOT._id]
+      cursor: {}
       hint: _id_
       readConcern:
         level: snapshot
