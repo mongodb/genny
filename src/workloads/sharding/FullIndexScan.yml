@@ -38,6 +38,8 @@ Actors:
     InitialCursorCommand:
       find: *CollectionToRead
       hint: _id_
+      readConcern:
+        level: snapshot
 
 - Name: Insert
   Type: CrudActor
