@@ -178,7 +178,9 @@ def compile_and_install(
         )
 
     except subprocess.CalledProcessError as ex:
-        SLOG.critical("Genny compile has failed. This is sometimes caused by having an old mongodbtoolchain. To update: curl -o toolchain_installer.sh http://mongodbtoolchain.build.10gen.cc/installer.sh && bash toolchain_installer.sh")
+        SLOG.critical(
+            "Genny compile has failed. This is sometimes caused by having an old mongodbtoolchain. To update: curl -o toolchain_installer.sh http://mongodbtoolchain.build.10gen.cc/installer.sh && bash toolchain_installer.sh"
+        )
         raise
 
     except:
