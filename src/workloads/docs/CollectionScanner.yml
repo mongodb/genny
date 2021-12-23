@@ -1,7 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
 Description: |
-  TODO: TIG-3319
+  A workload to test/document the collection scanner actor which is used to scan collection in a
+  given database. It takes numerous configuration options to adjust its behaviour.
 
 Actors:
 - Name: Loader
@@ -39,8 +40,6 @@ Actors:
   - {Nop: true}
   - {Nop: true}
   - Duration: 2 minutes
-    # Optionally skip the first iteration of the collection scanner
-    SkipFirstLoop: true
     # This flag will assume the collection names have been created
     # by the Loader actor and try to use them automatically.
     # Additionally it allows the collections being scanned to be

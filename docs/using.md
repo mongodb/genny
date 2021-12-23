@@ -25,7 +25,7 @@ If you see errors like the following, try reducing the number of threads and dur
 ```E0218 17:46:13.640106000 123145604628480 wakeup_fd_pipe.cc:40]         pipe creation failed (24): Too many open files```
 
 Logging currently goes to stdout and metrics data (ftdc) is written to
-`./build/CedarMetrics`.
+`./build/WorkloadOutput/CedarMetrics`.
 
 ## Viewing Metrics Data
 
@@ -37,7 +37,7 @@ If running locally you can use the `export` command that Genny provides to expor
 For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
 
 ```sh
-./run-genny export build/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
+./run-genny export build/WorkloadOutput/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
 ```
 
 
