@@ -174,7 +174,7 @@ auto resetState() {
 
 auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
 
-TEST_CASE("Global rate limiter can be used by phase loop", "[benchmark]") {
+TEST_CASE("Global rate limiter can be used by phase loop", "[slow][benchmark]") {
     using namespace std::chrono_literals;
 
     SECTION("Works with no Repeat or Duration") {
@@ -185,35 +185,47 @@ Actors:
   Type: IncActor
   Threads: 1
   Phases:
-    - Duration: 50 milliseconds 
-      GlobalRate: 7 per 20 milliseconds
-    - Duration: 50 milliseconds 
-      GlobalRate: 8 per 100 milliseconds
+    - Duration: 520 milliseconds 
+      GlobalRate: 7 per 50 milliseconds
+    - Duration: 520 milliseconds 
+      GlobalRate: 8 per 10000 milliseconds
 
 - Name: Two
   Type: IncActor
   Threads: 1
   Phases:
     - Blocking: None
-      GlobalRate: 8 per 100 milliseconds
+      GlobalRate: 7 per 50 milliseconds
 
       # When the phase ends the rate limit is reset and all threads
       # are immediately woken up.
     - Blocking: None
-      GlobalRate: 7 per 20 milliseconds
+      GlobalRate: 8 per 1000 milliseconds
 )",
                       "");
         auto& config = ns.root();
         int num_threads = 2;
 
+        resetState();
+        REQUIRE(getCurState() == 0);
+
         genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
         auto runInBg = [&ah]() { ah.run(); };
         std::thread t(runInBg);
-        std::this_thread::sleep_for(110ms);
         t.join();
 
         const auto state = getCurState();
-        REQUIRE(state == 72);
+        
+        // We may run the GlobalRate ops more or fewer, based on the randomness of thread
+        // wakeup times coinciding with phase endings for non-blocking operations.
+        // This is expected, so we can account for it by allowing more or fewer recurrence
+        // around the "expected" value of 156.
+        // (Including both actors and phases able to have timings off by an entire cycle.)
+        const auto expected = 156;
+        const auto maxCount = expected + 8 * 4;
+        const auto minCount = expected - 8 * 4;
+        REQUIRE(state <= maxCount);
+        REQUIRE(state >= minCount);
     }
 
     // The rate interval needs to be large enough to avoid sporadic failures, which makes
