@@ -219,9 +219,9 @@ Actors:
         // We may run the GlobalRate ops more or fewer, based on the randomness of thread
         // wakeup times coinciding with phase endings for non-blocking operations.
         // This is expected, so we can account for it by allowing more or fewer recurrence
-        // around the "expected" value of 168.
+        // around the "expected" value of 156.
         // (Including both actors and phases able to have timings off by an entire cycle.)
-        const auto expected = 168;
+        const auto expected = 156;
         const auto maxCount = expected + 8 * 4;
         const auto minCount = expected - 8 * 4;
         REQUIRE(state <= maxCount);
