@@ -31,7 +31,7 @@ Clients:
 Actors:
 - Name: FullIndexScan
   Type: GetMoreActor
-  Threads: 4
+  Threads: 20
   Phases:
   - Repeat: 1
     Database: *Database
