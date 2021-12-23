@@ -26,12 +26,12 @@ GlobalDefaults:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 101
+      maxPoolSize: 104
 
 Actors:
 - Name: FullIndexScan
   Type: GetMoreActor
-  Threads: 1
+  Threads: 4
   Phases:
   - Repeat: 1
     Database: *Database
