@@ -167,7 +167,6 @@ def _check_create_new_actor_test_report(workspace_root: str) -> Callable[[str], 
 _canned_artifacts = {
     "osx": "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/macos/cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3/binaries/mongo-mongodb_mongo_master_macos_cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3_21_12_03_09_47_48.tgz",
     "amazon2": "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/amazon/cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3/binaries/mongo-mongodb_mongo_master_amazon_cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3_21_12_03_09_47_48.tgz",
-    "rhel8": "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/enterprise-rhel-80-64-bit/cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3/binaries/mongo-mongodb_mongo_master_enterprise_rhel_80_64_bit_cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3_21_12_03_09_47_48.tgz",
 }
 
 
