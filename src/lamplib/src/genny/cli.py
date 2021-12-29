@@ -14,6 +14,13 @@ SLOG = structlog.get_logger(__name__)
 @click.option("-v", "--verbose", default=False, is_flag=True, help="Enable verbose output/logging.")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool) -> None:
+    """
+    🧞 Genny Version 0.0.1 💝🐹🌇⛔
+
+    To run workloads, try ./run-genny workload -h
+
+    For more information, see the docs: https://github.com/mongodb/genny
+    """
     from genny import loggers
 
     # Ensure that ctx.obj exists and is a dict.
