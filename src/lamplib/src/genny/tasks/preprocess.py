@@ -12,6 +12,15 @@ import structlog
 
 SLOG = structlog.get_logger(__name__)
 GENNY_INTERNAL = {"Name": "PhaseTimingRecorder", "Type": "PhaseTimingRecorder", "Threads": 1}
+DEFAULT_CONFIG = {
+                  # We go ahead and set the default pool with a 100 size so that
+                  # later URI injection can configure it. It's okay if the Default
+                  # pool isn't actually used in a workload, since they're constructed
+                  # lazily.
+                  "Clients": {
+                    "Default": {
+                        "QueryOptions": {
+                            "maxPoolSize": 100}}}}
 
 
 class ParseException(Exception):
@@ -31,19 +40,22 @@ def evaluate(workload_path: str, smoke: bool, output: str, override_file_path=No
     else:
         preprocess(workload_path=workload_path, smoke=smoke, override_file_path=override_file_path)
 
-
+# It's weird to mix our custom preprocessor with OmegaConf.
+# Future work can replace it with OmegaConf resolvers and interpolation.
 def preprocess(workload_path: str, smoke: bool, output_file=sys.stdout, override_file_path=None):
     """Evaluate a workload and output it to a file (or stdout)."""
     mode = _ParseMode.Smoke if smoke else _ParseMode.Normal
 
-    # First use Genny's custom preprocessor.
+    # First, use Genny's custom preprocessor on the workload yaml.
     parser = _WorkloadParser()
     raw_parsed = parser.parse(workload_path, parse_mode=mode)
-
-    # Second load any overrides.
-    # It's weird to mix our custom preprocessor with OmegaConf.
-    # Future work can replace it with OmegaConf resolvers and interpolation.
     conf = OmegaConf.create(raw_parsed)
+
+    # Second, apply it over the defaults.
+    OmegaConf.create(DEFAULT_CONFIG)
+    conf = OmegaConf.unsafe_merge(DEFAULT_CONFIG, conf)
+
+    # Third, apply any overrides.
     if override_file_path is not None:
         overrides = OmegaConf.load(override_file_path)
         conf = OmegaConf.unsafe_merge(conf, overrides)
