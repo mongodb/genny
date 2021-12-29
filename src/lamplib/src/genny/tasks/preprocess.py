@@ -58,7 +58,7 @@ def preprocess(workload_path: str, smoke: bool, output_file=sys.stdout, override
         overrides = OmegaConf.load(override_file_path)
         conf = OmegaConf.unsafe_merge(conf, overrides)
 
-    # Third, use Genny's custom preprocessor on the merged config.
+    # Third, use preprocessor on the merged config.
     with tempfile.NamedTemporaryFile() as fp:
         OmegaConf.save(config=conf, f=fp.name)
         parser = _WorkloadParser()
