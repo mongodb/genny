@@ -2,6 +2,7 @@ import os
 import tempfile
 import shutil
 import unittest
+import yaml
 from unittest.mock import patch
 
 from genny.tasks import preprocess
@@ -22,7 +23,7 @@ class TestPreprocess(unittest.TestCase):
             yaml_input=yaml_input, source=preprocess._WorkloadParser.YamlSource.String, path=cwd
         )
 
-        return parsedConfig
+        return yaml.dump(parsedConfig, sort_keys=False)
 
     def _assertYaml(self, yaml_input, expected):
         self.assertEqual(self._runParse(yaml_input), expected)
@@ -215,7 +216,7 @@ Actors:
     - LoadConfig:
         Path: src/testlib/configs/Good.yml"""
 
-        expected = """SchemaVersion: 2018-07-01
+        expected = """SchemaVersion: '2018-07-01'
 Actors:
 - Type: Fails
   Name: Fails
@@ -241,7 +242,7 @@ Actors:
       Path: src/testlib/configs/GoodWithKey.yml
       Key: ForSelfTest"""
 
-        expected = """SchemaVersion: 2018-07-01
+        expected = """SchemaVersion: '2018-07-01'
 Actors:
 - Type: Fails
   Name: Fails
@@ -268,7 +269,7 @@ Actors:
       Parameters:
         Repeat: 2
 """
-        expected = """SchemaVersion: 2018-07-01
+        expected = """SchemaVersion: '2018-07-01'
 Actors:
 - Type: Fails
   Name: Fails
@@ -294,7 +295,7 @@ Actors:
       Path: "src/testlib/configs/GoodNoRepeat.yml"
     Repeat: 3
 """
-        expected = """SchemaVersion: 2018-07-01
+        expected = """SchemaVersion: '2018-07-01'
 Actors:
 - Type: Fails
   Name: Fails
@@ -371,7 +372,7 @@ LoadConfig:
     Path: "src/testlib/configs/workload.yml"
 """
 
-        expected = """SchemaVersion: 2018-07-01
+        expected = """SchemaVersion: '2018-07-01'
 Actors:
 - Type: Fails
   Name: Fails
@@ -394,7 +395,7 @@ LoadConfig:
       Name: Passes
 """
 
-        expected = """SchemaVersion: 2018-07-01
+        expected = """SchemaVersion: '2018-07-01'
 Actors:
 - Type: Fails
   Name: Passes
@@ -419,7 +420,7 @@ LoadConfig:
 
         # Even though the nested workload defines a "Repeat"
         # paramter, the stored/nested one gets evaluated first.
-        expected = """SchemaVersion: 2018-07-01
+        expected = """SchemaVersion: '2018-07-01'
 Actors:
 - Type: Fails
   Name: Fails
