@@ -13,7 +13,11 @@ SLOG = structlog.get_logger(__name__)
 
 
 def main_genny_runner(
-    workload_yaml_path: str,
+    workload_yaml_path,
+    mongo_uri,
+    verbosity,
+    dry_run,
+    smoke_test,
     genny_repo_root: str,
     cleanup_metrics: bool,
     workspace_root: str,
@@ -31,28 +35,27 @@ def main_genny_runner(
         if not os.path.exists(path):
             SLOG.error("genny_core not found. Run install first.", path=path)
             raise Exception(f"genny_core not found at {path}.")
-        cmd = [path, *genny_args]
+        cmd = [path]
+
+        if dry_run:
+            cmd.append("dry-run")
+        else:
+            cmd.append("run")
+
+        cmd.append("--verbosity")
+        cmd.append(verbosity)
+        cmd.append("--mongo-uri")
+        cmd.append(mongo_uri)
 
         preprocessed_dir = os.path.join(workspace_root, "build/WorkloadOutput/workload")
         os.makedirs(preprocessed_dir, exist_ok=True)
 
-        # Intercept the workload given to the core binary.
-        index = -1
-        if "-w" in cmd:
-            index = cmd.index("-w") + 1
-        elif "--workload-file" in cmd:
-            index = cmd.index("--workload-file") + 1
-        elif "dry-run" in cmd:
-            index = cmd.index("dry-run") + 1
+        processed_workload = os.path.join(preprocessed_dir, os.path.basename(workload_yaml_path))
+        with open(processed_workload, "w") as f:
+            preprocess.preprocess(workload_path=workload_yaml_path, smoke=smoke_test, output_file=f)
 
-        if index >= 0:
-            workload_path = cmd[index]
-            smoke = "-s" in cmd or "--smoke-test" in cmd
-
-            temp_workload = os.path.join(preprocessed_dir, os.path.basename(workload_path))
-            with open(temp_workload, "w") as f:
-                preprocess.preprocess(workload_path=workload_path, smoke=smoke, output_file=f)
-            cmd[index] = temp_workload
+        cmd.append("--workload-file")
+        cmd.append(processed_workload)
 
         if hang:
             import time

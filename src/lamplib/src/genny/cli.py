@@ -308,7 +308,7 @@ def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: 
     ctx.ensure_object(dict)
 
     genny_runner.main_genny_runner(
-        workload_yaml_path=workload_yaml,
+        workload_yaml_path=workload_yaml[0],
         mongo_uri=mongo_uri,
         verbosity=verbosity,
         dry_run=dry_run,
