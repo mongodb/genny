@@ -268,7 +268,7 @@ def benchmark_test(ctx: click.Context) -> None:
 @cli.command(
     name="workload",
     help=(
-        "Actually runs a workload."),
+        "Actually run a workload."),
 )
 @click.argument("workload_yaml", nargs=-1)
 @click.option(
@@ -293,8 +293,16 @@ def benchmark_test(ctx: click.Context) -> None:
     is_flag=True,
     help=("Exit before the run step."),
 )
+@click.option(
+    "-s",
+    "--smoke-test",
+    required=False,
+    default=False,
+    is_flag=True,
+    help=("Run with every phase of every actor having repeat: 1."),
+)
 @click.pass_context
-def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: str, dry_run: bool):
+def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: str, dry_run: bool, smoke_test: bool):
     from genny.tasks import genny_runner
 
     ctx.ensure_object(dict)
@@ -304,6 +312,7 @@ def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: 
         mongo_uri=mongo_uri,
         verbosity=verbosity,
         dry_run=dry_run,
+        smoke_test=smoke_test,
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
         cleanup_metrics=True,
