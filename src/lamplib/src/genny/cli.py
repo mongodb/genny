@@ -151,9 +151,7 @@ def cmake_compile_install(
     "--override",
     required=False,
     default=None,
-    help=(
-        "Filepath of an override file. Use this to override workload configs."
-    ),
+    help=("Filepath of an override file. Use this to override workload configs."),
 )
 @click.option(
     "-s",
@@ -168,7 +166,9 @@ def cmake_compile_install(
 def evaluate(ctx: click.Context, workload_path: str, output: str, override: str, smoke: bool):
     from genny.tasks import preprocess
 
-    preprocess.evaluate(workload_path=workload_path, smoke=smoke, override_file_path=override, output=output)
+    preprocess.evaluate(
+        workload_path=workload_path, smoke=smoke, override_file_path=override, output=output
+    )
 
 
 @cli.command(
@@ -266,9 +266,7 @@ def benchmark_test(ctx: click.Context) -> None:
 
 
 @cli.command(
-    name="workload",
-    help=(
-        "Actually run a workload and place results in `build/WorkloadOutput`."),
+    name="workload", help=("Actually run a workload and place results in `build/WorkloadOutput`."),
 )
 @click.argument("workload_yaml", nargs=-1)
 @click.option(
@@ -314,12 +312,22 @@ def benchmark_test(ctx: click.Context) -> None:
     required=False,
     default=False,
     is_flag=True,
-    help=("Useful when running genny_core with a debugger. "
-          "Does all the poplar/curator/preprocessing stuff but then hangs indefinitely."
-          ),
+    help=(
+        "Useful when running genny_core with a debugger. "
+        "Does all the poplar/curator/preprocessing stuff but then hangs indefinitely."
+    ),
 )
 @click.pass_context
-def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: str, override: str, dry_run: bool, smoke_test: bool, debug: bool):
+def workload(
+    ctx: click.Context,
+    workload_yaml: str,
+    mongo_uri: str,
+    verbosity: str,
+    override: str,
+    dry_run: bool,
+    smoke_test: bool,
+    debug: bool,
+):
     from genny.tasks import genny_runner
 
     ctx.ensure_object(dict)
@@ -334,7 +342,7 @@ def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: 
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
         cleanup_metrics=True,
-        hang=debug
+        hang=debug,
     )
 
 

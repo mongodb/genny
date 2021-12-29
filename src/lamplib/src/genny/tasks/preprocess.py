@@ -22,15 +22,17 @@ def evaluate(workload_path: str, smoke: bool, output: str, override_file_path=No
     """CLI-friendly wrapper for preprocess."""
     if output is not None:
         with open(output, "w") as f:
-            preprocess(workload_path=workload_path, smoke=smoke, output_file=f,
-                       override_file_path=override_file_path)
+            preprocess(
+                workload_path=workload_path,
+                smoke=smoke,
+                output_file=f,
+                override_file_path=override_file_path,
+            )
     else:
-        preprocess(workload_path=workload_path, smoke=smoke,
-                   override_file_path=override_file_path)
+        preprocess(workload_path=workload_path, smoke=smoke, override_file_path=override_file_path)
 
 
-def preprocess(workload_path: str, smoke: bool, output_file=sys.stdout,
-               override_file_path=None):
+def preprocess(workload_path: str, smoke: bool, output_file=sys.stdout, override_file_path=None):
     """Evaluate a workload and output it to a file (or stdout)."""
     mode = _ParseMode.Smoke if smoke else _ParseMode.Normal
 
