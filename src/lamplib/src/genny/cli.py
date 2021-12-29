@@ -268,7 +268,7 @@ def benchmark_test(ctx: click.Context) -> None:
 @cli.command(
     name="workload",
     help=(
-        "Actually run a workload."),
+        "Actually run a workload and place results in `build/WorkloadOutput`."),
 )
 @click.argument("workload_yaml", nargs=-1)
 @click.option(
@@ -284,6 +284,13 @@ def benchmark_test(ctx: click.Context) -> None:
     required=False,
     default="info",
     help=("Log severity for boost logging. Valid values are trace/debug/info/warning/error/fatal."),
+)
+@click.option(
+    "-o",
+    "--override",
+    required=False,
+    default=None,
+    help=("Specify an override file to be merged with the specified workload yaml."),
 )
 @click.option(
     "-d",
@@ -312,7 +319,7 @@ def benchmark_test(ctx: click.Context) -> None:
           ),
 )
 @click.pass_context
-def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: str, dry_run: bool, smoke_test: bool, debug: bool):
+def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: str, override: str, dry_run: bool, smoke_test: bool, debug: bool):
     from genny.tasks import genny_runner
 
     ctx.ensure_object(dict)
@@ -321,6 +328,7 @@ def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: 
         workload_yaml_path=workload_yaml[0],
         mongo_uri=mongo_uri,
         verbosity=verbosity,
+        override=override,
         dry_run=dry_run,
         smoke_test=smoke_test,
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],

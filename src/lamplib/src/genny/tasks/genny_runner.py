@@ -16,6 +16,7 @@ def main_genny_runner(
     workload_yaml_path,
     mongo_uri,
     verbosity,
+    override,
     dry_run,
     smoke_test,
     genny_repo_root: str,
@@ -52,7 +53,7 @@ def main_genny_runner(
 
         processed_workload = os.path.join(preprocessed_dir, os.path.basename(workload_yaml_path))
         with open(processed_workload, "w") as f:
-            preprocess.preprocess(workload_path=workload_yaml_path, smoke=smoke_test, output_file=f)
+            preprocess.preprocess(workload_path=workload_yaml_path, smoke=smoke_test, output_file=f, override_file_path=override)
 
         cmd.append("--workload-file")
         cmd.append(processed_workload)
