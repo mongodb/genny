@@ -268,22 +268,42 @@ def benchmark_test(ctx: click.Context) -> None:
 @cli.command(
     name="workload",
     help=(
-        "Actually calls the underlying genny binary called genny_core "
-        "which is installed by default to 'dist'. "
-        "Pass '--' to pass additional args to genny_core, e.g."
-        "run-genny workload -- run -w path_to_yaml -u mongodb://localhost:271017"
-    ),
+        "Actually runs a workload."),
 )
-@click.argument("genny_args", nargs=-1)
+@click.argument("workload_yaml", nargs=-1)
+@click.option(
+    "-u",
+    "--mongo-uri",
+    required=False,
+    default="mongodb://localhost:27017",
+    help=("Set a default mongo uri used by connection pools that don't have one configured."),
+)
+@click.option(
+    "-v",
+    "--verbosity",
+    required=False,
+    default="info",
+    help=("Log severity for boost logging. Valid values are trace/debug/info/warning/error/fatal."),
+)
+@click.option(
+    "-d",
+    "--dry-run",
+    required=False,
+    default=False,
+    is_flag=True,
+    help=("Exit before the run step."),
+)
 @click.pass_context
-def workload(ctx: click.Context, genny_args: List[str]):
+def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: str, dry_run: bool):
     from genny.tasks import genny_runner
 
     ctx.ensure_object(dict)
-    ctx.obj["GENNY_ARGS"] = genny_args
 
     genny_runner.main_genny_runner(
-        genny_args=ctx.obj["GENNY_ARGS"],
+        workload_yaml_path=workload_yaml,
+        mongo_uri=mongo_uri,
+        verbosity=verbosity,
+        dry_run=dry_run,
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
         cleanup_metrics=True,

@@ -13,7 +13,7 @@ SLOG = structlog.get_logger(__name__)
 
 
 def main_genny_runner(
-    genny_args: List[str],
+    workload_yaml_path: str,
     genny_repo_root: str,
     cleanup_metrics: bool,
     workspace_root: str,
