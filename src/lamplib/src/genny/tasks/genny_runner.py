@@ -55,6 +55,7 @@ def main_genny_runner(
         with open(processed_workload, "w") as f:
             preprocess.preprocess(
                 workload_path=workload_yaml_path,
+                default_uri=mongo_uri,
                 smoke=smoke_test,
                 output_file=f,
                 override_file_path=override,

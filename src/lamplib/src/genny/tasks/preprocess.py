@@ -22,6 +22,7 @@ DEFAULT_CONFIG = {
     # lazily.
     "Clients": {"Default": {"QueryOptions": {"maxPoolSize": 100}}}
 }
+DEFAULT_URI = "mongodb://localhost:27017"
 
 
 class ParseException(Exception):
@@ -44,7 +45,7 @@ def evaluate(workload_path: str, smoke: bool, output: str, override_file_path=No
 
 # It's weird to mix our custom preprocessor with OmegaConf.
 # Future work can replace it with OmegaConf resolvers and interpolation.
-def preprocess(workload_path: str, smoke: bool, output_file=sys.stdout, override_file_path=None):
+def preprocess(workload_path: str, smoke: bool, default_uri: str = DEFAULT_URI, output_file=sys.stdout, override_file_path=None):
     """Evaluate a workload and output it to a file (or stdout)."""
     mode = _ParseMode.Smoke if smoke else _ParseMode.Normal
 
@@ -63,7 +64,7 @@ def preprocess(workload_path: str, smoke: bool, output_file=sys.stdout, override
         OmegaConf.save(config=conf, f=fp.name)
         parser = _WorkloadParser()
         path = Path(workload_path)
-        raw_parsed = parser.parse(fp.name, path=path, parse_mode=mode)
+        raw_parsed = parser.parse(fp.name, path=path, parse_mode=mode, default_uri=default_uri)
         conf = OmegaConf.create(raw_parsed)
 
     output_logger = structlog.PrintLogger(output_file)
@@ -170,12 +171,14 @@ class _WorkloadParser(object):
         self._phase_config_path = ""
         self._context = _Context()
 
-    def parse(self, yaml_input, source=YamlSource.File, path="", parse_mode=_ParseMode.Normal):
+    def parse(self, yaml_input, source=YamlSource.File, path="", parse_mode=_ParseMode.Normal,
+              default_uri=DEFAULT_URI):
         """Parse the yaml input, assumed to be a file by default."""
 
         if path == "":
             raise ParseException("Must specify path of original yaml for parser.")
 
+        self._default_uri = default_uri
         with self._context.enter():
             if source == _WorkloadParser.YamlSource.File:
                 workload = _load_file(yaml_input)
@@ -218,6 +221,8 @@ class _WorkloadParser(object):
             out = self._parse_instance(value)
         elif key == "Actors":
             out["Actors"] = self._parse_actors(value)
+        elif key == "Clients":
+            out["Clients"] = self._parse_clients(value)
         elif key == "OnlyActiveInPhases":
             out = self._parse_only_in(value)
         elif key == "LoadConfig":
@@ -267,6 +272,12 @@ class _WorkloadParser(object):
         if "PhaseTimingRecorder" not in names:
             actor_list.append(self._recursive_parse(GENNY_INTERNAL))
         return actor_list
+
+    def _parse_clients(self, clients):
+        clients_dict = self._recursive_parse(clients)
+        for _, client in clients_dict.items():
+            client.setdefault("URI", self._default_uri)
+        return clients_dict
 
     def _parse_instance(self, instance):
         actor = {}
