@@ -45,8 +45,6 @@ def main_genny_runner(
 
         cmd.append("--verbosity")
         cmd.append(verbosity)
-        cmd.append("--mongo-uri")
-        cmd.append(mongo_uri)
 
         preprocessed_dir = os.path.join(workspace_root, "build/WorkloadOutput/workload")
         os.makedirs(preprocessed_dir, exist_ok=True)
