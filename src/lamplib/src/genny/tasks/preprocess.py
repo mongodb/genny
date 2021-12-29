@@ -13,14 +13,12 @@ import structlog
 SLOG = structlog.get_logger(__name__)
 GENNY_INTERNAL = {"Name": "PhaseTimingRecorder", "Type": "PhaseTimingRecorder", "Threads": 1}
 DEFAULT_CONFIG = {
-                  # We go ahead and set the default pool with a 100 size so that
-                  # later URI injection can configure it. It's okay if the Default
-                  # pool isn't actually used in a workload, since they're constructed
-                  # lazily.
-                  "Clients": {
-                    "Default": {
-                        "QueryOptions": {
-                            "maxPoolSize": 100}}}}
+    # We go ahead and set the default pool with a 100 size so that
+    # later URI injection can configure it. It's okay if the Default
+    # pool isn't actually used in a workload, since they're constructed
+    # lazily.
+    "Clients": {"Default": {"QueryOptions": {"maxPoolSize": 100}}}
+}
 
 
 class ParseException(Exception):
@@ -39,6 +37,7 @@ def evaluate(workload_path: str, smoke: bool, output: str, override_file_path=No
             )
     else:
         preprocess(workload_path=workload_path, smoke=smoke, override_file_path=override_file_path)
+
 
 # It's weird to mix our custom preprocessor with OmegaConf.
 # Future work can replace it with OmegaConf resolvers and interpolation.
