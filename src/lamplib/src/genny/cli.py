@@ -140,6 +140,15 @@ def cmake_compile_install(
     ),
 )
 @click.option(
+    "-v",
+    "--override",
+    required=False,
+    default=None,
+    help=(
+        "Filepath of an override file. Use this to override workload configs."
+    ),
+)
+@click.option(
     "-s",
     "--smoke",
     is_flag=True,
@@ -149,10 +158,10 @@ def cmake_compile_install(
     ),
 )
 @click.pass_context
-def evaluate(ctx: click.Context, workload_path: str, output: str, smoke: bool):
+def evaluate(ctx: click.Context, workload_path: str, output: str, override: str, smoke: bool):
     from genny.tasks import preprocess
 
-    preprocess.evaluate(workload_path=workload_path, smoke=smoke, output=output)
+    preprocess.evaluate(workload_path=workload_path, smoke=smoke, override_file_path=override, output=output)
 
 
 @cli.command(
