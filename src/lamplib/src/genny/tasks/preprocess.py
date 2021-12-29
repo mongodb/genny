@@ -62,7 +62,8 @@ def preprocess(workload_path: str, smoke: bool, output_file=sys.stdout, override
     with tempfile.NamedTemporaryFile() as fp:
         OmegaConf.save(config=conf, f=fp.name)
         parser = _WorkloadParser()
-        raw_parsed = parser.parse(fp.name, parse_mode=mode)
+        path = Path(workload_path)
+        raw_parsed = parser.parse(fp.name, path=path, parse_mode=mode)
         conf = OmegaConf.create(raw_parsed)
 
     output_logger = structlog.PrintLogger(output_file)
@@ -172,15 +173,15 @@ class _WorkloadParser(object):
     def parse(self, yaml_input, source=YamlSource.File, path="", parse_mode=_ParseMode.Normal):
         """Parse the yaml input, assumed to be a file by default."""
 
+        if path == "":
+            raise ParseException("Must specify path of original yaml for parser.")
+
         with self._context.enter():
             if source == _WorkloadParser.YamlSource.File:
                 workload = _load_file(yaml_input)
-                path = Path(yaml_input)
                 self._phase_config_path = path.parent.absolute()
             elif source == _WorkloadParser.YamlSource.String:
                 workload = yaml.safe_load(yaml_input)
-                if path == "":
-                    raise ParseException("Must specify path for string yaml sources.")
                 self._phase_config_path = path
             else:
                 raise ParseException(f"Invalid yaml source type {source}.")
@@ -326,7 +327,7 @@ class _WorkloadParser(object):
                     ". Please ensure your workload file is placed in 'workloads/[subdirectory]/' and the "
                     "'Path' parameter is relative to the 'phases/' directory"
                 )
-                raise ParseException(path)
+                raise ParseException(msg)
 
             replacement = _load_file(path)
 
