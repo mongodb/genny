@@ -1,5 +1,6 @@
 import os
 import sys
+import tempfile
 import datetime
 from enum import Enum
 from pathlib import Path
@@ -11,7 +12,9 @@ import yaml
 import structlog
 
 SLOG = structlog.get_logger(__name__)
+# Cannot be in the default config because yaml merges overwrite lists instead of appending.
 GENNY_INTERNAL = {"Name": "PhaseTimingRecorder", "Type": "PhaseTimingRecorder", "Threads": 1}
+# If this gets any bigger, we should consider a yaml file.
 DEFAULT_CONFIG = {
     # We go ahead and set the default pool with a 100 size so that
     # later URI injection can configure it. It's okay if the Default
@@ -45,19 +48,22 @@ def preprocess(workload_path: str, smoke: bool, output_file=sys.stdout, override
     """Evaluate a workload and output it to a file (or stdout)."""
     mode = _ParseMode.Smoke if smoke else _ParseMode.Normal
 
-    # First, use Genny's custom preprocessor on the workload yaml.
-    parser = _WorkloadParser()
-    raw_parsed = parser.parse(workload_path, parse_mode=mode)
-    conf = OmegaConf.create(raw_parsed)
-
-    # Second, apply it over the defaults.
+    # First, apply the workload yaml over the defaults.
+    conf = OmegaConf.load(workload_path)
     OmegaConf.create(DEFAULT_CONFIG)
     conf = OmegaConf.unsafe_merge(DEFAULT_CONFIG, conf)
 
-    # Third, apply any overrides.
+    # Second, apply any overrides.
     if override_file_path is not None:
         overrides = OmegaConf.load(override_file_path)
         conf = OmegaConf.unsafe_merge(conf, overrides)
+
+    # Third, use Genny's custom preprocessor on the merged config.
+    with tempfile.NamedTemporaryFile() as fp:
+        OmegaConf.save(config=conf, f=fp.name)
+        parser = _WorkloadParser()
+        raw_parsed = parser.parse(fp.name, parse_mode=mode)
+        conf = OmegaConf.create(raw_parsed)
 
     output_logger = structlog.PrintLogger(output_file)
     output_logger.msg(
