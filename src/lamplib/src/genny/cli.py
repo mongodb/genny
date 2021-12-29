@@ -301,8 +301,18 @@ def benchmark_test(ctx: click.Context) -> None:
     is_flag=True,
     help=("Run with every phase of every actor having repeat: 1."),
 )
+@click.option(
+    "-b",
+    "--debug",
+    required=False,
+    default=False,
+    is_flag=True,
+    help=("Useful when running genny_core with a debugger. "
+          "Does all the poplar/curator/preprocessing stuff but then hangs indefinitely."
+          ),
+)
 @click.pass_context
-def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: str, dry_run: bool, smoke_test: bool):
+def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: str, dry_run: bool, smoke_test: bool, debug: bool):
     from genny.tasks import genny_runner
 
     ctx.ensure_object(dict)
@@ -316,30 +326,7 @@ def workload(ctx: click.Context, workload_yaml: str, mongo_uri: str, verbosity: 
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
         cleanup_metrics=True,
-    )
-
-
-@cli.command(
-    name="debug",
-    help=(
-        "Useful when running genny_core with a debugger. "
-        "Does all the poplar/curator stuff but then hangs indefinitely."
-    ),
-)
-@click.argument("genny_args", nargs=-1)
-@click.pass_context
-def run_debug(ctx: click.Context, genny_args: List[str]):
-    from genny.tasks import genny_runner
-
-    ctx.ensure_object(dict)
-    ctx.obj["GENNY_ARGS"] = genny_args
-
-    genny_runner.main_genny_runner(
-        hang=True,
-        genny_args=genny_args,
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
-        workspace_root=ctx.obj["WORKSPACE_ROOT"],
-        cleanup_metrics=True,
+        hang=debug
     )
 
 
