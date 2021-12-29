@@ -40,6 +40,9 @@ TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader - create records and add ind
 
     NodeSource nodes = NodeSource(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
         Actors:
         - Name: MonotonicLoader
           Type: MonotonicLoader
@@ -79,7 +82,7 @@ TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader - create records and add ind
     SECTION("Inserts documents, create indexes and check if indexed and documents are created") {
         try {
             const auto indexRegex = std::regex(".*\\\"firstBatch\\\"\\s:\\s\\[(.*)\\]");
-            genny::ActorHelper ah(nodes.root(), 1, MongoTestFixture::connectionUri().to_string());
+            genny::ActorHelper ah(nodes.root(), 1);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
             auto builder = bson_stream::document{};

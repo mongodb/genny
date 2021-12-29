@@ -240,8 +240,8 @@ TEST_CASE("PoolFactory behavior") {
     }
 
     SECTION("PoolManager can construct multiple pools") {
-        genny::v1::PoolManager manager{"mongodb:://localhost:27017", {}};
-        genny::NodeSource ns{"", ""};
+        genny::v1::PoolManager manager{{}};
+        genny::NodeSource ns{"Clients: {Default: {URI: 'mongodb:://localhost:27017'}, Foo: {URI: 'mongodb:://localhost:27017'}, Bar: {URI: 'mongodb:://localhost:27018'}}", ""};
         auto& config = ns.root();
 
         auto foo0 = manager.client("Foo", 0, config);

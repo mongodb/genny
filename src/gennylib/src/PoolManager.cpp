@@ -19,10 +19,11 @@
 namespace genny::v1 {
 namespace {
 
-auto createPool(const std::string& mongoUri,
-                const std::string& name,
+auto createPool(const std::string& name,
                 PoolManager::OnCommandStartCallback& apmCallback,
                 const Node& context) {
+
+    auto mongoUri = context["Clients"][name]["URI"].to<std::string>();
     auto poolFactory = PoolFactory(mongoUri, apmCallback);
 
     auto queryOpts =
@@ -63,7 +64,7 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
 
     auto& pool = pools[instance];
     if (pool == nullptr) {
-        pool = createPool(this->_mongoUri, name, this->_apmCallback, context);
+        pool = createPool(name, this->_apmCallback, context);
     }
 
     // no need to keep it past this point; pool is thread-safe

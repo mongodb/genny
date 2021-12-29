@@ -33,11 +33,13 @@ namespace genny {
 namespace {
 
 using namespace genny::testing;
-namespace BasicBson = bsoncxx::builder::basic;
 namespace bson_stream = bsoncxx::builder::stream;
 
 const auto dropAdminTestCollConfig = YAML::Load(R"(
     SchemaVersion: 2018-07-01
+    Clients:
+      Default:
+        URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
     Actors:
     - Name: TestActor
       Type: AdminCommand
@@ -59,6 +61,9 @@ TEST_CASE_METHOD(MongoTestFixture,
 
     NodeSource config(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
         Actors:
         - Name: TestRunCommand
           Type: RunCommand
@@ -77,7 +82,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         bool has_exception = true;
 
         try {
-            ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
+            ActorHelper ah(config.root(), 1);
             ah.run([](const WorkloadContext& wc) { wc.actors()[0]->run(); });
             has_exception = false;
         } catch (const boost::exception& e) {
@@ -103,6 +108,9 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
     auto makeConfig = []() {
         return YAML::Load(R"(
             SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestInsertWriteConcern
               Type: RunCommand
@@ -150,7 +158,7 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
         NodeSource nodeSource{YAML::Dump(yamlConfig), ""};
         auto apmCallback = makeApmCallback(events);
         ActorHelper ah{
-            nodeSource.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback};
+            nodeSource.root(), 1, apmCallback};
         ah.run();
         auto coll = MongoTestFixture::client["test"]["testCollection"];
         REQUIRE(events.size() > 0);
@@ -213,7 +221,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Insert a single document using the 'Operations' key name.") {
         auto config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
-
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -233,7 +243,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
         auto view = doc_value.view();
         NodeSource nodeSource{YAML::Dump(config), ""};
-        ActorHelper ah(nodeSource.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(nodeSource.root(), 1);
         auto verifyFn = [&db, view](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.collection("testCollection").count_documents(view) == 1);
@@ -244,7 +254,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("'Operations' of non-sequence type should throw.") {
         auto config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
-
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -257,14 +269,16 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )");
         NodeSource ns{YAML::Dump(config), ""};
-        REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1, MongoTestFixture::connectionUri().to_string()), 
+        REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1), 
                 Catch::Contains("Plural 'Operations' must be a sequence type"));
     }
 
     SECTION("Insert a single document using the 'Operation' key name.") {
         auto config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
-
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -284,7 +298,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
         auto view = doc_value.view();
         NodeSource ns{YAML::Dump(config), ""};
-        ActorHelper ah(ns.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(ns.root(), 1);
         auto verifyFn = [&db, view](const WorkloadContext& context) {
             REQUIRE(db.collection("testCollection").count_documents(view) == 1);
         };
@@ -294,7 +308,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Insert a single document with a field defined by the value generator.") {
         auto config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
-
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -318,7 +334,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                                                      << bson_stream::finalize;
         auto view = doc_value.view();
         NodeSource ns{YAML::Dump(config), ""};
-        ActorHelper ah(ns.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(ns.root(), 1);
         auto verifyFn = [&db, view](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.collection("testCollection").count_documents(view) == 1);
@@ -329,7 +345,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Having neither 'Operation' nor 'Operations' should throw.") {
         auto config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
-
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -349,14 +367,16 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )");
         NodeSource ns{YAML::Dump(config), ""};
-        REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1, MongoTestFixture::connectionUri().to_string()), 
+        REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1), 
                 Catch::Contains("Either 'Operation' or 'Operations' required."));
     }
 
     SECTION("Database should default to 'admin' when not specified in the the config.") {
         auto config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
-
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -376,7 +396,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         auto view = doc_value.view();
 
         NodeSource ns{YAML::Dump(config), ""};
-        ActorHelper ah(ns.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(ns.root(), 1);
         auto adminDb = client.database("admin");
         auto verifyFn = [&adminDb, view](const WorkloadContext& context) {
             REQUIRE(adminDb.has_collection("testCollection"));
@@ -387,7 +407,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 
         NodeSource ns2{YAML::Dump(dropAdminTestCollConfig), ""};
         // Clean up the newly created collection in the 'admin' database.
-        ActorHelper dropCollActor(ns2.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper dropCollActor(ns2.root(), 1);
         auto verifyDropFn = [&adminDb](const WorkloadContext& context) {
             REQUIRE_FALSE(adminDb.has_collection("testCollection"));
         };
@@ -406,6 +426,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Create a collection in the 'admin' database.") {
         auto config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: AdminCommand
@@ -423,7 +446,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         NodeSource ns{YAML::Dump(config), ""};
 
         REQUIRE_FALSE(adminDb.has_collection("testCollection"));
-        ActorHelper ah(ns.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(ns.root(), 1);
         auto verifyCreateFun = [&adminDb](const WorkloadContext& context) {
             REQUIRE(adminDb.has_collection("testCollection"));
         };
@@ -431,7 +454,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 
         // Clean up the newly created collection in the 'admin' database.
         NodeSource ns2{YAML::Dump(dropAdminTestCollConfig), ""};
-        ActorHelper dropCollActor(ns2.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper dropCollActor(ns2.root(), 1);
         auto verifyDropFn = [&adminDb](const WorkloadContext& context) {
             REQUIRE_FALSE(adminDb.has_collection("testCollection"));
         };
@@ -441,6 +464,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Database should default to 'admin' when not specified in the the config.") {
         auto config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: AdminCommand
@@ -455,7 +481,7 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )");
         NodeSource ns{YAML::Dump(config), ""};
-        ActorHelper ah(ns.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(ns.root(), 1);
         auto verifyCreateFn = [&adminDb](const WorkloadContext& context) {
             REQUIRE(adminDb.has_collection("testCollection"));
         };
@@ -465,7 +491,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 
 
         // Clean up the newly created collection in the 'admin' database.
-        ActorHelper dropCollActor(ns2.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper dropCollActor(ns2.root(), 1);
         auto verifyDropFn = [&adminDb](const WorkloadContext& context) {
             REQUIRE_FALSE(adminDb.has_collection("testCollection"));
         };
@@ -474,6 +500,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Running an AdminCommand on a non-admin database should throw.") {
         NodeSource config(R"(
             SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: AdminCommand
@@ -490,7 +519,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )",
                           "");
 
-        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1, MongoTestFixture::connectionUri().to_string()), 
+        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1), 
                 Catch::Contains("AdminCommands can only be run on the 'admin' database"));
     }
 }
@@ -507,6 +536,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Create a collection and then insert a document.") {
         NodeSource config(R"(
             SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -531,7 +563,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         auto builder = bson_stream::document{};
         bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
         auto view = doc_value.view();
-        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 1);
         auto verifyFn = [&db, adminDb, view](const WorkloadContext& context) {
             REQUIRE_FALSE(adminDb.has_collection("testCollection"));
             REQUIRE(db.has_collection("testCollection"));
@@ -543,7 +575,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Database should default to 'admin' if not specified in the config.") {
         NodeSource config(R"(
             SchemaVersion: 2018-07-01
-
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -561,7 +595,7 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )",
                           "");
-        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 1);
         auto verifyFn = [&adminDb](const WorkloadContext& context) {
             REQUIRE_FALSE(adminDb.has_collection("testCollection"));
         };
@@ -571,6 +605,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Having both 'Operation' and 'Operations' should throw.") {
         NodeSource config(R"(
             SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -592,7 +629,7 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )",
                           "");
-        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1, MongoTestFixture::connectionUri().to_string()), 
+        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1), 
                 Catch::Contains("Can't have both 'Operation' and 'Operations'."));
     }
 }
@@ -608,6 +645,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Insert a single document with operation metrics reported.") {
         NodeSource config(R"(
             SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -626,7 +666,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )",
                           "");
 
-        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 1);
         auto verifyFn = [&db, &ah](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
 
@@ -642,6 +682,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Insert a single document with operation metrics not reported.") {
         NodeSource config(R"(
             SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -659,7 +702,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )",
                           "");
 
-        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 1);
         auto verifyFn = [&db](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
         };
@@ -676,7 +719,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Have multiple operation metrics reported.") {
         NodeSource config(R"(
             SchemaVersion: 2018-07-01
-
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -699,7 +744,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )",
                           "");
 
-        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 1);
         auto verifyFn = [&db, &ah](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.has_collection("testCollection2"));
@@ -718,7 +763,9 @@ TEST_CASE_METHOD(MongoTestFixture,
     SECTION("Metrics reported for only one of the two operations listed.") {
         NodeSource config(R"(
             SchemaVersion: 2018-07-01
-
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -740,7 +787,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )",
                           "");
 
-        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 1);
         auto verifyFn = [&db, &ah](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.has_collection("testCollection2"));
