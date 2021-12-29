@@ -45,7 +45,13 @@ def evaluate(workload_path: str, smoke: bool, output: str, override_file_path=No
 
 # It's weird to mix our custom preprocessor with OmegaConf.
 # Future work can replace it with OmegaConf resolvers and interpolation.
-def preprocess(workload_path: str, smoke: bool, default_uri: str = DEFAULT_URI, output_file=sys.stdout, override_file_path=None):
+def preprocess(
+    workload_path: str,
+    smoke: bool,
+    default_uri: str = DEFAULT_URI,
+    output_file=sys.stdout,
+    override_file_path=None,
+):
     """Evaluate a workload and output it to a file (or stdout)."""
     mode = _ParseMode.Smoke if smoke else _ParseMode.Normal
 
@@ -171,8 +177,14 @@ class _WorkloadParser(object):
         self._phase_config_path = ""
         self._context = _Context()
 
-    def parse(self, yaml_input, source=YamlSource.File, path="", parse_mode=_ParseMode.Normal,
-              default_uri=DEFAULT_URI):
+    def parse(
+        self,
+        yaml_input,
+        source=YamlSource.File,
+        path="",
+        parse_mode=_ParseMode.Normal,
+        default_uri=DEFAULT_URI,
+    ):
         """Parse the yaml input, assumed to be a file by default."""
 
         if path == "":
