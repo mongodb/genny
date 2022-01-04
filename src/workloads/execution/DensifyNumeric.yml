@@ -127,36 +127,6 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-    - OperationMetricsName: FullByPartitionSmallStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: *field,
-            partitionByFields: ["partitionKey"],
-            range: {
-              bounds: "full",
-              step: *smallStep
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: FullByPartitionLargeStep
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
-          $densify: {
-            field: *field,
-            partitionByFields: ["partitionKey"],
-            range: {
-              bounds: "full",
-              step: *largeStep
-            }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
     - OperationMetricsName: PartitionedByPartitionSmallStep
       OperationName: RunCommand
       OperationCommand:
