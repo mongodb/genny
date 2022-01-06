@@ -170,11 +170,17 @@ def cmake_compile_install(
     ),
 )
 @click.pass_context
-def evaluate(ctx: click.Context, workload_path: str, mongo_uri: str, output: str, override: str, smoke: bool):
+def evaluate(
+    ctx: click.Context, workload_path: str, mongo_uri: str, output: str, override: str, smoke: bool
+):
     from genny.tasks import preprocess
 
     preprocess.evaluate(
-        workload_path=workload_path, default_uri =mongo_uri, smoke=smoke, override_file_path=override, output=output
+        workload_path=workload_path,
+        default_uri=mongo_uri,
+        smoke=smoke,
+        override_file_path=override,
+        output=output,
     )
 
 

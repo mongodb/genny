@@ -10,6 +10,7 @@ from genny.tasks import preprocess
 
 DEFAULT_URI = "mongodb://localhost:27017"
 
+
 class TestPreprocess(unittest.TestCase):
     def setUp(self):
         self.workspace_root = tempfile.mkdtemp()
@@ -22,7 +23,10 @@ class TestPreprocess(unittest.TestCase):
 
         p = preprocess._WorkloadParser()
         parsedConfig = p.parse(
-            yaml_input=yaml_input, default_uri=DEFAULT_URI, source=preprocess._WorkloadParser.YamlSource.String, path=cwd
+            yaml_input=yaml_input,
+            default_uri=DEFAULT_URI,
+            source=preprocess._WorkloadParser.YamlSource.String,
+            path=cwd,
         )
 
         return yaml.dump(parsedConfig, sort_keys=False)
@@ -452,17 +456,21 @@ HighLevelKey:
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             workload_path = os.path.join(tmpdirname, "workload.yml")
-            with open(workload_path,'w') as fp:
+            with open(workload_path, "w") as fp:
                 fp.write(yaml_input)
 
             override_path = os.path.join(tmpdirname, "override.yml")
-            with open(override_path,'w') as fp:
+            with open(override_path, "w") as fp:
                 fp.write(yaml_override)
 
             output = StringIO()
-            preprocess.preprocess(workload_path=workload_path, smoke=False,
-                                  default_uri="FakeUri", output_file=output,
-                                  override_file_path=override_path)
+            preprocess.preprocess(
+                workload_path=workload_path,
+                smoke=False,
+                default_uri="FakeUri",
+                output_file=output,
+                override_file_path=override_path,
+            )
 
             # Even though the nested workload defines a "Repeat"
             # parameter, the stored/nested one gets evaluated first.
