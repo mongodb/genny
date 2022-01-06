@@ -87,6 +87,15 @@ A couple of tips on defining external phase configs:
 2.  `./run-genny workload -- evaluate ./src/workloads/docs/HelloWorld.yml` is your friend. `evaluate` prints out
     the final YAML workload with all external phase definitions inlined.
 
+## Overrides
+
+Genny has an override syntax for configuring workloads. When invoking Genny, you can use the `-o` option to specify an override file.
+This uses [OmegaConf](https://omegaconf.readthedocs.io/en/2.1_branch/) to merge the override file onto the workload. This functionality
+should only be used to set values that absolutely need to be specified at runtime, such as URIs for systems under test.
+
+When using overrides or any other workload preprocessing, you can always use the `evaluate` subcommand to see the final workload that will
+actually be executed.
+
 ## Patch-Testing Genny Changes with Sys-Perf / DSI
 
 Install the [evergreen command-line client](https://evergreen.mongodb.com/settings) and put it
