@@ -23,22 +23,24 @@ DEFAULT_CONFIG = {
     "Clients": {"Default": {"QueryOptions": {"maxPoolSize": 100}}}
 }
 
+
 class ParseException(Exception):
     pass
 
 
-def evaluate(workload_path: str, smoke: bool, output: str, override_file_path=None):
+def evaluate(workload_path: str, default_uri: str, smoke: bool, output: str, override_file_path=None):
     """CLI-friendly wrapper for preprocess."""
     if output is not None:
         with open(output, "w") as f:
             preprocess(
                 workload_path=workload_path,
+                default_uri=default_uri,
                 smoke=smoke,
                 output_file=f,
                 override_file_path=override_file_path,
             )
     else:
-        preprocess(workload_path=workload_path, smoke=smoke, override_file_path=override_file_path)
+        preprocess(workload_path=workload_path, default_uri=default_uri, smoke=smoke, override_file_path=override_file_path)
 
 
 # It's weird to mix our custom preprocessor with OmegaConf.
