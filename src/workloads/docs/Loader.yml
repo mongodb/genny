@@ -28,7 +28,7 @@ Description: |
       evenly into Actor.Threads.
       * raise an InvalidConfiguration exception if Phase.Threads is set.
 
-keywords:
+Keywords:
 - docs
 - loader
 
