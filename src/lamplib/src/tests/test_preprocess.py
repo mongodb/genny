@@ -440,8 +440,15 @@ Actors:
         yaml_input = """SchemaVersion: 2018-07-01
 OverriddenKey: ValueShouldNotExist
 NotOverriddenKey: ValueShouldStaySame
+HighLevelKey:
+  InnerKey:
+    InnerInnerKey: Value
+    AnotherInnerInnerKey: InnerStaysSame
 """
-        yaml_override = """OverriddenKey: ThisIsTheCorrectValue"""
+        yaml_override = """OverriddenKey: ThisIsTheCorrectValue
+HighLevelKey:
+  InnerKey:
+    InnerInnerKey: ChangedInnerValue"""
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             workload_path = os.path.join(tmpdirname, "workload.yml")
@@ -468,6 +475,10 @@ Clients:
 SchemaVersion: '2018-07-01'
 OverriddenKey: ThisIsTheCorrectValue
 NotOverriddenKey: ValueShouldStaySame
+HighLevelKey:
+  InnerKey:
+    InnerInnerKey: ChangedInnerValue
+    AnotherInnerInnerKey: InnerStaysSame
 """
         output.seek(0)
         self.assertEqual(output.read(), expected)
