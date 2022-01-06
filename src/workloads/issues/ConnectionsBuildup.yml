@@ -1,8 +1,13 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
-# this workload created to reproduce SERVER-53853
 Description: |
-  TODO: TIG-3318
+  This workload created to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
+  low performance with secondaryPreferred reads
+
+Keywords:
+- reproducer
+- connections
+- secondaryPreferred
 
 Clients:
   Default:

@@ -15,6 +15,14 @@ Description: |
 
 # This workload does not support sharding yet.
 
+Keywords:
+- mixed
+- stress
+- insert
+- findOne
+- updateOne
+- deleteOne
+
 dbname: &dbname mix
 DocumentCount: &NumDocs 1024
 CollectionCount: &NumColls 512

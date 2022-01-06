@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: "@mongodb/security"
 Description: |
-  TODO: TIG-3318
+  TODO: TIG-3318 This should be on security team. It needs a new ticket.
 
 Clients:
   Default:
@@ -25,4 +25,3 @@ Actors:
     Repeat: 100
     Collection: "Inserts"
     Document: {"a": {^RandomInt: {min: 50, max: 60}}}
-

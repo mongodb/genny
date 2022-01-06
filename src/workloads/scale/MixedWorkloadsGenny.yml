@@ -10,7 +10,13 @@ Description: |
   by writes.
 
 # This workload does not support sharding yet.
-
+Keywords:
+- mixed
+- stress
+- insert
+- findOne
+- updateOne
+- deleteOne
 
 # These two values should match those are the top of MixPhases.yml
 dbname: &dbname mix
