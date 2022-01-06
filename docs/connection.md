@@ -1,4 +1,4 @@
-# Genny Connection Strings
+# Connection Strings
 
 This page describes how to use Genny connection strings in general, and in the multi-connection string case.
 This case can apply to testing multiple MongoDB clusters at once, or to testing a multitenant system.

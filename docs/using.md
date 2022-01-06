@@ -1,7 +1,7 @@
 # Using Genny
 
 This page describes how to run Genny and view its outputs. It also describes how
-to add actors and workloads. For details on the development process, see [Developing Genny](./developing).
+to add actors and workloads. For details on the development process, see [Developing Genny](./developing.md).
 
 ## Running Genny Workloads
 
@@ -93,8 +93,11 @@ Genny has an override syntax for configuring workloads. When invoking Genny, you
 This uses [OmegaConf](https://omegaconf.readthedocs.io/en/2.1_branch/) to merge the override file onto the workload. This functionality
 should only be used to set values that absolutely need to be specified at runtime, such as URIs for systems under test.
 
+For an example of when using overrides may be a good idea, check out our docs on [Connection Strings](./connection.md).
+
 When using overrides or any other workload preprocessing, you can always use the `evaluate` subcommand to see the final workload that will
 actually be executed.
+
 
 ## Patch-Testing Genny Changes with Sys-Perf / DSI
 
