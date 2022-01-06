@@ -22,8 +22,6 @@ DEFAULT_CONFIG = {
     # lazily.
     "Clients": {"Default": {"QueryOptions": {"maxPoolSize": 100}}}
 }
-DEFAULT_URI = "mongodb://localhost:27017"
-
 
 class ParseException(Exception):
     pass
@@ -48,7 +46,7 @@ def evaluate(workload_path: str, smoke: bool, output: str, override_file_path=No
 def preprocess(
     workload_path: str,
     smoke: bool,
-    default_uri: str = DEFAULT_URI,
+    default_uri: str,
     output_file=sys.stdout,
     override_file_path=None,
 ):
@@ -180,10 +178,10 @@ class _WorkloadParser(object):
     def parse(
         self,
         yaml_input,
+        default_uri,
         source=YamlSource.File,
         path="",
         parse_mode=_ParseMode.Normal,
-        default_uri=DEFAULT_URI,
     ):
         """Parse the yaml input, assumed to be a file by default."""
 

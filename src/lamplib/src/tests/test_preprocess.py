@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from genny.tasks import preprocess
 
+DEFAULT_URI = "mongodb://localhost:27017"
 
 class TestPreprocess(unittest.TestCase):
     def setUp(self):
@@ -21,7 +22,7 @@ class TestPreprocess(unittest.TestCase):
 
         p = preprocess._WorkloadParser()
         parsedConfig = p.parse(
-            yaml_input=yaml_input, source=preprocess._WorkloadParser.YamlSource.String, path=cwd
+            yaml_input=yaml_input, default_uri=DEFAULT_URI, source=preprocess._WorkloadParser.YamlSource.String, path=cwd
         )
 
         return yaml.dump(parsedConfig, sort_keys=False)
