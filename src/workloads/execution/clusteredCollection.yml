@@ -54,7 +54,7 @@ Actors:
     Operations:
     - OperationName: find
       OperationCommand:
-         Filter: {_id: {^RandomInt: {min: 0, max: *docCount}}}
+        Filter: {_id: {^RandomInt: {min: 0, max: *docCount}}}
   - *Nop
 
 # Phase 4: Point deletion
