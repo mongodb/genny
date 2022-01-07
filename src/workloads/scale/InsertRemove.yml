@@ -9,6 +9,8 @@ Description: |
 Keywords:
 - docs
 - InsertRemove
+- insert
+- delete
 
 Actors:
 - Name: InsertRemoveTest

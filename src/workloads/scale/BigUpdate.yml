@@ -10,8 +10,8 @@ Keywords:
 - stress
 - collections
 - indexes
-- updates
-- queries
+- update
+- find
 - cold data
 
 Clients:
