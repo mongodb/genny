@@ -1,7 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/security"
 Description: |
-  TODO: TIG-3318 This should be on security team. It needs a new ticket.
+  This workload measures the cost of simple insert operations against servers which perform TLS
+  encryption of wire protocol traffic and enforce authorization checks on each command invocation.
 
 Clients:
   Default:
@@ -25,3 +26,10 @@ Actors:
     Repeat: 100
     Collection: "Inserts"
     Document: {"a": {^RandomInt: {min: 50, max: 60}}}
+
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-ssl
