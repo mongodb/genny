@@ -199,10 +199,10 @@ void Topology::findConnectedNodesViaMongos(DBConnection& connection) {
 
     class ConfigSvrRetriever : public TopologyVisitor {
     public:
-        void onBeforeConfigSvr(const ConfigSvrDescription& desc) override {
+        void onBeforeReplSet(const ReplSetDescription& desc) override {
             configSvr = desc;
         }
-        ConfigSvrDescription configSvr;
+        ReplSetDescription configSvr;
     };
 
     mongocxx::uri baseUri(_factory.makeUri());
@@ -217,7 +217,8 @@ void Topology::findConnectedNodesViaMongos(DBConnection& connection) {
     auto configConnection = connection.makePeer(nameToUri(configServerConn));
     Topology configTopology(*configConnection);
     configTopology.accept(configSvrRetriever);
-    desc->configsvr = configSvrRetriever.configSvr;
+    desc->configsvr.primaryUri = configSvrRetriever.configSvr.primaryUri;
+    desc->configsvr.nodes = configSvrRetriever.configSvr.nodes;
 
     // Shards
     auto shardListRes = connection.runAdminCommand("listShards");
