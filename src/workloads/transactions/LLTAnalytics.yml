@@ -11,6 +11,12 @@ Owner: "@mongodb/product-perf"
 Description: |
   Workload to Benchmark the effect of LongLivedTransactions on an Update workload.
 
+Keywords:
+- transactions
+- long lived
+- snapshot
+- update
+
 GlobalDefaults:
   # That is 236M docs (4 collections x 59M docs), result in about 144GB for /data/dbs after the test
   # It takes about 9 hours to run this test - so many tests was done with 1/10 of data

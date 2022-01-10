@@ -4,16 +4,27 @@ Description: |
   This workload is a more stressful version of MixedWorkloadsGenny.yml, which itself is a port of
   the mixed_workloads in the workloads,
   repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
-  operations, each with dedicated actors/threads. The 4 operations are insert, findOne, updateOne,
-  and deleteOne. Since each type of operation runs in a dedicated thread it enables interesting
-  behavior, such as reads getting faster because of a write regression, or reads being starved by
-  writes. The origin of the test was as a reproduction for BF-2385 in which reads were starved out
-  by writes.
+  operations, each with dedicated actors/threads. The 4 operations are insertOne, findOne,
+  updateOne, and deleteOne. Since each type of operation runs in a dedicated thread it enables
+  interesting behavior, such as reads getting faster because of a write regression, or reads being
+  starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
+  starved out by writes.
 
   This more stressful version of the test only runs one test phase, using 1024 threads per operation
   for 45 minutes.
 
 # This workload does not support sharding yet.
+
+Keywords:
+- scale
+- insertOne
+- insert
+- findOne
+- find
+- updateOne
+- update
+- deleteOne
+- delete
 
 dbname: &dbname mix
 DocumentCount: &NumDocs 1024

@@ -3,6 +3,15 @@ Owner: "@mongodb/product-perf"
 Description: |
   Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload.
 
+Keywords:
+- transactions
+- long lived
+- snapshot
+- insert
+- find
+- update
+- delete
+
 GlobalDefaults:
   # Start: The following block gets updated for the other configurations.
   # In-memory: Database size works out about 12GB.
