@@ -1,0 +1,128 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Run basic insert and find and delete workload on a collection clustered by {_id: 1} .
+  Clustered collections are planned to mainly serve operations over the cluster
+  key such as monotonically increasing inserts, range queries and range deletions.
+
+GlobalDefaults:
+  RecordIdExtraPaddingParam: &RecordIdExtraPaddingParam {^Parameter: {Name: "RecordIdExtraPadding", Default: 0}}
+
+Actors:
+
+# Phase 1: create collection
+- Name: Create
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        create: &coll Collection0
+        clusteredIndex: {key: {_id: 1}, unique: true}
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Phase 2: insert. TODO Make multithreaded once TIG-2938 is resolved.
+- Name: Insert
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: &docCount 999999
+    BatchSize: 1000
+    Document:
+      _id: {^Join: {array: [{ ^FormatString: {"format": "%06d", "withArgs": [{^Inc: {start: 0}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}
+      a: {^FastRandomString: {length: 8, alphabet: "0123456789"}}
+      b: {^FastRandomString: {length: 1024}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Phase 3: Point _id lookups. TODO convert to range queries once TIG-3707 is implemented.
+- Name: Lookup
+  Type: CrudActor
+  Database: *db
+  Threads: 16
+  Phases:
+  - *Nop
+  - *Nop
+  - Duration: 1 minute
+    Collection: *coll
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter: {_id: {^Join: {array: [{ ^FormatString: {"format": "%06d", "withArgs": [{^RandomInt: {min: 0, max: *docCount}}]}}, {^FastRandomString: {length: 128, alphabet: "a"}}]}}}
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Phase 4: Create a secondary index.
+- Name: BuildIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key: {a: 1}
+          name: a
+  - *Nop
+  - *Nop
+
+# Phase 5: Secondary index lookups.
+- Name: Lookup
+  Type: CrudActor
+  Database: *db
+  Threads: 16
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Duration: 1 minute
+    Collection: *coll
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter: {a: {^FastRandomString: {length: 8, alphabet: "0123456789"}}}
+  - *Nop
+
+# Phase 6: Point deletion
+- Name: PointDeleter
+  Type: Deleter
+  Database: test
+  Threads: 16
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Duration: 3 minutes
+    Collection: *coll
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-all-feature-flags
+      - shard-lite-all-feature-flags

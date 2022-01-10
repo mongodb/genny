@@ -1,10 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: >
-  Run basic workload on a collection clustered by {_id: 1}.
+  Run basic workload on a collection clustered by {_id: 1} with large RecordId's (~130 bytes).
 
 GlobalDefaults:
-  RecordIdExtraPaddingParam: &RecordIdExtraPaddingParam 0
+  RecordIdExtraPaddingParam: &RecordIdExtraPaddingParam 128
 
 LoadConfig:
   Path: "../../phases/execution/clusteredCollection.yml"
