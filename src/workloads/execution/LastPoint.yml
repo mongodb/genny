@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests the performance of last point queries after the first milestone. 
+  This workload tests the performance of last point queries after the first milestone.
 
 Actors:
 - Name: CreateTimeSeriesCollection
@@ -149,14 +149,14 @@ Actors:
         pipeline:
           [
             {$sort: {
-              "tags.value": 1, 
+              "tags.value": 1,
               "time": -1,
             }},
             {$group: {
               _id: "$tags.value",
               last: {
-                  $first: "$$ROOT"
-            }}}
+                $first: "$$ROOT"
+              }}}
           ]
         cursor: {batchSize: *batchSize}
   - Nop: true
