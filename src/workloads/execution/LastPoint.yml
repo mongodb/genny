@@ -1,0 +1,188 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload tests the performance of last point queries after the first milestone. 
+
+Actors:
+- Name: CreateTimeSeriesCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Operation:
+      OperationMetricsName: CreateTimeSeriesCollection
+      OperationName: RunCommand
+      OperationCommand:
+        {create: &coll Collection6, timeseries: {timeField: "time", metaField: "tags"}}
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10000
+    BatchSize: &batchSize 100
+    Document:
+      part1: {^Choose: {from: [1, 2, 3, 4]}}
+      part2: {^Choose: {from: [1, 2, 3, 4]}}
+      time: {^RandomDate: {
+        min: {^Inc: {start: 0, multiplier: 1, step: 1}},
+        max: {^Inc: {start: 1, multiplier: 1, step: 1}}
+      }
+      }
+      double: {^Choose: {from: [
+        {^RandomDouble: { min: 0.0, max: 500.0 }},
+        null], weights: [2, 8]}}
+      tags: { value: {^Choose: {from: [
+        {^RandomInt: {min: -100, max: 100}},
+        {^RandomDouble: { min: 0.0, max: 500.0 }},
+        null], weights: [1, 1, 8]}}}
+      string: {^Choose: {from: [
+        {^RandomString: {length: 15}},
+        null], weights: [1, 4]}}
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+
+- Name: CreateIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes: [{key: {"tags.value": 1, "time": -1}, name: "x_1"}]
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+- Name: Run
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
+    - OperationMetricsName: RunLastPointCommand
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *coll
+        pipeline:
+          [
+            {$sort: {
+              "tags.value": 1, 
+              "time": -1,
+            }},
+            {$group: {
+              _id: "$tags.value",
+              last: {
+                  $first: "$$ROOT"
+            }}}
+          ]
+        cursor: {batchSize: *batchSize}
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - replica
+      - replica-all-feature-flags
+      - single-replica
+      - shard-lite
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v5.1
+      - v5.2
