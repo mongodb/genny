@@ -59,7 +59,7 @@ void testOneActor(genny::NodeSource& config,
     auto events = ApmEvents{};
     auto apmCallback = makeApmCallback(events);
     genny::ActorHelper ah(
-        config.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
+        config.root(), 1, apmCallback);
     auto start = std::chrono::steady_clock::now();
     ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
     auto seconds =
@@ -81,6 +81,9 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScanner", "[standalone][Collection
     SECTION("Scan documents in all collections of a database") {
         genny::NodeSource config(R"(
       SchemaVersion: 2018-07-01
+      Clients:
+        Default:
+          URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
       Actors:
       - Name: SnapshotScanner
         Type: CollectionScanner
@@ -131,6 +134,9 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerAll", "[standalone][Collect
     SECTION("Scan documents in all collections of multiple databases") {
         genny::NodeSource config2(R"(
       SchemaVersion: 2018-07-01
+      Clients:
+        Default:
+          URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
       Actors:
       - Name: SnapshotScannerAll
         Type: CollectionScanner

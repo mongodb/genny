@@ -62,7 +62,6 @@ public:
         YamlSource workloadSourceType = YamlSource::kFile;
         std::string workloadSource;  // either file name or yaml
 
-        std::string mongoUri;
         std::string description;
         DefaultDriver::RunMode runMode = RunMode::kNormal;
         boost::log::trivial::severity_level logVerbosity;

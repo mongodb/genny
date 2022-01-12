@@ -8,6 +8,7 @@ If you feel like these docs can be improved in any way, feel free to open a PR a
 * [Setting Up](./setup.md)
 * [Developing in Genny](./developing.md)
 * [Using Genny](./using.md)
+* [ConnectionStrings in Genny](./connection.md)
 * [Hitchhiker's Guide (Internals)](./HitchhikersGuide.md)
 * [Contribution Guidelines](../CONTRIBUTING.md)
 * [Documentation Workloads](../src/workloads/docs)

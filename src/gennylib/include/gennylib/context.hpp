@@ -137,13 +137,11 @@ public:
      * @param node top-level (file-level) YAML node
      * @param registry metrics registry to use in ActorContext::counter() etc
      * @param orchestrator to control Phasing
-     * @param mongoUri the base mongo URI to use @see PoolFactory
      * @param cast source of Actors to use. Actors are constructed
      * from the cast at construction-time.
      */
     WorkloadContext(const Node& node,
                     Orchestrator& orchestrator,
-                    const std::string& mongoUri,
                     const Cast& cast,
                     v1::PoolManager::OnCommandStartCallback apmCallback = {});
 

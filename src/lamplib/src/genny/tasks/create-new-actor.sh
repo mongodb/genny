@@ -541,6 +541,9 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
 
     NodeSource nodes = NodeSource(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
         Actors:
         - Name: ${actor_name}
           Type: ${actor_name}
@@ -554,7 +557,7 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
 
     SECTION("Inserts documents into the database.") {
         try {
-            genny::ActorHelper ah(nodes.root(), 1, MongoTestFixture::connectionUri().to_string());
+            genny::ActorHelper ah(nodes.root(), 1);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
             auto builder = bson_stream::document{};
