@@ -144,7 +144,7 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
 
     std::unique_ptr<ReplSetDescription> desc;
     auto setName = res.view()["setName"].get_utf8().value;
-    if (setName == "configSet") {
+    if (setName == "configSet" || setName == "configRepl") {
         desc = std::make_unique<ConfigSvrDescription>();
     } else {
         desc = std::make_unique<ReplSetDescription>();
