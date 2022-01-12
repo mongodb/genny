@@ -14,7 +14,7 @@ Actors:
       OperationMetricsName: CreateTimeSeriesCollection
       OperationName: RunCommand
       OperationCommand:
-        {create: &coll Collection6, timeseries: {timeField: "time", metaField: "tags"}}
+        {create: &coll Collection0, timeseries: {timeField: "time", metaField: "tags"}}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -68,14 +68,14 @@ Actors:
         max: {^Inc: {start: 1, multiplier: 1, step: 1}}
       }
       }
-      double: {^Choose: {from: [
+      measureD: {^Choose: {from: [
         {^RandomDouble: { min: 0.0, max: 500.0 }},
         null], weights: [2, 8]}}
       tags: { value: {^Choose: {from: [
         {^RandomInt: {min: -100, max: 100}},
         {^RandomDouble: { min: 0.0, max: 500.0 }},
         null], weights: [1, 1, 8]}}}
-      string: {^Choose: {from: [
+      measureS: {^Choose: {from: [
         {^RandomString: {length: 15}},
         null], weights: [1, 4]}}
   - Nop: true
@@ -163,7 +163,30 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
-  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
+    - OperationMetricsName: RunLastPointCommand2
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *coll
+        pipeline:
+          [
+            {$match: {
+              "tags.value": null,
+            }},
+            {$sort: {
+              "tags.value": 1,
+              "time": -1,
+            }},
+            {$group: {
+              _id: "$tags.value",
+              last: {
+                $first: "$measureD",
+                $first: "$measureS",
+              }}}
+          ]
+        cursor: {batchSize: *batchSize}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -177,7 +200,6 @@ AutoRun:
       - replica
       - replica-all-feature-flags
       - single-replica
-      - shard-lite
     branch_name:
       $neq:
       - v4.0
