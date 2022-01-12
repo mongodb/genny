@@ -183,7 +183,6 @@ Actors:
               _id: "$tags.value",
               last: {
                 $first: "$measureD",
-                $first: "$measureS",
               }}}
           ]
         cursor: {batchSize: *batchSize}
