@@ -18,11 +18,3 @@ Actors:
       Key: TPCHNormalizedQuery18
       Parameters:
         Query18Quantity: 300
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

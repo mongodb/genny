@@ -19,11 +19,3 @@ Actors:
       Parameters:
         Query5Date: "1994-01-01"
         Query5Region: "ASIA"
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

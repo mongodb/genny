@@ -20,11 +20,3 @@ Actors:
         Query16Brand: "Brand#45"
         Query16Type: "^MEDIUM POLISHED.*"
         Query16Sizes: [49, 14, 23, 45, 19, 3, 36, 9]
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

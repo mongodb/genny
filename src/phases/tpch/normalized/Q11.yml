@@ -1,12 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 11 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 11 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
-query11Nation: &query11Nation "GERMANY"
-query11Fraction: &query11Fraction 0.0001
+query11Nation: &query11Nation {^Parameter: {Name: "Query11Nation", Default: "GERMANY"}}
+query11Fraction: &query11Fraction {^Parameter: {Name: "Query11Fraction", Default: 0.0001}}
 
 TPCHNormalizedQuery11:
   Repeat: 1
@@ -29,7 +29,7 @@ TPCHNormalizedQuery11:
               from: "nation",
               localField: "supplier.s_nationkey",
               foreignField: "n_nationkey",
-              pipeline: [{$match: {n_name: {^Parameter: {Name: "Query11Nation", Default: *query11Nation}}}}],
+              pipeline: [{$match: {n_name: *query11Nation}}],
               as: "nation"}},
             {$unwind: "$nation"},
             {$addFields: {total_cost: {$multiply: ["$ps_supplycost", "$ps_availqty"]}}},
@@ -41,7 +41,7 @@ TPCHNormalizedQuery11:
               groups: {$push: {ps_partkey: "$_id", value: "$value"}},
               total_cost: {$sum: "$value"}}},
             {$addFields: {
-              threshold: {$multiply: ["$total_cost", {^Parameter: {Name: "Query11Fraction", Default: *query11Fraction}}]}}},
+              threshold: {$multiply: ["$total_cost", *query11Fraction]}}},
             {$unwind: "$groups"},
             {$project: {
               ps_partkey: "$groups.ps_partkey",

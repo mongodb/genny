@@ -20,11 +20,3 @@ Actors:
         Query8Type: "ECONOMY ANODIZED STEEL"
         Query8Region: "AMERICA"
         Query8Nation: "BRAZIL"
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

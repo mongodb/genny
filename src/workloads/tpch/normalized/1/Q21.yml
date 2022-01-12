@@ -18,11 +18,3 @@ Actors:
       Key: TPCHNormalizedQuery21
       Parameters:
         Query21Nation: "SAUDI ARABIA"
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

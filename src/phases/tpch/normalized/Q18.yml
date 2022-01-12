@@ -1,11 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 18 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 18 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
-query18Quantity: &query18Quantity 300
+query18Quantity: &query18Quantity {^Parameter: {Name: "Query18Quantity", Default: 300}}
 
 TPCHNormalizedQuery18:
   Repeat: 1
@@ -21,7 +21,7 @@ TPCHNormalizedQuery18:
             {$lookup: {from: "lineitem", let: {o_orderkey: "$o_orderkey"}, as: "lineitem", pipeline: [
               {$match: {$expr: {$eq: ["$$o_orderkey", "$l_orderkey"]}}},
               {$group: {_id: "$l_orderkey", "sum(l_quantity)": {$sum: "$l_quantity"}}},
-              {$match: {$expr: {$gt: ["$sum(l_quantity)", {^Parameter: {Name: "Query18Quantity", Default: *query18Quantity}}]}}},
+              {$match: {$expr: {$gt: ["$sum(l_quantity)", *query18Quantity]}}},
               {$project: {_id: 0, o_orderkey: "$_id", "sum(l_quantity)": 1}}]}},
             {$unwind: "$lineitem"},
             {$lookup: {from: "customer", localField: "o_custkey", foreignField: "c_custkey", as: "customer"}},

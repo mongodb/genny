@@ -1,11 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 10 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 10 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
-query10Date: &query10Date "1993-10-01"
+query10Date: &query10Date {^Parameter: {Name: "Query10Date", Default: "1993-10-01"}}
 
 TPCHNormalizedQuery10:
   Repeat: 1
@@ -19,8 +19,8 @@ TPCHNormalizedQuery10:
         pipeline:
           [
             {$match: {$and: [
-              {$expr: {$gte: ["$o_orderdate", {$dateFromString: {dateString: {^Parameter: {Name: "Query10Date", Default: *query10Date}}}}]}},
-              {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: {^Parameter: {Name: "Query10Date", Default: *query10Date}}}}, unit: "month", amount: 3}}]}}]}},
+              {$expr: {$gte: ["$o_orderdate", {$dateFromString: {dateString: *query10Date}}]}},
+              {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query10Date}}, unit: "month", amount: 3}}]}}]}},
             {$lookup: {from: "lineitem", localField: "o_orderkey", foreignField: "l_orderkey", as: "lineitem", pipeline: [
               {$match: {l_returnflag: "R"}}]}},
             {$unwind: "$lineitem"},

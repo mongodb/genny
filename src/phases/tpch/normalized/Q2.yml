@@ -1,13 +1,14 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 2 against the normalized schema.
+  Run TPC-H query 2 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
 
-query2Size: &query2Size 15
-query2Type: &query2Type "^.*BRASS$"  # ^.*{type}$"
-query2Region: &query2Region "EUROPE"
+query2Size: &query2Size {^Parameter: {Name: "Query2Size", Default: 15}}
+query2Type: &query2Type {^Parameter: {Name: "Query2Type", Default: "^.*BRASS$"}}  # ^.*{type}$"
+query2Region: &query2Region {^Parameter: {Name: "Query2Region", Default: "EUROPE"}}
 
 TPCHNormalizedQuery2:
   Repeat: 1
@@ -21,8 +22,8 @@ TPCHNormalizedQuery2:
         pipeline:
           [
             {$match: {$and: [
-              {p_type: {$regex: {^Parameter: {Name: "Query2Type", Default: *query2Type}}, $options: "si"}},
-              {p_size: {$eq: {^Parameter: {Name: "Query2Size", Default: *query2Size}}}}]}},
+              {p_type: {$regex: *query2Type, $options: "si"}},
+              {p_size: {$eq: *query2Size}}]}},
             {$lookup: {
               from: "partsupp",
               localField: "p_partkey",
@@ -47,7 +48,7 @@ TPCHNormalizedQuery2:
               foreignField: "r_regionkey",
               as: "region"}},
             {$unwind: "$region"},
-            {$match: {"region.r_name": {^Parameter: {Name: "Query2Region", Default: *query2Region}}}},
+            {$match: {"region.r_name": *query2Region}},
             {$sort: {"partsupp.ps_supplycost": 1}},
             {$group: {
               _id: {

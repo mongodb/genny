@@ -18,11 +18,3 @@ Actors:
       Key: TPCHNormalizedQuery10
       Parameters:
         Query10Date: "1993-10-01"
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

@@ -1,11 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 13 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 13 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
-query13Regex: &query13Regex "^.*special.*requests.*$"  # `^.*${query13Word1}.*${query13Word2}.*$`
+query13Regex: &query13Regex {^Parameter: {Name: "Query13Regex", Default: "^.*special.*requests.*$"}}  # `^.*${query13Word1}.*${query13Word2}.*$`
 
 TPCHNormalizedQuery13:
   Repeat: 1
@@ -19,7 +19,7 @@ TPCHNormalizedQuery13:
         pipeline:
           [
             {$lookup: {from: "orders", localField: "c_custkey", foreignField: "o_custkey", as: "orders", pipeline: [
-              {$match: {$expr: {$cond: {if: {$regexMatch: {input: "$o_comment", regex: {^Parameter: {Name: "Query13Regex", Default: *query13Regex}}, options: "si"}}, then: 0, else: 1}}}}]}},
+              {$match: {$expr: {$cond: {if: {$regexMatch: {input: "$o_comment", regex: *query13Regex, options: "si"}}, then: 0, else: 1}}}}]}},
             {$project: {c_custkey: 1, c_count: {$size: "$orders"}}},
             {$group: {_id: "$c_count", custdist: {$count: {}}}},
             {$project: {_id: 0, c_count: "$_id", custdist: 1}},

@@ -18,11 +18,3 @@ Actors:
       Key: TPCHNormalizedQuery1
       Parameters:
         Query1Delta: -90
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

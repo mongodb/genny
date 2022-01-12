@@ -18,11 +18,3 @@ Actors:
       Key: TPCHNormalizedQuery13
       Parameters:
         Query13Regex: "^.*special.*requests.*$"
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

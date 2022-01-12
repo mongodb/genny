@@ -20,11 +20,3 @@ Actors:
         Query2Size: 15
         Query2Type: "^.*BRASS$"
         Query2Region: "EUROPE"
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

@@ -24,11 +24,3 @@ Actors:
         Query22CountryCode5: {$toString: "30"}
         Query22CountryCode6: {$toString: "18"}
         Query22CountryCode7: {$toString: "17"}
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

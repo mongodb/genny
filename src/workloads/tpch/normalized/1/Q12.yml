@@ -20,11 +20,3 @@ Actors:
         Query12ShipMode1: "MAIL"
         Query12ShipMode2: "SHIP"
         Query12Date: "1994-01-01"
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

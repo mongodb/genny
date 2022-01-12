@@ -1,19 +1,19 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 22 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 22 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
 # Sadly, using an array here parses as an array of numbers instead of as an array of strings.
 # To work around this, use separate parameters for each entry in the array.
-query22CountryCode1: &query22CountryCode1 "13"
-query22CountryCode2: &query22CountryCode2 "31"
-query22CountryCode3: &query22CountryCode3 "23"
-query22CountryCode4: &query22CountryCode4 "29"
-query22CountryCode5: &query22CountryCode5 "30"
-query22CountryCode6: &query22CountryCode6 "18"
-query22CountryCode7: &query22CountryCode7 "17"
+query22CountryCode1: &query22CountryCode1 {^Parameter: {Name: "Query22CountryCode1", Default: "13"}}
+query22CountryCode2: &query22CountryCode2 {^Parameter: {Name: "Query22CountryCode2", Default: "31"}}
+query22CountryCode3: &query22CountryCode3 {^Parameter: {Name: "Query22CountryCode3", Default: "23"}}
+query22CountryCode4: &query22CountryCode4 {^Parameter: {Name: "Query22CountryCode4", Default: "29"}}
+query22CountryCode5: &query22CountryCode5 {^Parameter: {Name: "Query22CountryCode5", Default: "30"}}
+query22CountryCode6: &query22CountryCode6 {^Parameter: {Name: "Query22CountryCode6", Default: "18"}}
+query22CountryCode7: &query22CountryCode7 {^Parameter: {Name: "Query22CountryCode7", Default: "17"}}
 
 TPCHNormalizedQuery22:
   Repeat: 1
@@ -31,13 +31,13 @@ TPCHNormalizedQuery22:
             {$addFields: {cntrycode: { $substr: ["$c_phone", 0, 2]}}},
             {$match: {$and: [
               {$expr: {$in: ["$cntrycode", [
-                {^Parameter: {Name: "Query22CountryCode1", Default: *query22CountryCode1}},
-                {^Parameter: {Name: "Query22CountryCode2", Default: *query22CountryCode2}},
-                {^Parameter: {Name: "Query22CountryCode3", Default: *query22CountryCode3}},
-                {^Parameter: {Name: "Query22CountryCode4", Default: *query22CountryCode4}},
-                {^Parameter: {Name: "Query22CountryCode5", Default: *query22CountryCode5}},
-                {^Parameter: {Name: "Query22CountryCode6", Default: *query22CountryCode6}},
-                {^Parameter: {Name: "Query22CountryCode7", Default: *query22CountryCode7}}]]}},
+                *query22CountryCode1,
+                *query22CountryCode2,
+                *query22CountryCode3,
+                *query22CountryCode4,
+                *query22CountryCode5,
+                *query22CountryCode6,
+                *query22CountryCode7]]}},
               {custsale: null},
               {$expr: {$gt: ["$c_acctbal", 0.00]}}]}},
             {$facet: {

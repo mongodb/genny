@@ -20,11 +20,3 @@ Actors:
         Query6Date: "1994-01-01"
         Query6Discount: 0.06
         Query6Quantity: 24
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

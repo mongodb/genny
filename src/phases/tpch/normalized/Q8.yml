@@ -1,14 +1,14 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 8 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 8 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
 
-query8Type: &query8Type "ECONOMY ANODIZED STEEL"
-query8Region: &query8Region "AMERICA"
-query8Nation: &query8Nation "BRAZIL"
+query8Type: &query8Type {^Parameter: {Name: "Query8Type", Default: "ECONOMY ANODIZED STEEL"}}
+query8Region: &query8Region {^Parameter: {Name: "Query8Region", Default: "AMERICA"}}
+query8Nation: &query8Nation {^Parameter: {Name: "Query8Nation", Default: "BRAZIL"}}
 
 TPCHNormalizedQuery8:
   Repeat: 1
@@ -21,7 +21,7 @@ TPCHNormalizedQuery8:
         aggregate: part
         pipeline:
           [
-            {$match: {p_type: {$eq: {^Parameter: {Name: "Query8Type", Default: *query8Type}}}}},
+            {$match: {p_type: {$eq: *query8Type}}},
             {$lookup: {from: "lineitem", localField: "p_partkey", foreignField: "l_partkey", as: "lineitem"}},
             {$unwind: "$lineitem"},
             {$lookup: {from: "supplier", localField: "lineitem.l_suppkey", foreignField: "s_suppkey", as: "supplier"}},
@@ -39,14 +39,14 @@ TPCHNormalizedQuery8:
             {$unwind: "$n1"},
             {$lookup: {from: "region", localField: "n1.n_regionkey", foreignField: "r_regionkey", as: "region"}},
             {$unwind: "$region"},
-            {$match: {"region.r_name": {$eq: {^Parameter: {Name: "Query8Region", Default: *query8Region}}}}},
+            {$match: {"region.r_name": {$eq: *query8Region}}},
             {$project: {
               o_year: {$year: "$orders.o_orderdate"},
               volume: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [{$literal: 1}, "$lineitem.l_discount"]}]},
               nation: "$n2.n_name"}},
             {$group: {
               _id: "$o_year", total_volume: {$sum: "$volume"},
-              nation_volume: {$sum: {$cond: { if: {$eq: ["$nation", {^Parameter: {Name: "Query8Nation", Default: *query8Nation}}]}, then: "$volume", else: 0}}}}},
+              nation_volume: {$sum: {$cond: { if: {$eq: ["$nation", *query8Nation]}, then: "$volume", else: 0}}}}},
             {$project: {_id: 0, o_year: "$_id", mkt_share: {$divide: ["$nation_volume", "$total_volume"]}}},
             {$sort: {o_year: 1}}
           ]

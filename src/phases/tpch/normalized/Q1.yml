@@ -1,11 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 1 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 1 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
-query1Delta: &query1Delta -90
+query1Delta: &query1Delta {^Parameter: {Name: "Query1Delta", Default: -90}}
 
 TPCHNormalizedQuery1:
   Repeat: 1
@@ -18,7 +18,7 @@ TPCHNormalizedQuery1:
         aggregate: lineitem
         pipeline:
           [
-            {$match: {$expr: {$lte: ["$l_shipdate", {$dateAdd: {startDate: {$dateFromString: {dateString: "1998-12-01"}}, unit: "day", amount: {^Parameter: {Name: "Query1Delta", Default: *query1Delta}}}}]}}},
+            {$match: {$expr: {$lte: ["$l_shipdate", {$dateAdd: {startDate: {$dateFromString: {dateString: "1998-12-01"}}, unit: "day", amount: *query1Delta}}]}}},
             {$group: {
               _id: {l_returnflag: "$l_returnflag", l_linestatus: "$l_linestatus"},
               sum_qty: {$sum: "$l_quantity"},

@@ -1,10 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 21 against the normalized schema.
+  Run TPC-H query 21 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
-query21Nation: &query21Nation "SAUDI ARABIA"
+query21Nation: &query21Nation {^Parameter: {Name: "Query1Delta", Default: "SAUDI ARABIA"}}
 
 TPCHNormalizedQuery21:
   Repeat: 1
@@ -19,7 +20,7 @@ TPCHNormalizedQuery21:
           [
             {$lookup: {from: "nation", localField: "s_nationkey", foreignField: "n_nationkey", as: "nation"}},
             {$unwind: "$nation"},
-            {$match: {"nation.n_name": {^Parameter: {Name: "Query1Delta", Default: *query21Nation}}}},
+            {$match: {"nation.n_name": *query21Nation}},
             {$lookup: {from: "lineitem", localField: "s_suppkey", foreignField: "l_suppkey", as: "l1", pipeline: [{$match: {$expr: {$gt: ["$l_receiptdate", "$l_commitdate"]}}}]}},
             {$unwind: "$l1"},
             {$lookup: {from: "orders", localField: "l1.l_orderkey", foreignField: "o_orderkey", as: "orders", pipeline: [{$match: {o_orderstatus: "F"}}]}},

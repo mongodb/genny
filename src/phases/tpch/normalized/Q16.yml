@@ -1,14 +1,14 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 16 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 16 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
 
-query16Brand: &query16Brand "Brand#45"
-query16Type: &query16Type "^MEDIUM POLISHED.*"  # ^${type}.*$"
-query16Sizes: &query16Sizes [49, 14, 23, 45, 19, 3, 36, 9]
+query16Brand: &query16Brand {^Parameter: {Name: "Query16Brand", Default: "Brand#45"}}
+query16Type: &query16Type {^Parameter: {Name: "Query16Type", Default: "^MEDIUM POLISHED.*"}}  # ^${type}.*$"
+query16Sizes: &query16Sizes {^Parameter: {Name: "Query16Sizes", Default: [49, 14, 23, 45, 19, 3, 36, 9]}}
 
 TPCHNormalizedQuery16:
   Repeat: 1
@@ -22,9 +22,9 @@ TPCHNormalizedQuery16:
         pipeline:
           [
             {$match: {$and: [
-              {p_brand: {$ne: {^Parameter: {Name: "Query16Brand", Default: *query16Brand}}}},
-              {$expr: {$cond: {if: {$regexMatch: {input: "$p_type", regex: {^Parameter: {Name: "Query16Type", Default: *query16Type}}, options: "si"}}, then: 0, else: 1}}},
-              {p_size: {$in: {^Parameter: {Name: "Query16Sizes", Default: *query16Sizes}}}}]}},
+              {p_brand: {$ne: *query16Brand}},
+              {$expr: {$cond: {if: {$regexMatch: {input: "$p_type", regex: *query16Type, options: "si"}}, then: 0, else: 1}}},
+              {p_size: {$in: *query16Sizes}}]}},
             {$lookup: {
               from: "partsupp",
               localField: "p_partkey",

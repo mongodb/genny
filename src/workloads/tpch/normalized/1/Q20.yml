@@ -20,11 +20,3 @@ Actors:
         Query20Nation: "CANADA"
         Query20Color: "^forest.*$"
         Query20Date: "1994-01-01"
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

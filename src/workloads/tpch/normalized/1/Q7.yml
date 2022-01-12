@@ -19,11 +19,3 @@ Actors:
       Parameters:
         Query7Nation1: "FRANCE"
         Query7Nation2: "GERMANY"
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

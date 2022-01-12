@@ -1,12 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 7 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 7 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
-query7Nation1: &query7Nation1 "FRANCE"
-query7Nation2: &query7Nation2 "GERMANY"
+query7Nation1: &query7Nation1 {^Parameter: {Name: "Query7Nation1", Default: "FRANCE"}}
+query7Nation2: &query7Nation2 {^Parameter: {Name: "Query7Nation2", Default: "GERMANY"}}
 
 TPCHNormalizedQuery7:
   Repeat: 1
@@ -34,8 +34,8 @@ TPCHNormalizedQuery7:
             {$lookup: {from: "nation", localField: "customer.c_nationkey", foreignField: "n_nationkey", as: "n2"}},
             {$unwind: "$n2"},
             {$match: {$or: [
-              {$and: [{"n1.n_name": {^Parameter: {Name: "Query7Nation1", Default: *query7Nation1}}}, {"n2.n_name": {^Parameter: {Name: "Query7Nation2", Default: *query7Nation2}}}]},
-              {$and: [{"n1.n_name": {^Parameter: {Name: "Query7Nation2", Default: *query7Nation2}}}, {"n2.n_name": {^Parameter: {Name: "Query7Nation1", Default: *query7Nation1}}}]}]}},
+              {$and: [{"n1.n_name": *query7Nation1}, {"n2.n_name": *query7Nation2}]},
+              {$and: [{"n1.n_name": *query7Nation2}, {"n2.n_name": *query7Nation1}]}]}},
             {$project: {supp_nation: "$n1.n_name", cust_nation: "$n2.n_name", l_year: {$year: "$lineitem.l_shipdate"}, volume: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]}}},
             {$group: {_id: {supp_nation: "$supp_nation", cust_nation: "$cust_nation", l_year: "$l_year"}, revenue: {$sum: "$volume"}}},
             {$project: {_id: 0, supp_nation: "$_id.supp_nation", cust_nation: "$_id.cust_nation", l_year: "$_id.l_year", revenue: 1}},

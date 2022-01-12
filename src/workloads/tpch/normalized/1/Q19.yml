@@ -23,11 +23,3 @@ Actors:
         Query19Quantity2: 10
         Query19Brand3: "Brand#34"
         Query19Quantity3: 20
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

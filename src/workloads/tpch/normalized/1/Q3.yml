@@ -19,11 +19,3 @@ Actors:
       Parameters:
         Query3Segment: "BUILDING"
         Query3Date: "1995-03-15"
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

@@ -20,11 +20,3 @@ Actors:
       Parameters:
         Query11Nation: "GERMANY"
         Query11Fraction: 0.0001
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-  ThenRun:
-  - test_control: tpch

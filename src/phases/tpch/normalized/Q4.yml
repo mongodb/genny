@@ -1,11 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 4 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 4 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
-query4Date: &query4Date "1993-07-01"
+query4Date: &query4Date {^Parameter: {Name: "Query4Date", Default: "1993-07-01"}}
 
 TPCHNormalizedQuery4:
   Repeat: 1
@@ -20,8 +20,8 @@ TPCHNormalizedQuery4:
           [
             {$match: {
               $and: [
-                {$expr: {$gte: ["$o_orderdate", {$dateFromString: {dateString: {^Parameter: {Name: "Query4Date", Default: *query4Date}}}}]}},
-                {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: {^Parameter: {Name: "Query4Date", Default: *query4Date}}}}, unit: "month", amount: 3}}]}}]}},
+                {$expr: {$gte: ["$o_orderdate", {$dateFromString: {dateString: *query4Date}}]}},
+                {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query4Date}}, unit: "month", amount: 3}}]}}]}},
             {$lookup: {
               from: "lineitem",
               localField: "o_orderkey",

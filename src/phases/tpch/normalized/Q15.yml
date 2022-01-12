@@ -1,11 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 15 against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 15 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
-query15Date: &query15Date "1996-01-01"
+query15Date: &query15Date {^Parameter: {Name: "Query15Date", Default: "1996-01-01"}}
 
 TPCHNormalizedQuery15:
   Repeat: 1
@@ -20,11 +20,11 @@ TPCHNormalizedQuery15:
         [
           {$match: {
             $and: [
-              {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: {^Parameter: {Name: "Query15Date", Default: *query15Date}}}}]}},
+              {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: *query15Date}}]}},
               {$expr: {
                 $lt: [
                   "$l_shipdate",
-                  {$dateAdd: {startDate: {$dateFromString: {dateString: {^Parameter: {Name: "Query15Date", Default: *query15Date}}}}, unit: "month", amount: 3}}
+                  {$dateAdd: {startDate: {$dateFromString: {dateString: *query15Date}}, unit: "month", amount: 3}}
                 ]}}]}},
           {$group: {
             _id: "$l_suppkey",
