@@ -81,17 +81,17 @@ Actors:
   Database: *db
   Phases:
   - Nop: true
-  - Repeat: 1
   - Nop: true
-  - Repeat: 1
   - Nop: true
-  - Repeat: 1
   - Nop: true
-  - Repeat: 1
   - Nop: true
-  - Repeat: 1
   - Nop: true
-  - Repeat: 1
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
   - Nop: true
 
 - Name: CreateIndex
@@ -122,13 +122,10 @@ Actors:
   Type: RunCommand
   Database: *db
   Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
   - Repeat: 10
     Database: *db
     Operations:
-    - OperationMetricsName: RunLastPointCommand
+    - OperationMetricsName: RunSortGroupLastPointCommand
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
@@ -148,7 +145,7 @@ Actors:
   - Repeat: 10
     Database: *db
     Operations:
-    - OperationMetricsName: RunLastPointCommand2
+    - OperationMetricsName: RunMatchSortGroupLastPointCommand
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
@@ -168,6 +165,9 @@ Actors:
               }}}
           ]
         cursor: {batchSize: *batchSize}
+  - Nop: true
+  - Nop: true
+  - Nop: true
   - Nop: true
   - Nop: true
   - Nop: true
