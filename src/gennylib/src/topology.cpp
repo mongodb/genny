@@ -159,7 +159,7 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
         for (auto member : hosts_view) {
             MongodDescription memberDesc;
             memberDesc.mongodUri = nameToUri(std::string(member.get_utf8().value));
-            if (setName == "configSet") {
+            if (setName == "configSet" || setName == "configRepl") {
                 memberDesc.clusterType = ClusterType::configSvrMember;
             } else {
                 memberDesc.clusterType = ClusterType::replSetMember;
@@ -177,7 +177,7 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
         for (auto member : passives_view) {
             MongodDescription memberDesc;
             memberDesc.mongodUri = std::string(member.get_utf8().value);
-            if (setName == "configSet") {
+            if (setName == "configSet" || "configRepl") {
                 memberDesc.clusterType = ClusterType::configSvrMember;
             } else {
                 memberDesc.clusterType = ClusterType::replSetMember;
