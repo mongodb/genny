@@ -47,12 +47,12 @@ Actors:
         max: {^Inc: {start: 1, multiplier: 1, step: 1}}
       }
       }
-      tags : {
-        rack : {^Choose: {from: [
+      tags: {
+        rack: {^Choose: {from: [
           {^RandomInt: {min: 0, max: 2000}},
           0], weights: [10, 1]}},
-        service : {^RandomDouble: {min: 0.0, max: 500.0 }},
-        team : "NYC"
+        service: {^RandomDouble: {min: 0.0, max: 500.0 }},
+        team: "NYC"
       }
       usage_irq: {^RandomDouble: {min: 0, max: 500}}
       usage_user: {^RandomString: {length: 15}}
