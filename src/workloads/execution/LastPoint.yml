@@ -28,25 +28,6 @@ Actors:
   - Nop: true
   - Nop: true
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-
 - Name: InsertData
   Type: Loader
   Threads: 1
@@ -61,23 +42,20 @@ Actors:
     DocumentCount: 10000
     BatchSize: &batchSize 100
     Document:
-      part1: {^Choose: {from: [1, 2, 3, 4]}}
-      part2: {^Choose: {from: [1, 2, 3, 4]}}
       time: {^RandomDate: {
         min: {^Inc: {start: 0, multiplier: 1, step: 1}},
         max: {^Inc: {start: 1, multiplier: 1, step: 1}}
       }
       }
-      measureD: {^Choose: {from: [
-        {^RandomDouble: { min: 0.0, max: 500.0 }},
-        null], weights: [2, 8]}}
-      tags: { value: {^Choose: {from: [
-        {^RandomInt: {min: -100, max: 100}},
-        {^RandomDouble: { min: 0.0, max: 500.0 }},
-        null], weights: [1, 1, 8]}}}
-      measureS: {^Choose: {from: [
-        {^RandomString: {length: 15}},
-        null], weights: [1, 4]}}
+      tags : {
+        rack : {^Choose: {from: [
+          {^RandomInt: {min: 0, max: 2000}},
+          0], weights: [10, 1]}},
+        service : {^RandomDouble: {min: 0.0, max: 500.0 }},
+        team : "NYC"
+      }
+      usage_irq: {^RandomDouble: {min: 0, max: 500}}
+      usage_user: {^RandomString: {length: 15}}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -119,7 +97,7 @@ Actors:
     - OperationName: RunCommand
       OperationCommand:
         createIndexes: *coll
-        indexes: [{key: {"tags.value": 1, "time": -1}, name: "x_1"}]
+        indexes: [{key: {"tags.rack": 1, "time": -1}, name: "x_1"}]
   - Nop: true
   - Nop: true
   - Nop: true
@@ -149,11 +127,11 @@ Actors:
         pipeline:
           [
             {$sort: {
-              "tags.value": 1,
+              "tags.rack": 1,
               "time": -1,
             }},
             {$group: {
-              _id: "$tags.value",
+              _id: "$tags.rack",
               last: {
                 $first: "$$ROOT"
               }}}
@@ -173,16 +151,16 @@ Actors:
         pipeline:
           [
             {$match: {
-              "tags.value": null,
+              "tags.rack": null,
             }},
             {$sort: {
-              "tags.value": 1,
+              "tags.rack": 1,
               "time": -1,
             }},
             {$group: {
-              _id: "$tags.value",
+              _id: "$tags.rack",
               last: {
-                $first: "$measureD",
+                $first: "$usage_irq",
               }}}
           ]
         cursor: {batchSize: *batchSize}
