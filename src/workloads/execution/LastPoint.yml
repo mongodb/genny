@@ -14,7 +14,7 @@ Actors:
       OperationMetricsName: CreateTimeSeriesCollection
       OperationName: RunCommand
       OperationCommand:
-        {create: &coll Collection11, timeseries: {timeField: "time", metaField: "tags"}}
+        {create: &coll Collection0, timeseries: {timeField: "time", metaField: "tags"}}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -45,9 +45,9 @@ Actors:
       time: {^RandomDate: {min: "2022-01-01", max: "2022-01-01T01:00:00.001"}}
       tags: {
         rack: {^RandomInt: {min: 0, max: 4}},
-        arch: {^Choose: {from: [
-          "NYC", "CHI", "SF", "LON"]}},
         team: {^Choose: {from: [
+          "NYC", "CHI", "SF", "LON"]}},
+        arch: {^Choose: {from: [
           "x64", "x86"]}},
         region: {^Choose: {from: [
           "us-east-1", "us-west-1", "us-west-2", "eu-west-1", "eu-central-1",
