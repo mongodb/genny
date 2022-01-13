@@ -14,7 +14,7 @@ Actors:
       OperationMetricsName: CreateTimeSeriesCollection
       OperationName: RunCommand
       OperationCommand:
-        {create: &coll Collection0, timeseries: {timeField: "time", metaField: "tags"}}
+        {create: &coll Collection11, timeseries: {timeField: "time", metaField: "tags"}}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -39,23 +39,31 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 10000
+    DocumentCount: 5000000
     BatchSize: &batchSize 100
     Document:
-      time: {^RandomDate: {
-        min: {^Inc: {start: 0, multiplier: 1, step: 1}},
-        max: {^Inc: {start: 1, multiplier: 1, step: 1}}
-      }
-      }
+      time: {^RandomDate: {min: "2022-01-01", max: "2022-01-01T01:00:00.001"}}
       tags: {
-        rack: {^Choose: {from: [
-          {^RandomInt: {min: 0, max: 2000}},
-          0], weights: [10, 1]}},
-        service: {^RandomDouble: {min: 0.0, max: 500.0 }},
-        team: "NYC"
+        rack: {^RandomInt: {min: 0, max: 4}},
+        arch: {^Choose: {from: [
+          "NYC", "CHI", "SF", "LON"]}},
+        team: {^Choose: {from: [
+          "x64", "x86"]}},
+        region: {^Choose: {from: [
+        "us-east-1", "us-west-1", "us-west-2", "eu-west-1", "eu-central-1", 
+        "ap-southeast-1", "ap-southeast-2", "ap-northeast-1", "sa-east-1"]}}
       }
-      usage_irq: {^RandomDouble: {min: 0, max: 500}}
-      usage_user: {^RandomString: {length: 15}}
+      usage_irq: {^RandomDouble: {min: 0, max: 62}}
+      usage_softirq : {^RandomInt: {min: 0, max: 8}}
+      usage_steal : {^RandomInt: {min: 0, max: 43}}
+      usage_idle : {^RandomInt: {min: 0, max: 21}}
+      usage_guest : {^RandomInt: {min: 0, max: 77}}
+      usage_nice : {^RandomInt: {min: 0, max: 60}}
+      usage_iowait : {^RandomInt: {min: 0, max: 21}}
+      usage_system : {^RandomInt: {min: 0, max: 0}}
+      usage_user : {^RandomInt: {min: 0, max: 66}}
+      measurement : "cpu"
+      usage_guest_nice : {^RandomInt: {min: 0, max: 31}}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -137,10 +145,6 @@ Actors:
               }}}
           ]
         cursor: {batchSize: *batchSize}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
   - Repeat: 10
     Database: *db
     Operations:
@@ -151,7 +155,7 @@ Actors:
         pipeline:
           [
             {$match: {
-              "tags.rack": null,
+              "tags.rack": 2,
             }},
             {$sort: {
               "tags.rack": 1,
@@ -164,6 +168,10 @@ Actors:
               }}}
           ]
         cursor: {batchSize: *batchSize}
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Nop: true
   - Nop: true
   - Nop: true
   - Nop: true
