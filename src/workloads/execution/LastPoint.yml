@@ -37,7 +37,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 500
+    DocumentCount: 500000
     BatchSize: &batchSize 100
     Document:
       time: {^RandomDate: {min: "2022-01-01", max: "2022-01-01T01:00:00.001"}}
