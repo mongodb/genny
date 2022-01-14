@@ -2,6 +2,9 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
   This workload tests the performance of last point queries after the first milestone.
+  More specifically this workload benchmarks the performance for $sort + $group cases
+  including a compatible $match in front of $sort with the only index in the form of
+  {meta.a: 1, ts: -1}.
 
 Actors:
 - Name: CreateTimeSeriesCollection
