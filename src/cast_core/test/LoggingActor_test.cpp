@@ -28,6 +28,9 @@ TEST_CASE("LoggingActor") {
     SECTION("Configuration") {
         NodeSource config{R"(
 SchemaVersion: 2018-07-01
+Clients:
+  Default:
+    URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
 Actors:
 - Name: Nop
   Type: NopMetrics
@@ -44,7 +47,7 @@ Metrics:
   Path: build/genny-metrics
 )",
                           ""};
-        ActorHelper ah(config.root(), 2, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 2);
         ah.run();
         // Don't actually assert anything because it's hard to assert interactions with logging.
         // If you're running this test manually you should see exactly 3 log messages from

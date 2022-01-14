@@ -28,6 +28,9 @@ namespace genny {
 inline NodeSource createWorkloadYaml(const std::string& type, const std::string& actorYaml) {
     auto base = YAML::Load(R"(
 SchemaVersion: 2018-07-01
+Clients:
+  Default:
+    URI: mongodb://localhost:27017
 Actors: []
 )");
     auto actor = YAML::Load(std::string{actorYaml});
@@ -50,7 +53,7 @@ public:
           _nodeSource{createWorkloadYaml(name, actorYaml)},
           _orchestrator{},
           _workloadContext{
-              _nodeSource.root(), _orchestrator, "mongodb://localhost:27017", genny::globalCast()} {
+              _nodeSource.root(), _orchestrator, genny::globalCast()} {
     }
 
     void run() {

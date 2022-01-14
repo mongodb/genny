@@ -129,7 +129,6 @@ StaticFailsInfo Fails::state = {};
 DefaultDriver::ProgramOptions create(const std::string& yaml) {
     DefaultDriver::ProgramOptions opts;
 
-    opts.mongoUri = "mongodb://localhost:27017";
     opts.workloadSourceType = DefaultDriver::ProgramOptions::YamlSource::kString;
     opts.workloadSource = yaml;
 
@@ -164,6 +163,9 @@ TEST_CASE("Various Actor Behaviors") {
     SECTION("Normal Execution") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: mongodb://localhost:27017
         Actors:
         - Type: Fails
           Name: Fails
@@ -180,6 +182,9 @@ TEST_CASE("Various Actor Behaviors") {
     SECTION("Normal Execution: Two Repeat") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: mongodb://localhost:27017
         Actors:
         - Type: Fails
           Name: Fails
@@ -196,6 +201,9 @@ TEST_CASE("Various Actor Behaviors") {
     SECTION("Std Exception: Two Repeat") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: mongodb://localhost:27017
         Actors:
         - Type: Fails
           Name: Fails
@@ -212,6 +220,9 @@ TEST_CASE("Various Actor Behaviors") {
     SECTION("Boost Exception") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: mongodb://localhost:27017
         Actors:
         - Type: Fails
           Name: Fails
@@ -228,6 +239,9 @@ TEST_CASE("Various Actor Behaviors") {
     SECTION("Std Exception") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: mongodb://localhost:27017
         Actors:
         - Type: Fails
           Name: Fails
@@ -245,6 +259,9 @@ TEST_CASE("Various Actor Behaviors") {
     SECTION("Boost Exception in phase 2 by 2 threads") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: mongodb://localhost:27017
         Actors:
         - Type: Fails
           Name: Fails
@@ -264,6 +281,9 @@ TEST_CASE("Various Actor Behaviors") {
     SECTION("Exception prevents other Phases") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: mongodb://localhost:27017
         Actors:
         - Type: Fails
           Name: Fails
@@ -282,6 +302,9 @@ TEST_CASE("Various Actor Behaviors") {
     SECTION("200 Actors simultaneously throw") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: mongodb://localhost:27017
         Actors:
         - Type: Fails
           Name: Fails
@@ -300,6 +323,9 @@ TEST_CASE("Various Actor Behaviors") {
     SECTION("Two Actors simultaneously throw different exceptions") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: mongodb://localhost:27017
         Actors:
         - Type: Fails
           Name: Fails1
@@ -329,6 +355,9 @@ TEST_CASE("Various Actor Behaviors") {
     SECTION("Boost exception by two threads") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: mongodb://localhost:27017
         Actors:
           - Type: Fails
             Name: Fails

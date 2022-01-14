@@ -43,7 +43,7 @@ using Catch::Matchers::StartsWith;
 // The driver checks the passed-in mongo uri for accuracy but doesn't actually
 // initiate a connection until a connection is retrieved from
 // the connection-pool
-static constexpr std::string_view mongoUri = "mongodb://localhost:27017";
+static const std::string baseYaml = "SchemaVersion: 2018-07-01\nClients: {Default: {URI: 'mongodb://localhost:27017'}}\nActors: []\n";
 
 template <typename T, typename Arg, typename... Rest>
 auto& applyBracket(const T& t, Arg&& arg, Rest&&... rest) {
@@ -57,10 +57,10 @@ auto& applyBracket(const T& t, Arg&& arg, Rest&&... rest) {
 template <class Out, class... Args>
 void errors(const string& yaml, string message, Args... args) {
     genny::Orchestrator orchestrator{};
-    string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
+    string modified = baseYaml + yaml;
     NodeSource ns{modified, "errors-testcase"};
     auto test = [&]() {
-        auto context = WorkloadContext{ns.root(), orchestrator, mongoUri.data(), Cast{}};
+        auto context = WorkloadContext{ns.root(), orchestrator, Cast{}};
         return applyBracket(context, std::forward<Args>(args)...).template to<Out>();
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
@@ -71,10 +71,10 @@ template <class Out,
           class... Args>
 void gives(const string& yaml, OutV expect, Args... args) {
     genny::Orchestrator orchestrator{};
-    string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
+    string modified = baseYaml + yaml;
     NodeSource ns{modified, "gives-test"};
     auto test = [&]() {
-        auto context = WorkloadContext{ns.root(), orchestrator, mongoUri.data(), Cast{}};
+        auto context = WorkloadContext{ns.root(), orchestrator, Cast{}};
         if constexpr (Required) {
             return applyBracket(context, std::forward<Args>(args)...).template to<Out>();
         } else {
@@ -113,6 +113,9 @@ TEST_CASE("loads configuration okay") {
     SECTION("Valid YAML") {
         auto yaml = NodeSource(R"(
 SchemaVersion: 2018-07-01
+Clients:
+  Default:
+    URI: 'mongodb://localhost:27017'
 Actors:
 - Name: HelloWorld
   Type: Nop
@@ -120,14 +123,14 @@ Actors:
         )",
                                "");
 
-        WorkloadContext w{yaml.root(), orchestrator, mongoUri.data(), cast};
+        WorkloadContext w{yaml.root(), orchestrator, cast};
         auto& actors = w["Actors"];
     }
 
     SECTION("Invalid Schema Version") {
-        auto yaml = NodeSource("SchemaVersion: 2018-06-27\nActors: []", "");
+        auto yaml = NodeSource("SchemaVersion: 2018-06-27\nClients: {Default: {URI: 'mongodb://localhost:27017'}}\nActors: []\n", "");
 
-        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, cast); };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid Schema Version: 2018-06-27"));
     }
 
@@ -155,13 +158,16 @@ Actors:
         auto cast2 = Cast{{{"fromDocList", fromDocList}, {"fromDoc", fromDoc}}};
         auto yaml = NodeSource(
             "SchemaVersion: 2018-07-01\n"
+            "Clients:\n"
+            "  Default:\n"
+            "    URI: 'mongodb://localhost:27017'\n"
             "Actors: [ "
             "  {Type: fromDocList, docs: [{foo: bar}]}, "
             "  {Type: fromDoc,     doc:   {foo: bar}} "
             "]",
             "");
 
-        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast2); };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, cast2); };
         test();
 
         REQUIRE(fromDocListAssert);
@@ -177,7 +183,7 @@ Actors:
         gives<int>("Foo: 123", 123, "Foo");
         // ...and propagate errors.
         errors<int>("Foo: Bar",
-                    "Couldn't convert to 'int': 'bad conversion' at (Line:Column)=(2:5). On node "
+                    "Couldn't convert to 'int': 'bad conversion' at (Line:Column)=(3:5). On node "
                     "with path 'errors-testcase/Foo",
                     "Foo");
         // okay
@@ -223,22 +229,25 @@ Actors:
     }
 
     SECTION("Empty Yaml") {
-        auto yaml = NodeSource("Actors: []", "");
-        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
+        auto yaml = NodeSource("", "");
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, cast); };
         REQUIRE_THROWS_WITH(
             test(),
             Matches(
                 R"(Invalid key 'SchemaVersion': Tried to access node that doesn't exist. On node with path '/SchemaVersion': )"));
     }
     SECTION("No Actors") {
-        auto yaml = NodeSource("SchemaVersion: 2018-07-01", "");
-        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
+        auto yaml = NodeSource("SchemaVersion: 2018-07-01\nClients: {Default: {URI: 'mongodb://localhost:27017'}}", "");
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, cast); };
         test();
     }
 
     SECTION("Can call two actor producers") {
         NodeSource ns(R"(
 SchemaVersion: 2018-07-01
+Clients:
+  Default:
+    URI: 'mongodb://localhost:27017'
 Actors:
 - Name: One
   Type: SomeList
@@ -293,7 +302,7 @@ Actors:
         };
         auto& yaml = ns.root();
 
-        auto context = WorkloadContext{yaml, orchestrator, mongoUri.data(), twoActorCast};
+        auto context = WorkloadContext{yaml, orchestrator, twoActorCast};
 
 
         REQUIRE(someListProducer->calls == 1);
@@ -327,13 +336,15 @@ void onContext(const NodeSource& yaml, std::function<void(ActorContext&)> op) {
         {"Nop", std::make_shared<NopProducer>()},
     };
 
-    WorkloadContext{yaml.root(), orchestrator, mongoUri.data(), cast};
+    WorkloadContext{yaml.root(), orchestrator, cast};
 }
 
 TEST_CASE("PhaseContexts constructed as expected") {
     NodeSource ns(R"(
     SchemaVersion: 2018-07-01
-    MongoUri: mongodb://localhost:27017
+    Clients:
+      Default:
+        URI: 'mongodb://localhost:27017'
     Actors:
     - Name: HelloWorld
       Type: Op
@@ -407,7 +418,9 @@ TEST_CASE("Duplicate Phase Numbers") {
     SECTION("Phase Number syntax") {
         NodeSource ns(R"(
         SchemaVersion: 2018-07-01
-        MongoUri: mongodb://localhost:27017
+        Clients:
+          Default:
+            URI: 'mongodb://localhost:27017'
         Actors:
         - Type: Nop
           Phases:
@@ -417,14 +430,16 @@ TEST_CASE("Duplicate Phase Numbers") {
                       "");
         auto& yaml = ns.root();
 
-        REQUIRE_THROWS_WITH((WorkloadContext{yaml, orchestrator, mongoUri.data(), cast}),
+        REQUIRE_THROWS_WITH((WorkloadContext{yaml, orchestrator, cast}),
                             Catch::Matches("Duplicate phase 0"));
     }
 
     SECTION("PhaseRange syntax") {
         NodeSource ns(R"(
         SchemaVersion: 2018-07-01
-        MongoUri: mongodb://localhost:27017
+        Clients:
+          Default:
+            URI: 'mongodb://localhost:27017'
         Actors:
         - Type: Nop
           Phases:
@@ -434,7 +449,7 @@ TEST_CASE("Duplicate Phase Numbers") {
                       "");
         auto& yaml = ns.root();
 
-        REQUIRE_THROWS_WITH((WorkloadContext{yaml, orchestrator, mongoUri.data(), cast}),
+        REQUIRE_THROWS_WITH((WorkloadContext{yaml, orchestrator, cast}),
                             Catch::Matches("Duplicate phase 0"));
     }
 }
@@ -442,7 +457,9 @@ TEST_CASE("Duplicate Phase Numbers") {
 TEST_CASE("No PhaseContexts") {
     NodeSource ns(R"(
     SchemaVersion: 2018-07-01
-    MongoUri: mongodb://localhost:27017
+    Clients:
+      Default:
+        URI: 'mongodb://localhost:27017'
     Actors:
     - Name: HelloWorld
       Type: Nop
@@ -461,7 +478,9 @@ TEST_CASE("PhaseContexts constructed correctly with PhaseRange syntax") {
     SECTION("One Phase per block") {
         auto yaml = NodeSource(R"(
         SchemaVersion: 2018-07-01
-        MongoUri: mongodb://localhost:27017
+        Clients:
+          Default:
+            URI: 'mongodb://localhost:27017'
         Actors:
         - Name: HelloWorld
           Type: Nop
@@ -547,6 +566,9 @@ TEST_CASE("Actors Share WorkloadContext State") {
 
     NodeSource ns(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: 'mongodb://localhost:27017'
         Actors:
         - Name: DummyInsert
           Type: DummyInsert
@@ -604,6 +626,9 @@ TEST_CASE("context getPlural") {
     auto createYaml = [](std::string actorYaml) -> NodeSource {
         auto doc = YAML::Load(R"(
 SchemaVersion: 2018-07-01
+Clients:
+  Default:
+    URI: 'mongodb://localhost:27017'
 Numbers: [1,2,3]
 Actors: [{}]
 )");
@@ -673,6 +698,9 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
 
     auto yaml = NodeSource(R"(
     SchemaVersion: 2018-07-01
+    Clients:
+      Default:
+        URI: 'mongodb://localhost:27017'
     Database: test
     Actors:
     - Name: Actor1
@@ -681,7 +709,7 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
                            "");
 
     SECTION("Incorrect type value inputted") {
-        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, cast); };
         REQUIRE_THROWS_WITH(
             test(), Catch::Contains("Unable to construct actors: No producer for 'Bar'"));
     }

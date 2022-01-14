@@ -34,7 +34,12 @@ def dry_run_workload(
         return
 
     genny_runner.main_genny_runner(
-        genny_args=["dry-run", yaml_file_path],
+        workload_yaml_path=yaml_file_path,
+        mongo_uri="mongodb://localhost:27017",
+        verbosity="info",
+        override=None,
+        dry_run=True,
+        smoke_test=False,
         genny_repo_root=genny_repo_root,
         workspace_root=workspace_root,
         cleanup_metrics=True,
