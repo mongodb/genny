@@ -139,7 +139,7 @@ Actors:
             }}}
         ]
       cursor: {batchSize: *batchSize}
-  - OperationMetricsName: RunMatchSortGroupLastPointCommandWithDistinctGroup1
+  - OperationMetricsName: RunMatchSortGroupLastPointCommandWithDistinctGroup
     OperationName: RunCommand
     OperationCommand:
       aggregate: *coll
@@ -159,26 +159,7 @@ Actors:
             }}}
         ]
       cursor: {batchSize: *batchSize}
-  - OperationMetricsName: RunMatchSortGroupLastPointCommandWithDistinctGroup2
-    OperationName: RunCommand
-    OperationCommand:
-      aggregate: *coll
-      pipeline:
-        [
-          {$match: {
-            "tags.rack": 2,
-          }},
-          {$sort: {
-            "tags.rack": 1,
-            "time": -1,
-          }},
-          {$group: {
-            _id: "$tags.rack",
-            last: {
-              $first: "$usage_softirq",
-            }}}
-        ]
-      cursor: {batchSize: *batchSize}
+  - Nop: true
   - Nop: true
   - Nop: true
   - Nop: true
