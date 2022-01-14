@@ -39,7 +39,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 5000000
+    DocumentCount: 500000
     BatchSize: &batchSize 100
     Document:
       time: {^RandomDate: {min: "2022-01-01", max: "2022-01-01T01:00:00.001"}}
@@ -139,7 +139,7 @@ Actors:
             }}}
         ]
       cursor: {batchSize: *batchSize}
-  - OperationMetricsName: RunMatchSortGroupLastPointCommand
+  - OperationMetricsName: RunMatchSortGroupLastPointCommandWithDistinctGroup1
     OperationName: RunCommand
     OperationCommand:
       aggregate: *coll
@@ -159,9 +159,46 @@ Actors:
             }}}
         ]
       cursor: {batchSize: *batchSize}
-  - Nop: true
-  - Nop: true
-  - Nop: true
+  - OperationMetricsName: RunMatchSortGroupLastPointCommandWithDistinctGroup2
+    OperationName: RunCommand
+    OperationCommand:
+      aggregate: *coll
+      pipeline:
+        [
+          {$match: {
+            "tags.rack": 2,
+          }},
+          {$sort: {
+            "tags.rack": 1,
+            "time": -1,
+          }},
+          {$group: {
+            _id: "$tags.rack",
+            last: {
+              $first: "$usage_softirq",
+            }}}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationMetricsName: RunMatchSortGroupLastPointCommandWithDistinctGroup3
+    OperationName: RunCommand
+    OperationCommand:
+      aggregate: *coll
+      pipeline:
+        [
+          {$match: {
+            "tags.rack": 2,
+          }},
+          {$sort: {
+            "tags.rack": 1,
+            "time": -1,
+          }},
+          {$group: {
+            _id: "$tags.rack",
+            last: {
+              $first: "$usage_system",
+            }}}
+        ]
+      cursor: {batchSize: *batchSize}
   - Nop: true
   - Nop: true
   - Nop: true
