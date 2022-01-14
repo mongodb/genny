@@ -159,6 +159,9 @@ Actors:
             }}}
         ]
       cursor: {batchSize: *batchSize}
+  - Nop: true
+  - Nop: true
+  - Nop: true
   - OperationMetricsName: RunMatchSortGroupLastPointCommandWithDistinctGroup2
     OperationName: RunCommand
     OperationCommand:
@@ -179,6 +182,9 @@ Actors:
             }}}
         ]
       cursor: {batchSize: *batchSize}
+  - Nop: true
+  - Nop: true
+  - Nop: true
   - OperationMetricsName: RunMatchSortGroupLastPointCommandWithDistinctGroup3
     OperationName: RunCommand
     OperationCommand:
@@ -199,12 +205,6 @@ Actors:
             }}}
         ]
       cursor: {batchSize: *batchSize}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
   - Nop: true
   - Nop: true
 
