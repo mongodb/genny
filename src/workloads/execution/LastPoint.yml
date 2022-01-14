@@ -122,49 +122,43 @@ Actors:
   Type: RunCommand
   Database: *db
   Phases:
-  - Repeat: 10
-    Database: *db
-    Operations:
-    - OperationMetricsName: RunSortGroupLastPointCommand
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: *coll
-        pipeline:
-          [
-            {$sort: {
-              "tags.rack": 1,
-              "time": -1,
-            }},
-            {$group: {
-              _id: "$tags.rack",
-              last: {
-                $first: "$$ROOT"
-              }}}
-          ]
-        cursor: {batchSize: *batchSize}
-  - Repeat: 10
-    Database: *db
-    Operations:
-    - OperationMetricsName: RunMatchSortGroupLastPointCommand
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: *coll
-        pipeline:
-          [
-            {$match: {
-              "tags.rack": 2,
-            }},
-            {$sort: {
-              "tags.rack": 1,
-              "time": -1,
-            }},
-            {$group: {
-              _id: "$tags.rack",
-              last: {
-                $first: "$usage_irq",
-              }}}
-          ]
-        cursor: {batchSize: *batchSize}
+  - OperationMetricsName: RunSortGroupLastPointCommand
+    OperationName: RunCommand
+    OperationCommand:
+      aggregate: *coll
+      pipeline:
+        [
+          {$sort: {
+            "tags.rack": 1,
+            "time": -1,
+          }},
+          {$group: {
+            _id: "$tags.rack",
+            last: {
+              $first: "$$ROOT"
+            }}}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationMetricsName: RunMatchSortGroupLastPointCommand
+    OperationName: RunCommand
+    OperationCommand:
+      aggregate: *coll
+      pipeline:
+        [
+          {$match: {
+            "tags.rack": 2,
+          }},
+          {$sort: {
+            "tags.rack": 1,
+            "time": -1,
+          }},
+          {$group: {
+            _id: "$tags.rack",
+            last: {
+              $first: "$usage_irq",
+            }}}
+        ]
+      cursor: {batchSize: *batchSize}
   - Nop: true
   - Nop: true
   - Nop: true
