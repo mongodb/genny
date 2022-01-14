@@ -120,7 +120,6 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true
-  
 
 - Name: Run
   Type: RunCommand
