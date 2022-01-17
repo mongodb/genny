@@ -15,6 +15,10 @@ Clients:
   Default:
     QueryOptions:
       maxPoolSize: 20000
+  Update:
+    QueryOptions:
+      maxPoolSize: 100
+
 
 Actors:
 - Name: Loader

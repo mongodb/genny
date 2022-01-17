@@ -150,6 +150,9 @@ void requireOutcomeCounts(mongocxx::pool::entry& client, YAML::Node outcomeCount
 NodeSource createConfigurationYaml(YAML::Node operations) {
     YAML::Node config = YAML::Load(R"(
           SchemaVersion: 2018-07-01
+          Clients:
+            Default:
+              URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
           Actors:
           - Name: CrudActor
             Type: CrudActor
@@ -169,6 +172,9 @@ NodeSource createConfigurationYaml(YAML::Node operations) {
 NodeSource createConfigurationYamlPhase(YAML::Node phase) {
     YAML::Node config = YAML::Load(R"(
           SchemaVersion: 2018-07-01
+          Clients:
+            Default:
+              URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
           Actors:
           - Name: CrudActor
             Type: CrudActor
@@ -227,7 +233,7 @@ struct CrudActorTestCase {
                 generatedYaml = str.str();
             }
             genny::ActorHelper ah(
-                config.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
+                config.root(), 1, apmCallback);
             auto client = ah.client();
             dropAllDatabases(*client);
             events.clear();

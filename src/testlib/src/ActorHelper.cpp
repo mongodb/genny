@@ -30,7 +30,6 @@ namespace genny {
 ActorHelper::ActorHelper(const Node& config,
                          int tokenCount,
                          Cast::List castInitializer,
-                         const std::string& uri,
                          v1::PoolManager::OnCommandStartCallback apmCallback) {
     if (tokenCount <= 0) {
         throw InvalidConfigurationException("Must add a positive number of tokens");
@@ -41,7 +40,7 @@ ActorHelper::ActorHelper(const Node& config,
 
     _cast = std::make_unique<Cast>(castInitializer);
     try {
-        _wlc = std::make_unique<WorkloadContext>(config, *_orchestrator, uri, *_cast, apmCallback);
+        _wlc = std::make_unique<WorkloadContext>(config, *_orchestrator, *_cast, apmCallback);
     } catch (const std::exception& x) {
         BOOST_LOG_TRIVIAL(fatal) << boost::diagnostic_information(x, true);
         throw;
@@ -50,7 +49,6 @@ ActorHelper::ActorHelper(const Node& config,
 
 ActorHelper::ActorHelper(const Node& config,
                          int tokenCount,
-                         const std::string& uri,
                          v1::PoolManager::OnCommandStartCallback apmCallback) {
     if (tokenCount <= 0) {
         throw InvalidConfigurationException("Must add a positive number of tokens");
@@ -61,7 +59,7 @@ ActorHelper::ActorHelper(const Node& config,
 
     try {
         _wlc = std::make_unique<WorkloadContext>(
-            config, *_orchestrator, uri, globalCast(), apmCallback);
+            config, *_orchestrator, globalCast(), apmCallback);
     } catch (const std::exception& x) {
         BOOST_LOG_TRIVIAL(fatal) << boost::diagnostic_information(x, true);
         throw;

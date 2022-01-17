@@ -28,7 +28,6 @@
 namespace genny {
 namespace {
 using namespace genny::testing;
-namespace bson_stream = bsoncxx::builder::stream;
 
 TEST_CASE_METHOD(MongoTestFixture,
                  "MoveRandomChunkToRandomShard",
@@ -36,6 +35,9 @@ TEST_CASE_METHOD(MongoTestFixture,
 
     NodeSource nodes = NodeSource(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
         Actors:
         - Name: MoveRandomChunkToRandomShard
           Type: MoveRandomChunkToRandomShard
@@ -97,7 +99,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             auto initialShardId = chunkOpt.get().view()["shard"].get_utf8().value.to_string();
 
             // Run the actor.
-            genny::ActorHelper ah(nodes.root(), 1, MongoTestFixture::connectionUri().to_string());
+            genny::ActorHelper ah(nodes.root(), 1);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
             // Compare the chunk shard id after the move.

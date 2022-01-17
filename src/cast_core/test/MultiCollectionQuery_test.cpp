@@ -35,6 +35,9 @@ TEST_CASE_METHOD(MongoTestFixture, "MultiCollectionQuery", "[standalone][MultiCo
     SECTION("Query documents in a collection with sort and limit") {
         genny::NodeSource config(R"(
       SchemaVersion: 2018-07-01
+      Clients:
+        Default:
+          URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
       Actors:
       - Name: MultiCollectionQuery
         Type: MultiCollectionQuery
@@ -63,7 +66,7 @@ TEST_CASE_METHOD(MongoTestFixture, "MultiCollectionQuery", "[standalone][MultiCo
 
             auto apmCallback = makeApmCallback(events);
             genny::ActorHelper ah(
-                config.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
+                config.root(), 1, apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
             for (auto&& event : events) {

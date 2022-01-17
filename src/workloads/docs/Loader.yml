@@ -1,7 +1,36 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  TODO: TIG-3318
+  The Loader actor loads a fixed number of documents using a fixed
+  number of threads to a set of collections. The number of collections created
+  depends on the Phase.MultipleThreadsPerCollection, Phase.CollectionCount,
+  Phase.Threads and Actor.Threads values and is explained later.
+
+  Actor.Threads specifies the total number of threads created and used by the loader.
+
+  Phase.MultipleThreadsPerCollection controls whether there is a collections per thread or a
+  threads per collection load (defaults to false, so at most one thread will write to each collection).
+
+  When MultipleThreadsPerCollection is false, the actor will use at most one thread to load
+  one of more collections.
+  In this mode of operation the loader Actor will:
+    * create a total of  math.floor(Phase.CollectionCount / Phase.Threads) *  Actor.Threads collections.
+    * create Actor.Threads loader threads.
+    * each loader thread will create math.floor(Phase.CollectionCount / Phase.Threads) collections.
+    Both Actor.Threads and Phase.Threads must be set in this mode.
+
+    When MultipleThreadsPerCollection is true, the actor will use at least one thread to load
+    each collection.
+    In this mode of operation the loader will:
+      * creates a total of Phase.CollectionCount collections.
+      * each collection will be populated by (Actor.Thread / Phase.CollectionCount) threads.
+      * raise an InvalidConfiguration exception if Phase.CollectionCount doesn't divide
+      evenly into Actor.Threads.
+      * raise an InvalidConfiguration exception if Phase.Threads is set.
+
+Keywords:
+- docs
+- loader
 
 # More threads requires a larger connection pool.
 Clients:
@@ -9,33 +38,6 @@ Clients:
     QueryOptions:
       maxPoolSize: 200
 
-# The Loader actor loads a fixed number of documents using a fixed
-# number of threads to a set of collections. The number of collections created
-# depends on the Phase.MultipleThreadsPerCollection, Phase.CollectionCount,
-# Phase.Threads and Actor.Threads values and is explained later.
-#
-# Actor.Threads specifies the total number of threads created and used by the loader.
-#
-# Phase.MultipleThreadsPerCollection controls whether there is a collections per thread or a
-# threads per collection load (defaults to false, so at most one thread will write to each collection).
-#
-# When MultipleThreadsPerCollection is false, the actor will use at most one thread to load
-# one of more collections.
-# In this mode of operation the loader Actor will:
-#  * create a total of  math.floor(Phase.CollectionCount / Phase.Threads) *  Actor.Threads collections.
-#  * create Actor.Threads loader threads.
-#  * each loader thread will create math.floor(Phase.CollectionCount / Phase.Threads) collections.
-# Both Actor.Threads and Phase.Threads must be set in this mode.
-#
-# When MultipleThreadsPerCollection is true, the actor will use at least one thread to load
-# each collection.
-# In this mode of operation the loader will:
-#  * creates a total of Phase.CollectionCount collections.
-#  * each collection will be populated by (Actor.Thread / Phase.CollectionCount) threads.
-#  * raise an InvalidConfiguration exception if Phase.CollectionCount doesn't divide
-#    evenly into Actor.Threads.
-#  * raise an InvalidConfiguration exception if Phase.Threads is set.
-#
 
 Actors:
 - Name: MultipleCollectionsPerLoaderThread
