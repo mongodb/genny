@@ -44,7 +44,7 @@ Actors:
     DocumentCount: &docCount 999999
     BatchSize: 1000
     Document:
-      _id: {^Join: {array: [{ ^FormatString: {"format": "%06d", "withArgs": [{^Inc: {start: 0, multiplier: 1}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}
+      _id: {^Join: {array: [{ ^FormatString: {"format": "%06d", "withArgs": [{^Inc: {start: 0}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}
       a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}
       b: {^FastRandomString: {length: 1024}}
   - *Nop
