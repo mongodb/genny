@@ -1,0 +1,42 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 4 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  documents remain, which ensures that the query executes in its entirety.
+
+batchSize: &batchSize 101  # The default batch size.
+query4Date: &query4Date {^Parameter: {Name: "Query4Date", Default: "1993-07-01"}}
+
+TPCHNormalizedQuery4:
+  Repeat: 1
+  Database: tpch
+  Operations:
+  - OperationMetricsName: Query4
+    OperationName: RunCommand
+    OperationCommand:
+      explain:
+        aggregate: orders
+        pipeline:
+          [
+            {$match: {
+              $and: [
+                {$expr: {$gte: ["$o_orderdate", {$dateFromString: {dateString: *query4Date}}]}},
+                {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query4Date}}, unit: "month", amount: 3}}]}}]}},
+            {$lookup: {
+              from: "lineitem",
+              localField: "o_orderkey",
+              foreignField: "l_orderkey",
+              pipeline: [{$match: {$expr: {$lt: ["$l_commitdate", "$l_receiptdate"]}}}, {$count: "count"}],
+              as: "lineitem"}},
+            {$unwind: "$lineitem"},
+            {$match: {$expr: {$gt: ["$lineitem.count", 0]}}},
+            {$group: {
+              _id: "$o_orderpriority",
+              order_count: {$count: {}}}},
+            {$project: {_id: 0, o_orderpriority: "$_id", order_count: 1}},
+            {$sort: {o_orderpriority: 1}},
+          ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+      verbosity:
+        executionStats

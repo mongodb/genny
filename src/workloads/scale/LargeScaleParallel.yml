@@ -1,6 +1,7 @@
 SchemaVersion: 2018-07-01
+Owner: STM
 Description: |
-  TODO: TIG-3318
+  TODO: TIG-3722
 
 Clients:
   Default:

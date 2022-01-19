@@ -18,8 +18,6 @@
 #include <functional>
 #include <string>
 
-#include <mongocxx/uri.hpp>
-
 #include <gennylib/Cast.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
@@ -42,13 +40,11 @@ public:
      * @param tokenCount The total number of simultaneous threads ("tokens" in
      * Orchestrator lingo) required by all actors.
      * @param l initializer list for a Cast.
-     * @param uri optional, connection string to the mongo cluster.
      * @param clientOpts optional, options to the mongocxx::client.
      */
     ActorHelper(const Node& config,
                 int tokenCount,
                 Cast::List castInitializer,
-                const std::string& uri = mongocxx::uri::k_default_uri,
                 v1::PoolManager::OnCommandStartCallback apmCallback = {});
 
     /**
@@ -56,7 +52,6 @@ public:
      */
     ActorHelper(const Node& config,
                 int tokenCount,
-                const std::string& uri = mongocxx::uri::k_default_uri,
                 v1::PoolManager::OnCommandStartCallback apmCallback = {});
 
     void run(FuncWithContext&& runnerFunc);

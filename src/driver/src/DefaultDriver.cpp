@@ -143,7 +143,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
 
     auto workloadContext =
-        WorkloadContext{nodeSource.root(), orchestrator, options.mongoUri, globalCast()};
+        WorkloadContext{nodeSource.root(), orchestrator, globalCast()};
 
     genny::metrics::Registry& metrics = workloadContext.getMetrics();
 
@@ -298,9 +298,6 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
              "Path to workload configuration yaml file. "
              "Paths are relative to the program's cwd. "
              "Can also specify as the last positional argument.")
-            ("mongo-uri,u",
-             po::value<std::string>()->default_value("mongodb://localhost:27017"),
-             "Mongo URI to use for the default connection-pool.")
             ("verbosity,v",
               po::value<std::string>()->default_value("info"),
               "Log severity for boost logging. Valid values are trace/debug/info/warning/error/fatal.");
@@ -351,7 +348,6 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
         this->runMode = RunMode::kHelp;
 
     this->logVerbosity = parseVerbosity(vm["verbosity"].as<std::string>());
-    this->mongoUri = vm["mongo-uri"].as<std::string>();
 
     if (vm.count("workload-file") > 0) {
         this->workloadSource = vm["workload-file"].as<std::string>();

@@ -14,6 +14,13 @@ SLOG = structlog.get_logger(__name__)
 @click.option("-v", "--verbose", default=False, is_flag=True, help="Enable verbose output/logging.")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool) -> None:
+    """
+    🧞 Genny Version 0.0.1 💝🐹🌇⛔
+
+    To run workloads, try ./run-genny workload -h
+
+    For more information, see the docs: https://github.com/mongodb/genny
+    """
     from genny import loggers
 
     # Ensure that ctx.obj exists and is a dict.
@@ -131,6 +138,13 @@ def cmake_compile_install(
 )
 @click.argument("workload_path")
 @click.option(
+    "-u",
+    "--mongo-uri",
+    required=False,
+    default="mongodb://localhost:27017",
+    help=("Set a default mongo uri used by connection pools that don't have one configured."),
+)
+@click.option(
     "-o",
     "--output",
     required=False,
@@ -138,6 +152,13 @@ def cmake_compile_install(
     help=(
         "Filepath where the output of the evaluation will be written. Will write to stdout by default."
     ),
+)
+@click.option(
+    "-v",
+    "--override",
+    required=False,
+    default=None,
+    help=("Filepath of an override file. Use this to override workload configs."),
 )
 @click.option(
     "-s",
@@ -149,10 +170,18 @@ def cmake_compile_install(
     ),
 )
 @click.pass_context
-def evaluate(ctx: click.Context, workload_path: str, output: str, smoke: bool):
+def evaluate(
+    ctx: click.Context, workload_path: str, mongo_uri: str, output: str, override: str, smoke: bool
+):
     from genny.tasks import preprocess
 
-    preprocess.evaluate(workload_path=workload_path, smoke=smoke, output=output)
+    preprocess.evaluate(
+        workload_path=workload_path,
+        default_uri=mongo_uri,
+        smoke=smoke,
+        override_file_path=override,
+        output=output,
+    )
 
 
 @cli.command(
@@ -250,51 +279,83 @@ def benchmark_test(ctx: click.Context) -> None:
 
 
 @cli.command(
-    name="workload",
-    help=(
-        "Actually calls the underlying genny binary called genny_core "
-        "which is installed by default to 'dist'. "
-        "Pass '--' to pass additional args to genny_core, e.g."
-        "run-genny workload -- run -w path_to_yaml -u mongodb://localhost:271017"
-    ),
+    name="workload", help=("Actually run a workload and place results in `build/WorkloadOutput`."),
 )
-@click.argument("genny_args", nargs=-1)
-@click.pass_context
-def workload(ctx: click.Context, genny_args: List[str]):
-    from genny.tasks import genny_runner
-
-    ctx.ensure_object(dict)
-    ctx.obj["GENNY_ARGS"] = genny_args
-
-    genny_runner.main_genny_runner(
-        genny_args=ctx.obj["GENNY_ARGS"],
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
-        workspace_root=ctx.obj["WORKSPACE_ROOT"],
-        cleanup_metrics=True,
-    )
-
-
-@cli.command(
-    name="debug",
+@click.argument("workload_yaml", nargs=-1)
+@click.option(
+    "-u",
+    "--mongo-uri",
+    required=False,
+    default="mongodb://localhost:27017",
+    help=("Set a default mongo uri used by connection pools that don't have one configured."),
+)
+@click.option(
+    "-v",
+    "--verbosity",
+    required=False,
+    default="info",
+    help=("Log severity for boost logging. Valid values are trace/debug/info/warning/error/fatal."),
+)
+@click.option(
+    "-o",
+    "--override",
+    required=False,
+    default=None,
+    help=("Specify an override file to be merged with the specified workload yaml."),
+)
+@click.option(
+    "-d",
+    "--dry-run",
+    required=False,
+    default=False,
+    is_flag=True,
+    help=("Exit before the run step."),
+)
+@click.option(
+    "-s",
+    "--smoke-test",
+    required=False,
+    default=False,
+    is_flag=True,
+    help=("Run with every phase of every actor having repeat: 1."),
+)
+@click.option(
+    "-b",
+    "--debug",
+    required=False,
+    default=False,
+    is_flag=True,
     help=(
         "Useful when running genny_core with a debugger. "
-        "Does all the poplar/curator stuff but then hangs indefinitely."
+        "Does all the poplar/curator/preprocessing stuff but then hangs indefinitely."
     ),
 )
-@click.argument("genny_args", nargs=-1)
 @click.pass_context
-def run_debug(ctx: click.Context, genny_args: List[str]):
+def workload(
+    ctx: click.Context,
+    workload_yaml: str,
+    mongo_uri: str,
+    verbosity: str,
+    override: str,
+    dry_run: bool,
+    smoke_test: bool,
+    debug: bool,
+):
     from genny.tasks import genny_runner
 
     ctx.ensure_object(dict)
-    ctx.obj["GENNY_ARGS"] = genny_args
 
     genny_runner.main_genny_runner(
-        hang=True,
-        genny_args=genny_args,
+        workload_yaml_path=workload_yaml[0],
+        mongo_uri=mongo_uri,
+        verbosity=verbosity,
+        override=override,
+        dry_run=dry_run,
+        smoke_test=smoke_test,
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
         cleanup_metrics=True,
+        hang=debug,
     )
 
 

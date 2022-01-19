@@ -1,9 +1,11 @@
-# Single threaded updates to measure commit latency for various write concern.
-
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  TODO: TIG-3318
+  Single threaded updates to measure commit latency for various write concern.
+
+Keywords:
+- latency
+- write concern
 
 Actors:
 - Name: SingleThreadUpdate
