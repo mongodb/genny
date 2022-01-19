@@ -42,7 +42,7 @@ Actors:
     BatchSize: 1000
     Document:
       _id: {^Join: {array: [{ ^FormatString: {"format": "%06d", "withArgs": [{^Inc: {start: 0}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}
-      a: {^FastRandomString: {length: 8, alphabet: "0123456789"}}
+      a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}
       b: {^FastRandomString: {length: 1024}}
   - *Nop
   - *Nop
@@ -103,7 +103,7 @@ Actors:
     Operations:
     - OperationName: find
       OperationCommand:
-        Filter: {a: {^FastRandomString: {length: 8, alphabet: "0123456789"}}}
+        Filter: {a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}}
   - *Nop
 
 # Phase 6: Point deletion. TODO convert to range deletions once TIG-3707 is implemented.
