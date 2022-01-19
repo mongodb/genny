@@ -3,6 +3,10 @@ Owner: "@mongodb/server-execution"
 Description: >
   Run basic workload on a collection clustered by {_id: 1}.
 
+Keywords:
+- indexes
+- clustered
+
 GlobalDefaults:
   RecordIdExtraPaddingParam: &RecordIdExtraPaddingParam 0
 
