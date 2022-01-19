@@ -7,7 +7,7 @@ GlobalDefaults:
   RecordIdExtraPaddingParam: &RecordIdExtraPaddingParam 0
 
 LoadConfig:
-  Path: "../../phases/execution/clusteredCollection.yml"
+  Path: "../../phases/execution/ClusteredCollection.yml"
   Parameters:
     RecordIdExtraPadding: *RecordIdExtraPaddingParam
 
