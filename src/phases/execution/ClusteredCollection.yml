@@ -38,10 +38,13 @@ Actors:
     Database: *db
     Threads: 1
     CollectionCount: 1
+    # Set documentCount to 1 million - 1 to avoid an off-by-one in the LookupByClusterKey phase.
+    # This works around the inability of doing basic maths in the yml files combined with the
+    # ^RandomInt max bound being inclusive.
     DocumentCount: &docCount 999999
     BatchSize: 1000
     Document:
-      _id: {^Join: {array: [{ ^FormatString: {"format": "%06d", "withArgs": [{^Inc: {start: 0}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}
+      _id: {^Join: {array: [{ ^FormatString: {"format": "%06d", "withArgs": [{^Inc: {start: 0, multiplier: 1}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}
       a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}
       b: {^FastRandomString: {length: 1024}}
   - *Nop
@@ -50,7 +53,7 @@ Actors:
   - *Nop
 
 # Phase 3: Point _id lookups. TODO convert to range queries once TIG-3707 is implemented.
-- Name: Lookup
+- Name: LookupByClusterKey
   Type: CrudActor
   Database: *db
   Threads: 16
@@ -89,7 +92,7 @@ Actors:
   - *Nop
 
 # Phase 5: Secondary index lookups.
-- Name: Lookup
+- Name: LookupBySecondaryIndex
   Type: CrudActor
   Database: *db
   Threads: 16
