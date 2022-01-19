@@ -48,13 +48,9 @@ def cmake(
     # We set both the prefix path and the toolchain file here as a hack to allow cmake
     # to find both shared and static libraries. vcpkg doesn't natively support a project
     # using both.
-    cmake_prefix_paths = [
-        os.path.join(
-            toolchain_info.toolchain_dir, f"installed/x64-{toolchain_info.triplet_os}-dynamic",
-        ),
-        os.path.join(toolchain_info.toolchain_dir, f"installed/x64-{toolchain_info.triplet_os}",),
-    ]
-
+    cmake_prefix_path = os.path.join(
+        toolchain_info.toolchain_dir, f"installed/x64-{toolchain_info.triplet_os}-shared",
+    )
     cmake_toolchain_file = os.path.join(
         toolchain_info.toolchain_dir, "scripts/buildsystems/vcpkg.cmake"
     )
@@ -62,10 +58,10 @@ def cmake(
     cmake_cmd += [
         "-DGENNY_WORKSPACE_ROOT={}".format(workspace_root),
         # "-DGENNY_REPO_ROOT={}".format(genny_repo_root),  # Not needed (yet).
-        "-DCMAKE_PREFIX_PATH={}".format(";".join(cmake_prefix_paths)),
+        "-DCMAKE_PREFIX_PATH={}".format(cmake_prefix_path),
         "-DCMAKE_TOOLCHAIN_FILE={}".format(cmake_toolchain_file),
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
-        f"-DVCPKG_TARGET_TRIPLET=x64-{toolchain_info.triplet_os}",
+        f"-DVCPKG_TARGET_TRIPLET=x64-{toolchain_info.triplet_os}-static",
     ]
 
     cmake_cmd += _sanitizer_flags(sanitizer)
@@ -167,26 +163,14 @@ def compile_and_install(
         sanitizer=sanitizer,
         cmake_args=cmake_args,
     )
-
-    try:
-        compile_all(
-            genny_repo_root=genny_repo_root,
-            workspace_root=workspace_root,
-            build_system=build_system,
-            os_family=os_family,
-            linux_distro=linux_distro,
-            ignore_toolchain_version=ignore_toolchain_version,
-        )
-
-    except subprocess.CalledProcessError as ex:
-        SLOG.critical(
-            "Genny compile has failed. This is sometimes caused by having an old mongodbtoolchain. To update: curl -o toolchain_installer.sh http://mongodbtoolchain.build.10gen.cc/installer.sh && bash toolchain_installer.sh"
-        )
-        raise
-
-    except:
-        raise
-
+    compile_all(
+        genny_repo_root=genny_repo_root,
+        workspace_root=workspace_root,
+        build_system=build_system,
+        os_family=os_family,
+        linux_distro=linux_distro,
+        ignore_toolchain_version=ignore_toolchain_version,
+    )
     install(
         genny_repo_root=genny_repo_root,
         workspace_root=workspace_root,
