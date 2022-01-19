@@ -1,0 +1,22 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 20 against the normalized schema for scale 1.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHNormalizedQuery20
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - LoadConfig:
+      Path: ../../../../phases/tpch/normalized/Q20.yml
+      Key: TPCHNormalizedQuery20
+      Parameters:
+        Query20Nation: "CANADA"
+        Query20Color: "^forest.*$"
+        Query20Date: "1994-01-01"

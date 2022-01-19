@@ -1,0 +1,22 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 8 against the normalized schema for scale 1.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHNormalizedQuery8
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - LoadConfig:
+      Path: ../../../../phases/tpch/normalized/Q8.yml
+      Key: TPCHNormalizedQuery8
+      Parameters:
+        Query8Type: "ECONOMY ANODIZED STEEL"
+        Query8Region: "AMERICA"
+        Query8Nation: "BRAZIL"
