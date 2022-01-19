@@ -62,7 +62,7 @@ Actors:
     Operations:
     - OperationName: find
       OperationCommand:
-        Filter: {_id: {^Join: {array: [{ ^FormatString: {"format": "%06d", "withArgs": [{^RandomInt: {min: 0, max: *docCount}}]}}, {^FastRandomString: {length: 128, alphabet: "a"}}]}}}
+        Filter: {_id: {^Join: {array: [{ ^FormatString: {"format": "%06d", "withArgs": [{^RandomInt: {min: 0, max: *docCount}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}}
   - *Nop
   - *Nop
   - *Nop
