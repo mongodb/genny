@@ -24,6 +24,8 @@
 
 namespace genny::v1 {
 
+std::set<std::string> configSetNames{"configSet", "configRepl"};
+
 enum class ClusterType {
     standalone,
     replSetMember,
@@ -143,8 +145,8 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
     }
 
     std::unique_ptr<ReplSetDescription> desc;
-    auto setName = res.view()["setName"].get_utf8().value;
-    if (setName == "configSet" || setName == "configRepl") {
+    std::string setName = res.view()["setName"].get_utf8().value.data();
+    if (configSetNames.find(setName) != configSetNames.end()) {
         desc = std::make_unique<ConfigSvrDescription>();
     } else {
         desc = std::make_unique<ReplSetDescription>();
@@ -159,7 +161,7 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
         for (auto member : hosts_view) {
             MongodDescription memberDesc;
             memberDesc.mongodUri = nameToUri(std::string(member.get_utf8().value));
-            if (setName == "configSet" || setName == "configRepl") {
+            if (configSetNames.find(setName) != configSetNames.end()) {
                 memberDesc.clusterType = ClusterType::configSvrMember;
             } else {
                 memberDesc.clusterType = ClusterType::replSetMember;
@@ -177,7 +179,7 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
         for (auto member : passives_view) {
             MongodDescription memberDesc;
             memberDesc.mongodUri = std::string(member.get_utf8().value);
-            if (setName == "configSet" || "configRepl") {
+            if (configSetNames.find(setName) != configSetNames.end()) {
                 memberDesc.clusterType = ClusterType::configSvrMember;
             } else {
                 memberDesc.clusterType = ClusterType::replSetMember;
