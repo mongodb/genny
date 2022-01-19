@@ -106,7 +106,7 @@ Actors:
         Filter: {a: {^FastRandomString: {length: 8, alphabet: "0123456789"}}}
   - *Nop
 
-# Phase 6: Point deletion
+# Phase 6: Point deletion. TODO convert to range deletions once TIG-3707 is implemented.
 - Name: PointDeleter
   Type: Deleter
   Database: test
