@@ -38,13 +38,12 @@ Actors:
     Database: *db
     Threads: 1
     CollectionCount: 1
-    # Set documentCount to 1 million - 1 to avoid an off-by-one in the LookupByClusterKey phase.
-    # This works around the inability of doing basic maths in the yml files combined with the
-    # ^RandomInt max bound being inclusive.
-    DocumentCount: &docCount 999999
+    DocumentCount: &docCount 1000000
     BatchSize: 1000
     Document:
-      _id: {^Join: {array: [{ ^FormatString: {"format": "%06d", "withArgs": [{^Inc: {start: 0}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}
+      # Start from {_id: "0000001"} in order to be able to set the ^RandomInt max bound to *docCount
+      # in the LookupByClusterKey phase. This works around TIG-3759.
+      _id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: 1}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}
       a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}
       b: {^FastRandomString: {length: 1024}}
   - *Nop
@@ -65,7 +64,7 @@ Actors:
     Operations:
     - OperationName: find
       OperationCommand:
-        Filter: {_id: {^Join: {array: [{ ^FormatString: {"format": "%06d", "withArgs": [{^RandomInt: {min: 0, max: *docCount}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}}
+        Filter: {_id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^RandomInt: {min: 1, max: *docCount}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}}
   - *Nop
   - *Nop
   - *Nop
