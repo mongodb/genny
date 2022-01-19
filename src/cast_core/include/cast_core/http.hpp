@@ -43,9 +43,9 @@ boost::beast::ssl_stream<boost::beast::tcp_stream> make_tls_stream(std::string h
     ssl::context ctx(ssl::context::tlsv11);
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-    // TODO This does not work on Windows. If we ever care,
+    // This does not work on Windows. If we ever care,
     // see https://stackoverflow.com/a/40710806
-#error Windows is not supported by this method
+#error Windows is not supported by this function
 #else
     ctx.set_default_verify_paths();
 #endif
