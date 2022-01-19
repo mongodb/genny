@@ -72,15 +72,15 @@ buildvariants:
   tasks:
   - name: tg_compile
 
-    #- name: rhel70
-    #  display_name: RHEL 7
-    #  modules: [mongo]
-    #  expansions:
-    #    distro: rhel70
-    #  run_on:
-    #  - rhel70
-    #  tasks:
-    #  - name: tg_compile
+# - name: rhel70
+#   display_name: RHEL 7
+#   modules: [mongo]
+#   expansions:
+#     distro: rhel70
+#   run_on:
+#   - rhel70
+#   tasks:
+#   - name: tg_compile
 
 - name: rhel8
   display_name: RHEL 8
