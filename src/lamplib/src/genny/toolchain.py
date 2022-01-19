@@ -162,7 +162,7 @@ class ToolchainDownloader(Downloader):
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
 
-    TOOLCHAIN_BUILD_ID = "82eb7c32ad09726f3ef0ddc8d7f24a18b03d9644_21_11_23_16_37_21"
+    TOOLCHAIN_BUILD_ID = "c3ecb94b7ec0c080dd71253722b75fe1b94f86f1_22_01_19_17_37_44"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
     TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
