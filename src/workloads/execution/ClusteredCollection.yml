@@ -1,0 +1,23 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Run basic workload on a collection clustered by {_id: 1}.
+
+Keywords:
+- indexes
+- clustered
+
+GlobalDefaults:
+  RecordIdExtraPaddingParam: &RecordIdExtraPaddingParam 0
+
+LoadConfig:
+  Path: "../../phases/execution/ClusteredCollection.yml"
+  Parameters:
+    RecordIdExtraPadding: *RecordIdExtraPaddingParam
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-all-feature-flags
+      - shard-lite-all-feature-flags
