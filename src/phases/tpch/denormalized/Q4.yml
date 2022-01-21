@@ -1,0 +1,33 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 4 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  documents remain, which ensures that the query executes in its entirety.
+
+batchSize: &batchSize 101  # The default batch size.
+query4Date: &query4Date {^Parameter: {Name: "Query4Date", Default: "1993-07-01"}}
+
+TPCHDenormalizedQuery4:
+  Repeat: 1
+  Database: tpch
+  Operations:
+  - OperationMetricsName: Query4
+    OperationName: RunCommand
+    OperationCommand:
+      explain:
+        aggregate: customer
+        pipeline:
+          [
+            {$unwind: "$orders"},
+            {$match: {$and: [
+              {$expr: {$gte: ["$orders.o_orderdate", {$dateFromString: {dateString: *query4Date}}]}},
+              {$expr: {$lt: ["$orders.o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query4Date}}, unit: "month", amount: 3}}]}},
+              {$expr: {$gt: [{$size: {$filter: {input: "$orders.lineitem", cond: {$lt: ["$$this.l_commitdate", "$$this.l_receiptdate"]}}}}, 0]}}]}},
+            {$group: {_id: "$orders.o_orderpriority", order_count: {$count: {}}}},
+            {$project: {_id: 0, o_orderpriority: "$_id", order_count: 1}},
+            {$sort: {o_orderpriority: 1}}
+          ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+      verbosity:
+        executionStats

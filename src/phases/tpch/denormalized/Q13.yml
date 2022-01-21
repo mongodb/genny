@@ -1,0 +1,29 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 13 gainst the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  documents remain, which ensures that the query executes in its entirety.
+
+batchSize: &batchSize 101  # The default batch size.
+query13Regex: &query13Regex {^Parameter: {Name: "Query13Regex", Default: "^.*special.*requests.*$"}}  # `^.*${query13Word1}.*${query13Word2}.*$`
+
+TPCHDenormalizedQuery13:
+  Repeat: 1
+  Database: tpch
+  Operations:
+  - OperationMetricsName: Query13
+    OperationName: RunCommand
+    OperationCommand:
+      explain:
+        aggregate: customer
+        pipeline:
+          [
+            {$project: {c_custkey: 1, c_count: {$size: {$filter: {input: "$orders", cond: {$not: {$regexMatch: {input: "$$this.o_comment", regex: *query13Regex, options: "si"}}}}}}}},
+            {$group: {_id: "$c_count", custdist: {$count: {}}}},
+            {$project: {_id: 0, c_count: "$_id", custdist: 1}},
+            {$sort: {custdist: -1, c_count: -1}}
+          ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+      verbosity:
+        executionStats

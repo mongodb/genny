@@ -1,0 +1,40 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 6 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  documents remain, which ensures that the query executes in its entirety.
+
+batchSize: &batchSize 101  # The default batch size.
+
+query6Date: &query6Date {^Parameter: {Name: "Query6Date", Default: "1994-01-01"}}
+query6Discount: &query6Discount {^Parameter: {Name: "Query6Discount", Default: 0.06}}
+query6Quantity: &query6Quantity {^Parameter: {Name: "Query6Quantity", Default: 24}}
+
+TPCHDenormalizedQuery6:
+  Repeat: 1
+  Database: tpch
+  Operations:
+  - OperationMetricsName: Query6
+    OperationName: RunCommand
+    OperationCommand:
+      explain:
+        aggregate: customer
+        pipeline:
+          [
+            {$unwind: "$orders"},
+            {$addFields: {lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE"}},
+            {$unwind: "$lineitem"},
+            {$replaceWith: "$lineitem"},
+            {$match: {$and: [
+              {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: *query6Date}}]}},
+              {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query6Date}}, unit: "year", amount: 1}}]}},
+              {$expr: {$gte: ["$l_discount", {$subtract: [*query6Discount, 0.01]}]}},
+              {$expr: {$lte: ["$l_discount", {$add: [*query6Discount, 0.011]}]}},
+              {$expr: {$lt: ["$l_quantity", *query6Quantity]}}]}},
+            {$group: {_id: 0, revenue: {$sum: {$multiply: ["$l_extendedprice", "$l_discount"]}}}},
+            {$project: {_id: 0, revenue: 1}}
+          ]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+      verbosity:
+        executionStats
