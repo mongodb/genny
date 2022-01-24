@@ -24,7 +24,7 @@
 
 namespace genny::v1 {
 
-std::set<std::string> configSetNames{"configSet", "configRepl"};
+std::set<std::string> configSetNames{"configSet", "configRepl", "configSvrRS"};
 
 enum class ClusterType {
     standalone,
