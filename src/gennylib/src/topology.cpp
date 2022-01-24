@@ -24,8 +24,6 @@
 
 namespace genny::v1 {
 
-std::set<std::string> configSetNames{"configSet", "configRepl", "configSvrRS"};
-
 enum class ClusterType {
     standalone,
     replSetMember,
@@ -146,6 +144,7 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
 
     std::unique_ptr<ReplSetDescription> desc;
     std::string setName = res.view()["setName"].get_utf8().value.data();
+    std::set<std::string> configSetNames{"configSet", "configRepl", "configSvrRS"};
     if (configSetNames.find(setName) != configSetNames.end()) {
         desc = std::make_unique<ConfigSvrDescription>();
     } else {
