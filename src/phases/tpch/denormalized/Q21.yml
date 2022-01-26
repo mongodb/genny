@@ -5,7 +5,7 @@ Description: |
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize 101  # The default batch size.
-query21Nation: &query21Nation {^Parameter: {Name: "Query1Delta", Default: "SAUDI ARABIA"}}
+query21Nation: &query21Nation {^Parameter: {Name: "Query21Nation", Default: "SAUDI ARABIA"}}
 
 TPCHDenormalizedQuery21:
   Repeat: 1
