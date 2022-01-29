@@ -5,7 +5,7 @@ to add actors and workloads. For details on the development process, see [Develo
 
 ## Running Genny Workloads
 
-First install mongodb and start a mongod process:
+Start a mongod process. Use locally-built mongod if available. Otherwise, first install mongodb:
 
 ```sh
 brew install mongodb
@@ -17,9 +17,7 @@ Then build Genny (see [above](#build-and-install) for details):
 And then run a workload:
 
 ```sh
-./run-genny workload -- run                                         \
-    --workload-file       ./src/workloads/scale/InsertRemove.yml    \
-    --mongo-uri           'mongodb://localhost:27017'
+./run-genny workload ./src/workloads/scale/InsertRemove.yml
 ```
 If you see errors like the following, try reducing the number of threads and duration in ./src/workloads/scale/InsertRemove.yml
 ```E0218 17:46:13.640106000 123145604628480 wakeup_fd_pipe.cc:40]         pipe creation failed (24): Too many open files```
