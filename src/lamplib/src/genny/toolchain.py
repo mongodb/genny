@@ -186,12 +186,7 @@ class ToolchainDownloader(Downloader):
 
     def _get_url(self):
         prefix = "macos_1014" if self._os_family == "Darwin" else self._linux_distro
-        return (
-            "https://s3.amazonaws.com/mciuploads/genny-toolchain/"
-            "genny_toolchain_{}_{}/gennytoolchain.tgz".format(
-                prefix, ToolchainDownloader.TOOLCHAIN_BUILD_ID
-            )
-        )
+        return "https://mciuploads.s3.amazonaws.com/genny-toolchain/genny_toolchain_macos_1014_patch_be3c6fbf07a269f17474109871b51573a57dcb93_61f4478630661563f1929a7e_22_01_28_19_44_12/gennytoolchain.tgz"
 
     def _can_ignore(self):
         # If the toolchain dir is outdated or we ignore the toolchain version.
