@@ -42,6 +42,8 @@ struct SampleHttpClient::PhaseConfig {
 
     mongocxx::collection collection;
 
+    DocumentGenerator documentExpr;
+
     PhaseConfig(PhaseContext& phaseContext, mongocxx::database&& db, ActorId id)
         : database{db},
           collection{database[phaseContext["Collection"].to<std::string>()]},
@@ -73,11 +75,11 @@ void SampleHttpClient::run() {
                     // noop for successful HTTP
                     });
 
-                client->setFailHandler([&inserts](const simple_http::empty_body_request& /*req*/,
+                client->setFailHandler([&requests](const simple_http::empty_body_request& /*req*/,
                             const simple_http::string_body_response& /*resp*/,
                             simple_http::fail_reason fr, boost::string_view message) {
                         std::cout << "Failure code: " << fr << '\n';
-                    inserts.failure();
+                    requests.failure();
                 });
 
                 // Run the GET request to httpbin.org
@@ -86,16 +88,16 @@ void SampleHttpClient::run() {
 
                 ioContext.run();
 
-                inserts.success();
+                requests.success();
             } catch(mongocxx::operation_exception& e) {
-                inserts.failure();
+                requests.failure();
                 //
                 // MongoException lets you include a "causing" bson document in the
                 // exception message for help debugging.
                 //
                 BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
             } catch(...) {
-                inserts.failure();
+                requests.failure();
                 throw std::current_exception();
             }
         }
