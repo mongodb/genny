@@ -121,6 +121,7 @@ namespace {
 //
 // This tells the "global" cast about our actor using the defaultName() method
 // in the header file.
+// Do not use simple-beast-client on macOS
 #ifndef __APPLE__
 auto registerSampleHttpClient = Cast::registerDefault<SampleHttpClient>();
 #endif
