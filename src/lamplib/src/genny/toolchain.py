@@ -28,14 +28,14 @@ def _create_compile_environment(
 
     # For cmake and ctest
     cmake_bin_relative_dir = {
-        "linux": "downloads/tools/cmake-3.13.3-linux/cmake-3.13.3-Linux-x86_64/bin",
-        "osx": "downloads/tools/cmake-3.13.3-osx/cmake-3.13.3-Darwin-x86_64/CMake.app/Contents/bin",
+        "linux": "downloads/tools/cmake-3.20.2-linux/cmake-3.20.2-linux-x86_64/bin",
+        "osx": "downloads/tools/cmake-3.20.2-osx/cmake-3.20.2-Darwin-x86_64/CMake.app/Contents/bin",
     }[triplet_os]
     paths.insert(0, os.path.join(toolchain_dir, cmake_bin_relative_dir))
 
     # For ninja
     ninja_bin_dir = os.path.join(
-        toolchain_dir, "downloads/tools/ninja-1.8.2-{}:".format(triplet_os)
+        toolchain_dir, "downloads/tools/ninja-1.10.1-{}:".format(triplet_os)
     )
     paths.insert(0, ninja_bin_dir)
 
@@ -157,12 +157,12 @@ class ToolchainDownloader(Downloader):
     # These build IDs are from the genny-toolchain Evergreen task.
     # https://evergreen.mongodb.com/waterfall/genny-toolchain
     # Find a compile task (for any build variant) and modify the URL:
-    # genny_toolchain_amazon2_t_compile_cf1c50fab5291cd583a5036dc9ade265bca165a3_21_10_20_20_05_26
-    # =>                                cf1c50fab5291cd583a5036dc9ade265bca165a3_21_10_20_20_05_26
+    # genny_toolchain_archlinux_t_compile_82eb7c32ad09726f3ef0ddc8d7f24a18b03d9644_21_11_23_16_37_21
+    # =>                                  82eb7c32ad09726f3ef0ddc8d7f24a18b03d9644_21_11_23_16_37_21
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
 
-    TOOLCHAIN_BUILD_ID = "cf1c50fab5291cd583a5036dc9ade265bca165a3_21_10_20_20_05_26"
+    TOOLCHAIN_BUILD_ID = "fc5ec55493f12c0791739e66bd9ffc6db78468e1_22_01_31_16_45_23"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
     TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
