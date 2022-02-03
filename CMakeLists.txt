@@ -67,10 +67,12 @@ find_package(
         1.75
         REQUIRED
         COMPONENTS
+        date_time
         filesystem
         log_setup
         log
         program_options
+        regex
 )
 # </Boost>
 

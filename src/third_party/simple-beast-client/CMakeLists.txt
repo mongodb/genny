@@ -7,8 +7,6 @@ find_package(Boost 1.66 REQUIRED COMPONENTS
 find_package(OpenSSL)
 find_package(Threads)
 find_package(cppcodec)
-add_definitions(-DENABLE_DIGEST)
-add_definitions(-DENABLE_HTTPS)
 target_include_directories(simple-beast-client INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
@@ -26,3 +24,6 @@ install(TARGETS  simple-beast-client
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
+
+# example program is useful for validating the library
+#add_subdirectory(example)

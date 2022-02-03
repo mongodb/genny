@@ -162,7 +162,7 @@ class ToolchainDownloader(Downloader):
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
 
-    TOOLCHAIN_BUILD_ID = "82eb7c32ad09726f3ef0ddc8d7f24a18b03d9644_21_11_23_16_37_21"
+    TOOLCHAIN_BUILD_ID = "fc5ec55493f12c0791739e66bd9ffc6db78468e1_22_01_31_16_45_23"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
     TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
@@ -186,7 +186,12 @@ class ToolchainDownloader(Downloader):
 
     def _get_url(self):
         prefix = "macos_1014" if self._os_family == "Darwin" else self._linux_distro
-        return "https://mciuploads.s3.amazonaws.com/genny-toolchain/genny_toolchain_macos_1014_patch_be3c6fbf07a269f17474109871b51573a57dcb93_61f4478630661563f1929a7e_22_01_28_19_44_12/gennytoolchain.tgz"
+        return (
+            "https://s3.amazonaws.com/mciuploads/genny-toolchain/"
+            "genny_toolchain_{}_{}/gennytoolchain.tgz".format(
+                prefix, ToolchainDownloader.TOOLCHAIN_BUILD_ID
+            )
+        )
 
     def _can_ignore(self):
         # If the toolchain dir is outdated or we ignore the toolchain version.
