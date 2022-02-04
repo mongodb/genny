@@ -1,0 +1,489 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  This workload measures $lookup performance for scenarios that looks up local integer key against
+  foreign collection's integer key, when the foreign collections have multiple collection
+  cardinalities such as 1500 / 3500 / 5500 / 7500 / 9500.
+
+  While measuring performances, this workload collects numbers for both the SBE and the classic
+  engine $lookup implementations. The SBE $lookup implements the hash join and the (index) nested
+  loop join but the classic $lookup implements only (index) nested loop join. So we can compare
+  the SBE HJ / NLJ implementations to the classic engine NLJ implementation and the SBE INLJ
+  implementation to the classic engine INLJ implementation.
+
+  In summary, this workload conducts testing for the following test matrix:
+  - JoinType: HJ / NLJ / INLJ
+  - ForeignCollectionCardinality: 1500 / 3500 / 5500 / 7500 / 9500
+
+  This workload assumes that the SBE and SBE $lookup pushdown features are turned on.
+
+  The workload consists of the following phases and actors:
+    0. Cleans up database
+       - 'Setup' actor
+    1. Loads data into the local and foreign collections.
+       - 'LoadXXX' actors.
+    2. Runs and measures the SBE HJ lookups
+       - 'SBE_HJ' actor
+    3. Runs and measures the SBE NLJ lookups
+       - 'SBE_NLJ' actor
+    4. Turns off the SBE
+       - 'TurnOffSBE1st' actor
+    5. Runs and measures the classic NLJ lookups
+       - 'Classic' actor
+    6. Turns back on the SBE
+       - 'TurnOnSBE' actor
+    7. Build indexes on foreign collections
+       - 'BuildIndexes' actor
+    8. Runs and measures the SBE INLJ lookups
+       - 'SBE_INLJ' actor
+    9. Turns off the SBE
+       - 'TurnOffSBE2nd' actor
+    10. Runs and measures the classic INLJ lookups
+       - 'Classic_Indexed' actor
+
+# Defines the database name.
+Database: &db lookup_sbe_pushdown
+
+# Defines foreign collection names.
+Foreign1500: &Foreign1500 foreign_1500
+Foreign3500: &Foreign3500 foreign_3500
+Foreign5500: &Foreign5500 foreign_5500
+Foreign7500: &Foreign7500 foreign_7500
+Foreign9500: &Foreign9500 foreign_9500
+
+# Defines the local collection name.
+LocalSmallDoc100k: &LocalSmallDoc100k local_smalldoc_100k
+
+# Defines the local collection document type which is used by 'LoadLocalSmallDoc100k' actor. See
+# 'LocalSmallDocTemplate' to understand how each doc is filled.
+LocalSmallDoc: &LocalSmallDoc
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: LocalSmallDocTemplate
+
+# Defines foreign collections with 1500 / 3500 / 5500 / 7500 / 9500 documents which is used by
+# 'LoadForeign[1500|3500|5500|7500|9500]' actor. See 'ForeignSmallDocTemplate' to understand how
+# each doc is filled.
+ForeignSmallDoc1500: &ForeignSmallDoc1500
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: ForeignSmallDocTemplate
+    Parameters: 
+      card: 1500
+
+ForeignSmallDoc3500: &ForeignSmallDoc3500
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: ForeignSmallDocTemplate
+    Parameters: 
+      card: 3500
+
+ForeignSmallDoc5500: &ForeignSmallDoc5500
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: ForeignSmallDocTemplate
+    Parameters: 
+      card: 5500
+
+ForeignSmallDoc7500: &ForeignSmallDoc7500
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: ForeignSmallDocTemplate
+    Parameters: 
+      card: 7500
+
+ForeignSmallDoc9500: &ForeignSmallDoc9500
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: ForeignSmallDocTemplate
+    Parameters: 
+      card: 9500
+
+# Defines HJ lookup commands which are used by 'SBE_HJ' actor. See 'HJLookupCmdTemplate' for
+# details. To enable the SBE HJ lookup, the template has 'allowDiskUse: true' argument and all
+# foreign collections has the cardinality < 10000 and 'SBE_HJ' actor runs before creating any
+# indexes on any join fields.
+HJLookupForeign1500Cmd: &HJLookupForeign1500Cmd
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: HJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign1500
+
+HJLookupForeign3500Cmd: &HJLookupForeign3500Cmd
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: HJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign3500
+
+HJLookupForeign5500Cmd: &HJLookupForeign5500Cmd
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: HJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign5500
+
+HJLookupForeign7500Cmd: &HJLookupForeign7500Cmd
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: HJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign7500
+
+HJLookupForeign9500Cmd: &HJLookupForeign9500Cmd
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: HJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign9500
+
+# Defines NLJ lookup commands which are used by 'SBE_NLJ' / 'Classic' / 'SBE_INLJ' /
+# 'Classic_Indexed' actors. See 'NLJLookupCmdTemplate' for details. The command template can be
+# used for INLJ too because INLJ can be enabled when the foreign join field is indexed.
+NLJLookupForeign1500Cmd: &NLJLookupForeign1500Cmd
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign1500
+
+NLJLookupForeign3500Cmd: &NLJLookupForeign3500Cmd
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign3500
+
+NLJLookupForeign5500Cmd: &NLJLookupForeign5500Cmd
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign5500
+
+NLJLookupForeign7500Cmd: &NLJLookupForeign7500Cmd
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign7500
+
+NLJLookupForeign9500Cmd: &NLJLookupForeign9500Cmd
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign9500
+
+# Defines test operations for 'SBE_HJ' actor.
+HJTestOperations: &HJTestOperations
+- OperationMetricsName: Foreign1500_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *HJLookupForeign1500Cmd
+- OperationMetricsName: Foreign3500_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *HJLookupForeign3500Cmd
+- OperationMetricsName: Foreign5500_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *HJLookupForeign5500Cmd
+- OperationMetricsName: Foreign7500_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *HJLookupForeign7500Cmd
+- OperationMetricsName: Foreign9500_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *HJLookupForeign9500Cmd
+
+# Defines test operations for 'SBE_NLJ'/ 'Classic' / 'SBE_INLJ' / 'Classic_Indexed' actors.
+NLJTestOperations: &NLJTestOperations
+- OperationMetricsName: Foreign1500_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *NLJLookupForeign1500Cmd
+- OperationMetricsName: Foreign3500_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *NLJLookupForeign3500Cmd
+- OperationMetricsName: Foreign5500_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *NLJLookupForeign5500Cmd
+- OperationMetricsName: Foreign7500_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *NLJLookupForeign7500Cmd
+- OperationMetricsName: Foreign9500_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *NLJLookupForeign9500Cmd
+
+# Defines how many times each test operation is executed.
+TestRepeatCount: &TestRepeatCount 10
+
+TurnOffSBECmd: &TurnOffSBECmd 
+  Repeat:  1
+  Database: admin
+  Operations:
+    - OperationName: AdminCommand
+      OperationCommand:
+        setParameter: 1
+        internalQueryForceClassicEngine: true
+
+Actors:
+# The 'Setup' actor drops the database and runs in the 0th phase.
+- Name: Setup
+  Type: RunCommand
+  Database: *db
+  Thread: 1
+  Phases:
+  - Repeat: 1
+    Threads: 1
+    Database: *db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+  - Phase: 1..10 
+    Nop: true
+
+# The 'LoadForeign1500' / 'LoadForeign3500' / 'LoadForeign5500' / 'LoadForeign7500' /
+# 'LoadForeign9500' / 'LoadLocalSmallDoc100k' actors runs in the 1st phase.
+- Name: LoadForeign1500
+  Type: CrudActor
+  Database: *db
+  Threads: 1
+  Phases:
+  - &Nop {Nop: true}
+  - Repeat: 1500
+    Threads: 1
+    Collection: *Foreign1500
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *ForeignSmallDoc1500
+  - Phase: 2..10
+    Nop: true
+
+- Name: LoadForeign3500
+  Type: CrudActor
+  Database: *db
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 3500
+    Threads: 1
+    Collection: *Foreign3500
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *ForeignSmallDoc3500
+  - Phase: 2..10
+    Nop: true
+ 
+- Name: LoadForeign5500
+  Type: CrudActor
+  Database: *db
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 5500
+    Threads: 1
+    Collection: *Foreign5500
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *ForeignSmallDoc5500
+  - Phase: 2..10
+    Nop: true
+
+- Name: LoadForeign7500
+  Type: CrudActor
+  Database: *db
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 7500
+    Threads: 1
+    Collection: *Foreign7500
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *ForeignSmallDoc7500
+  - Phase: 2..10
+    Nop: true
+
+- Name: LoadForeign9500
+  Type: CrudActor
+  Database: *db
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 9500
+    Threads: 1
+    Collection: *Foreign9500
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *ForeignSmallDoc9500
+  - Phase: 2..10
+    Nop: true
+
+- Name: LoadLocalSmallDoc100k
+  Type: CrudActor
+  Database: *db
+  Threads: 10
+  Phases:
+  - *Nop
+  - Repeat: 10000
+    Threads: 1
+    Collection: *LocalSmallDoc100k
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *LocalSmallDoc
+  - Phase: 2..10
+    Nop: true
+
+# The 'SBE_HJ' actor measures the SBE HJ lookup performances and runs in the 2nd phase.
+- Name: SBE_HJ
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: *TestRepeatCount
+    Database: *db
+    Operations: *HJTestOperations
+  - Phase: 3..10
+    Nop: true
+
+# The 'SBE_NLJ' actor measures the SBE NLJ lookup performances and runs in the 3rd phase.
+- Name: SBE_NLJ
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - Phase: 0..2
+    Nop: true
+  - Repeat: *TestRepeatCount
+    Database: *db
+    Operations: *NLJTestOperations
+  - Phase: 4..10
+    Nop: true
+
+# The 'TurnOffSBE1st' actor turns off the SBE engine so that the classic engine's NLJ performances
+# can be measures and runs in the 4th phase.
+- Name: TurnOffSBE1st
+  Type: AdminCommand
+  Phases:
+  - Phase: 0..3
+    Nop: true
+  - *TurnOffSBECmd 
+  - Phase: 5..10
+    Nop: true
+
+# The 'Classic' actor measures the classic engine's NLJ performances and runs in the 5th phase.
+- Name: Classic
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - Phase: 0..4
+    Nop: true
+  - Repeat: *TestRepeatCount
+    Database: *db
+    Operations: *NLJTestOperations
+  - Phase: 6..10
+    Nop: true
+
+# The 'TurnOnSBE' actor turns back on the SBE and runs in 6th phase.
+- Name: TurnOnSBE
+  Type: AdminCommand
+  Phases:
+  - Phase: 0..5
+    Nop: true
+  - Repeat: 1
+    Database: admin
+    Operations:
+      - OperationName: AdminCommand
+        OperationCommand:
+          setParameter: 1
+          internalQueryForceClassicEngine: false
+  - Phase: 7..10
+    Nop: true
+
+# The 'BuildIndexes' actor builds indexes on 'int_key' join field of foreign collections so that
+# INLJ lookup performances can be measured and runs in the 7th phase.
+- Name: BuildIndexes
+  Type: RunCommand
+  Phases:
+  - Phase: 0..6
+    Nop:  true
+  - Repeat: 1
+    Database: *db
+    Operations:
+      - OperationName: RunCommand
+        OperationCommand:
+          createIndexes: *Foreign1500
+          indexes: &IndexSpec [{key: {"int_key": 1}, name: "idx"}]
+      - OperationName: RunCommand
+        OperationCommand:
+          createIndexes: *Foreign3500
+          indexes: *IndexSpec
+      - OperationName: RunCommand
+        OperationCommand:
+          createIndexes: *Foreign5500
+          indexes: *IndexSpec
+      - OperationName: RunCommand
+        OperationCommand:
+          createIndexes: *Foreign7500
+          indexes: *IndexSpec
+      - OperationName: RunCommand
+        OperationCommand:
+          createIndexes: *Foreign9500
+          indexes: *IndexSpec
+  - Phase: 8..10
+    Nop: true
+
+# The 'SBE_INLJ' actor measures the SBE INLJ lookup performances and  runs in the 8th phase.
+- Name: SBE_INLJ
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - Phase: 0..7
+    Nop: true
+  - Repeat: *TestRepeatCount
+    Database: *db
+    Operations: *NLJTestOperations
+  - *Nop
+  - *Nop
+
+# The 'TurnOffSBE2nd' actor turns off the SBE so that the classic INLJ lookup performances can be
+# measured and runs in the 9th phase.
+- Name: TurnOffSBE2nd
+  Type: AdminCommand
+  Phases:
+  - Phase: 0..8
+    Nop: true
+  - *TurnOffSBECmd 
+  - *Nop
+
+# The 'Classic_Indexed' actor measures the classic INLJ lookup performances and runs in the 10th
+# phase.
+- Name: Classic_Indexed
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - Phase: 0..9
+    Nop: true
+  - Repeat: *TestRepeatCount
+    Database: *db
+    Operations: *NLJTestOperations
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-all-feature-flags
