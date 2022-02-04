@@ -22,8 +22,8 @@ RandMediumStrGen: &RandMediumStr {^RandomString: {length: {^RandomInt: {min: 480
 # and it's highly probable that all possible values are generated for the join key.
 LocalSmallDocTemplate:
   int_key: *RandIntUpTo
-  str_key: 
-    ^FormatString: 
+  str_key:
+    ^FormatString:
       format: "%010d"
       withArgs: [*RandIntUpTo]
   data1: *Rand32BitInt
@@ -34,8 +34,8 @@ LocalSmallDocTemplate:
 # 'str_key' fields as 'LocalSmallDocTemplate'.
 LocalLargeDocTemplate:
   int_key: *RandIntUpTo
-  str_key: 
-    ^FormatString: 
+  str_key:
+    ^FormatString:
       format: "%010d"
       withArgs: [*RandIntUpTo]
   data1: *Rand32BitInt
@@ -51,8 +51,8 @@ LocalLargeDocTemplate:
 # 5 elements which is likely to make it possible to generate all possible values.
 ForeignSmallDocTemplate:
   int_key: *IncIntUpTo
-  str_key: 
-    ^FormatString: 
+  str_key:
+    ^FormatString:
       format: "%010d"
       withArgs: [*IncIntUpTo]
   doc_key: {int: *IncIntUpTo}

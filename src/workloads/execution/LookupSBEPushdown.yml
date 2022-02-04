@@ -68,35 +68,35 @@ ForeignSmallDoc1500: &ForeignSmallDoc1500
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: ForeignSmallDocTemplate
-    Parameters: 
+    Parameters:
       card: 1500
 
 ForeignSmallDoc3500: &ForeignSmallDoc3500
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: ForeignSmallDocTemplate
-    Parameters: 
+    Parameters:
       card: 3500
 
 ForeignSmallDoc5500: &ForeignSmallDoc5500
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: ForeignSmallDocTemplate
-    Parameters: 
+    Parameters:
       card: 5500
 
 ForeignSmallDoc7500: &ForeignSmallDoc7500
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: ForeignSmallDocTemplate
-    Parameters: 
+    Parameters:
       card: 7500
 
 ForeignSmallDoc9500: &ForeignSmallDoc9500
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: ForeignSmallDocTemplate
-    Parameters: 
+    Parameters:
       card: 9500
 
 # Defines HJ lookup commands which are used by 'SBE_HJ' actor. See 'HJLookupCmdTemplate' for
@@ -225,14 +225,14 @@ NLJTestOperations: &NLJTestOperations
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 10
 
-TurnOffSBECmd: &TurnOffSBECmd 
-  Repeat:  1
+TurnOffSBECmd: &TurnOffSBECmd
+  Repeat: 1
   Database: admin
   Operations:
-    - OperationName: AdminCommand
-      OperationCommand:
-        setParameter: 1
-        internalQueryForceClassicEngine: true
+  - OperationName: AdminCommand
+    OperationCommand:
+      setParameter: 1
+      internalQueryForceClassicEngine: true
 
 Actors:
 # The 'Setup' actor drops the database and runs in the 0th phase.
@@ -247,7 +247,7 @@ Actors:
     Operations:
     - OperationName: RunCommand
       OperationCommand: {dropDatabase: 1}
-  - Phase: 1..10 
+  - Phase: 1..10
     Nop: true
 
 # The 'LoadForeign1500' / 'LoadForeign3500' / 'LoadForeign5500' / 'LoadForeign7500' /
@@ -283,7 +283,7 @@ Actors:
         Document: *ForeignSmallDoc3500
   - Phase: 2..10
     Nop: true
- 
+
 - Name: LoadForeign5500
   Type: CrudActor
   Database: *db
@@ -381,7 +381,7 @@ Actors:
   Phases:
   - Phase: 0..3
     Nop: true
-  - *TurnOffSBECmd 
+  - *TurnOffSBECmd
   - Phase: 5..10
     Nop: true
 
@@ -407,10 +407,10 @@ Actors:
   - Repeat: 1
     Database: admin
     Operations:
-      - OperationName: AdminCommand
-        OperationCommand:
-          setParameter: 1
-          internalQueryForceClassicEngine: false
+    - OperationName: AdminCommand
+      OperationCommand:
+        setParameter: 1
+        internalQueryForceClassicEngine: false
   - Phase: 7..10
     Nop: true
 
@@ -420,30 +420,30 @@ Actors:
   Type: RunCommand
   Phases:
   - Phase: 0..6
-    Nop:  true
+    Nop: true
   - Repeat: 1
     Database: *db
     Operations:
-      - OperationName: RunCommand
-        OperationCommand:
-          createIndexes: *Foreign1500
-          indexes: &IndexSpec [{key: {"int_key": 1}, name: "idx"}]
-      - OperationName: RunCommand
-        OperationCommand:
-          createIndexes: *Foreign3500
-          indexes: *IndexSpec
-      - OperationName: RunCommand
-        OperationCommand:
-          createIndexes: *Foreign5500
-          indexes: *IndexSpec
-      - OperationName: RunCommand
-        OperationCommand:
-          createIndexes: *Foreign7500
-          indexes: *IndexSpec
-      - OperationName: RunCommand
-        OperationCommand:
-          createIndexes: *Foreign9500
-          indexes: *IndexSpec
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *Foreign1500
+        indexes: &IndexSpec [{key: {"int_key": 1}, name: "idx"}]
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *Foreign3500
+        indexes: *IndexSpec
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *Foreign5500
+        indexes: *IndexSpec
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *Foreign7500
+        indexes: *IndexSpec
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *Foreign9500
+        indexes: *IndexSpec
   - Phase: 8..10
     Nop: true
 
@@ -467,7 +467,7 @@ Actors:
   Phases:
   - Phase: 0..8
     Nop: true
-  - *TurnOffSBECmd 
+  - *TurnOffSBECmd
   - *Nop
 
 # The 'Classic_Indexed' actor measures the classic INLJ lookup performances and runs in the 10th

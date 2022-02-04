@@ -331,13 +331,13 @@ Actors:
   Phases:
   - Phase: 0..2
     Nop: true
-  - Repeat:  1
+  - Repeat: 1
     Database: admin
     Operations:
-      - OperationName: AdminCommand
-        OperationCommand:
-          setParameter: 1
-          internalQueryForceClassicEngine: true
+    - OperationName: AdminCommand
+      OperationCommand:
+        setParameter: 1
+        internalQueryForceClassicEngine: true
   - *Nop
 
 # The 'Classic_Misc' actor measures the classic engine's NLJ performances and runs in the 4th phase.
