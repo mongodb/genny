@@ -7,7 +7,7 @@ Description: |
 batchSize: &batchSize 101  # The default batch size.
 
 query17Brand: &query17Brand {^Parameter: {Name: "Query17Brand", Default: "Brand#23"}}
-query17Type: &query17Container {^Parameter: {Name: "Query17Container", Default: "MED BOX"}}
+query17Container: &query17Container {^Parameter: {Name: "Query17Container", Default: "MED BOX"}}
 
 TPCHNormalizedQuery17:
   Repeat: 1

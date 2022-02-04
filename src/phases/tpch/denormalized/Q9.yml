@@ -6,7 +6,7 @@ Description: |
 
 batchSize: &batchSize 101  # The default batch size.
 
-query9Color: &query9Color {^Parameter: {Name: "Query9Color", Default: "^.*green.*$"}}  # ^.*${query9Color}.*$
+query9Color: &query9Color {^Parameter: {Name: "Query9Color", Default: "^.*green.*$"}}  # ^.*${color}.*$
 
 TPCHDenormalizedQuery9:
   Repeat: 1
