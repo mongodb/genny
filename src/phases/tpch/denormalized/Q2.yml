@@ -18,19 +18,17 @@ TPCHDenormalizedQuery2:
     OperationName: RunCommand
     OperationCommand:
       explain:
-        aggregate: partsupp
+        aggregate: part
         pipeline:
           [
-            {$lookup: {from: "part", as: "part", localField: "ps_partkey", foreignField: "p_partkey", pipeline: [
-              {$match: {$and: [{p_type: {$regex: *query2Type, "$options": "si"}}, {p_size: {$eq: *query2Size}}]}}]}},
-            {$unwind: "$part"},
-            {$lookup: {from: "supplier", localField: "ps_suppkey", foreignField: "s_suppkey", as: "supplier", pipeline: [
-              {$match: {"nation.region.r_name": *query2Region}}]}},
+            {$match: {$and: [{p_type: {$regex: *query2Type, $options: "si"}}, {p_size: {$eq: *query2Size}}]}},
+            {$lookup: {from: "partsupp", localField: "p_partkey", foreignField: "ps_partkey", as: "partsupp"}},
+            {$unwind: "$partsupp"},
+            {$lookup: {from: "supplier", localField: "partsupp.ps_suppkey", foreignField: "s_suppkey", as: "supplier", pipeline: [
+              {$match: {"nation.region.r_name": {$eq: *query2Region}}}]}},
             {$unwind: "$supplier"},
-            {$sort: {ps_supplycost: 1}},
-            {$group: {
-              _id: {p_partkey: "$part.p_partkey", p_mfgr: "$part.p_mfgr"},
-              supplier: {$first: {s_acctbal: "$supplier.s_acctbal", s_name: "$supplier.s_name", s_address: "$supplier.s_address", s_phone: "$supplier.s_phone", s_comment: "$supplier.s_comment", ps_supplycost: "$ps_supplycost", n_name: "$supplier.nation.n_name"}}}},
+            {$sort: {"partsupp.ps_supplycost": 1}},
+            {$group: {_id: {p_partkey: "$p_partkey", p_mfgr: "$p_mfgr"}, supplier: {$first: {s_acctbal: "$supplier.s_acctbal", s_name: "$supplier.s_name", s_address: "$supplier.s_address", s_phone: "$supplier.s_phone", s_comment: "$supplier.s_comment", ps_supplycost: "$partsupp.ps_supplycost", n_name: "$supplier.nation.n_name"}}}},
             {$project: {_id: 0, s_acctbal: "$supplier.s_acctbal", s_name: "$supplier.s_name", n_name: "$supplier.n_name", p_partkey: "$_id.p_partkey", p_mfgr: "$_id.p_mfgr", s_address: "$supplier.s_address", s_phone: "$supplier.s_phone", s_comment: "$supplier.s_comment"}},
             {$sort: {s_acctbal: -1, n_name: 1, s_name: 1, p_partkey: 1}},
             {$limit: 100}
