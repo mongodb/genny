@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: "@mongodb/query-execution"
 Description: |
   This workload conducts testing for the following test matrix:
   - LocalCollectionCardinality: 100k / 300k / 500k / 700k
