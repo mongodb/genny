@@ -31,8 +31,8 @@
 #include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
 
-#include <value_generators/DocumentGenerator.hpp>
 #include <simple-beast-client/httpclient.hpp>
+#include <value_generators/DocumentGenerator.hpp>
 
 
 namespace genny::actor {
@@ -63,40 +63,44 @@ void SampleHttpClient::run() {
 
             auto requests = _totalRequests.start();
 
-            BOOST_LOG_TRIVIAL(debug) << " SampleHttpClient Inserting "
-                                    << bsoncxx::to_json(document.view());
+            BOOST_LOG_TRIVIAL(debug)
+                << " SampleHttpClient Inserting " << bsoncxx::to_json(document.view());
 
             try {
                 boost::asio::io_context ioContext;
                 auto client = std::make_shared<simple_http::get_client>(
                     ioContext,
                     [](simple_http::empty_body_request& /*req*/,
-                    simple_http::string_body_response& resp) {
-                    // noop for successful HTTP
+                       simple_http::string_body_response& resp) {
+                        // noop for successful HTTP
                     });
 
-                client->setFailHandler([&requests](const simple_http::empty_body_request& /*req*/,
-                            const simple_http::string_body_response& /*resp*/,
-                            simple_http::fail_reason fr, boost::string_view message) {
-                        std::cout << "Failure code: " << fr << '\n';
-                    requests.failure();
-                });
+                client->setFailHandler(
+                    [&requests](const simple_http::empty_body_request& /*req*/,
+                                const simple_http::string_body_response& /*resp*/,
+                                simple_http::fail_reason fr,
+                                boost::string_view message) {
+                        std::stringstream ss;
+                        ss << "Failure code: " << fr << endl;
+                        BOOST_LOG_WARN(ss.str());
+                        requests.failure();
+                    });
 
                 // Run the GET request to httpbin.org
                 client->get(simple_http::url{
                     "https://user:passwd@httpbin.org/digest-auth/auth/user/passwd/MD5/never"});
 
-                ioContext.run();
+                ioContext.run();  // blocks until requests are complete.
 
                 requests.success();
-            } catch(mongocxx::operation_exception& e) {
+            } catch (mongocxx::operation_exception& e) {
                 requests.failure();
                 //
                 // MongoException lets you include a "causing" bson document in the
                 // exception message for help debugging.
                 //
                 BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
-            } catch(...) {
+            } catch (...) {
                 requests.failure();
                 throw std::current_exception();
             }

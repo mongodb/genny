@@ -40,7 +40,6 @@ public:
     }
 
 private:
-
     mongocxx::pool::entry _client;
 
     genny::metrics::Operation _totalRequests;
