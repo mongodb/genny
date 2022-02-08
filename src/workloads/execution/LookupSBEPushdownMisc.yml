@@ -338,11 +338,11 @@ Actors:
       OperationCommand:
         createIndexes: *Foreign
         indexes:
-          - {key: {"int_key": 1}, name: "idx1"}
-          - {key: {"str_key": 1}, name: "idx2"}
-          - {key: {"doc_key.int": 1}, name: "idx3"}
-          - {key: {"doc_key.arr": 1}, name: "idx4"}
-          - {key: {"arr_key": 1}, name: "idx5"}
+        - {key: {"int_key": 1}, name: "idx1"}
+        - {key: {"str_key": 1}, name: "idx2"}
+        - {key: {"doc_key.int": 1}, name: "idx3"}
+        - {key: {"doc_key.arr": 1}, name: "idx4"}
+        - {key: {"arr_key": 1}, name: "idx5"}
   - *Nop
 
 # The 'MiscLookup' actor measures the SBE INLJ lookup performances on an all-feature-flags build and
