@@ -80,9 +80,7 @@ void SampleHttpClient::run() {
                                 const simple_http::string_body_response& /*resp*/,
                                 simple_http::fail_reason fr,
                                 boost::string_view message) {
-                        std::stringstream ss;
-                        ss << "Failure code: " << fr << endl;
-                        BOOST_LOG_WARN(ss.str());
+                        BOOST_LOG_TRIVIAL(warning) << "Failure code: " << fr << std::endl;
                         requests.failure();
                     });
 
