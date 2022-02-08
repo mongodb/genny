@@ -1,11 +1,11 @@
 # Using Genny
 
 This page describes how to run Genny and view its outputs. It also describes how
-to add actors and workloads. For details on the development process, see [Developing Genny](./developing).
+to add actors and workloads. For details on the development process, see [Developing Genny](./developing.md).
 
 ## Running Genny Workloads
 
-First install mongodb and start a mongod process:
+Start a mongod process. Use locally-built mongod if available. Otherwise, first install mongodb:
 
 ```sh
 brew install mongodb
@@ -17,9 +17,7 @@ Then build Genny (see [above](#build-and-install) for details):
 And then run a workload:
 
 ```sh
-./run-genny workload -- run                                         \
-    --workload-file       ./src/workloads/scale/InsertRemove.yml    \
-    --mongo-uri           'mongodb://localhost:27017'
+./run-genny workload ./src/workloads/scale/InsertRemove.yml
 ```
 If you see errors like the following, try reducing the number of threads and duration in ./src/workloads/scale/InsertRemove.yml
 ```E0218 17:46:13.640106000 123145604628480 wakeup_fd_pipe.cc:40]         pipe creation failed (24): Too many open files```
@@ -86,6 +84,18 @@ A couple of tips on defining external phase configs:
 
 2.  `./run-genny workload -- evaluate ./src/workloads/docs/HelloWorld.yml` is your friend. `evaluate` prints out
     the final YAML workload with all external phase definitions inlined.
+
+## Overrides
+
+Genny has an override syntax for configuring workloads. When invoking Genny, you can use the `-o` option to specify an override file.
+This uses [OmegaConf](https://omegaconf.readthedocs.io/en/2.1_branch/) to merge the override file onto the workload. This functionality
+should only be used to set values that absolutely need to be specified at runtime, such as URIs for systems under test.
+
+For an example of when using overrides may be a good idea, check out our docs on [Connection Strings](./connection.md).
+
+When using overrides or any other workload preprocessing, you can always use the `evaluate` subcommand to see the final workload that will
+actually be executed.
+
 
 ## Patch-Testing Genny Changes with Sys-Perf / DSI
 

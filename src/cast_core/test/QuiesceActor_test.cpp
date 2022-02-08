@@ -33,6 +33,9 @@ TEST_CASE_METHOD(
 
     NodeSource config = NodeSource(R"(
         SchemaVersion: 2018-07-01
+        Clients:
+        Default:
+          URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
         Actors:
         - Name: QuiesceActor
           Type: QuiesceActor
@@ -51,7 +54,7 @@ TEST_CASE_METHOD(
     SECTION("Quiesce collection") {
         dropAllDatabases();
         auto db = client.database("mydb");
-        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 1);
         // We just check that quiescing the cluster doesn't crash it.
         ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
     }

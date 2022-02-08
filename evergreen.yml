@@ -130,15 +130,15 @@ buildvariants:
   tasks:
   - name: tg_compile
 
-- name: centos6-perf
-  display_name: CentOS 6 for Performance
-  modules: [mongo]
-  expansions:
-    distro: rhel62
-  run_on:
-  - centos6-perf
-  tasks:
-  - name: tg_compile_and_benchmark
+# - name: centos6-perf
+#   display_name: CentOS 6 for Performance
+#   modules: [mongo]
+#   expansions:
+#     distro: rhel62
+#   run_on:
+#   - centos6-perf
+#   tasks:
+#   - name: tg_compile_and_benchmark
 
 
 ##                ⚡️ Tasks ⚡️

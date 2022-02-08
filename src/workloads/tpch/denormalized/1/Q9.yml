@@ -1,0 +1,20 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 9 against the denormalized schema for scale 1.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHDenormalizedQuery9
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - LoadConfig:
+      Path: ../../../../phases/tpch/denormalized/Q9.yml
+      Key: TPCHDenormalizedQuery9
+      Parameters:
+        Query9Color: "^.*green.*$"

@@ -1,0 +1,22 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 6 against the denormalized schema for scale 1.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHDenormalizedQuery6
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - LoadConfig:
+      Path: ../../../../phases/tpch/denormalized/Q6.yml
+      Key: TPCHDenormalizedQuery6
+      Parameters:
+        Query6Date: "1994-01-01"
+        Query6Discount: 0.06
+        Query6Quantity: 24

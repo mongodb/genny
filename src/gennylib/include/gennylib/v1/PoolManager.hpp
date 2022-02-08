@@ -40,18 +40,15 @@ public:
         std::function<void(const mongocxx::events::command_started_event&)>;
 
     /**
-     * @param mongoUri
-     *  the base URI to use. This typically comes from the command-line argument.
-     *  Additional connection/query-string parameters can be added via `Clients` configuration
+     *  Connection/query-string parameters can be added via `Clients` configuration
      *  passed in when calling `client()`.
      *  See PoolFactory for how this can be configured.
-     * keyword.
      *
      * @param callback
      *   a callback to be invoked for every `mongocxx::events::command_started_event`
      */
-    PoolManager(std::string mongoUri, OnCommandStartCallback callback)
-        : _mongoUri{std::move(mongoUri)}, _apmCallback{std::move(callback)} {}
+    PoolManager(OnCommandStartCallback callback)
+        : _apmCallback{std::move(callback)} {}
 
     /**
      * Obtain a connection or throw if none available.
@@ -77,8 +74,6 @@ public:
     std::unordered_map<std::string, size_t> instanceCount();
 
 private:
-    /** base uri passed into ctor */
-    std::string _mongoUri;
     /** callback passed into ctor */
     OnCommandStartCallback _apmCallback;
 
