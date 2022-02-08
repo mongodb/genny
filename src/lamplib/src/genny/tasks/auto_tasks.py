@@ -96,7 +96,9 @@ class WorkloadLister:
             cmd = run_command(cmd=[command], cwd=repo_path, shell=True, check=True)
             if cmd.returncode != 0:
                 SLOG.fatal("Failed to compare workload directory to origin.", *cmd)
-                raise RuntimeError("Failed to compare workload directory to origin: stdout: {cmd.stdout} stderr: {cmd.stderr}")
+                raise RuntimeError(
+                    "Failed to compare workload directory to origin: stdout: {cmd.stdout} stderr: {cmd.stderr}"
+                )
             lines = cmd.stdout
             modified_workloads.update(
                 {os.path.join(repo_path, line) for line in lines if line.endswith(".yml")}
