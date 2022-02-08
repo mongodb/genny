@@ -11,35 +11,26 @@ Description: |
   the SBE HJ / NLJ implementations to the classic engine NLJ implementation and the SBE INLJ
   implementation to the classic engine INLJ implementation.
 
+  Numbers on the 'standalone-all-feature-flags' environment are for the SBE $lookup and numbers on
+  the 'standalone' environment for the classic $lookup.
+
   In summary, this workload conducts testing for the following test matrix:
   - JoinType: HJ / NLJ / INLJ
   - ForeignCollectionCardinality: 1500 / 3500 / 5500 / 7500 / 9500
-
-  This workload assumes that the SBE and SBE $lookup pushdown features are turned on.
 
   The workload consists of the following phases and actors:
     0. Cleans up database
        - 'Setup' actor
     1. Loads data into the local and foreign collections.
        - 'LoadXXX' actors.
-    2. Runs and measures the SBE HJ lookups
-       - 'SBE_HJ' actor
-    3. Runs and measures the SBE NLJ lookups
-       - 'SBE_NLJ' actor
-    4. Turns off the SBE
-       - 'TurnOffSBE1st' actor
-    5. Runs and measures the classic NLJ lookups
-       - 'Classic' actor
-    6. Turns back on the SBE
-       - 'TurnOnSBE' actor
-    7. Build indexes on foreign collections
+    2. Runs and measures the SBE HJ lookups and the classic NLJ lookups
+       - 'HJLookup' actor
+    3. Runs and measures the SBE NLJ lookups and the classic NLJ lookups
+       - 'NLJLookup' actor
+    4. Builds indexes on foreign collections
        - 'BuildIndexes' actor
-    8. Runs and measures the SBE INLJ lookups
-       - 'SBE_INLJ' actor
-    9. Turns off the SBE
-       - 'TurnOffSBE2nd' actor
-    10. Runs and measures the classic INLJ lookups
-       - 'Classic_Indexed' actor
+    5. Runs and measures the SBE INLJ lookups and the classic INLJ lookups
+       - 'INLJLookup' actor
 
 # Defines the database name.
 Database: &db lookup_sbe_pushdown
@@ -99,9 +90,9 @@ ForeignSmallDoc9500: &ForeignSmallDoc9500
     Parameters:
       card: 9500
 
-# Defines HJ lookup commands which are used by 'SBE_HJ' actor. See 'HJLookupCmdTemplate' for
+# Defines HJ lookup commands which are used by 'HJLookup' actor. See 'HJLookupCmdTemplate' for
 # details. To enable the SBE HJ lookup, the template has 'allowDiskUse: true' argument and all
-# foreign collections has the cardinality < 10000 and 'SBE_HJ' actor runs before creating any
+# foreign collections has the cardinality < 10000 and 'HJLookup' actor runs before creating any
 # indexes on any join fields.
 HJLookupForeign1500Cmd: &HJLookupForeign1500Cmd
   LoadConfig:
@@ -143,9 +134,9 @@ HJLookupForeign9500Cmd: &HJLookupForeign9500Cmd
       l: *LocalSmallDoc100k
       f: *Foreign9500
 
-# Defines NLJ lookup commands which are used by 'SBE_NLJ' / 'Classic' / 'SBE_INLJ' /
-# 'Classic_Indexed' actors. See 'NLJLookupCmdTemplate' for details. The command template can be
-# used for INLJ too because INLJ can be enabled when the foreign join field is indexed.
+# Defines NLJ lookup commands which are used by 'NLJLookup' / 'INLJLookup' actors. See
+# 'NLJLookupCmdTemplate' for details. The command template can be used for INLJ too because INLJ
+# will be enabled when the foreign join field is indexed.
 NLJLookupForeign1500Cmd: &NLJLookupForeign1500Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
@@ -186,7 +177,7 @@ NLJLookupForeign9500Cmd: &NLJLookupForeign9500Cmd
       l: *LocalSmallDoc100k
       f: *Foreign9500
 
-# Defines test operations for 'SBE_HJ' actor.
+# Defines test operations for 'HJLookup' actor.
 HJTestOperations: &HJTestOperations
 - OperationMetricsName: Foreign1500_IntTopField
   OperationName: RunCommand
@@ -204,7 +195,7 @@ HJTestOperations: &HJTestOperations
   OperationName: RunCommand
   OperationCommand: *HJLookupForeign9500Cmd
 
-# Defines test operations for 'SBE_NLJ'/ 'Classic' / 'SBE_INLJ' / 'Classic_Indexed' actors.
+# Defines test operations for 'NLJLookup'/ 'INLJLookup' actors.
 NLJTestOperations: &NLJTestOperations
 - OperationMetricsName: Foreign1500_IntTopField
   OperationName: RunCommand
@@ -225,15 +216,6 @@ NLJTestOperations: &NLJTestOperations
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 10
 
-TurnOffSBECmd: &TurnOffSBECmd
-  Repeat: 1
-  Database: admin
-  Operations:
-  - OperationName: AdminCommand
-    OperationCommand:
-      setParameter: 1
-      internalQueryForceClassicEngine: true
-
 Actors:
 # The 'Setup' actor drops the database and runs in the 0th phase.
 - Name: Setup
@@ -247,7 +229,7 @@ Actors:
     Operations:
     - OperationName: RunCommand
       OperationCommand: {dropDatabase: 1}
-  - Phase: 1..10
+  - Phase: 1..5
     Nop: true
 
 # The 'LoadForeign1500' / 'LoadForeign3500' / 'LoadForeign5500' / 'LoadForeign7500' /
@@ -265,7 +247,7 @@ Actors:
     - OperationName: insertOne
       OperationCommand:
         Document: *ForeignSmallDoc1500
-  - Phase: 2..10
+  - Phase: 2..5
     Nop: true
 
 - Name: LoadForeign3500
@@ -281,7 +263,7 @@ Actors:
     - OperationName: insertOne
       OperationCommand:
         Document: *ForeignSmallDoc3500
-  - Phase: 2..10
+  - Phase: 2..5
     Nop: true
 
 - Name: LoadForeign5500
@@ -297,7 +279,7 @@ Actors:
     - OperationName: insertOne
       OperationCommand:
         Document: *ForeignSmallDoc5500
-  - Phase: 2..10
+  - Phase: 2..5
     Nop: true
 
 - Name: LoadForeign7500
@@ -313,7 +295,7 @@ Actors:
     - OperationName: insertOne
       OperationCommand:
         Document: *ForeignSmallDoc7500
-  - Phase: 2..10
+  - Phase: 2..5
     Nop: true
 
 - Name: LoadForeign9500
@@ -329,7 +311,7 @@ Actors:
     - OperationName: insertOne
       OperationCommand:
         Document: *ForeignSmallDoc9500
-  - Phase: 2..10
+  - Phase: 2..5
     Nop: true
 
 - Name: LoadLocalSmallDoc100k
@@ -345,11 +327,12 @@ Actors:
     - OperationName: insertOne
       OperationCommand:
         Document: *LocalSmallDoc
-  - Phase: 2..10
+  - Phase: 2..5
     Nop: true
 
-# The 'SBE_HJ' actor measures the SBE HJ lookup performances and runs in the 2nd phase.
-- Name: SBE_HJ
+# The 'HJLookup' actor measures the SBE HJ lookup performances on an all-feature-flags build and
+# runs in the 2nd phase. HJLookup becomes a NLJLookup on a normal build.
+- Name: HJLookup
   Type: RunCommand
   Database: *db
   Phases:
@@ -358,11 +341,11 @@ Actors:
   - Repeat: *TestRepeatCount
     Database: *db
     Operations: *HJTestOperations
-  - Phase: 3..10
+  - Phase: 3..5
     Nop: true
 
-# The 'SBE_NLJ' actor measures the SBE NLJ lookup performances and runs in the 3rd phase.
-- Name: SBE_NLJ
+# The 'NLJLookup' actor measures the NLJ lookup performances and runs in the 3rd phase.
+- Name: NLJLookup
   Type: RunCommand
   Database: *db
   Phases:
@@ -371,55 +354,15 @@ Actors:
   - Repeat: *TestRepeatCount
     Database: *db
     Operations: *NLJTestOperations
-  - Phase: 4..10
-    Nop: true
-
-# The 'TurnOffSBE1st' actor turns off the SBE engine so that the classic engine's NLJ performances
-# can be measures and runs in the 4th phase.
-- Name: TurnOffSBE1st
-  Type: AdminCommand
-  Phases:
-  - Phase: 0..3
-    Nop: true
-  - *TurnOffSBECmd
-  - Phase: 5..10
-    Nop: true
-
-# The 'Classic' actor measures the classic engine's NLJ performances and runs in the 5th phase.
-- Name: Classic
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - Phase: 0..4
-    Nop: true
-  - Repeat: *TestRepeatCount
-    Database: *db
-    Operations: *NLJTestOperations
-  - Phase: 6..10
-    Nop: true
-
-# The 'TurnOnSBE' actor turns back on the SBE and runs in 6th phase.
-- Name: TurnOnSBE
-  Type: AdminCommand
-  Phases:
-  - Phase: 0..5
-    Nop: true
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationName: AdminCommand
-      OperationCommand:
-        setParameter: 1
-        internalQueryForceClassicEngine: false
-  - Phase: 7..10
-    Nop: true
+  - *Nop
+  - *Nop
 
 # The 'BuildIndexes' actor builds indexes on 'int_key' join field of foreign collections so that
-# INLJ lookup performances can be measured and runs in the 7th phase.
+# INLJ lookup performances can be measured and runs in the 4th phase.
 - Name: BuildIndexes
   Type: RunCommand
   Phases:
-  - Phase: 0..6
+  - Phase: 0..3
     Nop: true
   - Repeat: 1
     Database: *db
@@ -444,39 +387,14 @@ Actors:
       OperationCommand:
         createIndexes: *Foreign9500
         indexes: *IndexSpec
-  - Phase: 8..10
-    Nop: true
+  - *Nop
 
-# The 'SBE_INLJ' actor measures the SBE INLJ lookup performances and  runs in the 8th phase.
-- Name: SBE_INLJ
+# The 'INLJLookup' actor measures the INLJ lookup performances and  runs in the 5th phase.
+- Name: INLJLookup
   Type: RunCommand
   Database: *db
   Phases:
-  - Phase: 0..7
-    Nop: true
-  - Repeat: *TestRepeatCount
-    Database: *db
-    Operations: *NLJTestOperations
-  - *Nop
-  - *Nop
-
-# The 'TurnOffSBE2nd' actor turns off the SBE so that the classic INLJ lookup performances can be
-# measured and runs in the 9th phase.
-- Name: TurnOffSBE2nd
-  Type: AdminCommand
-  Phases:
-  - Phase: 0..8
-    Nop: true
-  - *TurnOffSBECmd
-  - *Nop
-
-# The 'Classic_Indexed' actor measures the classic INLJ lookup performances and runs in the 10th
-# phase.
-- Name: Classic_Indexed
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - Phase: 0..9
+  - Phase: 0..4
     Nop: true
   - Repeat: *TestRepeatCount
     Database: *db
@@ -486,4 +404,5 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
+      - standalone
       - standalone-all-feature-flags

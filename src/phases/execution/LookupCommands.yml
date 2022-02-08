@@ -9,7 +9,7 @@ Description: |
 RandIntUpToTemplate: &RandIntUpTo {^RandomInt: {min: 1, max: {^Parameter: {Name: "card", Default: 9500}}}}
 # Generates a monotonically increasing integer value from 1 to 'card' parameter of which the default
 # is 9500.
-IncIntUpToTemplate: &IncIntUpTo {^Inc: {start: 1, end: {^Parameter: {Name: "card", Default: 9500}}}}
+IncIntUpToTemplate: &IncIntUpTo {^Inc: {start: 1}}
 # Generates a random 32bit integer value.
 Rand32BitIntGen: &Rand32BitInt {^RandomInt: {min: 0, max: 2147483647}}
 # Generates a random string of which the length is 10 - 80.
@@ -55,7 +55,7 @@ ForeignSmallDocTemplate:
     ^FormatString:
       format: "%010d"
       withArgs: [*IncIntUpTo]
-  doc_key: {int: *IncIntUpTo}
+  doc_key: {int: *IncIntUpTo, arr: {^Array: {of: *RandIntUpTo, number: 5}}}
   arr_key: {^Array: {of: *RandIntUpTo, number: 5}}
   data1: *Rand32BitInt
 
@@ -74,8 +74,8 @@ HJLookupCmdTemplate:
   allowDiskUse: true
   cursor: {batchSize: 2000}
 
-# The command template for double HJ lookups. Note that 'allowDiskUse' is true.
-HJDoubleLookupCmdTemplate:
+# The command template for double NLJ lookups. Note that 'allowDiskUse' is true.
+NLJDoubleLookupCmdTemplate:
   aggregate: {^Parameter: {Name: "l", Default: "local"}}
   pipeline:
     [
@@ -92,11 +92,11 @@ HJDoubleLookupCmdTemplate:
         as: "joined2"
       }},
     ]
-  allowDiskUse: true
+  allowDiskUse: false
   cursor: {batchSize: 2000}
 
-# The command template for triple HJ lookups. Note that 'allowDiskUse' is true.
-HJTripleLookupCmdTemplate:
+# The command template for triple NLJ lookups. Note that 'allowDiskUse' is true.
+NLJTripleLookupCmdTemplate:
   aggregate: {^Parameter: {Name: "l", Default: "local"}}
   pipeline:
     [
@@ -119,7 +119,7 @@ HJTripleLookupCmdTemplate:
         as: "joined3"
       }},
     ]
-  allowDiskUse: true
+  allowDiskUse: false
   cursor: {batchSize: 2000}
 
 # The command template for NLJ lookups. Note that 'allowDiskUse' is false. This command template
