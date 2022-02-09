@@ -51,11 +51,6 @@ struct SampleHttpClient::PhaseConfig {
 };
 
 
-//
-// Genny spins up a thread for each Actor instance. The `Threads:` configuration
-// tells Genny how many such instances to create. See further documentation in
-// the `Actor.hpp` file.
-//
 void SampleHttpClient::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
@@ -80,7 +75,11 @@ void SampleHttpClient::run() {
                                 const simple_http::string_body_response& /*resp*/,
                                 simple_http::fail_reason fr,
                                 boost::string_view message) {
+                        // TODO TIG-3843: this will always be triggered on macOS
+                        // with Failure code 2, Message: Error resolving
+                        // target: Host not found (authoritative)
                         BOOST_LOG_TRIVIAL(warning) << "Failure code: " << fr << std::endl;
+                        BOOST_LOG_TRIVIAL(warning) << "Message: " << message << std::endl;
                         requests.failure();
                     });
 
@@ -110,19 +109,9 @@ SampleHttpClient::SampleHttpClient(genny::ActorContext& context)
     : Actor{context},
       _totalRequests{context.operation("Insert", SampleHttpClient::id())},
       _client{context.client()},
-      //
-      // Pass any additional constructor parameters that your `PhaseConfig` needs.
-      //
-      // The first argument passed in here is actually the `ActorContext` but the
-      // `PhaseLoop` reads the `PhaseContext`s from there and constructs one
-      // instance for each Phase.
-      //
       _loop{context, (*_client)[context["Database"].to<std::string>()], SampleHttpClient::id()} {}
 
 namespace {
-//
-// This tells the "global" cast about our actor using the defaultName() method
-// in the header file.
 auto registerSampleHttpClient = Cast::registerDefault<SampleHttpClient>();
 }  // namespace
 }  // namespace genny::actor
