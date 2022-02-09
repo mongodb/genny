@@ -570,38 +570,6 @@ protected:
     std::string _separator;
 };
 
-class ConcatGenerator : public Generator<bsoncxx::array::value> {
-
-public:
-    ConcatGenerator(const Node& node, GeneratorArgs generatorArgs)
-        : _rng{generatorArgs.rng}, _id{generatorArgs.actorId} {
-        if (!node["arrays"].isSequence()) {
-            std::stringstream msg;
-            msg << "Malformed node for join array. Not a sequence " << node;
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
-        }
-        for (const auto&& [k, v] : node["arrays"]) {
-            _parts.push_back(literalArrayGenerator<false>(v, generatorArgs));
-        }
-    }
-
-    bsoncxx::array::value evaluate() override {
-        bsoncxx::builder::basic::array builder{};
-        for (auto&& arrGen : _parts) {
-            bsoncxx::array::value arr = arrGen->evaluate();
-            for (auto x : arr.view()) {
-                builder.append(x.get_value());
-            }
-        }
-        return builder.extract();
-    }
-
-protected:
-    DefaultRandom& _rng;
-    ActorId _id;
-    std::vector<UniqueGenerator<bsoncxx::array::value>> _parts;
-};
-
 /** handle the formatting of an individual array element value with the latest format. */
 void format_element(boost::format& message, bsoncxx::document::element val) {
     switch (val.type()) {
@@ -1014,6 +982,47 @@ private:
     const UniqueGenerator<int64_t> _nTimesGen;
 };
 
+class ConcatGenerator : public Generator<bsoncxx::array::value> {
+
+public:
+    ConcatGenerator(const Node& node,
+                    GeneratorArgs generatorArgs,
+                    std::map<std::string, Parser<UniqueAppendable>> parsers)
+        : _rng{generatorArgs.rng}, _id{generatorArgs.actorId} {
+        if (!node["arrays"].isSequence()) {
+            std::stringstream msg;
+            msg << "Malformed node for join array. Not a sequence " << node;
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
+        for (const auto&& [k, v] : node["arrays"]) {
+            auto metaKey = getMetaKey(v);
+            if (metaKey && *metaKey == "^Array") {
+                _parts.push_back(
+                    std::make_unique<ArrayGenerator>(v["^Array"], generatorArgs, parsers));
+            } else {
+                _parts.push_back(literalArrayGenerator<false>(v, generatorArgs));
+            }
+        }
+    }
+
+    bsoncxx::array::value evaluate() override {
+        bsoncxx::builder::basic::array builder{};
+        for (auto&& arrGen : _parts) {
+            bsoncxx::array::value arr = arrGen->evaluate();
+            for (auto x : arr.view()) {
+                builder.append(x.get_value());
+            }
+        }
+        auto val = builder.extract();
+        return val;
+    }
+
+protected:
+    DefaultRandom& _rng;
+    ActorId _id;
+    std::vector<UniqueGenerator<bsoncxx::array::value>> _parts;
+};
+
 /** `{^Object: {withNEntries: 10, havingKeys: {^Foo}, andValues: {^Bar}}` */
 class ObjectGenerator : public Generator<bsoncxx::document::value> {
 public:
@@ -1193,7 +1202,7 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      }},
     {"^Concat",
      [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ConcatGenerator>(node, generatorArgs);
+         return std::make_unique<ConcatGenerator>(node, generatorArgs, allParsers);
      }},
     {"^FormatString",
      [](const Node& node, GeneratorArgs generatorArgs) {
