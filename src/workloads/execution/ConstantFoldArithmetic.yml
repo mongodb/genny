@@ -1,0 +1,92 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  SERVER-63099 addresses a correctness issue in how we constant fold during multiplication and addition.
+  This workload tests the impact of the constant folding optimization in the aggregation pipeline to better
+  understand the impact of SERVER-63099 and hopefully mitigate the performance regression with other optimizations.
+  
+
+GlobalDefaults:
+  dbname: &db test
+  batchSize: &batchSize 3000
+  nop: &Nop {Nop: true}
+  constArray: &constArray {^Array: {of: {^RandomInt: {min: 1, max: 500}}, number: 500}}
+
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Phases:
+  - Repeat: 1
+    Database: *db
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10000
+    BatchSize: *batchSize
+    Document: {
+      _id: {^Inc: {}},
+      x: {^RandomInt: {min: -1000, max: 1000}},
+    }
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+
+- Name: Multiply
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - LoadConfig:
+      Path: &multiplyPhase ../../phases/execution/RunLargeArithmeticOp.yml
+      Key: RunMultiply
+      Parameters:
+        Name: AllConstants
+        Expression: {^Concat: {arrays: [*constArray, *constArray, {^RandomInt: {min: -500, max: 500}}]}}
+  - *Nop
+  - LoadConfig:
+      Path: *multiplyPhase
+      Key: RunMultiply
+      Parameters: 
+        Name: StartingFieldpath
+        Expression: {^Concat: {arrays: [["$x"], *constArray, *constArray]}}
+  - *Nop
+  - LoadConfig:
+      Path: *multiplyPhase
+      Key: RunMultiply
+      Parameters: 
+        Name: TailingFieldpath
+        Expression: {^Concat: {arrays: [*constArray, *constArray, ["$x"]]}}
+  - *Nop
+  - LoadConfig:
+      Path: *multiplyPhase
+      Key: RunMultiply
+      Parameters: 
+        Name: MiddleFieldpath
+        Expression: {^Concat: {arrays: [*constArray, ["$x"], *constArray]}}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
