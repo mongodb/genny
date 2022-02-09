@@ -551,6 +551,13 @@ Tests:
     - a: "Hello random person: Huey"
     - a: "Hello random person: IonKmglImH"
 
+  - Name: Concat Generator
+    GivenTemplate:
+      a: {^Concat: {arrays: [["It"], ["worked"]]}}
+    ThenReturns:
+    - a: ["It", "worked"]
+
+
   - Name: Double Generator
     GivenTemplate:
       a: {^RandomDouble: {min: 1.0, max: 20.0}}

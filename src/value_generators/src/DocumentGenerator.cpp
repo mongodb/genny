@@ -570,6 +570,38 @@ protected:
     std::string _separator;
 };
 
+class ConcatGenerator : public Generator<bsoncxx::array::value> {
+
+public:
+    ConcatGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _rng{generatorArgs.rng}, _id{generatorArgs.actorId} {
+        if (!node["arrays"].isSequence()) {
+            std::stringstream msg;
+            msg << "Malformed node for join array. Not a sequence " << node;
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
+        for (const auto&& [k, v] : node["arrays"]) {
+            _parts.push_back(literalArrayGenerator<false>(v, generatorArgs));
+        }
+    }
+
+    bsoncxx::array::value evaluate() override {
+        bsoncxx::builder::basic::array builder{};
+        for (auto&& arrGen : _parts) {
+            bsoncxx::array::value arr = arrGen->evaluate();
+            for (auto x : arr.view()) {
+                builder.append(x.get_value());
+            }
+        }
+        return builder.extract();
+    }
+
+protected:
+    DefaultRandom& _rng;
+    ActorId _id;
+    std::vector<UniqueGenerator<bsoncxx::array::value>> _parts;
+};
+
 /** handle the formatting of an individual array element value with the latest format. */
 void format_element(boost::format& message, bsoncxx::document::element val) {
     switch (val.type()) {
@@ -986,13 +1018,14 @@ private:
 class ObjectGenerator : public Generator<bsoncxx::document::value> {
 public:
     ObjectGenerator(const Node& node,
-                   GeneratorArgs generatorArgs,
-                   std::map<std::string, Parser<UniqueAppendable>> parsers)
+                    GeneratorArgs generatorArgs,
+                    std::map<std::string, Parser<UniqueAppendable>> parsers)
         : _rng{generatorArgs.rng},
           _node{node},
           _generatorArgs{generatorArgs},
           _keyGen{stringGenerator(node["havingKeys"], generatorArgs)},
-          _valueGen{valueGenerator<false, UniqueAppendable>(node["andValues"], generatorArgs, parsers)},
+          _valueGen{
+              valueGenerator<false, UniqueAppendable>(node["andValues"], generatorArgs, parsers)},
           _nTimesGen{intGenerator(extract(node, "withNEntries", "^Object"), generatorArgs)} {}
 
     bsoncxx::document::value evaluate() override {
@@ -1157,6 +1190,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^Join",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<JoinGenerator>(node, generatorArgs);
+     }},
+    {"^Concat",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<ConcatGenerator>(node, generatorArgs);
      }},
     {"^FormatString",
      [](const Node& node, GeneratorArgs generatorArgs) {
