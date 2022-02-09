@@ -569,6 +569,15 @@ Tests:
     ThenReturns:
     - a: ["Hello", "world", 123]
 
+  - Name: Concat with no arrays argument
+    GivenTemplate:
+      a: {^Concat: {foo: "bar"}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Concat with non-array arrays argument
+    GivenTemplate:
+      a: {^Concat: {arrays: "nope"}}
+    ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Double Generator
     GivenTemplate:
