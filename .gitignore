@@ -28,7 +28,3 @@ genny.egg-info
 
 # tools
 curator
-
-# add build dir, but not its contents
-build/*
-!build
