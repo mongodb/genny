@@ -215,6 +215,10 @@ Actors:
                                              data: { ^Join: { array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}},
                                        number: 10}}
 
+            # Concatenate constant arrays and generated arrays together.
+            combinedArrays: {^Concat: {arrays: [[1, 1], [2, 3, 5]]}}
+            combinedArraysWithGenerator: {^Concat: {arrays: [{^Array: {of: 1, number: 2}}, [2, 3, 5]]}}
+
             # Generate an object with 10 key-value pairs using the specified generator for each key and value.
             # Note: the default alphabet used by RandomString is fine for key names.
             # But see https://docs.mongodb.com/manual/core/dot-dollar-considerations/#std-label-crud-concepts-dot-dollar-considerations if other generators are used for the names.
