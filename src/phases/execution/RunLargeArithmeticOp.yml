@@ -21,4 +21,4 @@ RunMultiply:
           }
         }
       ]
-      cursor: {^Parameter: {Name: "BatchSize", Default: 3000}}
+      cursor: {batchSize: {^Parameter: {Name: "BatchSize", Default: 3000}}}

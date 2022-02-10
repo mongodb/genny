@@ -10,12 +10,13 @@ GlobalDefaults:
   dbname: &db test
   batchSize: &batchSize 3000
   nop: &Nop {Nop: true}
-  constArray: &constArray {^Array: {of: {^RandomInt: {min: 1, max: 500}}, number: 500}}
+  constArray: &constArray {^Array: {of: {^RandomInt: {min: -500, max: 500}}, number: 500}}
 
 
 Actors:
 - Name: InsertData
   Type: Loader
+  Threads: 1
   Phases:
   - Repeat: 1
     Database: *db
@@ -62,7 +63,7 @@ Actors:
       Key: RunMultiply
       Parameters:
         Name: AllConstants
-        Expression: {^Concat: {arrays: [*constArray, *constArray, {^RandomInt: {min: -500, max: 500}}]}}
+        Expression: {^Concat: {arrays: [*constArray, *constArray, [{^RandomInt: {min: -500, max: 500}}]]}}
   - *Nop
   - LoadConfig:
       Path: *multiplyPhase
