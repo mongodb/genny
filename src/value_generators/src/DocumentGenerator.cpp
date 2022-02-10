@@ -186,6 +186,10 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node,
 template <bool Verbatim>
 UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
                                                              GeneratorArgs generatorArgs);
+
+UniqueGenerator<bsoncxx::array::value> bsonArrayGenerator(const Node& node,
+                                                          GeneratorArgs generatorArgs);
+
 template <typename Distribution,
           const char* diststring,
           const char* parameter1name,
@@ -985,23 +989,15 @@ private:
 class ConcatGenerator : public Generator<bsoncxx::array::value> {
 
 public:
-    ConcatGenerator(const Node& node,
-                    GeneratorArgs generatorArgs,
-                    std::map<std::string, Parser<UniqueAppendable>> parsers)
+    ConcatGenerator(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng}, _id{generatorArgs.actorId} {
         if (!node["arrays"].isSequence()) {
             std::stringstream msg;
-            msg << "Malformed node for join array. Not a sequence " << node;
+            msg << "Malformed node for concat arrays. Not a sequence " << node;
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
         }
         for (const auto&& [k, v] : node["arrays"]) {
-            auto metaKey = getMetaKey(v);
-            if (metaKey && *metaKey == "^Array") {
-                _parts.push_back(
-                    std::make_unique<ArrayGenerator>(v["^Array"], generatorArgs, parsers));
-            } else {
-                _parts.push_back(literalArrayGenerator<false>(v, generatorArgs));
-            }
+            _parts.push_back(bsonArrayGenerator(v, generatorArgs));
         }
     }
 
@@ -1202,7 +1198,7 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      }},
     {"^Concat",
      [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ConcatGenerator>(node, generatorArgs, allParsers);
+         return std::make_unique<ConcatGenerator>(node, generatorArgs);
      }},
     {"^FormatString",
      [](const Node& node, GeneratorArgs generatorArgs) {
@@ -1505,6 +1501,39 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
         return parserPair->first(node[parserPair->second], generatorArgs);
     }
     return std::make_unique<ConstantAppender<std::string>>(node.to<std::string>());
+}
+
+/**
+ * @param node
+ *   Any node type that evaluates to an array (array literal, literal array of generators, ^Concat,
+ * ^Array)
+ * @return
+ *   The proper generator based on the parsed input.
+ */
+UniqueGenerator<bsoncxx::array::value> bsonArrayGenerator(const Node& node,
+                                                          GeneratorArgs generatorArgs) {
+    // Set of parsers to look when we request an double parser
+    const static std::map<std::string, Parser<UniqueGenerator<bsoncxx::array::value>>> arrayParsers{
+        {"^Concat",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ConcatGenerator>(node, generatorArgs);
+         }},
+        {"^Array",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
+         }},
+    };
+
+    if (auto parserPair = extractKnownParser(node, generatorArgs, arrayParsers)) {
+        // known parser type
+        return parserPair->first(node[parserPair->second], generatorArgs);
+    }
+    if (!node.isSequence()) {
+        std::stringstream msg;
+        msg << "Malformed node array. Not a sequence " << node;
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+    }
+    return literalArrayGenerator<false>(node, generatorArgs);
 }
 
 ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
