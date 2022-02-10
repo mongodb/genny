@@ -9,13 +9,13 @@ Description: |
 RandIntUpToTemplate: &RandIntUpTo {^RandomInt: {min: 1, max: {^Parameter: {Name: "card", Default: 9500}}}}
 # Generates a monotonically increasing integer value from 1 to 'card' parameter of which the default
 # is 9500.
-IncIntUpToTemplate: &IncIntUpTo {^Inc: {start: 1}}
+IncIntTemplate: &IncInt {^Inc: {start: 1}}
 # Generates a random 32bit integer value.
 Rand32BitIntGen: &Rand32BitInt {^RandomInt: {min: 0, max: 2147483647}}
 # Generates a random string of which the length is 10 - 80.
-RandomShortStringGen: &RandShortStr {^RandomString: {length: {^RandomInt: {min: 10, max: 80}}}}
+RandomShortStringGen: &RandShortStr {^FastRandomString: {length: {^RandomInt: {min: 10, max: 80}}}}
 # Generates a random string of which the length is 480 - 960.
-RandMediumStrGen: &RandMediumStr {^RandomString: {length: {^RandomInt: {min: 480, max: 960}}}}
+RandMediumStrGen: &RandMediumStr {^FastRandomString: {length: {^RandomInt: {min: 480, max: 960}}}}
 
 # The small document template for a local collection. Random values are generated for 'int_key' and
 # 'str_key' fields since local collections would have much more documents than foreign collections
@@ -50,12 +50,12 @@ LocalLargeDocTemplate:
 # guaranteed to be generated. But random values are generated for 'arr_key' since the array will
 # 5 elements which is likely to make it possible to generate all possible values.
 ForeignSmallDocTemplate:
-  int_key: *IncIntUpTo
+  int_key: *IncInt
   str_key:
     ^FormatString:
       format: "%010d"
-      withArgs: [*IncIntUpTo]
-  doc_key: {int: *IncIntUpTo, arr: {^Array: {of: *RandIntUpTo, number: 5}}}
+      withArgs: [*IncInt]
+  doc_key: {int: *IncInt, arr: {^Array: {of: *RandIntUpTo, number: 5}}}
   arr_key: {^Array: {of: *RandIntUpTo, number: 5}}
   data1: *Rand32BitInt
 
