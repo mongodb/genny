@@ -2,7 +2,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  TODO: description
+  This phase template constructs an aggregation pipeline that multiplies together
+  the provided arguments.
 
 RunMultiply:
   Repeat: 10

@@ -12,7 +12,7 @@ Description: |
   on the level of associativity in the optimizer.
 
   - Full associativity (current situation on master):
-    All three workloads should have similar performance statistics because all 1000 constants are rearranged to be 
+    All three workloads should have similar performance statistics because all 1000 constants are rearranged to be
     folded into one another, ignoring the order of operations in the original pipeline.
 
   - No associativity (simple correctness fix):
@@ -88,21 +88,21 @@ Actors:
   - LoadConfig:
       Path: *multiplyPhase
       Key: RunMultiply
-      Parameters: 
+      Parameters:
         Name: StartingFieldpath
         Expression: {^Concat: {arrays: [["$x"], *constArray, *constArray]}}
   - *Nop
   - LoadConfig:
       Path: *multiplyPhase
       Key: RunMultiply
-      Parameters: 
+      Parameters:
         Name: TailingFieldpath
         Expression: {^Concat: {arrays: [*constArray, *constArray, ["$x"]]}}
   - *Nop
   - LoadConfig:
       Path: *multiplyPhase
       Key: RunMultiply
-      Parameters: 
+      Parameters:
         Name: MiddleFieldpath
         Expression: {^Concat: {arrays: [*constArray, ["$x"], *constArray]}}
 
