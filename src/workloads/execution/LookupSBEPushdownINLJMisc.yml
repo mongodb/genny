@@ -6,6 +6,7 @@ Description: |
   - DocumentSize: Small document size vs Large document size
   - JoinFieldType: string type / sub-field type / array type / sub-field array type
   - NumberOfLookups: 1 / 2 / 3
+  - The foreign collection has 1500 documents each of which has a unique key value
 
   But this workload does not try to measure performances for full combination of the above test
   dimensions to avoid too lengthy test execution.
@@ -29,7 +30,7 @@ Description: |
     3. Calms down to isolate any trailing impacts from the previous phase
        - 'QuiesceActor'
     4. Runs and measures the miscellaneous lookups.
-       - 'MiscLookup' actor
+       - 'INLJLookupMisc' actor
 
 Keywords:
 - lookup
@@ -37,7 +38,7 @@ Keywords:
 - sbe
 
 # Defines the database name.
-Database: &db lookup_sbe_pushdown_misc
+Database: &db lookup_sbe_pushdown_inlj_misc
 
 # Defines foreign collection names.
 Foreign: &Foreign foreign
@@ -215,7 +216,7 @@ TestOperations: &TestOperations
   OperationCommand: *INLJTripleLookupCmd
 
 # Defines how many times each test operation is executed.
-TestRepeatCount: &TestRepeatCount 10
+TestRepeatCount: &TestRepeatCount 1
 
 Actors:
 # The 'Setup' actor drops the database and runs in the 0th phase.
@@ -365,9 +366,9 @@ Actors:
   - Repeat: 1
   - *Nop
 
-# The 'MiscLookup' actor measures the SBE INLJ lookup performances on an all-feature-flags build and
-# the classic INLJ lookup performances on a normal build and runs in the 4th phase.
-- Name: MiscLookup
+# The 'INLJLookupMisc' actor measures the SBE INLJ lookup performances on an all-feature-flags build
+# and the classic INLJ lookup performances on a normal build and runs in the 4th phase.
+- Name: INLJLookupMisc
   Type: RunCommand
   Database: *db
   Phases:

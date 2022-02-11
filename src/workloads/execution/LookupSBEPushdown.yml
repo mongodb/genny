@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-execution"
 Description: |
-  This workload measures $lookup performance for scenarios that looks up local integer key against
+  This workload measures $lookup performance for scenarios that look up local integer key against
   foreign collection's integer key, when the foreign collections have multiple collection
   cardinalities such as 1500 / 3500 / 5500 / 7500 / 9500.
 
@@ -18,6 +18,7 @@ Description: |
   In summary, this workload conducts testing for the following test matrix:
   - JoinType: HJ / NLJ / INLJ
   - ForeignCollectionCardinality: 1500 / 3500 / 5500 / 7500 / 9500
+  - The local collection has 100k documents and its documents are small ones
 
   The workload consists of the following phases and actors:
     0. Cleans up database
@@ -26,9 +27,11 @@ Description: |
        - 'LoadXXX' actors
     2. Calms down to isolate any trailing impacts from the load phase
        - 'Quiesce' actor
-    3. Runs and measures the SBE HJ lookups and the classic NLJ lookups
+    3. Runs and measures either the SBE HJ lookups or the classic NLJ lookups, depending on the
+       environment
        - 'HJLookup' actor
-    4. Runs and measures the SBE NLJ lookups and the classic NLJ lookups
+    4. Runs and measures either the SBE NLJ lookups or the classic NLJ lookups, depending on the
+       environment
        - 'NLJLookup' actor
     5. Builds indexes on foreign collections
        - 'BuildIndexes' actor
