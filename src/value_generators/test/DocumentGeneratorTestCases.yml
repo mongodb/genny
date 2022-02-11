@@ -590,6 +590,17 @@ Tests:
       a: {^Concat: {arrays: [[1, 2], "nope"]}}
     ThenThrows: InvalidValueGeneratorSyntax
 
+  - Name: Concat with ^Verbatim array.
+    GivenTemplate:
+      a: {^Concat: {arrays: [{^Verbatim: [{^RandomInt: "Hello"}]}, ["World"]]}}
+    ThenReturns:
+    - a: [{^RandomInt: "Hello"}, "World"]
+
+  - Name: Concat with ^Verbatim object is invalid.
+    GivenTemplate:
+      a: {^Concat: {arrays: [{^Verbatim: {^RandomInt: "Hello"}}, ["World"]]}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
   - Name: Double Generator
     GivenTemplate:
       a: {^RandomDouble: {min: 1.0, max: 20.0}}

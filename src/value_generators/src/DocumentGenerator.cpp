@@ -1512,7 +1512,6 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
  */
 UniqueGenerator<bsoncxx::array::value> bsonArrayGenerator(const Node& node,
                                                           GeneratorArgs generatorArgs) {
-    // Set of parsers to look when we request an double parser
     const static std::map<std::string, Parser<UniqueGenerator<bsoncxx::array::value>>> arrayParsers{
         {"^Concat",
          [](const Node& node, GeneratorArgs generatorArgs) {
@@ -1522,7 +1521,14 @@ UniqueGenerator<bsoncxx::array::value> bsonArrayGenerator(const Node& node,
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
          }},
-    };
+        {"^Verbatim", [](const Node& node, GeneratorArgs generatorArgs) {
+             if (!node.isSequence()) {
+                 std::stringstream msg;
+                 msg << "Malformed node array. Not a sequence " << node;
+                 BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+             }
+             return literalArrayGenerator<true>(node, generatorArgs);
+         }}};
 
     if (auto parserPair = extractKnownParser(node, generatorArgs, arrayParsers)) {
         // known parser type
