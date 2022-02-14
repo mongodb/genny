@@ -13,7 +13,8 @@ Description: |
   implementation.
 
   Numbers on the 'standalone-all-feature-flags' environment are for the SBE $lookup and numbers on
-  the 'standalone' environment for the classic $lookup.
+  the 'standalone' environment for the classic $lookup until the SBE $lookup pushdown feature will
+  be turned on by default.
 
   In summary, this workload conducts testing for the following test matrix:
   - JoinType: HJ / NLJ / INLJ
@@ -418,7 +419,7 @@ Actors:
   - *Nop
   - *Nop
 
-# The 'INLJLookup' actor measures the INLJ lookup performances and  runs in the 7th phase.
+# The 'INLJLookup' actor measures the INLJ lookup performances and runs in the 7th phase.
 - Name: INLJLookup
   Type: RunCommand
   Database: *db

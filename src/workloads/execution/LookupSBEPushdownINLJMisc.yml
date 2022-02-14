@@ -18,7 +18,8 @@ Description: |
   since the INLJ lookup is supposed to be very fast on both the SBE and the classic egnine.
 
   Numbers on the 'standalone-all-feature-flags' environment are for the SBE INLJ lookup and numbers
-  on the 'standalone' environment for the classic INLJ lookup.
+  on the 'standalone' environment for the classic INLJ lookup until the SBE $lookup feature will be
+  turned on by default.
 
   The workload consists of the following phases and actors:
     0. Cleans up database
