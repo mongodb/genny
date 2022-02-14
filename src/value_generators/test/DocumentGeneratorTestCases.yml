@@ -601,6 +601,12 @@ Tests:
       a: {^Concat: {arrays: [{^Verbatim: {^RandomInt: "Hello"}}, ["World"]]}}
     ThenThrows: InvalidValueGeneratorSyntax
 
+  - Name: Nested ^Concat
+    GivenTemplate:
+      a: {^Concat: {arrays: [{^Concat: {arrays: [[1,2], [3, 4]]}}, {^Concat: {arrays: [{^Array: {of: 5, number: 3}}]}}]}}
+    ThenReturns:
+      - a: [1,2,3,4,5,5,5]
+
   - Name: Double Generator
     GivenTemplate:
       a: {^RandomDouble: {min: 1.0, max: 20.0}}

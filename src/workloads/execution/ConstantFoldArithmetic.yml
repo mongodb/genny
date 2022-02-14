@@ -11,7 +11,7 @@ Description: |
   The three pipelines in this workload that contain a fieldpath should have different performance characteristics depending
   on the level of associativity in the optimizer.
 
-  - Full associativity (current situation on master):
+  - Full associativity:
     All three pipelines should have similar performance statistics because all 1000 constants are rearranged to be
     folded into one another, ignoring the order of operations in the original pipeline.
 
@@ -72,7 +72,7 @@ Actors:
   - Repeat: 1
   - *Nop
 
-- Name: Multiply
+- Name: RunMultiply
   Type: RunCommand
   Threads: 1
   Phases:
@@ -80,28 +80,28 @@ Actors:
   - *Nop
   - LoadConfig:
       Path: &multiplyPhase ../../phases/execution/RunLargeArithmeticOp.yml
-      Key: RunMultiply
+      Key: Multiply
       Parameters:
         Name: AllConstants
         Expression: {^Concat: {arrays: [*constArray, *constArray, [{^RandomInt: {min: -500, max: 500}}]]}}
   - *Nop
   - LoadConfig:
       Path: *multiplyPhase
-      Key: RunMultiply
+      Key: Multiply
       Parameters:
         Name: StartingFieldpath
         Expression: {^Concat: {arrays: [["$x"], *constArray, *constArray]}}
   - *Nop
   - LoadConfig:
       Path: *multiplyPhase
-      Key: RunMultiply
+      Key: Multiply
       Parameters:
         Name: TailingFieldpath
         Expression: {^Concat: {arrays: [*constArray, *constArray, ["$x"]]}}
   - *Nop
   - LoadConfig:
       Path: *multiplyPhase
-      Key: RunMultiply
+      Key: Multiply
       Parameters:
         Name: MiddleFieldpath
         Expression: {^Concat: {arrays: [*constArray, ["$x"], *constArray]}}

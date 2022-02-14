@@ -5,7 +5,7 @@ Description: |
   This phase template constructs an aggregation pipeline that multiplies together
   the provided arguments.
 
-RunMultiply:
+Multiply:
   Repeat: 10
   Database: {^Parameter: {Name: "Database", Default: "test"}}
   Operations:
