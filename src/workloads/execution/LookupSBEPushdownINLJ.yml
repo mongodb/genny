@@ -62,6 +62,8 @@ Foreign_SmallDoc_128kdocs_Inc128000g: &Foreign_SmallDoc_128kdocs_Inc128000g fore
 Foreign_SmallDoc_512kdocs_Inc512000g: &Foreign_SmallDoc_512kdocs_Inc512000g foreign_smalldoc_512kdocs_inc512000g
 
 # Defines foreign collection names with duplicated keys.
+# 64 duplicates per each key
+Foreign_SmallDoc_128kdocs_Inc2000g: &Foreign_SmallDoc_128kdocs_Inc2000g foreign_smalldoc_128kdocs_inc2000g
 # 16 duplicates per each key
 Foreign_SmallDoc_128kdocs_Inc8000g: &Foreign_SmallDoc_128kdocs_Inc8000g foreign_smalldoc_128kdocs_inc8000g
 # 4 duplicates per each key
@@ -245,6 +247,14 @@ NLJLookupForeign128000OnLargeStrKeyCmd: &NLJLookupForeign128000OnLargeStrKeyCmd
       lk: lstr_key
       k: lstr_key
 
+NLJLookupForeign128000_2000gCmd: &NLJLookupForeign128000_2000gCmd
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *Local_SmallDoc_2048kdocs_Rand2000g
+      f: *Foreign_SmallDoc_128kdocs_Inc2000g
+
 NLJLookupForeign128000_8000gCmd: &NLJLookupForeign128000_8000gCmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
@@ -329,6 +339,9 @@ INLJTestOperations: &INLJTestOperations
 - OperationMetricsName: Local_SmallDoc_2048kdocs_Rand128000g_LargeStrTopField_Foreign_SmallDoc_128kdocs_Inc128000g_LargeStrTopField
   OperationName: RunCommand
   OperationCommand: *NLJLookupForeign128000OnLargeStrKeyCmd
+- OperationMetricsName: Local_SmallDoc_2048kdocs_Rand2000g_IntTopField_Foreign_SmallDoc_128kdocs_Inc2000g_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *NLJLookupForeign128000_2000gCmd
 - OperationMetricsName: Local_SmallDoc_2048kdocs_Rand8000g_IntTopField_Foreign_SmallDoc_128kdocs_Inc8000g_IntTopField
   OperationName: RunCommand
   OperationCommand: *NLJLookupForeign128000_8000gCmd
@@ -362,6 +375,8 @@ IndexSpec: &IndexSpec
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 10
 
+Nop: &Nop {Nop: true}
+
 Actors:
 # The 'Setup' actor drops the database in the 0th phase and turns off the SBE $lookup pushdown
 # feature in the 1st phase.
@@ -391,7 +406,7 @@ Actors:
   Database: *db
   Threads: 1
   Phases:
-  - &Nop {Nop: true}
+  - *Nop
   - Repeat: 2000
     Threads: 1
     Collection: *Foreign_SmallDoc_2kdocs_Inc2000g
@@ -646,6 +661,26 @@ Actors:
 #     Nop: true
 
 # The 'LoadLocalXXX' actors for random keys run in the 3rd phase.
+- Name: LoadForeign_SmallDoc_128kdocs_Inc2000g
+  Type: CrudActor
+  Threads: 16
+  Database: *db
+  Phases:
+  - Phase: 0..2
+    Nop: true
+  - Repeat: 2000
+    Threads: 1
+    Collection: *Foreign_SmallDoc_128kdocs_Inc2000g
+    Operations:
+    - OperationName: insertMany
+      OperationCommand:
+        Documents:
+        - *Foreign_SmallDoc_Inc2000g
+        - *Foreign_SmallDoc_Inc2000g
+        - *Foreign_SmallDoc_Inc2000g
+        - *Foreign_SmallDoc_Inc2000g
+  - Phase: 4..8
+    Nop: true
 - Name: LoadForeign_SmallDoc_128kdocs_Inc8000g
   Type: CrudActor
   Threads: 16
@@ -704,6 +739,10 @@ Actors:
     - OperationName: RunCommand
       OperationCommand:
         createIndexes: *Foreign_SmallDoc_128kdocs_Inc128000g
+        indexes: *IndexSpec
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *Foreign_SmallDoc_128kdocs_Inc2000g
         indexes: *IndexSpec
     - OperationName: RunCommand
       OperationCommand:
