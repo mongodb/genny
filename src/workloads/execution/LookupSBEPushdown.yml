@@ -16,6 +16,18 @@ Description: |
   the 'standalone' environment for the classic $lookup until the SBE $lookup pushdown feature will
   be turned on by default.
 
+  Naming convention for collection names:
+  Foreign_[DocumentSize]_[NoOfDocs]docs_[KeyGenerationMethod][NoOfUniqueKeys]g
+  - DocumentSize: SmallDoc / LocalLargeDoc
+  - NoOfDocs: 'k' means 1000 and 'docs' means documents
+  - KeyGenerationMethod:
+    . Inc: Monotonically increasing key values
+    . Rand: Randomly generated key values
+  - NoOfUniqueKeys: 'g' means groups
+
+  Name convention for OperationMetricsName:
+  [LocalCollectionName]_[LocalJoinFieldType]_[ForeignCollectionName]_[ForeignJoinFieldType]
+
   In summary, this workload conducts testing for the following test matrix:
   - JoinType: HJ / NLJ / INLJ
   - ForeignCollectionCardinality: 1500 / 3500 / 5500 / 7500 / 9500
@@ -50,59 +62,92 @@ Keywords:
 Database: &db lookup_sbe_pushdown
 
 # Defines foreign collection names.
-Foreign1500: &Foreign1500 foreign_1500
-Foreign3500: &Foreign3500 foreign_3500
-Foreign5500: &Foreign5500 foreign_5500
-Foreign7500: &Foreign7500 foreign_7500
-Foreign9500: &Foreign9500 foreign_9500
+Foreign_SmallDoc_1500docs_Inc1500g: &Foreign_SmallDoc_1500docs_Inc1500g foreign_smalldoc_1500docs_inc1500g
+Foreign_SmallDoc_3500docs_Inc3500g: &Foreign_SmallDoc_3500docs_Inc3500g foreign_smalldoc_3500docs_inc3500g
+Foreign_SmallDoc_5500docs_Inc5500g: &Foreign_SmallDoc_5500docs_Inc5500g foreign_smalldoc_5500docs_inc5500g
+Foreign_SmallDoc_7500docs_Inc7500g: &Foreign_SmallDoc_7500docs_Inc7500g foreign_smalldoc_7500docs_inc7500g
+Foreign_SmallDoc_9500docs_Inc9500g: &Foreign_SmallDoc_9500docs_Inc9500g foreign_smalldoc_9500docs_inc9500g
 
 # Defines the local collection name.
-LocalSmallDoc100k: &LocalSmallDoc100k local_smalldoc_100k
+Local_SmallDoc_100kdocs_Rand1500g: &Local_SmallDoc_100kdocs_Rand1500g local_smalldoc_100kdocs_rand1500g
+Local_SmallDoc_100kdocs_Rand3500g: &Local_SmallDoc_100kdocs_Rand3500g local_smalldoc_100kdocs_rand3500g
+Local_SmallDoc_100kdocs_Rand5500g: &Local_SmallDoc_100kdocs_Rand5500g local_smalldoc_100kdocs_rand5500g
+Local_SmallDoc_100kdocs_Rand7500g: &Local_SmallDoc_100kdocs_Rand7500g local_smalldoc_100kdocs_rand7500g
+Local_SmallDoc_100kdocs_Rand9500g: &Local_SmallDoc_100kdocs_Rand9500g local_smalldoc_100kdocs_rand9500g
 
-# Defines the local collection document type which is used by 'LoadLocalSmallDoc100k' actor. See
-# 'LocalSmallDocTemplate' to understand how each doc is filled.
-LocalSmallDoc: &LocalSmallDoc
+# Defines the local collection document generators which are used by 'LoadLocalXXX' actors. See
+# 'LocalSmallDocRandKeyTemplate' to understand how each doc is filled.
+Local_SmallDoc_Rand1500g: &Local_SmallDoc_Rand1500g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
-    Key: LocalSmallDocTemplate
-
-# Defines foreign collections with 1500 / 3500 / 5500 / 7500 / 9500 documents which is used by
-# 'LoadForeign[1500|3500|5500|7500|9500]' actor. See 'ForeignSmallDocTemplate' to understand how
-# each doc is filled.
-ForeignSmallDoc1500: &ForeignSmallDoc1500
-  LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
-    Key: ForeignSmallDocTemplate
+    Key: LocalSmallDocRandKeyTemplate
     Parameters:
-      card: 1500
+      nkeys: 1500
 
-ForeignSmallDoc3500: &ForeignSmallDoc3500
+Local_SmallDoc_Rand3500g: &Local_SmallDoc_Rand3500g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
-    Key: ForeignSmallDocTemplate
+    Key: LocalSmallDocRandKeyTemplate
     Parameters:
-      card: 3500
+      nkeys: 3500
 
-ForeignSmallDoc5500: &ForeignSmallDoc5500
+Local_SmallDoc_Rand5500g: &Local_SmallDoc_Rand5500g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
-    Key: ForeignSmallDocTemplate
+    Key: LocalSmallDocRandKeyTemplate
     Parameters:
-      card: 5500
+      nkeys: 5500
 
-ForeignSmallDoc7500: &ForeignSmallDoc7500
+Local_SmallDoc_Rand7500g: &Local_SmallDoc_Rand7500g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
-    Key: ForeignSmallDocTemplate
+    Key: LocalSmallDocRandKeyTemplate
     Parameters:
-      card: 7500
+      nkeys: 7500
 
-ForeignSmallDoc9500: &ForeignSmallDoc9500
+Local_SmallDoc_Rand9500g: &Local_SmallDoc_Rand9500g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
-    Key: ForeignSmallDocTemplate
+    Key: LocalSmallDocRandKeyTemplate
     Parameters:
-      card: 9500
+      nkeys: 9500
+
+# Defines foreign collection document generators which are used by 'LoadForeignXXX' actor. See
+# 'ForeignSmallDocIncKeyTemplate' to understand how each doc is filled.
+Foreign_SmallDoc_Inc1500g: &Foreign_SmallDoc_Inc1500g
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: ForeignSmallDocIncKeyTemplate
+    Parameters:
+      nkeys: 1500
+
+Foreign_SmallDoc_Inc3500g: &Foreign_SmallDoc_Inc3500g
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: ForeignSmallDocIncKeyTemplate
+    Parameters:
+      nkeys: 3500
+
+Foreign_SmallDoc_Inc5500g: &Foreign_SmallDoc_Inc5500g
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: ForeignSmallDocIncKeyTemplate
+    Parameters:
+      nkeys: 5500
+
+Foreign_SmallDoc_Inc7500g: &Foreign_SmallDoc_Inc7500g
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: ForeignSmallDocIncKeyTemplate
+    Parameters:
+      nkeys: 7500
+
+Foreign_SmallDoc_Inc9500g: &Foreign_SmallDoc_Inc9500g
+  LoadConfig:
+    Path: "../../phases/execution/LookupCommands.yml"
+    Key: ForeignSmallDocIncKeyTemplate
+    Parameters:
+      nkeys: 9500
 
 # Defines HJ lookup commands which are used by 'HJLookup' actor. See 'HJLookupCmdTemplate' for
 # details. To enable the SBE HJ lookup, the template has 'allowDiskUse: true' argument and all
@@ -113,40 +158,40 @@ HJLookupForeign1500Cmd: &HJLookupForeign1500Cmd
     Path: "../../phases/execution/LookupCommands.yml"
     Key: HJLookupCmdTemplate
     Parameters:
-      l: *LocalSmallDoc100k
-      f: *Foreign1500
+      l: *Local_SmallDoc_100kdocs_Rand1500g
+      f: *Foreign_SmallDoc_1500docs_Inc1500g
 
 HJLookupForeign3500Cmd: &HJLookupForeign3500Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: HJLookupCmdTemplate
     Parameters:
-      l: *LocalSmallDoc100k
-      f: *Foreign3500
+      l: *Local_SmallDoc_100kdocs_Rand3500g
+      f: *Foreign_SmallDoc_3500docs_Inc3500g
 
 HJLookupForeign5500Cmd: &HJLookupForeign5500Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: HJLookupCmdTemplate
     Parameters:
-      l: *LocalSmallDoc100k
-      f: *Foreign5500
+      l: *Local_SmallDoc_100kdocs_Rand5500g
+      f: *Foreign_SmallDoc_5500docs_Inc5500g
 
 HJLookupForeign7500Cmd: &HJLookupForeign7500Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: HJLookupCmdTemplate
     Parameters:
-      l: *LocalSmallDoc100k
-      f: *Foreign7500
+      l: *Local_SmallDoc_100kdocs_Rand7500g
+      f: *Foreign_SmallDoc_7500docs_Inc7500g
 
 HJLookupForeign9500Cmd: &HJLookupForeign9500Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: HJLookupCmdTemplate
     Parameters:
-      l: *LocalSmallDoc100k
-      f: *Foreign9500
+      l: *Local_SmallDoc_100kdocs_Rand9500g
+      f: *Foreign_SmallDoc_9500docs_Inc9500g
 
 # Defines NLJ lookup commands which are used by 'NLJLookup' / 'INLJLookup' actors. See
 # 'NLJLookupCmdTemplate' for details. The command template can be used for INLJ too because INLJ
@@ -156,74 +201,74 @@ NLJLookupForeign1500Cmd: &NLJLookupForeign1500Cmd
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *LocalSmallDoc100k
-      f: *Foreign1500
+      l: *Local_SmallDoc_100kdocs_Rand1500g
+      f: *Foreign_SmallDoc_1500docs_Inc1500g
 
 NLJLookupForeign3500Cmd: &NLJLookupForeign3500Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *LocalSmallDoc100k
-      f: *Foreign3500
+      l: *Local_SmallDoc_100kdocs_Rand3500g
+      f: *Foreign_SmallDoc_3500docs_Inc3500g
 
 NLJLookupForeign5500Cmd: &NLJLookupForeign5500Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *LocalSmallDoc100k
-      f: *Foreign5500
+      l: *Local_SmallDoc_100kdocs_Rand5500g
+      f: *Foreign_SmallDoc_5500docs_Inc5500g
 
 NLJLookupForeign7500Cmd: &NLJLookupForeign7500Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *LocalSmallDoc100k
-      f: *Foreign7500
+      l: *Local_SmallDoc_100kdocs_Rand7500g
+      f: *Foreign_SmallDoc_7500docs_Inc7500g
 
 NLJLookupForeign9500Cmd: &NLJLookupForeign9500Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *LocalSmallDoc100k
-      f: *Foreign9500
+      l: *Local_SmallDoc_100kdocs_Rand9500g
+      f: *Foreign_SmallDoc_9500docs_Inc9500g
 
 # Defines test operations for 'HJLookup' actor.
 HJTestOperations: &HJTestOperations
-- OperationMetricsName: Foreign1500_IntTopField
+- OperationMetricsName: Local_SmallDoc_100kdocs_Rand1500g_IntTopField_Foreign_SmallDoc_1500docs_Inc1500g_IntTopField
   OperationName: RunCommand
   OperationCommand: *HJLookupForeign1500Cmd
-- OperationMetricsName: Foreign3500_IntTopField
+- OperationMetricsName: Local_SmallDoc_100kdocs_Rand3500g_IntTopField_Foreign_SmallDoc_3500docs_Inc3500g_IntTopField
   OperationName: RunCommand
   OperationCommand: *HJLookupForeign3500Cmd
-- OperationMetricsName: Foreign5500_IntTopField
+- OperationMetricsName: Local_SmallDoc_100kdocs_Rand5500g_IntTopField_Foreign_SmallDoc_5500docs_Inc5500g_IntTopField
   OperationName: RunCommand
   OperationCommand: *HJLookupForeign5500Cmd
-- OperationMetricsName: Foreign7500_IntTopField
+- OperationMetricsName: Local_SmallDoc_100kdocs_Rand7500g_IntTopField_Foreign_SmallDoc_7500docs_Inc7500g_IntTopField
   OperationName: RunCommand
   OperationCommand: *HJLookupForeign7500Cmd
-- OperationMetricsName: Foreign9500_IntTopField
+- OperationMetricsName: Local_SmallDoc_100kdocs_Rand9500g_IntTopField_Foreign_SmallDoc_9500docs_Inc9500g_IntTopField
   OperationName: RunCommand
   OperationCommand: *HJLookupForeign9500Cmd
 
 # Defines test operations for 'NLJLookup'/ 'INLJLookup' actors.
 NLJTestOperations: &NLJTestOperations
-- OperationMetricsName: Foreign1500_IntTopField
+- OperationMetricsName: Local_SmallDoc_100kdocs_Rand1500g_IntTopField_Foreign_SmallDoc_1500docs_Inc1500g_IntTopField
   OperationName: RunCommand
   OperationCommand: *NLJLookupForeign1500Cmd
-- OperationMetricsName: Foreign3500_IntTopField
+- OperationMetricsName: Local_SmallDoc_100kdocs_Rand3500g_IntTopField_Foreign_SmallDoc_3500docs_Inc3500g_IntTopField
   OperationName: RunCommand
   OperationCommand: *NLJLookupForeign3500Cmd
-- OperationMetricsName: Foreign5500_IntTopField
+- OperationMetricsName: Local_SmallDoc_100kdocs_Rand5500g_IntTopField_Foreign_SmallDoc_5500docs_Inc5500g_IntTopField
   OperationName: RunCommand
   OperationCommand: *NLJLookupForeign5500Cmd
-- OperationMetricsName: Foreign7500_IntTopField
+- OperationMetricsName: Local_SmallDoc_100kdocs_Rand7500g_IntTopField_Foreign_SmallDoc_7500docs_Inc7500g_IntTopField
   OperationName: RunCommand
   OperationCommand: *NLJLookupForeign7500Cmd
-- OperationMetricsName: Foreign9500_IntTopField
+- OperationMetricsName: Local_SmallDoc_100kdocs_Rand9500g_IntTopField_Foreign_SmallDoc_9500docs_Inc9500g_IntTopField
   OperationName: RunCommand
   OperationCommand: *NLJLookupForeign9500Cmd
 
@@ -246,9 +291,8 @@ Actors:
   - Phase: 1..7
     Nop: true
 
-# The 'LoadForeign1500' / 'LoadForeign3500' / 'LoadForeign5500' / 'LoadForeign7500' /
-# 'LoadForeign9500' / 'LoadLocalSmallDoc100k' actors run in the 1st phase.
-- Name: LoadForeign1500
+# The 'LoadForeignXXX' / 'LoadLocalXXX' actors run in the 1st phase.
+- Name: LoadForeign_SmallDoc_1500docs_Inc1500g
   Type: CrudActor
   Database: *db
   Threads: 1
@@ -256,15 +300,15 @@ Actors:
   - &Nop {Nop: true}
   - Repeat: 1500
     Threads: 1
-    Collection: *Foreign1500
+    Collection: *Foreign_SmallDoc_1500docs_Inc1500g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *ForeignSmallDoc1500
+        Document: *Foreign_SmallDoc_Inc1500g
   - Phase: 2..7
     Nop: true
 
-- Name: LoadForeign3500
+- Name: LoadForeign_SmallDoc_3500docs_Inc3500g
   Type: CrudActor
   Database: *db
   Threads: 1
@@ -272,15 +316,15 @@ Actors:
   - *Nop
   - Repeat: 3500
     Threads: 1
-    Collection: *Foreign3500
+    Collection: *Foreign_SmallDoc_3500docs_Inc3500g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *ForeignSmallDoc3500
+        Document: *Foreign_SmallDoc_Inc3500g
   - Phase: 2..7
     Nop: true
 
-- Name: LoadForeign5500
+- Name: LoadForeign_SmallDoc_5500docs_Inc5500g
   Type: CrudActor
   Database: *db
   Threads: 1
@@ -288,15 +332,15 @@ Actors:
   - *Nop
   - Repeat: 5500
     Threads: 1
-    Collection: *Foreign5500
+    Collection: *Foreign_SmallDoc_5500docs_Inc5500g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *ForeignSmallDoc5500
+        Document: *Foreign_SmallDoc_Inc5500g
   - Phase: 2..7
     Nop: true
 
-- Name: LoadForeign7500
+- Name: LoadForeign_SmallDoc_7500docs_Inc7500g
   Type: CrudActor
   Database: *db
   Threads: 1
@@ -304,15 +348,15 @@ Actors:
   - *Nop
   - Repeat: 7500
     Threads: 1
-    Collection: *Foreign7500
+    Collection: *Foreign_SmallDoc_7500docs_Inc7500g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *ForeignSmallDoc7500
+        Document: *Foreign_SmallDoc_Inc7500g
   - Phase: 2..7
     Nop: true
 
-- Name: LoadForeign9500
+- Name: LoadForeign_SmallDoc_9500docs_Inc9500g
   Type: CrudActor
   Database: *db
   Threads: 1
@@ -320,15 +364,15 @@ Actors:
   - *Nop
   - Repeat: 9500
     Threads: 1
-    Collection: *Foreign9500
+    Collection: *Foreign_SmallDoc_9500docs_Inc9500g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *ForeignSmallDoc9500
+        Document: *Foreign_SmallDoc_Inc9500g
   - Phase: 2..7
     Nop: true
 
-- Name: LoadLocalSmallDoc100k
+- Name: LoadLocal_SmallDoc_100kdocs_Rand1500g
   Type: CrudActor
   Database: *db
   Threads: 10
@@ -336,11 +380,75 @@ Actors:
   - *Nop
   - Repeat: 10000
     Threads: 1
-    Collection: *LocalSmallDoc100k
+    Collection: *Local_SmallDoc_100kdocs_Rand1500g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *LocalSmallDoc
+        Document: *Local_SmallDoc_Rand1500g
+  - Phase: 2..7
+    Nop: true
+
+- Name: LoadLocal_SmallDoc_100kdocs_Rand3500g
+  Type: CrudActor
+  Database: *db
+  Threads: 10
+  Phases:
+  - *Nop
+  - Repeat: 10000
+    Threads: 1
+    Collection: *Local_SmallDoc_100kdocs_Rand3500g
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *Local_SmallDoc_Rand3500g
+  - Phase: 2..7
+    Nop: true
+
+- Name: LoadLocal_SmallDoc_100kdocs_Rand5500g
+  Type: CrudActor
+  Database: *db
+  Threads: 10
+  Phases:
+  - *Nop
+  - Repeat: 10000
+    Threads: 1
+    Collection: *Local_SmallDoc_100kdocs_Rand5500g
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *Local_SmallDoc_Rand5500g
+  - Phase: 2..7
+    Nop: true
+
+- Name: LoadLocal_SmallDoc_100kdocs_Rand7500g
+  Type: CrudActor
+  Database: *db
+  Threads: 10
+  Phases:
+  - *Nop
+  - Repeat: 10000
+    Threads: 1
+    Collection: *Local_SmallDoc_100kdocs_Rand7500g
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *Local_SmallDoc_Rand7500g
+  - Phase: 2..7
+    Nop: true
+
+- Name: LoadLocal_SmallDoc_100kdocs_Rand9500g
+  Type: CrudActor
+  Database: *db
+  Threads: 10
+  Phases:
+  - *Nop
+  - Repeat: 10000
+    Threads: 1
+    Collection: *Local_SmallDoc_100kdocs_Rand9500g
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *Local_SmallDoc_Rand9500g
   - Phase: 2..7
     Nop: true
 
@@ -386,8 +494,8 @@ Actors:
   - Phase: 5..7
     Nop: true
 
-# The 'BuildIndexes' actor builds indexes on 'int_key' join field of foreign collections so that
-# INLJ lookup performances can be measured and runs in the 5th phase.
+# The 'BuildIndexes' actor builds indexes on 'int_key' / 'str_key' join fields of foreign
+# collections so that INLJ lookup performances can be measured and runs in the 5th phase.
 - Name: BuildIndexes
   Type: RunCommand
   Phases:
@@ -398,23 +506,23 @@ Actors:
     Operations:
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *Foreign1500
-        indexes: &IndexSpec [{key: {"int_key": 1}, name: "idx"}]
+        createIndexes: *Foreign_SmallDoc_1500docs_Inc1500g
+        indexes: &IndexSpec [{key: {"int_key": 1}, name: "idx"}, {key: {str_key: 1}, name: "str_idx"}]
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *Foreign3500
+        createIndexes: *Foreign_SmallDoc_3500docs_Inc3500g
         indexes: *IndexSpec
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *Foreign5500
+        createIndexes: *Foreign_SmallDoc_5500docs_Inc5500g
         indexes: *IndexSpec
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *Foreign7500
+        createIndexes: *Foreign_SmallDoc_7500docs_Inc7500g
         indexes: *IndexSpec
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *Foreign9500
+        createIndexes: *Foreign_SmallDoc_9500docs_Inc9500g
         indexes: *IndexSpec
   - *Nop
   - *Nop

@@ -6,7 +6,7 @@ Description: |
 # Defines value generators.
 
 # Generates a random integer value from 1 to 'card' parameter of which the default is 9500.
-RandIntUpToTemplate: &RandIntUpTo {^RandomInt: {min: 1, max: {^Parameter: {Name: "card", Default: 9500}}}}
+RandIntUpToTemplate: &RandIntUpTo {^RandomInt: {min: 1, max: {^Parameter: {Name: "nkeys", Default: 9500}}}}
 # Generates a monotonically increasing integer value from 1 to 'card' parameter of which the default
 # is 9500.
 IncIntTemplate: &IncInt {^Inc: {start: 1}}
@@ -20,7 +20,7 @@ RandMediumStrGen: &RandMediumStr {^FastRandomString: {length: {^RandomInt: {min:
 # The small document template for a local collection. Random values are generated for 'int_key' and
 # 'str_key' fields since local collections would have much more documents than foreign collections
 # and it's highly probable that all possible values are generated for the join key.
-LocalSmallDocTemplate:
+LocalSmallDocRandKeyTemplate:
   int_key: *RandIntUpTo
   str_key:
     ^FormatString:
@@ -32,7 +32,7 @@ LocalSmallDocTemplate:
 
 # The large document template for a local collection. The same comment applies to 'int_key' and
 # 'str_key' fields as 'LocalSmallDocTemplate'.
-LocalLargeDocTemplate:
+LocalLargeDocRandKeyTemplate:
   int_key: *RandIntUpTo
   str_key:
     ^FormatString:
@@ -49,7 +49,7 @@ LocalLargeDocTemplate:
 # for 'int_key' / 'str_key' / 'doc_key.int' fields so that every possible values for the range are
 # guaranteed to be generated. But random values are generated for 'arr_key' since the array will
 # 5 elements which is likely to make it possible to generate all possible values.
-ForeignSmallDocTemplate:
+ForeignSmallDocIncKeyTemplate:
   int_key: *IncInt
   str_key:
     ^FormatString:
@@ -58,6 +58,31 @@ ForeignSmallDocTemplate:
   doc_key: {int: *IncInt, arr: {^Array: {of: *RandIntUpTo, number: 5}}}
   arr_key: {^Array: {of: *RandIntUpTo, number: 5}}
   data1: *Rand32BitInt
+
+ForeignSmallDocRandKeyTemplate:
+  int_key: *RandIntUpTo
+  str_key:
+    ^FormatString:
+      format: "%010d"
+      withArgs: [*RandIntUpTo]
+  doc_key: {int: *IncInt, arr: {^Array: {of: *RandIntUpTo, number: 5}}}
+  arr_key: {^Array: {of: *RandIntUpTo, number: 5}}
+  data1: *Rand32BitInt
+
+ForeignLargeDocIncKeyTemplate:
+  int_key: *IncInt
+  str_key:
+    ^FormatString:
+      format: "%010d"
+      withArgs: [*IncInt]
+  doc_key: {int: *IncInt, arr: {^Array: {of: *RandIntUpTo, number: 5}}}
+  arr_key: {^Array: {of: *RandIntUpTo, number: 5}}
+  data1: *Rand32BitInt
+  data2: *Rand32BitInt
+  data3: *Rand32BitInt
+  data4: *Rand32BitInt
+  payload1: *RandShortStr
+  payload2: *RandMediumStr
 
 # The command template for HJ lookups. Note that 'allowDiskUse' is true.
 HJLookupCmdTemplate:
