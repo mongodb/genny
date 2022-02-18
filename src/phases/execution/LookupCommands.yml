@@ -26,6 +26,10 @@ LocalSmallDocRandKeyTemplate:
     ^FormatString:
       format: "%010d"
       withArgs: [*RandIntUpTo]
+  lstr_key:
+    ^FormatString:
+      format: "%040d"
+      withArgs: [*RandIntUpTo]
   data1: *Rand32BitInt
   data2: *Rand32BitInt
   payload: *RandShortStr
@@ -37,6 +41,10 @@ LocalLargeDocRandKeyTemplate:
   str_key:
     ^FormatString:
       format: "%010d"
+      withArgs: [*RandIntUpTo]
+  lstr_key:
+    ^FormatString:
+      format: "%040d"
       withArgs: [*RandIntUpTo]
   data1: *Rand32BitInt
   data2: *Rand32BitInt
@@ -55,6 +63,10 @@ ForeignSmallDocIncKeyTemplate:
     ^FormatString:
       format: "%010d"
       withArgs: [*IncInt]
+  lstr_key:
+    ^FormatString:
+      format: "%040d"
+      withArgs: [*IncInt]
   doc_key: {int: *IncInt, arr: {^Array: {of: *RandIntUpTo, number: 5}}}
   arr_key: {^Array: {of: *RandIntUpTo, number: 5}}
   data1: *Rand32BitInt
@@ -65,6 +77,10 @@ ForeignSmallDocRandKeyTemplate:
     ^FormatString:
       format: "%010d"
       withArgs: [*RandIntUpTo]
+  lstr_key:
+    ^FormatString:
+      format: "%040d"
+      withArgs: [*RandIntUpTo]
   doc_key: {int: *IncInt, arr: {^Array: {of: *RandIntUpTo, number: 5}}}
   arr_key: {^Array: {of: *RandIntUpTo, number: 5}}
   data1: *Rand32BitInt
@@ -74,6 +90,10 @@ ForeignLargeDocIncKeyTemplate:
   str_key:
     ^FormatString:
       format: "%010d"
+      withArgs: [*IncInt]
+  lstr_key:
+    ^FormatString:
+      format: "%040d"
       withArgs: [*IncInt]
   doc_key: {int: *IncInt, arr: {^Array: {of: *RandIntUpTo, number: 5}}}
   arr_key: {^Array: {of: *RandIntUpTo, number: 5}}

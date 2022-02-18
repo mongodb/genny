@@ -55,250 +55,309 @@ Keywords:
 Database: &db lookup_sbe_pushdown_inlj
 
 # Defines foreign collection names with increasing keys.
-Foreign_SmallDoc_15kdocs_Inc15000g: &Foreign_SmallDoc_15kdocs_Inc15000g foreign_smalldoc_15kdocs_inc15000g
-Foreign_SmallDoc_35kdocs_Inc35000g: &Foreign_SmallDoc_35kdocs_Inc35000g foreign_smalldoc_35kdocs_inc35000g
-Foreign_SmallDoc_55kdocs_Inc55000g: &Foreign_SmallDoc_55kdocs_Inc55000g foreign_smalldoc_55kdocs_inc55000g
-Foreign_SmallDoc_75kdocs_Inc75000g: &Foreign_SmallDoc_75kdocs_Inc75000g foreign_smalldoc_75kdocs_inc75000g
-Foreign_SmallDoc_95kdocs_Inc95000g: &Foreign_SmallDoc_95kdocs_Inc95000g foreign_smalldoc_95kdocs_inc95000g
+Foreign_SmallDoc_2kdocs_Inc2000g: &Foreign_SmallDoc_2kdocs_Inc2000g foreign_smalldoc_2kdocs_inc2000g
+Foreign_SmallDoc_8kdocs_Inc8000g: &Foreign_SmallDoc_8kdocs_Inc8000g foreign_smalldoc_8kdocs_inc8000g
+Foreign_SmallDoc_32kdocs_Inc32000g: &Foreign_SmallDoc_32kdocs_Inc32000g foreign_smalldoc_32kdocs_inc32000g
+Foreign_SmallDoc_128kdocs_Inc128000g: &Foreign_SmallDoc_128kdocs_Inc128000g foreign_smalldoc_128kdocs_inc128000g
+Foreign_SmallDoc_512kdocs_Inc512000g: &Foreign_SmallDoc_512kdocs_Inc512000g foreign_smalldoc_512kdocs_inc512000g
+
+# Defines foreign collection names with duplicated keys.
+# 16 duplicates per each key
+Foreign_SmallDoc_128kdocs_Inc8000g: &Foreign_SmallDoc_128kdocs_Inc8000g foreign_smalldoc_128kdocs_inc8000g
+# 4 duplicates per each key
+Foreign_SmallDoc_128kdocs_Inc32000g: &Foreign_SmallDoc_128kdocs_Inc32000g foreign_smalldoc_128kdocs_inc32000g
 
 # Defines foreign collection names with random keys.
-Foreign_SmallDoc_15kdocs_Rand15000g: &Foreign_SmallDoc_15kdocs_Rand15000g foreign_smalldoc_15kdocs_rand15000g
-Foreign_SmallDoc_35kdocs_Rand35000g: &Foreign_SmallDoc_35kdocs_Rand35000g foreign_smalldoc_35kdocs_rand35000g
-Foreign_SmallDoc_55kdocs_Rand55000g: &Foreign_SmallDoc_55kdocs_Rand55000g foreign_smalldoc_55kdocs_rand55000g
-Foreign_SmallDoc_75kdocs_Rand75000g: &Foreign_SmallDoc_75kdocs_Rand75000g foreign_smalldoc_75kdocs_rand75000g
-Foreign_SmallDoc_95kdocs_Rand95000g: &Foreign_SmallDoc_95kdocs_Rand95000g foreign_smalldoc_95kdocs_rand95000g
+Foreign_SmallDoc_2kdocs_Rand2000g: &Foreign_SmallDoc_2kdocs_Rand2000g foreign_smalldoc_2kdocs_rand2000g
+Foreign_SmallDoc_4kdocs_Rand8000g: &Foreign_SmallDoc_4kdocs_Rand8000g foreign_smalldoc_4kdocs_rand8000g
+Foreign_SmallDoc_8kdocs_Rand32000g: &Foreign_SmallDoc_8kdocs_Rand32000g foreign_smalldoc_8kdocs_rand32000g
+Foreign_SmallDoc_16kdocs_Rand128000g: &Foreign_SmallDoc_16kdocs_Rand128000g foreign_smalldoc_16kdocs_rand128000g
+Foreign_SmallDoc_32kdocs_Rand512000g: &Foreign_SmallDoc_32kdocs_Rand512000g foreign_smalldoc_32kdocs_rand512000g
 
 # Defines the local collection names.
-Local_SmallDoc_400kdocs_Rand15000g: &Local_SmallDoc_400kdocs_Rand15000g local_smalldoc_400kdocs_rand15000g
-Local_SmallDoc_400kdocs_Rand35000g: &Local_SmallDoc_400kdocs_Rand35000g local_smalldoc_400kdocs_rand35000g
-Local_SmallDoc_400kdocs_Rand55000g: &Local_SmallDoc_400kdocs_Rand55000g local_smalldoc_400kdocs_rand55000g
-Local_SmallDoc_400kdocs_Rand75000g: &Local_SmallDoc_400kdocs_Rand75000g local_smalldoc_400kdocs_rand75000g
-Local_SmallDoc_400kdocs_Rand95000g: &Local_SmallDoc_400kdocs_Rand95000g local_smalldoc_400kdocs_rand95000g
+Local_SmallDoc_2048kdocs_Rand2000g: &Local_SmallDoc_2048kdocs_Rand2000g local_smalldoc_2048kdocs_rand2000g
+Local_SmallDoc_2048kdocs_Rand8000g: &Local_SmallDoc_2048kdocs_Rand8000g local_smalldoc_2048kdocs_rand8000g
+Local_SmallDoc_2048kdocs_Rand32000g: &Local_SmallDoc_2048kdocs_Rand32000g local_smalldoc_2048kdocs_rand32000g
+Local_SmallDoc_2048kdocs_Rand128000g: &Local_SmallDoc_2048kdocs_Rand128000g local_smalldoc_2048kdocs_rand128000g
+Local_SmallDoc_2048kdocs_Rand512000g: &Local_SmallDoc_2048kdocs_Rand512000g local_smalldoc_2048kdocs_rand512000g
 
 # Defines the local collection document generators which are used by 'LoadLocalXXX' actors. See
 # 'LocalSmallDocRandKeyTemplate' to understand how each doc is filled.
-Local_SmallDoc_Rand15000g: &Local_SmallDoc_Rand15000g
+Local_SmallDoc_Rand2000g: &Local_SmallDoc_Rand2000g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: LocalSmallDocRandKeyTemplate
     Parameters:
-      nkeys: 15000
+      nkeys: 2000
 
-Local_SmallDoc_Rand35000g: &Local_SmallDoc_Rand35000g
+Local_SmallDoc_Rand8000g: &Local_SmallDoc_Rand8000g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: LocalSmallDocRandKeyTemplate
     Parameters:
-      nkeys: 35000
+      nkeys: 8000
 
-Local_SmallDoc_Rand55000g: &Local_SmallDoc_Rand55000g
+Local_SmallDoc_Rand32000g: &Local_SmallDoc_Rand32000g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: LocalSmallDocRandKeyTemplate
     Parameters:
-      nkeys: 55000
+      nkeys: 32000
 
-Local_SmallDoc_Rand75000g: &Local_SmallDoc_Rand75000g
+Local_SmallDoc_Rand128000g: &Local_SmallDoc_Rand128000g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: LocalSmallDocRandKeyTemplate
     Parameters:
-      nkeys: 75000
+      nkeys: 128000
 
-Local_SmallDoc_Rand95000g: &Local_SmallDoc_Rand95000g
+Local_SmallDoc_Rand512000g: &Local_SmallDoc_Rand512000g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: LocalSmallDocRandKeyTemplate
     Parameters:
-      nkeys: 95000
+      nkeys: 512000
 
 # Defines foreign collection document generators which are used by 'LoadForeignXXX' actor. See
 # 'ForeignSmallDocIncKeyTemplate' to understand how each doc is filled.
-Foreign_SmallDoc_Inc15000g: &Foreign_SmallDoc_Inc15000g
+Foreign_SmallDoc_Inc2000g: &Foreign_SmallDoc_Inc2000g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: ForeignSmallDocIncKeyTemplate
     Parameters:
-      nkeys: 15000
+      nkeys: 2000
 
-Foreign_SmallDoc_Inc35000g: &Foreign_SmallDoc_Inc35000g
+Foreign_SmallDoc_Inc8000g: &Foreign_SmallDoc_Inc8000g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: ForeignSmallDocIncKeyTemplate
     Parameters:
-      nkeys: 35000
+      nkeys: 8000
 
-Foreign_SmallDoc_Inc55000g: &Foreign_SmallDoc_Inc55000g
+Foreign_SmallDoc_Inc32000g: &Foreign_SmallDoc_Inc32000g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: ForeignSmallDocIncKeyTemplate
     Parameters:
-      nkeys: 55000
+      nkeys: 32000
 
-Foreign_SmallDoc_Inc75000g: &Foreign_SmallDoc_Inc75000g
+Foreign_SmallDoc_Inc128000g: &Foreign_SmallDoc_Inc128000g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: ForeignSmallDocIncKeyTemplate
     Parameters:
-      nkeys: 75000
+      nkeys: 128000
 
-Foreign_SmallDoc_Inc95000g: &Foreign_SmallDoc_Inc95000g
+Foreign_SmallDoc_Inc512000g: &Foreign_SmallDoc_Inc512000g
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: ForeignSmallDocIncKeyTemplate
     Parameters:
-      nkeys: 95000
+      nkeys: 512000
 
-Foreign_SmallDoc_Rand15000g: &Foreign_SmallDoc_Rand15000g
-  LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
-    Key: ForeignSmallDocRandKeyTemplate
-    Parameters:
-      nkeys: 15000
-
-Foreign_SmallDoc_Rand35000g: &Foreign_SmallDoc_Rand35000g
-  LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
-    Key: ForeignSmallDocRandKeyTemplate
-    Parameters:
-      nkeys: 35000
-
-Foreign_SmallDoc_Rand55000g: &Foreign_SmallDoc_Rand55000g
-  LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
-    Key: ForeignSmallDocRandKeyTemplate
-    Parameters:
-      nkeys: 55000
-
-Foreign_SmallDoc_Rand75000g: &Foreign_SmallDoc_Rand75000g
-  LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
-    Key: ForeignSmallDocRandKeyTemplate
-    Parameters:
-      nkeys: 75000
-
-Foreign_SmallDoc_Rand95000g: &Foreign_SmallDoc_Rand95000g
-  LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
-    Key: ForeignSmallDocRandKeyTemplate
-    Parameters:
-      nkeys: 95000
+# Foreign_SmallDoc_Rand2000g: &Foreign_SmallDoc_Rand2000g
+#   LoadConfig:
+#     Path: "../../phases/execution/LookupCommands.yml"
+#     Key: ForeignSmallDocRandKeyTemplate
+#     Parameters:
+#       nkeys: 2000
+# 
+# Foreign_SmallDoc_Rand8000g: &Foreign_SmallDoc_Rand8000g
+#   LoadConfig:
+#     Path: "../../phases/execution/LookupCommands.yml"
+#     Key: ForeignSmallDocRandKeyTemplate
+#     Parameters:
+#       nkeys: 4000
+# 
+# Foreign_SmallDoc_Rand32000g: &Foreign_SmallDoc_Rand32000g
+#   LoadConfig:
+#     Path: "../../phases/execution/LookupCommands.yml"
+#     Key: ForeignSmallDocRandKeyTemplate
+#     Parameters:
+#       nkeys: 8000
+# 
+# Foreign_SmallDoc_Rand128000g: &Foreign_SmallDoc_Rand128000g
+#   LoadConfig:
+#     Path: "../../phases/execution/LookupCommands.yml"
+#     Key: ForeignSmallDocRandKeyTemplate
+#     Parameters:
+#       nkeys: 16000
+# 
+# Foreign_SmallDoc_Rand512000g: &Foreign_SmallDoc_Rand512000g
+#   LoadConfig:
+#     Path: "../../phases/execution/LookupCommands.yml"
+#     Key: ForeignSmallDocRandKeyTemplate
+#     Parameters:
+#       nkeys: 32000
 
 # Defines NLJ lookup commands which are used by 'NLJLookup' / 'INLJLookup' actors. See
 # 'NLJLookupCmdTemplate' for details. The command template can be used for INLJ too because INLJ
 # will be enabled when the foreign join field is indexed.
-NLJLookupForeign15000Cmd: &NLJLookupForeign15000Cmd
+NLJLookupForeign2000Cmd: &NLJLookupForeign2000Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *Local_SmallDoc_400kdocs_Rand15000g
-      f: *Foreign_SmallDoc_15kdocs_Inc15000g
+      l: *Local_SmallDoc_2048kdocs_Rand2000g
+      f: *Foreign_SmallDoc_2kdocs_Inc2000g
 
-NLJLookupForeign35000Cmd: &NLJLookupForeign35000Cmd
+NLJLookupForeign8000Cmd: &NLJLookupForeign8000Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *Local_SmallDoc_400kdocs_Rand35000g
-      f: *Foreign_SmallDoc_35kdocs_Inc35000g
+      l: *Local_SmallDoc_2048kdocs_Rand8000g
+      f: *Foreign_SmallDoc_8kdocs_Inc8000g
 
-NLJLookupForeign55000Cmd: &NLJLookupForeign55000Cmd
+NLJLookupForeign32000Cmd: &NLJLookupForeign32000Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *Local_SmallDoc_400kdocs_Rand55000g
-      f: *Foreign_SmallDoc_55kdocs_Inc55000g
+      l: *Local_SmallDoc_2048kdocs_Rand32000g
+      f: *Foreign_SmallDoc_32kdocs_Inc32000g
 
-NLJLookupForeign75000Cmd: &NLJLookupForeign75000Cmd
+NLJLookupForeign128000Cmd: &NLJLookupForeign128000Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *Local_SmallDoc_400kdocs_Rand75000g
-      f: *Foreign_SmallDoc_75kdocs_Inc75000g
+      l: *Local_SmallDoc_2048kdocs_Rand128000g
+      f: *Foreign_SmallDoc_128kdocs_Inc128000g
 
-NLJLookupForeign95000Cmd: &NLJLookupForeign95000Cmd
+NLJLookupForeign128000OnStrKeyCmd: &NLJLookupForeign128000OnStrKeyCmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *Local_SmallDoc_400kdocs_Rand95000g
-      f: *Foreign_SmallDoc_95kdocs_Inc95000g
+      l: *Local_SmallDoc_2048kdocs_Rand128000g
+      f: *Foreign_SmallDoc_128kdocs_Inc128000g
+      lk: str_key
+      k: str_key
 
-NLJLookupForeignRand15000Cmd: &NLJLookupForeignRand15000Cmd
+NLJLookupForeign128000OnLargeStrKeyCmd: &NLJLookupForeign128000OnLargeStrKeyCmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *Local_SmallDoc_400kdocs_Rand15000g
-      f: *Foreign_SmallDoc_15kdocs_Rand15000g
+      l: *Local_SmallDoc_2048kdocs_Rand128000g
+      f: *Foreign_SmallDoc_128kdocs_Inc128000g
+      lk: lstr_key
+      k: lstr_key
 
-NLJLookupForeignRand35000Cmd: &NLJLookupForeignRand35000Cmd
+NLJLookupForeign128000_8000gCmd: &NLJLookupForeign128000_8000gCmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *Local_SmallDoc_400kdocs_Rand35000g
-      f: *Foreign_SmallDoc_35kdocs_Rand35000g
+      l: *Local_SmallDoc_2048kdocs_Rand8000g
+      f: *Foreign_SmallDoc_128kdocs_Inc8000g
 
-NLJLookupForeignRand55000Cmd: &NLJLookupForeignRand55000Cmd
+NLJLookupForeign128000_32000gCmd: &NLJLookupForeign128000_32000gCmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *Local_SmallDoc_400kdocs_Rand55000g
-      f: *Foreign_SmallDoc_55kdocs_Rand55000g
+      l: *Local_SmallDoc_2048kdocs_Rand32000g
+      f: *Foreign_SmallDoc_128kdocs_Inc32000g
 
-NLJLookupForeignRand75000Cmd: &NLJLookupForeignRand75000Cmd
+NLJLookupForeign512000Cmd: &NLJLookupForeign512000Cmd
   LoadConfig:
     Path: "../../phases/execution/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
-      l: *Local_SmallDoc_400kdocs_Rand75000g
-      f: *Foreign_SmallDoc_75kdocs_Rand75000g
+      l: *Local_SmallDoc_2048kdocs_Rand512000g
+      f: *Foreign_SmallDoc_512kdocs_Inc512000g
 
-NLJLookupForeignRand95000Cmd: &NLJLookupForeignRand95000Cmd
-  LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
-    Key: NLJLookupCmdTemplate
-    Parameters:
-      l: *Local_SmallDoc_400kdocs_Rand95000g
-      f: *Foreign_SmallDoc_95kdocs_Rand95000g
+# NLJLookupForeignRand15000Cmd: &NLJLookupForeignRand15000Cmd
+#   LoadConfig:
+#     Path: "../../phases/execution/LookupCommands.yml"
+#     Key: NLJLookupCmdTemplate
+#     Parameters:
+#       l: *Local_SmallDoc_2048kdocs_Rand2000g
+#       f: *Foreign_SmallDoc_2kdocs_Rand2000g
+# 
+# NLJLookupForeignRand35000Cmd: &NLJLookupForeignRand35000Cmd
+#   LoadConfig:
+#     Path: "../../phases/execution/LookupCommands.yml"
+#     Key: NLJLookupCmdTemplate
+#     Parameters:
+#       l: *Local_SmallDoc_2048kdocs_Rand8000g
+#       f: *Foreign_SmallDoc_4kdocs_Rand8000g
+# 
+# NLJLookupForeignRand55000Cmd: &NLJLookupForeignRand55000Cmd
+#   LoadConfig:
+#     Path: "../../phases/execution/LookupCommands.yml"
+#     Key: NLJLookupCmdTemplate
+#     Parameters:
+#       l: *Local_SmallDoc_2048kdocs_Rand32000g
+#       f: *Foreign_SmallDoc_8kdocs_Rand32000g
+# 
+# NLJLookupForeignRand75000Cmd: &NLJLookupForeignRand75000Cmd
+#   LoadConfig:
+#     Path: "../../phases/execution/LookupCommands.yml"
+#     Key: NLJLookupCmdTemplate
+#     Parameters:
+#       l: *Local_SmallDoc_2048kdocs_Rand128000g
+#       f: *Foreign_SmallDoc_16kdocs_Rand128000g
+# 
+# NLJLookupForeignRand95000Cmd: &NLJLookupForeignRand95000Cmd
+#   LoadConfig:
+#     Path: "../../phases/execution/LookupCommands.yml"
+#     Key: NLJLookupCmdTemplate
+#     Parameters:
+#       l: *Local_SmallDoc_2048kdocs_Rand512000g
+#       f: *Foreign_SmallDoc_32kdocs_Rand512000g
 
 # Defines test operations for '[Classic|SBE]_INLJLookup' actors.
 INLJTestOperations: &INLJTestOperations
-- OperationMetricsName: Local_SmallDoc_400kdocs_Rand15000g_IntTopField_Foreign_SmallDoc_15kdocs_Inc15000g_IntTopField
+- OperationMetricsName: Local_SmallDoc_2048kdocs_Rand2000g_IntTopField_Foreign_SmallDoc_2kdocs_Inc2000g_IntTopField
   OperationName: RunCommand
-  OperationCommand: *NLJLookupForeign15000Cmd
-- OperationMetricsName: Local_SmallDoc_400kdocs_Rand35000g_IntTopField_Foreign_SmallDoc_35kdocs_Inc35000g_IntTopField
+  OperationCommand: *NLJLookupForeign2000Cmd
+- OperationMetricsName: Local_SmallDoc_2048kdocs_Rand8000g_IntTopField_Foreign_SmallDoc_8kdocs_Inc8000g_IntTopField
   OperationName: RunCommand
-  OperationCommand: *NLJLookupForeign35000Cmd
-- OperationMetricsName: Local_SmallDoc_400kdocs_Rand55000g_IntTopField_Foreign_SmallDoc_55kdocs_Inc55000g_IntTopField
+  OperationCommand: *NLJLookupForeign8000Cmd
+- OperationMetricsName: Local_SmallDoc_2048kdocs_Rand32000g_IntTopField_Foreign_SmallDoc_32kdocs_Inc32000g_IntTopField
   OperationName: RunCommand
-  OperationCommand: *NLJLookupForeign55000Cmd
-- OperationMetricsName: Local_SmallDoc_400kdocs_Rand75000g_IntTopField_Foreign_SmallDoc_75kdocs_Inc75000g_IntTopField
+  OperationCommand: *NLJLookupForeign32000Cmd
+- OperationMetricsName: Local_SmallDoc_2048kdocs_Rand128000g_IntTopField_Foreign_SmallDoc_128kdocs_Inc128000g_IntTopField
   OperationName: RunCommand
-  OperationCommand: *NLJLookupForeign75000Cmd
-- OperationMetricsName: Local_SmallDoc_400kdocs_Rand95000g_IntTopField_Foreign_SmallDoc_95kdocs_Inc95000g_IntTopField
+  OperationCommand: *NLJLookupForeign128000Cmd
+- OperationMetricsName: Local_SmallDoc_2048kdocs_Rand128000g_StrTopField_Foreign_SmallDoc_128kdocs_Inc128000g_StrTopField
   OperationName: RunCommand
-  OperationCommand: *NLJLookupForeign95000Cmd
-- OperationMetricsName: Local_SmallDoc_400kdocs_Rand15000g_IntTopField_Foreign_SmallDoc_15kdocs_Rand15000g_IntTopField
+  OperationCommand: *NLJLookupForeign128000OnStrKeyCmd
+- OperationMetricsName: Local_SmallDoc_2048kdocs_Rand128000g_LargeStrTopField_Foreign_SmallDoc_128kdocs_Inc128000g_LargeStrTopField
   OperationName: RunCommand
-  OperationCommand: *NLJLookupForeignRand15000Cmd
-- OperationMetricsName: Local_SmallDoc_400kdocs_Rand35000g_IntTopField_Foreign_SmallDoc_35kdocs_Rand35000g_IntTopField
+  OperationCommand: *NLJLookupForeign128000OnLargeStrKeyCmd
+- OperationMetricsName: Local_SmallDoc_2048kdocs_Rand8000g_IntTopField_Foreign_SmallDoc_128kdocs_Inc8000g_IntTopField
   OperationName: RunCommand
-  OperationCommand: *NLJLookupForeignRand35000Cmd
-- OperationMetricsName: Local_SmallDoc_400kdocs_Rand55000g_IntTopField_Foreign_SmallDoc_55kdocs_Rand55000g_IntTopField
+  OperationCommand: *NLJLookupForeign128000_8000gCmd
+- OperationMetricsName: Local_SmallDoc_2048kdocs_Rand32000g_IntTopField_Foreign_SmallDoc_128kdocs_Inc32000g_IntTopField
   OperationName: RunCommand
-  OperationCommand: *NLJLookupForeignRand55000Cmd
-- OperationMetricsName: Local_SmallDoc_400kdocs_Rand75000g_IntTopField_Foreign_SmallDoc_75kdocs_Rand75000g_IntTopField
-  OperationName: RunCommand
-  OperationCommand: *NLJLookupForeignRand75000Cmd
-- OperationMetricsName: Local_SmallDoc_400kdocs_Rand95000g_IntTopField_Foreign_SmallDoc_95kdocs_Rand95000g_IntTopField
-  OperationName: RunCommand
-  OperationCommand: *NLJLookupForeignRand95000Cmd
+  OperationCommand: *NLJLookupForeign128000_32000gCmd
+# - OperationMetricsName: Local_SmallDoc_2048kdocs_Rand512000g_IntTopField_Foreign_SmallDoc_512kdocs_Inc512000g_IntTopField
+#   OperationName: RunCommand
+#   OperationCommand: *NLJLookupForeign512000Cmd
+# - OperationMetricsName: Local_SmallDoc_2048kdocs_Rand2000g_IntTopField_Foreign_SmallDoc_2kdocs_Rand2000g_IntTopField
+#   OperationName: RunCommand
+#   OperationCommand: *NLJLookupForeignRand15000Cmd
+# - OperationMetricsName: Local_SmallDoc_2048kdocs_Rand8000g_IntTopField_Foreign_SmallDoc_4kdocs_Rand8000g_IntTopField
+#   OperationName: RunCommand
+#   OperationCommand: *NLJLookupForeignRand35000Cmd
+# - OperationMetricsName: Local_SmallDoc_2048kdocs_Rand32000g_IntTopField_Foreign_SmallDoc_8kdocs_Rand32000g_IntTopField
+#   OperationName: RunCommand
+#   OperationCommand: *NLJLookupForeignRand55000Cmd
+# - OperationMetricsName: Local_SmallDoc_2048kdocs_Rand128000g_IntTopField_Foreign_SmallDoc_16kdocs_Rand128000g_IntTopField
+#   OperationName: RunCommand
+#   OperationCommand: *NLJLookupForeignRand75000Cmd
+# - OperationMetricsName: Local_SmallDoc_2048kdocs_Rand512000g_IntTopField_Foreign_SmallDoc_32kdocs_Rand512000g_IntTopField
+#   OperationName: RunCommand
+#   OperationCommand: *NLJLookupForeignRand95000Cmd
+
+IndexSpec: &IndexSpec
+  - {key: {int_key: 1}, name: "idx"}
+  - {key: {str_key: 1}, name: "str_idx"}
+  - {key: {lstr_key: 1}, name: "lstr_idx"}
 
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 10
@@ -327,261 +386,296 @@ Actors:
     Nop: true
 
 # The 'LoadForeignXXX' actors run in the 1st phase.
-- Name: LoadForeign_SmallDoc_15kdocs_Inc15000g
+- Name: LoadForeign_SmallDoc_2kdocs_Inc2000g
   Type: CrudActor
   Database: *db
   Threads: 1
   Phases:
   - &Nop {Nop: true}
-  - Repeat: 15000
+  - Repeat: 2000
     Threads: 1
-    Collection: *Foreign_SmallDoc_15kdocs_Inc15000g
+    Collection: *Foreign_SmallDoc_2kdocs_Inc2000g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *Foreign_SmallDoc_Inc15000g
+        Document: *Foreign_SmallDoc_Inc2000g
   - Phase: 2..8
     Nop: true
 
-- Name: LoadForeign_SmallDoc_35kdocs_Inc35000g
+- Name: LoadForeign_SmallDoc_8kdocs_Inc8000g
   Type: CrudActor
   Database: *db
   Threads: 1
   Phases:
   - *Nop
-  - Repeat: 35000
+  - Repeat: 8000
     Threads: 1
-    Collection: *Foreign_SmallDoc_35kdocs_Inc35000g
+    Collection: *Foreign_SmallDoc_8kdocs_Inc8000g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *Foreign_SmallDoc_Inc35000g
+        Document: *Foreign_SmallDoc_Inc8000g
   - Phase: 2..8
     Nop: true
 
-- Name: LoadForeign_SmallDoc_55kdocs_Inc55000g
+- Name: LoadForeign_SmallDoc_32kdocs_Inc32000g
   Type: CrudActor
   Database: *db
   Threads: 1
   Phases:
   - *Nop
-  - Repeat: 55000
+  - Repeat: 32000
     Threads: 1
-    Collection: *Foreign_SmallDoc_55kdocs_Inc55000g
+    Collection: *Foreign_SmallDoc_32kdocs_Inc32000g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *Foreign_SmallDoc_Inc55000g
+        Document: *Foreign_SmallDoc_Inc32000g
   - Phase: 2..8
     Nop: true
 
-- Name: LoadForeign_SmallDoc_75kdocs_Inc75000g
+- Name: LoadForeign_SmallDoc_128kdocs_Inc128000g
   Type: CrudActor
   Database: *db
   Threads: 1
   Phases:
   - *Nop
-  - Repeat: 75000
+  - Repeat: 128000
     Threads: 1
-    Collection: *Foreign_SmallDoc_75kdocs_Inc75000g
+    Collection: *Foreign_SmallDoc_128kdocs_Inc128000g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *Foreign_SmallDoc_Inc75000g
+        Document: *Foreign_SmallDoc_Inc128000g
   - Phase: 2..8
     Nop: true
 
-- Name: LoadForeign_SmallDoc_95kdocs_Inc95000g
+- Name: LoadForeign_SmallDoc_512kdocs_Inc512000g
   Type: CrudActor
   Database: *db
   Threads: 1
   Phases:
   - *Nop
-  - Repeat: 95000
+  - Repeat: 512000
     Threads: 1
-    Collection: *Foreign_SmallDoc_95kdocs_Inc95000g
+    Collection: *Foreign_SmallDoc_512kdocs_Inc512000g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *Foreign_SmallDoc_Inc95000g
+        Document: *Foreign_SmallDoc_Inc512000g
   - Phase: 2..8
     Nop: true
 
-- Name: LoadForeign_SmallDoc_15kdocs_Rand15000g
-  Type: CrudActor
-  Database: *db
-  Threads: 5
-  Phases:
-  - *Nop
-  - Repeat: 3000
-    Threads: 1
-    Collection: *Foreign_SmallDoc_15kdocs_Rand15000g
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *Foreign_SmallDoc_Rand15000g
-  - Phase: 2..8
-    Nop: true
-
-- Name: LoadForeign_SmallDoc_35kdocs_Rand35000g
-  Type: CrudActor
-  Database: *db
-  Threads: 5
-  Phases:
-  - *Nop
-  - Repeat: 7000
-    Threads: 1
-    Collection: *Foreign_SmallDoc_35kdocs_Rand35000g
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *Foreign_SmallDoc_Rand35000g
-  - Phase: 2..8
-    Nop: true
-
-- Name: LoadForeign_SmallDoc_55kdocs_Rand55000g
-  Type: CrudActor
-  Database: *db
-  Threads: 5
-  Phases:
-  - *Nop
-  - Repeat: 11000
-    Threads: 1
-    Collection: *Foreign_SmallDoc_55kdocs_Rand55000g
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *Foreign_SmallDoc_Rand55000g
-  - Phase: 2..8
-    Nop: true
-
-- Name: LoadForeign_SmallDoc_75kdocs_Rand75000g
-  Type: CrudActor
-  Database: *db
-  Threads: 5
-  Phases:
-  - *Nop
-  - Repeat: 15000
-    Threads: 1
-    Collection: *Foreign_SmallDoc_75kdocs_Rand75000g
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *Foreign_SmallDoc_Rand75000g
-  - Phase: 2..8
-    Nop: true
-
-- Name: LoadForeign_SmallDoc_95kdocs_Rand95000g
-  Type: CrudActor
-  Database: *db
-  Threads: 5
-  Phases:
-  - *Nop
-  - Repeat: 19000
-    Threads: 1
-    Collection: *Foreign_SmallDoc_95kdocs_Rand95000g
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *Foreign_SmallDoc_Rand95000g
-  - Phase: 2..8
-    Nop: true
+# - Name: LoadForeign_SmallDoc_2kdocs_Rand2000g
+#   Type: CrudActor
+#   Database: *db
+#   Threads: 5
+#   Phases:
+#   - *Nop
+#   - Repeat: 3000
+#     Threads: 1
+#     Collection: *Foreign_SmallDoc_2kdocs_Rand2000g
+#     Operations:
+#     - OperationName: insertOne
+#       OperationCommand:
+#         Document: *Foreign_SmallDoc_Rand2000g
+#   - Phase: 2..8
+#     Nop: true
+# 
+# - Name: LoadForeign_SmallDoc_4kdocs_Rand8000g
+#   Type: CrudActor
+#   Database: *db
+#   Threads: 5
+#   Phases:
+#   - *Nop
+#   - Repeat: 7000
+#     Threads: 1
+#     Collection: *Foreign_SmallDoc_4kdocs_Rand8000g
+#     Operations:
+#     - OperationName: insertOne
+#       OperationCommand:
+#         Document: *Foreign_SmallDoc_Rand8000g
+#   - Phase: 2..8
+#     Nop: true
+# 
+# - Name: LoadForeign_SmallDoc_8kdocs_Rand32000g
+#   Type: CrudActor
+#   Database: *db
+#   Threads: 5
+#   Phases:
+#   - *Nop
+#   - Repeat: 11000
+#     Threads: 1
+#     Collection: *Foreign_SmallDoc_8kdocs_Rand32000g
+#     Operations:
+#     - OperationName: insertOne
+#       OperationCommand:
+#         Document: *Foreign_SmallDoc_Rand32000g
+#   - Phase: 2..8
+#     Nop: true
+# 
+# - Name: LoadForeign_SmallDoc_16kdocs_Rand128000g
+#   Type: CrudActor
+#   Database: *db
+#   Threads: 5
+#   Phases:
+#   - *Nop
+#   - Repeat: 15000
+#     Threads: 1
+#     Collection: *Foreign_SmallDoc_16kdocs_Rand128000g
+#     Operations:
+#     - OperationName: insertOne
+#       OperationCommand:
+#         Document: *Foreign_SmallDoc_Rand128000g
+#   - Phase: 2..8
+#     Nop: true
+# 
+# - Name: LoadForeign_SmallDoc_32kdocs_Rand512000g
+#   Type: CrudActor
+#   Database: *db
+#   Threads: 5
+#   Phases:
+#   - *Nop
+#   - Repeat: 19000
+#     Threads: 1
+#     Collection: *Foreign_SmallDoc_32kdocs_Rand512000g
+#     Operations:
+#     - OperationName: insertOne
+#       OperationCommand:
+#         Document: *Foreign_SmallDoc_Rand512000g
+#   - Phase: 2..8
+#     Nop: true
 
 # The 'LoadLocalXXX' actors for monotonically increasing keys run in the 2nd phase.
-- Name: LoadLocal_SmallDoc_400kdocs_Rand15000g
+- Name: LoadLocal_SmallDoc_2048kdocs_Rand2000g
   Type: CrudActor
   Database: *db
   Threads: 5
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 80000
+  - Repeat: 409600
     Threads: 1
-    Collection: *Local_SmallDoc_400kdocs_Rand15000g
+    Collection: *Local_SmallDoc_2048kdocs_Rand2000g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *Local_SmallDoc_Rand15000g
+        Document: *Local_SmallDoc_Rand2000g
   - Phase: 3..8
     Nop: true
 
-- Name: LoadLocal_SmallDoc_400kdocs_Rand35000g
+- Name: LoadLocal_SmallDoc_2048kdocs_Rand8000g
   Type: CrudActor
   Database: *db
   Threads: 5
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 80000
+  - Repeat: 409600
     Threads: 1
-    Collection: *Local_SmallDoc_400kdocs_Rand35000g
+    Collection: *Local_SmallDoc_2048kdocs_Rand8000g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *Local_SmallDoc_Rand35000g
+        Document: *Local_SmallDoc_Rand8000g
   - Phase: 3..8
     Nop: true
 
-- Name: LoadLocal_SmallDoc_400kdocs_Rand55000g
+- Name: LoadLocal_SmallDoc_2048kdocs_Rand32000g
   Type: CrudActor
   Database: *db
   Threads: 5
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 80000
+  - Repeat: 409600
     Threads: 1
-    Collection: *Local_SmallDoc_400kdocs_Rand55000g
+    Collection: *Local_SmallDoc_2048kdocs_Rand32000g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *Local_SmallDoc_Rand55000g
+        Document: *Local_SmallDoc_Rand32000g
   - Phase: 3..8
     Nop: true
 
-- Name: LoadLocal_SmallDoc_400kdocs_Rand75000g
+- Name: LoadLocal_SmallDoc_2048kdocs_Rand128000g
   Type: CrudActor
   Database: *db
   Threads: 5
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 80000
+  - Repeat: 409600
     Threads: 1
-    Collection: *Local_SmallDoc_400kdocs_Rand75000g
+    Collection: *Local_SmallDoc_2048kdocs_Rand128000g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *Local_SmallDoc_Rand75000g
+        Document: *Local_SmallDoc_Rand128000g
   - Phase: 3..8
     Nop: true
 
-- Name: LoadLocal_SmallDoc_400kdocs_Rand95000g
+- Name: LoadLocal_SmallDoc_2048kdocs_Rand512000g
   Type: CrudActor
   Database: *db
   Threads: 5
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 80000
+  - Repeat: 409600
     Threads: 1
-    Collection: *Local_SmallDoc_400kdocs_Rand95000g
+    Collection: *Local_SmallDoc_2048kdocs_Rand512000g
     Operations:
     - OperationName: insertOne
       OperationCommand:
-        Document: *Local_SmallDoc_Rand95000g
+        Document: *Local_SmallDoc_Rand512000g
   - Phase: 3..8
     Nop: true
+
+# The 'Quiesce1' actors for random keys run in the 3rd phase. This actor is just a placeholder.
+# Enable either Quiesce1 actor or LoadForeign_SmallDoc_128kdocs_Inc8000g and LoadForeign_SmallDoc_128kdocs_Inc32000g actors
+# - Name: Quiesce1
+#   Type: QuiesceActor
+#   Threads: 1
+#   Database: *db
+#   Phases:
+#   - Phase: 0..2
+#     Nop: true
+#   - Repeat: 1
+#   - Phase: 4..8
+#     Nop: true
 
 # The 'LoadLocalXXX' actors for random keys run in the 3rd phase.
-- Name: Quiesce1
-  Type: QuiesceActor
-  Threads: 1
+- Name: LoadForeign_SmallDoc_128kdocs_Inc8000g
+  Type: CrudActor
+  Threads: 16
   Database: *db
   Phases:
   - Phase: 0..2
     Nop: true
-  - Repeat: 1
+  - Repeat: 8000
+    Threads: 1
+    Collection: *Foreign_SmallDoc_128kdocs_Inc8000g
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *Foreign_SmallDoc_Inc8000g
+  - Phase: 4..8
+    Nop: true
+- Name: LoadForeign_SmallDoc_128kdocs_Inc32000g
+  Type: CrudActor
+  Threads: 4
+  Database: *db
+  Phases:
+  - Phase: 0..2
+    Nop: true
+  - Repeat: 32000
+    Threads: 1
+    Collection: *Foreign_SmallDoc_128kdocs_Inc32000g
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *Foreign_SmallDoc_Inc32000g
   - Phase: 4..8
     Nop: true
 
@@ -597,44 +691,52 @@ Actors:
     Operations:
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *Foreign_SmallDoc_15kdocs_Inc15000g
-        indexes: &IndexSpec [{key: {"int_key": 1}, name: "idx"}, {key: {str_key: 1}, name: "str_idx"}]
-    - OperationName: RunCommand
-      OperationCommand:
-        createIndexes: *Foreign_SmallDoc_35kdocs_Inc35000g
+        createIndexes: *Foreign_SmallDoc_2kdocs_Inc2000g
         indexes: *IndexSpec
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *Foreign_SmallDoc_55kdocs_Inc55000g
+        createIndexes: *Foreign_SmallDoc_8kdocs_Inc8000g
         indexes: *IndexSpec
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *Foreign_SmallDoc_75kdocs_Inc75000g
+        createIndexes: *Foreign_SmallDoc_32kdocs_Inc32000g
         indexes: *IndexSpec
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *Foreign_SmallDoc_95kdocs_Inc95000g
+        createIndexes: *Foreign_SmallDoc_128kdocs_Inc128000g
         indexes: *IndexSpec
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *Foreign_SmallDoc_15kdocs_Rand15000g
+        createIndexes: *Foreign_SmallDoc_128kdocs_Inc8000g
         indexes: *IndexSpec
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *Foreign_SmallDoc_35kdocs_Rand35000g
+        createIndexes: *Foreign_SmallDoc_128kdocs_Inc32000g
         indexes: *IndexSpec
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *Foreign_SmallDoc_55kdocs_Rand55000g
+        createIndexes: *Foreign_SmallDoc_512kdocs_Inc512000g
         indexes: *IndexSpec
-    - OperationName: RunCommand
-      OperationCommand:
-        createIndexes: *Foreign_SmallDoc_75kdocs_Rand75000g
-        indexes: *IndexSpec
-    - OperationName: RunCommand
-      OperationCommand:
-        createIndexes: *Foreign_SmallDoc_95kdocs_Rand95000g
-        indexes: *IndexSpec
+#     - OperationName: RunCommand
+#       OperationCommand:
+#         createIndexes: *Foreign_SmallDoc_2kdocs_Rand2000g
+#         indexes: *IndexSpec
+#     - OperationName: RunCommand
+#       OperationCommand:
+#         createIndexes: *Foreign_SmallDoc_4kdocs_Rand8000g
+#         indexes: *IndexSpec
+#     - OperationName: RunCommand
+#       OperationCommand:
+#         createIndexes: *Foreign_SmallDoc_8kdocs_Rand32000g
+#         indexes: *IndexSpec
+#     - OperationName: RunCommand
+#       OperationCommand:
+#         createIndexes: *Foreign_SmallDoc_16kdocs_Rand128000g
+#         indexes: *IndexSpec
+#     - OperationName: RunCommand
+#       OperationCommand:
+#         createIndexes: *Foreign_SmallDoc_32kdocs_Rand512000g
+#         indexes: *IndexSpec
   - Phase: 5..8
     Nop: true
 
