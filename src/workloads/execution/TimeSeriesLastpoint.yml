@@ -1,0 +1,127 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of lastpoint-type queries on time-series collections. The
+  currently supported lastpoint aggregate pipelines that are tested here include:
+    1. a $sort on a meta field (ascending) and time (descending) and $group with _id on the meta
+       field and only $first accumulators.
+    2. any of the above pipelines with a preceding match predicate on a meta field.
+
+Actors:
+- Name: CreateTimeSeriesCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Operation:
+      OperationMetricsName: CreateTimeSeriesCollection
+      OperationName: RunCommand
+      OperationCommand:
+        {create: &coll Collection0, timeseries: {timeField: "timestamp", metaField: "metadata"}}
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 1000000
+    BatchSize: &batchSize 100
+    Document:
+      timestamp: {^RandomDate: {min: "2022-01-01", max: "2022-03-01"}}
+      metadata: {
+        sensorId: {^RandomInt: {min: 0, max: 100}},
+        type: "temperature"
+      }
+      temp: {^RandomDouble: {min: -30, max: 120}}
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: CreateIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - {key: {"metadata.sensorId": 1, timestamp: -1}, name: "MetaSubfieldAscendingTimeDescending"}
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        fsync: 1
+  - *Nop
+
+- Name: RunLastpoint
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 10
+    Database: *db
+    Operations:
+    - OperationMetricsName: LastpointWithMetaSubfieldAscendingTimeDescending
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$sort: {"metadata.sensorId": 1, timestamp: -1}},
+            {$group: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}}
+          ]
+        cursor: {batchSize: *batchSize}
+        # In cases when we cannot optimize for a covered index sort, allow for external sorting.
+        allowDiskUse: true
+    - OperationMetricsName: LastpointWithMetaSubfieldAscendingTimeDescendingPrecedingPredicate
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$match: {"metadata.sensorId": {$gt: 10}}},
+            {$sort: {"metadata.sensorId": 1, timestamp: -1}},
+            {$group: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}}
+          ]
+        cursor: {batchSize: *batchSize}
+        # In cases when we cannot optimize for a covered index sort, allow for external sorting.
+        allowDiskUse: true
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - replica
+      - replica-all-feature-flags
+      - shard-lite
+      - shard-lite-all-feature-flags
