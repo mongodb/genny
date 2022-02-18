@@ -551,6 +551,62 @@ Tests:
     - a: "Hello random person: Huey"
     - a: "Hello random person: IonKmglImH"
 
+  - Name: Concat two singletons
+    GivenTemplate:
+      a: {^Concat: {arrays: [["It"], ["worked"]]}}
+    ThenReturns:
+    - a: ["It", "worked"]
+
+  - Name: Concat with ^Array generator
+    GivenTemplate:
+      a: {^Concat: {arrays: [{^Array: {of: 1, number: 1}}, {^Array: {of: 2, number: 2}}]}}
+    ThenReturns:
+    - a: [1, 2, 2] 
+
+  - Name: Concat with generator and literal
+    GivenTemplate:
+      a: {^Concat: {arrays: [["Hello", "world"], {^Array: {of: 123, number: 1}}]}}
+    ThenReturns:
+    - a: ["Hello", "world", 123]
+
+  - Name: Concat with empty arrays
+    GivenTemplate:
+      a: {^Concat: {arrays: []}}
+    ThenReturns:
+    - a: []
+
+  - Name: Concat with no arrays argument
+    GivenTemplate:
+      a: {^Concat: {foo: "bar"}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Concat with non-array arrays argument
+    GivenTemplate:
+      a: {^Concat: {arrays: "nope"}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Concat with non-array inside of arrays
+    GivenTemplate:
+      a: {^Concat: {arrays: [[1, 2], "nope"]}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Concat with ^Verbatim array.
+    GivenTemplate:
+      a: {^Concat: {arrays: [{^Verbatim: [{^RandomInt: "Hello"}]}, ["World"]]}}
+    ThenReturns:
+    - a: [{^RandomInt: "Hello"}, "World"]
+
+  - Name: Concat with ^Verbatim object is invalid.
+    GivenTemplate:
+      a: {^Concat: {arrays: [{^Verbatim: {^RandomInt: "Hello"}}, ["World"]]}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Nested ^Concat
+    GivenTemplate:
+      a: {^Concat: {arrays: [{^Concat: {arrays: [[1,2], [3, 4]]}}, {^Concat: {arrays: [{^Array: {of: 5, number: 3}}]}}]}}
+    ThenReturns:
+      - a: [1,2,3,4,5,5,5]
+
   - Name: Double Generator
     GivenTemplate:
       a: {^RandomDouble: {min: 1.0, max: 20.0}}

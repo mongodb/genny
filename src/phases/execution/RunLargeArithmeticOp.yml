@@ -1,0 +1,25 @@
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This phase template constructs an aggregation pipeline that multiplies together
+  the provided arguments.
+
+Multiply:
+  Repeat: 10
+  Database: {^Parameter: {Name: "Database", Default: "test"}}
+  Operations:
+  - OperationMetricsName: {^Parameter: {Name: "Name", Default: "RunMultiply"}}
+    OperationName: RunCommand
+    OperationCommand:
+      aggregate: {^Parameter: {Name: "Collection", Default: "Collection0"}}
+      pipeline: [
+        {
+          $group: {
+            _id: {
+              $multiply: {^Parameter: {Name: "Expression", Default: []}}
+            }
+          }
+        }
+      ]
+      cursor: {batchSize: {^Parameter: {Name: "BatchSize", Default: 3000}}}
