@@ -121,6 +121,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
+      - standalone-all-feature-flags
       - replica
       - replica-all-feature-flags
       - shard-lite
