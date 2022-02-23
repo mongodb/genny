@@ -1009,6 +1009,10 @@ private:
         auto createOp = opConstructor->second;
         auto& yamlCommand = txnOp["OperationCommand"];
         // operations can override withTransaction's OnSession value
+        // This behavior is hard to test.
+        // The CrudActorYamlTests suite exercises both branches of this boolean
+        // but doesn't assert the behavior.
+        // Be careful when making changes around this code.
         bool onSession = yamlCommand["OnSession"].maybe<bool>().value_or(_onSession);
         _txnOps.push_back(createOp(yamlCommand, onSession, _collection, _operation, context, id));
     }
