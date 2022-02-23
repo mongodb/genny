@@ -1,0 +1,22 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Runs a workload that inserts and then deletes a large range of documents. Serves as a base line
+  for comparing legacy document by document deletes versus efficiently batched multi deletes.
+
+GlobalDefaults:
+  DocumentSizePaddingParam: &DocumentSizePaddingParam 1000  # = 1KB
+  DocumentCountParam: &DocumentCountParam 100000
+
+LoadConfig:
+  Path: "../../phases/execution/MultiDeletes.yml"
+  Parameters:
+    DocumentSizePadding: *DocumentSizePaddingParam
+    DocumentCount: *DocumentCountParam
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-all-feature-flags
+      - shard-lite-all-feature-flags

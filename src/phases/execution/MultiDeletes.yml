@@ -1,0 +1,81 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Basic phases of inserting documents and deleting large batches of documents from a collection.
+
+GlobalDefaults:
+  DocumentSizePaddingParam: &DocumentSizePaddingParam {^Parameter: {Name: "DocumentSizePadding", Default: 0}}
+  DocumentCountParam: &DocumentCountParam {^Parameter: {Name: "DocumentCount", Default: 1000000}}
+
+Actors:
+
+# Phase 1: Drop the database.
+- Name: DropDatabase
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &Database test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+
+# Phase 2: Create the collection.
+- Name: CreateCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *Database
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        create: &Collection Collection0  # Default collection populated by the loader.
+  - *Nop
+  - *Nop
+
+# Phase 3: Insert the documents.
+- Name: PopulateInitialData
+  Type: MonotonicSingleLoader
+  Threads: 50
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: *Database
+    Collection: *Collection
+    DocumentCount: *DocumentCountParam
+    BatchSize: 1000
+    Document:
+      padding: {^FastRandomString: {length: *DocumentSizePaddingParam}}
+  - *Nop
+
+# Phase 4: Delete all the docs.
+- Name: Delete
+  Type: CrudActor
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Collection: *Collection
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: deleteMany
+          Filter: {_id: {$gte: 0}}
+          OperationOptions:
+            WriteConcern: { Level: "majority" }
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-all-feature-flags
+      - shard-lite-all-feature-flags
