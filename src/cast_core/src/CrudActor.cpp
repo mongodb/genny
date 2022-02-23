@@ -1008,7 +1008,9 @@ private:
         }
         auto createOp = opConstructor->second;
         auto& yamlCommand = txnOp["OperationCommand"];
-        _txnOps.push_back(createOp(yamlCommand, _onSession, _collection, _operation, context, id));
+        // operations can override withTransaction level
+        bool onSession = yamlCommand["OnSession"].maybe<bool>().value_or(_onSession);
+        _txnOps.push_back(createOp(yamlCommand, onSession, _collection, _operation, context, id));
     }
 
     mongocxx::collection _collection;
