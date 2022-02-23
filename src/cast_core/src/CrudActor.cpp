@@ -1008,7 +1008,7 @@ private:
         }
         auto createOp = opConstructor->second;
         auto& yamlCommand = txnOp["OperationCommand"];
-        // operations can override withTransaction level
+        // operations can override withTransaction's OnSession value
         bool onSession = yamlCommand["OnSession"].maybe<bool>().value_or(_onSession);
         _txnOps.push_back(createOp(yamlCommand, onSession, _collection, _operation, context, id));
     }
