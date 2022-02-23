@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: >
-  Basic phases of inserting documents and deleting large batches of documents from a collection.
+  Inserts documents into a collection and deletes all the documents.
 
 GlobalDefaults:
   DocumentSizePaddingParam: &DocumentSizePaddingParam {^Parameter: {Name: "DocumentSizePadding", Default: 0}}
