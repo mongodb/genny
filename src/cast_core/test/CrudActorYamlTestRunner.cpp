@@ -85,7 +85,7 @@ void requireNumTransactions(mongocxx::pool::entry& client,
                             int64_t numTransactionsBeforeTest,
                             int64_t numExpectedTransactions) {
     auto numTransactionsAfterTest = getNumCommittedTransactions(client);
-    REQUIRE(numTransactionsAfterTest > numTransactionsBeforeTest);
+    REQUIRE(numTransactionsAfterTest >= numTransactionsBeforeTest);
     REQUIRE((numTransactionsAfterTest - numTransactionsBeforeTest) == numExpectedTransactions);
 }
 
@@ -257,7 +257,10 @@ struct CrudActorTestCase {
             dropAllDatabases(*client);
             events.clear();
 
-            auto numCommittedTransactionsBefore = getNumCommittedTransactions(client);
+            auto numCommittedTransactionsBefore = 0;
+            if (auto expectedNumTransactions = tcase["AssertNumTransactionsOccurred"]; expectedNumTransactions) {
+                numCommittedTransactionsBefore = getNumCommittedTransactions(client);
+            }
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
             // assert on copies so tests that themselves query don't affect the events
