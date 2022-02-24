@@ -543,7 +543,7 @@ Tests:
       - Filter: {a: 100}
         Count: 1
 
-  - Description: set ReadConcern on a find in a transaction
+  - Description: set ReadConcern on a find in a transaction without OnSession
     Operations:
       - OperationName: startTransaction
       - OperationName: setReadConcern
@@ -560,7 +560,31 @@ Tests:
     OutcomeCounts:
       - Filter: {a: 1}
         Count: 1
-    AssertNumTransactionsOccurred: 1
+    AssertNumTransactionsCommitted: 0
+
+  - Description: set ReadConcern on a find in a transaction
+    Operations:
+      - OperationName: startTransaction
+        OperationCommand:
+          OnSession: true
+      - OperationName: setReadConcern
+        OperationCommand:
+          ReadConcern:
+            Level: local
+          OnSession: true
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 1}
+          OnSession: true
+      - OperationName: find
+        OperationCommand:
+          Filter: {a: 1}
+          OnSession: true
+      - OperationName: commitTransaction
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 1
+    AssertNumTransactionsCommitted: 1
 
   - Description: set WriteConcern 1 on an InsertOne
     Operations:
@@ -573,7 +597,7 @@ Tests:
     OutcomeCounts:
       - Filter: {a: 1}
         Count: 1
-    AssertNumTransactionsOccurred: 0
+    AssertNumTransactionsCommitted: 0
 
   - Description: simple findOneAndReplace in a withTransaction
     Operations:
@@ -595,4 +619,4 @@ Tests:
         Count: 0
       - Filter: {a: 30}
         Count: 1
-    AssertNumTransactionsOccurred: 1
+    AssertNumTransactionsCommitted: 1

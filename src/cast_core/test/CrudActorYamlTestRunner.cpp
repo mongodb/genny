@@ -219,7 +219,7 @@ void requireAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::N
     if (auto expectCollections = tcase["ExpectedCollectionsExist"]; expectCollections) {
         requireExpectedCollectionsExist(client, events, expectCollections);
     }
-    if (auto expectedNumTransactions = tcase["AssertNumTransactionsOccurred"]; expectedNumTransactions) {
+    if (auto expectedNumTransactions = tcase["AssertNumTransactionsCommitted"]; expectedNumTransactions) {
         requireNumTransactions(client, numTransactionsBeforeTest, expectedNumTransactions.as<int64_t>());
     }
 }
@@ -258,7 +258,7 @@ struct CrudActorTestCase {
             events.clear();
 
             auto numCommittedTransactionsBefore = 0;
-            if (auto expectedNumTransactions = tcase["AssertNumTransactionsOccurred"]; expectedNumTransactions) {
+            if (auto expectedNumTransactions = tcase["AssertNumTransactionsCommitted"]; expectedNumTransactions) {
                 numCommittedTransactionsBefore = getNumCommittedTransactions(client);
             }
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
