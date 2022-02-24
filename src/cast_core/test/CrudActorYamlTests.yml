@@ -560,6 +560,7 @@ Tests:
     OutcomeCounts:
       - Filter: {a: 1}
         Count: 1
+    AssertNumTransactionsOccurred: 1
 
   - Description: set WriteConcern 1 on an InsertOne
     Operations:
@@ -572,6 +573,7 @@ Tests:
     OutcomeCounts:
       - Filter: {a: 1}
         Count: 1
+    AssertNumTransactionsOccurred: 0
 
   - Description: simple findOneAndReplace in a withTransaction
     Operations:
@@ -593,3 +595,4 @@ Tests:
         Count: 0
       - Filter: {a: 30}
         Count: 1
+    AssertNumTransactionsOccurred: 1

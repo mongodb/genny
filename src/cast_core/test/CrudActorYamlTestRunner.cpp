@@ -73,6 +73,22 @@ void requireExpectedCollectionsExist(mongocxx::pool::entry& client,
     }
 }
 
+int64_t getNumCommittedTransactions(mongocxx::pool::entry& client) {
+    bsoncxx::builder::basic::document server_status{};
+    server_status.append(bsoncxx::builder::basic::kvp("serverStatus", 1));
+    bsoncxx::document::value output = (*client)[DEFAULT_DB].run_command(server_status.extract());
+
+    return output.view()["transactions"]["totalCommitted"].get_int64();
+}
+
+void requireNumTransactions(mongocxx::pool::entry& client,
+                            int64_t numTransactionsBeforeTest,
+                            int64_t numExpectedTransactions) {
+    auto numTransactionsAfterTest = getNumCommittedTransactions(client);
+    REQUIRE(numTransactionsAfterTest > numTransactionsBeforeTest);
+    REQUIRE((numTransactionsAfterTest - numTransactionsBeforeTest) == numExpectedTransactions);
+}
+
 bool isNumeric(YAML::Node node) {
     try {
         node.as<long>();
@@ -190,7 +206,7 @@ NodeSource createConfigurationYamlPhase(YAML::Node phase) {
     }
     return NodeSource{YAML::Dump(config), "operationsConfig"};
 }
-void requireAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node tcase) {
+void requireAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node tcase, int64_t numTransactionsBeforeTest) {
     if (auto ocd = tcase["OutcomeData"]; ocd) {
         requireCounts(client, ocd);
     }
@@ -202,6 +218,9 @@ void requireAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::N
     }
     if (auto expectCollections = tcase["ExpectedCollectionsExist"]; expectCollections) {
         requireExpectedCollectionsExist(client, events, expectCollections);
+    }
+    if (auto expectedNumTransactions = tcase["AssertNumTransactionsOccurred"]; expectedNumTransactions) {
+        requireNumTransactions(client, numTransactionsBeforeTest, expectedNumTransactions.as<int64_t>());
     }
 }
 
@@ -238,6 +257,7 @@ struct CrudActorTestCase {
             dropAllDatabases(*client);
             events.clear();
 
+            auto numCommittedTransactionsBefore = getNumCommittedTransactions(client);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
             // assert on copies so tests that themselves query don't affect the events
@@ -247,7 +267,7 @@ struct CrudActorTestCase {
                 runMode == RunMode::kExpectedRuntimeException) {
                 FAIL("Expected exception " << error.as<std::string>() << " but not thrown");
             } else {
-                requireAfterState(client, eventsCopy, tcase);
+                requireAfterState(client, eventsCopy, tcase, numCommittedTransactionsBefore);
             }
         } catch (const boost::exception& e) {
             launderException(e, generatedYaml);
