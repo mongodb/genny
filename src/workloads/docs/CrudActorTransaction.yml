@@ -42,8 +42,9 @@ Actors:
               Update: {$set: {a: 5}}
             Options:
               Ordered: true
-            # OnSession can also be overridden here
-            #OnSession: true
+            # OnSession can also be overridden here, but it's unnecessary
+            # because OnSession is also present on withTransaction
+            OnSession: true
   - Repeat: 1
     Collection: test
     Operation:
