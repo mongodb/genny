@@ -565,8 +565,6 @@ Tests:
   - Description: set ReadConcern on a find in a transaction
     Operations:
       - OperationName: startTransaction
-        OperationCommand:
-          OnSession: true
       - OperationName: setReadConcern
         OperationCommand:
           ReadConcern:
@@ -599,24 +597,21 @@ Tests:
         Count: 1
     AssertNumTransactionsCommitted: 0
 
-  - Description: simple findOneAndReplace in a withTransaction
+  - Description: simple findOneAndReplace in a withTransaction without OnSession
     Operations:
       - OperationName: withTransaction
         OperationCommand:
-          OnSession: true
           OperationsInTransaction:
             - OperationName: insertOne
               OperationCommand:
                 Document: {a: 100}
-                OnSession: false
             - OperationName: findOneAndReplace
               OperationCommand:
                 Filter: {a: 100}
                 Replacement: {a: 30}
-                OnSession: true
     OutcomeCounts:
       - Filter: {a: 100}
         Count: 0
       - Filter: {a: 30}
         Count: 1
-    AssertNumTransactionsCommitted: 1
+    AssertNumTransactionsCommitted: 0
