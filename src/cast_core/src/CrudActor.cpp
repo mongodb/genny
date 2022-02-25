@@ -868,6 +868,8 @@ private:
 };
 
 /**
+ * Warning: Commands that should be apart of the transaction must declare
+ * the following value under OperationCommand: `OnSession: true`
  * Example usage:
  *    Operations:
  *    - OperationName: startTransaction
