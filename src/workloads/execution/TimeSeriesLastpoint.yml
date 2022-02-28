@@ -3,9 +3,11 @@ Owner: "@mongodb/query"
 Description: |
   This test exercises the behavior of lastpoint-type queries on time-series collections. The
   currently supported lastpoint aggregate pipelines that are tested here include:
-    1. a $sort on a meta field (ascending) and time (descending) and $group with _id on the meta
+    1. a $sort on a meta field (ascending, descending) and time (descending) and $group with _id on the meta
        field and only $first accumulators.
-    2. any of the above pipelines with a preceding match predicate on a meta field.
+    2. a $sort on a meta field (ascending, descending) and time (ascending) and $group with _id on the meta
+       field and only $last accumulators.
+    3. any of the above pipelines with a preceding match predicate on a meta field.
 
 Actors:
 - Name: CreateTimeSeriesCollection
@@ -23,6 +25,19 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: InsertData
   Type: Loader
@@ -35,7 +50,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 1000000
-    BatchSize: &batchSize 100
+    BatchSize: 100
     Document:
       timestamp: {^RandomDate: {min: "2022-01-01", max: "2022-03-01"}}
       metadata: {
@@ -46,40 +61,65 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
-- Name: CreateIndex
+# Lastpoint query with ascending index on meta subfield and descending index on time.
+- Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescending
   Type: RunCommand
-  Threads: 1
+  Database: *db
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 1
-    Database: *db
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        createIndexes: Collection0
-        indexes:
-        - {key: {"metadata.sensorId": 1, timestamp: -1}, name: "MetaSubfieldAscendingTimeDescending"}
+  - LoadConfig:
+      Path: &phasePath ../../phases/execution/TimeSeriesLastpoint.yml
+      Key: CreateIndex
+      Parameters:
+        Collection: *coll
+        IndexName: &metaAscTimeDesc "MetaSubfieldAscendingTimeDescending"
+        IndexPattern: {"metadata.sensorId": 1, timestamp: -1}
+  - LoadConfig:
+      Path: *phasePath
+      Key: Quiesce
+  - LoadConfig:
+      Path: *phasePath
+      Key: RunLastPointQuery
+      Parameters:
+        Collection: *coll
+        SortPattern: {"metadata.sensorId": 1, timestamp: -1}
+        GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
+  - LoadConfig:
+      Path: *phasePath
+      Key: DropIndex
+      Parameters:
+        Collection: *coll
+        IndexName: *metaAscTimeDesc
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - *Nop
   - *Nop
 
-- Name: Quiesce
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        fsync: 1
-  - *Nop
-
-- Name: RunLastpoint
+# Lastpoint query with descending index on meta subfield and descending index on time.
+- Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescending
   Type: RunCommand
   Database: *db
   Phases:
@@ -87,34 +127,125 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: 10
-    Database: *db
-    Operations:
-    - OperationMetricsName: LastpointWithMetaSubfieldAscendingTimeDescending
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
-          [
-            {$sort: {"metadata.sensorId": 1, timestamp: -1}},
-            {$group: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}}
-          ]
-        cursor: {batchSize: *batchSize}
-        # In cases when we cannot optimize for a covered index sort, allow for external sorting.
-        allowDiskUse: true
-    - OperationMetricsName: LastpointWithMetaSubfieldAscendingTimeDescendingPrecedingPredicate
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
-          [
-            {$match: {"metadata.sensorId": {$gt: 10}}},
-            {$sort: {"metadata.sensorId": 1, timestamp: -1}},
-            {$group: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}}
-          ]
-        cursor: {batchSize: *batchSize}
-        # In cases when we cannot optimize for a covered index sort, allow for external sorting.
-        allowDiskUse: true
+  - *Nop
+  - *Nop
+  - LoadConfig:
+      Path: *phasePath
+      Key: CreateIndex
+      Parameters:
+        Collection: *coll
+        IndexName: &metaDescTimeDesc "MetaSubfieldDescendingTimeDescending"
+        IndexPattern: {"metadata.sensorId": -1, timestamp: -1}
+  - LoadConfig:
+      Path: *phasePath
+      Key: Quiesce
+  - LoadConfig:
+      Path: *phasePath
+      Key: RunLastPointQuery
+      Parameters:
+        Collection: *coll
+        SortPattern: {"metadata.sensorId": -1, timestamp: -1}
+        GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
+  - LoadConfig:
+      Path: *phasePath
+      Key: DropIndex
+      Parameters:
+        Collection: *coll
+        IndexName: *metaDescTimeDesc
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Lastpoint query with descending index on meta subfield and ascending index on time.
+- Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscending
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - LoadConfig:
+      Path: *phasePath
+      Key: CreateIndex
+      Parameters:
+        Collection: *coll
+        IndexName: &metaDescTimeAsc "MetaSubfieldDescendingTimeAscending"
+        IndexPattern: {"metadata.sensorId": -1, timestamp: 1}
+  - LoadConfig:
+      Path: *phasePath
+      Key: Quiesce
+  - LoadConfig:
+      Path: *phasePath
+      Key: RunLastPointQuery
+      Parameters:
+        Collection: *coll
+        SortPattern: {"metadata.sensorId": -1, timestamp: 1}
+        GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
+  - LoadConfig:
+      Path: *phasePath
+      Key: DropIndex
+      Parameters:
+        Collection: *coll
+        IndexName: *metaDescTimeAsc
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Lastpoint query with ascending index on meta subfield and ascending index on time.
+- Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescending
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - LoadConfig:
+      Path: *phasePath
+      Key: CreateIndex
+      Parameters:
+        Collection: *coll
+        IndexName: &metaAscTimeAsc "MetaSubfieldAscendingTimeDescending"
+        IndexPattern: {"metadata.sensorId": 1, timestamp: 1}
+  - LoadConfig:
+      Path: *phasePath
+      Key: Quiesce
+  - LoadConfig:
+      Path: *phasePath
+      Key: RunLastPointQuery
+      Parameters:
+        Collection: *coll
+        SortPattern: {"metadata.sensorId": 1, timestamp: 1}
+        GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
+  - LoadConfig:
+      Path: *phasePath
+      Key: DropIndex
+      Parameters:
+        Collection: *coll
+        IndexName: *metaAscTimeAsc
 
 AutoRun:
 - When:
