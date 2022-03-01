@@ -14,6 +14,10 @@ Actors:
     Operations:
     - OperationName: withTransaction
       OperationCommand:
+        # The OnSession: true flag tells the driver to use a logical session. The actor will use the
+        # same session for the duration of a phase.
+        # If placed here, the session is used for every op listed in OperationsInTransaction
+        OnSession: true
         ThrowOnFailure: false  # Transactions are allowed to fail.
         RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
         Options:
@@ -38,8 +42,8 @@ Actors:
               Update: {$set: {a: 5}}
             Options:
               Ordered: true
-            # The OnSession: true flag tells the driver to use a logical session. The actor will use the
-            # same session for the duration of a phase.
+            # OnSession can also be overridden here, but it's unnecessary
+            # because OnSession is also present on withTransaction
             OnSession: true
   - Repeat: 1
     Collection: test

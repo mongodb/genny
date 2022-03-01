@@ -868,6 +868,8 @@ private:
 };
 
 /**
+ * Warning: Commands that should be apart of the transaction must declare
+ * the following value under OperationCommand: `OnSession: true`
  * Example usage:
  *    Operations:
  *    - OperationName: startTransaction
@@ -1008,7 +1010,13 @@ private:
         }
         auto createOp = opConstructor->second;
         auto& yamlCommand = txnOp["OperationCommand"];
-        _txnOps.push_back(createOp(yamlCommand, _onSession, _collection, _operation, context, id));
+        // operations can override withTransaction's OnSession value
+        // This behavior is hard to test.
+        // The CrudActorYamlTests suite exercises both branches of this boolean
+        // but doesn't assert the behavior.
+        // Be careful when making changes around this code.
+        bool onSession = yamlCommand["OnSession"].maybe<bool>().value_or(_onSession);
+        _txnOps.push_back(createOp(yamlCommand, onSession, _collection, _operation, context, id));
     }
 
     mongocxx::collection _collection;
