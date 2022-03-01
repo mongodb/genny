@@ -205,7 +205,7 @@ Actors:
   - *Nop
 
 # Lastpoint query with ascending index on meta subfield and ascending index on time.
-- Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescending
+- Name: RunLastpointQueryWithMetaSubfieldAscendingTimeAscending
   Type: RunCommand
   Database: *db
   Phases:
