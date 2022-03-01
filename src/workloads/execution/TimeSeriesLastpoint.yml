@@ -228,7 +228,7 @@ Actors:
       Key: CreateIndex
       Parameters:
         Collection: *coll
-        IndexName: &metaAscTimeAsc "MetaSubfieldAscendingTimeDescending"
+        IndexName: &metaAscTimeAsc "MetaSubfieldAscendingTimeAscending"
         IndexPattern: {"metadata.sensorId": 1, timestamp: 1}
   - LoadConfig:
       Path: *phasePath
