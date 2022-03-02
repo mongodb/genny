@@ -27,7 +27,7 @@ RunLastPointQuery:
   Repeat: 10
   Database: *db
   Operations:
-  - OperationMetricsName: LastPointQuery
+  - OperationMetricsName: RunLastPointQuery
     OperationName: RunCommand
     OperationCommand:
       aggregate: &coll {^Parameter: {Name: "IndexPattern", Default: "Collection0"}}
@@ -39,7 +39,7 @@ RunLastPointQuery:
       cursor: &batchSize {batchSize: {^Parameter: {Name: "BatchSize", Default: 100}}}
       # In cases when we cannot optimize for a covered index sort, allow for external sorting.
       allowDiskUse: true
-  - OperationMetricsName: LastPointQueryWithPrecedingPredicate
+  - OperationMetricsName: RunLastPointQueryWithPrecedingPredicate
     OperationName: RunCommand
     OperationCommand:
       aggregate: *coll
