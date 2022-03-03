@@ -72,6 +72,7 @@ struct RandomSampler::PhaseConfig {
 void RandomSampler::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
+            BOOST_LOG_TRIVIAL(info) << "Starting " << this->defaultName() << " execution";
             auto statTracker = _activeCollectionScannerInstances > 0
                 ? config->readWithScanOperation.start()
                 : config->readOperation.start();
@@ -85,6 +86,7 @@ void RandomSampler::run() {
                 throw std::domain_error("expected to find document: " + std::to_string(recordId));
             }
             statTracker.success();
+            BOOST_LOG_TRIVIAL(info) << "Ended " << this->defaultName() << " execution";
         }
     }
 }

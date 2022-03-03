@@ -59,6 +59,7 @@ struct InsertRemove::PhaseConfig {
 void InsertRemove::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
+            BOOST_LOG_TRIVIAL(info) << "Starting " << this->defaultName() << " execution";
             BOOST_LOG_TRIVIAL(debug) << " Inserting and then removing";
 
             // First we insert
@@ -74,6 +75,7 @@ void InsertRemove::run() {
             auto results = config->collection.delete_many(config->myDoc.view());
             removeCtx.addDocuments(1);
             removeCtx.success();
+            BOOST_LOG_TRIVIAL(info) << "Ended " << this->defaultName() << " execution";
         }
     }
 }

@@ -40,8 +40,10 @@ struct HelloWorld::PhaseConfig {
 void HelloWorld::run() {
     for (auto&& config : _loop) {
         for (auto _ : config) {
+            BOOST_LOG_TRIVIAL(info) << "Starting " << this->defaultName() << " execution";
             auto ctx = config->operation.start();
             BOOST_LOG_TRIVIAL(info) << config->message;
+            BOOST_LOG_TRIVIAL(debug) << "STARTING ACTOR: " << this->defaultName();
             ++_helloCounter;
             BOOST_LOG_TRIVIAL(info) << "Counter: " << _helloCounter;
             ctx.addDocuments(1);
@@ -50,6 +52,7 @@ void HelloWorld::run() {
 
             config->syntheticOperation.report(metrics::clock::now(),
                                               std::chrono::milliseconds{_helloCounter});
+            BOOST_LOG_TRIVIAL(info) << "Ended " << this->defaultName() << " execution";
         }
     }
 }

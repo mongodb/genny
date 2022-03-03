@@ -56,6 +56,7 @@ MonotonicSingleLoader::PhaseConfig::PhaseConfig(PhaseContext& phaseContext,
 void MonotonicSingleLoader::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
+            BOOST_LOG_TRIVIAL(info) << "Starting " << this->defaultName() << " execution";
             auto totalOpCtx = _totalBulkLoad.start();
 
             int64_t lowId;
@@ -96,6 +97,7 @@ void MonotonicSingleLoader::run() {
             }
 
             totalOpCtx.success();
+            BOOST_LOG_TRIVIAL(info) << "Ended " << this->defaultName() << " execution";
         }
     }
 }
