@@ -54,12 +54,12 @@ Actors:
   Type: LoggingActor
   Threads: 1
   Phases:
-    - *Nop
-    - LogEvery: 9 minutes
-      Blocking: None
-    - *Nop
-    - *Nop
-    - *Nop
+  - *Nop
+  - LogEvery: 9 minutes
+    Blocking: None
+  - *Nop
+  - *Nop
+  - *Nop
 
 # Phase 3: Issue a large delete that should take a considerable amount of time to run. This delete
 # will run with no concurrent writes to the database.
@@ -109,12 +109,12 @@ Actors:
   Type: LoggingActor
   Threads: 1
   Phases:
-    - *Nop
-    - *Nop
-    - *Nop
-    - LogEvery: 9 minutes
-      Blocking: None
-    - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - LogEvery: 9 minutes
+    Blocking: None
+  - *Nop
 
 # Phase 5: Issue a large delete that should take a considerable amount of time to run. This delete
 # will run with concurrent writes to the database.
@@ -154,7 +154,7 @@ Actors:
     - OperationName: insertOne
       OperationCommand:
         Document:
-           padding: {^FastRandomString: {length: {^RandomInt: {min: 512, max: 3072}}}}
+          padding: {^FastRandomString: {length: {^RandomInt: {min: 512, max: 3072}}}}
 AutoRun:
 - When:
     mongodb_setup:

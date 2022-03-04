@@ -16,7 +16,7 @@ Clients:
 LoadConfig:
   Path: "../../phases/execution/MultiDeletes.yml"
   Parameters:
-    DocumentSizePaddingBytes: 1024 #1KB
+    DocumentSizePaddingBytes: 1024  # 1KB
     DocumentCount: 5_000_000
 
 AutoRun:
