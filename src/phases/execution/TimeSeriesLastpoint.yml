@@ -1,0 +1,64 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  These are the phases used to measure performance of the last-point-in-time query optimization on timeseries collections.
+
+CreateIndex:
+  Repeat: 1
+  Database: &db test
+  Operations:
+  - OperationName: RunCommand
+    OperationMetricsName: CreateIndex
+    OperationCommand:
+      createIndexes: {^Parameter: {Name: "Collection", Default: "Collection0"}}
+      indexes:
+      - {key: {^Parameter: {Name: "IndexPattern", Default: {}}}, name: {^Parameter: {Name: "IndexName", Default: ""}}}
+
+Quiesce:
+  Repeat: 1
+  Database: admin
+  Operations:
+  - OperationName: RunCommand
+    OperationMetricsName: Quiesce
+    OperationCommand:
+      fsync: 1
+
+RunLastPointQuery:
+  Repeat: 10
+  Database: *db
+  Operations:
+  - OperationMetricsName: RunLastPointQuery
+    OperationName: RunCommand
+    OperationCommand:
+      aggregate: &coll {^Parameter: {Name: "IndexPattern", Default: "Collection0"}}
+      pipeline:
+        [
+          &sortPattern {$sort: {^Parameter: {Name: "SortPattern", Default: {}}}},
+          &groupPattern {$group: {^Parameter: {Name: "GroupPattern", Default: {}}}}
+        ]
+      cursor: &batchSize {batchSize: {^Parameter: {Name: "BatchSize", Default: 100}}}
+      # In cases when we cannot optimize for a covered index sort, allow for external sorting.
+      allowDiskUse: true
+  - OperationMetricsName: RunLastPointQueryWithPrecedingPredicate
+    OperationName: RunCommand
+    OperationCommand:
+      aggregate: *coll
+      pipeline:
+        [
+          {$match: {"metadata.sensorId": {$gt: 10}}},
+          *sortPattern,
+          *groupPattern
+        ]
+      cursor: *batchSize
+      # In cases when we cannot optimize for a covered index sort, allow for external sorting.
+      allowDiskUse: true
+
+DropIndex:
+  Repeat: 1
+  Database: *db
+  Operations:
+  - OperationMetricsName: DropIndex
+    OperationName: RunCommand
+    OperationCommand:
+      dropIndexes: {^Parameter: {Name: "Collection", Default: "Collection0"}}
+      index: {^Parameter: {Name: "IndexName", Default: ""}}
