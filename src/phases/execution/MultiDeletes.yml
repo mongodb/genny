@@ -39,8 +39,6 @@ Actors:
   - *Nop
   - Repeat: 1
     Database: *Database
-    MetricsName: PrePopulation0
-    Collection: *MassDeletionsColl
     Threads: 1
     CollectionCount: 1
     DocumentCount: *DocumentCount
@@ -95,7 +93,6 @@ Actors:
   - *Nop
   - *Nop
   - Repeat: 1
-    MetricsName: PrePopulation1
     Threads: 1
     Database: *Database
     CollectionCount: 1
