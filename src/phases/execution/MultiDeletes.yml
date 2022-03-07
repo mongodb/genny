@@ -44,6 +44,7 @@ Actors:
     DocumentCount: *DocumentCount
     BatchSize: 1000
     Document:
+      intToFilterBy: {^RandomInt: {min: 1, max: *DocumentCount}}
       padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
   - *Nop
   - *Nop
@@ -77,7 +78,8 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: deleteMany
-          Filter: {_id: {$gte: 0}}
+          # Filter by an integer field designed to never be less than or equal to 0.
+          Filter: {intToFilterBy: {$gte: 0}}
           OperationOptions:
             WriteConcern: { Level: "majority" }
   - *Nop
@@ -99,6 +101,7 @@ Actors:
     DocumentCount: *DocumentCount
     BatchSize: 1000
     Document:
+      intToFilterBy: {^RandomInt: {min: 1, max: *DocumentCount}}
       padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
   - *Nop
 
@@ -132,7 +135,7 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: deleteMany
-          Filter: {_id: {$gte: 0}}
+          Filter: {intToFilterBy: {$gte: 0}}
           OperationOptions:
             WriteConcern: { Level: "majority" }
 
