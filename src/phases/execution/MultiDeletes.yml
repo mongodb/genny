@@ -8,7 +8,7 @@ GlobalDefaults:
   DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
   DocumentCount: &DocumentCount {^Parameter: {Name: "DocumentCount", Default: 100_000_000}}
 
-# Static variables.
+# Constant variables.
 WriteRate: &WriteRate 1 per 500 microseconds  # 2000/second
 Database: &Database test
 # Collection0 is the default collection for the MonotonicSingleLoader.
@@ -44,7 +44,6 @@ Actors:
     DocumentCount: *DocumentCount
     BatchSize: 1000
     Document:
-      intToFilterBy: {^RandomInt: {min: 1, max: *DocumentCount}}
       padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
   - *Nop
   - *Nop
@@ -78,8 +77,8 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: deleteMany
-          # Filter by an integer field designed to never be less than or equal to 0.
-          Filter: {intToFilterBy: {$gte: 0}}
+          # Filter by the smallest OID so all documents are included.
+          Filter: {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
           OperationOptions:
             WriteConcern: { Level: "majority" }
   - *Nop
@@ -101,7 +100,6 @@ Actors:
     DocumentCount: *DocumentCount
     BatchSize: 1000
     Document:
-      intToFilterBy: {^RandomInt: {min: 1, max: *DocumentCount}}
       padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
   - *Nop
 
@@ -135,7 +133,7 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: deleteMany
-          Filter: {intToFilterBy: {$gte: 0}}
+          Filter: {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
           OperationOptions:
             WriteConcern: { Level: "majority" }
 
