@@ -31,16 +31,18 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 2: Populate the collection for mass deletion.
+# Phase 2: Populate the collection for mass deletion. TODO Make multithreaded once TIG-2938 is resolved.
 - Name: PopulateInitialData0
-  Type: MonotonicSingleLoader
-  Threads: 100
+  Type: Loader
+  Threads: 1
   Phases:
   - *Nop
   - Repeat: 1
-    MetricsName: PrePopulation0
     Database: *Database
+    MetricsName: PrePopulation0
     Collection: *MassDeletionsColl
+    Threads: 1
+    CollectionCount: 1
     DocumentCount: *DocumentCount
     BatchSize: 1000
     Document:
@@ -84,20 +86,19 @@ Actors:
   - *Nop
 
 # Phase 4: Populate the collection for mass deletion again. This time concurrent writes will be
-# issued to another collection in the same database.
-# NOTE: The MonotonicSingleLoader counter will start where it left off in the first instance of this
-# Actor in a previous phase.
+# issued to another collection in the same database. TODO Make multithreaded once TIG-2938 is resolved.
 - Name: PopulateInitialData1
-  Type: MonotonicSingleLoader
-  Threads: 100
+  Type: Loader
+  Threads: 1
   Phases:
   - *Nop
   - *Nop
   - *Nop
   - Repeat: 1
     MetricsName: PrePopulation1
+    Threads: 1
     Database: *Database
-    Collection: *MassDeletionsColl
+    CollectionCount: 1
     DocumentCount: *DocumentCount
     BatchSize: 1000
     Document:
@@ -138,7 +139,7 @@ Actors:
           OperationOptions:
             WriteConcern: { Level: "majority" }
 
-# Phase 5: Perform some write operations - see how write latency is impacted by the large delete.
+# Phase 5: Perform some write operations - see how write latency is impacted on Collection1 by the large delete on Collection0.
 - Name: Insert
   Type: CrudActor
   Database: *Database
