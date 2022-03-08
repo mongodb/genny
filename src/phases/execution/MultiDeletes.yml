@@ -4,14 +4,15 @@ Description: >
   Runs inserts on one collection while a mass deletion takes place on another collection in the same database.
 
 GlobalDefaults:
-  # Configurable parameters
-  DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
+  # Configurable parameters.
   DocumentCount: &DocumentCount {^Parameter: {Name: "DocumentCount", Default: 100_000_000}}
+  # The size of the documents inserted and deleted into collections during this test.
+  DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
 
 # Constant variables.
 WriteRate: &WriteRate 1 per 500 microseconds  # 2000/second
 Database: &Database test
-# Collection0 is the default collection for the MonotonicSingleLoader.
+# Collection0 is the default collection for the Loader.
 MassDeletionsColl: &MassDeletionsColl Collection0
 
 Actors:
@@ -49,7 +50,7 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 2: Gaurd against timout due to no logging during PrePoulation0.
+# Phase 2: Guard against timeout due to no logging during PopulateInitialData0.
 - Name: LoggingActor0
   Type: LoggingActor
   Threads: 1
@@ -103,7 +104,7 @@ Actors:
       padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
   - *Nop
 
-# Phase 4: Gaurd against timout due to no logging during PrePoulation1.
+# Phase 4: Guard against timeout due to no logging during PopulateInitialData1.
 - Name: LoggingActor1
   Type: LoggingActor
   Threads: 1
@@ -153,7 +154,7 @@ Actors:
     - OperationName: insertOne
       OperationCommand:
         Document:
-          padding: {^FastRandomString: {length: {^RandomInt: {min: 512, max: 3072}}}}
+          padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
 AutoRun:
 - When:
     mongodb_setup:
