@@ -31,12 +31,32 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
 
-# Phase 2: Populate the collection for mass deletion. TODO Make multithreaded once TIG-2938 is resolved.
+# Phase 2: Set the profile level to see operation times in the logs.
+- Name: SetProfileLevel
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *Database
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        profile: 0
+        slowms: -1
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Phase 3: Populate the collection for mass deletion. TODO Make multithreaded once TIG-2938 is resolved.
 - Name: PopulateInitialData0
   Type: Loader
   Threads: 1
   Phases:
+  - *Nop
   - *Nop
   - Repeat: 1
     Database: *Database
@@ -50,11 +70,12 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 2: Guard against timeout due to no logging during PopulateInitialData0.
+# Phase 3: Guard against timeout due to no logging during PopulateInitialData0.
 - Name: LoggingActor0
   Type: LoggingActor
   Threads: 1
   Phases:
+  - *Nop
   - *Nop
   - LogEvery: 9 minutes
     Blocking: None
@@ -62,12 +83,13 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 3: Issue a large delete that should take a considerable amount of time to run. This delete
+# Phase 4: Issue a large delete that should take a considerable amount of time to run. This delete
 # will run with no concurrent writes to the database.
 - Name: LargeMultiDelete0
   Type: CrudActor
   Database: *Database
   Phases:
+  - *Nop
   - *Nop
   - *Nop
   - Repeat: 1
@@ -85,12 +107,13 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 4: Populate the collection for mass deletion again. This time concurrent writes will be
+# Phase 5: Populate the collection for mass deletion again. This time concurrent writes will be
 # issued to another collection in the same database. TODO Make multithreaded once TIG-2938 is resolved.
 - Name: PopulateInitialData1
   Type: Loader
   Threads: 1
   Phases:
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -104,7 +127,7 @@ Actors:
       padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
   - *Nop
 
-# Phase 4: Guard against timeout due to no logging during PopulateInitialData1.
+# Phase 5: Guard against timeout due to no logging during PopulateInitialData1.
 - Name: LoggingActor1
   Type: LoggingActor
   Threads: 1
@@ -112,16 +135,18 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
   - LogEvery: 9 minutes
     Blocking: None
   - *Nop
 
-# Phase 5: Issue a large delete that should take a considerable amount of time to run. This delete
+# Phase 6: Issue a large delete that should take a considerable amount of time to run. This delete
 # will run with concurrent writes to the database.
 - Name: LargeMultiDelete1
   Type: CrudActor
   Database: *Database
   Phases:
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -138,11 +163,12 @@ Actors:
           OperationOptions:
             WriteConcern: { Level: "majority" }
 
-# Phase 5: Perform some write operations - see how write latency is impacted on Collection1 by the large delete on Collection0.
+# Phase 6: Perform some write operations - see how write latency is impacted on Collection1 by the large delete on Collection0.
 - Name: Insert
   Type: CrudActor
   Database: *Database
   Phases:
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
