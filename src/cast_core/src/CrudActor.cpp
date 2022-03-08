@@ -492,6 +492,8 @@ struct BulkWriteOperation : public BaseOperation {
                 "WriteCommand '" + writeCommand + "' not supported in bulkWrite operations."));
         }
         auto createWriteOp = writeOpConstructor->second;
+        auto& yamlCommand = writeOp["OperationCommand"];
+        bool onSession = yamlCommand["OnSession"].maybe<bool>().value_or(_onSession);
         _writeOps.push_back(
             createWriteOp(writeOp, _onSession, _collection, _operation, context, id));
     }
