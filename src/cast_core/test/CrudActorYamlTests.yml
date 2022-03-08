@@ -597,6 +597,25 @@ Tests:
         Count: 1
     AssertNumTransactionsCommitted: 0
 
+  - Description: simple findOneAndReplace in a withTransaction without OnSession
+    Operations:
+      - OperationName: withTransaction
+        OperationCommand:
+          OperationsInTransaction:
+            - OperationName: insertOne
+              OperationCommand:
+                Document: {a: 100}
+            - OperationName: findOneAndReplace
+              OperationCommand:
+                Filter: {a: 100}
+                Replacement: {a: 30}
+    OutcomeCounts:
+      - Filter: {a: 100}
+        Count: 0
+      - Filter: {a: 30}
+        Count: 1
+    AssertNumTransactionsCommitted: 0
+
   - Description: WithTransaction, BulkWrite insert, delete, then re-insert with OnSession on bulkWrite
     Operations:
       - OperationName: withTransaction
