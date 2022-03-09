@@ -615,3 +615,60 @@ Tests:
       - Filter: {a: 30}
         Count: 1
     AssertNumTransactionsCommitted: 0
+
+  - Description: simple findOneAndReplace in a withTransaction with OnSession
+    Operations:
+      - OperationName: withTransaction
+        OperationCommand:
+          OnSession: true
+          OperationsInTransaction:
+            - OperationName: insertOne
+              OperationCommand:
+                Document: {a: 100}
+            - OperationName: findOneAndReplace
+              OperationCommand:
+                Filter: {a: 100}
+                Replacement: {a: 30}
+    OutcomeCounts:
+      - Filter: {a: 100}
+        Count: 0
+      - Filter: {a: 30}
+        Count: 1
+    AssertNumTransactionsCommitted: 1
+
+  - Description: WithTransaction, BulkWrite insert, delete, then re-insert without OnSession on bulkWrite
+    Operations:
+      - OperationName: withTransaction
+        OperationCommand:
+          OperationsInTransaction:
+          - OperationName: bulkWrite
+            OperationCommand:
+              WriteOperations:
+                - WriteCommand: insertOne
+                  Document: { a: 1 }
+                - WriteCommand: deleteOne
+                  Filter: { a: 1 }
+                - WriteCommand: insertOne
+                  Document: { a: 2 }
+    OutcomeData:
+      - {a: 2}
+    AssertNumTransactionsCommitted: 0
+
+  - Description: WithTransaction, BulkWrite insert, delete, then re-insert with OnSession on bulkWrite
+    Operations:
+      - OperationName: withTransaction
+        OperationCommand:
+          OperationsInTransaction:
+          - OperationName: bulkWrite
+            OperationCommand:
+              OnSession: true
+              WriteOperations:
+                - WriteCommand: insertOne
+                  Document: { a: 1 }
+                - WriteCommand: deleteOne
+                  Filter: { a: 1 }
+                - WriteCommand: insertOne
+                  Document: { a: 2 }
+    OutcomeData:
+      - {a: 2}
+    AssertNumTransactionsCommitted: 1
