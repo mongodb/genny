@@ -23,4 +23,3 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica-all-feature-flags
-      - shard-lite-all-feature-flags
