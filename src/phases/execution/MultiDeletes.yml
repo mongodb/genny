@@ -1,0 +1,163 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Runs inserts on one collection while a mass deletion takes place on another collection in the same database.
+
+GlobalDefaults:
+  # Configurable parameters.
+  DocumentCount: &DocumentCount {^Parameter: {Name: "DocumentCount", Default: 100_000_000}}
+  # The size of the documents inserted and deleted into collections during this test.
+  DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
+
+# Constant variables.
+WriteRate: &WriteRate 1 per 500 microseconds  # 2000/second
+Database: &Database test
+# Collection0 is the default collection for the Loader.
+MassDeletionsColl: &MassDeletionsColl Collection0
+
+Actors:
+
+# Phase 1: Drop the database.
+- Name: DropDatabase
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *Database
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Phase 2: Populate the collection for mass deletion. TODO Make multithreaded once TIG-2938 is resolved.
+- Name: PopulateInitialData0
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *Database
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *DocumentCount
+    BatchSize: 1000
+    Document:
+      padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Phase 2: Guard against timeout due to no logging during PopulateInitialData0.
+- Name: LoggingActor0
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+  - *Nop
+  - LogEvery: 9 minutes
+    Blocking: None
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Phase 3: Issue a large delete that should take a considerable amount of time to run. This delete
+# will run with no concurrent writes to the database.
+- Name: LargeMultiDelete0
+  Type: CrudActor
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    MetricsName: DuringMassDeletion0
+    Collection: *MassDeletionsColl
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: deleteMany
+          # Filter by the smallest OID so all documents are included.
+          Filter: {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
+          OperationOptions:
+            WriteConcern: { Level: "majority" }
+  - *Nop
+  - *Nop
+
+# Phase 4: Populate the collection for mass deletion again. This time concurrent writes will be
+# issued to another collection in the same database. TODO Make multithreaded once TIG-2938 is resolved.
+- Name: PopulateInitialData1
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Threads: 1
+    Database: *Database
+    CollectionCount: 1
+    DocumentCount: *DocumentCount
+    BatchSize: 1000
+    Document:
+      padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
+  - *Nop
+
+# Phase 4: Guard against timeout due to no logging during PopulateInitialData1.
+- Name: LoggingActor1
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - LogEvery: 9 minutes
+    Blocking: None
+  - *Nop
+
+# Phase 5: Issue a large delete that should take a considerable amount of time to run. This delete
+# will run with concurrent writes to the database.
+- Name: LargeMultiDelete1
+  Type: CrudActor
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    MetricsName: DuringMassDeletion1
+    Collection: *MassDeletionsColl
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: deleteMany
+          Filter: {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
+          OperationOptions:
+            WriteConcern: { Level: "majority" }
+
+# Phase 5: Perform some write operations - see how write latency is impacted on Collection1 by the large delete on Collection0.
+- Name: Insert
+  Type: CrudActor
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Blocking: None
+    GlobalRate: *WriteRate
+    Collection: Collection1
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document:
+          padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-all-feature-flags
+      - shard-lite-all-feature-flags

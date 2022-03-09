@@ -1,0 +1,25 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Runs a workload that inserts and then deletes a large range of documents on one collection while
+  performing writes on another collection in the same database. Serves as a base line for comparing
+  legacy document by document deletes versus efficiently batched multi deletes.
+
+# Increase the maxPoolSize to enable faster initial data population
+Clients:
+  Default:
+    QueryOptions:
+      # Allow for longer duration since the loading of the data may take a while.
+      socketTimeoutMS: 3_600_000  # = 1 hour
+
+LoadConfig:
+  Path: "../../phases/execution/MultiDeletes.yml"
+  Parameters:
+    DocumentSizePaddingBytes: 1024  # 1KB
+    DocumentCount: 10_000_000
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-all-feature-flags
