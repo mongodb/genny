@@ -110,7 +110,8 @@ void CommitLatency::run() {
         }
 
         for (const auto&& _ : config) {
-            BOOST_LOG_TRIVIAL(info) << "Starting " << this->defaultName() << " execution";
+            BOOST_LOG_TRIVIAL(debug)
+                << "Starting " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
             auto ctx = config->op.start();
             // Basically we withdraw `amount` from account 1 and deposit to account 2
             // amount = random.randint(-100, 100)
