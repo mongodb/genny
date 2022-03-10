@@ -1,19 +1,33 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: >
-  Runs inserts on one collection while a mass deletion takes place on another collection in the same database.
+  Runs a workload that deletes a large range of documents while performing writes on another collection.
+  Allows for comparing the performance of the DELETE_STAGE vs the BATCHED_DELETE_STAGE, primarily in terms
+  of deletion throughput, and w:majority latencies of the concurrent writes.
+  The mass deletion namespace is __internalBatchedDeletesTesting.Collection0
+  The concurrent writes namespace is __internalBatchedDeletesTesting.concurrentWritesColl
 
 GlobalDefaults:
   # Configurable parameters.
   DocumentCount: &DocumentCount {^Parameter: {Name: "DocumentCount", Default: 100_000_000}}
   # The size of the documents inserted and deleted into collections during this test.
   DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
+  # Whether to use the BATCHED_DELETE query exec stage over DELETE.
+  UseBatchedDeleteStage: &UseBatchedDeleteStage {^Parameter: {Name: "UseBatchedDeleteStage", Default: 0}}
 
-# Constant variables.
+# Constants
 WriteRate: &WriteRate 1 per 500 microseconds  # 2000/second
-Database: &Database test
-# Collection0 is the default collection for the Loader.
+ConcurrentWritesColl: &ConcurrentWritesColl concurrentWritesColl
+
+# Constants hardcoded in server (see TIG-3945, TIG-3882)
+Database: &Database __internalBatchedDeletesTesting
 MassDeletionsColl: &MassDeletionsColl Collection0
+
+Clients:
+  Default:
+    QueryOptions:
+      # Allow for longer duration since the loading of the data may take a while.
+      socketTimeoutMS: 3_600_000  # = 1 hour
 
 Actors:
 
@@ -31,12 +45,33 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
 
-# Phase 2: Populate the collection for mass deletion. TODO Make multithreaded once TIG-2938 is resolved.
+# Phase 2: Select between DELETE and BATCHED_DELETE query exec stage.
+- Name: SelectDeleteExecutor
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operation:
+      OperationMetricsName: SelectDeleteExecutor
+      OperationName: RunCommand
+      OperationCommand:
+        setParameter: 1
+        internalBatchUserMultiDeletesForTest: *UseBatchedDeleteStage
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Phase 3: Populate the collection for mass deletion. TODO Make multithreaded once TIG-2938 is resolved.
 - Name: PopulateInitialData0
   Type: Loader
   Threads: 1
   Phases:
+  - *Nop
   - *Nop
   - Repeat: 1
     Database: *Database
@@ -50,11 +85,12 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 2: Guard against timeout due to no logging during PopulateInitialData0.
+# Phase 4: Guard against timeout due to no logging during PopulateInitialData0.
 - Name: LoggingActor0
   Type: LoggingActor
   Threads: 1
   Phases:
+  - *Nop
   - *Nop
   - LogEvery: 9 minutes
     Blocking: None
@@ -62,7 +98,7 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 3: Issue a large delete that should take a considerable amount of time to run. This delete
+# Phase 4: Issue a large delete that should take a considerable amount of time to run. This delete
 # will run with no concurrent writes to the database.
 - Name: LargeMultiDelete0
   Type: CrudActor
@@ -70,8 +106,10 @@ Actors:
   Phases:
   - *Nop
   - *Nop
+  - *Nop
   - Repeat: 1
     MetricsName: DuringMassDeletion0
+    Database: *Database
     Collection: *MassDeletionsColl
     Operations:
     - OperationName: bulkWrite
@@ -85,7 +123,7 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 4: Populate the collection for mass deletion again. This time concurrent writes will be
+# Phase 5: Populate the collection for mass deletion again, in preparation for phase 5 when concurrent writes will be
 # issued to another collection in the same database. TODO Make multithreaded once TIG-2938 is resolved.
 - Name: PopulateInitialData1
   Type: Loader
@@ -94,9 +132,11 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
   - Repeat: 1
     Threads: 1
     Database: *Database
+    Collection: *MassDeletionsColl
     CollectionCount: 1
     DocumentCount: *DocumentCount
     BatchSize: 1000
@@ -104,7 +144,7 @@ Actors:
       padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
   - *Nop
 
-# Phase 4: Guard against timeout due to no logging during PopulateInitialData1.
+# Phase 5: Guard against timeout due to no logging during PopulateInitialData1.
 - Name: LoggingActor1
   Type: LoggingActor
   Threads: 1
@@ -112,16 +152,18 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
   - LogEvery: 9 minutes
     Blocking: None
   - *Nop
 
-# Phase 5: Issue a large delete that should take a considerable amount of time to run. This delete
-# will run with concurrent writes to the database.
+# Phase 6: Issue a large delete that should take a considerable amount of time to run. This delete
+# will run with concurrent writes to another collection.
 - Name: LargeMultiDelete1
   Type: CrudActor
   Database: *Database
   Phases:
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -134,11 +176,12 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: deleteMany
+          # Filter by the smallest OID so all documents are included.
           Filter: {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
           OperationOptions:
             WriteConcern: { Level: "majority" }
 
-# Phase 5: Perform some write operations - see how write latency is impacted on Collection1 by the large delete on Collection0.
+# Phase 6: Perform some write operations - see how write latency is impacted on ConcurrentWritesColl by the large delete on MassDeletionsColl.
 - Name: Insert
   Type: CrudActor
   Database: *Database
@@ -147,9 +190,11 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
   - Blocking: None
     GlobalRate: *WriteRate
-    Collection: Collection1
+    Database: *Database
+    Collection: *ConcurrentWritesColl
     Operations:
     - OperationName: insertOne
       OperationCommand:

@@ -1,13 +1,14 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: >
-  Deletes a large range of documents using the DELETE query exec stage while performing writes on another collection.
+  Deletes a large range of documents using the BATCHED_DELETE query exec stage while performing writes on another collection.
 
 LoadConfig:
   Path: "../../phases/execution/MultiDeletes.yml"
   Parameters:
     DocumentSizePaddingBytes: 1024  # 1KB
     DocumentCount: 10_000_000
+    UseBatchedDeleteStage: 1
 
 AutoRun:
 - When:
