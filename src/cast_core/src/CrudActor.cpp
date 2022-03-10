@@ -1520,7 +1520,8 @@ void CrudActor::run() {
             config->fsm.onNewPhase(config.isNop(), _rng);
         }
         for (const auto&& _ : config) {
-            BOOST_LOG_TRIVIAL(info) << "Starting " << this->defaultName() << " execution";
+            BOOST_LOG_TRIVIAL(debug)
+                << "Starting " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
             auto metricsContext = config->metrics.start();
             // std::optionals (like `delay`) convert to boolean true iff their value is present.
             if (auto delay = config->fsm.run(session, _rng); delay) {
@@ -1532,7 +1533,8 @@ void CrudActor::run() {
                 }
             }
             metricsContext.success();
-            BOOST_LOG_TRIVIAL(info) << "Ended " << this->defaultName() << " execution";
+            BOOST_LOG_TRIVIAL(debug)
+                << "Ended " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
         }
     }
 }

@@ -70,7 +70,8 @@ struct MultiCollectionQuery::PhaseConfig {
 void MultiCollectionQuery::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
-            BOOST_LOG_TRIVIAL(info) << "Starting " << this->defaultName() << " execution";
+            BOOST_LOG_TRIVIAL(debug)
+                << "Starting " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
             // Select a collection
             // This area is ripe for defining a collection generator, based off a string generator.
             // It could look like: collection: {^Concat: [Collection, ^RandomInt: {min: 0, max:
@@ -101,7 +102,8 @@ void MultiCollectionQuery::run() {
                 opCtx.addDocuments(count);
                 opCtx.success();
             }
-            BOOST_LOG_TRIVIAL(info) << "Ended " << this->defaultName() << " execution";
+            BOOST_LOG_TRIVIAL(debug)
+                << "Ended " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
         }
     }
 }

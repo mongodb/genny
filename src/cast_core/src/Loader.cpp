@@ -121,7 +121,8 @@ struct Loader::PhaseConfig {
 void genny::actor::Loader::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
-            BOOST_LOG_TRIVIAL(info) << "Starting " << this->defaultName() << " execution";
+            BOOST_LOG_TRIVIAL(debug)
+                << "Starting " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
             for (uint i = config->collectionOffset;
                  i < config->collectionOffset + config->numCollections;
                  i++) {
@@ -187,7 +188,8 @@ void genny::actor::Loader::run() {
                 BOOST_LOG_TRIVIAL(info) << "Done with load phase. All " << config->numDocuments
                                         << " documents loaded into " << collectionName;
             }
-            BOOST_LOG_TRIVIAL(info) << "Ended " << this->defaultName() << " execution";
+            BOOST_LOG_TRIVIAL(debug)
+                << "Ended " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
         }
     }
 }

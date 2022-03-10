@@ -34,7 +34,8 @@ struct NopMetrics::PhaseConfig {
 void NopMetrics::run() {
 
     for (auto&& config : _loop) {
-        BOOST_LOG_TRIVIAL(info) << "Starting " << this->defaultName() << " execution";
+        BOOST_LOG_TRIVIAL(debug)
+                << "Starting " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
         auto prev_ctx = std::unique_ptr<metrics::OperationContext>();
         for (auto _ : config) {
             if (prev_ctx) {
@@ -45,7 +46,8 @@ void NopMetrics::run() {
         if (prev_ctx) {
             prev_ctx->success();
         }
-        BOOST_LOG_TRIVIAL(info) << "Ended " << this->defaultName() << " execution";
+        BOOST_LOG_TRIVIAL(debug)
+                << "Ended " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
     }
 }
 

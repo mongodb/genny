@@ -172,7 +172,8 @@ void CommitLatency::run() {
                 _session->commit_transaction();
             }
             ctx.success();
-            BOOST_LOG_TRIVIAL(info) << "Ended " << this->defaultName() << " execution";
+            BOOST_LOG_TRIVIAL(debug)
+                << "Ended " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
         }
     }
 }

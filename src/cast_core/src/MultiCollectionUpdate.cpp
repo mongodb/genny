@@ -61,7 +61,8 @@ struct MultiCollectionUpdate::PhaseConfig {
 void MultiCollectionUpdate::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
-            BOOST_LOG_TRIVIAL(info) << "Starting " << this->defaultName() << " execution";
+            BOOST_LOG_TRIVIAL(debug)
+                << "Starting " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
             // Select a collection
             auto collectionNumber = config->uniformDistribution(_rng);
             auto collectionName = "Collection" + std::to_string(collectionNumber);
@@ -80,7 +81,8 @@ void MultiCollectionUpdate::run() {
                 opCtx.addDocuments(result->modified_count());
                 opCtx.success();
             }
-            BOOST_LOG_TRIVIAL(info) << "Ended " << this->defaultName() << " execution";
+            BOOST_LOG_TRIVIAL(debug)
+                << "Ended " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
         }
     }
 }

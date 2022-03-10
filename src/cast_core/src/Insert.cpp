@@ -46,7 +46,8 @@ struct Insert::PhaseConfig {
 void Insert::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
-            BOOST_LOG_TRIVIAL(info) << "Starting " << this->defaultName() << " execution";
+            BOOST_LOG_TRIVIAL(debug)
+                << "Starting " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
             auto ctx = _insert.start();
             auto document = config->documentExpr();
             BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(document.view());
@@ -54,7 +55,8 @@ void Insert::run() {
             ctx.addDocuments(1);
             ctx.addBytes(document.view().length());
             ctx.success();
-            BOOST_LOG_TRIVIAL(info) << "Ended " << this->defaultName() << " execution";
+            BOOST_LOG_TRIVIAL(debug)
+                << "Ended " << this->defaultName() << "::" << this->name() << "::" << this->id() << " execution";
         }
     }
 }

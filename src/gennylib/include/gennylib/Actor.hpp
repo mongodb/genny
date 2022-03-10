@@ -15,6 +15,8 @@
 #ifndef HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 #define HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 
+#include <string_view>
+
 namespace genny {
 
 using ActorId = unsigned int;
@@ -94,8 +96,13 @@ public:
         return _id;
     }
 
+    virtual std::string_view name() const {
+        return _name;
+    }
+
 private:
     ActorId _id;
+    std::string_view _name;
 };
 
 }  // namespace genny
