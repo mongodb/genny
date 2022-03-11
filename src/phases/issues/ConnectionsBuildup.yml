@@ -11,7 +11,7 @@ EnableSharding:
     - OperationMetricsName: EnableSharding
       OperationName: AdminCommand
       OperationCommand:
-        enableSharding: *db
+        enableSharding: &db test
 
 ShardCollection:
   Repeat: 1
@@ -42,7 +42,7 @@ InsertData:
 ConnectionsBuildup:
   Repeat: 30000
   Database: *db
-  Collection: *coll
+  Collection: &coll Collection0
   Operations:
     - OperationName: find
       OperationCommand:
