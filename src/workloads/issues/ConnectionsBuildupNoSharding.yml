@@ -42,7 +42,7 @@ InsertData: &InsertData
     Parameters:
       db: *db
       coll: *coll
-ConnectionsBuildup: &LConnectionsBuildup
+ConnectionsBuildup: &ConnectionsBuildup
   LoadConfig:
     Path: *phasePath
     Key: ConnectionsBuildup
