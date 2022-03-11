@@ -495,7 +495,7 @@ struct BulkWriteOperation : public BaseOperation {
         auto& yamlCommand = writeOp["OperationCommand"];
         bool onSession = yamlCommand["OnSession"].maybe<bool>().value_or(_onSession);
         _writeOps.push_back(
-            createWriteOp(writeOp, _onSession, _collection, _operation, context, id));
+            createWriteOp(writeOp, onSession, _collection, _operation, context, id));
     }
 
     void run(mongocxx::client_session& session) override {
