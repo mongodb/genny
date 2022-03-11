@@ -658,6 +658,7 @@ Tests:
     Operations:
       - OperationName: withTransaction
         OperationCommand:
+          OnSession: false
           OperationsInTransaction:
           - OperationName: bulkWrite
             OperationCommand:
