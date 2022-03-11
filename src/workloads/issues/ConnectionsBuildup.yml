@@ -14,19 +14,18 @@ Clients:
     QueryOptions:
       maxPoolSize: 1000
 
+# Parameters reused in multiple Actors.
+db: &db test
+&Nop {Nop: true}
+phasePath: &phasePath ../../phases/issues/ConnectionsBuildup.yml
+
 Actors:
 - Name: EnableSharding
   Type: AdminCommand
   Threads: 1
   Phases:
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: EnableSharding
-      OperationName: AdminCommand
-      OperationCommand:
-        enableSharding: &db test
-  - &Nop {Nop: true}
+  - *EnableSharding
+  - *Nop
   - *Nop
   - *Nop
 
@@ -35,15 +34,7 @@ Actors:
   Threads: 1
   Phases:
   - *Nop
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: ShardCollection
-      OperationName: AdminCommand
-      OperationCommand:
-        shardCollection: test.Collection0  # Collection0 is the default collection populated by the Loader.
-        key:
-          _id: 1
+  - *ShardCollection
   - *Nop
   - *Nop
 
@@ -53,19 +44,7 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 1
-    Threads: 1
-    Database: *db
-    CollectionCount: 1
-    DocumentCount: 50000
-    BatchSize: 10000
-    Document:
-      _id: {^Inc: {start: 1000}}
-      date: &date {^RandomDate: {min: "2019-01-01", max: "2020-01-01"}}
-      ticker: &ticker {^RandomString: {length: 3}}
-      price: &price {^RandomInt: {min: 1, max: 1000}}
-      quantity: &quantity {^RandomInt: {min: 1, max: 1000}}
-      fee: &fee {^RandomInt: {min: 0, max: 1000}}
+  - *InsertData
   - *Nop
 
 - Name: ConnectionsBuildup
@@ -77,15 +56,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: 30000
-    Collection: Collection0
-    Operations:
-    - OperationName: find
-      OperationCommand:
-        Filter: {_id: {^RandomInt: {min: 1000, max: 50000}}}
-        Options:
-          ReadPreference:
-            ReadMode: secondaryPreferred
+  - *ConnectionsBuildup
 
 # to avoid connection closing
 - Name: LoggingActor
