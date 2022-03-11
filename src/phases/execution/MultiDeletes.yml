@@ -23,12 +23,6 @@ ConcurrentWritesColl: &ConcurrentWritesColl concurrentWritesColl
 Database: &Database __internalBatchedDeletesTesting
 MassDeletionsColl: &MassDeletionsColl Collection0
 
-Clients:
-  Default:
-    QueryOptions:
-      # Allow for longer duration since the loading of the data may take a while.
-      socketTimeoutMS: 3_600_000  # = 1 hour
-
 Actors:
 
 # Phase 1: Drop the database.

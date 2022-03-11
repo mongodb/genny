@@ -3,6 +3,12 @@ Owner: "@mongodb/server-execution"
 Description: >
   Deletes a large range of documents using the BATCHED_DELETE query exec stage while performing writes on another collection.
 
+Clients:
+  Default:
+    QueryOptions:
+      # Allow for longer duration since the loading of the data may take a while.
+      socketTimeoutMS: 3_600_000  # = 1 hour
+
 LoadConfig:
   Path: "../../phases/execution/MultiDeletes.yml"
   Parameters:
