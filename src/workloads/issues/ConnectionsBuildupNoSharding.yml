@@ -2,7 +2,7 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
   This workload created to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
-  low performance with secondaryPreferred reads
+  low performance with secondaryPreferred reads - for running without sharding
 
 Keywords:
 - reproducer
@@ -16,8 +16,39 @@ Clients:
 
 # Parameters reused in multiple Actors.
 db: &db test
-&Nop {Nop: true}
+coll: &coll Collection0
 phasePath: &phasePath ../../phases/issues/ConnectionsBuildup.yml
+
+# Operations reused in multiple Phases.
+Nop: &Nop {Nop: true}
+EnableSharding: &EnableSharding
+  LoadConfig:
+    Key: EnableSharding
+    Path: *phasePath
+    Parameters:
+      db: *db
+      call: *coll
+ShardCollection: &ShardCollection
+  LoadConfig:
+    Path: *phasePath
+    Key: ShardCollection
+    Parameters:
+      db: *db
+      coll: *coll
+InsertData: &InsertData
+  LoadConfig:
+    Path: *phasePath
+    Key: InsertData
+    Parameters:
+      db: *db
+      coll: *coll
+ConnectionsBuildup: &LConnectionsBuildup
+  LoadConfig:
+    Path: *phasePath
+    Key: ConnectionsBuildup
+    Parameters:
+      db: *db
+      coll: *coll
 
 Actors:
 - Name: InsertData
