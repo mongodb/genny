@@ -79,7 +79,7 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 4: Guard against timeout due to no logging during PopulateInitialData0.
+# Phase 3: Guard against timeout due to no logging during PopulateInitialData0.
 - Name: LoggingActor0
   Type: LoggingActor
   Threads: 1
