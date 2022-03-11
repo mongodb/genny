@@ -117,7 +117,7 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 5: Populate the collection for mass deletion again, in preparation for phase 5 when concurrent writes will be
+# Phase 5: Populate the collection for mass deletion again, in preparation for phase 6 when concurrent writes will be
 # issued to another collection in the same database. TODO Make multithreaded once TIG-2938 is resolved.
 - Name: PopulateInitialData1
   Type: Loader
