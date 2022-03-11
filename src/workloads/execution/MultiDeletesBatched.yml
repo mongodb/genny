@@ -3,6 +3,7 @@ Owner: "@mongodb/server-execution"
 Description: >
   Deletes a large range of documents using the BATCHED_DELETE query exec stage while performing writes on another collection.
 
+# TODO move the Clients section to src/phases/execution/MultiDeletes.yml once TIG-3950 is resolved.
 Clients:
   Default:
     QueryOptions:
