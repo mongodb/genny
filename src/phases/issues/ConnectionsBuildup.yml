@@ -41,8 +41,7 @@ InsertData:
   
 ConnectionsBuildup:
   Repeat: 30000
-  Database: *db
-  Collection: &coll Collection0
+  Collection: Collection0
   Operations:
     - OperationName: find
       OperationCommand:

@@ -16,7 +16,6 @@ Clients:
 
 # Parameters reused in multiple Actors.
 db: &db test
-coll: &coll Collection0
 phasePath: &phasePath ../../phases/issues/ConnectionsBuildup.yml
 
 # Operations reused in multiple Phases.
@@ -25,30 +24,18 @@ EnableSharding: &EnableSharding
   LoadConfig:
     Key: EnableSharding
     Path: *phasePath
-    Parameters:
-      db: *db
-      call: *coll
 ShardCollection: &ShardCollection
   LoadConfig:
     Path: *phasePath
     Key: ShardCollection
-    Parameters:
-      db: *db
-      coll: *coll
 InsertData: &InsertData
   LoadConfig:
     Path: *phasePath
     Key: InsertData
-    Parameters:
-      db: *db
-      coll: *coll
 ConnectionsBuildup: &ConnectionsBuildup
   LoadConfig:
     Path: *phasePath
     Key: ConnectionsBuildup
-    Parameters:
-      db: *db
-      coll: *coll
 
 Actors:
 - Name: EnableSharding
