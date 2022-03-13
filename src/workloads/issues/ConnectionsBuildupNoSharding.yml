@@ -59,7 +59,7 @@ Actors:
 AutoRun:
 - When:
     mongodb_setup:
-      $eq: 
+      $eq:
       - atlas-like-replica
       - replica
       - replica-all-feature-flags
