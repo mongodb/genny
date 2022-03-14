@@ -2,7 +2,7 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
   This workload created to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
-  low performance with secondaryPreferred reads
+  low performance with secondaryPreferred reads - for running without sharding
 
 Keywords:
 - reproducer
@@ -20,14 +20,6 @@ phasePath: &phasePath ../../phases/issues/ConnectionsBuildup.yml
 
 # Operations reused in multiple Phases.
 Nop: &Nop {Nop: true}
-EnableSharding: &EnableSharding
-  LoadConfig:
-    Key: EnableSharding
-    Path: *phasePath
-ShardCollection: &ShardCollection
-  LoadConfig:
-    Path: *phasePath
-    Key: ShardCollection
 InsertData: &InsertData
   LoadConfig:
     Path: *phasePath
@@ -38,30 +30,10 @@ ConnectionsBuildup: &ConnectionsBuildup
     Key: ConnectionsBuildup
 
 Actors:
-- Name: EnableSharding
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - *EnableSharding
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: ShardCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *ShardCollection
-  - *Nop
-  - *Nop
-
 - Name: InsertData
   Type: Loader
   Threads: 1
   Phases:
-  - *Nop
-  - *Nop
   - *InsertData
   - *Nop
 
@@ -72,8 +44,6 @@ Actors:
   Threads: 500
   Phases:
   - *Nop
-  - *Nop
-  - *Nop
   - *ConnectionsBuildup
 
 # to avoid connection closing
@@ -83,14 +53,14 @@ Actors:
   Phases:
   - LogEvery: 10 second  # TimeSpec
     Blocking: None  # must be Blocking:None
-  - LogEvery: 10 second  # TimeSpec
-    Blocking: None  # must be Blocking:None
-  - LogEvery: 10 second  # TimeSpec
-    Blocking: None  # must be Blocking:None
   - LogEvery: 1 minute  # TimeSpec
     Blocking: None  # must be Blocking:None
 
 AutoRun:
 - When:
     mongodb_setup:
-      $eq: shard-single
+      $eq:
+      - atlas-like-replica
+      - replica
+      - replica-all-feature-flags
+      - single-replica
