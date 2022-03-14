@@ -133,7 +133,7 @@ Actors:
   #       aggregate: Collection0
   #       pipeline: [{$sort: {t: 1}}]
   #       cursor: {batchSize: *batchSize}
-  - Repeat: 1
+  - Repeat: 50
     Database: *db
     Operations:
     - OperationMetricsName: SortQueryNoBoundedSorter
@@ -142,7 +142,7 @@ Actors:
         aggregate: Collection0
         pipeline: [{$sort: {"t": 1}}]
         cursor: {batchSize: *batchSize}
-  - Repeat: 1
+  - Repeat: 50
     Database: *db
     Operations:
     - OperationMetricsName: SortQueryBoundedSorter
