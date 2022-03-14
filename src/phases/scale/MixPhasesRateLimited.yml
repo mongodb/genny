@@ -1,0 +1,79 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  Phase defintions for the MixedWorkloadsGenny, which is a port of the mixed_workloads in the
+  workloads repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
+  operations, each with dedicated actors/threads. The 4 operations are insertOne, findOne,
+  updateOne, and deleteOne. Since each type of operation runs in a dedicated thread it enables
+  interesting behavior, such as reads getting faster because of a write regression, or reads being
+  starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
+  starved out by writes.
+
+Keywords:
+- scale
+- insertOne
+- insert
+- findOne
+- find
+- updateOne
+- update
+- deleteOne
+- delete
+
+dbname: &dbname mix
+runtime: &runtime 7 minutes
+DocumentCount: &NumDocs 100000
+CollectionCount: &NumColls 1
+
+Filter: &filter {id: {^RandomInt: {min: 0, max: *NumDocs}}}
+string: &string {^FastRandomString: {length: 50}}
+Document: &doc
+  id: {^RandomInt: {min: 0, max: *NumDocs}}
+  a: {^RandomInt: {min: 0, max: *NumDocs}}
+  # Note that in the original workload the string c was perfectly compressable.
+  # We can put a constant there if needed.
+  c: *string
+
+UpdatePhase:
+  Duration: *runtime
+  GlobalRate: 500 per 250 milliseconds
+  RecordFailure: true
+  CollectionCount: *NumColls
+  Operations:
+  - OperationName: updateOne
+    OperationCommand:
+      Filter: *filter
+      Update:
+        $inc: {a: 1}
+        $set: {c: *string}
+
+RemovePhase:
+  Duration: *runtime
+  GlobalRate: 500 per 125 milliseconds
+  RecordFailure: true
+  CollectionCount: *NumColls
+  Operations:
+  - OperationName: deleteOne
+    OperationCommand:
+      Filter: *filter
+
+InsertPhase:
+  Duration: *runtime
+  GlobalRate: 500 per 125 milliseconds
+  RecordFailure: true
+  CollectionCount: *NumColls
+  Operations:
+  - OperationName: insertOne
+    OperationCommand:
+      Document: *doc
+
+FindPhase:
+  Duration: *runtime
+  GlobalRate: 500 per 125 milliseconds
+  RecordFailure: true
+  CollectionCount: *NumColls
+  Operations:
+  - OperationName: findOne
+    OperationCommand:
+      Filter: *filter
+
