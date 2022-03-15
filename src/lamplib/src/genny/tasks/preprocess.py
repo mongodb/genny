@@ -348,8 +348,8 @@ class _WorkloadParser(object):
 
             out = {}
             path = load_config["Path"]
-            out = self._preprocess('Path', path, out)
-            path = out['Path']
+            out = self._preprocess("Path", path, out)
+            path = out["Path"]
 
             keysSeen += 1
 
