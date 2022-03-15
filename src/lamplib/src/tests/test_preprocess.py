@@ -440,6 +440,86 @@ Actors:
 """
         self._assertYaml(yaml_input, expected)
 
+    def test_load_config_override(self):
+
+        yaml_input = """
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+
+LoadConfig:
+  Path: src/testlib/configs/LoadConfig.yml
+  Parameters:
+    MainRandomUUIDFilename: src/testlib/configs/load_config/gte.yml
+    Comment: Overridden comment
+"""
+
+        expected = """SchemaVersion: '2018-07-01'
+Owner: '@mongodb/server-execution'
+Parameters:
+- src/testlib/configs/load_config/gte.yml
+Queries:
+- OperationName: findOne
+  OperationCommand:
+    Filter:
+      uuid:
+        $gte: 1
+    Options:
+      Comment: Overridden comment
+"""
+        self._assertYaml(yaml_input, expected)
+
+    def test_load_config_expansion(self):
+
+        yaml_input = """
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+
+LoadConfig:
+  Path: src/testlib/configs/LoadConfig.yml
+  Parameters:
+    Comment: Overridden comment
+"""
+
+        expected = """SchemaVersion: '2018-07-01'
+Owner: '@mongodb/server-execution'
+Parameters:
+- src/testlib/configs/load_config/Eq.yml
+Queries:
+- OperationName: findOne
+  OperationCommand:
+    Filter:
+      uuid:
+        $eq: 1
+    Options:
+      Comment: Overridden comment
+"""
+        self._assertYaml(yaml_input, expected)
+
+    def test_load_config_defaults(self):
+
+        yaml_input = """
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+
+LoadConfig:
+  Path: src/testlib/configs/LoadConfig.yml
+"""
+
+        expected = """SchemaVersion: '2018-07-01'
+Owner: '@mongodb/server-execution'
+Parameters:
+- src/testlib/configs/load_config/Eq.yml
+Queries:
+- OperationName: findOne
+  OperationCommand:
+    Filter:
+      uuid:
+        $eq: 1
+    Options:
+      Comment: Random UUID
+"""
+        self._assertYaml(yaml_input, expected)
+
     def test_override(self):
         yaml_input = """SchemaVersion: 2018-07-01
 OverriddenKey: ValueShouldNotExist
