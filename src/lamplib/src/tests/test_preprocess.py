@@ -449,14 +449,14 @@ Owner: "@mongodb/server-execution"
 LoadConfig:
   Path: src/testlib/configs/LoadConfig.yml
   Parameters:
-    MainRandomUUIDFilename: src/testlib/configs/load_config/gte.yml
+    MainRandomUUIDFilename: src/testlib/configs/load_config/Gte.yml
     Comment: Overridden comment
 """
 
         expected = """SchemaVersion: '2018-07-01'
 Owner: '@mongodb/server-execution'
 Parameters:
-- src/testlib/configs/load_config/gte.yml
+- src/testlib/configs/load_config/Gte.yml
 Queries:
 - OperationName: findOne
   OperationCommand:
