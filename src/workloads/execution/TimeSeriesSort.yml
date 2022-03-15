@@ -85,7 +85,7 @@ Actors:
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2022-01-01", step: 40000}}
-      m: {^RandomString: {length: 4}}
+      m: {^RandomInt: {min: 0, max: 1000}}
   - *Nop
   - *Nop
   - *Nop
@@ -95,7 +95,19 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    # To get a good signal we need this to be at least bucket size squared.
+    # The bucket size is 360. This is 360 * 360 *8. The 8 is just for safety.
+    DocumentCount: 503680 # TODO fix this
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2023-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  # - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -112,27 +124,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  # - Repeat: 1
-  #   Database: *db
-  #   Operations:
-  #   - OperationMetricsName: CreateIndex
-  #     OperationName: RunCommand
-  #     OperationCommand:
-  #       createIndexes: Collection0
-  #       indexes:
-  #       - key:
-  #           t: 1
-  #         name: timeAsc
   - *Nop
-  # - Repeat: 1
-  #   Database: *db
-  #   Operations:
-  #   - OperationMetricsName: SortQuery
-  #     OperationName: RunCommand
-  #     OperationCommand:
-  #       aggregate: Collection0
-  #       pipeline: [{$sort: {t: 1}}]
-  #       cursor: {batchSize: *batchSize}
   - Repeat: 50
     Database: *db
     Operations:
@@ -164,21 +156,84 @@ Actors:
                         }
                     }]
         cursor: {batchSize: *batchSize}
-  # - Repeat: 1
-  #   Database: *db
-  #   Operations:
-  #   - OperationMetricsName: DropIndex
-  #     OperationName: RunCommand
-  #     OperationCommand:
-  #       dropIndexes: Collection0
-  #       index: timeAsc
+  - Repeat: 50
+    Database: *db
+    Operations:
+    - OperationMetricsName: TimeToFirstResultQueryNoBoundedSorter
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{$sort: {"t": 1}}, {$_internalInhibitOptimization: {}}, {$limit: 1}]
+        cursor: {batchSize: *batchSize}
+  - Repeat: 50
+    Database: *db
+    Operations:
+    - OperationMetricsName: TimeToFirstResultQueryBoundedSorter
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: system.buckets.Collection0
+        pipeline: [{$sort: {"control.min.t": 1}},
+                    {$_internalUnpackBucket: {
+                      exclude : [ ],
+                      timeField : "t",
+                      metaField : "m",
+                      bucketMaxSpanSeconds : 3600,
+                      assumeNoMixedSchemaData : true
+                      }
+                    },
+                    {$_internalBoundedSort: {
+                            sortKey: {t: 1},
+                            bound: 3600,
+                        }
+                    },
+                    {$limit: 1}]
+        cursor: {batchSize: *batchSize}
+  - Repeat: 50
+    Database: *db
+    Operations:
+    - OperationMetricsName: MetaPointPredicateTimeSortNoBoundedSorter
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{$sort: {"t": 1}}, {$match: {m: 2}}]
+        cursor: {batchSize: *batchSize}
+        # allowDiskUse: true
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Repeat: 50
+    Database: *db
+    Operations:
+    - OperationMetricsName: SpillVsNoSpillSortQueryNoBoundedSorter
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{$sort: {"t": 1}}]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+  - Repeat: 50
+    Database: *db
+    Operations:
+    - OperationMetricsName: SpillVsNoSpillSortQueryBoundedSorter
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: system.buckets.Collection0
+        pipeline: [{$sort: {"control.min.t": 1}},
+                    {$_internalUnpackBucket: {
+                      exclude : [ ],
+                      timeField : "t",
+                      metaField : "m",
+                      bucketMaxSpanSeconds : 3600,
+                      assumeNoMixedSchemaData : true
+                      }
+                    },
+                    {$_internalBoundedSort: {
+                            sortKey: {t: 1},
+                            bound: 3600,
+                        }
+                    }]
+        cursor: {batchSize: *batchSize}
+  # - *Nop
+  # - *Nop
   - *Nop
   - *Nop
   - *Nop
