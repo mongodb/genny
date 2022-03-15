@@ -148,9 +148,7 @@ Actors:
         fsync: 1
   - *nop
 
-
 # Update Actors
-
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
@@ -161,7 +159,6 @@ Actors:
 #
 ## Remove Actors
 #
-
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
@@ -171,7 +168,6 @@ Actors:
 
 ## Insert Actors
 #
-
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
@@ -199,4 +195,3 @@ AutoRun:
       - replica-1dayhistory-15gbwtcache
       - replica-maintenance-events
       - replica-all-feature-flags
-      
