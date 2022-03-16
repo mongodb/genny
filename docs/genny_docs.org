@@ -36,11 +36,45 @@ By default, Genny will try to connect to a MongoDB server at ~localhost:27017~. 
 
 For more details on how Genny handles connections, see [[*Connecting to the Server][Connecting to the Server]].
 ** What is a workload?
-** What is an actor?
-** What is a phase?
-*** Duration
-*** Repeat
-*** Nop
+A *workload* is a repeatable procedure that Genny uses to generate load against a system under test. Genny workloads are written in yaml configs that describe how *actors* move through *phases*. This section describes each of these.
+*** How are workloads configured?
+Here is an example of a simple Genny workload config:
+
+#+BEGIN_SRC
+SchemaVersion: 2018-07-01
+Owner: "@10gen/dev-prod-tips"
+Description: |
+  This is an introductory workload that shows how to write a workload in Genny.
+  This workload writes a few messages to the screen.
+
+Keywords:
+- docs
+- HelloWorld
+
+Actors:
+- Name: HelloWorldExample
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
+    Duration: 50 milliseconds
+  - Message: Hello Phase 1 👬
+    Repeat: 100
+#+END_SRC
+
+Everything under the ~Actor~ key (where the magic happens) will be explained in the next section. First let's look at the other *required* keys:
+
+- ~SchemaVersion~ - This is a basic versioning system used for Genny workload syntax. For the moment, any new workloads should have the value ~2018-07-01~ for this key.
+- ~Owner~ - This should have an identifier for the team that owns the workload, ideally an @-mentionable GitHub team.
+- ~Description~ - This should contain a written description of the workload. It's recommended to go into as much detail as possible, since understanding the performance issue behind why a workload was written can be very difficult months or years later.
+- ~Keywords~ - These should be searchable keywords associated with your workload. Include keywords for actors used, operations performed, qualities of the system under test that are expected, etc.
+
+Workload configurations can be found in [[file:../src/workloads][./src/workloads]] from the Genny repo root. Organization of this directory is arbitrary as far as Genny is concerned, though example workloads should be in the ~docs~ subdir.
+*** What is an actor?
+*** What is a phase?
+**** Duration
+**** Repeat
+**** Nop
 ** Outputs
 *** FTDC Metrics
 *** Preprocessed Workload
