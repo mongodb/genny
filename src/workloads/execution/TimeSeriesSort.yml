@@ -105,7 +105,7 @@ Actors:
     DocumentCount: 503680 # TODO fix this
     BatchSize: *batchSize
     Document:
-      t: {^IncDate: {start: "2023-01-01", step: 400}}
+      t: {^IncDate: {start: "2023-01-01", step: 40000}}
       m: {^RandomInt: {min: 0, max: 1000}}
   # - *Nop
   - *Nop
@@ -195,10 +195,31 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
-        pipeline: [{$sort: {"t": 1}}, {$match: {m: 2}}]
+        pipeline: [{$match: {m: 1}}, {$sort: {"t": 1}}] # this will match ~100 docs
         cursor: {batchSize: *batchSize}
-        # allowDiskUse: true
-  - *Nop
+  - Repeat: 50
+    Database: *db
+    Operations:
+    - OperationMetricsName: MetaPointPredicateTimeSortBoundedSorter
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: system.buckets.Collection0
+        pipeline: [{$match: {meta: 1}},
+                    {$sort: {"control.min.t": 1}},
+                    {$_internalUnpackBucket: {
+                      exclude : [ ],
+                      timeField : "t",
+                      metaField : "m",
+                      bucketMaxSpanSeconds : 3600,
+                      assumeNoMixedSchemaData : true
+                      }
+                    },
+                    {$_internalBoundedSort: {
+                            sortKey: {t: 1},
+                            bound: 3600,
+                        }
+                    }]
+        cursor: {batchSize: *batchSize}
   - *Nop
   - Repeat: 50
     Database: *db
