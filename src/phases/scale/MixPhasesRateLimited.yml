@@ -78,4 +78,3 @@ FindPhase:
   - OperationName: findOne
     OperationCommand:
       Filter: *filter
-
