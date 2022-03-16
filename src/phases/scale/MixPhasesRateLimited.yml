@@ -19,8 +19,8 @@ Keywords:
 - update
 - deleteOne
 - delete
-- RateLimited
-- GlobalRate
+- rateLimited
+- globalRate
 
 dbname: &dbname mix
 runtime: &runtime 7 minutes
