@@ -101,7 +101,7 @@ Actors:
   Type: InsertRemove
   Threads: 100
   Phases:
-  - Duration: 50 milliseconds
+  - Duration: 10 milliseconds
   - Nop
 #+END_SRC
 
@@ -117,9 +117,55 @@ In addition to the universal fields above, individual actors may have their own 
 
 Actors are written in C++, and creating new actors or extending existing ones is a common and encouraged workflow when using Genny. For more details, see [[* Creating an Actor][Creating an Actor]].
 *** What is a phase?
-**** Duration
-**** Repeat
-**** Nop
+Genny workloads and actors proceed in a sequence of phases, configured inside actors. In the running example, our ~HelloWorld~ actor is configured with two phases:
+
+#+BEGIN_SRC
+Actors:
+- Name: HelloWorldExample
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
+    Duration: 50 milliseconds
+  - Message: Hello Phase 1 👬
+    Repeat: 100
+#+END_SRC
+
+This actor will execute the first phase for 50 milleseconds. It will perform iterations of its main loop (printing "Hello Phase 0") as many times as it can for that duration. It will then move on to the second phase, where it will perform exactly 100 iterations of its main loop (printing "Hello Phase 1"), regardless of how long it takes. Then the workload will end.
+
+Now consider a situation with two actors:
+
+#+BEGIN_SRC
+Actors:
+- Name: HelloWorldExample
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
+    Duration: 50 milliseconds
+  - Message: Hello Phase 1 👬
+    Repeat: 100
+- Name: HelloWorldSecondExample
+  Type: HelloWorld
+  Threads: 1
+  Phases:
+  - Message: Other Actor Phase 0
+    Duration: 10 milliseconds
+  - Message: Other Actor Phase 1
+    Duration: 10 milliseconds
+#+END_SRC
+
+Here we have the ~HelloWorldSecondExample~ actor running for 10 milliseconds in each phase. However, the second phase will not begin after 10 seconds. It's important to note that phases are coordinated globally, and actors configured with either ~Repeat~ or ~Duration~ will hold the phase open. In this case, ~HelloWorldSecondExample~ will operate for 10 milliseconds during the first phase, sleep for 40 milliseconds for the rest of the phase, then after ~HelloWorldExample~ finishes holding the phase open, both actors will begin the next phase.
+
+Phase configurations accept the following keys:
+- ~Duration~ - How long to operate in this phase while holding the phase open.
+- ~Repeat~ - How many times to repeat the operation while holding the phase open.
+- ~Blocking~ - This key can be specified with the value ~None~ to cause the actor to run as a background actor for this phase. This actor will act as many times as possible during the phase without holding it open, then move on to the next phase when everyone else is ready.
+- ~Nop~ - This key can be set with the value ~true~ to cause the actor to nop for the duration of the phase.
+
+A couple of notes:
+- You can specify both ~Repeat~ and ~Duration~ for a phase. Whichever lasts longer wins.
+- It is undefined behavior if a given phase does not have some actor specifying ~Repeat~ or ~Duration~.
 ** Outputs
 *** FTDC Metrics
 *** Preprocessed Workload
