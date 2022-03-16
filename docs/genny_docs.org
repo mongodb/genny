@@ -66,11 +66,56 @@ Everything under the ~Actor~ key (where the magic happens) will be explained in 
 
 - ~SchemaVersion~ - This is a basic versioning system used for Genny workload syntax. For the moment, any new workloads should have the value ~2018-07-01~ for this key.
 - ~Owner~ - This should have an identifier for the team that owns the workload, ideally an @-mentionable GitHub team.
-- ~Description~ - This should contain a written description of the workload. It's recommended to go into as much detail as possible, since understanding the performance issue behind why a workload was written can be very difficult months or years later.
+- ~Description~ - This should contain a written description of the workload. It's recommended to go into as much detail as possible, since understanding the performance issue behind why a workload was written can be difficult months or years later.
 - ~Keywords~ - These should be searchable keywords associated with your workload. Include keywords for actors used, operations performed, qualities of the system under test that are expected, etc.
 
 Workload configurations can be found in [[file:../src/workloads][./src/workloads]] from the Genny repo root. Organization of this directory is arbitrary as far as Genny is concerned, though example workloads should be in the ~docs~ subdir.
 *** What is an actor?
+Genny uses an actor-based model for its workload generation. When execution begins, Genny spawns all configured actors in their own threads. Each actor can behave independently, be configured separately, and even has its own source code. In the example above, the following is the actor configuration:
+
+#+BEGIN_SRC
+Actors:
+- Name: HelloWorldExample
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
+    Duration: 50 milliseconds
+  - Message: Hello Phase 1 👬
+    Repeat: 100
+#+END_SRC
+
+In this example, there is a single ~HelloWorld~ actor allocated two threads. This actor moves through a series of phases, printing a message in each. Phases are described further in the next section. Each thread contains a complete "instance" of the actor, configured identically. We could add more actors like so:
+
+#+BEGIN_SRC
+Actors:
+- Name: HelloWorldExample
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
+    Duration: 50 milliseconds
+  - Message: Hello Phase 1 👬
+    Repeat: 100
+- Name: InsertRemoveExample
+  Type: InsertRemove
+  Threads: 100
+  Phases:
+  - Duration: 50 milliseconds
+  - Nop
+#+END_SRC
+
+This example has an additional ~InsertRemove~ actor with 100 threads, where each thread inserts and removes a document as fast as possible. Note that even though the actors are listed sequentially, all actors are concurrent.
+
+Actor configurations expect the following keys:
+- ~Name~ - The human-understandable name of this particular actor configuration. This should be unique throughout the workload.
+- ~Type~ - The kind of actor to create. This determines the actor's behavior and possible configuration options.
+- ~Threads~ - How many threads to allocate for this actor.
+- ~Phases~ - A list of phase configurations (described in next section).
+
+In addition to the universal fields above, individual actors may have their own configuration keys, such as the ~Message~ key of the ~HelloWorld~ actor, used to determine what message is printed.
+
+Actors are written in C++, and creating new actors or extending existing ones is a common and encouraged workflow when using Genny. For more details, see [[* Creating an Actor][Creating an Actor]].
 *** What is a phase?
 **** Duration
 **** Repeat
