@@ -1,13 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  Phase defintions for the MixedWorkloadsGennyRateLimited, which is a port of the mixed_workloads in the
-  workloads repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
+  This workload is a Rate Limited version of  MixedWorkloadsGenny, which is a port of the mixed_workloads in the workloads repo.
+  https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
   operations with a single dedicated actor/thread. The 4 operations are insertOne, findOne,
   updateOne, and deleteOne. Previously, each type of operation ran in a dedicated thread which resulted in
-  high CPU utilization of around 90% (this workload can be found in MixedWorkloadsGenny).
-  The Update operation was found to cause the highest CPU usage. Rate Limits were added to maintain CPU
-  utlization at 30-40%, along with using a higher thread level and decreasing phase number count from 4 to 1.
+  high CPU utilization of around 90%. The Update operation was found to cause the highest CPU usage.
+  Rate Limits were added to maintain CPU utlization at 30-40%, along with using a higher thread level and decreasing phase number count from 4 to 1.
 # This workload does not support sharding yet.
 Keywords:
 - scale
@@ -19,8 +18,8 @@ Keywords:
 - update
 - deleteOne
 - delete
-- RateLimited
-- GlobalRate
+- rateLimited
+- globalRate
 
 # These two values should match those are the top of MixPhasesRateLimited.yml
 dbname: &dbname mix
