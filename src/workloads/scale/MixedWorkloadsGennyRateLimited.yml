@@ -5,10 +5,9 @@ Description: |
   workloads repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
   operations with a single dedicated actor/thread. The 4 operations are insertOne, findOne,
   updateOne, and deleteOne. Previously, each type of operation ran in a dedicated thread which resulted in
-  high CPU utilization of around 90% (this workload can be found in MixedWorkloadsGenny). 
-  The Update operation was found to cause the highest CPU usage. Rate Limits were added to maintain CPU 
+  high CPU utilization of around 90% (this workload can be found in MixedWorkloadsGenny).
+  The Update operation was found to cause the highest CPU usage. Rate Limits were added to maintain CPU
   utlization at 30-40%, along with using a higher thread level and decreasing phase number count from 4 to 1.
-
 # This workload does not support sharding yet.
 Keywords:
 - scale
