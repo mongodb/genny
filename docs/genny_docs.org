@@ -1,0 +1,76 @@
+* Introduction
+Hello! These are the docs for Genny specifically. For an overall view of MongoDB's performance testing infrastructure, please look at the [[https://github.com/10gen/performance-tooling-docs][Performance Tooling Docs]].
+
+If you have any questions, please reach out to the TIPS team in our dedicated slack channel: #performance-tooling-users. If you feel like these docs can be improved in any way, feel free to open a PR and assign someone from TIPS. No ticket necessary. This document is intended to be readable straight-through, in addition to serving as a reference on an as-needed basis. If there are any difficulties in flow or discoverability, please let us know.
+
+* Getting Started and Building
+For build instructions, see the installation guide [[file:setup.md][here]].
+
+To launch Genny, navigate to the root of the Genny repo and run the following: 
+
+#+BEGIN_SRC
+./run-genny workload src/workloads/docs/HelloWorld.yml
+#+END_SRC
+
+Whenever you have questions about the Genny CLI, you can always use the ~-h~ option for the top-level Genny CLI or any subcommands:
+
+#+BEGIN_SRC
+./run-genny -h # See all subcommands
+./run-genny workload -h # See args and options for the workload subcommand
+#+END_SRC
+
+* Core Concepts
+This section introduces the core concepts used by Genny, the minimal required syntax for its inputs, and builds up a basic example.
+** What is load generation?
+Genny is a *load generation* tool. It is used as a client in [[https://en.wikipedia.org/wiki/Load_testing][load tests]] to perform a large amount of work against a system under test, measuring the client-side visible responses of said test subject. These measurements may represent things like latency, number of operations performed, how many errors occurred, etc. The procedure Genny uses to perform the work should be as deterministic and repeatable as possible. This procedure is called a *workload*.
+
+Results of a load test can inform developers as to the performance of the test subject in stressful situations. How does a system handle increasing numbers of connections performing conflicting operations? How does a system handle a large number of users performing one operation, then simultaneously switching to another in an instant? How does one user initiating a long-running, expensive operation affect the latencies observed by other users? All these situations can be simulated with Genny.
+** What is the system under test?
+Genny usually expects to be given a connection string to a system under test. While there's nothing preventing a user from writing a "workload" that spawns the system under test, there is not first-class support for such behavior. Genny is explicitly _not_ a test orchestrator. For test orchestration needs, consider using [[https://github.com/10gen/dsi/][DSI]].
+
+By default, Genny will try to connect to a MongoDB server at ~localhost:27017~. To pass a MongoDB connection string to Genny, use the ~-u~ option:
+
+#+BEGIN_SRC
+./run-genny workload -u [arbitrary_URI] src/workloads/docs/InsertWithNop.yml
+#+END_SRC
+
+For more details on how Genny handles connections, see [[*Connecting to the Server][Connecting to the Server]].
+** What is a workload?
+** What is an actor?
+** What is a phase?
+*** Duration
+*** Repeat
+*** Nop
+** Outputs
+*** FTDC Metrics
+*** Preprocessed Workload
+** Workload Development
+** Minimal running example?
+* Further Concepts
+** Connecting to the Server
+** Common Actors
+** Phase Details
+*** SleepBefore
+*** SleepAfter
+*** GlobalRate
+**** Algorithm used, how to smooth
+*** Background Actor
+** Generators
+** Preprocessor
+*** Evaluate
+*** LoadConfig
+*** Parameters
+*** ActorTemplate
+*** OnlyActiveInPhases
+*** Overrides
+** Conventions and Value Interpretation
+** Creating an Actor
+*** PhaseLoop
+*** Gennylib API
+*** Operations
+*** Integration Tests
+*** LINK: Developing in Genny
+*** LINK: Contribution Guidelines
+** Internal Metrics
+** Pre-seeded Data
+* Common Pitfalls (FAQ)
