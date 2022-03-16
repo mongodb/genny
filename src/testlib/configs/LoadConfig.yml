@@ -1,0 +1,14 @@
+SchemaVersion: 2018-07-01
+
+Parameters:
+  - &RandomUUIDFilename {^Parameter: {Name: "MainRandomUUIDFilename", Default: src/testlib/configs/load_config/Eq.yml }}
+
+Queries:
+  - OperationName: findOne
+    OperationCommand:
+      Filter:
+        LoadConfig:
+          Path: *RandomUUIDFilename
+          Key: LargeKeys
+      Options:
+        Comment: {^Parameter: {Name: "Comment", Default: "Random UUID" }}

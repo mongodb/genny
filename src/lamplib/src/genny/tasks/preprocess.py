@@ -346,7 +346,11 @@ class _WorkloadParser(object):
                 msg = f"Missing the `Path` top-level key in your loadable configuration: {load_config}"
                 raise ParseException(msg)
 
+            out = {}
             path = load_config["Path"]
+            out = self._preprocess("Path", path, out)
+            path = out["Path"]
+
             keysSeen += 1
 
             path = os.path.join(self._phase_config_path, path)
