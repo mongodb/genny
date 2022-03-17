@@ -36,6 +36,9 @@ Actors:
   - *Nop # 11
   - *Nop # 12
   - *Nop # 13
+  - *Nop # 13.1
+  - *Nop # 13.2
+  - *Nop # 13.3
   - *Nop # 14
   - *Nop # 15
   - *Nop # 16
@@ -73,15 +76,18 @@ Actors:
           name: MetaTime
   - *Nop # 12
   - *Nop # 13
-  # - *Nop # 14
-  - Repeat: 1 # 14
-    Database: *db
-    Operations:
-    - OperationMetricsName: DropMetaTimeIndex
-      OperationName: RunCommand
-      OperationCommand:
-        dropIndexes: *coll
-        index: MetaTime
+  - *Nop # 13.1
+  - *Nop # 13.2
+  - *Nop # 13.3
+  - *Nop # 14
+  # - Repeat: 1 # 14
+  #   Database: *db
+  #   Operations:
+  #   - OperationMetricsName: DropMetaTimeIndex
+  #     OperationName: RunCommand
+  #     OperationCommand:
+  #       dropIndexes: *coll
+  #       index: MetaTime
   - *Nop # 15
   - *Nop # 16
   - *Nop # 17
@@ -110,14 +116,17 @@ Actors:
   - Repeat: 1 # 11
   - *Nop # 12
   - Repeat: 1 # 13
-  - *Nop # 14
-  - Repeat: 1 # 15
-  - *Nop # 16
-  - Repeat: 1 # 17
-  - *Nop # 18
-  - Repeat: 1 # 19
-  - *Nop # 20
-  - Repeat: 1 # 21
+  - *Nop # 13.1
+  - Repeat: 1 # 13.2
+  - *Nop # 13.3
+  - Repeat: 1 # 14
+  - *Nop # 15
+  - Repeat: 1 # 16
+  - *Nop # 17
+  - Repeat: 1 # 18
+  - *Nop # 19
+  - Repeat: 1 # 20
+  - *Nop # 21
 
 - Name: InsertData
   Type: Loader
@@ -131,9 +140,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    # To get a good signal we need this to be at least bucket size squared.
-    # The bucket size is 360. This is 360 * 360 *8. The 8 is just for safety.
-    DocumentCount: 103680 # TODO fix this
+    DocumentCount: 103680
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2022-01-01", step: 400}}
@@ -148,15 +155,25 @@ Actors:
   - *Nop # 11
   - *Nop # 12
   - *Nop # 13
+  - Repeat: 1 # 13.1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2024-01-01", step: 400}}
+      m: 1001
+  - *Nop # 13.2
+  - *Nop # 13.3
   # - *Nop # 14
   - Repeat: 1 # 14
     Database: *db
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    # To get a good signal we need this to be at least bucket size squared.
-    # The bucket size is 360. This is 360 * 360 *8. The 8 is just for safety.
-    DocumentCount: 503680 # TODO fix this
+    DocumentCount: 503680
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2023-01-01", step: 400}}
@@ -180,7 +197,7 @@ Actors:
   - *Nop # 4
   - *Nop # 5
   - *Nop # 6
-  - Repeat: 50 # 7
+  - Repeat: &numQueryRuns 50 # 7
     Database: *db
     Operations:
     - OperationMetricsName: SortQueryNoBoundedSorter
@@ -189,7 +206,7 @@ Actors:
         aggregate: *coll
         pipeline: [{$sort: {"t": 1}}]
         cursor: {batchSize: *batchSize}
-  - Repeat: 50 # 8
+  - Repeat: *numQueryRuns # 8
     Database: *db
     Operations:
     - OperationMetricsName: SortQueryBoundedSorter
@@ -211,7 +228,7 @@ Actors:
                         }
                     }]
         cursor: {batchSize: *batchSize}
-  - Repeat: 50 # 9
+  - Repeat: *numQueryRuns # 9
     Database: *db
     Operations:
     - OperationMetricsName: TimeToFirstResultQueryNoBoundedSorter
@@ -220,7 +237,7 @@ Actors:
         aggregate: *coll
         pipeline: [{$sort: {"t": 1}}, {$_internalInhibitOptimization: {}}, {$limit: 1}]
         cursor: {batchSize: *batchSize}
-  - Repeat: 50 # 10
+  - Repeat: *numQueryRuns # 10
     Database: *db
     Operations:
     - OperationMetricsName: TimeToFirstResultQueryBoundedSorter
@@ -244,16 +261,16 @@ Actors:
                     {$limit: 1}]
         cursor: {batchSize: *batchSize}
   - *Nop # 11
-  - Repeat: 50 # 12
+  - Repeat: *numQueryRuns # 12
     Database: *db
     Operations:
     - OperationMetricsName: MetaPointPredicateTimeSortNoBoundedSorter
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
-        pipeline: [{$match: {m: 1}}, {$sort: {"t": 1}}] # this will match ~100 docs
+        pipeline: [{$match: {m: 1}}, {$sort: {t: 1}}] # this will match ~100 docs
         cursor: {batchSize: *batchSize}
-  - Repeat: 50 # 13
+  - Repeat: *numQueryRuns # 13
     Database: *db
     Operations:
     - OperationMetricsName: MetaPointPredicateTimeSortBoundedSorter
@@ -276,10 +293,43 @@ Actors:
                         }
                     }]
         cursor: {batchSize: *batchSize}
+  - *Nop # 13.1
+  - Repeat: *numQueryRuns # 13.2
+    Database: *db
+    Operations:
+    - OperationMetricsName: SelectiveMetaPointPredicateTimeSortNoBoundedSorter
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *coll
+        pipeline: [{$match: {m: 1001}}, {$sort: {t: 1}}] # this will match ~100 docs
+        cursor: {batchSize: *batchSize}
+  - Repeat: *numQueryRuns # 13.3
+    Database: *db
+    Operations:
+    - OperationMetricsName: SelectiveMetaPointPredicateTimeSortBoundedSorter
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: system.buckets.Collection0
+        pipeline: [{$match: {meta: 1001}},
+                    {$sort: {"control.min.t": 1}},
+                    {$_internalUnpackBucket: {
+                      exclude : [ ],
+                      timeField : "t",
+                      metaField : "m",
+                      bucketMaxSpanSeconds : 3600,
+                      assumeNoMixedSchemaData : true
+                      }
+                    },
+                    {$_internalBoundedSort: {
+                            sortKey: {t: 1},
+                            bound: 3600,
+                        }
+                    }]
+        cursor: {batchSize: *batchSize}
   - *Nop # 14
   - *Nop # 15
   - *Nop # 16
-  - Repeat: 50 # 17
+  - Repeat: *numQueryRuns # 17
     Database: *db
     Operations:
     - OperationMetricsName: SpillVsNoSpillSortQueryNoBoundedSorter
@@ -289,7 +339,7 @@ Actors:
         pipeline: [{$sort: {"t": 1}}]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
-  - Repeat: 50 # 18
+  - Repeat: *numQueryRuns # 18
     Database: *db
     Operations:
     - OperationMetricsName: SpillVsNoSpillSortQueryBoundedSorter
