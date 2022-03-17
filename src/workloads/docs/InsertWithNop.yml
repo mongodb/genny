@@ -13,7 +13,7 @@ Keywords:
 Actors:
 - Name: InsertWithNopTest
   Type: Insert
-  Threads: 100
+  Threads: 5
   Database: "test2"
   Phases:
   - {Nop: true}

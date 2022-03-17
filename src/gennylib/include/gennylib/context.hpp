@@ -356,16 +356,16 @@ public:
     }
 
     /**
-     * @return the type of the actor
+     * @return the type of actor
      */
-    std::string_view actorType() {
+    std::string actorType() {
         return _actorType;
     }
 
     /**
      * @return the name of the actor
      */
-    std::string_view actorName() {
+    std::string actorName() {
         return _actorName;
     }
 
@@ -491,11 +491,7 @@ private:
 class PhaseContext final : public v1::HasNode {
 public:
     PhaseContext(const Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
-        : v1::HasNode{node},
-        _actor{std::addressof(actorContext)},
-        _phaseNumber(phaseNumber),
-        _actorType{actorContext.actorType()},
-        _actorName{actorContext.actorName()}{}
+        : v1::HasNode{node}, _actor{std::addressof(actorContext)}, _phaseNumber(phaseNumber) {}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
@@ -530,15 +526,15 @@ public:
     /**
      * @return the type of the actor
      */
-    std::string_view actorType() const {
-        return _actorType;
+    std::string actorType() const {
+        return this->actor().actorType();
     }
 
     /**
      * @return the name of the actor
      */
-    std::string_view actorName() const {
-        return _actorName;
+    std::string actorName() const {
+        return this->actor().actorName();
     }
 
     /**
@@ -575,8 +571,6 @@ public:
 private:
     ActorContext* _actor;
     const PhaseNumber _phaseNumber;
-    const std::string _actorType;
-    const std::string _actorName;
 };
 
 }  // namespace genny

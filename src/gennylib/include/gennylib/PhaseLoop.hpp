@@ -492,8 +492,8 @@ private:
     Orchestrator& _orchestrator;
     const PhaseNumber _currentPhase;
     const std::unique_ptr<T> _value;  // nullptr iff operation is Nop
-    const std::string_view _actorType;
-    const std::string_view _actorName;
+    const std::string _actorType;
+    const std::string _actorName;
     const std::unique_ptr<IterationChecker> _iterationCheck;
 
 };  // class ActorPhase
