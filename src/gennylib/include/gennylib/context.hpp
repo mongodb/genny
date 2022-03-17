@@ -358,14 +358,14 @@ public:
     /**
      * @return the type of actor
      */
-    std::string actorType() {
+    std::string actorType() const {
         return _actorType;
     }
 
     /**
      * @return the name of the actor
      */
-    std::string actorName() {
+    std::string actorName() const {
         return _actorName;
     }
 

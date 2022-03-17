@@ -420,9 +420,9 @@ public:
     }
 
     // Used to print out when an actor begins/ends in a phase for debugging purposes.
-    std::string actorInfo(int id) const {
+    std::string actorInfo() const {
         std::ostringstream stm;
-        stm << _actorType << "::" << _actorName << "::" << id;
+        stm << _actorType << "::" << _actorName;
         if (this->isNop()) {
             stm << "::nop";
         }
@@ -535,10 +535,10 @@ public:
         // between invocations of operator*() and vice-versa.
         _currentPhase = this->_orchestrator.awaitPhaseStart();
         auto&& found = _phaseMap.find(_currentPhase);
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << found->second.actorInfo(found->first);
+        BOOST_LOG_TRIVIAL(debug) << "Starting " << found->second.actorInfo();
         if (!this->doesBlockOn(_currentPhase)) {
             this->_orchestrator.awaitPhaseEnd(false);
-            BOOST_LOG_TRIVIAL(debug) << "Ending " << found->second.actorInfo(found->first) << "from operator*";
+            BOOST_LOG_TRIVIAL(debug) << "Ending " << found->second.actorInfo();
         }
 
         _awaitingPlusPlus = true;
@@ -561,7 +561,7 @@ public:
         if (this->doesBlockOn(_currentPhase)) {
             this->_orchestrator.awaitPhaseEnd(true);
             auto&& found = _phaseMap.find(_currentPhase);
-            BOOST_LOG_TRIVIAL(debug) << "Ended " << found->second.actorInfo(found->first) << "from operator++";
+            BOOST_LOG_TRIVIAL(debug) << "Ended " << found->second.actorInfo();
         }
 
         _awaitingPlusPlus = false;
