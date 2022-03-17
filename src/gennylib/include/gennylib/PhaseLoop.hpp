@@ -25,6 +25,8 @@
 #include <unordered_map>
 #include <utility>
 
+#include <boost/log/trivial.hpp>
+
 #include <boost/exception/exception.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -393,6 +395,8 @@ public:
           _currentPhase{currentPhase},
           _value{!phaseContext.isNop() ? std::make_unique<T>(std::forward<Args>(args)...)
                                        : nullptr},
+          _actorType{phaseContext.actorType()},
+          _actorName{phaseContext.actorName()},
           _iterationCheck{std::make_unique<IterationChecker>(phaseContext)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
@@ -413,6 +417,18 @@ public:
     // Checks if the actor is performing a nullOp. Used only for testing.
     constexpr bool isNop() const {
         return !_value;
+    }
+
+    // Used to print out when an actor begins/ends in a phase for debugging purposes.
+    std::string actorInfo(int id) const {
+        std::ostringstream stm;
+        stm << _actorType << "::" << _actorName << "::" << id;
+        if (this->isNop()) {
+            stm << "::nop";
+        }
+
+        stm.str();
+        return stm.str();
     }
 
     // Could use `auto` for return-type of operator-> and operator*, but
@@ -476,6 +492,8 @@ private:
     Orchestrator& _orchestrator;
     const PhaseNumber _currentPhase;
     const std::unique_ptr<T> _value;  // nullptr iff operation is Nop
+    const std::string_view _actorType;
+    const std::string_view _actorName;
     const std::unique_ptr<IterationChecker> _iterationCheck;
 
 };  // class ActorPhase
@@ -516,13 +534,14 @@ public:
         // Intentionally don't bother with cases where user didn't call operator++()
         // between invocations of operator*() and vice-versa.
         _currentPhase = this->_orchestrator.awaitPhaseStart();
+        auto&& found = _phaseMap.find(_currentPhase);
+        BOOST_LOG_TRIVIAL(debug) << "Starting " << found->second.actorInfo(found->first);
         if (!this->doesBlockOn(_currentPhase)) {
             this->_orchestrator.awaitPhaseEnd(false);
+            BOOST_LOG_TRIVIAL(debug) << "Ending " << found->second.actorInfo(found->first) << "from operator*";
         }
 
         _awaitingPlusPlus = true;
-
-        auto&& found = _phaseMap.find(_currentPhase);
 
         if (found == _phaseMap.end()) {
             // We're (incorrectly) constructed outside of the conventional flow,
@@ -541,6 +560,8 @@ public:
         // between invocations of operator*() and vice-versa.
         if (this->doesBlockOn(_currentPhase)) {
             this->_orchestrator.awaitPhaseEnd(true);
+            auto&& found = _phaseMap.find(_currentPhase);
+            BOOST_LOG_TRIVIAL(debug) << "Ended " << found->second.actorInfo(found->first) << "from operator++";
         }
 
         _awaitingPlusPlus = false;

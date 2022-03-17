@@ -337,6 +337,8 @@ public:
         : v1::HasNode{node}, _workload{&workloadContext}, _phaseContexts{} {
         _phaseContexts = constructPhaseContexts(_node, this);
         auto threads = (*this)["Threads"].maybe<int>().value_or(1);
+        _actorType = (*this)["Type"].maybe<std::string>().value_or("no_type");
+        _actorName = (*this)["Name"].maybe<std::string>().value_or("no_name");
         _nextActorId = this->workload().claimActorIds(threads);
     }
 
@@ -351,6 +353,20 @@ public:
      */
     ActorId nextActorId() {
         return _nextActorId++;
+    }
+
+    /**
+     * @return the type of the actor
+     */
+    std::string_view actorType() {
+        return _actorType;
+    }
+
+    /**
+     * @return the name of the actor
+     */
+    std::string_view actorName() {
+        return _actorName;
     }
 
     /**
@@ -450,6 +466,8 @@ private:
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
 
     std::atomic<ActorId> _nextActorId;
+    std::string _actorType;
+    std::string _actorName;
 };
 
 /**
@@ -473,7 +491,11 @@ private:
 class PhaseContext final : public v1::HasNode {
 public:
     PhaseContext(const Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
-        : v1::HasNode{node}, _actor{std::addressof(actorContext)}, _phaseNumber(phaseNumber) {}
+        : v1::HasNode{node},
+        _actor{std::addressof(actorContext)},
+        _phaseNumber(phaseNumber),
+        _actorType{actorContext.actorType()},
+        _actorName{actorContext.actorName()}{}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
@@ -503,6 +525,20 @@ public:
 
     SleepContext getSleepContext() const {
         return SleepContext(_phaseNumber, this->actor().orchestrator());
+    }
+
+    /**
+     * @return the type of the actor
+     */
+    std::string_view actorType() const {
+        return _actorType;
+    }
+
+    /**
+     * @return the name of the actor
+     */
+    std::string_view actorName() const {
+        return _actorName;
     }
 
     /**
@@ -539,6 +575,8 @@ public:
 private:
     ActorContext* _actor;
     const PhaseNumber _phaseNumber;
+    const std::string _actorType;
+    const std::string _actorName;
 };
 
 }  // namespace genny
