@@ -227,14 +227,68 @@ Since the percentage-based limiting treats the entire estimation period as the d
 Rate limiting accepts the following configurations:
 - ~GlobalRate~ - specified as either a rate specification (x per y minutes/seconds/milliseconds/etc) or as a percentage
 
+*** How do I run a workload?
+
+Workloads can be run with the following Genny command:
+
+#+BEGIN_SRC
+./run-genny workload <path_to_workload>
+#+END_SRC
+
+If your workload requires a MongoDB connection (most do), then you can pass it in with ~-u~. See [[*Connecting to the Server][Connecting to the Server]] for more details.
+
 ** Outputs
-*** FTDC Metrics
-*** Preprocessed Workload
+Genny's primary output is time-series data. Every time an actor performs an operation, such as an insert, a removal, a runcommand, etc, the actor thread starts a timer. When the operation returns from the server, the operation is recorded as either a success or failure. The duration of the operation, as viewed from the client, is recorded with the operation completion time.
+
+Genny outputs to `./build/WorkloadOutput`. When running Genny for the first time, you should see two outputs in that directory:
+- ~CedarMetrics~ - a directory full of FTDC files, where each file corresponds to a single time-series metric for a single operation. For more details about the format and contents of these FTDC files, see our tool-agnostic documentation [[https://github.com/10gen/performance-tooling-docs/blob/main/getting_started/intrarun_data_generation.md][here]].
+- ~workload~ - a directory containing the preprocessed workload. Learn more about the preprocessor [[*Preprocessor][here]].
+
+If you run Genny and the ~CedarMetrics~ directory already exists, it will be moved to ~CedarMetrics-<current_time>~ to avoid overwriting results. The preprocessed workload will be deposited into the ~workload~ directory, possibly overwriting the existing one. (Or you may end up with multiple workloads in the directory, if they have different names. This has no impact on execution.)
 ** Workload Development
-** Minimal running example?
+ 1. Create a yaml file in ~./src/workloads~ in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in ~./src/phases~ (and for more details about what that means, see [[*Preprocessor][here]]). Consider whether existing actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [[*Creating an Actor][here]].
+
+    #+BEGIN_SRC
+    vim src/workloads/<workload_dir>/<workload_name.yml>
+    vim src/phases/<phase_dir>/<phases_name.yml> # Only necessary if creating external configuration
+    ./run-genny create-new-actor  # Only necessary if creating a new actor
+    #+END_SRC
+
+ 2. Run the self-tests:
+    #+BEGIN_SRC
+    ./run-genny lint-yaml  # Lint all YAML files
+    ./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
+    ./run-genny resmoke-test  # Run actor integration tests - only necessary if adding/editing actors
+    #+END_SRC
+
+ 3. (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
+    #+BEGIN_SRC
+    ./run-genny workload -u <connection_uri> src/workloads/<workload_dir/workload_name.yml>
+    #+END_SRC
+
+ 4. (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [[./run-dsi onboarding  # introductory DSI command; see link above for details][Running DSI Locally]] for details:
+    #+BEGIN_SRC
+    ./run-dsi onboarding  # introductory DSI command; see link above for details
+    cd WORK
+    rm -rf src/genny
+    ln -s ~/<path_to_genny>/genny src
+    vim bootstrap.yml
+    #+END_SRC
+
+ 5. Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [[*AutoRun][AutoRun]], you can create a patch using the following:
+
+    #+BEGIN_SRC
+    cd ~/<path_to_evg_project_repo>
+    evergreen patch -p <evg_project>
+    cd ~/<path_to_genny>/genny
+    evergreen patch-set-module -i <patch_id_number> genny
+    #+END_SRC
+
+    You can then select ~schedule_patch_auto_tasks~ on a variant to schedule any modified or new Genny tasks created by AutoRun. Alternatively, you could select ~schedule_variant_auto_tasks~ to schedule all Genny tasks on that variant.
+
 * Further Concepts
-** Connecting to the Server
 ** Common Actors
+** AutoRun
 ** Generators
 ** Preprocessor
 *** Evaluate
@@ -243,6 +297,7 @@ Rate limiting accepts the following configurations:
 *** ActorTemplate
 *** OnlyActiveInPhases
 *** Overrides
+** Connecting to the Server
 ** Conventions and Value Interpretation
 ** Creating an Actor
 *** PhaseLoop
