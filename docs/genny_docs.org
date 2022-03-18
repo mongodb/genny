@@ -6,7 +6,7 @@ If you have any questions, please reach out to the TIPS team in our dedicated sl
 * Getting Started and Building
 For build instructions, see the installation guide [[file:setup.md][here]].
 
-To launch Genny, navigate to the root of the Genny repo and run the following: 
+To try launching Genny, navigate to the root of the Genny repo and run the following: 
 
 #+BEGIN_SRC
 ./run-genny workload src/workloads/docs/HelloWorld.yml
@@ -157,15 +157,40 @@ Actors:
 
 Here we have the ~HelloWorldSecondExample~ actor running for 10 milliseconds in each phase. However, the second phase will not begin after 10 seconds. It's important to note that phases are coordinated globally, and actors configured with either ~Repeat~ or ~Duration~ will hold the phase open. In this case, ~HelloWorldSecondExample~ will operate for 10 milliseconds during the first phase, sleep for 40 milliseconds for the rest of the phase, then after ~HelloWorldExample~ finishes holding the phase open, both actors will begin the next phase.
 
-Phase configurations accept the following keys:
+Phase configurations accept the following main keys:
 - ~Duration~ - How long to operate in this phase while holding the phase open.
 - ~Repeat~ - How many times to repeat the operation while holding the phase open.
-- ~Blocking~ - This key can be specified with the value ~None~ to cause the actor to run as a background actor for this phase. This actor will act as many times as possible during the phase without holding it open, then move on to the next phase when everyone else is ready.
+- ~Blocking~ - This key can be specified with the value ~None~ to cause the actor to run as a *background actor* for this phase. This actor will act as many times as possible during the phase without holding it open, then move on to the next phase when everyone else is ready.
 - ~Nop~ - This key can be set with the value ~true~ to cause the actor to nop for the duration of the phase.
 
-A couple of notes:
+A couple of notes about the above:
 - You can specify both ~Repeat~ and ~Duration~ for a phase. Whichever lasts longer wins.
 - It is undefined behavior if a given phase does not have some actor specifying ~Repeat~ or ~Duration~.
+
+**** Sleeping
+
+In addition to the above keys, actors can also be configured to sleep during parts of phases. For example:
+
+#+BEGIN_SRC
+Actors:
+- Name: HelloWorldExample
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - SleepBefore: 10 milliseconds
+    Message: Hello Phase 0 🐳
+    Duration: 50 milliseconds
+    SleepAfter: 10 milliseconds
+- Name: HelloWorldSecondExample
+  Type: HelloWorld
+  Threads: 1
+  Phases:
+  - Message: Other Actor Phase 0
+    Duration: 10 milliseconds
+  - Message: Other Actor Phase 1
+    Duration: 10 milliseconds
+#+END_SRC
+
 ** Outputs
 *** FTDC Metrics
 *** Preprocessed Workload
