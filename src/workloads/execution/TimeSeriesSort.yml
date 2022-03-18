@@ -299,7 +299,7 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
-        pipeline: [{$sort: {t: 1}}]
+        pipeline: [{$sort: {t: -1}}]
         cursor: {batchSize: *batchSize}
   - Repeat: *numQueryRuns
     Database: *db
