@@ -365,7 +365,7 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
-        pipeline: [{$match: {m: 1001}}, {$sort: {t: 1}}]  # this will match ~5100 docs
+        pipeline: [{$match: {m: 1001}}, {$sort: {t: 1}}]  # this will match ~5000 docs
         cursor: {batchSize: *batchSize}
   - Repeat: *numQueryRuns
     Database: *db
