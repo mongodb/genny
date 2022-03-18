@@ -180,16 +180,52 @@ Actors:
   - SleepBefore: 10 milliseconds
     Message: Hello Phase 0 🐳
     Duration: 50 milliseconds
-    SleepAfter: 10 milliseconds
-- Name: HelloWorldSecondExample
-  Type: HelloWorld
-  Threads: 1
-  Phases:
-  - Message: Other Actor Phase 0
-    Duration: 10 milliseconds
-  - Message: Other Actor Phase 1
-    Duration: 10 milliseconds
+    SleepAfter: 15 milliseconds
 #+END_SRC
+
+This will sleep for 10 milliseconds at the beginning of /every/ actor iteration and for 15 milliseconds at the end of every iteration. This time is counted as part of the phase duration. Genny accepts the following sleep configurations:
+
+- ~SleepBefore~ - duration to sleep at the beginning of each iteration
+- ~SleepAfter~ - duration to sleep after each iteration
+  
+**** Rate Limiting
+
+By default, actors will repeat their main loop as quickly as possible. Sometimes you want to restrict how quickly an actor works. This can be done using a rate limiter:
+
+#+BEGIN_SRC
+Actors:
+- Name: HelloWorldExample
+  Type: HelloWorld
+  Threads: 100
+  Phases:
+  - Message: Hello Phase 0
+    GlobalRate: 5 per 10 milliseconds
+    Duration: 50 milliseconds
+#+END_SRC
+
+Using the ~GlobalRate~ configuration, the above actor will only have 5 threads act every 10 milliseconds, despite having 100 threads that could reasonable act at once.
+
+In addition to hard-coding how many threads act and when, you can configure Genny to rate-limit the actor at a percentage of the detected maximum rate:
+
+#+BEGIN_SRC
+Actors:
+- Name: HelloWorldExample
+  Type: HelloWorld
+  Threads: 100
+  Phases:
+  - Message: Hello Phase 0
+    GlobalRate: 80%
+    Duration: 2 minutes
+#+END_SRC
+
+The above workload will run ~HelloWorldExample~ at maximum throughput for either 1 minutes or 3 iterations of the actor's loop, whichever is longer. Afterwards, Genny will use the estimated throughput from that time to limit the actor to 80% of the max throughput.
+
+Note that the rate limiter uses a [[https://en.wikipedia.org/wiki/Token_bucket][token bucket algorithm]]. This means that bursty behavior is possible. For example, if we configure ~GlobalRate: 5 per 10 milliseconds~ then we will have 5 threads act all at once, followed by 9 or so milliseconds without any threads acting, then another burst of 5 threads acting, etc. We can smooth the rate by specifying a tighter yet equivalent rate limit: ~GlobalRate: 1 per 2 milliseconds~.
+
+Since the percentage-based limiting treats the entire estimation period as the duration in the rate specification, it is highly prone to bursty behavior.
+
+Rate limiting accepts the following configurations:
+- ~GlobalRate~ - specified as either a rate specification (x per y minutes/seconds/milliseconds/etc) or as a percentage
 
 ** Outputs
 *** FTDC Metrics
@@ -199,12 +235,6 @@ Actors:
 * Further Concepts
 ** Connecting to the Server
 ** Common Actors
-** Phase Details
-*** SleepBefore
-*** SleepAfter
-*** GlobalRate
-**** Algorithm used, how to smooth
-*** Background Actor
 ** Generators
 ** Preprocessor
 *** Evaluate
