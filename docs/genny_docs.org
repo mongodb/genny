@@ -240,7 +240,7 @@ If your workload requires a MongoDB connection (most do), then you can pass it i
 ** Outputs
 Genny's primary output is time-series data. Every time an actor performs an operation, such as an insert, a removal, a runcommand, etc, the actor thread starts a timer. When the operation returns from the server, the operation is recorded as either a success or failure. The duration of the operation, as viewed from the client, is recorded with the operation completion time.
 
-Genny outputs to `./build/WorkloadOutput`. When running Genny for the first time, you should see two outputs in that directory:
+Genny outputs to ~./build/WorkloadOutput~. When running Genny for the first time, you should see two outputs in that directory:
 - ~CedarMetrics~ - a directory full of FTDC files, where each file corresponds to a single time-series metric for a single operation. For more details about the format and contents of these FTDC files, see our tool-agnostic documentation [[https://github.com/10gen/performance-tooling-docs/blob/main/getting_started/intrarun_data_generation.md][here]].
 - ~workload~ - a directory containing the preprocessed workload. Learn more about the preprocessor [[*Preprocessor][here]].
 
@@ -286,10 +286,93 @@ If you run Genny and the ~CedarMetrics~ directory already exists, it will be mov
 
     You can then select ~schedule_patch_auto_tasks~ on a variant to schedule any modified or new Genny tasks created by AutoRun. Alternatively, you could select ~schedule_variant_auto_tasks~ to schedule all Genny tasks on that variant.
 
+For more details on workload development, please check out our general docs on [[https://github.com/10gen/performance-tooling-docs/blob/main/new_workloads.md][Developing and Modifying Workloads]] and on [[https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md][Basic Performance Patch Testing]].
 * Further Concepts
 ** Common Actors
+There are several actors owned by TIPS which are intended for widespread use:
+
+- CrudActor - Used to perform CRUD operations, recording client-side metrics.
+- RunCommand - Execute a command against the remote server. Often used for utility purposes, but metrics are collected as well.
+- Loader - Load many documents into the remote database. Often used early in a workload to set the preconditions for testing. 
+- QuiesceActor - Quiesce a cluster, making sure common operations are complete. This is often used to reduce noise between phases.
+
+Examples with these and other actors can be found in [[file:../src/workloads/docs][./src/workloads/docs]].
+
 ** AutoRun
+*** What is AutoRun?
+AutoRun is a utility to allow workload authors to determine scheduling of their workloads without having to commit to a separate repo. The utility is specifically designed for users who are using DSI through Evergreen. To use AutoRun, make sure your project has integrated DSI with Evergreen as explained [[https://github.com/10gen/dsi/wiki/DSI-In-Evergreen][here]].
+
+After performing the above integration, your Evergreen project should have a ~schedule_variant_auto_tasks~ task on each variant, which can be used to schedule all Genny workloads that are configured to run on this variant. There will also be the ~schedule_patch_auto_tasks~ task which will schedule any new or modified Genny workloads. If you want to run an unmodified workload, make a small edit (such as inserting whitespace) to force it to be picked up by that latter task.
+
+Both of the above tasks will have a dependency on ~schedule_global_auto_tasks~, which invokes ~./run-genny auto-tasks~ to create all possible tasks, viewable in the ~TaskJson~ directory of that task's DSI artifacts. The variant-specific task generator task will then schedule the appropriate task, based on the workload configurations described below.
+*** Configuring AutoRun
+The ~schedule_variant_auto_tasks~ task automatically runs workloads based on the evergreen environment
+(variables from ~bootstrap.yml~ and ~runtime.yml~ in DSI) and an optional AutoRun
+section in any workload. The AutoRun section is a list of <When/ThenRun> blocks,
+where if the When condition is met, tasks are scheduled with additional bootstrap
+values from ThenRun. For example,
+suppose we have a ~test_workload.yml~ file in a ~workloads/*/~ subdirectory,
+containing the following AutoRun section:
+
+#+BEGIN_SRC
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-noflowcontrol
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+    ThenRun:
+      - infrastructure_provisioning: foo
+      - infrastructure_provisioning: bar
+      - arbitrary_key: baz
+#+END_SRC
+
+In this case, it looks in the ~bootstrap.yml~ of ~test_workload~, checks if ~mongodb_setup~
+is either ~replica~ or ~replica-noflowcontrol~, and also if ~branch_name~ is neither ~v4.0~ nor ~v4.2~.
+If both conditions are true, then we schedule several tasks. Let's say the workload name is
+~DemoWorkload~, 3 tasks are scheduled - ~demo_workload_foo~, ~demo_workload_bar~, and ~demo_workload_baz~.
+The first task is passed in the bootstrap value ~infrastructure_provisioning: foo~, the second
+is passed in ~infrastructure_provisioning: bar~ and the third ~arbitrary_key: baz~.
+
+This is a more complex example of AutoRun. Here's a more simple one representing a more common usecase:
+
+#+BEGIN_SRC
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq: standalone
+#+END_SRC
+
+Let's say this is ~DemoWorkload~ again. In this case, if ~mongodb_setup~ is ~standalone~
+we schedule ~demo_workload~ with no additional params.
+
+A few notes on the syntax:
+- Supports multiple When/ThenRun blocks per AutoRun. Each are evaluated independently.
+- When blocks can evaluate multiple conditions. All conditions must be true to schedule the task.
+- When supports $eq and $neq. Both can accept either a scalar or list of values.
+- For a list of values, $eq evaluates to true if it is equal to at least one.
+- For a list of values, $neq evaluates to true if it is equal to none of the values.
+- ThenRun blocks are optional.
+    - **Most usecases do not need to use ThenRun**
+    - If you do use ThenRun, please be judicious. If you have a task that is scheduled when
+      mongodb_setup == replica, it would be confusing if mongodb_setup was overwritten to standalone.
+      But it would be ok to overwrite mongodb_setup to replica-delay-mixed, as is done in the
+      [ParallelWorkload][pi] workload.
+- Each item in the ThenRun list can only support one {bootstrap_key: bootstrap_value} pair.
+- If using ThenRun but you would also like to schedule a task without any bootstrap overrides,
+  Add an extra pair to ThenRun with the original key/value, like done on line 189 [here][pi].
+- If using ThenRun, the new task name becomes <taskname>_<bootstrap-value>. In the ParallelWorkload example,
+  the task name becomes parallel_insert_replica_delay_mixed (name is automatically converted to snake_case).
+  The bootstrap-key is not included in the name for the purpose of not changing existing names and
+  thus deleting history. This may change after PM-2310.
 ** Generators
+It is often necessary to use Genny to operate with large amounts of data which would be impractical to hardcode. Genny uses generators for this. A generator is a piece of code that generates pseudorandom values every time it is invoked, and which can be configured from the workload yaml. Notably, generators use a hardcoded seed, so repeated Genny executions should be deterministic with respect to generated values.
+
+Generators are not a builtin feature of Genny, but must be integrated by each actor for the configuration values that accept them. For examples of using generators, see [[file:../src/workloads/docs/Generators.yml][./src/workloads/docs/Generators.yml]]. To integrate generators into an actor, use the [[../src/value_generators/include/value_generators/DocumentGenerator.hpp][DocumentGenerator]] with the yaml node you intend to generate documents from. (And see [[*Creating an Actor][here]] for more details on creating an actor in the first place.)
 ** Preprocessor
 *** Evaluate
 *** LoadConfig
