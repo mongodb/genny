@@ -245,6 +245,18 @@ Genny outputs to ~./build/WorkloadOutput~. When running Genny for the first time
 - ~workload~ - a directory containing the preprocessed workload. Learn more about the preprocessor [[*Preprocessor][here]].
 
 If you run Genny and the ~CedarMetrics~ directory already exists, it will be moved to ~CedarMetrics-<current_time>~ to avoid overwriting results. The preprocessed workload will be deposited into the ~workload~ directory, possibly overwriting the existing one. (Or you may end up with multiple workloads in the directory, if they have different names. This has no impact on execution.)
+
+You can use the ~export~ command that Genny provides to export outputted FTDC to CSV.
+For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
+
+#+BEGIN_SRC
+./run-genny export build/WorkloadOutput/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
+#+END_SRC
+
+You can also use the ~translate~ subcommand to convert results to a [[https://github.com/10gen/t2/][t2-readable]] format.
+
+If you are running Genny through DSI in Evergreen, the FTDC contents are rolled up into summary statistics like ~OperationThroughput~ and such, viewable in the Evergreen perf UI. 
+
 ** Workload Development
  1. Create a yaml file in ~./src/workloads~ in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in ~./src/phases~ (and for more details about what that means, see [[*Preprocessor][here]]). Consider whether existing actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [[*Creating an Actor][here]].
 
@@ -566,12 +578,13 @@ Clients:
 
 For more information, see [[*Defaults and Overrides][Defaults and Overrides]].
 ** Creating an Actor
-*** PhaseLoop
-*** Gennylib API
-*** Operations
-*** Integration Tests
-*** LINK: Developing in Genny
-*** LINK: Contribution Guidelines
-** Internal Metrics
-** Pre-seeded Data
+Creating new actors is a common and encouraged workflow in Genny. To create one, run the following:
+
+#+BEGIN_SRC
+./run-genny create-new-actor
+#+END_SRC
+
+This will create new actor .cpp and .h files, an example workload yaml, as well as actor integration tests, all with inline comments guiding you through the actor creation process. You might want to take a look at [[file:./developing.md][Developing Genny]] and the [[file:../CONTRIBUTING.md][Contribution Guidelines]].
+
+It is encouraged to make new actors as general as possible, for reuse among workloads. No need to loop TIPS into a PR when developing an actor, unless you'd just prefer a second look. Actor authors own their actors.
 * Common Pitfalls (FAQ)
