@@ -482,7 +482,89 @@ When actually evaluating and constructing a workload at runtime, Genny takes the
 5. Output the result to ~./build/WorkloadOutput/workload~.
 6. Run the workload.
 ** Connecting to the Server
-** Conventions and Value Interpretation
+*** Connection Strings and Pools
+Genny creates connections using one or more C++ driver pools. These pools can be configured in a workload like so:
+
+#+BEGIN_SRC
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 500
+    URI: "mongodb://localhost:27017"
+  Update:
+    QueryOptions:
+      maxPoolSize: 500
+    URI: "mongodb://localhost:27017"
+#+END_SRC
+
+This will configure two pools, one named `Default` and one named `Update`. The `QueryOptions` can contain
+any supported [[https://docs.mongodb.com/manual/reference/connection-string/][connection string option]], and these will
+be spliced into the final URI used to connect. Genny constructs pools lazily, so these pools will not actually be
+created until a workload actor requests them.
+
+The ~Default~ pool is what actors connect to unless their .cpp class determines otherwise. Some actors (the Loader, CrudActor, and RunCommand actors)
+have a ~ClientName~ field for specifying which pool to request.
+
+Genny's preprocessor operates on this configuration to make using it easier. The ~-u~ CLI option can be used to set the default URI. During preprocessing,
+any pool that does not have the ~URI~ key set will be given this value. The default value of the default URI is ~"mongodb://localhost:27017"~. Since URI
+is typically not known until runtime, this means that most workloads should have a configuration more like the following:
+
+#+BEGIN_SRC
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 500
+  Update:
+    QueryOptions:
+      maxPoolSize: 500
+#+END_SRC
+*** Multiple Connection Strings
+If multiple different connection strings are needed, such as when testing a multitenant system, we can use an override file. For the above configuration,
+we can create the following override:
+
+#+BEGIN_SRC
+Clients:
+  Default:
+    URI: "mongodb://localhost:27017"
+  Update:
+    URI: "mongodb://localhost:27018"
+#+END_SRC
+
+Notice the different ports. This can be used at runtime as:
+
+
+#+BEGIN_SRC
+./run-genny workload example.yml -o override.yml
+#+END_SRC
+
+This will apply the override onto the workload, creating the following result:
+
+#+BEGIN_SRC
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 500
+    URI: "mongodb://localhost:27017"
+  Update:
+    QueryOptions:
+      maxPoolSize: 500
+    URI: "mongodb://localhost:27018"
+#+END_SRC
+
+Genny's ~evaluate~ subcommand can always be used to see the result of complex configurations.
+*** Default
+Since actors generally need a connection and not all workloads need a complicated connection or multiple pools,
+simply not setting any connection pools will cause Genny to default to the following:
+
+#+BEGIN_SRC
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 100
+    URI: "mongodb://localhost:27017"
+#+END_SRC
+
+For more information, see [[*Defaults and Overrides][Defaults and Overrides]].
 ** Creating an Actor
 *** PhaseLoop
 *** Gennylib API
