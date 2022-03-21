@@ -588,3 +588,5 @@ This will create new actor .cpp and .h files, an example workload yaml, as well 
 
 It is encouraged to make new actors as general as possible, for reuse among workloads. No need to loop TIPS into a PR when developing an actor, unless you'd just prefer a second look. Actor authors own their actors.
 * Common Pitfalls (FAQ)
+** pipe creation failed (24): Too many open files
+If you see errors like this locally, try either increasing your ulimit or reducing the number of threads and duration.
