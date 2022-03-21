@@ -483,7 +483,7 @@ Type: PhaseTimingRecorder
 Threads: 1
 #+END_SRC
 
-For more details about the purpose this actor serves, see [[*Internal Metrics][Internal Metrics]].
+This actor is used to collect several internal metrics.
 
 When actually evaluating and constructing a workload at runtime, Genny takes the following steps:
 
