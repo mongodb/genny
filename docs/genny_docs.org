@@ -587,6 +587,10 @@ Creating new actors is a common and encouraged workflow in Genny. To create one,
 This will create new actor .cpp and .h files, an example workload yaml, as well as actor integration tests, all with inline comments guiding you through the actor creation process. You might want to take a look at [[file:./developing.md][Developing Genny]] and the [[file:../CONTRIBUTING.md][Contribution Guidelines]].
 
 It is encouraged to make new actors as general as possible, for reuse among workloads. No need to loop TIPS into a PR when developing an actor, unless you'd just prefer a second look. Actor authors own their actors.
-* Common Pitfalls (FAQ)
+* Pitfalls
 ** pipe creation failed (24): Too many open files
 If you see errors like this locally, try either increasing your ulimit or reducing the number of threads and duration.
+** Actor integration tests fail locally
+There are currently pathing errors when running integration tests locally. This is tracked in [[https://jira.mongodb.org/browse/TIG-3687][TIG-3687]]. That ticket also lists a workaround for local use.
+** The Loader agent requires thread count set on both actor and phase level
+This is tracked in [[https://jira.mongodb.org/browse/TIG-3016][TIG-3016]] which will correct the issue.
