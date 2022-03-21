@@ -58,8 +58,9 @@ ActorTemplates:
         NopInPhasesUpTo: 2
         PhaseConfig:
           LoadConfig:
-            Path: ../../phases/scale/MixPhasesRateLimited.yml
+            Path: ../../phases/scale/MixPhases.yml
             Key: UpdatePhase
+          GlobalRate: 500 per 250 milliseconds
 
 - TemplateName: RemoveTemplate
   Config:
@@ -74,8 +75,9 @@ ActorTemplates:
         NopInPhasesUpTo: 2
         PhaseConfig:
           LoadConfig:
-            Path: ../../phases/scale/MixPhasesRateLimited.yml
+            Path: ../../phases/scale/MixPhases.yml
             Key: RemovePhase
+          GlobalRate: 500 per 125 milliseconds
 
 - TemplateName: InsertTemplate
   Config:
@@ -90,8 +92,9 @@ ActorTemplates:
         NopInPhasesUpTo: 2
         PhaseConfig:
           LoadConfig:
-            Path: ../../phases/scale/MixPhasesRateLimited.yml
+            Path: ../../phases/scale/MixPhases.yml
             Key: InsertPhase
+          GlobalRate: 500 per 125 milliseconds
 
 - TemplateName: FindTemplate
   Config:
@@ -106,8 +109,9 @@ ActorTemplates:
         NopInPhasesUpTo: 2
         PhaseConfig:
           LoadConfig:
-            Path: ../../phases/scale/MixPhasesRateLimited.yml
+            Path: ../../phases/scale/MixPhases.yml
             Key: FindPhase
+          GlobalRate: 500 per 125 milliseconds
 
 Actors:
 - Name: Setup
