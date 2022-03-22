@@ -1,0 +1,271 @@
+SchemaVersion: 2018-07-01
+Owner: Atlas Serverless
+Description: |
+  This workload is an extension of scale/LargeIndexedIns.yml to run the workload
+  on multiple serverless tenants. On each cluster, it sends bursts of finds that
+  use large $ins while running a low rate update workload.  The workload causes high CPU load as the server
+  becomes bottlenecked on tcmalloc spinlocks during the find operations.
+  Improvements or regressions in this aspect of the allocator should
+  be measurable by the average CPU usage during this test as well as
+  the latency of the find operations.
+
+  In this workload, large arrays of random strings are generated to use
+  for the $in queries.  To avoid a CPU bottleneck on the workload client,
+  it uses a ^Once generator to generate the arrays once during initialization.
+
+  IMPORTANT NOTE: You must match the number of clients with the value for the
+  clustersPerConfig key specified in the atlas-serverless-local.yml file in DSI. This will ensure
+  that x serverless instances are created to run workloads on x serverless tenants, using x clients.
+
+Clients:
+  Client1:
+    QueryOptions:
+      maxPoolSize: 250
+  Client2:
+    QueryOptions:
+      maxPoolSize: 250
+  Client3:
+    QueryOptions:
+      maxPoolSize: 250
+  Client4:
+    QueryOptions:
+      maxPoolSize: 250
+
+Actors:
+- Name: Loader1
+  Type: Loader
+  ClientName: Client1
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: largeins
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: 1000
+    BatchSize: 1000
+    Indexes:
+    - keys: {hash: 1, key: 1, string1: 1, string2: 1}
+    - keys: {key: 1}
+    Document:
+      _id: {^Inc: {start: 0}}
+      hash: &randomString1 {^RandomString: {length: 22}}
+      key: *randomString1
+  - {Nop: true}
+
+- Name: FindLargeIndex1
+  Type: CrudActor
+  Threads: 64
+  Database: largeins
+  ClientName: Client1
+  Phases:
+  - {Nop: true}
+  - Name: FindLargeIn
+    Duration: 10 minutes
+    GlobalRate: 1000 per 15 seconds
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter:
+          hash:
+            $in: &arrayGenerator1 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString1, number: 20000}}}}
+          key:
+            $in: *arrayGenerator1
+
+- Name: Update1
+  Type: CrudActor
+  Database: largeins
+  ClientName: Client1
+  Threads: 10
+  Phases:
+  - {Nop: true}
+  - Duration: 10 minutes
+    RecordFailure: true
+    GlobalRate: 1 per 250 milliseconds
+    Collection: Collection0
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
+        Update:
+          $inc: {a: 1}
+
+- Name: Loader2
+  Type: Loader
+  ClientName: Client2
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: largeins
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: 1000
+    BatchSize: 1000
+    Indexes:
+    - keys: {hash: 1, key: 1, string1: 1, string2: 1}
+    - keys: {key: 1}
+    Document:
+      _id: {^Inc: {start: 0}}
+      hash: &randomString2 {^RandomString: {length: 22}}
+      key: *randomString2
+  - {Nop: true}
+
+- Name: FindLargeIndex2
+  Type: CrudActor
+  Threads: 64
+  Database: largeins
+  ClientName: Client2
+  Phases:
+  - {Nop: true}
+  - Name: FindLargeIn
+    Duration: 10 minutes
+    GlobalRate: 1000 per 15 seconds
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter:
+          hash:
+            $in: &arrayGenerator2 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString2, number: 20000}}}}
+          key:
+            $in: *arrayGenerator2
+
+- Name: Update2
+  Type: CrudActor
+  Database: largeins
+  ClientName: Client2
+  Threads: 10
+  Phases:
+  - {Nop: true}
+  - Duration: 10 minutes
+    RecordFailure: true
+    GlobalRate: 1 per 250 milliseconds
+    Collection: Collection0
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
+        Update:
+          $inc: {a: 1}
+
+- Name: Loader3
+  Type: Loader
+  ClientName: Client3
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: largeins
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: 1000
+    BatchSize: 1000
+    Indexes:
+    - keys: {hash: 1, key: 1, string1: 1, string2: 1}
+    - keys: {key: 1}
+    Document:
+      _id: {^Inc: {start: 0}}
+      hash: &randomString3 {^RandomString: {length: 22}}
+      key: *randomString3
+  - {Nop: true}
+
+- Name: FindLargeIndex3
+  Type: CrudActor
+  Threads: 64
+  Database: largeins
+  ClientName: Client3
+  Phases:
+  - {Nop: true}
+  - Name: FindLargeIn
+    Duration: 10 minutes
+    GlobalRate: 1000 per 15 seconds
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter:
+          hash:
+            $in: &arrayGenerator3 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString3, number: 20000}}}}
+          key:
+            $in: *arrayGenerator3
+
+- Name: Update3
+  Type: CrudActor
+  Database: largeins
+  ClientName: Client3
+  Threads: 10
+  Phases:
+  - {Nop: true}
+  - Duration: 10 minutes
+    RecordFailure: true
+    GlobalRate: 1 per 250 milliseconds
+    Collection: Collection0
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
+        Update:
+          $inc: {a: 1}
+
+- Name: Loader4
+  Type: Loader
+  ClientName: Client4
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: largeins
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: 1000
+    BatchSize: 1000
+    Indexes:
+    - keys: {hash: 1, key: 1, string1: 1, string2: 1}
+    - keys: {key: 1}
+    Document:
+      _id: {^Inc: {start: 0}}
+      hash: &randomString4 {^RandomString: {length: 22}}
+      key: *randomString4
+  - {Nop: true}
+
+- Name: FindLargeIndex4
+  Type: CrudActor
+  Threads: 64
+  Database: largeins
+  ClientName: Client4
+  Phases:
+  - {Nop: true}
+  - Name: FindLargeIn
+    Duration: 10 minutes
+    GlobalRate: 1000 per 15 seconds
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter:
+          hash:
+            $in: &arrayGenerator4 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString4, number: 20000}}}}
+          key:
+            $in: *arrayGenerator4
+
+- Name: Update4
+  Type: CrudActor
+  Database: largeins
+  ClientName: Client4
+  Threads: 10
+  Phases:
+  - {Nop: true}
+  - Duration: 10 minutes
+    RecordFailure: true
+    GlobalRate: 1 per 250 milliseconds
+    Collection: Collection0
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
+        Update:
+          $inc: {a: 1}
+
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq: replica
