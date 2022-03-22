@@ -29,59 +29,73 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
-  - Repeat: 1
+  - *Nop # 1
+  - Repeat: 1 # 2
     Database: *db
     Operation:
       OperationMetricsName: CreateTimeSeriesCollection
       OperationName: RunCommand
       OperationCommand:
         {create: &coll Collection0, timeseries: {timeField: "t", metaField: "m"}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - *Nop # 3
+  - *Nop # 4
+  - *Nop # 5
+  - *Nop # 6
+  - *Nop # 7
+  - *Nop # 7.1
+  - *Nop # 8
+  - *Nop # 8.1
+  - *Nop # 9
+  - *Nop # 10
+  - *Nop # 10.1
+  - *Nop # 11
+  - *Nop # 11.1
+  - *Nop # 12
+  - *Nop # 13
+  - *Nop # 13.1
+  - *Nop # 14
+  - *Nop # 14.1
+  - *Nop # 15
+  - *Nop # 16
+  - *Nop # 17
+  - *Nop # 17.1
+  - *Nop # 18
+  - *Nop # 18.1
+  - *Nop # 19
+  - *Nop # 20
+  - *Nop # 20.1
+  - *Nop # 21
+  - *Nop # 21.1
+  - *Nop # 22
+  - *Nop # 23
+  - *Nop # 24
+  - *Nop # 25
+  - *Nop # 26
+  - *Nop # 27
+  - *Nop # 27.1
+  - *Nop # 28
+  - *Nop # 28.1
+  - *Nop # 29
+  - *Nop # 30
+  - *Nop # 31
+  - *Nop # 32
 
 - Name: IndexCollection
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
+  - *Nop # 1
+  - *Nop # 2
+  - *Nop # 3
+  - *Nop # 4
+  - *Nop # 5
+  - *Nop # 6
+  - *Nop # 7
+  - *Nop # 7.1
+  - *Nop # 8
+  - *Nop # 8.1
+  - *Nop # 9
+  - Repeat: 1 # 10
     Database: *db
     Operations:
     - OperationMetricsName: CreateDescendingTimeIndex
@@ -91,9 +105,11 @@ Actors:
         indexes:
         - key: {t: -1}
           name: DescendingTime
-  - *Nop
-  - *Nop
-  - Repeat: 1
+  - *Nop # 10.1
+  - *Nop # 11
+  - *Nop # 11.1
+  - *Nop # 12
+  - Repeat: 1 # 13
     Database: *db
     Operations:
     - OperationMetricsName: DropDescendingTimeIndex
@@ -101,9 +117,11 @@ Actors:
       OperationCommand:
         dropIndexes: *coll
         index: DescendingTime
-  - *Nop
-  - *Nop
-  - Repeat: 1
+  - *Nop # 13.1
+  - *Nop # 14
+  - *Nop # 14.1
+  - *Nop # 15
+  - Repeat: 1 # 16
     Database: *db
     Operations:
     - OperationMetricsName: CreateMetaTimeIndex
@@ -113,15 +131,19 @@ Actors:
         indexes:
         - key: {m: 1, t: 1}
           name: MetaTime
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
+  - *Nop # 17
+  - *Nop # 17.1
+  - *Nop # 18
+  - *Nop # 18.1
+  - *Nop # 19
+  - *Nop # 20
+  - *Nop # 20.1
+  - *Nop # 21
+  - *Nop # 21.1
+  - *Nop # 22
+  - *Nop # 23
+  - *Nop # 24
+  - Repeat: 1 # 25
     Database: *db
     Operations:
     - OperationMetricsName: DropMetaTimeIndex
@@ -129,13 +151,15 @@ Actors:
       OperationCommand:
         dropIndexes: *coll
         index: MetaTime
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - *Nop # 26
+  - *Nop # 27
+  - *Nop # 27.1
+  - *Nop # 28
+  - *Nop # 28.1
+  - *Nop # 29
+  - *Nop # 30
+  - *Nop # 31
+  - *Nop # 32
 
 
 - Name: Quiesce
@@ -143,47 +167,59 @@ Actors:
   Threads: 1
   Database: *db
   Phases:
-  - *Nop
+  - *Nop # 1
+  - *Nop # 2
+  - *Nop # 3
+  - *Nop # 4
+  - *Nop # 5
+  - *Nop # 6
+  - *Nop # 7
   - Repeat: 1
-  - *Nop
+  - *Nop # 8
   - Repeat: 1
-  - *Nop
+  - *Nop # 9
+  - *Nop # 10
   - Repeat: 1
-  - *Nop
+  - *Nop # 11
   - Repeat: 1
-  - *Nop
+  - *Nop # 12
+  - *Nop # 13
   - Repeat: 1
-  - *Nop
+  - *Nop # 14
   - Repeat: 1
-  - *Nop
+  - *Nop # 15
+  - *Nop # 16
+  - *Nop # 17
   - Repeat: 1
-  - *Nop
+  - *Nop # 18
   - Repeat: 1
-  - *Nop
+  - *Nop # 19
+  - *Nop # 20
   - Repeat: 1
-  - *Nop
+  - *Nop # 21
   - Repeat: 1
-  - *Nop
+  - *Nop # 22
+  - *Nop # 23
+  - *Nop # 24
+  - *Nop # 25
+  - *Nop # 26
+  - *Nop # 27
   - Repeat: 1
-  - *Nop
+  - *Nop # 28
   - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
+  - *Nop # 29
+  - *Nop # 30
+  - *Nop # 31
+  - *Nop # 32
 
 - Name: InsertData
   Type: Loader
   Threads: 1
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
+  - *Nop # 1
+  - *Nop # 2
+  - *Nop # 3
+  - Repeat: 1 # 4
     Database: *db
     Collection: *coll
     Threads: 1
@@ -193,19 +229,25 @@ Actors:
     Document:
       t: {^IncDate: {start: "2022-01-01", step: 400}}
       m: {^RandomInt: {min: 0, max: 1000}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
+  - *Nop # 5
+  - *Nop # 6
+  - *Nop # 7
+  - *Nop # 7.1
+  - *Nop # 8
+  - *Nop # 8.1
+  - *Nop # 9
+  - *Nop # 10
+  - *Nop # 10.1
+  - *Nop # 11
+  - *Nop # 11.1
+  - *Nop # 12
+  - *Nop # 13
+  - *Nop # 13.1
+  - *Nop # 14
+  - *Nop # 14.1
+  - *Nop # 15
+  - *Nop # 16
+  - Repeat: 1 # 17
     Database: *db
     Collection: *coll
     Threads: 1
@@ -215,9 +257,11 @@ Actors:
     Document:
       t: {^IncDate: {start: "2022-01-01", step: 400}}
       m: 1001
-  - *Nop
-  - *Nop
-  - Repeat: 1
+  - *Nop # 17.1
+  - *Nop # 18
+  - *Nop # 18.1
+  - *Nop # 19
+  - Repeat: 1 # 20
     Database: *db
     Collection: *coll
     Threads: 1
@@ -227,11 +271,13 @@ Actors:
     Document:
       t: {^IncDate: {start: "2024-01-01", step: 400}}
       m: 1002
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
+  - *Nop # 20.1
+  - *Nop # 21
+  - *Nop # 21.1
+  - *Nop # 22
+  - *Nop # 23
+  - *Nop # 24
+  - Repeat: 1 # 25
     Database: *db
     Collection: *coll
     Threads: 1
@@ -241,26 +287,29 @@ Actors:
     Document:
       t: {^IncDate: {start: "2023-01-01", step: 400}}
       m: {^RandomInt: {min: 0, max: 1000}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - *Nop # 26
+  - *Nop # 27
+  - *Nop # 27.1
+  - *Nop # 28
+  - *Nop # 28.1
+  - *Nop # 29
+  - *Nop # 30
+  - *Nop # 31
+  - *Nop # 32
 
 - Name: Queries
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: &numQueryRuns 50
+  - *Nop # 1
+  - *Nop # 2
+  - *Nop # 3
+  - *Nop # 4
+  - *Nop # 5
+  - *Nop # 6
+  - *Nop # 7
+  - *Nop # 7.1
+  - Repeat: &numQueryRuns 50 # 8
     Database: *db
     Operations:
     - OperationMetricsName: SortQueryBlockingSort
@@ -269,7 +318,8 @@ Actors:
         aggregate: *coll
         pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
-  - Repeat: *numQueryRuns
+  - *Nop # 8.1
+  - Repeat: *numQueryRuns # 9
     Database: *db
     Operations:
     - OperationMetricsName: SortQueryBoundedSorter
@@ -293,8 +343,9 @@ Actors:
         ]
         cursor: {batchSize: *batchSize}
         hint: {$natural: 1}
-  - *Nop
-  - Repeat: *numQueryRuns
+  - *Nop # 10
+  - *Nop # 10.1
+  - Repeat: *numQueryRuns # 11
     Database: *db
     Operations:
     - OperationMetricsName: DescendingSortWithDescendingIndexQueryBlockingSort
@@ -303,7 +354,8 @@ Actors:
         aggregate: *coll
         pipeline: [{$sort: {t: -1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
-  - Repeat: *numQueryRuns
+  - *Nop # 11.1
+  - Repeat: *numQueryRuns # 12
     Database: *db
     Operations:
     - OperationMetricsName: DescendingSortWithDescendingIndexQueryBoundedSorter
@@ -327,8 +379,9 @@ Actors:
         ]
         cursor: {batchSize: *batchSize}
         hint: {$natural: -1}
-  - *Nop
-  - Repeat: *numQueryRuns
+  - *Nop # 13
+  - *Nop # 13.1
+  - Repeat: *numQueryRuns # 14
     Database: *db
     Operations:
     - OperationMetricsName: TimeToFirstResultQueryBlockingSort
@@ -337,7 +390,8 @@ Actors:
         aggregate: *coll
         pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$limit: 1}]
         cursor: {batchSize: *batchSize}
-  - Repeat: *numQueryRuns
+  - *Nop # 14.1
+  - Repeat: *numQueryRuns # 15
     Database: *db
     Operations:
     - OperationMetricsName: TimeToFirstResultQueryBoundedSorter
@@ -360,9 +414,10 @@ Actors:
         ]
         cursor: {batchSize: *batchSize}
         hint: {$natural: 1}
-  - *Nop
-  - *Nop
-  - Repeat: *numQueryRuns
+  - *Nop # 16
+  - *Nop # 17
+  - *Nop # 17.1
+  - Repeat: *numQueryRuns # 18
     Database: *db
     Operations:
     - OperationMetricsName: MetaPointPredicateTimeSortBlockingSort
@@ -377,7 +432,8 @@ Actors:
             {$skip: 1e10}
           ]
           cursor: {batchSize: *batchSize}
-  - Repeat: *numQueryRuns
+  - *Nop # 18.1
+  - Repeat: *numQueryRuns # 19
     Database: *db
     Operations:
     - OperationMetricsName: MetaPointPredicateTimeSortBoundedSorter
@@ -402,8 +458,9 @@ Actors:
           {$skip: 1e10}
         ]
         cursor: {batchSize: *batchSize}
-  - *Nop
-  - Repeat: *numQueryRuns
+  - *Nop # 20
+  - *Nop # 20.1
+  - Repeat: *numQueryRuns # 21
     Database: *db
     Operations:
     - OperationMetricsName: SelectiveMetaPointPredicateTimeSortBlockingSort
@@ -417,7 +474,8 @@ Actors:
           {$skip: 1e10}
         ]
         cursor: {batchSize: *batchSize}
-  - Repeat: *numQueryRuns
+  - *Nop # 21.1
+  - Repeat: *numQueryRuns # 22
     Database: *db
     Operations:
     - OperationMetricsName: SelectiveMetaPointPredicateTimeSortBoundedSorter
@@ -474,12 +532,13 @@ Actors:
   #                       }
   #                   }, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
   #       cursor: {batchSize: *batchSize}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: *numQueryRuns
+  - *Nop # 23
+  - *Nop # 24
+  - *Nop # 25
+  - *Nop # 26
+  - *Nop # 27
+  - *Nop # 27.1
+  - Repeat: *numQueryRuns # 28
     Database: *db
     Operations:
     - OperationMetricsName: SpillVsNoSpillSortQueryBlockingSort
@@ -489,7 +548,8 @@ Actors:
         pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
-  - Repeat: *numQueryRuns
+  - *Nop # 28.1
+  - Repeat: *numQueryRuns # 29
     Database: *db
     Operations:
     - OperationMetricsName: SpillVsNoSpillSortQueryBoundedSorter
@@ -513,9 +573,9 @@ Actors:
         ]
         cursor: {batchSize: *batchSize}
         hint: {$natural: 1}
-  - *Nop
-  - *Nop
-  - *Nop
+  - *Nop # 30
+  - *Nop # 31
+  - *Nop # 32
 
 AutoRun:
 - When:
