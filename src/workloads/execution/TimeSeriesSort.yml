@@ -188,7 +188,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 103680
+    DocumentCount: 100000
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2022-01-01", step: 400}}
@@ -236,7 +236,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 503680
+    DocumentCount: 500000
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2023-01-01", step: 400}}
@@ -267,7 +267,7 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
-        pipeline: [{$sort: {t: 1}}]
+        pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
   - Repeat: *numQueryRuns
     Database: *db
@@ -276,20 +276,20 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: system.buckets.Collection0
-        pipeline: [{$sort: {"control.min.t": 1}},
-                   {$_internalUnpackBucket: {
-                     exclude: [],
-                     timeField: "t",
-                     metaField: "m",
-                     bucketMaxSpanSeconds: 3600,
-                     assumeNoMixedSchemaData: true
-                   }
-                   },
-                   {$_internalBoundedSort: {
-                     sortKey: {t: 1},
-                     bound: 3600,
-                   }
-                   }]
+        pipeline: [{$_internalUnpackBucket: {
+                    exclude: [],
+                    timeField: "t",
+                    metaField: "m",
+                    bucketMaxSpanSeconds: 3600,
+                    assumeNoMixedSchemaData: true
+                  }
+                  },
+                  {$_internalBoundedSort: {
+                    sortKey: {t: 1},
+                    bound: 3600,
+                  }
+                  }, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
+        hint: {$natural: 1}
         cursor: {batchSize: *batchSize}
   - *Nop
   - Repeat: *numQueryRuns
@@ -299,29 +299,29 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
-        pipeline: [{$sort: {t: -1}}]
+        pipeline: [{$sort: {t: -1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
   - Repeat: *numQueryRuns
     Database: *db
     Operations:
-    - OperationMetricsName: DescendingSortWithDescendingIndexQueryBoundedSort
+    - OperationMetricsName: DescendingSortWithDescendingIndexQueryBoundedSorter
       OperationName: RunCommand
       OperationCommand:
         aggregate: system.buckets.Collection0
         pipeline: [{$sort: {"control.max.t": -1}},
-                   {$_internalUnpackBucket: {
-                     exclude: [],
-                     timeField: "t",
-                     metaField: "m",
-                     bucketMaxSpanSeconds: 3600,
-                     assumeNoMixedSchemaData: true
-                   }
-                   },
-                   {$_internalBoundedSort: {
-                     sortKey: {t: -1},
-                     bound: 3600,
-                   }
-                   }]
+                  {$_internalUnpackBucket: {
+                    exclude: [],
+                    timeField: "t",
+                    metaField: "m",
+                    bucketMaxSpanSeconds: 3600,
+                    assumeNoMixedSchemaData: true
+                  }
+                  },
+                  {$_internalBoundedSort: {
+                    sortKey: {t: -1},
+                    bound: 3600,
+                  }
+                  }, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
   - *Nop
   - Repeat: *numQueryRuns
@@ -340,22 +340,22 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: system.buckets.Collection0
-        pipeline: [{$sort: {"control.min.t": 1}},
-                   {$_internalUnpackBucket: {
-                     exclude: [],
-                     timeField: "t",
-                     metaField: "m",
-                     bucketMaxSpanSeconds: 3600,
-                     assumeNoMixedSchemaData: true
-                   }
-                   },
-                   {$_internalBoundedSort: {
-                     sortKey: {t: 1},
-                     bound: 3600,
-                   }
-                   },
-                   {$limit: 1}]
+        pipeline: [{$_internalUnpackBucket: {
+                    exclude: [],
+                    timeField: "t",
+                    metaField: "m",
+                    bucketMaxSpanSeconds: 3600,
+                    assumeNoMixedSchemaData: true
+                  }
+                  },
+                  {$_internalBoundedSort: {
+                    sortKey: {t: 1},
+                    bound: 3600,
+                  }
+                  },
+                  {$limit: 1}]
         cursor: {batchSize: *batchSize}
+        hint: {$natural: 1}
   - *Nop
   - *Nop
   - Repeat: *numQueryRuns
@@ -364,9 +364,10 @@ Actors:
     - OperationMetricsName: MetaPointPredicateTimeSortBlockingSort
       OperationName: RunCommand
       OperationCommand:
-        aggregate: *coll
-        pipeline: [{$match: {m: 1001}}, {$sort: {t: 1}}]  # this will match ~5000 docs
-        cursor: {batchSize: *batchSize}
+        explain:
+          aggregate: *coll
+          pipeline: [{$match: {m: 1001}}, {$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]  # this will match ~5000 docs
+          cursor: {batchSize: *batchSize}
   - Repeat: *numQueryRuns
     Database: *db
     Operations:
@@ -375,20 +376,20 @@ Actors:
       OperationCommand:
         aggregate: system.buckets.Collection0
         pipeline: [{$match: {meta: 1001}},
-                   {$sort: {"control.min.t": 1}},
-                   {$_internalUnpackBucket: {
-                     exclude: [],
-                     timeField: "t",
-                     metaField: "m",
-                     bucketMaxSpanSeconds: 3600,
-                     assumeNoMixedSchemaData: true
-                   }
-                   },
-                   {$_internalBoundedSort: {
-                     sortKey: {t: 1},
-                     bound: 3600,
-                   }
-                   }]
+                  {$sort: {"control.min.t": 1}},
+                  {$_internalUnpackBucket: {
+                    exclude: [],
+                    timeField: "t",
+                    metaField: "m",
+                    bucketMaxSpanSeconds: 3600,
+                    assumeNoMixedSchemaData: true
+                  }
+                  },
+                  {$_internalBoundedSort: {
+                    sortKey: {t: 1},
+                    bound: 3600,
+                  }
+                  }, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
   - *Nop
   - Repeat: *numQueryRuns
@@ -398,7 +399,7 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
-        pipeline: [{$match: {m: 1002}}, {$sort: {t: 1}}]  # this will match ~10 docs
+        pipeline: [{$match: {m: 1002}}, {$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]  # this will match ~10 docs
         cursor: {batchSize: *batchSize}
   - Repeat: *numQueryRuns
     Database: *db
@@ -408,23 +409,23 @@ Actors:
       OperationCommand:
         aggregate: system.buckets.Collection0
         pipeline: [{$match: {meta: 1002}},
-                   {$sort: {"control.min.t": 1}},
-                   {$_internalUnpackBucket: {
-                     exclude: [],
-                     timeField: "t",
-                     metaField: "m",
-                     bucketMaxSpanSeconds: 3600,
-                     assumeNoMixedSchemaData: true
-                   }
-                   },
-                   {$_internalBoundedSort: {
-                     sortKey: {t: 1},
-                     bound: 3600,
-                   }
-                   }]
+                  {$sort: {"control.min.t": 1}},
+                  {$_internalUnpackBucket: {
+                    exclude: [],
+                    timeField: "t",
+                    metaField: "m",
+                    bucketMaxSpanSeconds: 3600,
+                    assumeNoMixedSchemaData: true
+                  }
+                  },
+                  {$_internalBoundedSort: {
+                    sortKey: {t: 1},
+                    bound: 3600,
+                  }
+                  }, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
   # Compound key for $_internalBoundedSort is not implemented yet.
-  # - Repeat: *numQueryRuns # 13.4
+  # - Repeat: *numQueryRuns
   #   Database: *db
   #   Operations:
   #   - OperationMetricsName: MetaSortTimeSortBlockingSort
@@ -433,7 +434,7 @@ Actors:
   #       aggregate: *coll
   #       pipeline: [{$sort: {m: 1, t: 1}}]
   #       cursor: {batchSize: *batchSize}
-  # - Repeat: *numQueryRuns # 13.5
+  # - Repeat: *numQueryRuns
   #   Database: *db
   #   Operations:
   #   - OperationMetricsName: MetaSortTimeSortBoundedSorter
@@ -467,7 +468,7 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
-        pipeline: [{$sort: {t: 1}}]
+        pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - Repeat: *numQueryRuns
@@ -477,21 +478,21 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: system.buckets.Collection0
-        pipeline: [{$sort: {"control.min.t": 1}},
-                   {$_internalUnpackBucket: {
-                     exclude: [],
-                     timeField: "t",
-                     metaField: "m",
-                     bucketMaxSpanSeconds: 3600,
-                     assumeNoMixedSchemaData: true
-                   }
-                   },
-                   {$_internalBoundedSort: {
-                     sortKey: {t: 1},
-                     bound: 3600,
-                   }
-                   }]
+        pipeline: [{$_internalUnpackBucket: {
+                    exclude: [],
+                    timeField: "t",
+                    metaField: "m",
+                    bucketMaxSpanSeconds: 3600,
+                    assumeNoMixedSchemaData: true
+                  }
+                  },
+                  {$_internalBoundedSort: {
+                    sortKey: {t: 1},
+                    bound: 3600,
+                  }
+                  }, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
+        hint: {$natural: 1}
   - *Nop
   - *Nop
   - *Nop
