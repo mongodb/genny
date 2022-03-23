@@ -384,4 +384,6 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
-      - standalone-all-feature-flags
+# Reenable this setup if you want to enable the SBE $lookup perf testing on all-feature-flags
+# build variant on Evergreen patch build
+# - standalone-all-feature-flags
