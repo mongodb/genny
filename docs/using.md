@@ -5,14 +5,15 @@
 2.  [Getting Started and Building](#org35e6dff)
 3.  [Core Concepts](#org1140a6b)
     1.  [What is load generation?](#orgdcd1898)
-    2.  [What is the system under test?](#orgc7904ae)
-    3.  [What is a workload?](#org3610c67)
+	2.  [What other load generation tools are there?](#orgc7988ae)
+    3.  [What is the system under test?](#orgc7904ae)
+    4.  [What is a workload?](#org3610c67)
         1.  [How are workloads configured?](#orgdecc7ae)
         2.  [What is an actor?](#org51d4d33)
         3.  [What is a phase?](#orgb655d69)
         4.  [How do I run a workload?](#org32b8ad3)
-    4.  [Outputs](#orgec88ad4)
-    5.  [Workload Development](#org0e7c476)
+    5.  [Outputs](#orgec88ad4)
+    6.  [Workload Development](#org0e7c476)
 4.  [Further Concepts](#org61c719c)
     1.  [Common Actors](#org78b250a)
     2.  [AutoRun](#org2b04b49)
@@ -41,7 +42,7 @@
 
 Hello! These are the docs for Genny specifically. For an overall view of MongoDB's performance testing infrastructure, please look at the [Performance Tooling Docs](https://github.com/10gen/performance-tooling-docs).
 
-If you have any questions, please reach out to the TIPS team in our dedicated slack channel: #performance-tooling-users. If you feel like these docs can be improved in any way, feel free to open a PR and assign someone from TIPS. No ticket necessary. This document is intended to be readable straight-through, in addition to serving as a reference on an as-needed basis. If there are any difficulties in flow or discoverability, please let us know.
+If you have any questions, please reach out to the TIPS team in our dedicated slack channel: [https://mongodb.slack.com/archives/C01VD0LQZED](#performance-tooling-users). If you feel like these docs can be improved in any way, feel free to open a PR and assign someone from TIPS. No ticket necessary. This document is intended to be readable straight-through, in addition to serving as a reference on an as-needed basis. If there are any difficulties in flow or discoverability, please let us know.
 
 
 <a id="org35e6dff"></a>
@@ -53,6 +54,8 @@ For build instructions, see the installation guide [here](setup.md).
 To try launching Genny, navigate to the root of the Genny repo and run the following: 
 
     ./run-genny workload src/workloads/docs/HelloWorld.yml
+
+Note that the above test workload does not connect to a remote server, while most do. For more details, see [What is the System Under Test?](#orgc7904ae)
 
 Whenever you have questions about the Genny CLI, you can always use the `-h` option for the top-level Genny CLI or any subcommands:
 
@@ -75,6 +78,18 @@ Genny is a **load generation** tool. It is used as a client in [load tests](http
 
 Results of a load test can inform developers as to the performance of the test subject in stressful situations. How does a system handle increasing numbers of connections performing conflicting operations? How does a system handle a large number of users performing one operation, then simultaneously switching to another in an instant? How does one user initiating a long-running, expensive operation affect the latencies observed by other users? All these situations can be simulated with Genny.
 
+<a id="orgc7988ae"></a>
+
+### What other load generation tools are there?
+At MongoDB, we've historically used [benchrun-based](https://github.com/10gen/workloads) workloads. This legacy tooling was deprecated in favor of Genny in order to provide:
+
+- A standardized [interface](#org3610c67) for workload authoring in yaml.
+- A [phase mechanism](#orgb655d69) for organizing workload execution.
+- More reusability via yaml-configurable [actors](#org51d4d33) with a consistent C++ [authoring mechanism](#org7e6c6bd).
+- High-fidelity intrarun [time series outputs](#orgec88ad4).
+- Lack of dependency on the legacy mongo shell.
+
+For the above reasons, we encourage users to write new workloads in Genny.
 
 <a id="orgc7904ae"></a>
 
@@ -163,8 +178,10 @@ In this example, there is a single `HelloWorld` actor allocated two threads. Thi
       Type: InsertRemove
       Threads: 100
       Phases:
-      - Duration: 10 milliseconds
-      - Nop
+      - Collection: inserts
+		Database: test
+	    Duration: 10 milliseconds
+      - Nop: true
 
 This example has an additional `InsertRemove` actor with 100 threads, where each thread inserts and removes a document as fast as possible. Note that even though the actors are listed sequentially, all actors are concurrent.
 
@@ -177,7 +194,7 @@ Actor configurations expect the following keys:
 
 In addition to the universal fields above, individual actors may have their own configuration keys, such as the `Message` key of the `HelloWorld` actor, used to determine what message is printed.
 
-Actors are written in C++, and creating new actors or extending existing ones is a common and encouraged workflow when using Genny. For more details, see [Creating an Actor](#org7e6c6bd).
+Actors are written in C++, and creating new actors or extending existing ones is a common and encouraged workflow when using Genny. These actors are owned by their authors. For more details, see [Creating an Actor](#org7e6c6bd).
 
 
 <a id="orgb655d69"></a>
@@ -218,7 +235,7 @@ Now consider a situation with two actors:
       - Message: Other Actor Phase 1
         Duration: 10 milliseconds
 
-Here we have the `HelloWorldSecondExample` actor running for 10 milliseconds in each phase. However, the second phase will not begin after 10 seconds. It's important to note that phases are coordinated globally, and actors configured with either `Repeat` or `Duration` will hold the phase open. In this case, `HelloWorldSecondExample` will operate for 10 milliseconds during the first phase, sleep for 40 milliseconds for the rest of the phase, then after `HelloWorldExample` finishes holding the phase open, both actors will begin the next phase.
+Here we have the `HelloWorldSecondExample` actor running for 10 milliseconds in each phase. However, the second phase will not begin after 10 milliseconds. It's important to note that phases are coordinated globally, and actors configured with either `Repeat` or `Duration` will hold the phase open. In this case, `HelloWorldSecondExample` will operate for 10 milliseconds during the first phase, sleep for 40 milliseconds for the rest of the phase, then after `HelloWorldExample` finishes holding the phase open, both actors will begin the next phase.
 
 Phase configurations accept the following main keys:
 
@@ -337,6 +354,8 @@ If you are running Genny through DSI in Evergreen, the FTDC contents are rolled 
         ./run-genny lint-yaml  # Lint all YAML files
         ./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
         ./run-genny resmoke-test  # Run actor integration tests - only necessary if adding/editing actors
+		
+    Note the current [issue](#orgb084b49) running resmoke-test.
 
 3.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
     
@@ -360,6 +379,8 @@ If you are running Genny through DSI in Evergreen, the FTDC contents are rolled 
     You can then select `schedule_patch_auto_tasks` on a variant to schedule any modified or new Genny tasks created by AutoRun. Alternatively, you could select `schedule_variant_auto_tasks` to schedule all Genny tasks on that variant.
 
 For more details on workload development, please check out our general docs on [Developing and Modifying Workloads](https://github.com/10gen/performance-tooling-docs/blob/main/new_workloads.md) and on [Basic Performance Patch Testing](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md).
+
+Users who would like a second look at their workloads can ask product performance. Users who have questions about their Genny usage can ask TIPS (@dev-prod-tips).
 
 
 <a id="org61c719c"></a>
@@ -467,7 +488,7 @@ A few notes on the syntax:
 
 ## Generators
 
-It is often necessary to use Genny to operate with large amounts of data which would be impractical to hardcode. Genny uses generators for this. A generator is a piece of code that generates pseudorandom values every time it is invoked, and which can be configured from the workload yaml. Notably, generators use a hardcoded seed, so repeated Genny executions should be deterministic with respect to generated values.
+It is often necessary to use Genny to operate with large amounts of data which would be impractical to hardcode. Genny uses generators for this. A generator is a piece of code that generates pseudorandom values every time it is invoked, and which can be configured from the workload yaml. Notably, generators use a hardcoded seed, which is always automatically reused, so repeated Genny executions should be deterministic with respect to generated values.
 
 Generators are not a builtin feature of Genny, but must be integrated by each actor for the configuration values that accept them. For examples of using generators, see [./src/workloads/docs/Generators.yml](../src/workloads/docs/Generators.yml). To integrate generators into an actor, use the [DocumentGenerator](../src/value_generators/include/value_generators/DocumentGenerator.hpp) with the yaml node you intend to generate documents from. (And see [here](#org7e6c6bd) for more details on creating an actor in the first place.)
 
@@ -476,9 +497,11 @@ Generators are not a builtin feature of Genny, but must be integrated by each ac
 
 ## Preprocessor
 
-For convenience when developing workloads, Genny offers a preprocessing syntax that can be used for configuration reuse and parameterization. Remember: when developing a workload, you can always use the following to see the results of preprocessing:
+For convenience when developing workloads, Genny offers a preprocessing syntax that can be used for configuration reuse and parameterization. Remember: when developing a workload, you can always check results of preprocessing:
 
     ./run-genny evaluate src/workloads/<workload_dir/workload_name.yml>
+	
+This command helps find yaml-based mistakes.
 
 
 <a id="orga6d35c7"></a>
@@ -615,7 +638,7 @@ Genny creates connections using one or more C++ driver pools. These pools can be
           maxPoolSize: 500
         URI: "mongodb://localhost:27017"
 
-This will configure two pools, one named \`Default\` and one named \`Update\`. The \`QueryOptions\` can contain
+This will configure two pools, one named `Default` and one named `Update`. The `QueryOptions` can contain
 any supported [connection string option](https://docs.mongodb.com/manual/reference/connection-string/), and these will
 be spliced into the final URI used to connect. Genny constructs pools lazily, so these pools will not actually be
 created until a workload actor requests them.
