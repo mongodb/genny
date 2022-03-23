@@ -262,8 +262,3 @@ Actors:
         Update:
           $inc: {a: 1}
 
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq: replica
