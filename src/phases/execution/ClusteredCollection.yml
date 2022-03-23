@@ -22,6 +22,10 @@ Actors:
       OperationCommand:
         create: &coll Collection0
         clusteredIndex: {key: {_id: 1}, unique: true}
+    - OperationName: RunCommand
+      OperationCommand:
+        shardCollection: test.Collection0
+        key: {_id: 1}
   - &Nop {Nop: true}
   - *Nop
   - *Nop
