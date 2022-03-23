@@ -2,20 +2,18 @@ SchemaVersion: 2018-07-01
 Owner: Atlas Serverless
 Description: |
   This workload is an extension of scale/LargeIndexedIns.yml to run the workload
-  on multiple serverless tenants. On each cluster, it sends bursts of finds that
-  use large $ins while running a low rate update workload.  The workload causes high CPU load as the server
-  becomes bottlenecked on tcmalloc spinlocks during the find operations.
-  Improvements or regressions in this aspect of the allocator should
-  be measurable by the average CPU usage during this test as well as
-  the latency of the find operations.
+  on multiple serverless tenants, with some slight variations. The Clients are
+  expected to be overridden with URI keys to provide multiple connection strings.
+  On each cluster, the workload sends bursts of finds that use large $ins while
+  running a low rate update workload. The workload causes high CPU load as the
+  server becomes bottlenecked on tcmalloc spinlocks during the find operations.
 
   In this workload, large arrays of random strings are generated to use
   for the $in queries.  To avoid a CPU bottleneck on the workload client,
   it uses a ^Once generator to generate the arrays once during initialization.
 
-  IMPORTANT NOTE: You must match the number of clients with the value for the
-  clustersPerConfig key specified in the atlas-serverless-local.yml file in DSI. This will ensure
-  that x serverless instances are created to run workloads on x serverless tenants, using x clients.
+  IMPORTANT NOTE: Refer to this wiki if you're changing the number of Clients in
+  this workload: https://tinyurl.com/ycyr45fs
 
 Clients:
   Client1:
@@ -54,13 +52,13 @@ Actors:
 
 - Name: FindLargeIndex1
   Type: CrudActor
-  Threads: 64
+  Threads: 32
   Database: largeins
   ClientName: Client1
   Phases:
   - {Nop: true}
   - Name: FindLargeIn
-    Duration: 10 minutes
+    Duration: 30 minutes
     GlobalRate: 1000 per 15 seconds
     Collection: Collection0
     Operations:
@@ -79,7 +77,7 @@ Actors:
   Threads: 10
   Phases:
   - {Nop: true}
-  - Duration: 10 minutes
+  - Duration: 30 minutes
     RecordFailure: true
     GlobalRate: 1 per 250 milliseconds
     Collection: Collection0
@@ -112,13 +110,13 @@ Actors:
 
 - Name: FindLargeIndex2
   Type: CrudActor
-  Threads: 64
+  Threads: 32
   Database: largeins
   ClientName: Client2
   Phases:
   - {Nop: true}
   - Name: FindLargeIn
-    Duration: 10 minutes
+    Duration: 30 minutes
     GlobalRate: 1000 per 15 seconds
     Collection: Collection0
     Operations:
@@ -137,7 +135,7 @@ Actors:
   Threads: 10
   Phases:
   - {Nop: true}
-  - Duration: 10 minutes
+  - Duration: 30 minutes
     RecordFailure: true
     GlobalRate: 1 per 250 milliseconds
     Collection: Collection0
@@ -170,13 +168,13 @@ Actors:
 
 - Name: FindLargeIndex3
   Type: CrudActor
-  Threads: 64
+  Threads: 32
   Database: largeins
   ClientName: Client3
   Phases:
   - {Nop: true}
   - Name: FindLargeIn
-    Duration: 10 minutes
+    Duration: 30 minutes
     GlobalRate: 1000 per 15 seconds
     Collection: Collection0
     Operations:
@@ -195,7 +193,7 @@ Actors:
   Threads: 10
   Phases:
   - {Nop: true}
-  - Duration: 10 minutes
+  - Duration: 30 minutes
     RecordFailure: true
     GlobalRate: 1 per 250 milliseconds
     Collection: Collection0
@@ -228,13 +226,13 @@ Actors:
 
 - Name: FindLargeIndex4
   Type: CrudActor
-  Threads: 64
+  Threads: 32
   Database: largeins
   ClientName: Client4
   Phases:
   - {Nop: true}
   - Name: FindLargeIn
-    Duration: 10 minutes
+    Duration: 30 minutes
     GlobalRate: 1000 per 15 seconds
     Collection: Collection0
     Operations:
@@ -253,7 +251,7 @@ Actors:
   Threads: 10
   Phases:
   - {Nop: true}
-  - Duration: 10 minutes
+  - Duration: 30 minutes
     RecordFailure: true
     GlobalRate: 1 per 250 milliseconds
     Collection: Collection0
