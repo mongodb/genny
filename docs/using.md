@@ -54,6 +54,26 @@ For build instructions, see the installation guide [here](setup.md).
 To try launching Genny, navigate to the root of the Genny repo and run the following: 
 
     ./run-genny workload src/workloads/docs/HelloWorld.yml
+	
+You should see output similar to the following:
+
+	[curator] 2022/03/24 10:44:11 [p=info]: starting poplar gRPC service at 'localhost:2288'
+	[2022-03-24 10:44:12.376776] [0x000070000af63000] [info]    Hello Phase 0 🐳
+	[2022-03-24 10:44:12.376810] [0x000070000aee0000] [info]    Hello Phase 0 🐳
+	[2022-03-24 10:44:12.376823] [0x000070000af63000] [info]    Counter: 1
+	[2022-03-24 10:44:12.376833] [0x000070000aee0000] [info]    Counter: 2
+	[2022-03-24 10:44:12.376859] [0x000070000af63000] [info]    Hello Phase 0 🐳
+	[2022-03-24 10:44:12.376872] [0x000070000aee0000] [info]    Hello Phase 0 🐳
+	[2022-03-24 10:44:12.376877] [0x000070000af63000] [info]    Counter: 3
+	[2022-03-24 10:44:12.376888] [0x000070000aee0000] [info]    Counter: 4
+	[2022-03-24 10:44:12.376903] [0x000070000af63000] [info]    Hello Phase 0 🐳
+	.... (more lines of output) ....
+	[2022-03-24 10:44:56.942097] [0x0000700010152000] [info]    Hello Phase 2
+	[2022-03-24 10:44:56.942104] [0x00007000100cf000] [info]    Hello Phase 2
+	[2022-03-24 10:44:56.942112] [0x0000700010152000] [info]    Counter: 3369
+	[2022-03-24 10:44:56.942119] [0x00007000100cf000] [info]    Counter: 3370
+	[curator] 2022/03/24 10:44:58 [p=info]: poplar rpc service terminated
+
 
 Note that the above test workload does not connect to a remote server, while most do. For more details, see [What is the System Under Test?](#orgc7904ae)
 
@@ -115,7 +135,7 @@ A **workload** is a repeatable procedure that Genny uses to generate load agains
 
 ### How are workloads configured?
 
-Here is an example of a simple Genny workload config:
+Here is an example of a simple Genny workload config (from the Getting Started section above):
 
     SchemaVersion: 2018-07-01
     Owner: "@10gen/dev-prod-tips"
@@ -183,7 +203,9 @@ In this example, there is a single `HelloWorld` actor allocated two threads. Thi
 	    Duration: 10 milliseconds
       - Nop: true
 
-This example has an additional `InsertRemove` actor with 100 threads, where each thread inserts and removes a document as fast as possible. Note that even though the actors are listed sequentially, all actors are concurrent.
+This example has an additional `InsertRemove` actor with 100 threads, where each thread inserts and removes a document as fast as possible. A user observing the database contents might notice a document appearing and disappearing rapidly. This actor will output `InsertRemoveExample.Insert.ftdc` and `InsertRemoveExample.Remove.ftdc` time series outputs, showing the insertions and removals happening for 10 milliseconds at the phase start. (See [here](#orgec88ad4) for more details on outputs.)
+
+Note that even though the actors are listed sequentially, all actors are concurrent.
 
 Actor configurations expect the following keys:
 
@@ -237,6 +259,8 @@ Now consider a situation with two actors:
 
 Here we have the `HelloWorldSecondExample` actor running for 10 milliseconds in each phase. However, the second phase will not begin after 10 milliseconds. It's important to note that phases are coordinated globally, and actors configured with either `Repeat` or `Duration` will hold the phase open. In this case, `HelloWorldSecondExample` will operate for 10 milliseconds during the first phase, sleep for 40 milliseconds for the rest of the phase, then after `HelloWorldExample` finishes holding the phase open, both actors will begin the next phase.
 
+Therefore, the logged output of this actor would show many lines of `Hello Phase 0` interspersed with `Other Actor Phase 0`, then a long period of _only_ lines showing `Hello Phase 0`, then the next phase would begin with many lines of `Other Actor Phase 1` intersperesed with exactly 100 lines saying `Hello Phase 1`.
+
 Phase configurations accept the following main keys:
 
 -   `Duration` - How long to operate in this phase while holding the phase open.
@@ -281,7 +305,7 @@ A couple of notes about the above:
             GlobalRate: 5 per 10 milliseconds
             Duration: 50 milliseconds
     
-    Using the `GlobalRate` configuration, the above actor will only have 5 threads act every 10 milliseconds, despite having 100 threads that could reasonable act at once.
+    Using the `GlobalRate` configuration, the above actor will only have 5 threads act every 10 milliseconds, despite having 100 threads that could reasonable act at once. If this workload's outputs were to be analyzed and the intrarun time series were graphed, the user would see only 5 operations occurring every 10 milliseconds. (See [here](#orgec88ad4) for more details about outputs.)
     
     In addition to hard-coding how many threads act and when, you can configure Genny to rate-limit the actor at a percentage of the detected maximum rate:
     
@@ -381,6 +405,8 @@ If you are running Genny through DSI in Evergreen, the FTDC contents are rolled 
 For more details on workload development, please check out our general docs on [Developing and Modifying Workloads](https://github.com/10gen/performance-tooling-docs/blob/main/new_workloads.md) and on [Basic Performance Patch Testing](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md).
 
 Users who would like a second look at their workloads can ask product performance. Users who have questions about their Genny usage can ask TIPS (@dev-prod-tips).
+
+Users who would like a private workload should consider putting it in the [PrivateWorkloads repo](https://github.com/10gen/PrivateWorkloads).
 
 
 <a id="org61c719c"></a>
