@@ -42,7 +42,7 @@
 
 Hello! These are the docs for Genny specifically. Genny is a workload-generator with first-class support for time-series data-collection of operations running against MongoDB. It is recommended for use in all MongoDB load generation. For an overall view of MongoDB's performance testing infrastructure, please look at the [Performance Tooling Docs](https://github.com/10gen/performance-tooling-docs).
 
-If you have any questions, please reach out to the TIPS team in our dedicated slack channel: [https://mongodb.slack.com/archives/C01VD0LQZED](#performance-tooling-users). If you feel like these docs can be improved in any way, feel free to open a PR and assign someone from TIPS. No ticket necessary. This document is intended to be readable straight-through, in addition to serving as a reference on an as-needed basis. If there are any difficulties in flow or discoverability, please let us know.
+If you have any questions, please reach out to the TIPS team in our dedicated slack channel: [#performance-tooling-users](https://mongodb.slack.com/archives/C01VD0LQZED). If you feel like these docs can be improved in any way, feel free to open a PR and assign someone from TIPS. No ticket necessary. This document is intended to be readable straight-through, in addition to serving as a reference on an as-needed basis. If there are any difficulties in flow or discoverability, please let us know.
 
 
 <a id="org35e6dff"></a>
