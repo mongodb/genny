@@ -40,7 +40,7 @@
 
 # Introduction
 
-Hello! These are the docs for Genny specifically. For an overall view of MongoDB's performance testing infrastructure, please look at the [Performance Tooling Docs](https://github.com/10gen/performance-tooling-docs).
+Hello! These are the docs for Genny specifically. Genny is a workload-generator with first-class support for time-series data-collection of operations running against MongoDB. It is recommended for use in all MongoDB load generation. For an overall view of MongoDB's performance testing infrastructure, please look at the [Performance Tooling Docs](https://github.com/10gen/performance-tooling-docs).
 
 If you have any questions, please reach out to the TIPS team in our dedicated slack channel: [https://mongodb.slack.com/archives/C01VD0LQZED](#performance-tooling-users). If you feel like these docs can be improved in any way, feel free to open a PR and assign someone from TIPS. No ticket necessary. This document is intended to be readable straight-through, in addition to serving as a reference on an as-needed basis. If there are any difficulties in flow or discoverability, please let us know.
 
@@ -96,7 +96,7 @@ This section introduces the core concepts used by Genny, the minimal required sy
 
 Genny is a **load generation** tool. It is used as a client in [load tests](https://en.wikipedia.org/wiki/Load_testing) to perform a large amount of work against a system under test, measuring the client-side visible responses of said test subject. These measurements may represent things like latency, number of operations performed, how many errors occurred, etc. The procedure Genny uses to perform the work should be as deterministic and repeatable as possible. This procedure is called a **workload**.
 
-Results of a load test can inform developers as to the performance of the test subject in stressful situations. How does a system handle increasing numbers of connections performing conflicting operations? How does a system handle a large number of users performing one operation, then simultaneously switching to another in an instant? How does one user initiating a long-running, expensive operation affect the latencies observed by other users? All these situations can be simulated with Genny.
+Results of a load test can inform developers as to the performance of the test subject in stressful situations. How does a system handle increasing numbers of connections performing conflicting operations? How does a system handle a large number of users performing one operation, then simultaneously switching to another in an instant? How does one user initiating a long-running, expensive operation affect the latencies observed by other users? How does the system respond when put under load much higher than originally intended (stress testing)? All these situations can be simulated with Genny.
 
 <a id="orgc7988ae"></a>
 
@@ -171,7 +171,9 @@ Workload configurations can be found in [./src/workloads](../src/workloads) from
 
 ### What is an actor?
 
-Genny uses an actor-based model for its workload generation. When execution begins, Genny spawns all configured actors in their own threads. Each actor can behave independently, be configured separately, and even has its own source code. In the example above, the following is the actor configuration:
+Genny uses an actor-based model for its workload generation. When execution begins, Genny spawns all configured actors in their own threads. Each actor can behave independently, be configured separately, and even has its own source code. Actors generally have a core loop that performs work against the system under test, and this loop can be repeated many times.
+
+In the example above, the following is the actor configuration:
 
     Actors:
     - Name: HelloWorldExample
@@ -215,6 +217,13 @@ Actor configurations expect the following keys:
 -   `Phases` - A list of phase configurations (described in next section).
 
 In addition to the universal fields above, individual actors may have their own configuration keys, such as the `Message` key of the `HelloWorld` actor, used to determine what message is printed.
+
+Some tips for configuring actors:
+
+- If your configurations grow complex, consider splitting phases out to a new file. See [here](#org2078b23).
+- If you have many threads, make sure you increase the client pool size. If the pool grows large, consider having several. [See here](#orgd6b0450).
+- Make sure each actor has a globally unique name.
+- Consider whether your actor will have "lingering" effects after a phase transition. If it does, and if that's not desireable for this workload, consider using the Quiesce actor.
 
 Actors are written in C++, and creating new actors or extending existing ones is a common and encouraged workflow when using Genny. These actors are owned by their authors. For more details, see [Creating an Actor](#org7e6c6bd).
 
