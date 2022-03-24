@@ -15,8 +15,6 @@
 #ifndef HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 #define HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 
-#include <string>
-
 namespace genny {
 
 using ActorId = unsigned int;
@@ -75,15 +73,6 @@ public:
      */
     virtual ~Actor() = default;
 
-    struct ActorInfo {
-        std::string name;
-        std::string type;
-        ActorId id;
-
-        ActorInfo(std::string name, std::string type, ActorId id)
-                : name{name}, type{type}, id{id} {}
-    };
-
     /*
      * A consistent compilation-unit unique name for this actor.
      * This name is mostly intended for metrics and logging purposes.
@@ -105,13 +94,8 @@ public:
         return _id;
     }
 
-//    virtual const ActorInfo& getActorInfo() const {
-//        return _actorInfo;
-//    }
-
 private:
     ActorId _id;
-    ActorInfo _actorInfo;
 };
 
 }  // namespace genny
