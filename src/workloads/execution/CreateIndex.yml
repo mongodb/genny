@@ -1,8 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: |
-  TODO: TIG-3322
-
+   This workload tests the performance of index creation on replica sets and standalones. We use
+   2 actors, InsertData and IndexCollection. For more information about these actors, please refer
+   to CreateIndexPhase.yml.
 Actors:
 - Name: InsertData
   Type: Loader
