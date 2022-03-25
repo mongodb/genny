@@ -54,7 +54,6 @@ TPCHDenormalizedQuery15:
         allowDiskUse: true
       verbosity:
         executionStats
-  - OperationMetricsName: Query15DropView
-    OperationName: RunCommand
+  - OperationName: RunCommand
     OperationCommand:
       drop: revenue
