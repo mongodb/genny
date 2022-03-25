@@ -76,7 +76,7 @@ Nanosecond Loops<Task, Args...>::phaseLoop(Args&&... args) {
                                                0_ts,
                                                std::nullopt),
         1,
-        1};
+        "canaries::metricsLoop"};
     auto task = Task(std::forward<Args>(args)...);
 
     int64_t before = now();
@@ -138,7 +138,7 @@ Nanosecond Loops<Task, Args...>::metricsPhaseLoop(Args&&... args) {
                                                0_ts,
                                                std::nullopt),
         1,
-        1};
+        "canaries::metricsLoop"};
     auto task = Task(std::forward<Args>(args)...);
 
     auto metrics = genny::metrics::Registry{};
@@ -170,7 +170,7 @@ Nanosecond Loops<Task, Args...>::metricsFtdcPhaseLoop(Args&&... args) {
                                                0_ts,
                                                std::nullopt),
         1,
-        1};
+        "canaries::metricsLoops"};
     auto task = Task(std::forward<Args>(args)...);
 
     auto metrics = genny::metrics::Registry{false};

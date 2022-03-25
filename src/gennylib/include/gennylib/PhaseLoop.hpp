@@ -375,13 +375,12 @@ public:
     ActorPhase(Orchestrator& orchestrator,
                std::unique_ptr<IterationChecker> iterationCheck,
                PhaseNumber currentPhase,
-               ActorId id,
-//               std::string actorInfo,
+               std::string actorInfo,
                Args&&... args)
         : _orchestrator{orchestrator},
           _currentPhase{currentPhase},
           _value{std::make_unique<T>(std::forward<Args>(args)...)},
-          _actorInfo{"actorInfo"},
+          _actorInfo{actorInfo},
           _iterationCheck{std::move(iterationCheck)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
