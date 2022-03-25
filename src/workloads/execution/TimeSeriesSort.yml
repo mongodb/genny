@@ -336,7 +336,7 @@ Actors:
           }},
           {$_internalBoundedSort: {
             sortKey: {t: 1},
-            bound: 3600,
+            bound: {base: "min"},
           }},
           {$_internalInhibitOptimization: {}},
           {$skip: 1e10}
@@ -354,6 +354,7 @@ Actors:
         aggregate: *coll
         pipeline: [{$sort: {t: -1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
+        hint: "DescendingTime"
   - *Nop
   - Repeat: *numQueryRuns
     Database: *db
@@ -363,6 +364,7 @@ Actors:
       OperationCommand:
         aggregate: system.buckets.Collection0
         pipeline: [
+          {$sort: {"control.max.t": -1}},
           {$_internalUnpackBucket: {
             exclude: [],
             timeField: "t",
@@ -372,13 +374,12 @@ Actors:
           }},
           {$_internalBoundedSort: {
             sortKey: {t: -1},
-            bound: 3600,
+            bound: {base: "max"},
           }},
           {$_internalInhibitOptimization: {}},
           {$skip: 1e10}
         ]
         cursor: {batchSize: *batchSize}
-        hint: {$natural: -1}
   - *Nop
   - *Nop
   - Repeat: *numQueryRuns
@@ -408,7 +409,7 @@ Actors:
           }},
           {$_internalBoundedSort: {
             sortKey: {t: 1},
-            bound: 3600,
+            bound: {base: "min"},
           }},
           {$limit: 1}
         ]
@@ -452,7 +453,7 @@ Actors:
           }},
           {$_internalBoundedSort: {
             sortKey: {t: 1},
-            bound: 3600,
+            bound: {base: "min"},
           }},
           {$_internalInhibitOptimization: {}},
           {$skip: 1e10}
@@ -494,7 +495,7 @@ Actors:
           }},
           {$_internalBoundedSort: {
             sortKey: {t: 1},
-            bound: 3600,
+            bound: {base: "min"},
           }},
           {$_internalInhibitOptimization: {}},
           {$skip: 1e10}
@@ -528,7 +529,7 @@ Actors:
   #                   },
   #                   {$_internalBoundedSort: {
   #                           sortKey: {m: 1, t: 1},
-  #                           bound: 3600,
+  #                           bound: {base: "min"},
   #                       }
   #                   }, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
   #       cursor: {batchSize: *batchSize}
@@ -566,7 +567,7 @@ Actors:
           }},
           {$_internalBoundedSort: {
             sortKey: {t: 1},
-            bound: 3600,
+            bound: {base: "min"},
           }},
           {$_internalInhibitOptimization: {}},
           {$skip: 1e10}
