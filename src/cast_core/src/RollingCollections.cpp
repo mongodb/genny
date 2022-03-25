@@ -470,6 +470,7 @@ RollingCollections::RollingCollections(genny::ActorContext& context)
       _collectionNames{
           WorkloadContext::getActorSharedState<RollingCollections, RollingCollectionNames>()},
       _loop{context,
+            RollingCollections::id(),
             (*_client)[context["Database"].to<std::string>()],
             RollingCollections::id(),
             WorkloadContext::getActorSharedState<RollingCollections, RollingCollectionNames>(),

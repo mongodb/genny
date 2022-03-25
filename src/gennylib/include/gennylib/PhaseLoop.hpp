@@ -375,10 +375,13 @@ public:
     ActorPhase(Orchestrator& orchestrator,
                std::unique_ptr<IterationChecker> iterationCheck,
                PhaseNumber currentPhase,
+               ActorId id,
+//               std::string actorInfo,
                Args&&... args)
         : _orchestrator{orchestrator},
           _currentPhase{currentPhase},
           _value{std::make_unique<T>(std::forward<Args>(args)...)},
+          _actorInfo{"actorInfo"},
           _iterationCheck{std::move(iterationCheck)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
@@ -390,13 +393,13 @@ public:
     ActorPhase(Orchestrator& orchestrator,
                PhaseContext& phaseContext,
                PhaseNumber currentPhase,
+               ActorId id,
                Args&&... args)
         : _orchestrator{orchestrator},
           _currentPhase{currentPhase},
           _value{!phaseContext.isNop() ? std::make_unique<T>(std::forward<Args>(args)...)
                                        : nullptr},
-          _actorType{phaseContext.actorType()},
-          _actorName{phaseContext.actorName()},
+          _actorInfo{phaseContext.actorInfo(id)},
           _iterationCheck{std::make_unique<IterationChecker>(phaseContext)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
@@ -421,14 +424,7 @@ public:
 
     // Used to print out when an actor begins/ends in a phase for debugging purposes.
     std::string actorInfo() const {
-        std::ostringstream stm;
-        stm << _actorType << "::" << _actorName;
-        if (this->isNop()) {
-            stm << "::nop";
-        }
-
-        stm.str();
-        return stm.str();
+        return _actorInfo;
     }
 
     // Could use `auto` for return-type of operator-> and operator*, but
@@ -492,8 +488,7 @@ private:
     Orchestrator& _orchestrator;
     const PhaseNumber _currentPhase;
     const std::unique_ptr<T> _value;  // nullptr iff operation is Nop
-    const std::string _actorType;
-    const std::string _actorName;
+    const std::string _actorInfo;
     const std::unique_ptr<IterationChecker> _iterationCheck;
 
 };  // class ActorPhase
@@ -691,9 +686,9 @@ class PhaseLoop final {
 
 public:
     template <class... Args>
-    explicit PhaseLoop(ActorContext& context, Args&&... args)
+    explicit PhaseLoop(ActorContext& context, ActorId id, Args&&... args)
         : PhaseLoop(context.orchestrator(),
-                    std::move(constructPhaseMap(context, std::forward<Args>(args)...))) {
+                    std::move(constructPhaseMap(context, id, std::forward<Args>(args)...))) {
         // Some of these static_assert() calls are redundant. This is to help
         // users more easily track down compiler errors.
         //
@@ -718,12 +713,12 @@ public:
 
 private:
     template <class... Args>
-    static v1::PhaseMap<T> constructPhaseMap(ActorContext& actorContext, Args&&... args) {
+    static v1::PhaseMap<T> constructPhaseMap(ActorContext& actorContext, ActorId id, Args&&... args) {
 
         // clang-format off
         static_assert(std::is_constructible_v<T, PhaseContext&, Args...>);
         // kinda redundant with ↑ but may help error-handling
-        static_assert(std::is_constructible_v<v1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseNumber, PhaseContext&, Args...>);
+        static_assert(std::is_constructible_v<v1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseNumber, ActorId, PhaseContext&, Args...>);
         // clang-format on
 
         v1::PhaseMap<T> out;
@@ -735,6 +730,7 @@ private:
                 actorContext.orchestrator(),
                 *phaseContext,
                 num,
+                id,
                 // last arg(s) get forwarded to T ctor (via forward inside of make_unique)
                 *phaseContext,
                 std::forward<Args>(args)...);

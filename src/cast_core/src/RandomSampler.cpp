@@ -98,6 +98,7 @@ RandomSampler::RandomSampler(genny::ActorContext& context)
                                                CollectionScanner::RunningActorCounter>()},
       _random{context.workload().getRNGForThread(RandomSampler::id())},
       _loop{context,
+            RandomSampler::id(),
             this,
             (*_client)[context["Database"].to<std::string>()],
             context["CollectionCount"].to<IntegerSpec>(),

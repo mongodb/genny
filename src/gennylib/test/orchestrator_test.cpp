@@ -252,6 +252,7 @@ std::unordered_map<PhaseNumber, v1::ActorPhase<int>> makePhaseConfig(
             orchestrator,
             std::make_unique<v1::IterationChecker>(dur, iters, false, 0_ts, 0_ts, nullopt),
             phaseNum,
+            1, // actorId; hardcoding this as we only use it for debug logging.
             phaseVal);
         // prevent misconfiguration within test (dupe phaseNum vals)
         {

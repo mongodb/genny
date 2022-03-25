@@ -58,6 +58,7 @@ TEST_CASE("Correctness for N iterations") {
         v1::ActorPhase<int> loop{
             o,
             std::make_unique<v1::IterationChecker>(nullopt, 0_uis, false, 0_ts, 0_ts, nullopt),
+            1,
             1};
         int i = 0;
         for (auto _ : loop)
@@ -68,6 +69,7 @@ TEST_CASE("Correctness for N iterations") {
         v1::ActorPhase<int> loop{
             o,
             std::make_unique<v1::IterationChecker>(nullopt, 1_uis, false, 0_ts, 0_ts, nullopt),
+            1,
             1};
         int i = 0;
         for (auto _ : loop)
@@ -78,6 +80,7 @@ TEST_CASE("Correctness for N iterations") {
         v1::ActorPhase<int> loop{
             o,
             std::make_unique<v1::IterationChecker>(nullopt, 113_uis, false, 0_ts, 0_ts, nullopt),
+            1,
             1};
         int i = 0;
         for (auto _ : loop)
@@ -93,7 +96,8 @@ TEST_CASE("Correctness for N milliseconds") {
         v1::ActorPhase<int> loop{
             o,
             std::make_unique<v1::IterationChecker>(0_ots, nullopt, false, 0_ts, 0_ts, nullopt),
-            0};
+            0,
+            1};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -105,7 +109,8 @@ TEST_CASE("Correctness for N milliseconds") {
         v1::ActorPhase<int> loop{
             o,
             std::make_unique<v1::IterationChecker>(10_ots, nullopt, false, 0_ts, 0_ts, nullopt),
-            0};
+            0,
+            1};
 
         auto start = chrono::system_clock::now();
         for (auto _ : loop) {
@@ -129,7 +134,8 @@ TEST_CASE("Correctness for N milliseconds with sleepNonBlocking") {
         v1::ActorPhase<int> loop{
             o,
             std::make_unique<v1::IterationChecker>(10_ots, nullopt, false, 0_ts, 0_ts, nullopt),
-            0};
+            0,
+            1};
 
         auto start = chrono::system_clock::now();
         int i = 0;
@@ -156,7 +162,8 @@ TEST_CASE("Correctness for N milliseconds with sleepNonBlocking") {
         v1::ActorPhase<int> loop{
             o,
             std::make_unique<v1::IterationChecker>(10_ots, nullopt, false, 0_ts, 0_ts, nullopt),
-            0};
+            0,
+            1};
 
         auto start = chrono::system_clock::now();
         int i = 0;
@@ -181,7 +188,8 @@ TEST_CASE("Combinations of duration and iterations") {
         v1::ActorPhase<int> loop{
             o,
             std::make_unique<v1::IterationChecker>(0_ots, 100_uis, false, 0_ts, 0_ts, nullopt),
-            0};
+            0,
+            1};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -191,7 +199,8 @@ TEST_CASE("Combinations of duration and iterations") {
         v1::ActorPhase<int> loop{
             o,
             std::make_unique<v1::IterationChecker>(5_ots, 100_uis, false, 0_ts, 0_ts, nullopt),
-            0};
+            0,
+            1};
 
         auto start = chrono::system_clock::now();
         int i = 0;
@@ -216,7 +225,8 @@ TEST_CASE("Combinations of duration and iterations") {
                 o,
                 std::make_unique<v1::IterationChecker>(
                     make_optional(TimeSpec{-1}), nullopt, false, 0_ts, 0_ts, nullopt),
-                0}),
+                0,
+                1}),
             Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
     }
 }
@@ -225,7 +235,7 @@ TEST_CASE("Can do without either iterations or duration") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
     v1::ActorPhase<int> actorPhase{
-        o, std::make_unique<v1::IterationChecker>(nullopt, nullopt, false, 0_ts, 0_ts, nullopt), 0};
+        o, std::make_unique<v1::IterationChecker>(nullopt, nullopt, false, 0_ts, 0_ts, nullopt), 0, 1};
     auto iters = 0;
     for (auto&& _ : actorPhase) {
         ++iters;
@@ -242,7 +252,7 @@ TEST_CASE("Iterator concept correctness") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
     v1::ActorPhase<int> loop{
-        o, std::make_unique<v1::IterationChecker>(nullopt, 1_uis, false, 0_ts, 0_ts, nullopt), 0};
+        o, std::make_unique<v1::IterationChecker>(nullopt, 1_uis, false, 0_ts, 0_ts, nullopt), 0, 1};
 
     // can deref
     SECTION("Deref and advance works") {
@@ -325,7 +335,7 @@ TEST_CASE("Actual Actor Example") {
 
     public:
         IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
-            : Actor(actorContext), _loop{actorContext, 1}, _counters{counters} {}
+            : Actor(actorContext), _loop{actorContext, 1, 1}, _counters{counters} {}
         //                        ↑ is forwarded to the IncrementsMapValues ctor as the
         //                        keyOffset param.
 

@@ -49,7 +49,7 @@ struct IncrementsActor : public Actor {
 
     PhaseLoop<PhaseConfig> _loop;
 
-    IncrementsActor(ActorContext& ctx) : Actor(ctx), _loop{ctx} {}
+    IncrementsActor(ActorContext& ctx) : Actor(ctx), _loop{ctx, 1} {}
 
     void run() override {
         for (auto&& config : _loop) {

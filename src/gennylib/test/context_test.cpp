@@ -514,7 +514,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
 
         DummyInsert(ActorContext& actorContext)
             : Actor(actorContext),
-              _loop{actorContext},
+              _loop{actorContext, 1},
               _iCounter{WorkloadContext::getActorSharedState<DummyInsert, InsertCounter>()} {}
 
         void run() override {
@@ -539,7 +539,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
     public:
         DummyFind(ActorContext& actorContext)
             : Actor(actorContext),
-              _loop{actorContext},
+              _loop{actorContext, 1},
               _iCounter{
                   WorkloadContext::getActorSharedState<DummyInsert, DummyInsert::InsertCounter>()} {
         }

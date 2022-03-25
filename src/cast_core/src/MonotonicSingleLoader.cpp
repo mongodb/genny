@@ -108,7 +108,7 @@ MonotonicSingleLoader::MonotonicSingleLoader(genny::ActorContext& context)
       _docIdCounter{
           WorkloadContext::getActorSharedState<MonotonicSingleLoader,
                                                MonotonicSingleLoader::DocumentIdCounter>()},
-      _loop{context, _client, MonotonicSingleLoader::id()} {}
+      _loop{context, MonotonicSingleLoader::id(), _client, MonotonicSingleLoader::id()} {}
 
 namespace {
 auto registerMonotonicSingleLoader = Cast::registerDefault<MonotonicSingleLoader>();

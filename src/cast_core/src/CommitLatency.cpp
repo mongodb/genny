@@ -179,7 +179,7 @@ CommitLatency::CommitLatency(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().getRNGForThread(CommitLatency::id())},
       _client{std::move(context.client())},
-      _loop{context, (*_client)[context["Database"].to<std::string>()], CommitLatency::id()} {}
+      _loop{context, CommitLatency::id(), (*_client)[context["Database"].to<std::string>()], CommitLatency::id()} {}
 
 namespace {
 auto registerCommitLatency = Cast::registerDefault<CommitLatency>();

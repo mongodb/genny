@@ -92,7 +92,7 @@ struct Fails : public genny::Actor {
     genny::PhaseLoop<PhaseConfig> loop;
     static StaticFailsInfo state;
 
-    explicit Fails(genny::ActorContext& ctx) : Actor(ctx), loop{ctx} {}
+    explicit Fails(genny::ActorContext& ctx) : Actor(ctx), loop{ctx, 1} {}
 
     static std::string_view defaultName() {
         return "Fails";

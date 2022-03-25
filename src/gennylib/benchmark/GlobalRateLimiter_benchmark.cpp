@@ -30,7 +30,7 @@ TEST_CASE("Find max performance of rate limiter", "[benchmark]") {
 
         IncActor(genny::ActorContext& ac)
             : Actor(ac),
-              _loop{ac},
+              _loop{ac, 1},
               _counter{WorkloadContext::getActorSharedState<IncActor, IncCounter>()} {
             _counter.store(0);
         };

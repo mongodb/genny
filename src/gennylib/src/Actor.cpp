@@ -19,5 +19,5 @@
 #include <gennylib/context.hpp>
 
 namespace genny {
-Actor::Actor(ActorContext& context) : _id{context.nextActorId()}, _actorInfo{context.actorName(), context.actorType(), _id} {}
+Actor::Actor(ActorContext& context) : _id{context.nextActorId()} {}
 }  // namespace genny

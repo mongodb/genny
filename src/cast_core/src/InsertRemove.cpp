@@ -84,7 +84,7 @@ InsertRemove::InsertRemove(genny::ActorContext& context)
       _insert{context.operation("Insert", InsertRemove::id())},
       _remove{context.operation("Remove", InsertRemove::id())},
       _client{std::move(context.client())},
-      _loop{context, _rng, _client, InsertRemove::id()} {}
+      _loop{context, InsertRemove::id(), _rng, _client, InsertRemove::id()} {}
 
 namespace {
 auto registerInsertRemove = genny::Cast::registerDefault<genny::actor::InsertRemove>();

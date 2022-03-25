@@ -65,7 +65,7 @@ QuiesceActor::QuiesceActor(genny::ActorContext& context)
     : Actor{context},
       _totalQuiesces{context.operation("Quiesce", QuiesceActor::id())},
       _client{context.client()},
-      _loop{context} {}
+      _loop{context, QuiesceActor::id()} {}
 
 namespace {
 auto registerQuiesceActor = Cast::registerDefault<QuiesceActor>();

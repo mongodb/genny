@@ -523,6 +523,15 @@ public:
         return SleepContext(_phaseNumber, this->actor().orchestrator());
     }
 
+    std::string actorInfo(ActorId id) const {
+        std:: string info = this->actor().actorType() + "::" + this->actor().actorName() + "::" + std::to_string(id);
+        if (this->isNop()) {
+            info += "::isNop";
+        }
+
+        return info;
+    }
+
     /**
      * @return the type of the actor
      */

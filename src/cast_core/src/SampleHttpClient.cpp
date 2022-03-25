@@ -109,7 +109,7 @@ SampleHttpClient::SampleHttpClient(genny::ActorContext& context)
     : Actor{context},
       _totalRequests{context.operation("Insert", SampleHttpClient::id())},
       _client{context.client()},
-      _loop{context, (*_client)[context["Database"].to<std::string>()], SampleHttpClient::id()} {}
+      _loop{context, SampleHttpClient::id(), (*_client)[context["Database"].to<std::string>()], SampleHttpClient::id()} {}
 
 namespace {
 auto registerSampleHttpClient = Cast::registerDefault<SampleHttpClient>();

@@ -516,6 +516,7 @@ CollectionScanner::CollectionScanner(genny::ActorContext& context)
       _generateCollectionNames{context["GenerateCollectionNames"].maybe<bool>().value_or(false)},
       _databaseNames{context["Database"].to<std::string>()},
       _loop{context,
+            CollectionScanner::id(),
             this,
             _databaseNames,
             context["CollectionCount"].maybe<IntegerSpec>().value_or(0),

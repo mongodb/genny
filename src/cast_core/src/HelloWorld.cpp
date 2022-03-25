@@ -57,7 +57,7 @@ void HelloWorld::run() {
 HelloWorld::HelloWorld(genny::ActorContext& context)
     : Actor(context),
       _helloCounter{WorkloadContext::getActorSharedState<HelloWorld, HelloWorldCounter>()},
-      _loop{context, HelloWorld::id()} {}
+      _loop{context, HelloWorld::id(), HelloWorld::id()} {}
 
 namespace {
 auto registerHelloWorld = genny::Cast::registerDefault<genny::actor::HelloWorld>();

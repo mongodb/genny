@@ -61,7 +61,7 @@ Insert::Insert(genny::ActorContext& context)
     : Actor(context),
       _insert{context.operation("Insert", Insert::id())},
       _client{std::move(context.client())},
-      _loop{context, (*_client)[context["Database"].to<std::string>()], Insert::id()} {}
+      _loop{context, Insert::id(), (*_client)[context["Database"].to<std::string>()], Insert::id()} {}
 
 namespace {
 auto registerInsert = genny::Cast::registerDefault<genny::actor::Insert>();

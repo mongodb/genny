@@ -108,7 +108,7 @@ MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
     : Actor(context),
       _queryOp{context.operation("Query", MultiCollectionQuery::id())},
       _client{std::move(context.client())},
-      _loop{context, _client, MultiCollectionQuery::id()} {}
+      _loop{context, MultiCollectionQuery::id(), _client, MultiCollectionQuery::id()} {}
 
 namespace {
 auto registerMultiCollectionQuery =

@@ -65,7 +65,7 @@ void LoggingActor::run() {
     }
 }
 
-LoggingActor::LoggingActor(genny::ActorContext& context) : Actor{context}, _loop{context} {
+LoggingActor::LoggingActor(genny::ActorContext& context) : Actor{context}, _loop{context, LoggingActor::id()} {
     if (context["Threads"].to<size_t>() != 1) {
         BOOST_THROW_EXCEPTION(
             InvalidConfigurationException("LoggignActor must only have Threads:1"));

@@ -48,7 +48,7 @@ void NopMetrics::run() {
 }
 
 NopMetrics::NopMetrics(genny::ActorContext& context)
-    : Actor(context), _loop{context, NopMetrics::id()} {}
+    : Actor(context), _loop{context, NopMetrics::id(), NopMetrics::id()} {}
 
 namespace {
 auto registerNopMetrics = genny::Cast::registerDefault<genny::actor::NopMetrics>();
