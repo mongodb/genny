@@ -532,7 +532,7 @@ public:
         BOOST_LOG_TRIVIAL(debug) << "Starting " << found->second.actorInfo();
         if (!this->doesBlockOn(_currentPhase)) {
             this->_orchestrator.awaitPhaseEnd(false);
-            BOOST_LOG_TRIVIAL(debug) << "Ending " << found->second.actorInfo();
+            BOOST_LOG_TRIVIAL(debug) << "Ended " << found->second.actorInfo();
         }
 
         _awaitingPlusPlus = true;

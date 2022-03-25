@@ -533,20 +533,6 @@ public:
     }
 
     /**
-     * @return the type of the actor
-     */
-    std::string actorType() const {
-        return this->actor().actorType();
-    }
-
-    /**
-     * @return the name of the actor
-     */
-    std::string actorName() const {
-        return this->actor().actorName();
-    }
-
-    /**
      * Convenience method for creating a metrics::Operation that's unique for this phase and thread.
      *
      * If "MetricsName" is specified for a phase, it is used.
