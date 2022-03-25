@@ -7,39 +7,56 @@ Description: >
 
 GlobalDefaults:
   RecordIdExtraPaddingParam: &RecordIdExtraPaddingParam {^Parameter: {Name: "RecordIdExtraPadding", Default: 0}}
+  Database: &Database test
+  Collection: &Collection Collection0
+  Namespace: &Namespace test.Collection0
+  Nop: &Nop {Nop: true}
 
 Actors:
-
 # Phase 1: create collection
 - Name: Create
   Type: RunCommand
   Threads: 1
   Phases:
   - Repeat: 1
-    Database: &db test
+    Database: *Database
     Operations:
     - OperationName: RunCommand
       OperationCommand:
-        create: &coll Collection0
+        create: *Collection
         clusteredIndex: {key: {_id: 1}, unique: true}
-    - OperationName: RunCommand
-      OperationCommand:
-        shardCollection: test.Collection0
-        key: {_id: 1}
-  - &Nop {Nop: true}
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
   - *Nop
 
-# Phase 2: insert. TODO Make multithreaded once TIG-2938 is resolved.
+#Phase 2: Shard the collection
+- Name: ShardCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *Database
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: *Namespace
+        key: {_id: 1}
+
+# Phase 3: insert. TODO Make multithreaded once TIG-2938 is resolved.
 - Name: Insert
   Type: Loader
   Threads: 1
   Phases:
   - *Nop
   - Repeat: 1
-    Database: *db
+    Database: *Database
     Threads: 1
     CollectionCount: 1
     DocumentCount: &docCount 1000000
@@ -55,16 +72,16 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 3: Point _id lookups. TODO convert to range queries once TIG-3707 is implemented.
+# Phase 4: Point _id lookups. TODO convert to range queries once TIG-3707 is implemented.
 - Name: LookupByClusterKey
   Type: CrudActor
-  Database: *db
+  Database: *Database
   Threads: 16
   Phases:
   - *Nop
   - *Nop
   - Duration: 1 minute
-    Collection: *coll
+    Collection: *Collection
     Operations:
     - OperationName: find
       OperationCommand:
@@ -73,7 +90,7 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 4: Create a secondary index.
+# Phase 5: Create a secondary index.
 - Name: BuildIndex
   Type: RunCommand
   Threads: 1
@@ -82,22 +99,22 @@ Actors:
   - *Nop
   - *Nop
   - Repeat: 1
-    Database: *db
-    Collection: *coll
+    Database: *Database
+    Collection: *Collection
     Operations:
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: *coll
+        createIndexes: *Collection
         indexes:
         - key: {a: 1}
           name: a
   - *Nop
   - *Nop
 
-# Phase 5: Secondary index lookups.
+# Phase 6: Secondary index lookups.
 - Name: LookupBySecondaryIndex
   Type: CrudActor
-  Database: *db
+  Database: *Database
   Threads: 16
   Phases:
   - *Nop
@@ -105,14 +122,14 @@ Actors:
   - *Nop
   - *Nop
   - Duration: 1 minute
-    Collection: *coll
+    Collection: *Collection
     Operations:
     - OperationName: find
       OperationCommand:
         Filter: {a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}}
   - *Nop
 
-# Phase 6: Point deletion. TODO convert to range deletions once TIG-3707 is implemented.
+# Phase 7: Point deletion. TODO convert to range deletions once TIG-3707 is implemented.
 - Name: PointDeleter
   Type: Deleter
   Database: test
@@ -124,7 +141,7 @@ Actors:
   - *Nop
   - *Nop
   - Duration: 3 minutes
-    Collection: *coll
+    Collection: *Collection
 
 AutoRun:
 - When:
