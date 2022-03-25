@@ -2,20 +2,19 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: |
   This workload consists of a situation where the server is being contacted by 10k different
-  clients in a situation where there are increasingly more writes from 0% to 100% of the time.
-  The purpose of this workload is to have the entire spectrum of read-writes happening in a
-  situation where the server is overloaded.
+  clients to simulate an extreme case of overload in the server. Both reads and writes happen
+  at the same time in balanced fashion.
 
 Keywords:
-  - scale
-  - insertMany
-  - find
+- scale
+- insertMany
+- find
 
 dbname: &dbname mixed_10k
 DocumentCount: &NumDocs 10000
 CollectionCount: &NumColls 1
 
-NumPhases: &NumPhases 6
+NumPhases: &NumPhases 2
 Document: &doc
   a: {^RandomInt: {min: 0, max: *NumDocs}}
   b: {^RandomString: {length: 16}}
@@ -28,132 +27,85 @@ Clients:
       maxPoolSize: 10000
 
 ActorTemplates:
-  - TemplateName: WritesActorTemplate
-    Config:
-      Name: {^Parameter: {Name: "Name", Default: WritesActor}}
-      Type: CrudActor
-      Database: *dbname
-      ClientName: Writes
-      Threads: {^Parameter: {Name: "Threads", Default: 1000}}
-      Phases:
-        OnlyActiveInPhases:
-          Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
-          NopInPhasesUpTo: *NumPhases
-          PhaseConfig:
-            Duration: 1 minutes
-            CollectionCount: *NumColls
-            Operations:
-              - OperationName: insertMany
-                OperationMetricsName: WriteDocs
-                OperationCommand:
-                  Documents:
-                    - *doc
-                    - *doc
-                ThrowOnFailure: false  # Whether to throw an exception if an operation fails
-                # RecordFailure: true  # If ThrowOnFailure is false, whether the failed operations should be recorded.
-  - TemplateName: ReadsActorTemplate
-    Config:
-      Name: {^Parameter: {Name: "Name", Default: ReadsActor}}
-      Type: CrudActor
-      Database: *dbname
-      ClientName: Reads
-      Threads: {^Parameter: {Name: "Threads", Default: 1000}}
-      Phases:
-        OnlyActiveInPhases:
-          Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
-          NopInPhasesUpTo: *NumPhases
-          PhaseConfig:
-            Duration: 1 minutes
-            CollectionCount: *NumColls
-            Operations:
-              - OperationName: find
-                OperationCommand:
-                  Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
-                OperationMetricsName: ReadDocs
-Actors:
-  - Name: Setup
-    Type: Loader
-    Threads: 1
+- TemplateName: WritesActorTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: WritesActor}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Writes
+    Threads: {^Parameter: {Name: "Threads", Default: 1000}}
     Phases:
       OnlyActiveInPhases:
-        Active: [0]
+        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
-          # Have 10k documents ready at start
-          Repeat: 1
-          BatchSize: 100
-          Threads: 1
-          DocumentCount: *NumDocs
-          Database: *dbname
+          Duration: 1 minutes
           CollectionCount: *NumColls
-          Document: *doc
-          Indexes:
-            - keys: {a: 1}
+          Operations:
+          - OperationName: insertMany
+            OperationMetricsName: WriteDocs
+            OperationCommand:
+              Documents:
+              - *doc
+              - *doc
+            ThrowOnFailure: false  # Whether to throw an exception if an operation fails
+            # RecordFailure: true  # If ThrowOnFailure is false, whether the failed operations should be recorded.
+- TemplateName: ReadsActorTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: ReadsActor}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Reads
+    Threads: {^Parameter: {Name: "Threads", Default: 1000}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Duration: 1 minutes
+          CollectionCount: *NumColls
+          Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
+            OperationMetricsName: ReadDocs
+Actors:
+- Name: Setup
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        # Have 10k documents ready at start
+        Repeat: 1
+        BatchSize: 100
+        Threads: 1
+        DocumentCount: *NumDocs
+        Database: *dbname
+        CollectionCount: *NumColls
+        Document: *doc
+        Indexes:
+        - keys: {a: 1}
 
-  - ActorFromTemplate:
-      TemplateName: WritesActorTemplate
-      TemplateParameters:
-        Name: WritesActor90_10
-        Threads: 1000
-        ActivePhases: [2]
-  - ActorFromTemplate:
-      TemplateName: WritesActorTemplate
-      TemplateParameters:
-        Name: WritesActor60_40
-        Threads: 4000
-        ActivePhases: [3]
-  - ActorFromTemplate:
-      TemplateName: WritesActorTemplate
-      TemplateParameters:
-        Name: WritesActor40_60
-        Threads: 6000
-        ActivePhases: [4]
-  - ActorFromTemplate:
-      TemplateName: WritesActorTemplate
-      TemplateParameters:
-        Name: WritesActor10_90
-        Threads: 9000
-        ActivePhases: [5]
-  - ActorFromTemplate:
-      TemplateName: WritesActorTemplate
-      TemplateParameters:
-        Name: WritesActor0_100
-        Threads: 10000
-        ActivePhases: [6]
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: {^Parameter: {Name: "WritingName", Default: WritingActor_50_50}}
+      Threads: {^Parameter: {Name: "WritingThreads", Default: 5000}}
+      ActivePhases: [1]
 
-  - ActorFromTemplate:
-      TemplateName: ReadsActorTemplate
-      TemplateParameters:
-        Name: ReadsActor100_0
-        Threads: 10000
-        ActivePhases: [1]
-  - ActorFromTemplate:
-      TemplateName: ReadsActorTemplate
-      TemplateParameters:
-        Name: ReadsActor90_10
-        Threads: 9000
-        ActivePhases: [2]
-  - ActorFromTemplate:
-      TemplateName: ReadsActorTemplate
-      TemplateParameters:
-        Name: ReadsActor60_40
-        Threads: 6000
-        ActivePhases: [3]
-  - ActorFromTemplate:
-      TemplateName: ReadsActorTemplate
-      TemplateParameters:
-        Name: ReadsActor40_60
-        Threads: 4000
-        ActivePhases: [4]
-  - ActorFromTemplate:
-      TemplateName: ReadsActorTemplate
-      TemplateParameters:
-        Name: ReadsActor10_90
-        Threads: 1000
-        ActivePhases: [5]
+- ActorFromTemplate:
+    TemplateName: ReadsActorTemplate
+    TemplateParameters:
+      Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
+      Threads: {^Parameter: {Name: "ReadingThreads", Default: 5000}}
+      ActivePhases: [1]
+
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - standalone
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - standalone
