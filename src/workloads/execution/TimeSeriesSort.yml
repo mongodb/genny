@@ -427,7 +427,7 @@ Actors:
         explain:
           aggregate: *coll
           pipeline: [
-            {$match: {m: 1001}},  # this will match ~5000 docs
+            {$match: {m: 1001}},  # this will match 5000 docs
             {$sort: {t: 1}},
             {$_internalInhibitOptimization: {}},
             {$skip: 1e10}
@@ -469,7 +469,7 @@ Actors:
       OperationCommand:
         aggregate: *coll
         pipeline: [
-          {$match: {m: 1002}},  # this will match ~10 docs
+          {$match: {m: 1002}},  # this will match 10 docs
           {$sort: {t: 1}},
           {$_internalInhibitOptimization: {}},
           {$skip: 1e10}
