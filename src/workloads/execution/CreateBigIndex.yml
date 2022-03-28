@@ -1,10 +1,8 @@
-# Create indexes on a collection large enough that the external sorter must spill to disk.
-
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: |
-  TODO: TIG-3322
-
+   This workload tests the performance of creating indexes on a collection large enough that the external
+   sorter must spill to disk. This can happen when the keys are larger than maxIndexBuildMemoryUsageMegabytes.
 Actors:
 
 # Phase 1: Insert enough data to ensure than an index build on each field spills to disk with a
