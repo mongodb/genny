@@ -39,6 +39,9 @@ Description: |
 # 	# "id_with_actor" : "ActorId-7"
 
 
+Parameters:
+  - &DatabaseName {^Parameter: {Name: "DatabaseName", Default: mydb }}
+
 Clients:
   Default:
     QueryOptions:
@@ -50,7 +53,7 @@ Clients:
 Actors:
 - Name: Generator Examples
   Type: CrudActor
-  Database: mydb
+  Database: *DatabaseName
   Threads: 10
   ClientName: SomeOtherPool  # Which connection pool to use. Must be defined in Clients section.
   Phases:
