@@ -1,0 +1,121 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  TODO explain this
+
+
+GlobalDefaults:
+  dbname: &db test
+  batchSize: &batchSize 30000
+  fieldName: &field "numeric"
+  index: &index
+    keys: {numeric: 1}
+  nop: &Nop {Nop: true}
+
+Actors:
+- Name: CreateTimeSeriesCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *db
+    Operation:
+      OperationMetricsName: CreateTimeSeriesCollection
+      OperationName: RunCommand
+      OperationCommand:
+        {create: &coll Collection0, timeseries: {timeField: "t", metaField: "m"}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 1e6 # insert 10000 overlapping buckets
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2022-01-01", step: 400}}
+      m: {^Cycle: {ofLength: 10000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+  - *Nop
+
+- Name: Queries
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: &numQueryRuns 50
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *coll
+        pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
+        cursor: {batchSize: *batchSize}
+        # allowDiskUse: true
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBoundedSort
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: system.buckets.Collection0
+        pipeline: [
+          {$_internalUnpackBucket: {
+            exclude: [],
+            timeField: "t",
+            metaField: "m",
+            bucketMaxSpanSeconds: 3600,
+            assumeNoMixedSchemaData: true
+          }},
+          {$_internalBoundedSort: {
+            sortKey: {t: 1},
+            bound: {base: "min"},
+          }},
+          {$_internalInhibitOptimization: {}},
+          {$skip: 1e10}
+        ]
+        cursor: {batchSize: *batchSize}
+        hint: {$natural: 1}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v5.1
+      - v5.2
