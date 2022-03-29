@@ -67,25 +67,11 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
 
 - Name: IndexCollection
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -107,8 +93,6 @@ Actors:
           name: DescendingTime
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
   - Repeat: 1
     Database: *db
     Operations:
@@ -117,8 +101,6 @@ Actors:
       OperationCommand:
         dropIndexes: *coll
         index: DescendingTime
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - Repeat: 1
@@ -131,10 +113,6 @@ Actors:
         indexes:
         - key: {m: 1, t: 1}
           name: MetaTime
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -158,8 +136,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
 
 
 - Name: Quiesce
@@ -176,15 +152,9 @@ Actors:
   - *Nop
   - Repeat: 1
   - *Nop
-  - Repeat: 1
-  - *Nop
   - *Nop
   - Repeat: 1
   - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - Repeat: 1
   - *Nop
   - Repeat: 1
   - *Nop
@@ -192,10 +162,6 @@ Actors:
   - *Nop
   - Repeat: 1
   - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - Repeat: 1
   - *Nop
   - Repeat: 1
   - *Nop
@@ -203,8 +169,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - Repeat: 1
   - *Nop
   - Repeat: 1
   - *Nop
@@ -241,12 +205,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
   - Repeat: 1
     Database: *db
     Collection: *coll
@@ -257,8 +215,6 @@ Actors:
     Document:
       t: {^IncDate: {start: "2022-01-01", step: 400}}
       m: 1001
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - Repeat: 1
@@ -275,8 +231,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
   - Repeat: 1
     Database: *db
     Collection: *coll
@@ -287,8 +241,6 @@ Actors:
     Document:
       t: {^IncDate: {start: "2023-01-01", step: 400}}
       m: {^RandomInt: {min: 0, max: 1000}}
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -319,31 +271,6 @@ Actors:
         pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
   - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SortQueryBoundedSorter
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: system.buckets.Collection0
-        pipeline: [
-          {$_internalUnpackBucket: {
-            exclude: [],
-            timeField: "t",
-            metaField: "m",
-            bucketMaxSpanSeconds: 3600,
-            assumeNoMixedSchemaData: true
-          }},
-          {$_internalBoundedSort: {
-            sortKey: {t: 1},
-            bound: {base: "min"},
-          }},
-          {$_internalInhibitOptimization: {}},
-          {$skip: 1e10}
-        ]
-        cursor: {batchSize: *batchSize}
-        hint: {$natural: 1}
-  - *Nop
   - *Nop
   - Repeat: *numQueryRuns
     Database: *db
@@ -356,31 +283,6 @@ Actors:
         cursor: {batchSize: *batchSize}
         hint: "DescendingTime"
   - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: DescendingSortWithDescendingIndexQueryBoundedSorter
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: system.buckets.Collection0
-        pipeline: [
-          {$sort: {"control.max.t": -1}},
-          {$_internalUnpackBucket: {
-            exclude: [],
-            timeField: "t",
-            metaField: "m",
-            bucketMaxSpanSeconds: 3600,
-            assumeNoMixedSchemaData: true
-          }},
-          {$_internalBoundedSort: {
-            sortKey: {t: -1},
-            bound: {base: "max"},
-          }},
-          {$_internalInhibitOptimization: {}},
-          {$skip: 1e10}
-        ]
-        cursor: {batchSize: *batchSize}
-  - *Nop
   - *Nop
   - Repeat: *numQueryRuns
     Database: *db
@@ -391,30 +293,6 @@ Actors:
         aggregate: *coll
         pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$limit: 1}]
         cursor: {batchSize: *batchSize}
-  - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: TimeToFirstResultQueryBoundedSorter
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: system.buckets.Collection0
-        pipeline: [
-          {$_internalUnpackBucket: {
-            exclude: [],
-            timeField: "t",
-            metaField: "m",
-            bucketMaxSpanSeconds: 3600,
-            assumeNoMixedSchemaData: true
-          }},
-          {$_internalBoundedSort: {
-            sortKey: {t: 1},
-            bound: {base: "min"},
-          }},
-          {$limit: 1}
-        ]
-        cursor: {batchSize: *batchSize}
-        hint: {$natural: 1}
   - *Nop
   - *Nop
   - *Nop
@@ -434,32 +312,6 @@ Actors:
           ]
           cursor: {batchSize: *batchSize}
   - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: MetaPointPredicateTimeSortBoundedSorter
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: system.buckets.Collection0
-        pipeline: [
-          {$match: {meta: 1001}},
-          {$sort: {"control.min.t": 1}},
-          {$_internalUnpackBucket: {
-            exclude: [],
-            timeField: "t",
-            metaField: "m",
-            bucketMaxSpanSeconds: 3600,
-            assumeNoMixedSchemaData: true
-          }},
-          {$_internalBoundedSort: {
-            sortKey: {t: 1},
-            bound: {base: "min"},
-          }},
-          {$_internalInhibitOptimization: {}},
-          {$skip: 1e10}
-        ]
-        cursor: {batchSize: *batchSize}
-  - *Nop
   - *Nop
   - Repeat: *numQueryRuns
     Database: *db
@@ -471,32 +323,6 @@ Actors:
         pipeline: [
           {$match: {m: 1002}},  # this will match 10 docs
           {$sort: {t: 1}},
-          {$_internalInhibitOptimization: {}},
-          {$skip: 1e10}
-        ]
-        cursor: {batchSize: *batchSize}
-  - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SelectiveMetaPointPredicateTimeSortBoundedSorter
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: system.buckets.Collection0
-        pipeline: [
-          {$match: {meta: 1002}},
-          {$sort: {"control.min.t": 1}},
-          {$_internalUnpackBucket: {
-            exclude: [],
-            timeField: "t",
-            metaField: "m",
-            bucketMaxSpanSeconds: 3600,
-            assumeNoMixedSchemaData: true
-          }},
-          {$_internalBoundedSort: {
-            sortKey: {t: 1},
-            bound: {base: "min"},
-          }},
           {$_internalInhibitOptimization: {}},
           {$skip: 1e10}
         ]
@@ -549,31 +375,6 @@ Actors:
         pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
         allowDiskUse: true
-  - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SpillVsNoSpillSortQueryBoundedSorter
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: system.buckets.Collection0
-        pipeline: [
-          {$_internalUnpackBucket: {
-            exclude: [],
-            timeField: "t",
-            metaField: "m",
-            bucketMaxSpanSeconds: 3600,
-            assumeNoMixedSchemaData: true
-          }},
-          {$_internalBoundedSort: {
-            sortKey: {t: 1},
-            bound: {base: "min"},
-          }},
-          {$_internalInhibitOptimization: {}},
-          {$skip: 1e10}
-        ]
-        cursor: {batchSize: *batchSize}
-        hint: {$natural: 1}
   - *Nop
   - *Nop
   - *Nop
