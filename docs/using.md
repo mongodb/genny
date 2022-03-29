@@ -523,7 +523,7 @@ A few notes on the syntax:
 
 ## Generators
 
-It is often necessary to use Genny to operate with large amounts of data which would be impractical to hardcode. Genny uses generators for this. A generator is a piece of code that generates pseudorandom values every time it is invoked, and which can be configured from the workload yaml. Notably, generators use a hardcoded seed, which is always automatically reused, so repeated Genny executions should be deterministic with respect to generated values.
+It is often necessary to use Genny to operate with large amounts of data which would be impractical to hardcode. Genny uses generators for this. A generator is a piece of code that generates pseudorandom values every time it is invoked, and which can be configured from the workload yaml. Notably, generators use a hardcoded seed, which is always automatically reused by default, so repeated Genny executions should be deterministic with respect to generated values. A user wanting to vary the generated docs can vary the seed. See [./src/workloads/docs/GeneratorsSeeded.yml](../src/workloads/docs/GeneratorsSeeded.yml) for an example.
 
 Generators are not a builtin feature of Genny, but must be integrated by each actor for the configuration values that accept them. For examples of using generators, see [./src/workloads/docs/Generators.yml](../src/workloads/docs/Generators.yml). To integrate generators into an actor, use the [DocumentGenerator](../src/value_generators/include/value_generators/DocumentGenerator.hpp) with the yaml node you intend to generate documents from. (And see [here](#org7e6c6bd) for more details on creating an actor in the first place.)
 
