@@ -1,8 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: |
-  TODO: TIG-3322
-
+  This workload tests the performance of a successful background validation of a collection with a
+  high load. This helps us visualize impact on throughput and latency. This workload has 4 phases.
+  First, we will create initial test data. Next, we will run a series of CRUD operations without
+  validation in the background. Then, we set maxValidateMBperSec to 1mbps in order to purposely
+  throttle background validation. Finally, we run a series of CRUD operations with background
+  validation concurrently.
 Actors:
 - Name: InsertData
   Type: Loader
