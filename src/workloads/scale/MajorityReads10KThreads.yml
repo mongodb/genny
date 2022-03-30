@@ -3,6 +3,11 @@ Owner: "@mongodb/server-execution"
 Description: |
   This workload simulates a case of extreme overload with a majority of reads happening.
 
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 10100
+
 LoadConfig:
   Path: "./Mixed10KThreads.yml"
   Parameters:
@@ -10,3 +15,9 @@ LoadConfig:
     ReadingName: ReadingActor_90_10
     WritingThreads: 1000
     ReadingThreads: 9000
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
