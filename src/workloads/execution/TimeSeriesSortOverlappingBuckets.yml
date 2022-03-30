@@ -47,8 +47,6 @@ Actors:
   Threads: 1
   Phases:
   - *Nop
-  - *Nop
-  - *Nop
   - Repeat: 1
     Database: *db
     Collection: *coll
@@ -57,8 +55,13 @@ Actors:
     DocumentCount: 1e6 # insert 10000 overlapping buckets
     BatchSize: *batchSize
     Document:
+      # t repeats each date 10000 times [d1 d1 d1 d1... d2 d2 d2 d2 ...]
+      # t: {^Repeat: {count: 10000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
       t: {^IncDate: {start: "2022-01-01", step: 400}}
+      # m cycles through the meta values [0 1 2 ... 9999 0 1 2 ... 9999 0 1 2 ...]
       m: {^Cycle: {ofLength: 10000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+  - *Nop
   - *Nop
   - *Nop
 

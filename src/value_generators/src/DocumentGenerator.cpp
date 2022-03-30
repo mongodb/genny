@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
 #include <value_generators/DocumentGenerator.hpp>
 
 #include <fstream>
@@ -993,43 +994,33 @@ public:
                    int64_t numRepeats)
         : _numRepeats{numRepeats},
         _repeatCounter{0},
-          _valueGen{getGenerator(
-              extract(node, "fromGenerator", "^Repeat"), generatorArgs, parsers)},
-          _item{getNextItem()} {}
+        _valueGen{valueGenerator<false, UniqueAppendable>(extract(node, "fromGenerator", "^Repeat"), generatorArgs, parsers)},
+          _item(getItem()) {}
 
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        updateState();
         auto itemView = _item.view();
         builder.append(bsoncxx::builder::basic::kvp(key, itemView[0].get_value()));
+        updateIndex();
     }
     void append(bsoncxx::builder::basic::array& builder) override {
-        updateState();
         auto itemView = _item.view();
         builder.append(itemView[0].get_value());
+        updateIndex();
     }
 
 private:
-    static UniqueAppendable getGenerator(
-        const Node& node,
-        GeneratorArgs generatorArgs,
-        std::map<std::string, Parser<UniqueAppendable>> parsers) {
-        return valueGenerator<false, UniqueAppendable>(node, generatorArgs, parsers);
-    }
-
-    void updateState() {
-        _repeatCounter++;
-        if(_repeatCounter >= _numRepeats){
-            // reset counter
-            _repeatCounter = 0;
-            // update item
-            _item = getNextItem();
-        }
-    }
-
-    bsoncxx::array::value getNextItem(){
+    bsoncxx::array::value getItem() {
         bsoncxx::builder::basic::array builder{};
         _valueGen->append(builder);
         return builder.extract();
+    }
+
+    void updateIndex() {
+        _repeatCounter++;
+        if(_repeatCounter >= _numRepeats){
+            _repeatCounter = 0;
+            _item = getItem();
+        }
     }
 
     int64_t _numRepeats;
