@@ -874,6 +874,26 @@ private:
     const UniqueGenerator<std::string> _generator;
 };
 
+/** `{^IncDate: {start: "2022-01-01", step: 10000, multiplier: 0}}` */
+class IncDateGenerator : public Generator<bsoncxx::types::b_date> {
+public:
+    IncDateGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _step{node["step"].maybe<int64_t>().value_or(1)} {
+        _counter = dateGenerator(node["start"], generatorArgs)->evaluate() +
+            generatorArgs.actorId * node["multiplier"].maybe<int64_t>().value_or(0);
+    }
+
+    bsoncxx::types::b_date evaluate() override {
+        auto inc_value = _counter;
+        _counter += _step;
+        return bsoncxx::types::b_date{std::chrono::milliseconds{inc_value}};
+    }
+
+private:
+    int64_t _step;
+    int64_t _counter;
+};
+
 /** `{^RandomDate: {min: "2015-01-01", max: "2015-01-01T23:59:59.999Z"}}` */
 class RandomDateGenerator : public Generator<bsoncxx::types::b_date> {
 public:
@@ -1241,6 +1261,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^Inc",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<IncGenerator>(node, generatorArgs);
+     }},
+    {"^IncDate",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<IncDateGenerator>(node, generatorArgs);
      }},
     {"^Array",
      [](const Node& node, GeneratorArgs generatorArgs) {
