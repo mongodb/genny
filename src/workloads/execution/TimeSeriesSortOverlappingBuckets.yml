@@ -52,14 +52,13 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6 # insert 10000 overlapping buckets
+    DocumentCount: 1005000 # insert 1000 overlapping buckets
     BatchSize: *batchSize
     Document:
-      # t repeats each date 10000 times [d1 d1 d1 d1... d2 d2 d2 d2 ...]
-      # t: {^Repeat: {count: 10000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
-      t: {^IncDate: {start: "2022-01-01", step: 400}}
+      # t repeats each date 1000 times [d1 d1 d1 d1... d2 d2 d2 d2 ...]
+      t: {^Repeat: {count: 1000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
       # m cycles through the meta values [0 1 2 ... 9999 0 1 2 ... 9999 0 1 2 ...]
-      m: {^Cycle: {ofLength: 10000, fromGenerator: {^Inc: {start: 0}}}}
+      m: {^Cycle: {ofLength: 1000, fromGenerator: {^Inc: {start: 0}}}}
   - *Nop
   - *Nop
   - *Nop
@@ -81,7 +80,7 @@ Actors:
         aggregate: *coll
         pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
-        # allowDiskUse: true
+        allowDiskUse: true
   - *Nop
   - Repeat: *numQueryRuns
     Database: *db
@@ -107,6 +106,7 @@ Actors:
         ]
         cursor: {batchSize: *batchSize}
         hint: {$natural: 1}
+        allowDiskUse: true
 
 AutoRun:
 - When:
@@ -122,3 +122,4 @@ AutoRun:
       - v5.0
       - v5.1
       - v5.2
+      - v5.3
