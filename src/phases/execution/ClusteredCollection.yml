@@ -11,6 +11,7 @@ GlobalDefaults:
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
   Nop: &Nop {Nop: true}
+  DocumentCount:  &docCount 1000000
 
 Actors:
 # Phase 1: create collection
@@ -23,8 +24,12 @@ Actors:
     Operations:
     - OperationName: RunCommand
       OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
         create: *Collection
         clusteredIndex: {key: {_id: 1}, unique: true}
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -36,6 +41,7 @@ Actors:
   Type: AdminCommand
   Threads: 1
   Phases:
+  - *Nop
   - Repeat: 1
     Database: admin
     Operations:
@@ -48,6 +54,11 @@ Actors:
       OperationCommand:
         shardCollection: *Namespace
         key: {_id: 1}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 # Phase 3: insert. TODO Make multithreaded once TIG-2938 is resolved.
 - Name: Insert
@@ -55,11 +66,12 @@ Actors:
   Threads: 1
   Phases:
   - *Nop
+  - *Nop
   - Repeat: 1
     Database: *Database
     Threads: 1
     CollectionCount: 1
-    DocumentCount: &docCount 1000000
+    DocumentCount: *docCount
     BatchSize: 1000
     Document:
       # Start from {_id: "0000001"} in order to be able to set the ^RandomInt max bound to *docCount
@@ -80,6 +92,7 @@ Actors:
   Phases:
   - *Nop
   - *Nop
+  - *Nop
   - Duration: 1 minute
     Collection: *Collection
     Operations:
@@ -95,6 +108,7 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -121,6 +135,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
   - Duration: 1 minute
     Collection: *Collection
     Operations:
@@ -130,11 +145,16 @@ Actors:
   - *Nop
 
 # Phase 7: Point deletion. TODO convert to range deletions once TIG-3707 is implemented.
+# Deleter uses findAndModify internally:
+#   Query for sharded findAndModify must contain the shard key: generic server error
 - Name: PointDeleter
-  Type: Deleter
-  Database: test
+  Type: CrudActor
+  Database: *Database
   Threads: 16
+  RandomRemainder : &RandomRemainder {^RandomInt: {min: 0, max: 99}}
+  DeleteQuery : &DeleteQuery { a : { $mod: [ 100, *RandomRemainder ] } } 
   Phases:
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -142,6 +162,10 @@ Actors:
   - *Nop
   - Duration: 3 minutes
     Collection: *Collection
+    Operations:
+    - OperationName: deleteMany
+      OperationCommand:
+        Filter: *DeleteQuery
 
 AutoRun:
 - When:
