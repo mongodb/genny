@@ -19,12 +19,9 @@ Document: &doc
   a: {^RandomInt: {min: 0, max: *NumDocs}}
   b: {^RandomString: {length: 16}}
 Clients:
-  Reads:
+  Default:
     QueryOptions:
-      maxPoolSize: 10000
-  Writes:
-    QueryOptions:
-      maxPoolSize: 10000
+      maxPoolSize: 10100
 
 ActorTemplates:
 - TemplateName: WritesActorTemplate
@@ -32,7 +29,6 @@ ActorTemplates:
     Name: {^Parameter: {Name: "Name", Default: WritesActor}}
     Type: CrudActor
     Database: *dbname
-    ClientName: Writes
     Threads: {^Parameter: {Name: "Threads", Default: 1000}}
     Phases:
       OnlyActiveInPhases:
@@ -42,20 +38,16 @@ ActorTemplates:
           Duration: 1 minutes
           CollectionCount: *NumColls
           Operations:
-          - OperationName: insertMany
+          - OperationName: insertOne
             OperationMetricsName: WriteDocs
             OperationCommand:
-              Documents:
-              - *doc
-              - *doc
-            ThrowOnFailure: false  # Whether to throw an exception if an operation fails
-            # RecordFailure: true  # If ThrowOnFailure is false, whether the failed operations should be recorded.
+              Document: *doc
+            ThrowOnFailure: false
 - TemplateName: ReadsActorTemplate
   Config:
     Name: {^Parameter: {Name: "Name", Default: ReadsActor}}
     Type: CrudActor
     Database: *dbname
-    ClientName: Reads
     Threads: {^Parameter: {Name: "Threads", Default: 1000}}
     Phases:
       OnlyActiveInPhases:
@@ -69,6 +61,7 @@ ActorTemplates:
             OperationCommand:
               Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
             OperationMetricsName: ReadDocs
+            ThrowOnFailure: false
 Actors:
 - Name: Setup
   Type: Loader
@@ -108,4 +101,3 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
-      - standalone
