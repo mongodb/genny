@@ -29,12 +29,22 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: Quiesce
   Type: QuiesceActor
   Threads: 1
   Database: *db
   Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
   - *Nop
   - *Nop
   - Repeat: 1
@@ -57,8 +67,24 @@ Actors:
     Document:
       # t repeats each date 1000 times [d1 d1 d1 d1... d2 d2 d2 d2 ...]
       t: {^Repeat: {count: 1000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
-      # m cycles through the meta values [0 1 2 ... 9999 0 1 2 ... 9999 0 1 2 ...]
+      # m cycles through the meta values [0 1 2 ... 999 0 1 2 ... 999 0 1 2 ...]
       m: {^Cycle: {ofLength: 1000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10005000 # insert 10000 more overlapping buckets
+    BatchSize: *batchSize
+    Document:
+      # t repeats each date 10000 times [d1 d1 d1 d1... d2 d2 d2 d2 ...]
+      t: {^Repeat: {count: 10000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
+      # m cycles through the meta values [0 1 2 ... 9999 0 1 2 ... 9999 0 1 2 ...]
+      m: {^Cycle: {ofLength: 10000, fromGenerator: {^Inc: {start: 0}}}}
   - *Nop
   - *Nop
   - *Nop
@@ -74,7 +100,7 @@ Actors:
   - Repeat: &numQueryRuns 50
     Database: *db
     Operations:
-    - OperationMetricsName: SortQuerySpillBlockingSort
+    - OperationMetricsName: SortQuerySpillBlockingSort1Mil
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
@@ -85,7 +111,45 @@ Actors:
   - Repeat: *numQueryRuns
     Database: *db
     Operations:
-    - OperationMetricsName: SortQuerySpillBoundedSort
+    - OperationMetricsName: SortQuerySpillBoundedSort1Mil
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: system.buckets.Collection0
+        pipeline: [
+          {$_internalUnpackBucket: {
+            exclude: [],
+            timeField: "t",
+            metaField: "m",
+            bucketMaxSpanSeconds: 3600,
+            assumeNoMixedSchemaData: true
+          }},
+          {$_internalBoundedSort: {
+            sortKey: {t: 1},
+            bound: {base: "min"},
+          }},
+          {$_internalInhibitOptimization: {}},
+          {$skip: 1e10}
+        ]
+        cursor: {batchSize: *batchSize}
+        hint: {$natural: 1}
+        allowDiskUse: true
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort10Mil
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *coll
+        pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
+        cursor: {batchSize: *batchSize}
+        allowDiskUse: true
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBoundedSort10Mil
       OperationName: RunCommand
       OperationCommand:
         aggregate: system.buckets.Collection0
