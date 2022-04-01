@@ -35,7 +35,7 @@ ActorTemplates:
         Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
-          Duration: 1 minutes
+          Duration: 3 minutes
           CollectionCount: *NumColls
           Operations:
           - OperationName: insertOne
@@ -54,7 +54,7 @@ ActorTemplates:
         Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
-          Duration: 1 minutes
+          Duration: 3 minutes
           CollectionCount: *NumColls
           Operations:
           - OperationName: find
