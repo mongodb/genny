@@ -21,3 +21,4 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
+      - replica-all-feature-flags
