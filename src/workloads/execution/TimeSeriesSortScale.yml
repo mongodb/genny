@@ -99,7 +99,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -193,7 +192,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: &numDocs 5e5
+    DocumentCount: &numDocs 1e6
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2000-01-01", step: 400}}
@@ -406,7 +405,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: &numQueryRuns 10
+  - Repeat: &numQueryRuns 50
     Database: *db
     Operations:
     - OperationMetricsName: SortQuerySpillBlockingSort1M
