@@ -193,7 +193,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: &numDocs 5e5
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2000-01-01", step: 400}}
@@ -207,7 +207,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2001-01-01", step: 400}}
@@ -221,7 +221,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2002-01-01", step: 400}}
@@ -235,7 +235,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2003-01-01", step: 400}}
@@ -249,7 +249,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2004-01-01", step: 400}}
@@ -263,7 +263,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2005-01-01", step: 400}}
@@ -277,7 +277,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2006-01-01", step: 400}}
@@ -291,7 +291,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2007-01-01", step: 400}}
@@ -305,7 +305,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2008-01-01", step: 400}}
@@ -319,7 +319,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2009-01-01", step: 400}}
@@ -333,7 +333,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2010-01-01", step: 400}}
@@ -347,7 +347,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2011-01-01", step: 400}}
@@ -361,7 +361,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2012-01-01", step: 400}}
@@ -375,7 +375,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2013-01-01", step: 400}}
@@ -389,7 +389,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e6
+    DocumentCount: *numDocs
     BatchSize: *batchSize
     Document:
       t: {^IncDate: {start: "2014-01-01", step: 400}}
@@ -406,7 +406,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: &numQueryRuns 1
+  - Repeat: &numQueryRuns 10
     Database: *db
     Operations:
     - OperationMetricsName: SortQuerySpillBlockingSort1M
