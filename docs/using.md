@@ -53,34 +53,40 @@ For build instructions, see the installation guide [here](setup.md).
 
 To try launching Genny, navigate to the root of the Genny repo and run the following: 
 
-    ./run-genny workload src/workloads/docs/HelloWorld.yml
+```bash
+./run-genny workload src/workloads/docs/HelloWorld.yml
+```
 	
 You should see output similar to the following:
 
-	[curator] 2022/03/24 10:44:11 [p=info]: starting poplar gRPC service at 'localhost:2288'
-	[2022-03-24 10:44:12.376776] [0x000070000af63000] [info]    Hello Phase 0 🐳
-	[2022-03-24 10:44:12.376810] [0x000070000aee0000] [info]    Hello Phase 0 🐳
-	[2022-03-24 10:44:12.376823] [0x000070000af63000] [info]    Counter: 1
-	[2022-03-24 10:44:12.376833] [0x000070000aee0000] [info]    Counter: 2
-	[2022-03-24 10:44:12.376859] [0x000070000af63000] [info]    Hello Phase 0 🐳
-	[2022-03-24 10:44:12.376872] [0x000070000aee0000] [info]    Hello Phase 0 🐳
-	[2022-03-24 10:44:12.376877] [0x000070000af63000] [info]    Counter: 3
-	[2022-03-24 10:44:12.376888] [0x000070000aee0000] [info]    Counter: 4
-	[2022-03-24 10:44:12.376903] [0x000070000af63000] [info]    Hello Phase 0 🐳
-	.... (more lines of output) ....
-	[2022-03-24 10:44:56.942097] [0x0000700010152000] [info]    Hello Phase 2
-	[2022-03-24 10:44:56.942104] [0x00007000100cf000] [info]    Hello Phase 2
-	[2022-03-24 10:44:56.942112] [0x0000700010152000] [info]    Counter: 3369
-	[2022-03-24 10:44:56.942119] [0x00007000100cf000] [info]    Counter: 3370
-	[curator] 2022/03/24 10:44:58 [p=info]: poplar rpc service terminated
+```bash
+[curator] 2022/03/24 10:44:11 [p=info]: starting poplar gRPC service at 'localhost:2288'
+[2022-03-24 10:44:12.376776] [0x000070000af63000] [info]    Hello Phase 0 🐳
+[2022-03-24 10:44:12.376810] [0x000070000aee0000] [info]    Hello Phase 0 🐳
+[2022-03-24 10:44:12.376823] [0x000070000af63000] [info]    Counter: 1
+[2022-03-24 10:44:12.376833] [0x000070000aee0000] [info]    Counter: 2
+[2022-03-24 10:44:12.376859] [0x000070000af63000] [info]    Hello Phase 0 🐳
+[2022-03-24 10:44:12.376872] [0x000070000aee0000] [info]    Hello Phase 0 🐳
+[2022-03-24 10:44:12.376877] [0x000070000af63000] [info]    Counter: 3
+[2022-03-24 10:44:12.376888] [0x000070000aee0000] [info]    Counter: 4
+[2022-03-24 10:44:12.376903] [0x000070000af63000] [info]    Hello Phase 0 🐳
+.... (more lines of output) ....
+[2022-03-24 10:44:56.942097] [0x0000700010152000] [info]    Hello Phase 2
+[2022-03-24 10:44:56.942104] [0x00007000100cf000] [info]    Hello Phase 2
+[2022-03-24 10:44:56.942112] [0x0000700010152000] [info]    Counter: 3369
+[2022-03-24 10:44:56.942119] [0x00007000100cf000] [info]    Counter: 3370
+[curator] 2022/03/24 10:44:58 [p=info]: poplar rpc service terminated
+```
 
 
 Note that the above test workload does not connect to a remote server, while most do. For more details, see [What is the System Under Test?](#orgc7904ae)
 
 Whenever you have questions about the Genny CLI, you can always use the `-h` option for the top-level Genny CLI or any subcommands:
 
-    ./run-genny -h # See all subcommands
-    ./run-genny workload -h # See args and options for the workload subcommand
+```bash
+./run-genny -h # See all subcommands
+./run-genny workload -h # See args and options for the workload subcommand
+```
 
 
 <a id="org1140a6b"></a>
@@ -361,7 +367,7 @@ Actors:
 Workloads can be run with the following Genny command:
 
 ```bash
-./run-genny workload <path_to_workload>
+./run-genny workload [path_to_workload]
 ```
 
 If your workload requires a MongoDB connection (most do), then you can pass it in with `-u`. See [Connecting to the Server](#orgd6b0450) for more details.
@@ -399,8 +405,8 @@ If you are running Genny through DSI in Evergreen, the FTDC contents are rolled 
 1.  Create a yaml file in `./src/workloads` in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in `./src/phases` (and for more details about what that means, see [here](#org2078b23)). Consider whether existing Actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [here](#org7e6c6bd).
     
 ```bash
-vim src/workloads/<workload_dir>/<workload_name.yml>
-vim src/phases/<phase_dir>/<phases_name.yml> # Only necessary if creating external configuration
+vim src/workloads/[workload_dir]/[workload_name.yml]
+vim src/phases/[phase_dir]/[phases_name.yml] # Only necessary if creating external configuration
 ./run-genny create-new-actor  # Only necessary if creating a new Actor
 ```
 
@@ -523,9 +529,9 @@ This is a more complex example of AutoRun. Here's a more simple one representing
 
 ```yaml
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq: standalone
+- When:
+    mongodb_setup:
+      $eq: standalone
 ```
 
 Let's say this is `DemoWorkload` again. In this case, if `mongodb_setup` is `standalone`
@@ -809,7 +815,7 @@ For more information, see [Defaults and Overrides](#org22b7a0f).
 Creating new Actors is a common and encouraged workflow in Genny. To create one, run the following:
 
 ```bash
-    ./run-genny create-new-actor
+./run-genny create-new-actor
 ```
 
 This will create new Actor .cpp and .h files, an example workload yaml, as well as Actor integration tests, all with inline comments guiding you through the Actor creation process. You might want to take a look at [Developing Genny](./developing.md) and the [Contribution Guidelines](../CONTRIBUTING.md).
