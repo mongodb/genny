@@ -19,7 +19,7 @@
     2.  [AutoRun](#org2b04b49)
         1.  [What is AutoRun?](#orgd0067d1)
         2.  [Configuring AutoRun](#orgbfb0d8e)
-    3.  [Generators](#orgd89f221)
+    3.  [Value Generators](#orgd89f221)
     4.  [Preprocessor](#org2078b23)
         1.  [LoadConfig](#orga6d35c7)
         2.  [ActorTemplate](#orga45b1d8)
@@ -147,8 +147,8 @@ Here is an example of a simple Genny workload config (from the Getting Started s
 SchemaVersion: 2018-07-01
 Owner: "@10gen/dev-prod-tips"
 Description: |
-	This is an introductory workload that shows how to write a workload in Genny.
-	This workload writes a few messages to the screen.
+  This is an introductory workload that shows how to write a workload in Genny.
+  This workload writes a few messages to the screen.
 
 Keywords:
 - docs
@@ -219,7 +219,7 @@ Actors:
 
 This example has an additional `InsertRemove` Actor with 100 threads, where each thread inserts and removes a document as fast as possible. A user observing the database contents might notice a document appearing and disappearing rapidly. This Actor will output `InsertRemoveExample.Insert.ftdc` and `InsertRemoveExample.Remove.ftdc` time series outputs, showing the insertions and removals happening for 10 milliseconds at the phase start. (See [here](#orgec88ad4) for more details on outputs.)
 
-Note that even though the Actors are listed sequentially, all Actors are concurrent.
+Note that even though the Actors are listed sequentially, all Actors are concurrent. [Example](../src/workloads/HelloWorld-MultiplePhases.yml).
 
 Actor configurations expect the following keys:
 
@@ -418,7 +418,7 @@ vim src/phases/[phase_dir]/[phases_name.yml] # Only necessary if creating extern
 	./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
     ```
 		
-    Note the current [issue](#orgb084b49) running resmoke-test.
+    Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
 
 3.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
     
@@ -495,7 +495,7 @@ Both of the above tasks will have a dependency on `schedule_global_auto_tasks`, 
 
 The `schedule_variant_auto_tasks` task automatically runs workloads based on the evergreen environment
 (variables from `bootstrap.yml` and `runtime.yml` in DSI) and an optional AutoRun
-section in any workload. The AutoRun section is a list of <When/ThenRun> blocks,
+section in any workload. The AutoRun section is a list of `When`/`ThenRun` blocks,
 where if the When condition is met, tasks are scheduled with additional bootstrap
 values from ThenRun. For example,
 suppose we have a `test_workload.yml` file in a `workloads/*/` subdirectory,
@@ -539,33 +539,32 @@ we schedule `demo_workload` with no additional params.
 
 A few notes on the syntax:
 
--   Supports multiple When/ThenRun blocks per AutoRun. Each are evaluated independently.
--   When blocks can evaluate multiple conditions. All conditions must be true to schedule the task.
--   When supports $eq and $neq. Both can accept either a scalar or list of values.
--   For a list of values, $eq evaluates to true if it is equal to at least one.
--   For a list of values, $neq evaluates to true if it is equal to none of the values.
--   ThenRun blocks are optional.
+-   Supports multiple `When`/`ThenRun` blocks per `AutoRun`. Each are evaluated independently.
+-   `When` blocks can evaluate multiple conditions. All conditions must be true to schedule the task.
+-   `When` supports `$eq` and `$neq`. Both can accept either a scalar or list of values.
+-   For a list of values, `$eq` evaluates to true if it is equal to at least one.
+-   For a list of values, `$neq` evaluates to true if it is equal to none of the values.
+-   `ThenRun` blocks are optional.
     -   ****Most usecases do not need to use ThenRun****
-    -   If you do use ThenRun, please be judicious. If you have a task that is scheduled when
-        mongodb<sub>setup</sub> == replica, it would be confusing if mongodb<sub>setup</sub> was overwritten to standalone.
-        But it would be ok to overwrite mongodb<sub>setup</sub> to replica-delay-mixed, as is done in the
-        [ParallelWorkload][pi] workload.
--   Each item in the ThenRun list can only support one {bootstrap<sub>key</sub>: bootstrap<sub>value</sub>} pair.
--   If using ThenRun but you would also like to schedule a task without any bootstrap overrides,
-    Add an extra pair to ThenRun with the original key/value, like done on line 189 [here][pi].
--   If using ThenRun, the new task name becomes <taskname>\_<bootstrap-value>. In the ParallelWorkload example,
-    the task name becomes parallel<sub>insert</sub><sub>replica</sub><sub>delay</sub><sub>mixed</sub> (name is automatically converted to snake<sub>case</sub>).
-    The bootstrap-key is not included in the name for the purpose of not changing existing names and
+    -   If you do use `ThenRun`, please be judicious. If you have a task that is scheduled when
+        `mongodb_setup` == `replica`, it would be confusing if `mongodb_setup` was overwritten to `standalone`.
+        But it would be ok to overwrite `mongodb_setup` to `replica-delay-mixed`.
+-   Each item in the `ThenRun` list can only support one `{bootstrap_key: bootstrap_value}` pair.
+-   If using `ThenRun` but you would also like to schedule a task without any bootstrap overrides,
+    Add an extra pair to `ThenRun` with the original key/value.
+-   If using `ThenRun`, the new task name becomes `<taskname>_<bootstrap-value>`. In the `ParallelWorkload` example,
+    the task name becomes `parallel_insert_replica_delay_mixed` (name is automatically converted to snake_case).
+    The `bootstrap-key` is not included in the name for the purpose of not changing existing names and
     thus deleting history. This may change after PM-2310.
 
 
 <a id="orgd89f221"></a>
 
-## Generators
+## Value Generators
 
-It is often necessary to use Genny to operate with large amounts of data which would be impractical to hardcode. Genny uses generators for this. A generator is a piece of code that generates pseudorandom values every time it is invoked, and which can be configured from the workload yaml. Notably, generators use a hardcoded seed, which is always automatically reused by default, so repeated Genny executions should be deterministic with respect to generated values. A user wanting to vary the generated docs can vary the seed. See [./src/workloads/docs/GeneratorsSeeded.yml](../src/workloads/docs/GeneratorsSeeded.yml) for an example.
+It is often necessary to use Genny to operate with large amounts of data which would be impractical to hardcode. Genny uses value generators for this. A value generator is a piece of code that generates pseudorandom values every time it is invoked, and which can be configured from the workload yaml. Notably, value generators use a hardcoded seed, which is always automatically reused by default, so repeated Genny executions should be deterministic with respect to generated values. A user wanting to vary the generated docs can vary the seed. See [./src/workloads/docs/GeneratorsSeeded.yml](../src/workloads/docs/GeneratorsSeeded.yml) for an example.
 
-Generators are not a builtin feature of Genny, but must be integrated by each Actor for the configuration values that accept them. For examples of using generators, see [./src/workloads/docs/Generators.yml](../src/workloads/docs/Generators.yml). To integrate generators into an Actor, use the [DocumentGenerator](../src/value_generators/include/value_generators/DocumentGenerator.hpp) with the yaml node you intend to generate documents from. (And see [here](#org7e6c6bd) for more details on creating an Actor in the first place.)
+Value generators are not a builtin feature of Genny, but must be integrated by each Actor for the configuration values that accept them. For examples of using value generators, see [./src/workloads/docs/Generators.yml](../src/workloads/docs/Generators.yml). To integrate generators into an Actor, use the [DocumentGenerator](../src/value_generators/include/value_generators/DocumentGenerator.hpp) with the yaml node you intend to generate documents from. (And see [here](#org7e6c6bd) for more details on creating an Actor in the first place.)
 
 
 <a id="org2078b23"></a>
@@ -578,7 +577,7 @@ For convenience when developing workloads, Genny offers a preprocessing syntax t
 ./run-genny evaluate src/workloads/[workload_dir/workload_name.yml]
 ```
 	
-This command helps find yaml-based mistakes.
+This command helps find yaml-based mistakes. Note that we don't do schema-checking for this yaml.
 
 
 <a id="orga6d35c7"></a>
@@ -607,7 +606,7 @@ Also consider the following file located at `./src/phases/HelloWorld/ExamplePhas
 ```yaml
 SchemaVersion: 2018-07-01
 Description: |
-	Example phase to illustrate how PhaseConfig composition works.
+  Example phase to illustrate how PhaseConfig composition works.
 
 UseMe:
   Message: Hello Phase 2
