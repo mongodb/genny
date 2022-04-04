@@ -6,34 +6,137 @@ Description: |
 
 GlobalDefaults:
   dbname: &db test
+  coll: &coll Collection0
+  bucketsColl: &bucketsColl system.buckets.Collection0
   batchSize: &batchSize 30000
   fieldName: &field "numeric"
   index: &index
     keys: {numeric: 1}
   nop: &Nop {Nop: true}
 
+BlockingSortCmd: &BlockingSortCmd
+  LoadConfig:
+    Path: "../../phases/execution/TimeSeriesSortOverlappingBucketsCommands.yml"
+    Key: BlockingSortCmdTemplate
+    Parameters:
+      coll: *coll
+      batchSize: *batchSize
+
+BoundedSortCmd: &BoundedSortCmd
+  LoadConfig:
+    Path: "../../phases/execution/TimeSeriesSortOverlappingBucketsCommands.yml"
+    Key: BoundedSortCmdTemplate
+    Parameters:
+      coll: *bucketsColl
+      batchSize: *batchSize
+
 Actors:
 - Name: CreateTimeSeriesCollection
   Type: RunCommand
   Threads: 1
   Phases:
-  - Repeat: 1
+  - &CreateCollection
+    Repeat: 1
     Database: *db
     Operation:
       OperationMetricsName: CreateTimeSeriesCollection
       OperationName: RunCommand
       OperationCommand:
-        {create: &coll Collection0, timeseries: {timeField: "t", metaField: "m"}}
+        {create: *coll, timeseries: {timeField: "t", metaField: "m"}}
   - *Nop
   - *Nop
   - *Nop
   - *Nop
   - *Nop
+  - &DropCollection
+    Repeat: 1
+    Database: test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *coll
+
+  - *CreateCollection
   - *Nop
   - *Nop
   - *Nop
   - *Nop
   - *Nop
+  - *DropCollection
+
+  - *CreateCollection
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *DropCollection
+
+  - *CreateCollection
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *DropCollection
+
+  - *CreateCollection
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *DropCollection
+
+  - *CreateCollection
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *DropCollection
+
+  - *CreateCollection
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *DropCollection
+
+  - *CreateCollection
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *DropCollection
+
+  - *CreateCollection
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *DropCollection
+
+  - *CreateCollection
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *DropCollection
+
+  # - Phase: 0..3
+  #   Nop: true
+
+  # Phases:
+  #   OnlyActiveInPhases:
+  #     Active: [0, 2, 4, 6, 8, 10, 12, 14, 16]
+  #     NopInPhasesUpTo: *MaxPhases
+  #     PhaseConfig:
+  #       Repeat: 1
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -42,14 +145,82 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 1
+  - Repeat: 1 # Quiesce
   - *Nop
-  - Repeat: 1
+  - Repeat: 1 # Quiesce
   - *Nop
   - *Nop
-  - Repeat: 1
+
   - *Nop
-  - Repeat: 1
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
+  - Repeat: 1 # Quiesce
+  - *Nop
   - *Nop
 
 - Name: InsertData
@@ -73,18 +244,156 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+
+  - *Nop
   - Repeat: 1
     Database: *db
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 10005000 # insert 10000 more overlapping buckets
+    DocumentCount: 2010000 # insert 2000 overlapping buckets
     BatchSize: *batchSize
     Document:
-      # t repeats each date 10000 times [d1 d1 d1 d1... d2 d2 d2 d2 ...]
+      t: {^Repeat: {count: 2000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
+      m: {^Cycle: {ofLength: 2000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 3015000
+    BatchSize: *batchSize
+    Document:
+      t: {^Repeat: {count: 3000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
+      m: {^Cycle: {ofLength: 3000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 4020000
+    BatchSize: *batchSize
+    Document:
+      t: {^Repeat: {count: 4000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
+      m: {^Cycle: {ofLength: 4000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 5025000
+    BatchSize: *batchSize
+    Document:
+      t: {^Repeat: {count: 5000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
+      m: {^Cycle: {ofLength: 5000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 6030000
+    BatchSize: *batchSize
+    Document:
+      t: {^Repeat: {count: 6000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
+      m: {^Cycle: {ofLength: 6000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 7035000
+    BatchSize: *batchSize
+    Document:
+      t: {^Repeat: {count: 7000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
+      m: {^Cycle: {ofLength: 7000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 8040000
+    BatchSize: *batchSize
+    Document:
+      t: {^Repeat: {count: 8000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
+      m: {^Cycle: {ofLength: 8000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 9045000
+    BatchSize: *batchSize
+    Document:
+      t: {^Repeat: {count: 9000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
+      m: {^Cycle: {ofLength: 9000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10050000
+    BatchSize: *batchSize
+    Document:
       t: {^Repeat: {count: 10000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
-      # m cycles through the meta values [0 1 2 ... 9999 0 1 2 ... 9999 0 1 2 ...]
       m: {^Cycle: {ofLength: 10000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -102,37 +411,161 @@ Actors:
     Operations:
     - OperationMetricsName: SortQuerySpillBlockingSort1Mil
       OperationName: RunCommand
-      OperationCommand:
-        aggregate: *coll
-        pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+      OperationCommand: *BlockingSortCmd
   - *Nop
   - Repeat: *numQueryRuns
     Database: *db
     Operations:
     - OperationMetricsName: SortQuerySpillBoundedSort1Mil
       OperationName: RunCommand
-      OperationCommand:
-        aggregate: system.buckets.Collection0
-        pipeline: [
-          {$_internalUnpackBucket: {
-            exclude: [],
-            timeField: "t",
-            metaField: "m",
-            bucketMaxSpanSeconds: 3600,
-            assumeNoMixedSchemaData: true
-          }},
-          {$_internalBoundedSort: {
-            sortKey: {t: 1},
-            bound: {base: "min"},
-          }},
-          {$_internalInhibitOptimization: {}},
-          {$skip: 1e10}
-        ]
-        cursor: {batchSize: *batchSize}
-        hint: {$natural: 1}
-        allowDiskUse: true
+      OperationCommand: *BoundedSortCmd
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort2Mil
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBoundedSort2Mil
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort3Mil
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBoundedSort3Mil
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort4Mil
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBoundedSort4Mil
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort5Mil
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBoundedSort5Mil
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort6Mil
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBoundedSort6Mil
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort7Mil
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBoundedSort7Mil
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort8Mil
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBoundedSort8Mil
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort9Mil
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBoundedSort9Mil
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+  - *Nop
+
+  - *Nop
   - *Nop
   - *Nop
   - Repeat: *numQueryRuns
@@ -140,37 +573,16 @@ Actors:
     Operations:
     - OperationMetricsName: SortQuerySpillBlockingSort10Mil
       OperationName: RunCommand
-      OperationCommand:
-        aggregate: *coll
-        pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+      OperationCommand: *BlockingSortCmd
   - *Nop
   - Repeat: *numQueryRuns
     Database: *db
     Operations:
     - OperationMetricsName: SortQuerySpillBoundedSort10Mil
       OperationName: RunCommand
-      OperationCommand:
-        aggregate: system.buckets.Collection0
-        pipeline: [
-          {$_internalUnpackBucket: {
-            exclude: [],
-            timeField: "t",
-            metaField: "m",
-            bucketMaxSpanSeconds: 3600,
-            assumeNoMixedSchemaData: true
-          }},
-          {$_internalBoundedSort: {
-            sortKey: {t: 1},
-            bound: {base: "min"},
-          }},
-          {$_internalInhibitOptimization: {}},
-          {$skip: 1e10}
-        ]
-        cursor: {batchSize: *batchSize}
-        hint: {$natural: 1}
-        allowDiskUse: true
+      OperationCommand: *BoundedSortCmd
+  - *Nop
+
 
 AutoRun:
 - When:
