@@ -9,7 +9,7 @@
     3.  [What is the system under test?](#orgc7904ae)
     4.  [What is a workload?](#org3610c67)
         1.  [How are workloads configured?](#orgdecc7ae)
-        2.  [What is an actor?](#org51d4d33)
+        2.  [What is an Actor?](#org51d4d33)
         3.  [What is a phase?](#orgb655d69)
         4.  [How do I run a workload?](#org32b8ad3)
     5.  [Outputs](#orgec88ad4)
@@ -33,7 +33,7 @@
 5.  [Pitfalls](#org3aaae9e)
     1.  [pipe creation failed (24): Too many open files](#orga7ab911)
     2.  [Actor integration tests fail locally](#orgb084b49)
-    3.  [The Loader agent requires thread count set on both actor and phase level](#org97681a9)
+    3.  [The Loader agent requires thread count set on both Actor and phase level](#org97681a9)
 
 
 <a id="orgf1f92f6"></a>
@@ -105,7 +105,7 @@ At MongoDB, we've historically used [benchrun-based](https://github.com/10gen/wo
 
 - A standardized [interface](#org3610c67) for workload authoring in yaml.
 - A [phase mechanism](#orgb655d69) for organizing workload execution.
-- More reusability via yaml-configurable [actors](#org51d4d33) with a consistent C++ [authoring mechanism](#org7e6c6bd).
+- More reusability via yaml-configurable [Actors](#org51d4d33) with a consistent C++ [authoring mechanism](#org7e6c6bd).
 - High-fidelity intrarun [time series outputs](#orgec88ad4).
 - Lack of dependency on the legacy mongo shell.
 
@@ -115,7 +115,7 @@ For the above reasons, we encourage users to write new workloads in Genny.
 
 ## What is the system under test?
 
-Genny usually expects to be given a connection string to a system under test. While there's nothing preventing a user from writing a "workload" that spawns the system under test, there is not first-class support for such behavior. Genny is explicitly <span class="underline">not</span> a test orchestrator. For test orchestration needs, consider using [DSI](https://github.com/10gen/dsi/).
+Genny usually expects to be given a connection string to a system under test. While there's nothing preventing a user from writing a "workload" that spawns the system under test, there is not first-class support for such behavior. Genny is explicitly _not_ a test orchestrator. For test orchestration needs, consider using [DSI](https://github.com/10gen/dsi/).
 
 By default, Genny will try to connect to a MongoDB server at `localhost:27017`. To pass a MongoDB connection string to Genny, use the `-u` option:
 
@@ -128,7 +128,7 @@ For more details on how Genny handles connections, see [Connecting to the Server
 
 ## What is a workload?
 
-A **workload** is a repeatable procedure that Genny uses to generate load against a system under test. Genny workloads are written in yaml configs that describe how **actors** move through **phases**. This section describes each of these.
+A **workload** is a repeatable procedure that Genny uses to generate load against a system under test. Genny workloads are written in yaml configs that describe how **Actors** move through **phases**. This section describes each of these.
 
 
 <a id="orgdecc7ae"></a>
@@ -137,197 +137,213 @@ A **workload** is a repeatable procedure that Genny uses to generate load agains
 
 Here is an example of a simple Genny workload config (from the Getting Started section above):
 
-    SchemaVersion: 2018-07-01
-    Owner: "@10gen/dev-prod-tips"
-    Description: |
-      This is an introductory workload that shows how to write a workload in Genny.
-      This workload writes a few messages to the screen.
-    
-    Keywords:
-    - docs
-    - HelloWorld
-    
-    Actors:
-    - Name: HelloWorldExample
-      Type: HelloWorld
-      Threads: 2
-      Phases:
-      - Message: Hello Phase 0 🐳
-        Duration: 50 milliseconds
-      - Message: Hello Phase 1 👬
-        Repeat: 100
+```yaml
+SchemaVersion: 2018-07-01
+Owner: "@10gen/dev-prod-tips"
+Description: |
+	This is an introductory workload that shows how to write a workload in Genny.
+	This workload writes a few messages to the screen.
+
+Keywords:
+- docs
+- HelloWorld
+
+Actors:
+- Name: HelloWorldExample
+	Type: HelloWorld
+	Threads: 2
+	Phases:
+	- Message: Hello Phase 0 🐳
+	  Duration: 50 milliseconds
+	- Message: Hello Phase 1 👬
+	  Repeat: 100
+```
 
 Everything under the `Actor` key (where the magic happens) will be explained in the next section. First let's look at the other **required** keys:
 
 -   `SchemaVersion` - This is a basic versioning system used for Genny workload syntax. For the moment, any new workloads should have the value `2018-07-01` for this key.
 -   `Owner` - This should have an identifier for the team that owns the workload, ideally an @-mentionable GitHub team.
 -   `Description` - This should contain a written description of the workload. It's recommended to go into as much detail as possible, since understanding the performance issue behind why a workload was written can be difficult months or years later.
--   `Keywords` - These should be searchable keywords associated with your workload. Include keywords for actors used, operations performed, qualities of the system under test that are expected, etc.
+-   `Keywords` - These should be searchable keywords associated with your workload. Include keywords for Actors used, operations performed, qualities of the system under test that are expected, etc.
 
 Workload configurations can be found in [./src/workloads](../src/workloads) from the Genny repo root. Organization of this directory is arbitrary as far as Genny is concerned, though example workloads should be in the `docs` subdir.
 
 
 <a id="org51d4d33"></a>
 
-### What is an actor?
+### What is an Actor?
 
-Genny uses an actor-based model for its workload generation. When execution begins, Genny spawns all configured actors in their own threads. Each actor can behave independently, be configured separately, and even has its own source code. Actors generally have a core loop that performs work against the system under test, and this loop can be repeated many times.
+Genny uses an Actor-based model for its workload generation. When execution begins, Genny spawns all configured Actors in their own threads. Each Actor can behave independently, be configured separately, and even has its own source code. Actors generally have a core loop that performs work against the system under test, and this loop can be repeated many times.
 
-In the example above, the following is the actor configuration:
+In the example above, the following is the Actor configuration:
 
-    Actors:
-    - Name: HelloWorldExample
-      Type: HelloWorld
-      Threads: 2
-      Phases:
-      - Message: Hello Phase 0 🐳
-        Duration: 50 milliseconds
-      - Message: Hello Phase 1 👬
-        Repeat: 100
+```yaml
+Actors:
+- Name: HelloWorldExample
+	Type: HelloWorld
+	Threads: 2
+	Phases:
+	- Message: Hello Phase 0 🐳
+	  Duration: 50 milliseconds
+	- Message: Hello Phase 1 👬
+	  Repeat: 100
+```
 
-In this example, there is a single `HelloWorld` actor allocated two threads. This actor moves through a series of phases, printing a message in each. Phases are described further in the next section. Each thread contains a complete "instance" of the actor, configured identically. We could add more actors like so:
+In this example, there is a single `HelloWorld` Actor allocated two threads. This Actor moves through a series of phases, printing a message in each. Phases are described further in the next section. Each thread contains a complete "instance" of the Actor, configured identically. We could add more Actors like so:
 
-    Actors:
-    - Name: HelloWorldExample
-      Type: HelloWorld
-      Threads: 2
-      Phases:
-      - Message: Hello Phase 0 🐳
-        Duration: 50 milliseconds
-      - Message: Hello Phase 1 👬
-        Repeat: 100
-    - Name: InsertRemoveExample
-      Type: InsertRemove
-      Threads: 100
-      Phases:
-      - Collection: inserts
-		Database: test
-	    Duration: 10 milliseconds
-      - Nop: true
+```
+Actors:
+- Name: HelloWorldExample
+	Type: HelloWorld
+	Threads: 2
+	Phases:
+	- Message: Hello Phase 0 🐳
+	Duration: 50 milliseconds
+	- Message: Hello Phase 1 👬
+	Repeat: 100
+- Name: InsertRemoveExample
+	Type: InsertRemove
+	Threads: 100
+	Phases:
+	- Collection: inserts
+	Database: test
+	Duration: 10 milliseconds
+	- Nop: true
+```
 
-This example has an additional `InsertRemove` actor with 100 threads, where each thread inserts and removes a document as fast as possible. A user observing the database contents might notice a document appearing and disappearing rapidly. This actor will output `InsertRemoveExample.Insert.ftdc` and `InsertRemoveExample.Remove.ftdc` time series outputs, showing the insertions and removals happening for 10 milliseconds at the phase start. (See [here](#orgec88ad4) for more details on outputs.)
+This example has an additional `InsertRemove` Actor with 100 threads, where each thread inserts and removes a document as fast as possible. A user observing the database contents might notice a document appearing and disappearing rapidly. This Actor will output `InsertRemoveExample.Insert.ftdc` and `InsertRemoveExample.Remove.ftdc` time series outputs, showing the insertions and removals happening for 10 milliseconds at the phase start. (See [here](#orgec88ad4) for more details on outputs.)
 
-Note that even though the actors are listed sequentially, all actors are concurrent.
+Note that even though the Actors are listed sequentially, all Actors are concurrent.
 
 Actor configurations expect the following keys:
 
--   `Name` - The human-understandable name of this particular actor configuration. This should be unique throughout the workload.
--   `Type` - The kind of actor to create. This determines the actor's behavior and possible configuration options.
--   `Threads` - How many threads to allocate for this actor.
+-   `Name` - The human-understandable name of this particular Actor configuration. This should be unique throughout the workload.
+-   `Type` - The kind of Actor to create. This determines the Actor's behavior and possible configuration options.
+-   `Threads` - How many threads to allocate for this Actor.
 -   `Phases` - A list of phase configurations (described in next section).
 
-In addition to the universal fields above, individual actors may have their own configuration keys, such as the `Message` key of the `HelloWorld` actor, used to determine what message is printed.
+In addition to the universal fields above, individual Actors may have their own configuration keys, such as the `Message` key of the `HelloWorld` Actor, used to determine what message is printed.
 
-Some tips for configuring actors:
+Some tips for configuring Actors:
 
 - If your configurations grow complex, consider splitting phases out to a new file. See [here](#org2078b23).
 - If you have many threads, make sure you increase the client pool size. If the pool grows large, consider having several. [See here](#orgd6b0450).
-- Make sure each actor has a globally unique name.
-- Consider whether your actor will have "lingering" effects after a phase transition. If it does, and if that's not desireable for this workload, consider using the Quiesce actor.
+- Make sure each Actor has a globally unique name.
+- Consider whether your Actor will have "lingering" effects after a phase transition. If it does, and if that's not desireable for this workload, consider using the Quiesce Actor.
 
-Actors are written in C++, and creating new actors or extending existing ones is a common and encouraged workflow when using Genny. These actors are owned by their authors. For more details, see [Creating an Actor](#org7e6c6bd).
+Actors are written in C++, and creating new Actors or extending existing ones is a common and encouraged workflow when using Genny. These Actors are owned by their authors. For more details, see [Creating an Actor](#org7e6c6bd).
 
 
 <a id="orgb655d69"></a>
 
 ### What is a phase?
 
-Genny workloads and actors proceed in a sequence of phases, configured inside actors. In the running example, our `HelloWorld` actor is configured with two phases:
+Genny workloads and Actors proceed in a sequence of phases, configured inside Actors. In the running example, our `HelloWorld` Actor is configured with two phases:
 
-    Actors:
-    - Name: HelloWorldExample
-      Type: HelloWorld
-      Threads: 2
-      Phases:
-      - Message: Hello Phase 0 🐳
-        Duration: 50 milliseconds
-      - Message: Hello Phase 1 👬
-        Repeat: 100
+```yaml
+Actors:
+- Name: HelloWorldExample
+	Type: HelloWorld
+	Threads: 2
+	Phases:
+	- Message: Hello Phase 0 🐳
+	  Duration: 50 milliseconds
+	- Message: Hello Phase 1 👬
+	  Repeat: 100
+```
 
-This actor will execute the first phase for 50 milleseconds. It will perform iterations of its main loop (printing "Hello Phase 0") as many times as it can for that duration. It will then move on to the second phase, where it will perform exactly 100 iterations of its main loop (printing "Hello Phase 1"), regardless of how long it takes. Then the workload will end.
+This Actor will execute the first phase for 50 milleseconds. It will perform iterations of its main loop (printing "Hello Phase 0") as many times as it can for that duration. It will then move on to the second phase, where it will perform exactly 100 iterations of its main loop (printing "Hello Phase 1"), regardless of how long it takes. Then the workload will end.
 
-Now consider a situation with two actors:
+Now consider a situation with two Actors:
 
-    Actors:
-    - Name: HelloWorldExample
-      Type: HelloWorld
-      Threads: 2
-      Phases:
-      - Message: Hello Phase 0 🐳
-        Duration: 50 milliseconds
-      - Message: Hello Phase 1 👬
-        Repeat: 100
-    - Name: HelloWorldSecondExample
-      Type: HelloWorld
-      Threads: 1
-      Phases:
-      - Message: Other Actor Phase 0
-        Duration: 10 milliseconds
-      - Message: Other Actor Phase 1
-        Duration: 10 milliseconds
+```yaml
+Actors:
+- Name: HelloWorldExample
+	Type: HelloWorld
+	Threads: 2
+	Phases:
+	- Message: Hello Phase 0 🐳
+	  Duration: 50 milliseconds
+	- Message: Hello Phase 1 👬
+	  Repeat: 100
+- Name: HelloWorldSecondExample
+	Type: HelloWorld
+	Threads: 1
+	Phases:
+	- Message: Other Actor Phase 0
+	  Duration: 10 milliseconds
+	- Message: Other Actor Phase 1
+	  Duration: 10 milliseconds
+```
 
-Here we have the `HelloWorldSecondExample` actor running for 10 milliseconds in each phase. However, the second phase will not begin after 10 milliseconds. It's important to note that phases are coordinated globally, and actors configured with either `Repeat` or `Duration` will hold the phase open. In this case, `HelloWorldSecondExample` will operate for 10 milliseconds during the first phase, sleep for 40 milliseconds for the rest of the phase, then after `HelloWorldExample` finishes holding the phase open, both actors will begin the next phase.
+Here we have the `HelloWorldSecondExample` Actor running for 10 milliseconds in each phase. However, the second phase will not begin after 10 milliseconds. It's important to note that phases are coordinated globally, and Actors configured with either `Repeat` or `Duration` will hold the phase open. In this case, `HelloWorldSecondExample` will operate for 10 milliseconds during the first phase, sleep for 40 milliseconds for the rest of the phase, then after `HelloWorldExample` finishes holding the phase open, both Actors will begin the next phase.
 
-Therefore, the logged output of this actor would show many lines of `Hello Phase 0` interspersed with `Other Actor Phase 0`, then a long period of _only_ lines showing `Hello Phase 0`, then the next phase would begin with many lines of `Other Actor Phase 1` intersperesed with exactly 100 lines saying `Hello Phase 1`.
+Therefore, the logged output of this Actor would show many lines of `Hello Phase 0` interspersed with `Other Actor Phase 0`, then a long period of _only_ lines showing `Hello Phase 0`, then the next phase would begin with many lines of `Other Actor Phase 1` intersperesed with exactly 100 lines saying `Hello Phase 1`.
 
 Phase configurations accept the following main keys:
 
 -   `Duration` - How long to operate in this phase while holding the phase open.
 -   `Repeat` - How many times to repeat the operation while holding the phase open.
--   `Blocking` - This key can be specified with the value `None` to cause the actor to run as a **background actor** for this phase. This actor will act as many times as possible during the phase without holding it open, then move on to the next phase when everyone else is ready.
--   `Nop` - This key can be set with the value `true` to cause the actor to nop for the duration of the phase.
+-   `Blocking` - This key can be specified with the value `None` to cause the Actor to run as a **background Actor** for this phase. This Actor will act as many times as possible during the phase without holding it open, then move on to the next phase when everyone else is ready.
+-   `Nop` - This key can be set with the value `true` to cause the Actor to nop for the duration of the phase.
 
 A couple of notes about the above:
 
 -   You can specify both `Repeat` and `Duration` for a phase. Whichever lasts longer wins.
--   It is undefined behavior if a given phase does not have some actor specifying `Repeat` or `Duration`.
+-   It is undefined behavior if a given phase does not have some Actor specifying `Repeat` or `Duration`.
 
 1.  Sleeping
 
-    In addition to the above keys, actors can also be configured to sleep during parts of phases. For example:
+    In addition to the above keys, Actors can also be configured to sleep during parts of phases. For example:
     
-        Actors:
-        - Name: HelloWorldExample
-          Type: HelloWorld
-          Threads: 2
-          Phases:
-          - SleepBefore: 10 milliseconds
-            Message: Hello Phase 0 🐳
-            Duration: 50 milliseconds
-            SleepAfter: 15 milliseconds
+```yaml
+Actors:
+- Name: HelloWorldExample
+	Type: HelloWorld
+	Threads: 2
+	Phases:
+	- SleepBefore: 10 milliseconds
+	  Message: Hello Phase 0 🐳
+	  Duration: 50 milliseconds
+	  SleepAfter: 15 milliseconds
+```
     
-    This will sleep for 10 milliseconds at the beginning of *every* actor iteration and for 15 milliseconds at the end of every iteration. This time is counted as part of the phase duration. Genny accepts the following sleep configurations:
+    This will sleep for 10 milliseconds at the beginning of *every* Actor iteration and for 15 milliseconds at the end of every iteration. This time is counted as part of the phase duration. Genny accepts the following sleep configurations:
     
     -   `SleepBefore` - duration to sleep at the beginning of each iteration
     -   `SleepAfter` - duration to sleep after each iteration
 
 2.  Rate Limiting
 
-    By default, actors will repeat their main loop as quickly as possible. Sometimes you want to restrict how quickly an actor works. This can be done using a rate limiter:
+    By default, Actors will repeat their main loop as quickly as possible. Sometimes you want to restrict how quickly an Actor works. This can be done using a rate limiter:
     
-        Actors:
-        - Name: HelloWorldExample
-          Type: HelloWorld
-          Threads: 100
-          Phases:
-          - Message: Hello Phase 0
-            GlobalRate: 5 per 10 milliseconds
-            Duration: 50 milliseconds
+```yaml
+Actors:
+- Name: HelloWorldExample
+	Type: HelloWorld
+	Threads: 100
+	Phases:
+	- Message: Hello Phase 0
+	  GlobalRate: 5 per 10 milliseconds
+	  Duration: 50 milliseconds
+```
     
-    Using the `GlobalRate` configuration, the above actor will only have 5 threads act every 10 milliseconds, despite having 100 threads that could reasonable act at once. If this workload's outputs were to be analyzed and the intrarun time series were graphed, the user would see only 5 operations occurring every 10 milliseconds. (See [here](#orgec88ad4) for more details about outputs.)
+    Using the `GlobalRate` configuration, the above Actor will only have 5 threads act every 10 milliseconds, despite having 100 threads that could reasonable act at once. If this workload's outputs were to be analyzed and the intrarun time series were graphed, the user would see only 5 operations occurring every 10 milliseconds. (See [here](#orgec88ad4) for more details about outputs.)
     
-    In addition to hard-coding how many threads act and when, you can configure Genny to rate-limit the actor at a percentage of the detected maximum rate:
+    In addition to hard-coding how many threads act and when, you can configure Genny to rate-limit the Actor at a percentage of the detected maximum rate:
     
-        Actors:
-        - Name: HelloWorldExample
-          Type: HelloWorld
-          Threads: 100
-          Phases:
-          - Message: Hello Phase 0
-            GlobalRate: 80%
-            Duration: 2 minutes
+```yaml
+Actors:
+- Name: HelloWorldExample
+	Type: HelloWorld
+	Threads: 100
+	Phases:
+	- Message: Hello Phase 0
+	  GlobalRate: 80%
+	  Duration: 2 minutes
+```
     
-    The above workload will run `HelloWorldExample` at maximum throughput for either 1 minutes or 3 iterations of the actor's loop, whichever is longer. Afterwards, Genny will use the estimated throughput from that time to limit the actor to 80% of the max throughput.
+    The above workload will run `HelloWorldExample` at maximum throughput for either 1 minutes or 3 iterations of the Actor's loop, whichever is longer. Afterwards, Genny will use the estimated throughput from that time to limit the Actor to 80% of the max throughput.
     
     Note that the rate limiter uses a [token bucket algorithm](https://en.wikipedia.org/wiki/Token_bucket). This means that bursty behavior is possible. For example, if we configure `GlobalRate: 5 per 10 milliseconds` then we will have 5 threads act all at once, followed by 9 or so milliseconds without any threads acting, then another burst of 5 threads acting, etc. We can smooth the rate by specifying a tighter yet equivalent rate limit: `GlobalRate: 1 per 2 milliseconds`.
     
@@ -344,7 +360,9 @@ A couple of notes about the above:
 
 Workloads can be run with the following Genny command:
 
-    ./run-genny workload <path_to_workload>
+```bash
+./run-genny workload <path_to_workload>
+```
 
 If your workload requires a MongoDB connection (most do), then you can pass it in with `-u`. See [Connecting to the Server](#orgd6b0450) for more details.
 
@@ -353,7 +371,7 @@ If your workload requires a MongoDB connection (most do), then you can pass it i
 
 ## Outputs
 
-Genny's primary output is time-series data. Every time an actor performs an operation, such as an insert, a removal, a runcommand, etc, the actor thread starts a timer. When the operation returns from the server, the operation is recorded as either a success or failure. The duration of the operation, as viewed from the client, is recorded with the operation completion time.
+Genny's primary output is time-series data. Every time an Actor performs an operation, such as an insert, a removal, a runcommand, etc, the Actor thread starts a timer. When the operation returns from the server, the operation is recorded as either a success or failure. The duration of the operation, as viewed from the client, is recorded with the operation completion time.
 
 Genny outputs to `./build/WorkloadOutput`. When running Genny for the first time, you should see two outputs in that directory:
 
@@ -365,7 +383,9 @@ If you run Genny and the `CedarMetrics` directory already exists, it will be mov
 You can use the `export` command that Genny provides to export outputted FTDC to CSV.
 For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
 
-    ./run-genny export build/WorkloadOutput/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
+```bash
+./run-genny export build/WorkloadOutput/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
+```
 
 You can also use the `translate` subcommand to convert results to a [t2-readable](https://github.com/10gen/t2/) format.
 
@@ -376,38 +396,48 @@ If you are running Genny through DSI in Evergreen, the FTDC contents are rolled 
 
 ## Workload Development
 
-1.  Create a yaml file in `./src/workloads` in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in `./src/phases` (and for more details about what that means, see [here](#org2078b23)). Consider whether existing actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [here](#org7e6c6bd).
+1.  Create a yaml file in `./src/workloads` in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in `./src/phases` (and for more details about what that means, see [here](#org2078b23)). Consider whether existing Actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [here](#org7e6c6bd).
     
-        vim src/workloads/<workload_dir>/<workload_name.yml>
-        vim src/phases/<phase_dir>/<phases_name.yml> # Only necessary if creating external configuration
-        ./run-genny create-new-actor  # Only necessary if creating a new actor
+```bash
+vim src/workloads/<workload_dir>/<workload_name.yml>
+vim src/phases/<phase_dir>/<phases_name.yml> # Only necessary if creating external configuration
+./run-genny create-new-actor  # Only necessary if creating a new Actor
+```
 
 2.  Run the self-tests:
     
-        ./run-genny lint-yaml  # Lint all YAML files
-        ./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
-        ./run-genny resmoke-test  # Run actor integration tests - only necessary if adding/editing actors
+    ```bash
+	./run-genny lint-yaml  # Lint all YAML files
+	./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
+	./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
+    ```
 		
     Note the current [issue](#orgb084b49) running resmoke-test.
 
 3.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
     
-        ./run-genny workload -u <connection_uri> src/workloads/<workload_dir/workload_name.yml>
+    ```bash
+    ./run-genny workload -u <connection_uri> src/workloads/<workload_dir/workload_name.yml>
+    ```
 
 4.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](./run-dsi onboarding  # introductory DSI command; see link above for details) for details:
     
-        ./run-dsi onboarding  # introductory DSI command; see link above for details
-        cd WORK
-        rm -rf src/genny
-        ln -s ~/<path_to_genny>/genny src
-        vim bootstrap.yml
+	```bash
+	./run-dsi onboarding  # introductory DSI command; see link above for details
+	cd WORK
+	rm -rf src/genny
+	ln -s ~/<path_to_genny>/genny src
+	vim bootstrap.yml
+	```
 
 5.  Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
     
-        cd ~/<path_to_evg_project_repo>
-        evergreen patch -p <evg_project>
-        cd ~/<path_to_genny>/genny
-        evergreen patch-set-module -i <patch_id_number> genny
+	```bash
+	cd ~/<path_to_evg_project_repo>
+	evergreen patch -p <evg_project>
+	cd ~/<path_to_genny>/genny
+	evergreen patch-set-module -i <patch_id_number> genny
+	```
     
     You can then select `schedule_patch_auto_tasks` on a variant to schedule any modified or new Genny tasks created by AutoRun. Alternatively, you could select `schedule_variant_auto_tasks` to schedule all Genny tasks on that variant.
 
@@ -427,14 +457,14 @@ Users who would like a private workload should consider putting it in the [Priva
 
 ## Common Actors
 
-There are several actors owned by TIPS which are intended for widespread use:
+There are several Actors owned by TIPS which are intended for widespread use:
 
 -   CrudActor - Used to perform CRUD operations, recording client-side metrics.
 -   RunCommand - Execute a command against the remote server. Often used for utility purposes, but metrics are collected as well.
 -   Loader - Load many documents into the remote database. Often used early in a workload to set the preconditions for testing.
 -   QuiesceActor - Quiesce a cluster, making sure common operations are complete. This is often used to reduce noise between phases.
 
-Examples with these and other actors can be found in [./src/workloads/docs](../src/workloads/docs).
+Examples with these and other Actors can be found in [./src/workloads/docs](../src/workloads/docs).
 
 
 <a id="org2b04b49"></a>
@@ -465,20 +495,22 @@ values from ThenRun. For example,
 suppose we have a `test_workload.yml` file in a `workloads/*/` subdirectory,
 containing the following AutoRun section:
 
-    AutoRun:
-      - When:
-          mongodb_setup:
-    	$eq:
-    	  - replica
-    	  - replica-noflowcontrol
-          branch_name:
-    	$neq:
-    	  - v4.0
-    	  - v4.2
-        ThenRun:
-          - infrastructure_provisioning: foo
-          - infrastructure_provisioning: bar
-          - arbitrary_key: baz
+```yaml
+AutoRun:
+- When:
+    mongodb_setup:
+	  $eq:
+	  - replica
+	  - replica-noflowcontrol
+    branch_name:
+	  $neq:
+	  - v4.0
+	  - v4.2
+  ThenRun:
+  - infrastructure_provisioning: foo
+  - infrastructure_provisioning: bar
+  - arbitrary_key: baz
+```
 
 In this case, it looks in the `bootstrap.yml` of `test_workload`, checks if `mongodb_setup`
 is either `replica` or `replica-noflowcontrol`, and also if `branch_name` is neither `v4.0` nor `v4.2`.
@@ -489,10 +521,12 @@ is passed in `infrastructure_provisioning: bar` and the third `arbitrary_key: ba
 
 This is a more complex example of AutoRun. Here's a more simple one representing a more common usecase:
 
-    AutoRun:
-      - When:
-          mongodb_setup:
-    	$eq: standalone
+```yaml
+AutoRun:
+  - When:
+      mongodb_setup:
+	    $eq: standalone
+```
 
 Let's say this is `DemoWorkload` again. In this case, if `mongodb_setup` is `standalone`
 we schedule `demo_workload` with no additional params.
@@ -525,7 +559,7 @@ A few notes on the syntax:
 
 It is often necessary to use Genny to operate with large amounts of data which would be impractical to hardcode. Genny uses generators for this. A generator is a piece of code that generates pseudorandom values every time it is invoked, and which can be configured from the workload yaml. Notably, generators use a hardcoded seed, which is always automatically reused by default, so repeated Genny executions should be deterministic with respect to generated values. A user wanting to vary the generated docs can vary the seed. See [./src/workloads/docs/GeneratorsSeeded.yml](../src/workloads/docs/GeneratorsSeeded.yml) for an example.
 
-Generators are not a builtin feature of Genny, but must be integrated by each actor for the configuration values that accept them. For examples of using generators, see [./src/workloads/docs/Generators.yml](../src/workloads/docs/Generators.yml). To integrate generators into an actor, use the [DocumentGenerator](../src/value_generators/include/value_generators/DocumentGenerator.hpp) with the yaml node you intend to generate documents from. (And see [here](#org7e6c6bd) for more details on creating an actor in the first place.)
+Generators are not a builtin feature of Genny, but must be integrated by each Actor for the configuration values that accept them. For examples of using generators, see [./src/workloads/docs/Generators.yml](../src/workloads/docs/Generators.yml). To integrate generators into an Actor, use the [DocumentGenerator](../src/value_generators/include/value_generators/DocumentGenerator.hpp) with the yaml node you intend to generate documents from. (And see [here](#org7e6c6bd) for more details on creating an Actor in the first place.)
 
 
 <a id="org2078b23"></a>
@@ -534,7 +568,9 @@ Generators are not a builtin feature of Genny, but must be integrated by each ac
 
 For convenience when developing workloads, Genny offers a preprocessing syntax that can be used for configuration reuse and parameterization. Remember: when developing a workload, you can always check results of preprocessing:
 
-    ./run-genny evaluate src/workloads/<workload_dir/workload_name.yml>
+```bash
+./run-genny evaluate src/workloads/<workload_dir/workload_name.yml>
+```
 	
 This command helps find yaml-based mistakes.
 
@@ -543,42 +579,48 @@ This command helps find yaml-based mistakes.
 
 ### LoadConfig
 
-The `LoadConfig` keyword can be used to load arbitrary configuration from another file. For example, consider the following actor definition:
+The `LoadConfig` keyword can be used to load arbitrary configuration from another file. For example, consider the following Actor definition:
 
-    Actors:
-    - Name: HelloWorld
-      Type: HelloWorld
-      Threads: 2
-      Phases:
-      - Message: Hello Phase 0 🐳
-        Duration: 50 milliseconds
-      - LoadConfig:
-          Path: ../../phases/HelloWorld/ExamplePhase2.yml
-          Key: UseMe  # Only load the YAML structure from this top-level key.
-          Parameters:
-    	Repeat: 2
+```yaml
+Actors:
+- Name: HelloWorld
+	Type: HelloWorld
+	Threads: 2
+	Phases:
+	- Message: Hello Phase 0 🐳
+	Duration: 50 milliseconds
+	- LoadConfig:
+		Path: ../../phases/HelloWorld/ExamplePhase2.yml
+		Key: UseMe  # Only load the YAML structure from this top-level key.
+		Parameters:
+	Repeat: 2
+```
 
 Also consider the following file located at `./src/phases/HelloWorld/ExamplePhase2.yml`:
 
-    SchemaVersion: 2018-07-01
-    Description: |
-      Example phase to illustrate how PhaseConfig composition works.
-    
-    UseMe:
-      Message: Hello Phase 2
-      Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+```yaml
+SchemaVersion: 2018-07-01
+Description: |
+	Example phase to illustrate how PhaseConfig composition works.
+
+UseMe:
+	Message: Hello Phase 2
+	Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+```
 
 Using `LoadConfig`, the contents of the `UseMe` key will be placed into the location where the `LoadConfig` was evaluated, with parameters substituted, so we end up with the following ouput from evaluation: 
 
-    Actors:
-    - Name: HelloWorld
-      Type: HelloWorld
-      Threads: 2
-      Phases:
-      - Message: Hello Phase 0 🐳
-        Duration: 50 milliseconds
-      - Message: Hello Phase 2
-        Repeat: 2
+```yaml
+Actors:
+- Name: HelloWorld
+	Type: HelloWorld
+	Threads: 2
+	Phases:
+	- Message: Hello Phase 0 🐳
+	  Duration: 50 milliseconds
+	- Message: Hello Phase 2
+	  Repeat: 2
+```
 
 A few notes:
 
@@ -593,28 +635,30 @@ The `LoadConfig` keyword can be used to substitute and parameterize anything, in
 
 ### ActorTemplate
 
-Genny also offers a syntax for templatizing actors. This is useful if there are many actors that share common configuration, which need to differ in specific ways. An example of this can be found [here](../src/workloads/docs/HelloWorld-ActorTemplate.yml).
+Genny also offers a syntax for templatizing Actors. This is useful if there are many Actors that share common configuration, which need to differ in specific ways. An example of this can be found [here](../src/workloads/docs/HelloWorld-ActorTemplate.yml).
 
 
 <a id="orgf9c328f"></a>
 
 ### OnlyActiveInPhases
 
-If there are many phases, and an actor only needs to run for some of them, there is an alternative syntax to specify only the phases the actor runs in. Consider the following actor:
+If there are many phases, and an Actor only needs to run for some of them, there is an alternative syntax to specify only the phases the Actor runs in. Consider the following Actor:
 
-    Actors:
-    - Name: HelloWorld
-      Type: HelloWorld
-      Threads: 2
-      Phases:
-      OnlyActiveInPhases:
-        Active: [0, 2]
-        NopInPhasesUpTo: 3
-        PhaseConfig:
-          Message: Alternate Phase 1
-          Repeat: 100
+```yaml
+Actors:
+- Name: HelloWorld
+	Type: HelloWorld
+	Threads: 2
+	Phases:
+	  OnlyActiveInPhases:
+	    Active: [0, 2]
+	    NopInPhasesUpTo: 3
+	    PhaseConfig:
+		  Message: Alternate Phase 1
+		  Repeat: 100
+```
 
-This configures the actor to run with the given configuration in phases named 0 and 2, and nops in all other phases up phase named 3.
+This configures the Actor to run with the given configuration in phases named 0 and 2, and nops in all other phases up phase named 3.
 
 
 <a id="org22b7a0f"></a>
@@ -623,10 +667,12 @@ This configures the actor to run with the given configuration in phases named 0 
 
 By default, a Genny workload yaml contains the following configuration:
 
-    Clients:
-      Default:
-        QueryOptions:
-          maxPoolSize: 100
+```yaml
+Clients:
+  Default:
+	QueryOptions:
+		maxPoolSize: 100
+```
 
 For more details about this configuration's purpose, see the section on [Connecting to the Server](#orgd6b0450).
 
@@ -634,20 +680,22 @@ Genny also has an override syntax for configuring workloads. When invoking Genny
 This uses [OmegaConf](<https://omegaconf.readthedocs.io/en/2.1_branch/>) to merge the override file onto the workload. This functionality
 should only be used to set values that absolutely need to be specified at runtime, such as URIs for systems under test. (See [Connecting to the Server](#orgd6b0450) for details.)
 
-Furthermore, there is a default actor that is injected during preprocessing, which has the following configuration:
+Furthermore, there is a default Actor that is injected during preprocessing, which has the following configuration:
 
-    Name: PhaseTimingRecorder 
-    Type: PhaseTimingRecorder
-    Threads: 1
+```yaml
+Name: PhaseTimingRecorder 
+Type: PhaseTimingRecorder
+Threads: 1
+```
 
-This actor is used to collect several internal metrics.
+This Actor is used to collect several internal metrics.
 
 When actually evaluating and constructing a workload at runtime, Genny takes the following steps:
 
 1.  Start with the defaults.
 2.  Apply the workload yaml configuration over the defaults, deep merging the yamls and giving priority to the workload yaml.
 3.  Apply the overrides file (if given) over the results of step 2, deep merging the yamls and giving priority to the overrides.
-4.  Use the preprocessor on the resultant config, evaluating all `LoadConfig`, `ActorTemplate`, and other keywords recursively. Injection of the `PhaseTimingRecorder` default actor occurs while evaluating the `Actors` list.
+4.  Use the preprocessor on the resultant config, evaluating all `LoadConfig`, `ActorTemplate`, and other keywords recursively. Injection of the `PhaseTimingRecorder` default Actor occurs while evaluating the `Actors` list.
 5.  Output the result to `./build/WorkloadOutput/workload`.
 6.  Run the workload.
 
@@ -663,35 +711,39 @@ When actually evaluating and constructing a workload at runtime, Genny takes the
 
 Genny creates connections using one or more C++ driver pools. These pools can be configured in a workload like so:
 
-    Clients:
-      Default:
-        QueryOptions:
-          maxPoolSize: 500
-        URI: "mongodb://localhost:27017"
-      Update:
-        QueryOptions:
-          maxPoolSize: 500
-        URI: "mongodb://localhost:27017"
+```yaml
+Clients:
+  Default:
+    QueryOptions:
+	  maxPoolSize: 500
+    URI: "mongodb://localhost:27017"
+	Update:
+	  QueryOptions:
+	    maxPoolSize: 500
+	  URI: "mongodb://localhost:27017"
+```
 
 This will configure two pools, one named `Default` and one named `Update`. The `QueryOptions` can contain
 any supported [connection string option](https://docs.mongodb.com/manual/reference/connection-string/), and these will
 be spliced into the final URI used to connect. Genny constructs pools lazily, so these pools will not actually be
-created until a workload actor requests them.
+created until a workload Actor requests them.
 
-The `Default` pool is what actors connect to unless their .cpp class determines otherwise. Some actors (the Loader, CrudActor, and RunCommand actors)
+The `Default` pool is what Actors connect to unless their .cpp class determines otherwise. Some Actors (the Loader, CrudActor, and RunCommand actors)
 have a `ClientName` field for specifying which pool to request.
 
 Genny's preprocessor operates on this configuration to make using it easier. The `-u` CLI option can be used to set the default URI. During preprocessing,
 any pool that does not have the `URI` key set will be given this value. The default value of the default URI is `"mongodb://localhost:27017"`. Since URI
 is typically not known until runtime, this means that most workloads should have a configuration more like the following:
 
-    Clients:
-      Default:
-        QueryOptions:
-          maxPoolSize: 500
-      Update:
-        QueryOptions:
-          maxPoolSize: 500
+```yaml
+Clients:
+  Default:
+    QueryOptions:
+		maxPoolSize: 500
+	Update:
+	  QueryOptions:
+		maxPoolSize: 500
+```
 
 
 <a id="orga591018"></a>
@@ -701,27 +753,33 @@ is typically not known until runtime, this means that most workloads should have
 If multiple different connection strings are needed, such as when testing a multitenant system, we can use an override file. For the above configuration,
 we can create the following override:
 
-    Clients:
-      Default:
-        URI: "mongodb://localhost:27017"
-      Update:
-        URI: "mongodb://localhost:27018"
+```yaml
+Clients:
+  Default:
+    URI: "mongodb://localhost:27017"
+  Update:
+	URI: "mongodb://localhost:27018"
+```
 
 Notice the different ports. This can be used at runtime as:
 
-    ./run-genny workload example.yml -o override.yml
+```bash
+./run-genny workload example.yml -o override.yml
+```
 
 This will apply the override onto the workload, creating the following result:
 
-    Clients:
-      Default:
-        QueryOptions:
-          maxPoolSize: 500
-        URI: "mongodb://localhost:27017"
-      Update:
-        QueryOptions:
-          maxPoolSize: 500
-        URI: "mongodb://localhost:27018"
+```yaml
+Clients:
+  Default:
+	QueryOptions:
+		maxPoolSize: 500
+	URI: "mongodb://localhost:27017"
+  Update:
+	QueryOptions:
+		maxPoolSize: 500
+	URI: "mongodb://localhost:27018"
+```
 
 Genny's `evaluate` subcommand can always be used to see the result of complex configurations.
 
@@ -730,14 +788,16 @@ Genny's `evaluate` subcommand can always be used to see the result of complex co
 
 ### Default
 
-Since actors generally need a connection and not all workloads need a complicated connection or multiple pools,
+Since Actors generally need a connection and not all workloads need a complicated connection or multiple pools,
 simply not setting any connection pools will cause Genny to default to the following:
 
-    Clients:
-      Default:
-        QueryOptions:
-          maxPoolSize: 100
-        URI: "mongodb://localhost:27017"
+```yaml
+Clients:
+  Default:
+	QueryOptions:
+		maxPoolSize: 100
+	URI: "mongodb://localhost:27017"
+```
 
 For more information, see [Defaults and Overrides](#org22b7a0f).
 
@@ -746,13 +806,15 @@ For more information, see [Defaults and Overrides](#org22b7a0f).
 
 ## Creating an Actor
 
-Creating new actors is a common and encouraged workflow in Genny. To create one, run the following:
+Creating new Actors is a common and encouraged workflow in Genny. To create one, run the following:
 
+```bash
     ./run-genny create-new-actor
+```
 
-This will create new actor .cpp and .h files, an example workload yaml, as well as actor integration tests, all with inline comments guiding you through the actor creation process. You might want to take a look at [Developing Genny](./developing.md) and the [Contribution Guidelines](../CONTRIBUTING.md).
+This will create new Actor .cpp and .h files, an example workload yaml, as well as Actor integration tests, all with inline comments guiding you through the Actor creation process. You might want to take a look at [Developing Genny](./developing.md) and the [Contribution Guidelines](../CONTRIBUTING.md).
 
-It is encouraged to make new actors as general as possible, for reuse among workloads. No need to loop TIPS into a PR when developing an actor, unless you'd just prefer a second look. Actor authors own their actors.
+It is encouraged to make new Actors as general as possible, for reuse among workloads. No need to loop TIPS into a PR when developing an Actor, unless you'd just prefer a second look. Actor authors own their Actors.
 
 
 <a id="org3aaae9e"></a>
@@ -776,7 +838,7 @@ There are currently pathing errors when running integration tests locally. This 
 
 <a id="org97681a9"></a>
 
-## The Loader agent requires thread count set on both actor and phase level
+## The Loader agent requires thread count set on both Actor and phase level
 
 This is tracked in [TIG-3016](https://jira.mongodb.org/browse/TIG-3016) which will correct the issue.
 
