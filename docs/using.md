@@ -59,7 +59,7 @@ To try launching Genny, navigate to the root of the Genny repo and run the follo
 	
 You should see output similar to the following:
 
-```bash
+```
 [curator] 2022/03/24 10:44:11 [p=info]: starting poplar gRPC service at 'localhost:2288'
 [2022-03-24 10:44:12.376776] [0x000070000af63000] [info]    Hello Phase 0 🐳
 [2022-03-24 10:44:12.376810] [0x000070000aee0000] [info]    Hello Phase 0 🐳
@@ -423,7 +423,7 @@ vim src/phases/[phase_dir]/[phases_name.yml] # Only necessary if creating extern
 3.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
     
     ```bash
-    ./run-genny workload -u <connection_uri> src/workloads/<workload_dir/workload_name.yml>
+    ./run-genny workload -u [connection_uri] src/workloads/[workload_dir/workload_name.yml]
     ```
 
 4.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](./run-dsi onboarding  # introductory DSI command; see link above for details) for details:
@@ -432,17 +432,17 @@ vim src/phases/[phase_dir]/[phases_name.yml] # Only necessary if creating extern
 	./run-dsi onboarding  # introductory DSI command; see link above for details
 	cd WORK
 	rm -rf src/genny
-	ln -s ~/<path_to_genny>/genny src
+	ln -s ~/[path_to_genny]/genny src
 	vim bootstrap.yml
 	```
 
 5.  Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
     
 	```bash
-	cd ~/<path_to_evg_project_repo>
-	evergreen patch -p <evg_project>
-	cd ~/<path_to_genny>/genny
-	evergreen patch-set-module -i <patch_id_number> genny
+	cd ~/[path_to_evg_project_repo]
+	evergreen patch -p [evg_project]
+	cd ~/[path_to_genny]/genny
+	evergreen patch-set-module -i [patch_id_number] genny
 	```
     
     You can then select `schedule_patch_auto_tasks` on a variant to schedule any modified or new Genny tasks created by AutoRun. Alternatively, you could select `schedule_variant_auto_tasks` to schedule all Genny tasks on that variant.
@@ -575,7 +575,7 @@ Generators are not a builtin feature of Genny, but must be integrated by each Ac
 For convenience when developing workloads, Genny offers a preprocessing syntax that can be used for configuration reuse and parameterization. Remember: when developing a workload, you can always check results of preprocessing:
 
 ```bash
-./run-genny evaluate src/workloads/<workload_dir/workload_name.yml>
+./run-genny evaluate src/workloads/[workload_dir/workload_name.yml]
 ```
 	
 This command helps find yaml-based mistakes.
