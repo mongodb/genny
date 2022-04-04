@@ -150,13 +150,13 @@ Keywords:
 
 Actors:
 - Name: HelloWorldExample
-	Type: HelloWorld
-	Threads: 2
-	Phases:
-	- Message: Hello Phase 0 🐳
-	  Duration: 50 milliseconds
-	- Message: Hello Phase 1 👬
-	  Repeat: 100
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
+	Duration: 50 milliseconds
+  - Message: Hello Phase 1 👬
+	Repeat: 100
 ```
 
 Everything under the `Actor` key (where the magic happens) will be explained in the next section. First let's look at the other **required** keys:
@@ -180,35 +180,35 @@ In the example above, the following is the Actor configuration:
 ```yaml
 Actors:
 - Name: HelloWorldExample
-	Type: HelloWorld
-	Threads: 2
-	Phases:
-	- Message: Hello Phase 0 🐳
-	  Duration: 50 milliseconds
-	- Message: Hello Phase 1 👬
-	  Repeat: 100
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
+	Duration: 50 milliseconds
+  - Message: Hello Phase 1 👬
+	Repeat: 100
 ```
 
 In this example, there is a single `HelloWorld` Actor allocated two threads. This Actor moves through a series of phases, printing a message in each. Phases are described further in the next section. Each thread contains a complete "instance" of the Actor, configured identically. We could add more Actors like so:
 
-```
+```yaml
 Actors:
 - Name: HelloWorldExample
-	Type: HelloWorld
-	Threads: 2
-	Phases:
-	- Message: Hello Phase 0 🐳
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
 	Duration: 50 milliseconds
-	- Message: Hello Phase 1 👬
+  - Message: Hello Phase 1 👬
 	Repeat: 100
 - Name: InsertRemoveExample
-	Type: InsertRemove
-	Threads: 100
-	Phases:
-	- Collection: inserts
+  Type: InsertRemove
+  Threads: 100
+  Phases:
+  - Collection: inserts
 	Database: test
 	Duration: 10 milliseconds
-	- Nop: true
+  - Nop: true
 ```
 
 This example has an additional `InsertRemove` Actor with 100 threads, where each thread inserts and removes a document as fast as possible. A user observing the database contents might notice a document appearing and disappearing rapidly. This Actor will output `InsertRemoveExample.Insert.ftdc` and `InsertRemoveExample.Remove.ftdc` time series outputs, showing the insertions and removals happening for 10 milliseconds at the phase start. (See [here](#orgec88ad4) for more details on outputs.)
@@ -243,13 +243,13 @@ Genny workloads and Actors proceed in a sequence of phases, configured inside Ac
 ```yaml
 Actors:
 - Name: HelloWorldExample
-	Type: HelloWorld
-	Threads: 2
-	Phases:
-	- Message: Hello Phase 0 🐳
-	  Duration: 50 milliseconds
-	- Message: Hello Phase 1 👬
-	  Repeat: 100
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
+	Duration: 50 milliseconds
+  - Message: Hello Phase 1 👬
+	Repeat: 100
 ```
 
 This Actor will execute the first phase for 50 milleseconds. It will perform iterations of its main loop (printing "Hello Phase 0") as many times as it can for that duration. It will then move on to the second phase, where it will perform exactly 100 iterations of its main loop (printing "Hello Phase 1"), regardless of how long it takes. Then the workload will end.
@@ -259,21 +259,21 @@ Now consider a situation with two Actors:
 ```yaml
 Actors:
 - Name: HelloWorldExample
-	Type: HelloWorld
-	Threads: 2
-	Phases:
-	- Message: Hello Phase 0 🐳
-	  Duration: 50 milliseconds
-	- Message: Hello Phase 1 👬
-	  Repeat: 100
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
+	Duration: 50 milliseconds
+  - Message: Hello Phase 1 👬
+	Repeat: 100
 - Name: HelloWorldSecondExample
-	Type: HelloWorld
-	Threads: 1
-	Phases:
-	- Message: Other Actor Phase 0
-	  Duration: 10 milliseconds
-	- Message: Other Actor Phase 1
-	  Duration: 10 milliseconds
+  Type: HelloWorld
+  Threads: 1
+  Phases:
+  - Message: Other Actor Phase 0
+	Duration: 10 milliseconds
+  - Message: Other Actor Phase 1
+	Duration: 10 milliseconds
 ```
 
 Here we have the `HelloWorldSecondExample` Actor running for 10 milliseconds in each phase. However, the second phase will not begin after 10 milliseconds. It's important to note that phases are coordinated globally, and Actors configured with either `Repeat` or `Duration` will hold the phase open. In this case, `HelloWorldSecondExample` will operate for 10 milliseconds during the first phase, sleep for 40 milliseconds for the rest of the phase, then after `HelloWorldExample` finishes holding the phase open, both Actors will begin the next phase.
@@ -299,13 +299,13 @@ A couple of notes about the above:
 ```yaml
 Actors:
 - Name: HelloWorldExample
-	Type: HelloWorld
-	Threads: 2
-	Phases:
-	- SleepBefore: 10 milliseconds
-	  Message: Hello Phase 0 🐳
-	  Duration: 50 milliseconds
-	  SleepAfter: 15 milliseconds
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - SleepBefore: 10 milliseconds
+	Message: Hello Phase 0 🐳
+	Duration: 50 milliseconds
+	SleepAfter: 15 milliseconds
 ```
     
     This will sleep for 10 milliseconds at the beginning of *every* Actor iteration and for 15 milliseconds at the end of every iteration. This time is counted as part of the phase duration. Genny accepts the following sleep configurations:
@@ -320,12 +320,12 @@ Actors:
 ```yaml
 Actors:
 - Name: HelloWorldExample
-	Type: HelloWorld
-	Threads: 100
-	Phases:
-	- Message: Hello Phase 0
-	  GlobalRate: 5 per 10 milliseconds
-	  Duration: 50 milliseconds
+  Type: HelloWorld
+  Threads: 100
+  Phases:
+  - Message: Hello Phase 0
+	GlobalRate: 5 per 10 milliseconds
+	Duration: 50 milliseconds
 ```
     
     Using the `GlobalRate` configuration, the above Actor will only have 5 threads act every 10 milliseconds, despite having 100 threads that could reasonable act at once. If this workload's outputs were to be analyzed and the intrarun time series were graphed, the user would see only 5 operations occurring every 10 milliseconds. (See [here](#orgec88ad4) for more details about outputs.)
@@ -335,12 +335,12 @@ Actors:
 ```yaml
 Actors:
 - Name: HelloWorldExample
-	Type: HelloWorld
-	Threads: 100
-	Phases:
-	- Message: Hello Phase 0
-	  GlobalRate: 80%
-	  Duration: 2 minutes
+  Type: HelloWorld
+  Threads: 100
+  Phases:
+  - Message: Hello Phase 0
+	GlobalRate: 80%
+	Duration: 2 minutes
 ```
     
     The above workload will run `HelloWorldExample` at maximum throughput for either 1 minutes or 3 iterations of the Actor's loop, whichever is longer. Afterwards, Genny will use the estimated throughput from that time to limit the Actor to 80% of the max throughput.
