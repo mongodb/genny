@@ -484,6 +484,8 @@ Examples with these and other Actors can be found in [./src/workloads/docs](../s
 
 AutoRun is a utility to allow workload authors to determine scheduling of their workloads without having to commit to a separate repo. The utility is specifically designed for users who are using DSI through Evergreen. To use AutoRun, make sure your project has integrated DSI with Evergreen as explained [here](https://github.com/10gen/dsi/wiki/DSI-In-Evergreen).
 
+AutoRun searches in `./src/*/src/workloads` and assumes that all repos, including Genny itself, are checked out in `./src`.
+
 After performing the above integration, your Evergreen project should have a `schedule_variant_auto_tasks` task on each variant, which can be used to schedule all Genny workloads that are configured to run on this variant. There will also be the `schedule_patch_auto_tasks` task which will schedule any new or modified Genny workloads. If you want to run an unmodified workload, make a small edit (such as inserting whitespace) to force it to be picked up by that latter task.
 
 Both of the above tasks will have a dependency on `schedule_global_auto_tasks`, which invokes `./run-genny auto-tasks` to create all possible tasks, viewable in the `TaskJson` directory of that task's DSI artifacts. The variant-specific task generator task will then schedule the appropriate task, based on the workload configurations described below.
@@ -682,8 +684,10 @@ Clients:
 For more details about this configuration's purpose, see the section on [Connecting to the Server](#orgd6b0450).
 
 Genny also has an override syntax for configuring workloads. When invoking Genny, you can use the `-o` option to specify an override file.
-This uses [OmegaConf](<https://omegaconf.readthedocs.io/en/2.1_branch/>) to merge the override file onto the workload. This functionality
+This uses [OmegaConf](https://omegaconf.readthedocs.io/en/2.1_branch/) to merge the override file onto the workload. This functionality
 should only be used to set values that absolutely need to be specified at runtime, such as URIs for systems under test. (See [Connecting to the Server](#orgd6b0450) for details.)
+
+*Warning* - Using overrides and omegaconf syntax and greatly increase workload complexity. Users interested in using overrides files or OmegaConf functionality should come talk to the TIPS team.
 
 Furthermore, there is a default Actor that is injected during preprocessing, which has the following configuration:
 
@@ -703,6 +707,8 @@ When actually evaluating and constructing a workload at runtime, Genny takes the
 4.  Use the preprocessor on the resultant config, evaluating all `LoadConfig`, `ActorTemplate`, and other keywords recursively. Injection of the `PhaseTimingRecorder` default Actor occurs while evaluating the `Actors` list.
 5.  Output the result to `./build/WorkloadOutput/workload`.
 6.  Run the workload.
+
+Note that the final results of the above can be viewed with `./run-genny evaluate`. This is extremely useful for debugging.
 
 
 <a id="orgd6b0450"></a>
@@ -819,7 +825,7 @@ Creating new Actors is a common and encouraged workflow in Genny. To create one,
 
 This will create new Actor .cpp and .h files, an example workload yaml, as well as Actor integration tests, all with inline comments guiding you through the Actor creation process. You might want to take a look at [Developing Genny](./developing.md) and the [Contribution Guidelines](../CONTRIBUTING.md).
 
-It is encouraged to make new Actors as general as possible, for reuse among workloads. No need to loop TIPS into a PR when developing an Actor, unless you'd just prefer a second look. Actor authors own their Actors.
+If your configuration wants to use logic, ifs, or anything beyond simple or existing commands in a loop, then consider writing your own Actor. It doesn't need to be super general or even super well-tested or refactored. Genny is open to submissions and you own whatever Actor you write. No need to loop TIPS in to your custom actor's PR unless you'd just like a second look.
 
 
 <a id="org3aaae9e"></a>
@@ -838,7 +844,7 @@ If you see errors like this locally, try either increasing your ulimit or reduci
 
 ## Actor integration tests fail locally
 
-There are currently pathing errors when running integration tests locally. This is tracked in [TIG-3687](https://jira.mongodb.org/browse/TIG-3687). That ticket also lists a workaround for local use.
+There are currently pathing issues when running integration tests locally. This is tracked in [TIG-3687](https://jira.mongodb.org/browse/TIG-3687). That ticket also lists a workaround for local use.
 
 
 <a id="org97681a9"></a>
