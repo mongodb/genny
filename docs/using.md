@@ -154,9 +154,9 @@ Actors:
   Threads: 2
   Phases:
   - Message: Hello Phase 0 🐳
-	Duration: 50 milliseconds
+    Duration: 50 milliseconds
   - Message: Hello Phase 1 👬
-	Repeat: 100
+    Repeat: 100
 ```
 
 Everything under the `Actor` key (where the magic happens) will be explained in the next section. First let's look at the other **required** keys:
@@ -184,9 +184,9 @@ Actors:
   Threads: 2
   Phases:
   - Message: Hello Phase 0 🐳
-	Duration: 50 milliseconds
+    Duration: 50 milliseconds
   - Message: Hello Phase 1 👬
-	Repeat: 100
+    Repeat: 100
 ```
 
 In this example, there is a single `HelloWorld` Actor allocated two threads. This Actor moves through a series of phases, printing a message in each. Phases are described further in the next section. Each thread contains a complete "instance" of the Actor, configured identically. We could add more Actors like so:
@@ -198,16 +198,16 @@ Actors:
   Threads: 2
   Phases:
   - Message: Hello Phase 0 🐳
-	Duration: 50 milliseconds
+    Duration: 50 milliseconds
   - Message: Hello Phase 1 👬
-	Repeat: 100
+    Repeat: 100
 - Name: InsertRemoveExample
   Type: InsertRemove
   Threads: 100
   Phases:
   - Collection: inserts
-	Database: test
-	Duration: 10 milliseconds
+    Database: test
+    Duration: 10 milliseconds
   - Nop: true
 ```
 
@@ -247,9 +247,9 @@ Actors:
   Threads: 2
   Phases:
   - Message: Hello Phase 0 🐳
-	Duration: 50 milliseconds
+    Duration: 50 milliseconds
   - Message: Hello Phase 1 👬
-	Repeat: 100
+    Repeat: 100
 ```
 
 This Actor will execute the first phase for 50 milleseconds. It will perform iterations of its main loop (printing "Hello Phase 0") as many times as it can for that duration. It will then move on to the second phase, where it will perform exactly 100 iterations of its main loop (printing "Hello Phase 1"), regardless of how long it takes. Then the workload will end.
@@ -263,17 +263,17 @@ Actors:
   Threads: 2
   Phases:
   - Message: Hello Phase 0 🐳
-	Duration: 50 milliseconds
+    Duration: 50 milliseconds
   - Message: Hello Phase 1 👬
-	Repeat: 100
+    Repeat: 100
 - Name: HelloWorldSecondExample
   Type: HelloWorld
   Threads: 1
   Phases:
   - Message: Other Actor Phase 0
-	Duration: 10 milliseconds
+    Duration: 10 milliseconds
   - Message: Other Actor Phase 1
-	Duration: 10 milliseconds
+    Duration: 10 milliseconds
 ```
 
 Here we have the `HelloWorldSecondExample` Actor running for 10 milliseconds in each phase. However, the second phase will not begin after 10 milliseconds. It's important to note that phases are coordinated globally, and Actors configured with either `Repeat` or `Duration` will hold the phase open. In this case, `HelloWorldSecondExample` will operate for 10 milliseconds during the first phase, sleep for 40 milliseconds for the rest of the phase, then after `HelloWorldExample` finishes holding the phase open, both Actors will begin the next phase.
@@ -303,9 +303,9 @@ Actors:
   Threads: 2
   Phases:
   - SleepBefore: 10 milliseconds
-	Message: Hello Phase 0 🐳
-	Duration: 50 milliseconds
-	SleepAfter: 15 milliseconds
+    Message: Hello Phase 0 🐳
+    Duration: 50 milliseconds
+    SleepAfter: 15 milliseconds
 ```
     
     This will sleep for 10 milliseconds at the beginning of *every* Actor iteration and for 15 milliseconds at the end of every iteration. This time is counted as part of the phase duration. Genny accepts the following sleep configurations:
@@ -324,8 +324,8 @@ Actors:
   Threads: 100
   Phases:
   - Message: Hello Phase 0
-	GlobalRate: 5 per 10 milliseconds
-	Duration: 50 milliseconds
+    GlobalRate: 5 per 10 milliseconds
+    Duration: 50 milliseconds
 ```
     
     Using the `GlobalRate` configuration, the above Actor will only have 5 threads act every 10 milliseconds, despite having 100 threads that could reasonable act at once. If this workload's outputs were to be analyzed and the intrarun time series were graphed, the user would see only 5 operations occurring every 10 milliseconds. (See [here](#orgec88ad4) for more details about outputs.)
@@ -339,8 +339,8 @@ Actors:
   Threads: 100
   Phases:
   - Message: Hello Phase 0
-	GlobalRate: 80%
-	Duration: 2 minutes
+    GlobalRate: 80%
+    Duration: 2 minutes
 ```
     
     The above workload will run `HelloWorldExample` at maximum throughput for either 1 minutes or 3 iterations of the Actor's loop, whichever is longer. Afterwards, Genny will use the estimated throughput from that time to limit the Actor to 80% of the max throughput.
@@ -499,13 +499,13 @@ containing the following AutoRun section:
 AutoRun:
 - When:
     mongodb_setup:
-	  $eq:
-	  - replica
-	  - replica-noflowcontrol
+      $eq:
+      - replica
+      - replica-noflowcontrol
     branch_name:
-	  $neq:
-	  - v4.0
-	  - v4.2
+      $neq:
+      - v4.0
+      - v4.2
   ThenRun:
   - infrastructure_provisioning: foo
   - infrastructure_provisioning: bar
@@ -525,7 +525,7 @@ This is a more complex example of AutoRun. Here's a more simple one representing
 AutoRun:
   - When:
       mongodb_setup:
-	    $eq: standalone
+        $eq: standalone
 ```
 
 Let's say this is `DemoWorkload` again. In this case, if `mongodb_setup` is `standalone`
@@ -584,16 +584,16 @@ The `LoadConfig` keyword can be used to load arbitrary configuration from anothe
 ```yaml
 Actors:
 - Name: HelloWorld
-	Type: HelloWorld
-	Threads: 2
-	Phases:
-	- Message: Hello Phase 0 🐳
-	Duration: 50 milliseconds
-	- LoadConfig:
-		Path: ../../phases/HelloWorld/ExamplePhase2.yml
-		Key: UseMe  # Only load the YAML structure from this top-level key.
-		Parameters:
-	Repeat: 2
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
+    Duration: 50 milliseconds
+  - LoadConfig:
+      Path: ../../phases/HelloWorld/ExamplePhase2.yml
+      Key: UseMe  # Only load the YAML structure from this top-level key.
+      Parameters:
+        Repeat: 2
 ```
 
 Also consider the following file located at `./src/phases/HelloWorld/ExamplePhase2.yml`:
@@ -604,8 +604,8 @@ Description: |
 	Example phase to illustrate how PhaseConfig composition works.
 
 UseMe:
-	Message: Hello Phase 2
-	Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+  Message: Hello Phase 2
+  Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
 ```
 
 Using `LoadConfig`, the contents of the `UseMe` key will be placed into the location where the `LoadConfig` was evaluated, with parameters substituted, so we end up with the following ouput from evaluation: 
@@ -613,13 +613,13 @@ Using `LoadConfig`, the contents of the `UseMe` key will be placed into the loca
 ```yaml
 Actors:
 - Name: HelloWorld
-	Type: HelloWorld
-	Threads: 2
-	Phases:
-	- Message: Hello Phase 0 🐳
-	  Duration: 50 milliseconds
-	- Message: Hello Phase 2
-	  Repeat: 2
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
+    Duration: 50 milliseconds
+  - Message: Hello Phase 2
+    Repeat: 2
 ```
 
 A few notes:
@@ -647,15 +647,15 @@ If there are many phases, and an Actor only needs to run for some of them, there
 ```yaml
 Actors:
 - Name: HelloWorld
-	Type: HelloWorld
-	Threads: 2
-	Phases:
-	  OnlyActiveInPhases:
-	    Active: [0, 2]
-	    NopInPhasesUpTo: 3
-	    PhaseConfig:
-		  Message: Alternate Phase 1
-		  Repeat: 100
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0, 2]
+      NopInPhasesUpTo: 3
+      PhaseConfig:
+        Message: Alternate Phase 1
+        Repeat: 100
 ```
 
 This configures the Actor to run with the given configuration in phases named 0 and 2, and nops in all other phases up phase named 3.
@@ -670,8 +670,8 @@ By default, a Genny workload yaml contains the following configuration:
 ```yaml
 Clients:
   Default:
-	QueryOptions:
-		maxPoolSize: 100
+    QueryOptions:
+      maxPoolSize: 100
 ```
 
 For more details about this configuration's purpose, see the section on [Connecting to the Server](#orgd6b0450).
@@ -715,12 +715,12 @@ Genny creates connections using one or more C++ driver pools. These pools can be
 Clients:
   Default:
     QueryOptions:
-	  maxPoolSize: 500
+      maxPoolSize: 500
     URI: "mongodb://localhost:27017"
-	Update:
-	  QueryOptions:
-	    maxPoolSize: 500
-	  URI: "mongodb://localhost:27017"
+  Update:
+    QueryOptions:
+      maxPoolSize: 500
+    URI: "mongodb://localhost:27017"
 ```
 
 This will configure two pools, one named `Default` and one named `Update`. The `QueryOptions` can contain
@@ -739,10 +739,10 @@ is typically not known until runtime, this means that most workloads should have
 Clients:
   Default:
     QueryOptions:
-		maxPoolSize: 500
-	Update:
-	  QueryOptions:
-		maxPoolSize: 500
+      maxPoolSize: 500
+  Update:
+    QueryOptions:
+      maxPoolSize: 500
 ```
 
 
@@ -758,7 +758,7 @@ Clients:
   Default:
     URI: "mongodb://localhost:27017"
   Update:
-	URI: "mongodb://localhost:27018"
+    URI: "mongodb://localhost:27018"
 ```
 
 Notice the different ports. This can be used at runtime as:
@@ -772,13 +772,13 @@ This will apply the override onto the workload, creating the following result:
 ```yaml
 Clients:
   Default:
-	QueryOptions:
-		maxPoolSize: 500
-	URI: "mongodb://localhost:27017"
+    QueryOptions:
+      maxPoolSize: 500
+    URI: "mongodb://localhost:27017"
   Update:
-	QueryOptions:
-		maxPoolSize: 500
-	URI: "mongodb://localhost:27018"
+    QueryOptions:
+      maxPoolSize: 500
+    URI: "mongodb://localhost:27018"
 ```
 
 Genny's `evaluate` subcommand can always be used to see the result of complex configurations.
@@ -794,9 +794,9 @@ simply not setting any connection pools will cause Genny to default to the follo
 ```yaml
 Clients:
   Default:
-	QueryOptions:
-		maxPoolSize: 100
-	URI: "mongodb://localhost:27017"
+    QueryOptions:
+      maxPoolSize: 100
+    URI: "mongodb://localhost:27017"
 ```
 
 For more information, see [Defaults and Overrides](#org22b7a0f).
