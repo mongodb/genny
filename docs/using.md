@@ -314,14 +314,14 @@ Actors:
     SleepAfter: 15 milliseconds
 ```
     
-    This will sleep for 10 milliseconds at the beginning of *every* Actor iteration and for 15 milliseconds at the end of every iteration. This time is counted as part of the phase duration. Genny accepts the following sleep configurations:
+This will sleep for 10 milliseconds at the beginning of *every* Actor iteration and for 15 milliseconds at the end of every iteration. This time is counted as part of the phase duration. Genny accepts the following sleep configurations:
     
-    -   `SleepBefore` - duration to sleep at the beginning of each iteration
-    -   `SleepAfter` - duration to sleep after each iteration
+-   `SleepBefore` - duration to sleep at the beginning of each iteration
+-   `SleepAfter` - duration to sleep after each iteration
 
 2.  Rate Limiting
 
-    By default, Actors will repeat their main loop as quickly as possible. Sometimes you want to restrict how quickly an Actor works. This can be done using a rate limiter:
+By default, Actors will repeat their main loop as quickly as possible. Sometimes you want to restrict how quickly an Actor works. This can be done using a rate limiter:
     
 ```yaml
 Actors:
@@ -334,9 +334,9 @@ Actors:
     Duration: 50 milliseconds
 ```
     
-    Using the `GlobalRate` configuration, the above Actor will only have 5 threads act every 10 milliseconds, despite having 100 threads that could reasonable act at once. If this workload's outputs were to be analyzed and the intrarun time series were graphed, the user would see only 5 operations occurring every 10 milliseconds. (See [here](#orgec88ad4) for more details about outputs.)
+Using the `GlobalRate` configuration, the above Actor will only have 5 threads act every 10 milliseconds, despite having 100 threads that could reasonable act at once. If this workload's outputs were to be analyzed and the intrarun time series were graphed, the user would see only 5 operations occurring every 10 milliseconds. (See [here](#orgec88ad4) for more details about outputs.)
     
-    In addition to hard-coding how many threads act and when, you can configure Genny to rate-limit the Actor at a percentage of the detected maximum rate:
+In addition to hard-coding how many threads act and when, you can configure Genny to rate-limit the Actor at a percentage of the detected maximum rate:
     
 ```yaml
 Actors:
@@ -351,13 +351,13 @@ Actors:
     
     The above workload will run `HelloWorldExample` at maximum throughput for either 1 minutes or 3 iterations of the Actor's loop, whichever is longer. Afterwards, Genny will use the estimated throughput from that time to limit the Actor to 80% of the max throughput.
     
-    Note that the rate limiter uses a [token bucket algorithm](https://en.wikipedia.org/wiki/Token_bucket). This means that bursty behavior is possible. For example, if we configure `GlobalRate: 5 per 10 milliseconds` then we will have 5 threads act all at once, followed by 9 or so milliseconds without any threads acting, then another burst of 5 threads acting, etc. We can smooth the rate by specifying a tighter yet equivalent rate limit: `GlobalRate: 1 per 2 milliseconds`.
+Note that the rate limiter uses a [token bucket algorithm](https://en.wikipedia.org/wiki/Token_bucket). This means that bursty behavior is possible. For example, if we configure `GlobalRate: 5 per 10 milliseconds` then we will have 5 threads act all at once, followed by 9 or so milliseconds without any threads acting, then another burst of 5 threads acting, etc. We can smooth the rate by specifying a tighter yet equivalent rate limit: `GlobalRate: 1 per 2 milliseconds`.
     
-    Since the percentage-based limiting treats the entire estimation period as the duration in the rate specification, it is highly prone to bursty behavior.
+Since the percentage-based limiting treats the entire estimation period as the duration in the rate specification, it is highly prone to bursty behavior.
     
-    Rate limiting accepts the following configurations:
+Rate limiting accepts the following configurations:
     
-    -   `GlobalRate` - specified as either a rate specification (x per y minutes/seconds/milliseconds/etc) or as a percentage
+-   `GlobalRate` - specified as either a rate specification (x per y minutes/seconds/milliseconds/etc) or as a percentage
 
 
 <a id="org32b8ad3"></a>
@@ -404,11 +404,11 @@ If you are running Genny through DSI in Evergreen, the FTDC contents are rolled 
 
 1.  Create a yaml file in `./src/workloads` in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in `./src/phases` (and for more details about what that means, see [here](#org2078b23)). Consider whether existing Actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [here](#org7e6c6bd).
     
-```bash
-vim src/workloads/[workload_dir]/[workload_name.yml]
-vim src/phases/[phase_dir]/[phases_name.yml] # Only necessary if creating external configuration
-./run-genny create-new-actor  # Only necessary if creating a new Actor
-```
+    ```bash
+    vim src/workloads/[workload_dir]/[workload_name.yml]
+    vim src/phases/[phase_dir]/[phases_name.yml] # Only necessary if creating external configuration
+    ./run-genny create-new-actor  # Only necessary if creating a new Actor
+    ```
 
 2.  Run the self-tests:
     
