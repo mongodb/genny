@@ -217,7 +217,7 @@ TestOperations: &TestOperations
   OperationCommand: *INLJTripleLookupCmd
 
 # Defines how many times each test operation is executed.
-TestRepeatCount: &TestRepeatCount 1
+TestRepeatCount: &TestRepeatCount 10
 
 Actors:
 # The 'Setup' actor drops the database and runs in the 0th phase.
