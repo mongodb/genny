@@ -1,0 +1,554 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+    This test exercises the behavior of the time series bounded sorter as the number of documents
+    in the collection increases.
+
+GlobalDefaults:
+  dbname: &db test
+  coll: &coll Collection0
+  bucketsColl: &bucketsColl system.buckets.Collection0
+  batchSize: &batchSize 30000
+  fieldName: &field "numeric"
+  index: &index
+    keys: {numeric: 1}
+  nop: &Nop {Nop: true}
+
+BlockingSortCmd: &BlockingSortCmd
+  LoadConfig:
+    Path: "../../phases/execution/TimeSeriesSortCommands.yml"
+    Key: BlockingSortCmdTemplate
+    Parameters:
+      coll: *coll
+      batchSize: *batchSize
+
+BoundedSortCmd: &BoundedSortCmd
+  LoadConfig:
+    Path: "../../phases/execution/TimeSeriesSortCommands.yml"
+    Key: BoundedSortNoSpillCmdTemplate
+    Parameters:
+      coll: *bucketsColl
+      batchSize: *batchSize
+
+Actors:
+- Name: CreateTimeSeriesCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: 75
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operation:
+          OperationMetricsName: CreateTimeSeriesCollection
+          OperationName: RunCommand
+          OperationCommand:
+            {create: *coll, timeseries: {timeField: "t", metaField: "m"}}
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2, 4, 7, 9, 12, 14, 17, 19, 22, 24, 27, 29, 32, 34, 37, 39,
+               42, 44, 47, 49, 52, 54, 57, 59, 62, 64, 67, 69, 72, 74]
+      NopInPhasesUpTo: 75
+      PhaseConfig:
+        Repeat: 1
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: &numDocs 1e6
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2000-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2001-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2002-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2003-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2004-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2005-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2006-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2007-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2008-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2009-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2010-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2011-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2012-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2013-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *numDocs
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2014-01-01", step: 400}}
+      m: {^RandomInt: {min: 0, max: 1000}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: Queries
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: &numQueryRuns 50
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort1M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort1M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort2M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort2M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort3M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort3M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort4M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort4M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort5M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort5M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort6M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort6M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort7M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort7M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort8M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort8M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort9M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort9M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort10M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort10M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort11M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort11M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort12M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort12M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort13M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort13M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort14M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort14M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+  - *Nop
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort15M
+      OperationName: RunCommand
+      OperationCommand: *BlockingSortCmd
+  - *Nop
+  - Repeat: *numQueryRuns
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQueryBoundedSort15M
+      OperationName: RunCommand
+      OperationCommand: *BoundedSortCmd
+
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v5.1
+      - v5.2
+      - v5.3
