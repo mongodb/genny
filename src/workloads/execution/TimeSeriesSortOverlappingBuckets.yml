@@ -1,7 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  TODO explain this
+  This test exercises the behavior of the time series bounded sorter with many overlapping buckets,
+  forcing the sort to spill to disk. We test from 1,000 overlapping buckets to 10,000 overlapping
+  buckets.
 
 
 GlobalDefaults:
@@ -128,16 +130,6 @@ Actors:
   - *Nop
   - *DropCollection
 
-  # - Phase: 0..3
-  #   Nop: true
-
-  # Phases:
-  #   OnlyActiveInPhases:
-  #     Active: [0, 2, 4, 6, 8, 10, 12, 14, 16]
-  #     NopInPhasesUpTo: *MaxPhases
-  #     PhaseConfig:
-  #       Repeat: 1
-
 - Name: Quiesce
   Type: QuiesceActor
   Threads: 1
@@ -145,81 +137,81 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 1 # Quiesce
+  - Repeat: 1
   - *Nop
-  - Repeat: 1 # Quiesce
-  - *Nop
-  - *Nop
-
-  - *Nop
-  - *Nop
-  - Repeat: 1 # Quiesce
-  - *Nop
-  - Repeat: 1 # Quiesce
+  - Repeat: 1
   - *Nop
   - *Nop
 
   - *Nop
   - *Nop
-  - Repeat: 1 # Quiesce
+  - Repeat: 1
   - *Nop
-  - Repeat: 1 # Quiesce
-  - *Nop
-  - *Nop
-
-  - *Nop
-  - *Nop
-  - Repeat: 1 # Quiesce
-  - *Nop
-  - Repeat: 1 # Quiesce
+  - Repeat: 1
   - *Nop
   - *Nop
 
   - *Nop
   - *Nop
-  - Repeat: 1 # Quiesce
+  - Repeat: 1
   - *Nop
-  - Repeat: 1 # Quiesce
-  - *Nop
-  - *Nop
-
-  - *Nop
-  - *Nop
-  - Repeat: 1 # Quiesce
-  - *Nop
-  - Repeat: 1 # Quiesce
+  - Repeat: 1
   - *Nop
   - *Nop
 
   - *Nop
   - *Nop
-  - Repeat: 1 # Quiesce
+  - Repeat: 1
   - *Nop
-  - Repeat: 1 # Quiesce
-  - *Nop
-  - *Nop
-
-  - *Nop
-  - *Nop
-  - Repeat: 1 # Quiesce
-  - *Nop
-  - Repeat: 1 # Quiesce
+  - Repeat: 1
   - *Nop
   - *Nop
 
   - *Nop
   - *Nop
-  - Repeat: 1 # Quiesce
+  - Repeat: 1
   - *Nop
-  - Repeat: 1 # Quiesce
+  - Repeat: 1
   - *Nop
   - *Nop
 
   - *Nop
   - *Nop
-  - Repeat: 1 # Quiesce
+  - Repeat: 1
   - *Nop
-  - Repeat: 1 # Quiesce
+  - Repeat: 1
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
   - *Nop
   - *Nop
 
@@ -233,7 +225,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1005000 # insert 1000 overlapping buckets
+    DocumentCount: 1005000  # insert 1000 overlapping buckets
     BatchSize: *batchSize
     Document:
       # t repeats each date 1000 times [d1 d1 d1 d1... d2 d2 d2 d2 ...]
@@ -252,7 +244,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 2010000 # insert 2000 overlapping buckets
+    DocumentCount: 2010000
     BatchSize: *batchSize
     Document:
       t: {^Repeat: {count: 2000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 400}}}}
