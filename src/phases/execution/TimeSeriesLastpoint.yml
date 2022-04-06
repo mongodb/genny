@@ -39,13 +39,28 @@ RunLastPointQuery:
       cursor: &batchSize {batchSize: {^Parameter: {Name: "BatchSize", Default: 100}}}
       # In cases when we cannot optimize for a covered index sort, allow for external sorting.
       allowDiskUse: true
-  - OperationMetricsName: RunLastPointQueryWithPrecedingPredicate
+  # This predicate should select 90% of documents.
+  - OperationMetricsName: RunLastPointQueryWithLargePredicate
     OperationName: RunCommand
     OperationCommand:
       aggregate: *coll
       pipeline:
         [
           {$match: {"metadata.sensorId": {$gt: 10}}},
+          *sortPattern,
+          *groupPattern
+        ]
+      cursor: *batchSize
+      # In cases when we cannot optimize for a covered index sort, allow for external sorting.
+      allowDiskUse: true
+  # This predicate should select 10% of documents.
+  - OperationMetricsName: RunLastPointQueryWithSmallPredicate
+    OperationName: RunCommand
+    OperationCommand:
+      aggregate: *coll
+      pipeline:
+        [
+          {$match: {"metadata.sensorId": {$lt: 10}}},
           *sortPattern,
           *groupPattern
         ]
