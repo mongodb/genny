@@ -188,9 +188,6 @@ struct CollectionSharder::PhaseConfig {
             return true;
         }
         return false;
-        
-        // If hello response is not present, something went wrong
-        BOOST_THROW_EXCEPTION(std::runtime_error("hello command returned unexpected result: " + bsoncxx::to_json(helloResult)));
     }
 };
 
