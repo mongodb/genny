@@ -25,6 +25,7 @@ namespace genny::actor {
 /** @private */
 struct HelloWorld::PhaseConfig {
     std::string message;
+    std::string actorInfo;
 
     /** record data about each iteration */
     metrics::Operation operation;
@@ -34,11 +35,13 @@ struct HelloWorld::PhaseConfig {
     explicit PhaseConfig(PhaseContext& context, ActorId actorId)
         : message{context["Message"].maybe<std::string>().value_or("Hello, World!")},
           operation{context.operation("DefaultMetricsName", actorId)},
-          syntheticOperation{context.operation("SyntheticOperation", actorId)} {}
+          syntheticOperation{context.operation("SyntheticOperation", actorId)},
+          actorInfo{context.actorInfo(actorId)} {}
 };
 
 void HelloWorld::run() {
     for (auto&& config : _loop) {
+        BOOST_LOG_TRIVIAL(debug) << "Starting " << config->actorInfo << " execution";
         for (auto _ : config) {
             auto ctx = config->operation.start();
             BOOST_LOG_TRIVIAL(info) << config->message;
@@ -51,6 +54,7 @@ void HelloWorld::run() {
             config->syntheticOperation.report(metrics::clock::now(),
                                               std::chrono::milliseconds{_helloCounter});
         }
+        BOOST_LOG_TRIVIAL(debug) << "Ended " << config->actorInfo << " execution";
     }
 }
 

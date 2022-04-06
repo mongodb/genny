@@ -337,6 +337,8 @@ public:
         : v1::HasNode{node}, _workload{&workloadContext}, _phaseContexts{} {
         _phaseContexts = constructPhaseContexts(_node, this);
         auto threads = (*this)["Threads"].maybe<int>().value_or(1);
+        _actorType = (*this)["Type"].maybe<std::string>().value_or("no_type");
+        _actorName = (*this)["Name"].maybe<std::string>().value_or("no_name");
         _nextActorId = this->workload().claimActorIds(threads);
     }
 
@@ -351,6 +353,20 @@ public:
      */
     ActorId nextActorId() {
         return _nextActorId++;
+    }
+
+    /**
+     * @return the type of actor
+     */
+    std::string actorType() const {
+        return _actorType;
+    }
+
+    /**
+     * @return the name of the actor
+     */
+    std::string actorName() const {
+        return _actorName;
     }
 
     /**
@@ -449,6 +465,8 @@ private:
     WorkloadContext* _workload;
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
 
+    std::string _actorType;
+    std::string _actorName;
     std::atomic<ActorId> _nextActorId;
 };
 
@@ -503,6 +521,15 @@ public:
 
     SleepContext getSleepContext() const {
         return SleepContext(_phaseNumber, this->actor().orchestrator());
+    }
+
+    std::string actorInfo(ActorId id) const {
+        std:: string info = this->actor().actorType() + "::" + this->actor().actorName() + "::" + std::to_string(id);
+        if (this->isNop()) {
+            info += "::isNop";
+        }
+
+        return info;
     }
 
     /**
