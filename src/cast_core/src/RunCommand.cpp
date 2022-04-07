@@ -208,44 +208,88 @@ private:
     bool _awaitStepdown;
 };
 
-struct InstanceType {
-    static constexpr std::string_view kStandalone = "standalone";
-    static constexpr std::string_view kSharded = "sharded";
-    static constexpr std::string_view kReplicaSet = "replica_set";
+class InstanceTypeFilter {
+public:
+    struct Options {
+        static constexpr std::string_view kStandalone = "standalone";
+        static constexpr std::string_view kSharded = "sharded";
+        static constexpr std::string_view kReplicaSet = "replica_set";
 
-    static std::string_view get(mongocxx::database &db) {
+        static std::string getValidOptionsListAsString() {
+            std::stringstream listString;
+            listString << kStandalone << ", " << kSharded << ", " << kReplicaSet;
+            return listString.str();
+        }
+
+        static bool isValid(std::string_view instanceType) {
+            return instanceType == kStandalone || instanceType == kSharded 
+                    || instanceType == kReplicaSet;
+        }
+
+        static bool isValidList(const std::vector<std::string>& options) {
+            for(auto &option : options) {
+                if(!isValid(option)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    };
+
+    InstanceTypeFilter(PhaseContext &context, mongocxx::pool::entry& client) {
+        try {
+            _onlyRunInInstancesContext = context.getPlural<std::string>(
+                "OnlyRunInInstance", "OnlyRunInInstances", [&](const Node& node) {
+                    return node.to<std::string>();
+            });
+        } catch(...) {
+            // If the key exists there is a configuration error
+            if(context["OnlyRunInInstance"] || context["OnlyRunInInstance"]) {
+                std::rethrow_exception(std::current_exception());
+            }
+        }
+
+        _typeFoundInConfig = false;
+        if(_onlyRunInInstancesContext.size()) {
+            if(!Options::isValidList(_onlyRunInInstancesContext)) {
+                std::stringstream errorMsg;
+                errorMsg << "OnlyRunInInstance or OnlyRunInInstances valid values are: "
+                    << Options::getValidOptionsListAsString();
+                throw InvalidConfigurationException(errorMsg.str());
+            }
+
+            auto adminDB = (*client)["admin"];
+            _type = getInstanceType(adminDB);
+            for(const auto &configInstanceType : _onlyRunInInstancesContext) {
+                if(_type == configInstanceType) {
+                    _typeFoundInConfig = true;
+                }
+            }
+        }
+    }
+
+    bool shouldRun() {
+        return _onlyRunInInstancesContext.size() == 0 || _typeFoundInConfig;
+    }
+
+    static std::string_view getInstanceType(mongocxx::database &db) {
         using bsoncxx::builder::basic::kvp;
         using bsoncxx::builder::basic::make_document;
 
         auto helloResult = db.run_command(make_document(kvp("hello", 1)));
         if(auto msg = helloResult.view()["msg"]) {
-            return kSharded;
+            return Options::kSharded;
         }
         if(auto msg = helloResult.view()["hosts"]) {
-            return kReplicaSet;
+            return Options::kReplicaSet;
         }
-        return kStandalone;
+        return Options::kStandalone;
     }
 
-    static bool isValid(std::string_view instanceType) {
-        return instanceType == kStandalone || instanceType == kSharded 
-                || instanceType == kReplicaSet;
-    }
-
-    static bool isValidOptionList(const std::vector<std::string>& options) {
-        for(auto &option : options) {
-            if(!InstanceType::isValid(option)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    static std::string getValidOptionsListAsString() {
-        std::stringstream listString;
-        listString << kStandalone << ", " << kSharded << ", " << kReplicaSet;
-        return listString.str();
-    }
+private:
+    std::vector<std::string> _onlyRunInInstancesContext;
+    bool _typeFoundInConfig;
+    std::string_view _type;
 };
 
 /** @private */
@@ -262,8 +306,9 @@ struct actor::RunCommand::PhaseConfig {
                 "AdminCommands can only be run on the 'admin' database.");
         }
 
+        InstanceTypeFilter onlyRunInInstancesFilter(context, client);
         // Run when there are no OnlyRunInInstances option or when one of the options matches
-        if(checkOnlyRunInInstances(context, client)) {
+        if(onlyRunInInstancesFilter.shouldRun()) {
             auto createOperation = [&](const Node& node) {
                 return DatabaseOperation::create(node, context, actorContext, id, client, database);
             };
@@ -271,42 +316,6 @@ struct actor::RunCommand::PhaseConfig {
             operations = context.getPlural<std::unique_ptr<DatabaseOperation>>(
                 "Operation", "Operations", createOperation);
         }
-    }
-
-    bool checkOnlyRunInInstances(PhaseContext &context, mongocxx::pool::entry& client) {
-        std::vector<std::string> onlyRunInInstances;
-
-        try {
-            onlyRunInInstances = context.getPlural<std::string>(
-                "OnlyRunInInstance", "OnlyRunInInstances", [&](const Node& node) {
-                    return node.to<std::string>();
-            });
-        } catch(...) {
-            // If the key exists there is a configuration error
-            if(context["OnlyRunInInstance"] || context["OnlyRunInInstance"]) {
-                std::rethrow_exception(std::current_exception());
-            }
-        }
-
-        bool instanceTypeFound = false;
-        if(onlyRunInInstances.size()) {
-            if(!InstanceType::isValidOptionList(onlyRunInInstances)) {
-                std::stringstream errorMsg;
-                errorMsg << "OnlyRunInInstance or OnlyRunInInstances valid values are: "
-                    << InstanceType::getValidOptionsListAsString();
-                throw InvalidConfigurationException(errorMsg.str());
-            }
-
-            auto adminDB = (*client)["admin"];
-            auto selfInstanceType = InstanceType::get(adminDB);
-            for(const auto &configInstanceType : onlyRunInInstances) {
-                if(selfInstanceType == configInstanceType) {
-                    instanceTypeFound = true;
-                    // We don't break to complete checking the configuration.
-                }
-            }
-        }
-        return onlyRunInInstances.size() == 0 || instanceTypeFound;
     }
 
     bool throwOnFailure;
