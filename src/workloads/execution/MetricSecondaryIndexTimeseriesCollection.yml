@@ -3,6 +3,12 @@ Owner: "@mongodb/query"
 Description: |
   This test exercises the behavior of querying for data in a timeseries collection using a metric index.
 
+  The phases are:
+  0. Create collection
+  1. Insert events + create index
+  2. Quiesce
+  3. Query
+
 GlobalDefaults:
   dbname: &db test
   batchSize: &batchSize 30000
@@ -26,48 +32,11 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
 
 - Name: InsertData
   Type: Loader
   Threads: 1
   Phases:
-  - *Nop
   - *Nop
   - Repeat: 1
     Database: *db
@@ -83,31 +52,27 @@ Actors:
       timestamp: {^IncDate: {start: "2022-01-01", step: 40000}}
       # Uniform, unique distribution of values so we can point query.
       numeric: {^Inc: {start: 0, step: 1}}
-      # string: {^RandomString: {length: 4000}}
+      # Large padding string to simulate many other fields being present.
+      string: {^RandomString: {length: 4000}}
     Indexes:
     - *index
   - *Nop
   - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Repeat: 1
   - *Nop
 
 - Name: PointQueries
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -129,16 +94,6 @@ Actors:
           }
         }]
         cursor: {batchSize: *batchSize}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
 
 AutoRun:
 - When:
@@ -154,3 +109,4 @@ AutoRun:
       - v5.0
       - v5.1
       - v5.2
+      - v5.3
