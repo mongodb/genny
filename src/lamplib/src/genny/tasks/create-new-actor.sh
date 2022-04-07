@@ -331,10 +331,6 @@ struct ${actor_name}::PhaseConfig {
 // the ${q}Actor.hpp${q} file.
 //
 void ${actor_name}::run() {
-    // This will print out some information about the actor beginning execution.
-    // This will occur for every actor thread, and will print out the actor type,
-    // name and id. Debug mode is used to not spam logs for high thread actors.
-    BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
     //
     // The ${q}config${q} variable is bound to the ${q}PhaseConfig${q} that was
     // constructed for the current Phase at setup time. This loop will automatically
@@ -342,6 +338,11 @@ void ${actor_name}::run() {
     // Actors so that all Actors start and end at the right time.
     //
     for (auto&& config : _loop) {
+        //
+        // This will print out some information about the actor beginning execution.
+        // This will occur for every actor thread, and will print out the actor type,
+        // name and id. Debug mode is used to not spam logs for high thread actors.
+        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         //
         // This inner loop is run according to the Phase configuration for this
         // Actor. If you have ${q}{Duration: 1 minute}${q} this loop will be run
@@ -415,8 +416,8 @@ void ${actor_name}::run() {
                 BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
             }
         }
+        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
-    BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
 }
 
 ${actor_name}::${actor_name}(genny::ActorContext& context)
