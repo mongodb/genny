@@ -15,6 +15,8 @@
 #ifndef HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 #define HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 
+#include <string>
+
 namespace genny {
 
 using ActorId = unsigned int;
@@ -79,6 +81,14 @@ public:
      */
     // static std::string_view defaultName()
 
+
+    /**
+     * @return info string containing the actor type, name and id
+     */
+    std::string actorInfo() const {
+        return _actorInfo;
+    }
+
     /**
      * The main method of an actor. Will be run in its own thread.
      * This is only intended to be called by workload drivers.
@@ -96,6 +106,7 @@ public:
 
 private:
     ActorId _id;
+    std::string _actorInfo;
 };
 
 }  // namespace genny

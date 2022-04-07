@@ -356,17 +356,11 @@ public:
     }
 
     /**
-     * @return the type of actor
+     * @param id for this actor
+     * @return info string containing the actor type, name and id
      */
-    std::string actorType() const {
-        return _actorType;
-    }
-
-    /**
-     * @return the name of the actor
-     */
-    std::string actorName() const {
-        return _actorName;
+    std::string actorInfo(ActorId id) const {
+        return _actorType + "::" + _actorName + "::" + std::to_string(id);
     }
 
     /**
@@ -521,15 +515,6 @@ public:
 
     SleepContext getSleepContext() const {
         return SleepContext(_phaseNumber, this->actor().orchestrator());
-    }
-
-    std::string actorInfo(ActorId id) const {
-        std:: string info = this->actor().actorType() + "::" + this->actor().actorName() + "::" + std::to_string(id);
-        if (this->isNop()) {
-            info += "::isNop";
-        }
-
-        return info;
     }
 
     /**
