@@ -208,6 +208,8 @@ private:
     bool _awaitStepdown;
 };
 
+// Class to parse and hold the OnlyRunInInstance configuration. This option may be used to only
+// run under certain configurations Available configurations are specified in Options.
 class InstanceTypeFilter {
 public:
     struct Options {
@@ -243,7 +245,8 @@ public:
                     return node.to<std::string>();
             });
         } catch(...) {
-            // If the key exists there is a configuration error
+            // Exception might be due to keys not found or other errors. If its due to keys not 
+            // found ignore the expception. Otherwise rethrow.
             if(context["OnlyRunInInstance"] || context["OnlyRunInInstance"]) {
                 std::rethrow_exception(std::current_exception());
             }
@@ -263,15 +266,21 @@ public:
             for(const auto &configInstanceType : _onlyRunInInstancesContext) {
                 if(_type == configInstanceType) {
                     _typeFoundInConfig = true;
+                    break;
                 }
             }
         }
     }
 
+    // Indicates if operations should be run. If there is no OnlyRunInInstance configuration or one 
+    // of the specified options matches the client instance type, returns true. Otherwise returns 
+    // false.
     bool shouldRun() {
         return _onlyRunInInstancesContext.size() == 0 || _typeFoundInConfig;
     }
 
+    // The output of the "hello" command is parsed to check if we are running in a Mongos, a replica 
+    // set, or a standalone instance.
     static std::string_view getInstanceType(mongocxx::database &db) {
         using bsoncxx::builder::basic::kvp;
         using bsoncxx::builder::basic::make_document;
