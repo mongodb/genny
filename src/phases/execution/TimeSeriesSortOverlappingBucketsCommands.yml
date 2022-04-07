@@ -5,7 +5,7 @@ Description: |
 
 BlockingSortCmdTemplate:
   aggregate: {^Parameter: {Name: "coll", Default: Collection0}}
-  pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
+  pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$limit: 1}]
   cursor: {batchSize: {^Parameter: {Name: "batchSize", Default: 30000}}}
   allowDiskUse: true
 
@@ -23,8 +23,7 @@ BoundedSortCmdTemplate:
       sortKey: {t: 1},
       bound: {base: "min"},
     }},
-    {$_internalInhibitOptimization: {}},
-    {$skip: 1e10}
+    {$limit: 1}
   ]
   cursor: {batchSize: {^Parameter: {Name: "batchSize", Default: 30000}}}
   hint: {$natural: 1}
