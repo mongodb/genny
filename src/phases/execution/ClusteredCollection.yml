@@ -39,19 +39,26 @@ Actors:
 
 #Phase 1: Shard the collection
 - Name: ShardCollection
-  Type: CollectionSharder
+  Type: AdminCommand
   Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [1]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
+        OnlyRunInInstance: sharded
         Repeat: 1
-        ShardCollections:
-        - Database: *Database
-          Collection: *Collection
-          key: {_id: "hashed"}
-          numInitialChunks: 12
+        Operations:
+        - OperationName: AdminCommand
+          OperationMetricsName: EnableShardingMetrics
+          OperationCommand:
+            enableSharding: *Database
+        - OperationName: AdminCommand
+          OperationMetricsName: ShardCollectionMetrics
+          OperationCommand:
+            shardCollection: *Namespace
+            key: {_id: "hashed"}
+            numInitialChunks: 12
 
 # Phase 2: insert. TODO Make multithreaded once TIG-2938 is resolved.
 - Name: Insert
@@ -132,9 +139,7 @@ Actors:
             Filter: {a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}}
 
 
-# Phase 6: Point deletion. TODO convert to range deletions once TIG-3707 is implemented.
-# Deleter uses findAndModify internally:
-#   Query for sharded findAndModify must contain the shard key: generic server error
+# Phase 6: Point deletion.
 - Name: PointDeleter
   Type: CrudActor
   Database: *Database
@@ -145,7 +150,7 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         RandomRemainder : &RandomRemainder {^RandomInt: {min: 0, max: 99}}
-        DeleteQuery : &DeleteQuery { $expr: { $eq: [{ $mod: [ { $toInt: "$a" }, 100 ] }, *RandomRemainder] } } #{ a : { $mod: [ 100, *RandomRemainder ] } } 
+        DeleteQuery : &DeleteQuery { $expr: { $eq: [{ $mod: [ { $toInt: "$a" }, 100 ] }, *RandomRemainder] } }
         Duration: 3 minutes
         Collection: *Collection
         Operations:

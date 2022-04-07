@@ -803,5 +803,291 @@ TEST_CASE_METHOD(MongoTestFixture,
         ah.runDefaultAndVerify(verifyFn);
     }
 }
+
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Check OnlyRunInInstance in standalone",
+                 "[standalone]") {
+
+    dropAllDatabases();
+    auto db = client.database("test");
+
+    SECTION("OnlyRunInInstance for sharded and replica_set instances skips operations") {
+        auto config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+            Actors:
+            - Name: TestActor
+              Type: RunCommand
+              Threads: 1
+              Phases:
+              - OnlyRunInInstances: [sharded, replica_set]
+                Repeat: 1
+                Database: test
+                Operations:
+                - OperationName: RunCommand
+                  OperationCommand:
+                    insert: testCollection
+                    documents: [{rating: 10}]
+            Metrics:
+              Format: csv
+        )");
+        auto builder = bson_stream::document{};
+        bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
+        auto view = doc_value.view();
+        NodeSource nodeSource{YAML::Dump(config), ""};
+        ActorHelper ah(nodeSource.root(), 1);
+        auto verifyFn = [&db, view](const WorkloadContext& context) {
+            REQUIRE(db.collection("testCollection").count_documents(view) == 0);
+        };
+        ah.runDefaultAndVerify(verifyFn);
+    }
+
+    SECTION("OnlyRunInInstance for standalone (last) does operation") {
+        auto config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+            Actors:
+            - Name: TestActor
+              Type: RunCommand
+              Threads: 1
+              Phases:
+              - OnlyRunInInstances: [sharded, replica_set, standalone]
+                Repeat: 1
+                Database: test
+                Operations:
+                - OperationName: RunCommand
+                  OperationCommand:
+                    insert: testCollection
+                    documents: [{rating: 10}]
+            Metrics:
+              Format: csv
+        )");
+        auto builder = bson_stream::document{};
+        bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
+        auto view = doc_value.view();
+        NodeSource nodeSource{YAML::Dump(config), ""};
+        ActorHelper ah(nodeSource.root(), 1);
+        auto verifyFn = [&db, view](const WorkloadContext& context) {
+            REQUIRE(db.has_collection("testCollection"));
+            REQUIRE(db.collection("testCollection").count_documents(view) == 1);
+        };
+        ah.runDefaultAndVerify(verifyFn);
+    }
+}
+
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Check OnlyRunInInstance in replica_set",
+                 "[single_node_replset][three_node_replset]") {
+
+    dropAllDatabases();
+    auto db = client.database("test");
+
+    SECTION("OnlyRunInInstance for sharded and standalone instances skips operations") {
+        auto config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+            Actors:
+            - Name: TestActor
+              Type: RunCommand
+              Threads: 1
+              Phases:
+              - OnlyRunInInstances: [sharded, standalone]
+                Repeat: 1
+                Database: test
+                Operations:
+                - OperationName: RunCommand
+                  OperationCommand:
+                    insert: testCollection
+                    documents: [{rating: 10}]
+            Metrics:
+              Format: csv
+        )");
+        auto builder = bson_stream::document{};
+        bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
+        auto view = doc_value.view();
+        NodeSource nodeSource{YAML::Dump(config), ""};
+        ActorHelper ah(nodeSource.root(), 1);
+        auto verifyFn = [&db, view](const WorkloadContext& context) {
+            REQUIRE(db.collection("testCollection").count_documents(view) == 0);
+        };
+        ah.runDefaultAndVerify(verifyFn);
+    }
+
+    SECTION("OnlyRunInInstance for replica_set (first) does operation") {
+        auto config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+            Actors:
+            - Name: TestActor
+              Type: RunCommand
+              Threads: 1
+              Phases:
+              - OnlyRunInInstances: [replica_set, standalone]
+                Repeat: 1
+                Database: test
+                Operations:
+                - OperationName: RunCommand
+                  OperationCommand:
+                    insert: testCollection
+                    documents: [{rating: 10}]
+            Metrics:
+              Format: csv
+        )");
+        auto builder = bson_stream::document{};
+        bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
+        auto view = doc_value.view();
+        NodeSource nodeSource{YAML::Dump(config), ""};
+        ActorHelper ah(nodeSource.root(), 1);
+        auto verifyFn = [&db, view](const WorkloadContext& context) {
+            REQUIRE(db.has_collection("testCollection"));
+            REQUIRE(db.collection("testCollection").count_documents(view) == 1);
+        };
+        ah.runDefaultAndVerify(verifyFn);
+    }
+}
+
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Check OnlyRunInInstance in sharded",
+                 "[sharded]") {
+
+    dropAllDatabases();
+    auto db = client.database("test");
+
+    SECTION("OnlyRunInInstances: [standalone,replica_set] skips operations in sharded") {
+        auto config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+            Actors:
+            - Name: TestActor
+              Type: RunCommand
+              Threads: 1
+              Phases:
+              - OnlyRunInInstances: [standalone, replica_set]
+                Repeat: 1
+                Database: test
+                Operations:
+                - OperationName: RunCommand
+                  OperationCommand:
+                    insert: testCollection
+                    documents: [{rating: 10}]
+            Metrics:
+              Format: csv
+        )");
+        auto builder = bson_stream::document{};
+        bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
+        auto view = doc_value.view();
+        NodeSource nodeSource{YAML::Dump(config), ""};
+        ActorHelper ah(nodeSource.root(), 1);
+        auto verifyFn = [&db, view](const WorkloadContext& context) {
+            REQUIRE(db.collection("testCollection").count_documents(view) == 0);
+        };
+        ah.runDefaultAndVerify(verifyFn);
+    }
+
+    SECTION("OnlyRunInInstance for sharded does operation") {
+        auto config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+            Actors:
+            - Name: TestActor
+              Type: RunCommand
+              Threads: 1
+              Phases:
+              - OnlyRunInInstance: sharded
+                Repeat: 1
+                Database: test
+                Operations:
+                - OperationName: RunCommand
+                  OperationCommand:
+                    insert: testCollection
+                    documents: [{rating: 10}]
+            Metrics:
+              Format: csv
+        )");
+        auto builder = bson_stream::document{};
+        bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
+        auto view = doc_value.view();
+        NodeSource nodeSource{YAML::Dump(config), ""};
+        ActorHelper ah(nodeSource.root(), 1);
+        auto verifyFn = [&db, view](const WorkloadContext& context) {
+            REQUIRE(db.has_collection("testCollection"));
+            REQUIRE(db.collection("testCollection").count_documents(view) == 1);
+        };
+        ah.runDefaultAndVerify(verifyFn);
+    }
+}
+
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Check OnlyRunInInstance inputs",
+                 "[standalone][sharded][single_node_replset][three_node_replset]") {
+    SECTION("OnlyRunInInstances throws on non-existing type") {
+        NodeSource config(R"(
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+            Actors:
+            - Name: TestActor
+              Type: RunCommand
+              Threads: 1
+              Phases:
+              - OnlyRunInInstances: [standalone, non-existing]
+                Repeat: 1
+                Database: test
+                Operations:
+                - OperationName: RunCommand
+                  OperationCommand:
+                    insert: testCollection
+                    documents: [{rating: 10}]
+            Metrics:
+              Format: csv
+        )", "");
+
+        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1), 
+        Catch::Contains("OnlyRunInInstance or OnlyRunInInstances valid values are:"));
+    }
+
+    SECTION("OnlyRunInInstances throws with both plural and singular") {
+        NodeSource config(R"(
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+            Actors:
+            - Name: TestActor
+              Type: RunCommand
+              Threads: 1
+              Phases:
+              - OnlyRunInInstances: [standalone]
+                OnlyRunInInstance: sharded
+                Repeat: 1
+                Database: test
+                Operations:
+                - OperationName: RunCommand
+                  OperationCommand:
+                    insert: testCollection
+                    documents: [{rating: 10}]
+            Metrics:
+              Format: csv
+        )", "");
+
+        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1), 
+        Catch::Contains("Can't have both 'OnlyRunInInstance' and 'OnlyRunInInstances'."));
+    }
+    
+}
+
 }  // namespace
 }  // namespace genny
