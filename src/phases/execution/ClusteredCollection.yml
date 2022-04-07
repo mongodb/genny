@@ -11,7 +11,7 @@ GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
-  DocumentCount:  &docCount 1000000
+  DocumentCount: &docCount 1000000
   MaxPhases: &MaxPhases 7
 
 
@@ -37,7 +37,7 @@ Actors:
             clusteredIndex: {key: {_id: 1}, unique: true}
 
 
-#Phase 1: Shard the collection
+# Phase 1: Shard the collection
 - Name: ShardCollection
   Type: AdminCommand
   Threads: 1
@@ -149,8 +149,8 @@ Actors:
       Active: [6]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        RandomRemainder : &RandomRemainder {^RandomInt: {min: 0, max: 99}}
-        DeleteQuery : &DeleteQuery { $expr: { $eq: [{ $mod: [ { $toInt: "$a" }, 100 ] }, *RandomRemainder] } }
+        RandomRemainder: &RandomRemainder {^RandomInt: {min: 0, max: 99}}
+        DeleteQuery: &DeleteQuery { $expr: { $eq: [{ $mod: [{ $toInt: "$a" }, 100] }, *RandomRemainder] } }
         Duration: 3 minutes
         Collection: *Collection
         Operations:
