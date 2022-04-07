@@ -53,6 +53,7 @@ struct SampleHttpClient::PhaseConfig {
 
 void SampleHttpClient::run() {
     for (auto&& config : _loop) {
+        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (const auto&& _ : config) {
             auto document = config->documentExpr();
 
@@ -102,6 +103,7 @@ void SampleHttpClient::run() {
                 throw std::current_exception();
             }
         }
+        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

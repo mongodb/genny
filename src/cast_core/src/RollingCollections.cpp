@@ -458,9 +458,11 @@ struct RollingCollections::PhaseConfig {
 
 void RollingCollections::run() {
     for (auto&& config : _loop) {
+        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (const auto&& _ : config) {
             config->_operation->run();
         }
+        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

@@ -46,6 +46,7 @@ struct MoveRandomChunkToRandomShard::PhaseConfig {
 
 void MoveRandomChunkToRandomShard::run() {
     for (auto&& config : _loop) {
+        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (const auto&& _ : config) {
             try {
                 auto&& configDatabase = _client->database("config");
@@ -126,6 +127,7 @@ void MoveRandomChunkToRandomShard::run() {
                         .view()));
             }
         }
+        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

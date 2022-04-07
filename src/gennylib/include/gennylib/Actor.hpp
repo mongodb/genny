@@ -84,6 +84,7 @@ public:
 
     /**
      * @return info string containing the actor type, name and id
+     * Can be used for debug logging.
      */
     std::string actorInfo() const {
         return _actorInfo;

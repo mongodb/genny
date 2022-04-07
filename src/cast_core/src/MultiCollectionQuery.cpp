@@ -69,6 +69,7 @@ struct MultiCollectionQuery::PhaseConfig {
 
 void MultiCollectionQuery::run() {
     for (auto&& config : _loop) {
+        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (auto&& _ : config) {
             // Select a collection
             // This area is ripe for defining a collection generator, based off a string generator.
@@ -101,6 +102,7 @@ void MultiCollectionQuery::run() {
                 opCtx.success();
             }
         }
+        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 
