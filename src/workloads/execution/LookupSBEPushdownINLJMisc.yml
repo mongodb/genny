@@ -217,7 +217,7 @@ TestOperations: &TestOperations
   OperationCommand: *INLJTripleLookupCmd
 
 # Defines how many times each test operation is executed.
-TestRepeatCount: &TestRepeatCount 1
+TestRepeatCount: &TestRepeatCount 10
 
 Actors:
 # The 'Setup' actor drops the database and runs in the 0th phase.
@@ -384,6 +384,4 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
-# Reenable this setup if you want to enable the SBE $lookup perf testing on all-feature-flags
-# build variant on Evergreen patch build
-# - standalone-all-feature-flags
+      - standalone-all-feature-flags
