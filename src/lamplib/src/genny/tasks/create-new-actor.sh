@@ -339,11 +339,6 @@ void ${actor_name}::run() {
     //
     for (auto&& config : _loop) {
         //
-        // This will print out some information about the actor beginning execution.
-        // This will occur for every actor thread, and will print out the actor type,
-        // name and id. Debug mode is used to not spam logs for high thread actors.
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
-        //
         // This inner loop is run according to the Phase configuration for this
         // Actor. If you have ${q}{Duration: 1 minute}${q} this loop will be run
         // for one minute, etc. It also handles rate-limiting and error-handling
@@ -416,7 +411,6 @@ void ${actor_name}::run() {
                 BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
             }
         }
-        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

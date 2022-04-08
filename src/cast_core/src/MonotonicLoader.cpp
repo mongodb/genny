@@ -82,7 +82,6 @@ struct MonotonicLoader::PhaseConfig {
 
 void genny::actor::MonotonicLoader::run() {
     for (auto&& config : _loop) {
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (auto&& _ : config) {
             for (uint i = config->collectionOffset;
                  i < config->collectionOffset + config->numCollections;
@@ -152,7 +151,6 @@ void genny::actor::MonotonicLoader::run() {
                 BOOST_LOG_TRIVIAL(info) << "Done with load phase. All documents loaded";
             }
         }
-        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

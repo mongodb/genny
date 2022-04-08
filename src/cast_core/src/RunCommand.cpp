@@ -236,7 +236,6 @@ struct actor::RunCommand::PhaseConfig {
 
 void actor::RunCommand::run() {
     for (auto&& config : _loop) {
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (auto&& _ : config) {
             for (auto&& op : config->operations) {
                 try {
@@ -253,7 +252,6 @@ void actor::RunCommand::run() {
                 }
             }
         }
-        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

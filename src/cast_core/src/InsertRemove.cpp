@@ -58,7 +58,6 @@ struct InsertRemove::PhaseConfig {
 
 void InsertRemove::run() {
     for (auto&& config : _loop) {
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (auto&& _ : config) {
             BOOST_LOG_TRIVIAL(debug) << " Inserting and then removing";
 
@@ -76,7 +75,6 @@ void InsertRemove::run() {
             removeCtx.addDocuments(1);
             removeCtx.success();
         }
-        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

@@ -60,7 +60,6 @@ struct MultiCollectionUpdate::PhaseConfig {
 
 void MultiCollectionUpdate::run() {
     for (auto&& config : _loop) {
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (auto&& _ : config) {
             // Select a collection
             auto collectionNumber = config->uniformDistribution(_rng);
@@ -81,7 +80,6 @@ void MultiCollectionUpdate::run() {
                 opCtx.success();
             }
         }
-        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

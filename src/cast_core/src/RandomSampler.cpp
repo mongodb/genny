@@ -71,7 +71,6 @@ struct RandomSampler::PhaseConfig {
 
 void RandomSampler::run() {
     for (auto&& config : _loop) {
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (const auto&& _ : config) {
             auto statTracker = _activeCollectionScannerInstances > 0
                 ? config->readWithScanOperation.start()
@@ -87,7 +86,6 @@ void RandomSampler::run() {
             }
             statTracker.success();
         }
-        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

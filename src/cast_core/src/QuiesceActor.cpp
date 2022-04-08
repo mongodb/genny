@@ -49,7 +49,6 @@ struct QuiesceActor::PhaseConfig {
 
 void QuiesceActor::run() {
     for (auto&& config : _loop) {
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (const auto&& _ : config) {
             auto quiesceContext = _totalQuiesces.start();
             BOOST_LOG_TRIVIAL(debug) << "QuiesceActor quiescing cluster.";
@@ -59,7 +58,6 @@ void QuiesceActor::run() {
                 quiesceContext.failure();
             }
         }
-        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

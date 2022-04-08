@@ -86,7 +86,7 @@ void CommitLatency::run() {
     using namespace bsoncxx::builder::stream;
 
     for (auto&& config : _loop) {
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
+
         std::shared_ptr<mongocxx::client_session> _session;
         if (config.begin() != config.end()) {
             BOOST_LOG_TRIVIAL(info)
@@ -172,7 +172,6 @@ void CommitLatency::run() {
             }
             ctx.success();
         }
-        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

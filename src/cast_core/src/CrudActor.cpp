@@ -1525,7 +1525,6 @@ struct CrudActor::PhaseConfig {
 
 void CrudActor::run() {
     for (auto&& config : _loop) {
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         auto session = _client->start_session();
         if (!config.isNop()) {
             config->fsm.onNewPhase(config.isNop(), _rng);
@@ -1543,7 +1542,6 @@ void CrudActor::run() {
             }
             metricsContext.success();
         }
-        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

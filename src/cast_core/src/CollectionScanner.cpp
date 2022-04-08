@@ -416,7 +416,6 @@ void CollectionScanner::run() {
     int i = 0;
     std::optional<bsoncxx::types::b_timestamp> readClusterTime;
     for (auto&& config : _loop) {
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (const auto&& _ : config) {
             if (config->selectClusterTimeOnly) {
                 std::this_thread::sleep_for(std::chrono::seconds{1});
@@ -504,7 +503,6 @@ void CollectionScanner::run() {
             _runningActorCounter--;
             BOOST_LOG_TRIVIAL(debug) << "Finished collection scanner id: " << this->_index;
         }
-        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

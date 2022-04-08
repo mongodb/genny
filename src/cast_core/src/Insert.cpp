@@ -45,7 +45,6 @@ struct Insert::PhaseConfig {
 
 void Insert::run() {
     for (auto&& config : _loop) {
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (const auto&& _ : config) {
             auto ctx = _insert.start();
             auto document = config->documentExpr();
@@ -55,7 +54,6 @@ void Insert::run() {
             ctx.addBytes(document.view().length());
             ctx.success();
         }
-        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 

@@ -48,7 +48,6 @@ struct Deleter::PhaseConfig {
 
 void Deleter::run() {
     for (auto&& config : _loop) {
-        BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (const auto&& _ : config) {
             auto statTracker = config->deleteOperation.start();
             /*
@@ -64,7 +63,6 @@ void Deleter::run() {
                 statTracker.failure();
             }
         }
-        BOOST_LOG_TRIVIAL(debug) << "Ended " << this->actorInfo() << " execution";
     }
 }
 
