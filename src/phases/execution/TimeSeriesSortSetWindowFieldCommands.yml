@@ -1,0 +1,47 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  These are the phases used to measure performance of the bounded sorter for timeseries collections.
+
+BlockingSortCmdTemplate:
+  aggregate: {^Parameter: {Name: "coll", Default: Collection0}}
+  pipeline: [
+   {
+      $setWindowFields: {
+         partitionBy: "$m",
+         sortBy: {t: 1},
+         output: {
+            cumulativeQuantityForState: {
+               $sum: "$measurement",
+               window: {
+                  documents: ["unbounded", "current"]
+               }
+            }
+         }
+      }
+   },
+   {$_internalInhibitOptimization: {}},
+   {$skip: 1e10}
+  ]
+  cursor: {batchSize: {^Parameter: {Name: "batchSize", Default: 30000}}}
+  allowDiskUse: true
+
+BoundedSortCmdTemplate:
+  aggregate: {^Parameter: {Name: "bucketsColl", Default: system.buckets.Collection0}}
+  pipeline: [
+    {$_internalUnpackBucket: {
+      exclude: [],
+      timeField: "t",
+      metaField: "m",
+      bucketMaxSpanSeconds: 3600,
+      assumeNoMixedSchemaData: true
+    }},
+    {$_internalBoundedSort: {
+      sortKey: {t: 1},
+      bound: {base: "min"},
+    }},
+    {$skip: 1e10}
+  ]
+  cursor: {batchSize: {^Parameter: {Name: "batchSize", Default: 30000}}}
+  hint: {$natural: 1}
+  allowDiskUse: true

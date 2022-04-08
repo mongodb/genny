@@ -18,7 +18,7 @@ GlobalDefaults:
 
 BlockingSortCmd: &BlockingSortCmd
   LoadConfig:
-    Path: "../../phases/execution/TimeSeriesSortOverlappingBucketsCommands.yml"
+    Path: "../../phases/execution/TimeSeriesSortSetWindowFieldCommands.yml"
     Key: BlockingSortCmdTemplate
     Parameters:
       coll: *coll
@@ -26,7 +26,7 @@ BlockingSortCmd: &BlockingSortCmd
 
 BoundedSortCmd: &BoundedSortCmd
   LoadConfig:
-    Path: "../../phases/execution/TimeSeriesSortOverlappingBucketsCommands.yml"
+    Path: "../../phases/execution/TimeSeriesSortSetWindowFieldCommands.yml"
     Key: BoundedSortCmdTemplate
     Parameters:
       coll: *bucketsColl
@@ -228,10 +228,12 @@ Actors:
     DocumentCount: 1001000  # insert 100 independent series, each series has 100 buckets
     BatchSize: *batchSize
     Document:
+      # TODO maybe change the data/how overlapping it can be
       # t repeats each date 100 times [d1 d1 d1 d1... d2 d2 d2 d2 ...]
       t: {^Repeat: {count: 100, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
       # m cycles through the meta values [0 1 2 ... 99 0 1 2 ... 99 0 1 2 ...]
       m: {^Cycle: {ofLength: 100, fromGenerator: {^Inc: {start: 0}}}}
+      measurement: {^RandomInt: {min: 10, max: 20}}
   - *Nop
   - *Nop
   - *Nop
