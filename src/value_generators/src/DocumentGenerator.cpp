@@ -63,7 +63,11 @@ public:
 
 namespace {
 using namespace genny;
-const boost::posix_time::ptime epoch{boost::gregorian::date(1970, 1, 1)};
+
+const boost::posix_time::ptime& epoch() {
+    static boost::posix_time::ptime out{boost::gregorian::date(1970, 1, 1)};
+    return out;
+}
 
 template <typename T>
 class ConstantAppender : public Generator<T> {
@@ -147,17 +151,23 @@ std::optional<std::string> getMetaKey(const Node& node) {
 }
 
 /** Default alphabet for string generators */
-const std::string kDefaultAlphabet = std::string{
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz"
-    "0123456789+/"};
+const std::string& kDefaultAlphabet() {
+    static std::string out{
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789+/"};
+    return out;
+}
 
 // Useful typedefs
 
 template <typename O>
 using Parser = std::function<O(const Node&, GeneratorArgs)>;
 
-const boost::posix_time::ptime maxDate{boost::gregorian::date(2150, 1, 1)};
+const boost::posix_time::ptime& maxDate() {
+    static boost::posix_time::ptime out{boost::gregorian::date(2150, 1, 1)};
+    return out;
+}
 
 // Pre-declaring all at once
 // Documentation is at the implementations-site.
@@ -171,7 +181,7 @@ UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
 UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<int64_t> dateGenerator(const Node& node,
                                        GeneratorArgs generatorArgs,
-                                       const boost::posix_time::ptime& defaultTime = epoch);
+                                       const boost::posix_time::ptime& defaultTime = epoch());
 template <bool Verbatim, typename Out>
 Out valueGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
@@ -194,6 +204,7 @@ template <typename Distribution,
           const char* parameter2name>
 class DoubleGenerator2Parameter : public Generator<double> {
 public:
+    [[maybe_unused]]  // Used in instantiated templates. No need to warn on it.
     DoubleGenerator2Parameter(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng},
           _actorId{generatorArgs.actorId},
@@ -218,6 +229,7 @@ private:
 template <typename Distribution, const char* diststring, const char* parameter1name>
 class DoubleGenerator1Parameter : public Generator<double> {
 public:
+    [[maybe_unused]]  // Used in instantiated templates. No need to warn on it.
     DoubleGenerator1Parameter(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng},
           _actorId{generatorArgs.actorId},
@@ -512,15 +524,11 @@ public:
         // Bitwise add with _subnetMask and add to _prefix
         // Note that _subnetMask and _prefix are always default values for now.
         auto distribution = boost::random::uniform_int_distribution<int32_t>{};
-        auto ipint = (distribution(_rng) & _subnetMask) + _prefix;
-        std::array<int32_t, 4> octets;
-        for (int i = 0; i < 4; i++) {
-            octets[i] = ipint & 255;
-            ipint = ipint >> 8;
-        }
+        const uint32_t ipint = (distribution(_rng) & _subnetMask) + _prefix;
         // convert to a string
         std::ostringstream ipout;
-        ipout << octets[3] << "." << octets[2] << "." << octets[1] << "." << octets[0];
+        ipout << ((ipint >> 24) & 255) << "." << ((ipint >> 16) & 255) << "."
+              << ((ipint >> 8) & 255) << "." << (ipint & 255);
         return ipout.str();
     }
 
@@ -721,7 +729,7 @@ public:
         : _rng{generatorArgs.rng},
           _id{generatorArgs.actorId},
           _lengthGen{intGenerator(extract(node, "length", "^RandomString"), generatorArgs)},
-          _alphabet{node["alphabet"].maybe<std::string>().value_or(kDefaultAlphabet)},
+          _alphabet{node["alphabet"].maybe<std::string>().value_or(kDefaultAlphabet())},
           _alphabetLength{_alphabet.size()} {
         if (_alphabetLength <= 0) {
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
@@ -899,7 +907,7 @@ public:
         : _rng{generatorArgs.rng},
           _node{node},
           _minGen{dateGenerator(node["min"], generatorArgs)},
-          _maxGen{dateGenerator(node["max"], generatorArgs, maxDate)} {}
+          _maxGen{dateGenerator(node["max"], generatorArgs, maxDate())} {}
 
     bsoncxx::types::b_date evaluate() override {
         auto min = _minGen->evaluate();
@@ -1203,86 +1211,89 @@ Out valueGenerator(const Node& node,
     BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
 }
 
-const std::map<std::string, Parser<UniqueAppendable>> allParsers{
-    {"^FastRandomString",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<FastRandomStringGenerator>(node, generatorArgs);
-     }},
-    {"^RandomString",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
-     }},
-    {"^Join",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<JoinGenerator>(node, generatorArgs);
-     }},
-    {"^Concat",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ConcatGenerator>(node, generatorArgs);
-     }},
-    {"^FormatString",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers);
-     }},
-    {"^Choose",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ChooseGenerator>(node, generatorArgs);
-     }},
-    {"^IP",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<IPGenerator>(node, generatorArgs);
-     }},
-    {"^ActorIdString",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ActorIdStringGenerator>(node, generatorArgs);
-     }},
-    {"^ActorId",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ActorIdIntGenerator>(node, generatorArgs);
-     }},
-    {"^RandomInt", int64GeneratorBasedOnDistribution},
-    {"^RandomDouble", doubleGeneratorBasedOnDistribution},
-    {"^Now",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<NowGenerator>(node, generatorArgs);
-     }},
-    {"^RandomDate",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<RandomDateGenerator>(node, generatorArgs);
-     }},
-    {"^ObjectId",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ObjectIdGenerator>(node, generatorArgs);
-     }},
-    {"^Verbatim",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return valueGenerator<true, UniqueAppendable>(node, generatorArgs, allParsers);
-     }},
-    {"^Inc",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<IncGenerator>(node, generatorArgs);
-     }},
-    {"^IncDate",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<IncDateGenerator>(node, generatorArgs);
-     }},
-    {"^Array",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
-     }},
-    {"^Object",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ObjectGenerator>(node, generatorArgs, allParsers);
-     }},
-    {"^Cycle",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers);
-     }},
-    {"^FixedGeneratedValue",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers, 1);
-     }},
-};
+const std::map<std::string, Parser<UniqueAppendable>>& allParsers() {
+    static const std::map<std::string, Parser<UniqueAppendable>> out{
+        {"^FastRandomString",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<FastRandomStringGenerator>(node, generatorArgs);
+         }},
+        {"^RandomString",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
+         }},
+        {"^Join",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<JoinGenerator>(node, generatorArgs);
+         }},
+        {"^Concat",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ConcatGenerator>(node, generatorArgs);
+         }},
+        {"^FormatString",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers());
+         }},
+        {"^Choose",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ChooseGenerator>(node, generatorArgs);
+         }},
+        {"^IP",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<IPGenerator>(node, generatorArgs);
+         }},
+        {"^ActorIdString",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ActorIdStringGenerator>(node, generatorArgs);
+         }},
+        {"^ActorId",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ActorIdIntGenerator>(node, generatorArgs);
+         }},
+        {"^RandomInt", int64GeneratorBasedOnDistribution},
+        {"^RandomDouble", doubleGeneratorBasedOnDistribution},
+        {"^Now",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NowGenerator>(node, generatorArgs);
+         }},
+        {"^RandomDate",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<RandomDateGenerator>(node, generatorArgs);
+         }},
+        {"^ObjectId",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ObjectIdGenerator>(node, generatorArgs);
+         }},
+        {"^Verbatim",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return valueGenerator<true, UniqueAppendable>(node, generatorArgs, allParsers());
+         }},
+        {"^Inc",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<IncGenerator>(node, generatorArgs);
+         }},
+        {"^IncDate",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<IncDateGenerator>(node, generatorArgs);
+         }},
+        {"^Array",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers());
+         }},
+        {"^Object",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ObjectGenerator>(node, generatorArgs, allParsers());
+         }},
+        {"^Cycle",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers());
+         }},
+        {"^FixedGeneratedValue",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers(), 1);
+         }},
+    };
+    return out;
+}
 
 
 /**
@@ -1313,7 +1324,7 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node,
     DocumentGenerator::Impl::Entries entries;
     for (const auto&& [k, v] : node) {
         auto key = k.toString();
-        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, generatorArgs, allParsers);
+        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, generatorArgs, allParsers());
         entries.emplace_back(key, std::move(valgen));
     }
     return std::make_unique<DocumentGenerator::Impl>(std::move(entries));
@@ -1330,7 +1341,7 @@ UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
                                                              GeneratorArgs generatorArgs) {
     LiteralArrayGenerator::ValueType entries;
     for (const auto&& [k, v] : node) {
-        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, generatorArgs, allParsers);
+        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, generatorArgs, allParsers());
         entries.push_back(std::move(valgen));
     }
     return std::make_unique<LiteralArrayGenerator>(std::move(entries));
@@ -1517,7 +1528,7 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
          }},
         {"^FormatString",
          [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers);
+             return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers());
          }},
     };
     if (auto parserPair = extractKnownParser(node, generatorArgs, stringParsers)) {
@@ -1543,7 +1554,7 @@ UniqueGenerator<bsoncxx::array::value> bsonArrayGenerator(const Node& node,
          }},
         {"^Array",
          [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
+             return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers());
          }},
         {"^Verbatim", [](const Node& node, GeneratorArgs generatorArgs) {
              if (!node.isSequence()) {
@@ -1574,7 +1585,7 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
     }
     for (const auto&& [k, v] : node["from"]) {
-        _choices.push_back(valueGenerator<false, UniqueAppendable>(v, generatorArgs, allParsers));
+        _choices.push_back(valueGenerator<false, UniqueAppendable>(v, generatorArgs, allParsers()));
     }
     if (node["weights"]) {
         for (const auto&& [k, v] : node["weights"]) {
@@ -1601,18 +1612,18 @@ int64_t parseStringToMillis(const std::string& datetime) {
             date_stream.imbue(format);
             boost::local_time::local_date_time local_date{boost::local_time::not_a_date_time};
             if (date_stream >> local_date) {
-                return (local_date.utc_time() - epoch).total_milliseconds();
+                return (local_date.utc_time() - epoch()).total_milliseconds();
             }
         }
     }
     try {
         // Last gasp try to interpret unsigned long long.
-        return std::stoull(datetime);
+        return static_cast<int64_t>(std::stoull(datetime));
     } catch (const std::invalid_argument& _) {
         auto msg = "^RandomDate: Invalid Dateformat '" + datetime + "'";
         BOOST_THROW_EXCEPTION(InvalidDateFormat{msg});
     }
-};
+}
 
 /**
  * @private
@@ -1701,7 +1712,7 @@ UniqueGenerator<int64_t> dateGenerator(const Node& node,
     }
 
     // No value, get the appropriate default.
-    auto millis = (defaultTime - epoch).total_milliseconds();
+    auto millis = (defaultTime - epoch()).total_milliseconds();
     return std::make_unique<ConstantAppender<int64_t>>(millis);
 }
 }  // namespace
