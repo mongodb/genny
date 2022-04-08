@@ -224,7 +224,7 @@ public:
         }
 
         static bool isValid(std::string_view instanceType) {
-            return instanceType == kStandalone || instanceType == kSharded 
+            return instanceType == kStandalone || instanceType == kSharded
                     || instanceType == kReplicaSet;
         }
 
@@ -245,7 +245,7 @@ public:
                     return node.to<std::string>();
             });
         } catch(...) {
-            // Exception might be due to keys not found or other errors. If its due to keys not 
+            // Exception might be due to keys not found or other errors. If its due to keys not
             // found ignore the expception. Otherwise rethrow.
             if(context["OnlyRunInInstance"] || context["OnlyRunInInstance"]) {
                 std::rethrow_exception(std::current_exception());
@@ -264,8 +264,8 @@ public:
         }
     }
 
-    // Indicates if operations should be run. If there is no OnlyRunInInstance configuration or one 
-    // of the specified options matches the client instance type, returns true. Otherwise returns 
+    // Indicates if operations should be run. If there is no OnlyRunInInstance configuration or one
+    // of the specified options matches the client instance type, returns true. Otherwise returns
     // false.
     bool shouldRun() {
         if(_type.length() == 0 && _onlyRunInInstancesContext.size()) {
@@ -281,7 +281,7 @@ public:
         return _onlyRunInInstancesContext.size() == 0 || _typeFoundInConfig;
     }
 
-    // The output of the "hello" command is parsed to check if we are running in a Mongos, a replica 
+    // The output of the "hello" command is parsed to check if we are running in a Mongos, a replica
     // set, or a standalone instance.
     static std::string_view getInstanceType(mongocxx::database &db) {
         using bsoncxx::builder::basic::kvp;
