@@ -252,7 +252,6 @@ public:
             }
         }
 
-        _typeFoundInConfig = false;
         if(_onlyRunInInstancesContext.size()) {
             if(!Options::isValidList(_onlyRunInInstancesContext)) {
                 std::stringstream errorMsg;
@@ -261,14 +260,7 @@ public:
                 throw InvalidConfigurationException(errorMsg.str());
             }
 
-            auto adminDB = (*client)["admin"];
-            _type = getInstanceType(adminDB);
-            for(const auto &configInstanceType : _onlyRunInInstancesContext) {
-                if(_type == configInstanceType) {
-                    _typeFoundInConfig = true;
-                    break;
-                }
-            }
+            _adminDB = (*client)["admin"];
         }
     }
 
@@ -276,6 +268,16 @@ public:
     // of the specified options matches the client instance type, returns true. Otherwise returns 
     // false.
     bool shouldRun() {
+        if(_type.length() == 0 && _onlyRunInInstancesContext.size()) {
+            _type = getInstanceType(_adminDB);
+            _typeFoundInConfig = false;
+            for(const auto &configInstanceType : _onlyRunInInstancesContext) {
+                if(_type == configInstanceType) {
+                    _typeFoundInConfig = true;
+                    break;
+                }
+            }
+        }
         return _onlyRunInInstancesContext.size() == 0 || _typeFoundInConfig;
     }
 
@@ -299,6 +301,7 @@ private:
     std::vector<std::string> _onlyRunInInstancesContext;
     bool _typeFoundInConfig;
     std::string_view _type;
+    mongocxx::database _adminDB;
 };
 
 /** @private */
@@ -307,7 +310,8 @@ struct actor::RunCommand::PhaseConfig {
                 ActorContext& actorContext,
                 mongocxx::pool::entry& client,
                 ActorId id)
-        : throwOnFailure{context["ThrowOnFailure"].maybe<bool>().value_or(true)} {
+        : throwOnFailure{context["ThrowOnFailure"].maybe<bool>().value_or(true)},
+            onlyRunInInstancesFilter(context, client) {
         auto actorType = actorContext["Type"].to<std::string>();
         auto database = context["Database"].maybe<std::string>().value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
@@ -315,25 +319,27 @@ struct actor::RunCommand::PhaseConfig {
                 "AdminCommands can only be run on the 'admin' database.");
         }
 
-        InstanceTypeFilter onlyRunInInstancesFilter(context, client);
-        // Run when there are no OnlyRunInInstances option or when one of the options matches
-        if(onlyRunInInstancesFilter.shouldRun()) {
-            auto createOperation = [&](const Node& node) {
-                return DatabaseOperation::create(node, context, actorContext, id, client, database);
-            };
+        auto createOperation = [&](const Node& node) {
+            return DatabaseOperation::create(node, context, actorContext, id, client, database);
+        };
 
-            operations = context.getPlural<std::unique_ptr<DatabaseOperation>>(
-                "Operation", "Operations", createOperation);
-        }
+        operations = context.getPlural<std::unique_ptr<DatabaseOperation>>(
+            "Operation", "Operations", createOperation);
     }
 
     bool throwOnFailure;
     std::vector<std::unique_ptr<DatabaseOperation>> operations;
+    InstanceTypeFilter onlyRunInInstancesFilter;
 };
 
 void actor::RunCommand::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
+            // Run ops when there is no OnlyRunInInstances option or when one of the options matches
+            if(!config->onlyRunInInstancesFilter.shouldRun()) {
+                continue;
+            }
+
             for (auto&& op : config->operations) {
                 try {
                     op->run();
