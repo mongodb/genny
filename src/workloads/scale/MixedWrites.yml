@@ -37,7 +37,7 @@ Actors:
 
 AutoRun:
 - When:
-    infrastructure_provisioning:
+    mongodb_setup:
       $eq: replica
   ThenRun:
   - mongodb_setup: replica-delay-mixed
