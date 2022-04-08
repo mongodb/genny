@@ -835,12 +835,15 @@ public:
 // see https://www.boost.org/doc/libs/1_75_0/doc/html/date_time/date_time_io.html.
 // We strive to use smart pointers where possible. In this case this is not possible
 // but not a huge deal as these objects are statically allocated.
-const auto formats = {
-    std::locale(std::locale::classic(),
-                new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M:%s%ZP")),
-    std::locale(std::locale::classic(),
-                new boost::local_time::local_time_input_facet("%Y-%m-%d %H:%M:%s%ZP")),
-};
+const auto& formats() {
+    static auto out = {
+        std::locale{std::locale::classic(),
+                    new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M:%s%ZP")},
+        std::locale{std::locale::classic(),
+                    new boost::local_time::local_time_input_facet("%Y-%m-%d %H:%M:%s%ZP")},
+    };
+    return out;
+}
 
 class DateToIntGenerator : public Generator<int64_t> {
 public:
@@ -1607,7 +1610,7 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
 int64_t parseStringToMillis(const std::string& datetime) {
     if (!datetime.empty()) {
         // TODO: PERF-2153 needs some investigation.
-        for (const auto& format : formats) {
+        for (const auto& format : formats()) {
             std::istringstream date_stream{datetime};
             date_stream.imbue(format);
             boost::local_time::local_date_time local_date{boost::local_time::not_a_date_time};
@@ -1755,8 +1758,11 @@ TypeGenerator<double> makeDoubleGenerator(const Node& node, GeneratorArgs genera
 
 template <class T>
 TypeGenerator<T>::~TypeGenerator() = default;
+
 template <class T>
+[[maybe_unused]]  // Used in instantiated templates. No need to warn on it.
 TypeGenerator<T>::TypeGenerator(TypeGenerator<T>&&) noexcept = default;
+
 template <class T>
 TypeGenerator<T>& TypeGenerator<T>::operator=(TypeGenerator<T>&&) noexcept = default;
 
