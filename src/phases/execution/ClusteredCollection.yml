@@ -28,9 +28,6 @@ Actors:
         Repeat: 1
         Database: *Database
         Operations:
-        # - OperationName: RunCommand
-        #   OperationCommand:
-        #     drop: *Collection
         - OperationName: RunCommand
           OperationCommand:
             create: *Collection
@@ -149,14 +146,14 @@ Actors:
       Active: [6]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        RandomRemainder: &RandomRemainder {^RandomInt: {min: 0, max: 99}}
-        DeleteQuery: &DeleteQuery { $expr: { $eq: [{ $mod: [{ $toInt: "$a" }, 100] }, *RandomRemainder] } }
         Duration: 3 minutes
         Collection: *Collection
         Operations:
-        - OperationName: deleteMany
+        - OperationName: deleteOne
           OperationCommand:
-            Filter: *DeleteQuery
+            Filter:
+              # 1000000 docs / 16 threads = 62500
+              {_id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: 1, multiplier: 62500}}]}}, *PaddingGenerator]}}}
 
 AutoRun:
 - When:
