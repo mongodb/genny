@@ -33,8 +33,8 @@ RunLastPointQuery:
       aggregate: &coll {^Parameter: {Name: "IndexPattern", Default: "Collection0"}}
       pipeline:
         [
-          &sortPattern {$sort: {^Parameter: {Name: "SortPattern", Default: {}}}},
-          &groupPattern {$group: {^Parameter: {Name: "GroupPattern", Default: {}}}}
+          &sortStage {$sort: &sortPattern {^Parameter: {Name: "SortPattern", Default: {}}}},
+          &groupStage {$group: {^Parameter: {Name: "GroupPattern", Default: {}}}}
         ]
       cursor: &batchSize {batchSize: {^Parameter: {Name: "BatchSize", Default: 100}}}
       # In cases when we cannot optimize for a covered index sort, allow for external sorting.
@@ -47,8 +47,8 @@ RunLastPointQuery:
       pipeline:
         [
           {$match: {"metadata.sensorId": {$gt: 10}}},
-          *sortPattern,
-          *groupPattern
+          *sortStage,
+          *groupStage
         ]
       cursor: *batchSize
       # In cases when we cannot optimize for a covered index sort, allow for external sorting.
@@ -61,8 +61,23 @@ RunLastPointQuery:
       pipeline:
         [
           {$match: {"metadata.sensorId": {$lt: 10}}},
-          *sortPattern,
-          *groupPattern
+          *sortStage,
+          *groupStage
+        ]
+      cursor: *batchSize
+      # In cases when we cannot optimize for a covered index sort, allow for external sorting.
+      allowDiskUse: true
+  # Test the lastpoint optimization with $top or $bottom.
+  - OperationMetricsName: RunLastPointQueryWithTopOrBottom
+    OperationName: RunCommand
+    OperationCommand:
+      aggregate: *coll
+      pipeline:
+        [
+          {$group: {
+            _id: "$metadata.sensorId",
+            mostRecent: {^Parameter: {Name: "GroupPatternTopOrBottom", Default: {}}}
+          }}
         ]
       cursor: *batchSize
       # In cases when we cannot optimize for a covered index sort, allow for external sorting.
