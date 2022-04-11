@@ -2,7 +2,11 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
     This test exercises the behavior of the time series bounded sorter as the number of documents
-    in the collection increases.
+    in the collection increases.  We test the sort from 1 million documents to 15 million. Each
+    document has a random meta value ranging from 0 to 1000. Since this file is meant to test how
+    the bounded sorter scales with collection document count, we do not increase the number of
+    series during each insertion phase. The bounded sorter is expected to scale linearly, while a
+    normal blocking sort should scale worse.
 
 GlobalDefaults:
   dbname: &db test
@@ -67,7 +71,6 @@ Actors:
 
   - Repeat: 1
     Database: *db
-    Collection: *coll
     Threads: 1
     CollectionCount: 1
     DocumentCount: &numDocs 1e6
@@ -82,7 +85,6 @@ Actors:
 
   - Repeat: 1
     Database: *db
-    Collection: *coll
     Threads: 1
     CollectionCount: 1
     DocumentCount: *numDocs
@@ -97,7 +99,6 @@ Actors:
 
   - Repeat: 1
     Database: *db
-    Collection: *coll
     Threads: 1
     CollectionCount: 1
     DocumentCount: *numDocs
@@ -112,7 +113,6 @@ Actors:
 
   - Repeat: 1
     Database: *db
-    Collection: *coll
     Threads: 1
     CollectionCount: 1
     DocumentCount: *numDocs
@@ -127,7 +127,6 @@ Actors:
 
   - Repeat: 1
     Database: *db
-    Collection: *coll
     Threads: 1
     CollectionCount: 1
     DocumentCount: *numDocs
@@ -142,7 +141,6 @@ Actors:
 
   - Repeat: 1
     Database: *db
-    Collection: *coll
     Threads: 1
     CollectionCount: 1
     DocumentCount: *numDocs
@@ -157,7 +155,6 @@ Actors:
 
   - Repeat: 1
     Database: *db
-    Collection: *coll
     Threads: 1
     CollectionCount: 1
     DocumentCount: *numDocs
@@ -172,7 +169,6 @@ Actors:
 
   - Repeat: 1
     Database: *db
-    Collection: *coll
     Threads: 1
     CollectionCount: 1
     DocumentCount: *numDocs
@@ -187,7 +183,6 @@ Actors:
 
   - Repeat: 1
     Database: *db
-    Collection: *coll
     Threads: 1
     CollectionCount: 1
     DocumentCount: *numDocs
@@ -202,7 +197,6 @@ Actors:
 
   - Repeat: 1
     Database: *db
-    Collection: *coll
     Threads: 1
     CollectionCount: 1
     DocumentCount: *numDocs
@@ -217,7 +211,6 @@ Actors:
 
   - Repeat: 1
     Database: *db
-    Collection: *coll
     Threads: 1
     CollectionCount: 1
     DocumentCount: *numDocs
@@ -232,7 +225,6 @@ Actors:
 
   - Repeat: 1
     Database: *db
-    Collection: *coll
     Threads: 1
     CollectionCount: 1
     DocumentCount: *numDocs
