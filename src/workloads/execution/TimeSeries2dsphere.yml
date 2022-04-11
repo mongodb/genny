@@ -58,7 +58,9 @@ Actors:
       OperationMetricsName: CreateTimeSeriesCollection
       OperationName: RunCommand
       OperationCommand:
-        {create: &coll Collection1, timeseries: {timeField: "timestamp", metaField: "meta"}}
+        # We have to call the collection 'Collection0' because that's the name that Loader
+        # chooses implicitly.
+        {create: &coll Collection0, timeseries: {timeField: "timestamp", metaField: "meta"}}
   - *Nop
   - *Nop
   - *Nop
@@ -70,8 +72,6 @@ Actors:
   - *Nop
   - Repeat: 1
     Database: *db
-    # Collection: *coll
-    AreYOuEvenListening: false
     Threads: 1
     CollectionCount: 1
     DocumentCount: *documentCount
