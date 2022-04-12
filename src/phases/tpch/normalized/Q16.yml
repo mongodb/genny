@@ -16,6 +16,7 @@ TPCHNormalizedQuery16:
   Operations:
   - OperationMetricsName: Query16
     OperationName: RunCommand
+    OperationLogsResult: true
     OperationCommand:
       explain:
         aggregate: part

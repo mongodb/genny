@@ -14,6 +14,7 @@ TPCHDenormalizedQuery5:
   Operations:
   - OperationMetricsName: Query5
     OperationName: RunCommand
+    OperationLogsResult: true
     OperationCommand:
       explain:
         aggregate: customer

@@ -16,6 +16,7 @@ TPCHNormalizedQuery8:
   Operations:
   - OperationMetricsName: Query8
     OperationName: RunCommand
+    OperationLogsResult: true
     OperationCommand:
       explain:
         aggregate: part

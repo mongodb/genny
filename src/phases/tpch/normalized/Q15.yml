@@ -13,6 +13,7 @@ TPCHNormalizedQuery15:
   Operations:
   - OperationMetricsName: Query15CreateView
     OperationName: RunCommand
+    OperationLogsResult: true
     OperationCommand:
       create: revenue
       viewOn: lineitem
