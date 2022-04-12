@@ -140,7 +140,7 @@ Actors:
 - Name: PointDeleter
   Type: CrudActor
   Database: *Database
-  Threads: 16
+  Threads: &ThreadCount 16
   Phases:
     OnlyActiveInPhases:
       Active: [6]
@@ -152,8 +152,7 @@ Actors:
         - OperationName: deleteOne
           OperationCommand:
             Filter:
-              # 1000000 docs / 16 threads = 62500
-              {_id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: 1, multiplier: 62500}}]}}, *PaddingGenerator]}}}
+              {_id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: 0, multiplier: 1, step: *ThreadCount}}]}}, *PaddingGenerator]}}}
 
 AutoRun:
 - When:
