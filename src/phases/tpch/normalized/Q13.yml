@@ -13,6 +13,7 @@ TPCHNormalizedQuery13:
   Operations:
   - OperationMetricsName: Query13
     OperationName: RunCommand
+    OperationLogsResult: true
     OperationCommand:
       explain:
         aggregate: customer

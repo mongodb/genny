@@ -26,32 +26,39 @@ LastpointQueryMetaAscTimeDesc: &LastpointQueryMetaAscTimeDesc
     Key: RunLastPointQuery
     Parameters:
       Collection: *coll
-      SortPattern: {"metadata.sensorId": 1, timestamp: -1}
+      SortPattern: &sortPatternMetaAscTimeDesc {"metadata.sensorId": 1, timestamp: -1}
       GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
+      GroupPatternTopOrBottom: {$top: {
+        sortBy: *sortPatternMetaAscTimeDesc,
+        output: &output {timestamp: "$timestamp", temp: "$temp"}
+      }}
 LastpointQueryMetaDescTimeDesc: &LastpointQueryMetaDescTimeDesc
   LoadConfig:
     Path: *phasePath
     Key: RunLastPointQuery
     Parameters:
       Collection: *coll
-      SortPattern: {"metadata.sensorId": -1, timestamp: -1}
+      SortPattern: &sortPatternMetaDescTimeDesc {"metadata.sensorId": -1, timestamp: -1}
       GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
+      GroupPatternTopOrBottom: {$top: {sortBy: *sortPatternMetaDescTimeDesc, output: *output}}
 LastpointQueryMetaDescTimeAsc: &LastpointQueryMetaDescTimeAsc
   LoadConfig:
     Path: *phasePath
     Key: RunLastPointQuery
     Parameters:
       Collection: *coll
-      SortPattern: {"metadata.sensorId": -1, timestamp: 1}
+      SortPattern: &sortPatternMetaDescTimeAsc {"metadata.sensorId": -1, timestamp: 1}
       GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
+      GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaDescTimeAsc, output: *output}}
 LastpointQueryMetaAscTimeAsc: &LastpointQueryMetaAscTimeAsc
   LoadConfig:
     Path: *phasePath
     Key: RunLastPointQuery
     Parameters:
       Collection: *coll
-      SortPattern: {"metadata.sensorId": 1, timestamp: 1}
+      SortPattern: &sortPatternMetaAscTimeAsc {"metadata.sensorId": 1, timestamp: 1}
       GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
+      GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaAscTimeAsc, output: *output}}
 
 Actors:
 - Name: CreateTimeSeriesCollection
@@ -176,7 +183,7 @@ Actors:
       Parameters:
         Collection: *coll
         IndexName: &metaAscTimeDesc "MetaSubfieldAscendingTimeDescending"
-        IndexPattern: {"metadata.sensorId": 1, timestamp: -1}
+        IndexPattern: *sortPatternMetaAscTimeDesc
   - *Quiesce
   - *LastpointQueryMetaAscTimeDesc
   - LoadConfig:
@@ -253,7 +260,7 @@ Actors:
       Parameters:
         Collection: *coll
         IndexName: &metaDescTimeDesc "MetaSubfieldDescendingTimeDescending"
-        IndexPattern: {"metadata.sensorId": -1, timestamp: -1}
+        IndexPattern: *sortPatternMetaDescTimeDesc
   - *Quiesce
   - *LastpointQueryMetaDescTimeDesc
   - LoadConfig:
@@ -330,7 +337,7 @@ Actors:
       Parameters:
         Collection: *coll
         IndexName: &metaDescTimeAsc "MetaSubfieldDescendingTimeAscending"
-        IndexPattern: {"metadata.sensorId": -1, timestamp: 1}
+        IndexPattern: *sortPatternMetaDescTimeAsc
   - *Quiesce
   - *LastpointQueryMetaDescTimeAsc
   - LoadConfig:
@@ -405,7 +412,7 @@ Actors:
       Parameters:
         Collection: *coll
         IndexName: &metaAscTimeAsc "MetaSubfieldAscendingTimeAscending"
-        IndexPattern: {"metadata.sensorId": 1, timestamp: 1}
+        IndexPattern: *sortPatternMetaAscTimeAsc
   - *Quiesce
   - *LastpointQueryMetaAscTimeAsc
   - LoadConfig:

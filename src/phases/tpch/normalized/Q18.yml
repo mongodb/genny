@@ -13,6 +13,7 @@ TPCHNormalizedQuery18:
   Operations:
   - OperationMetricsName: Query18
     OperationName: RunCommand
+    OperationLogsResult: true
     OperationCommand:
       explain:
         aggregate: orders
