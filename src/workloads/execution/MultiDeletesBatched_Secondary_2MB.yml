@@ -13,8 +13,8 @@ Clients:
 LoadConfig:
   Path: "../../phases/execution/MultiDeletes.yml"
   Parameters:
-    DocumentSizePaddingBytes: 1024  # 1KB
-    DocumentCount: 10_000_000
+    DocumentSizePaddingBytes: 2097152  # 2MB
+    DocumentCount: 5_000
     UseBatchedDeleteStage: 1
     ConfigurationFile: "../../phases/execution/config/MultiDeletes/Secondary.yml"
 

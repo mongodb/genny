@@ -14,7 +14,7 @@ LoadConfig:
   Path: "../../phases/execution/MultiDeletes.yml"
   Parameters:
     DocumentSizePaddingBytes: 10485760  # 10MB
-    DocumentCount: 1_000_000
+    DocumentCount: 1_000
     InsertBatchSize: 100 # Cannot batch insert more than INT_MAX bytes
     UseBatchedDeleteStage: 1
 
