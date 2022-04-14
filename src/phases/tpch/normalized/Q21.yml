@@ -13,6 +13,7 @@ TPCHNormalizedQuery21:
   Operations:
   - OperationMetricsName: Query21
     OperationName: RunCommand
+    OperationLogsResult: true
     OperationCommand:
       explain:
         aggregate: supplier

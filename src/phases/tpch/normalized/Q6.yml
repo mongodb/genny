@@ -16,6 +16,7 @@ TPCHNormalizedQuery6:
   Operations:
   - OperationMetricsName: Query6
     OperationName: RunCommand
+    OperationLogsResult: true
     OperationCommand:
       explain:
         aggregate: lineitem
