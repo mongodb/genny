@@ -178,9 +178,9 @@ public:
                 if (_options.awaitStepdown) {
                     runThenAwaitStepdown(_database, view);
                 } else {
-                    auto command_result = _database.run_command(view);
+                    auto commandResult = _database.run_command(view);
                     if (_options.logResult) {
-                        BOOST_LOG_TRIVIAL(info) << " Command result: " << bsoncxx::to_json(command_result);
+                        BOOST_LOG_TRIVIAL(info) << " Command result: " << bsoncxx::to_json(commandResult);
                     }
                 }
 
