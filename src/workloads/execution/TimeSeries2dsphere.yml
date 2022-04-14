@@ -4,10 +4,12 @@ Description: |
   This test exercises the behavior of querying for data in a timeseries collection using a 2dsphere index.
 
   The phases are:
-  1. Create collection
-  2. Insert events + create index
-  3. Quiesce
-  4. Query
+  0. Create collection
+  1. Insert events + create index
+  2. Quiesce
+  3. $geoWithin
+  4. Quiesce
+  5. $geoNear
 
 GlobalDefaults:
   # Schema constants.
@@ -72,6 +74,8 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
 
 - Name: InsertData
   Type: Loader
@@ -98,6 +102,8 @@ Actors:
     - *index
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -105,6 +111,8 @@ Actors:
   Database: *db
   Phases:
   - *Nop
+  - *Nop
+  - Repeat: 1
   - *Nop
   - Repeat: 1
   - *Nop
@@ -116,7 +124,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Duration: 10 seconds  # TODO more
+  - Duration: 30 seconds
     Database: *db
     Operations:
     - OperationMetricsName: GeoWithinQuery
@@ -128,6 +136,28 @@ Actors:
             {^RandomDouble: { min: *minX, max: *maxX }},
             {^RandomDouble: { min: *minY, max: *maxY }},
           ], 0.001]}}}},
+          {$skip: 1e5},
+        ]
+        cursor: {}
+  - *Nop
+  - Duration: 30 seconds
+    Database: *db
+    Operations:
+    - OperationMetricsName: GeoNearQuery
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [
+          {$geoNear: {
+            key: 'location',
+            near: [
+              {^RandomDouble: { min: *minX, max: *maxX }},
+              {^RandomDouble: { min: *minY, max: *maxY }},
+            ],
+            spherical: true,
+            distanceField: 'd',
+            maxDistance: 0.001,
+          }},
           {$skip: 1e5},
         ]
         cursor: {}
