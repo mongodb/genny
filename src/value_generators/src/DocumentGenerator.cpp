@@ -1092,6 +1092,68 @@ private:
 };
 
 
+class TwoDWalkGenerator : public Generator<bsoncxx::array::value> {
+public:
+    TwoDWalkGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _rng(generatorArgs.rng)
+        , _docsPerSeries{extract(node, "docsPerSeries", "TwoDWalk").maybe<int64_t>().value()}
+        , _distPerDoc{extract(node, "distPerDoc", "TwoDWalk").maybe<double>().value()}
+        , _genX{
+            extract(node, "minX", "TwoDWalk").maybe<double>().value(),
+            extract(node, "maxX", "TwoDWalk").maybe<double>().value(),
+        }
+        , _genY{
+            extract(node, "minY", "TwoDWalk").maybe<double>().value(),
+            extract(node, "maxY", "TwoDWalk").maybe<double>().value(),
+        }
+    {
+    }
+
+    bsoncxx::array::value evaluate() override {
+        if (_numGenerated % _docsPerSeries == 0) {
+            beginSeries();
+        }
+        ++_numGenerated;
+
+        _x += _vx;
+        _y += _vy;
+
+        bsoncxx::builder::basic::array builder{};
+        builder.append(_x);
+        builder.append(_y);
+        return builder.extract();
+    }
+
+private:
+    using Uniform = boost::random::uniform_real_distribution<double>;
+
+    // Pick a new random position and velocity.
+    void beginSeries() {
+        _x = _genX(_rng);
+        _y = _genY(_rng);
+
+        double pi = acos(-1);
+        double dir = Uniform{0, 2*pi}(_rng);
+        _vx = _distPerDoc * cos(dir);
+        _vy = _distPerDoc * sin(dir);
+    }
+
+    DefaultRandom& _rng;
+
+    // Initial arguments.
+    const int64_t _docsPerSeries;
+    const double _distPerDoc;
+    const Uniform _genX;
+    const Uniform _genY;
+
+    // Mutable state.
+    double _x, _y; // position
+    double _vx, _vy; // "velocity", in units per document.
+    int64_t _numGenerated{0};
+
+};
+
+
 /** `{a: [...]}` */
 class LiteralArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
@@ -1261,6 +1323,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^Inc",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<IncGenerator>(node, generatorArgs);
+     }},
+    {"^TwoDWalk",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<TwoDWalkGenerator>(node, generatorArgs);
      }},
     {"^IncDate",
      [](const Node& node, GeneratorArgs generatorArgs) {
