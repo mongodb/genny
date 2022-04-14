@@ -152,6 +152,9 @@ Actors:
         - OperationName: deleteOne
           OperationCommand:
             Filter:
+              # Beware, ^Inc uses ActorId which is unique for each instance within the whole workload
+              # If there are N threads created before the PointDeleter, the first N documents will
+              # not be deleted. See TIG-4057
               {_id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: 0, multiplier: 1, step: *ThreadCount}}]}}, *PaddingGenerator]}}}
 
 AutoRun:
