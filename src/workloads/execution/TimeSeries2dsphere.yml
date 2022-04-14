@@ -19,10 +19,18 @@ GlobalDefaults:
   # Data distribution constants.
   # To insert more efficiently, pick a big-ish batch size.
   # This shouldn't really affect the resulting collection though.
-  # TODO just inline these if they're used once.
-  batchSize: &batchSize 30000
-  # With events 10 seconds apart, a 
+  insertBatchSize: &insertBatchSize 30000
+  # Events are 10 seconds apart: 10,000 ms.
+  docIntervalMillis: &docIntervalMillis 10000
+  # Let's generate 1000 series of data.
+  # Note that the timestamp does not restart when we change from one series to the next, which is
+  # unrealistic. In real life the events from all 1000 series would be happening around the same
+  # time. But it shouldn't matter for this test, because the query and the index both ignore the
+  # time field.
   docsPerSeries: &docsPerSeries 1000
+  # Let's generate 120 days worth of data. That means (120 * 24 * 60 * 60) seconds, which is
+  # (120 * 24 * 60 * 60 / 10) = 1036800 events. This number is roughly 1,000,000, which means we
+  # have roughly 1,000 events in each of our 1,000 series.
   documentCount: &documentCount 1036800
   # Since we have a relatively small amount of data, we don't want to use an area that's too
   # big (such as the entire Earth, or a whole continent). That would make the data very
@@ -75,13 +83,9 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: *documentCount
-    BatchSize: *batchSize
+    BatchSize: *insertBatchSize
     Document:
-      # start "2022-01-01" = "2022-01-01T00:00:00Z", step 10000 = size of step 10 seconds or 10,000 millis
-      # Note that the timestamp does not restart when we change from one series to the next,
-      # so that's unrealistic, but it shouldn't matter for this test because the query and
-      # the index both ignore the time field.
-      timestamp: {^IncDate: {start: "2022-01-01", step: 40000}}
+      timestamp: {^IncDate: {start: "2022-01-01", step: *docIntervalMillis}}
       location: {^TwoDWalk: {
         docsPerSeries: *docsPerSeries,
         minX: *minX,
@@ -126,7 +130,7 @@ Actors:
           ], 0.001]}}}},
           {$skip: 1e5},
         ]
-        cursor: {batchSize: *batchSize}
+        cursor: {}
 
 AutoRun:
 - When:
