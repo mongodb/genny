@@ -1,0 +1,24 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Deletes a large range of documents using the DELETE query exec stage while performing writes on another collection.
+
+# TODO move the Clients section to src/phases/execution/MultiDeletes.yml once TIG-3950 is resolved.
+Clients:
+  Default:
+    QueryOptions:
+      # Allow for longer duration since the loading of the data may take a while.
+      socketTimeoutMS: 3_600_000  # = 1 hour
+
+LoadConfig:
+  Path: "../../phases/execution/MultiDeletes.yml"
+  Parameters:
+    DocumentSizePaddingBytes: 1024  # 1KB
+    DocumentCount: 10_000_000
+    ConfigurationFile: "../../phases/execution/config/MultiDeletes/Secondary.yml"
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-all-feature-flags

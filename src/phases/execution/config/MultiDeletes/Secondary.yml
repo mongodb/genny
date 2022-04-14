@@ -1,0 +1,26 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Configuration for MultiDeletes workload. This configuration uses a secondary index to delete.
+
+GlobalDefaults:
+  # The size of the documents inserted and deleted into collections during this test.
+  DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
+
+InitializeDatabaseOps:
+- OperationName: RunCommand
+  OperationCommand: {dropDatabase: 1}
+- OperationName: RunCommand
+  OperationCommand:
+    createIndexes: {^Parameter: {Name: "Collection", Default: Collection0}}
+    indexes:
+    - key: {a: 1}
+      name: a
+
+InsertDocument:
+  a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}
+  padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
+
+# Delete all entries by secondary
+DeleteQuery: {a: {$gte: "000000"}}
+

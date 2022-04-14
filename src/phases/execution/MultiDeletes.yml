@@ -14,6 +14,20 @@ GlobalDefaults:
   DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
   # Whether to use the BATCHED_DELETE query exec stage over DELETE.
   UseBatchedDeleteStage: &UseBatchedDeleteStage {^Parameter: {Name: "UseBatchedDeleteStage", Default: 0}}
+  # Configuration file to use: delete by primary (default) or delete by secondary
+  ConfigFile: &ConfigFile {^Parameter: {Name: "ConfigurationFile", Default: "../../phases/execution/config/MultiDeletes/Default.yml"}}
+  # Load Insert document from config file
+  DocumentToInsert: &DocumentToInsert
+    LoadConfig:
+      Path: *ConfigFile
+      Key: InsertDocument
+      Parameters:
+        DocumentSizePaddingBytes: *DocumentSizePaddingBytes
+  # Load delete query from config file
+  DeleteQuery: &DeleteQuery
+    LoadConfig:
+      Path: *ConfigFile
+      Key: DeleteQuery
 
 # Constants
 WriteRate: &WriteRate 1 per 500 microseconds  # 2000/second
@@ -24,17 +38,17 @@ Database: &Database __internalBatchedDeletesTesting
 MassDeletionsColl: &MassDeletionsColl Collection0
 
 Actors:
-
 # Phase 1: Drop the database.
-- Name: DropDatabase
+- Name: InitializeDatabase
   Type: RunCommand
   Threads: 1
   Phases:
   - Repeat: 1
     Database: *Database
     Operations:
-    - OperationName: RunCommand
-      OperationCommand: {dropDatabase: 1}
+      LoadConfig:
+        Path: *ConfigFile
+        Key: InitializeDatabaseOps
   - &Nop {Nop: true}
   - *Nop
   - *Nop
@@ -74,7 +88,7 @@ Actors:
     DocumentCount: *DocumentCount
     BatchSize: 1000
     Document:
-      padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
+      *DocumentToInsert
   - *Nop
   - *Nop
   - *Nop
@@ -110,8 +124,8 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: deleteMany
-          # Filter by the smallest OID so all documents are included.
-          Filter: {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
+          Filter:
+            *DeleteQuery
           OperationOptions:
             WriteConcern: { Level: "majority" }
   - *Nop
@@ -135,7 +149,7 @@ Actors:
     DocumentCount: *DocumentCount
     BatchSize: 1000
     Document:
-      padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
+      *DocumentToInsert
   - *Nop
 
 # Phase 5: Guard against timeout due to no logging during PopulateInitialData1.
@@ -171,7 +185,8 @@ Actors:
         WriteOperations:
         - WriteCommand: deleteMany
           # Filter by the smallest OID so all documents are included.
-          Filter: {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
+          Filter:
+            *DeleteQuery
           OperationOptions:
             WriteConcern: { Level: "majority" }
 
@@ -193,7 +208,7 @@ Actors:
     - OperationName: insertOne
       OperationCommand:
         Document:
-          padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
+          *DocumentToInsert
 AutoRun:
 - When:
     mongodb_setup:
