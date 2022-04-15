@@ -2,8 +2,11 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
   This test exercises the behavior of the time series bounded sorter with many overlapping buckets,
-  forcing the sort to spill to disk. We test from 1,000 overlapping buckets to 10,000 overlapping
-  buckets.
+  forcing the sort to spill to disk. We increase the number of independent series with each test.
+  The first test has 100 independent series with 100 buckets in each series, and each bucket has 100
+  documents. The second test then has 200 independent series with the same number of buckets in each
+  series and the same number of documents in each bucket. The last test then has 1000 independent
+  series.
 
 
 GlobalDefaults:
@@ -24,14 +27,6 @@ BlockingSortCmd: &BlockingSortCmd
       coll: *coll
       batchSize: *batchSize
 
-BoundedSortCmd: &BoundedSortCmd
-  LoadConfig:
-    Path: "../../phases/execution/TimeSeriesSortOverlappingBucketsCommands.yml"
-    Key: BoundedSortCmdTemplate
-    Parameters:
-      coll: *bucketsColl
-      batchSize: *batchSize
-
 Actors:
 - Name: CreateTimeSeriesCollection
   Type: RunCommand
@@ -48,8 +43,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
   - &DropCollection
     Repeat: 1
     Database: test
@@ -62,21 +55,9 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
   - *DropCollection
 
   - *CreateCollection
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *DropCollection
-
-  - *CreateCollection
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -86,21 +67,9 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
   - *DropCollection
 
   - *CreateCollection
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *DropCollection
-
-  - *CreateCollection
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -110,6 +79,10 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *DropCollection
+
+  - *CreateCollection
+  - *Nop
   - *Nop
   - *Nop
   - *DropCollection
@@ -118,13 +91,15 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
   - *DropCollection
 
   - *CreateCollection
   - *Nop
   - *Nop
+  - *Nop
+  - *DropCollection
+
+  - *CreateCollection
   - *Nop
   - *Nop
   - *Nop
@@ -139,21 +114,9 @@ Actors:
   - *Nop
   - Repeat: 1
   - *Nop
-  - Repeat: 1
-  - *Nop
   - *Nop
 
   - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-
-  - *Nop
-  - *Nop
-  - Repeat: 1
   - *Nop
   - Repeat: 1
   - *Nop
@@ -163,21 +126,9 @@ Actors:
   - *Nop
   - Repeat: 1
   - *Nop
-  - Repeat: 1
-  - *Nop
   - *Nop
 
   - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-
-  - *Nop
-  - *Nop
-  - Repeat: 1
   - *Nop
   - Repeat: 1
   - *Nop
@@ -187,6 +138,10 @@ Actors:
   - *Nop
   - Repeat: 1
   - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
   - Repeat: 1
   - *Nop
   - *Nop
@@ -195,6 +150,10 @@ Actors:
   - *Nop
   - Repeat: 1
   - *Nop
+  - *Nop
+
+  - *Nop
+  - *Nop
   - Repeat: 1
   - *Nop
   - *Nop
@@ -203,13 +162,9 @@ Actors:
   - *Nop
   - Repeat: 1
   - *Nop
-  - Repeat: 1
-  - *Nop
   - *Nop
 
   - *Nop
-  - *Nop
-  - Repeat: 1
   - *Nop
   - Repeat: 1
   - *Nop
@@ -225,7 +180,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1001000  # insert 100 independent series, each series has 100 buckets
+    DocumentCount: 10010  # insert 100 independent series, each series has 100 buckets
     BatchSize: *batchSize
     Document:
       # t repeats each date 100 times [d1 d1 d1 d1... d2 d2 d2 d2 ...]
@@ -235,8 +190,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
 
   - *Nop
   - Repeat: 1
@@ -244,7 +197,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 2002000  # increase to 200 independent series, each series has 100 buckets
+    DocumentCount: 20020  # increase to 200 independent series, each series has 100 buckets
     BatchSize: *batchSize
     Document:
       t: {^Repeat: {count: 200, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
@@ -252,8 +205,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
 
   - *Nop
   - Repeat: 1
@@ -261,7 +212,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 3003000
+    DocumentCount: 30030
     BatchSize: *batchSize
     Document:
       t: {^Repeat: {count: 300, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
@@ -269,8 +220,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
 
   - *Nop
   - Repeat: 1
@@ -278,7 +227,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 4004000
+    DocumentCount: 40040
     BatchSize: *batchSize
     Document:
       t: {^Repeat: {count: 400, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
@@ -286,8 +235,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
 
   - *Nop
   - Repeat: 1
@@ -295,7 +242,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 5005000
+    DocumentCount: 50050
     BatchSize: *batchSize
     Document:
       t: {^Repeat: {count: 500, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
@@ -303,8 +250,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
 
   - *Nop
   - Repeat: 1
@@ -312,7 +257,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 6006000
+    DocumentCount: 60060
     BatchSize: *batchSize
     Document:
       t: {^Repeat: {count: 600, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
@@ -320,8 +265,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
 
   - *Nop
   - Repeat: 1
@@ -329,7 +272,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 7007000
+    DocumentCount: 70070
     BatchSize: *batchSize
     Document:
       t: {^Repeat: {count: 700, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
@@ -337,8 +280,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
 
   - *Nop
   - Repeat: 1
@@ -346,7 +287,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 8008000
+    DocumentCount: 80080
     BatchSize: *batchSize
     Document:
       t: {^Repeat: {count: 800, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
@@ -354,8 +295,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
 
   - *Nop
   - Repeat: 1
@@ -363,7 +302,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 9009000
+    DocumentCount: 90090
     BatchSize: *batchSize
     Document:
       t: {^Repeat: {count: 900, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
@@ -371,8 +310,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
 
   - *Nop
   - Repeat: 1
@@ -380,13 +317,11 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 10010000
+    DocumentCount: 100100
     BatchSize: *batchSize
     Document:
       t: {^Repeat: {count: 1000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
       m: {^Cycle: {ofLength: 1000, fromGenerator: {^Inc: {start: 0}}}}
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -405,13 +340,6 @@ Actors:
       OperationName: RunCommand
       OperationCommand: *BlockingSortCmd
   - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SortQuerySpillBoundedSort1Mil
-      OperationName: RunCommand
-      OperationCommand: *BoundedSortCmd
-  - *Nop
 
   - *Nop
   - *Nop
@@ -422,13 +350,6 @@ Actors:
     - OperationMetricsName: SortQuerySpillBlockingSort2Mil
       OperationName: RunCommand
       OperationCommand: *BlockingSortCmd
-  - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SortQuerySpillBoundedSort2Mil
-      OperationName: RunCommand
-      OperationCommand: *BoundedSortCmd
   - *Nop
 
   - *Nop
@@ -441,13 +362,6 @@ Actors:
       OperationName: RunCommand
       OperationCommand: *BlockingSortCmd
   - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SortQuerySpillBoundedSort3Mil
-      OperationName: RunCommand
-      OperationCommand: *BoundedSortCmd
-  - *Nop
 
   - *Nop
   - *Nop
@@ -458,13 +372,6 @@ Actors:
     - OperationMetricsName: SortQuerySpillBlockingSort4Mil
       OperationName: RunCommand
       OperationCommand: *BlockingSortCmd
-  - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SortQuerySpillBoundedSort4Mil
-      OperationName: RunCommand
-      OperationCommand: *BoundedSortCmd
   - *Nop
 
   - *Nop
@@ -477,13 +384,6 @@ Actors:
       OperationName: RunCommand
       OperationCommand: *BlockingSortCmd
   - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SortQuerySpillBoundedSort5Mil
-      OperationName: RunCommand
-      OperationCommand: *BoundedSortCmd
-  - *Nop
 
   - *Nop
   - *Nop
@@ -494,13 +394,6 @@ Actors:
     - OperationMetricsName: SortQuerySpillBlockingSort6Mil
       OperationName: RunCommand
       OperationCommand: *BlockingSortCmd
-  - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SortQuerySpillBoundedSort6Mil
-      OperationName: RunCommand
-      OperationCommand: *BoundedSortCmd
   - *Nop
 
   - *Nop
@@ -513,13 +406,6 @@ Actors:
       OperationName: RunCommand
       OperationCommand: *BlockingSortCmd
   - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SortQuerySpillBoundedSort7Mil
-      OperationName: RunCommand
-      OperationCommand: *BoundedSortCmd
-  - *Nop
 
   - *Nop
   - *Nop
@@ -530,13 +416,6 @@ Actors:
     - OperationMetricsName: SortQuerySpillBlockingSort8Mil
       OperationName: RunCommand
       OperationCommand: *BlockingSortCmd
-  - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SortQuerySpillBoundedSort8Mil
-      OperationName: RunCommand
-      OperationCommand: *BoundedSortCmd
   - *Nop
 
   - *Nop
@@ -549,13 +428,6 @@ Actors:
       OperationName: RunCommand
       OperationCommand: *BlockingSortCmd
   - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SortQuerySpillBoundedSort9Mil
-      OperationName: RunCommand
-      OperationCommand: *BoundedSortCmd
-  - *Nop
 
   - *Nop
   - *Nop
@@ -566,13 +438,6 @@ Actors:
     - OperationMetricsName: SortQuerySpillBlockingSort10Mil
       OperationName: RunCommand
       OperationCommand: *BlockingSortCmd
-  - *Nop
-  - Repeat: *numQueryRuns
-    Database: *db
-    Operations:
-    - OperationMetricsName: SortQuerySpillBoundedSort10Mil
-      OperationName: RunCommand
-      OperationCommand: *BoundedSortCmd
   - *Nop
 
 

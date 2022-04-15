@@ -8,23 +8,3 @@ BlockingSortCmdTemplate:
   pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$limit: 1}]
   cursor: {batchSize: {^Parameter: {Name: "batchSize", Default: 30000}}}
   allowDiskUse: true
-
-BoundedSortCmdTemplate:
-  aggregate: {^Parameter: {Name: "bucketsColl", Default: system.buckets.Collection0}}
-  pipeline: [
-    {$_internalUnpackBucket: {
-      exclude: [],
-      timeField: "t",
-      metaField: "m",
-      bucketMaxSpanSeconds: 3600,
-      assumeNoMixedSchemaData: true
-    }},
-    {$_internalBoundedSort: {
-      sortKey: {t: 1},
-      bound: {base: "min"},
-    }},
-    {$limit: 1}
-  ]
-  cursor: {batchSize: {^Parameter: {Name: "batchSize", Default: 30000}}}
-  hint: {$natural: 1}
-  allowDiskUse: true
