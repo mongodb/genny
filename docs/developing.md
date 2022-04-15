@@ -109,6 +109,16 @@ IDEs can debug Genny if it is built with the `Debug` build type:
 ./run-genny install -- -DCMAKE_BUILD_TYPE=Debug
 ```
 
+Genny has a verbose output mode:
+
+```shell
+./run-genny workload -v debug
+```
+
+Actor information can be printed for additional help, eg: when an
+[actor is about to begin](https://github.com/mongodb/genny/blob/a3fd9cb1ee9954877281922cf5959b635d889599/src/cast_core/src/HelloWorld.cpp#L42-L45)
+or when it has [ended](https://github.com/mongodb/genny/blob/a3fd9cb1ee9954877281922cf5959b635d889599/src/cast_core/src/HelloWorld.cpp#L58)
+
 ## Code Style and Limitations
 
 > Don't get cute.
