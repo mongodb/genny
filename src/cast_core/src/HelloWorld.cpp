@@ -39,6 +39,9 @@ struct HelloWorld::PhaseConfig {
 
 void HelloWorld::run() {
     for (auto&& config : _loop) {
+        // Note that this gets printed before any rate-limiting occurs.
+        // I.e an actor may print "Starting ... execution" then be rate-limited
+        // because rate-limiting is part of the inner actor iteration.
         BOOST_LOG_TRIVIAL(debug) << "Starting " << this->actorInfo() << " execution";
         for (auto _ : config) {
             auto ctx = config->operation.start();
