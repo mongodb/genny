@@ -2,11 +2,11 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
     This test exercises the behavior of the time series bounded sorter as the number of documents
-    in the collection increases.  We test the sort from 1 million documents to 15 million. Each
-    document has a random meta value ranging from 0 to 1000. Since this file is meant to test how
-    the bounded sorter scales with collection document count, we do not increase the number of
-    series during each insertion phase. The bounded sorter is expected to scale linearly, while a
-    normal blocking sort should scale worse.
+    in the collection increases.  The collection has 10 million documents, and each document has a
+    random meta value ranging from 0 to 1000. Since this file is meant to test how the bounded
+    sorter scales with collection document count, we do not increase the number of series during
+    each insertion phase. The bounded sorter is expected to scale linearly, while a normal blocking
+    sort should scale worse.
 
 GlobalDefaults:
   dbname: &db test
