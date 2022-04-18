@@ -6,7 +6,6 @@ Description: |
   each series, and each bucket has 100 documents. The documents inserted have the same timestamps,
   with different meta values.
 
-
 GlobalDefaults:
   dbname: &db test
   coll: &coll Collection0
@@ -30,8 +29,7 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  - &CreateCollection
-    Repeat: 1
+  - Repeat: 1
     Database: *db
     Operation:
       OperationMetricsName: CreateTimeSeriesCollection
@@ -41,8 +39,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - &DropCollection
-    Repeat: 1
+  - Repeat: 1
     Database: test
     Operations:
     - OperationName: RunCommand
@@ -86,14 +83,13 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: &numQueryRuns 50
+  - Repeat: 50
     Database: *db
     Operations:
     - OperationMetricsName: SortQuerySpillBlockingSort
       OperationName: RunCommand
       OperationCommand: *BlockingSortCmd
   - *Nop
-
 
 AutoRun:
 - When:
