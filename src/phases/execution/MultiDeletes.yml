@@ -10,7 +10,7 @@ Description: >
 GlobalDefaults:
   # Configurable parameters.
   DocumentCount: &DocumentCount {^Parameter: {Name: "DocumentCount", Default: 100_000_000}}
-    # Whether to use the BATCHED_DELETE query exec stage over DELETE.
+  # Number of documents to batch into an insert.
   InsertBatchSize: &InsertBatchSize {^Parameter: {Name: "InsertBatchSize", Default: 1000}}
   # The size of the documents inserted and deleted into collections during this test.
   DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}

@@ -15,7 +15,8 @@ LoadConfig:
   Parameters:
     DocumentSizePaddingBytes: 10485760  # 10MB
     DocumentCount: 1_000
-    InsertBatchSize: 1 # Cannot batch insert more than INT_MAX bytes, also no need to batch large docs
+    # Cannot batch insert more than INT_MAX bytes, also no need to batch large docs
+    InsertBatchSize: 1
     UseBatchedDeleteStage: 1
     ConfigurationFile: "../../phases/execution/config/MultiDeletes/Secondary.yml"
 

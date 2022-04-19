@@ -15,7 +15,8 @@ LoadConfig:
   Parameters:
     DocumentSizePaddingBytes: 2097152  # 2MB
     DocumentCount: 5_000
-    InsertBatchSize: 1 # No need to batch large docs
+    # No need to batch large docs
+    InsertBatchSize: 1
 
 AutoRun:
 - When:

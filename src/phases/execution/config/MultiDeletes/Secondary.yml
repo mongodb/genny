@@ -26,5 +26,5 @@ DeleteQuery:
   # The following does not work because "000000" gets converted to 0 integer by the DocumentGenerator
   # See TIG-4064
   # {a: {$gte: "000000"}}
-  a: {$gte : {^FastRandomString: {length: 6, alphabet: "0"}}}
+  a: {$gte: {^FastRandomString: {length: 6, alphabet: "0"}}}
 
