@@ -287,7 +287,13 @@ public:
     // of the specified options matches the client instance type, returns true. Otherwise returns
     // false.
     bool shouldRun() {
-        if(_type == Options::Code::kNotInitialized && _onlyRunInInstancesContext.size()) {
+        // Run if the option was not specified
+        if(_onlyRunInInstancesContext.size() == 0) {
+            return true;
+        }
+
+        // Only verify type once
+        if(_type == Options::Code::kNotInitialized) {
             _type = getInstanceType(_adminDB);
             _typeFoundInConfig = false;
             for(const auto &configInstanceType : _onlyRunInInstancesContext) {
@@ -297,7 +303,7 @@ public:
                 }
             }
         }
-        return _onlyRunInInstancesContext.size() == 0 || _typeFoundInConfig;
+        return _typeFoundInConfig;
     }
 
     // The output of the "hello" command is parsed to check if we are running in a Mongos, a replica
