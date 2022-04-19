@@ -213,34 +213,59 @@ private:
 class InstanceTypeFilter {
 public:
     struct Options {
-        static constexpr std::string_view kStandalone = "standalone";
-        static constexpr std::string_view kSharded = "sharded";
-        static constexpr std::string_view kReplicaSet = "replica_set";
+        enum Code {
+            kStandalone,
+            kSharded,
+            kReplicaSet,
+            _size,          // Must before kNotInitialized
+            kNotInitialized  // Must be last
+        };
+        static constexpr std::string_view kNames[Code::_size] = {
+            [kStandalone] = "standalone",
+            [kSharded] = "sharded",
+            [kReplicaSet] = "replica_set"
+        };
 
         static std::string getValidOptionsListAsString() {
             std::stringstream listString;
-            listString << kStandalone << ", " << kSharded << ", " << kReplicaSet;
+            for(int i = 0; i < Code::_size; ++i) {
+                if(i != 0) {
+                    listString << ", ";
+                }
+                listString << kNames[i];
+            }
             return listString.str();
         }
 
-        static bool isValid(std::string_view instanceType) {
-            return instanceType == kStandalone || instanceType == kSharded
-                    || instanceType == kReplicaSet;
-        }
-
-        static bool isValidList(const std::vector<std::string>& options) {
-            for(auto &option : options) {
-                if(!isValid(option)) {
-                    return false;
+        static std::optional<Code> stringToCode(std::string_view instanceType) {
+            for(int i = 0; i < Code::_size; ++i) {
+                if(kNames[i] == instanceType) {
+                    return static_cast<Code>(i);
                 }
             }
-            return true;
+            return {};
+        }
+
+        static std::vector<Code> getCodesFromStrings(const std::vector<std::string>& options) {
+            std::vector<Code> codeOptions;
+            for(auto &option : options) {
+                if(auto code = stringToCode(option)) {
+                    codeOptions.push_back(*code);
+                } else {
+                    std::stringstream errorMsg;
+                    errorMsg << "OnlyRunInInstance or OnlyRunInInstances valid values are: "
+                        << Options::getValidOptionsListAsString();
+                    throw InvalidConfigurationException(errorMsg.str());
+                }
+            }
+            return codeOptions;
         }
     };
 
     InstanceTypeFilter(PhaseContext &context, mongocxx::pool::entry& client) {
+        std::vector<std::string> stringOptions;
         try {
-            _onlyRunInInstancesContext = context.getPlural<std::string>(
+            stringOptions = context.getPlural<std::string>(
                 "OnlyRunInInstance", "OnlyRunInInstances", [&](const Node& node) {
                     return node.to<std::string>();
             });
@@ -252,14 +277,8 @@ public:
             }
         }
 
-        if(_onlyRunInInstancesContext.size()) {
-            if(!Options::isValidList(_onlyRunInInstancesContext)) {
-                std::stringstream errorMsg;
-                errorMsg << "OnlyRunInInstance or OnlyRunInInstances valid values are: "
-                    << Options::getValidOptionsListAsString();
-                throw InvalidConfigurationException(errorMsg.str());
-            }
-
+        if(stringOptions.size()) {
+            _onlyRunInInstancesContext = Options::getCodesFromStrings(stringOptions);
             _adminDB = (*client)["admin"];
         }
     }
@@ -268,7 +287,7 @@ public:
     // of the specified options matches the client instance type, returns true. Otherwise returns
     // false.
     bool shouldRun() {
-        if(_type.length() == 0 && _onlyRunInInstancesContext.size()) {
+        if(_type == Options::Code::kNotInitialized && _onlyRunInInstancesContext.size()) {
             _type = getInstanceType(_adminDB);
             _typeFoundInConfig = false;
             for(const auto &configInstanceType : _onlyRunInInstancesContext) {
@@ -283,24 +302,24 @@ public:
 
     // The output of the "hello" command is parsed to check if we are running in a Mongos, a replica
     // set, or a standalone instance.
-    static std::string_view getInstanceType(mongocxx::database &db) {
+    static Options::Code getInstanceType(mongocxx::database &db) {
         using bsoncxx::builder::basic::kvp;
         using bsoncxx::builder::basic::make_document;
 
         auto helloResult = db.run_command(make_document(kvp("hello", 1)));
         if(auto msg = helloResult.view()["msg"]) {
-            return Options::kSharded;
+            return Options::Code::kSharded;
         }
         if(auto msg = helloResult.view()["hosts"]) {
-            return Options::kReplicaSet;
+            return Options::Code::kReplicaSet;
         }
-        return Options::kStandalone;
+        return Options::Code::kStandalone;
     }
 
 private:
-    std::vector<std::string> _onlyRunInInstancesContext;
+    std::vector<Options::Code> _onlyRunInInstancesContext;
     bool _typeFoundInConfig;
-    std::string_view _type;
+    Options::Code _type {Options::Code::kNotInitialized};
     mongocxx::database _adminDB;
 };
 
