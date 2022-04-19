@@ -269,7 +269,7 @@ public:
                 "OnlyRunInInstance", "OnlyRunInInstances", [&](const Node& node) {
                     return node.to<std::string>();
             });
-        } catch(...) {
+        } catch(const InvalidKeyException&) {
             // Exception might be due to keys not found or other errors. If its due to keys not
             // found ignore the expception. Otherwise rethrow.
             if(context["OnlyRunInInstance"] || context["OnlyRunInInstance"]) {
