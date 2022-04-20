@@ -3,8 +3,7 @@ Owner: "@mongodb/query"
 Description: |
     This test exercises the behavior of the time series bounded sorter as the number of documents
     in the collection increases.  The collection has 10 million documents, and each document has a
-    random meta value ranging from 0 to 1000. The bounded sorter is expected to scale linearly,
-    while a normal blocking sort should scale worse.
+    random meta value ranging from 0 to 1000.
 
 GlobalDefaults:
   dbname: &db test
