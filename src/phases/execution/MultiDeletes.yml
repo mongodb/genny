@@ -10,37 +10,37 @@ Description: >
 GlobalDefaults:
   # Configurable parameters.
   DocumentCount: &DocumentCount {^Parameter: {Name: "DocumentCount", Default: 100_000_000}}
-  # Number of documents to batch into an insert.
+  # Number of documents to batch into an insert. Batching small documents is more efficient.
   InsertBatchSize: &InsertBatchSize {^Parameter: {Name: "InsertBatchSize", Default: 1000}}
   # The size of the documents inserted and deleted into collections during this test.
   DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
   # Whether to use the BATCHED_DELETE query exec stage over DELETE.
   UseBatchedDeleteStage: &UseBatchedDeleteStage {^Parameter: {Name: "UseBatchedDeleteStage", Default: 0}}
-  # Configuration file to use: delete by primary (default) or delete by secondary
+  # Configuration file to use: delete by primary (default) or delete by secondary.
   ConfigFile: &ConfigFile {^Parameter: {Name: "ConfigurationFile", Default: "../../phases/execution/config/MultiDeletes/Default.yml"}}
-  # Load Insert document from config file
+  # Load Insert document from config file.
   DocumentToInsert: &DocumentToInsert
     LoadConfig:
       Path: *ConfigFile
       Key: InsertDocument
       Parameters:
         DocumentSizePaddingBytes: *DocumentSizePaddingBytes
-  # Load delete query from config file
+  # Load delete query from config file.
   DeleteQuery: &DeleteQuery
     LoadConfig:
       Path: *ConfigFile
       Key: DeleteQuery
 
-# Constants
+# Constants.
 WriteRate: &WriteRate 1 per 500 microseconds  # 2000/second
 ConcurrentWritesColl: &ConcurrentWritesColl concurrentWritesColl
 
-# Constants hardcoded in server (see TIG-3945, TIG-3882)
+# Constants hardcoded in server (see TIG-3945, TIG-3882).
 Database: &Database __internalBatchedDeletesTesting
 MassDeletionsColl: &MassDeletionsColl Collection0
 
 Actors:
-# Phase 1: Drop the database.
+# Phase 1: Initialize the database.
 - Name: InitializeDatabase
   Type: RunCommand
   Threads: 1
@@ -186,7 +186,6 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: deleteMany
-          # Filter by the smallest OID so all documents are included.
           Filter:
             *DeleteQuery
           OperationOptions:
