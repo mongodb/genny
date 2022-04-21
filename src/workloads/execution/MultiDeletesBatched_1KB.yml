@@ -1,7 +1,19 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: >
-  Deletes a large range of documents using the BATCHED_DELETE query exec stage while performing writes on another collection.
+  Deletes a range of documents using the BATCHED_DELETE query exec stage while performing writes on another collection.
+  Documents are approximately of size ~1KB.
+
+Keywords:
+- RunCommand
+- Loader
+- LoggingActor
+- CrudActor
+- insert
+- delete
+- batch
+- deleteMany
+- latency
 
 # TODO move the Clients section to src/phases/execution/MultiDeletes.yml once TIG-3950 is resolved.
 Clients:

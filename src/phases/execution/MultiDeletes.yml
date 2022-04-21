@@ -7,11 +7,22 @@ Description: >
   The mass deletion namespace is __internalBatchedDeletesTesting.Collection0
   The concurrent writes namespace is __internalBatchedDeletesTesting.concurrentWritesColl
 
+Keywords:
+- RunCommand
+- Loader
+- LoggingActor
+- CrudActor
+- insert
+- delete
+- batch
+- deleteMany
+- latency
+
 GlobalDefaults:
   # Configurable parameters.
   DocumentCount: &DocumentCount {^Parameter: {Name: "DocumentCount", Default: 100_000_000}}
   # Number of documents to batch into an insert. Batching small documents is more efficient.
-  InsertBatchSize: &InsertBatchSize {^Parameter: {Name: "InsertBatchSize", Default: 1000}}
+  InsertBatchSize: &InsertBatchSize {^Parameter: {Name: "InsertBatchSize", Default: 1_000}}
   # The size of the documents inserted and deleted into collections during this test.
   DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
   # Whether to use the BATCHED_DELETE query exec stage over DELETE.
