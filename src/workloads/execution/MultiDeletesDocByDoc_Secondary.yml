@@ -15,7 +15,7 @@ LoadConfig:
   Parameters:
     DocumentSizePaddingBytes: 1024  # 1KB
     DocumentCount: 10_000_000
-    ConfigurationFile: "../../phases/execution/config/MultiDeletes/Secondary.yml"
+    ConfigurationFile: "../../phases/execution/config/MultiDeletes/WithSecondaryIndexes.yml"
 
 AutoRun:
 - When:

@@ -18,7 +18,7 @@ LoadConfig:
     # Cannot batch insert more than INT_MAX bytes, also no need to batch large docs
     InsertBatchSize: 1
     UseBatchedDeleteStage: 1
-    ConfigurationFile: "../../phases/execution/config/MultiDeletes/Secondary.yml"
+    ConfigurationFile: "../../phases/execution/config/MultiDeletes/WithSecondaryIndexes.yml"
 
 AutoRun:
 - When:
