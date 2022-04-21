@@ -212,6 +212,11 @@ private:
 // run under certain configurations Available configurations are specified in Options.
 class InstanceTypeFilter {
 public:
+    struct Keys {
+        static constexpr char kSingular[] = "OnlyRunInInstance";
+        static constexpr char kPlural[] = "OnlyRunInInstances";
+    };
+
     struct Options {
         enum Code {
             kStandalone,
@@ -253,7 +258,7 @@ public:
                     codeOptions.push_back(*code);
                 } else {
                     std::stringstream errorMsg;
-                    errorMsg << "OnlyRunInInstance or OnlyRunInInstances valid values are: "
+                    errorMsg << Keys::kSingular << " or " << Keys::kPlural << " valid values are: "
                         << Options::getValidOptionsListAsString();
                     throw InvalidConfigurationException(errorMsg.str());
                 }
@@ -266,13 +271,13 @@ public:
         std::vector<std::string> stringOptions;
         try {
             stringOptions = context.getPlural<std::string>(
-                "OnlyRunInInstance", "OnlyRunInInstances", [&](const Node& node) {
+                Keys::kSingular, Keys::kPlural, [&](const Node& node) {
                     return node.to<std::string>();
             });
         } catch(const InvalidKeyException&) {
             // Exception might be due to keys not found or other errors. If its due to keys not
             // found ignore the expception. Otherwise rethrow.
-            if(context["OnlyRunInInstance"] || context["OnlyRunInInstances"]) {
+            if(context[Keys::kSingular] || context[Keys::kPlural]) {
                 std::rethrow_exception(std::current_exception());
             }
         }
