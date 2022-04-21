@@ -272,7 +272,7 @@ public:
         } catch(const InvalidKeyException&) {
             // Exception might be due to keys not found or other errors. If its due to keys not
             // found ignore the expception. Otherwise rethrow.
-            if(context["OnlyRunInInstance"] || context["OnlyRunInInstance"]) {
+            if(context["OnlyRunInInstance"] || context["OnlyRunInInstances"]) {
                 std::rethrow_exception(std::current_exception());
             }
         }
