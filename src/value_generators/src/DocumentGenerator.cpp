@@ -977,6 +977,57 @@ private:
     int64_t _currentIndex;
 };
 
+/** `{^Repeat: {numRepeats: 2, fromGenerator: {^Inc: {start: 1000}}}}` */
+class RepeatGenerator : public Appendable {
+
+public:
+    RepeatGenerator(const Node& node,
+                   GeneratorArgs generatorArgs,
+                   std::map<std::string, Parser<UniqueAppendable>> parsers)
+        : RepeatGenerator(
+              node, generatorArgs, parsers, extract(node, "count", "^Repeat").to<int64_t>()) {}
+
+    RepeatGenerator(const Node& node,
+                   GeneratorArgs generatorArgs,
+                   std::map<std::string, Parser<UniqueAppendable>> parsers,
+                   int64_t numRepeats)
+        : _numRepeats{numRepeats},
+        _repeatCounter{0},
+        _valueGen{valueGenerator<false, UniqueAppendable>(extract(node, "fromGenerator", "^Repeat"), generatorArgs, parsers)},
+          _item(getItem()) {}
+
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        auto itemView = _item.view();
+        builder.append(bsoncxx::builder::basic::kvp(key, itemView[0].get_value()));
+        updateIndex();
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        auto itemView = _item.view();
+        builder.append(itemView[0].get_value());
+        updateIndex();
+    }
+
+private:
+    bsoncxx::array::value getItem() {
+        bsoncxx::builder::basic::array builder{};
+        _valueGen->append(builder);
+        return builder.extract();
+    }
+
+    void updateIndex() {
+        _repeatCounter++;
+        if(_repeatCounter >= _numRepeats){
+            _repeatCounter = 0;
+            _item = getItem();
+        }
+    }
+
+    int64_t _numRepeats;
+    int64_t _repeatCounter;
+    UniqueAppendable _valueGen;
+    bsoncxx::array::value _item;
+};
+
 /** `{^Array: {of: {a: b}, number: 2}` */
 class ArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
@@ -1343,6 +1394,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^Cycle",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers);
+     }},
+    {"^Repeat",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<RepeatGenerator>(node, generatorArgs, allParsers);
      }},
     {"^FixedGeneratedValue",
      [](const Node& node, GeneratorArgs generatorArgs) {
