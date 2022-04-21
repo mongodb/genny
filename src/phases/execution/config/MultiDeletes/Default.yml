@@ -3,17 +3,6 @@ Owner: "@mongodb/server-execution"
 Description: >
   Configuration for the MultiDeletes workload. This configuration uses the _id index to delete.
 
-GlobalDefaults:
-  # The size of the documents inserted and deleted into collections during this test.
-  DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
-
 InitializeDatabaseOps:
 - OperationName: RunCommand
   OperationCommand: {dropDatabase: 1}
-
-InsertDocument:
-  padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
-
-
-# Filter by the smallest OID so all documents are included.
-DeleteQuery: {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}

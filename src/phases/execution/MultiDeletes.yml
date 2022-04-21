@@ -27,20 +27,21 @@ GlobalDefaults:
   DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
   # Whether to use the BATCHED_DELETE query exec stage over DELETE.
   UseBatchedDeleteStage: &UseBatchedDeleteStage {^Parameter: {Name: "UseBatchedDeleteStage", Default: 0}}
-  # Configuration file to use: delete by primary (default) or delete by secondary.
+  # Configuration file to use: delete by primary (default) or delete with secondary indexes.
   ConfigFile: &ConfigFile {^Parameter: {Name: "ConfigurationFile", Default: "../../phases/execution/config/MultiDeletes/Default.yml"}}
-  # Load Insert document from config file.
-  DocumentToInsert: &DocumentToInsert
-    LoadConfig:
-      Path: *ConfigFile
-      Key: InsertDocument
-      Parameters:
-        DocumentSizePaddingBytes: *DocumentSizePaddingBytes
-  # Load delete query from config file.
+  # Insert same document for both default and with secondary indexes to remove one variable.
+  InsertDocument: &DocumentToInsert
+    a: &rs {^FastRandomString: {length: 6, alphabet: "0123456789"}}
+    b: *rs
+    c: *rs
+    d: *rs
+    e: *rs
+    f: *rs
+    g: *rs
+    padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
+  # Delete by primary index always.
   DeleteQuery: &DeleteQuery
-    LoadConfig:
-      Path: *ConfigFile
-      Key: DeleteQuery
+    {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
 
 # Constants.
 WriteRate: &WriteRate 1 per 500 microseconds  # 2000/second

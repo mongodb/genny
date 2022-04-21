@@ -3,10 +3,6 @@ Owner: "@mongodb/server-execution"
 Description: >
   Configuration for MultiDeletes workload. This configuration uses a secondary index to delete.
 
-GlobalDefaults:
-  # The size of the documents inserted and deleted into collections during this test.
-  DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
-
 InitializeDatabaseOps:
 - OperationName: RunCommand
   OperationCommand: {dropDatabase: 1}
@@ -16,15 +12,16 @@ InitializeDatabaseOps:
     indexes:
     - key: {a: 1}
       name: a
-
-InsertDocument:
-  a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}
-  padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
-
-# Delete all entries by secondary
-DeleteQuery:
-  # The following does not work because "000000" gets converted to 0 integer by the DocumentGenerator
-  # See TIG-4064
-  # {a: {$gte: "000000"}}
-  a: {$gte: {^FastRandomString: {length: 6, alphabet: "0"}}}
+    - key: {b: 1}
+      name: b
+    - key: {c: 1}
+      name: c
+    - key: {d: 1}
+      name: d
+    - key: {e: 1}
+      name: e
+    - key: {f: 1}
+      name: f
+    - key: {g: 1}
+      name: g
 
