@@ -9,17 +9,16 @@ Description: |
 GlobalDefaults:
   dbname: &db test
   coll: &coll Collection0
-  bucketsColl: &bucketsColl system.buckets.Collection0
   batchSize: &batchSize 30000
   fieldName: &field "numeric"
   index: &index
     keys: {numeric: 1}
   nop: &Nop {Nop: true}
 
-BlockingSortCmd: &BlockingSortCmd
+SortCmd: &SortCmd
   LoadConfig:
-    Path: "../../phases/execution/TimeSeriesSortOverlappingBucketsCommands.yml"
-    Key: BlockingSortCmdTemplate
+    Path: "../../phases/execution/TimeSeriesSortCommands.yml"
+    Key: SortFirstResultCmdTemplate
     Parameters:
       coll: *coll
       batchSize: *batchSize
@@ -88,7 +87,7 @@ Actors:
     Operations:
     - OperationMetricsName: SortQuerySpillBlockingSort
       OperationName: RunCommand
-      OperationCommand: *BlockingSortCmd
+      OperationCommand: *SortCmd
   - *Nop
 
 AutoRun:
