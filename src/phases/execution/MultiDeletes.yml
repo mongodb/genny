@@ -21,7 +21,7 @@ Keywords:
 GlobalDefaults:
   # Configurable parameters.
   DocumentCount: &DocumentCount {^Parameter: {Name: "DocumentCount", Default: 100_000_000}}
-  # Number of documents to batch into an insert. Batching small documents is more efficient.
+  # Number of documents to batch into an insert. This should be configurable because large docs may hit a memory limit if the batch size is fixed.
   InsertBatchSize: &InsertBatchSize {^Parameter: {Name: "InsertBatchSize", Default: 1_000}}
   # The size of the documents inserted and deleted into collections during this test.
   DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
