@@ -285,20 +285,9 @@ public:
         if(stringOptions.size()) {
             _onlyRunInInstancesContext = Options::getCodesFromStrings(stringOptions);
             _adminDB = (*client)["admin"];
-        }
-    }
 
-    // Indicates if operations should be run. If there is no OnlyRunInInstance configuration or one
-    // of the specified options matches the client instance type, returns true. Otherwise returns
-    // false.
-    bool shouldRun() {
-        // Run if the option was not specified
-        if(_onlyRunInInstancesContext.size() == 0) {
-            return true;
-        }
-
-        // Only verify type once
-        if(_type == Options::Code::kNotInitialized) {
+            // Query type in constructor, this way query is done in context build. Until TIG-3290 is
+            // done this requires excluding workloads using this functionality from the dry-run.
             _type = getInstanceType(_adminDB);
             _typeFoundInConfig = false;
             for(const auto &configInstanceType : _onlyRunInInstancesContext) {
@@ -308,7 +297,13 @@ public:
                 }
             }
         }
-        return _typeFoundInConfig;
+    }
+
+    // Indicates if operations should be run. If there is no OnlyRunInInstance configuration or one
+    // of the specified options matches the client instance type, returns true. Otherwise returns
+    // false.
+    bool shouldRun() {
+        return (_onlyRunInInstancesContext.size() == 0) || _typeFoundInConfig;
     }
 
     // The output of the "hello" command is parsed to check if we are running in a Mongos, a replica
