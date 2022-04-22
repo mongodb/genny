@@ -1,0 +1,107 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of the time series bounded sorter with many overlapping buckets,
+  forcing the sort to spill to disk. We insert 1000 independent series with 100 buckets in
+  each series, and each bucket has 100 documents. The documents inserted have the same timestamps,
+  with different meta values.
+
+GlobalDefaults:
+  dbname: &db test
+  coll: &coll Collection0
+  batchSize: &batchSize 30000
+  fieldName: &field "numeric"
+  index: &index
+    keys: {numeric: 1}
+  nop: &Nop {Nop: true}
+
+SortCmd: &SortCmd
+  LoadConfig:
+    Path: "../../phases/execution/TimeSeriesSortCommands.yml"
+    Key: SortFirstResultCmdTemplate
+    Parameters:
+      coll: *coll
+      batchSize: *batchSize
+
+Actors:
+- Name: CreateTimeSeriesCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *db
+    Operation:
+      OperationMetricsName: CreateTimeSeriesCollection
+      OperationName: RunCommand
+      OperationCommand:
+        {create: *coll, timeseries: {timeField: "t", metaField: "m"}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *coll
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10010000
+    BatchSize: *batchSize
+    Document:
+      t: {^Repeat: {count: 1000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
+      m: {^Cycle: {ofLength: 1000, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: Queries
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 50
+    Database: *db
+    Operations:
+    - OperationMetricsName: SortQuerySpillBlockingSort
+      OperationName: RunCommand
+      OperationCommand: *SortCmd
+  - *Nop
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v5.1
+      - v5.2
+      - v5.3
