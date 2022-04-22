@@ -312,6 +312,13 @@ class _WorkloadParser(object):
                 f"Faulting key: {e}\n"
             )
             raise ParseException(msg)
+        except Exception as e:
+            msg = (
+                "Failure trying to parse ^NumExpr node.\n"
+                f"Node source: {input}\n"
+                f"Exception: {e}\n"
+            )
+            raise ParseException(msg)
 
     def _parse_templates(self, templates):
         for template_node in templates:
