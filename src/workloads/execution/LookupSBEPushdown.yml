@@ -436,3 +436,8 @@ AutoRun:
       $eq:
       - standalone
       - standalone-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4

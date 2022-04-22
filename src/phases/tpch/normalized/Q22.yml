@@ -21,6 +21,7 @@ TPCHNormalizedQuery22:
   Operations:
   - OperationMetricsName: Query22
     OperationName: RunCommand
+    OperationLogsResult: true
     OperationCommand:
       explain:
         aggregate: customer

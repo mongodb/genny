@@ -337,6 +337,8 @@ public:
         : v1::HasNode{node}, _workload{&workloadContext}, _phaseContexts{} {
         _phaseContexts = constructPhaseContexts(_node, this);
         auto threads = (*this)["Threads"].maybe<int>().value_or(1);
+        _actorType = (*this)["Type"].maybe<std::string>().value_or("no_type");
+        _actorName = (*this)["Name"].maybe<std::string>().value_or("no_name");
         _nextActorId = this->workload().claimActorIds(threads);
     }
 
@@ -351,6 +353,14 @@ public:
      */
     ActorId nextActorId() {
         return _nextActorId++;
+    }
+
+    /**
+     * @param id for this actor
+     * @return info string containing the actor type, name and id
+     */
+    std::string actorInfo(ActorId id) const {
+        return _actorType + "::" + _actorName + "::" + std::to_string(id);
     }
 
     /**
@@ -449,6 +459,8 @@ private:
     WorkloadContext* _workload;
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
 
+    std::string _actorType;
+    std::string _actorName;
     std::atomic<ActorId> _nextActorId;
 };
 
