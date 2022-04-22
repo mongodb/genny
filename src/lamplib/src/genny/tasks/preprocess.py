@@ -10,6 +10,7 @@ from contextlib import AbstractContextManager
 from omegaconf import OmegaConf
 import yaml
 import structlog
+import numexpr
 
 SLOG = structlog.get_logger(__name__)
 # Cannot be in the default config because yaml merges overwrite lists instead of appending.
@@ -234,6 +235,8 @@ class _WorkloadParser(object):
     def _preprocess(self, key, value, out):
         if key == "^Parameter":
             out = self._replace_param(value)
+        elif key == "^NumExpr":
+            out = self._replace_numexpr(value)
         elif key == "ActorTemplates":
             self._parse_templates(value)
         elif key == "ActorFromTemplate":
@@ -278,6 +281,37 @@ class _WorkloadParser(object):
             return self._recursive_parse(paramVal)
         else:
             return self._recursive_parse(defaultVal)
+
+    def _replace_numexpr(self, input):
+        if "Expr" not in input:
+            msg = "Invalid keys for '^NumExpr', please set 'Expr'" f" in following node: {input}"
+            raise ParseException(msg)
+
+        if type(input["Expr"]) != str:
+            msg = "Invalid value for 'Expr', which must be a string," f" in following node: {input}"
+            raise ParseException(msg)
+
+        parsedDict = {}  # Pass empty dict to avoid yaml to access context of this function
+        if "Dict" in input:
+            inputDict = input["Dict"]
+            parsedDict = self._recursive_parse(inputDict)
+            if not all(type(value) == int or type(value) == float for value in parsedDict.values()):
+                msg = (
+                    "Invalid values for 'Dict' in '^NumExpr', only numerical values are allowed.\n"
+                    f"Node source: {inputDict}\n"
+                    f"Node eval: {parsedDict}\n"
+                )
+                raise ParseException(msg)
+
+        try:
+            return numexpr.evaluate(input["Expr"], parsedDict).tolist()
+        except KeyError as e:
+            msg = (
+                "Key used in 'Expr' not found in 'Dict'\n"
+                f"Node source: {input}\n"
+                f"Faulting key: {e}\n"
+            )
+            raise ParseException(msg)
 
     def _parse_templates(self, templates):
         for template_node in templates:
