@@ -359,12 +359,12 @@ struct actor::RunCommand::PhaseConfig {
 
 void actor::RunCommand::run() {
     for (auto&& config : _loop) {
-        // Run ops when there is no OnlyRunInInstances option or when one of the options matches
-        if(!config->onlyRunInInstancesFilter.shouldRun()) {
-            continue;
-        }
-
         for (auto&& _ : config) {
+            // Run ops when there is no OnlyRunInInstances option or when one of the options matches
+            if(!config->onlyRunInInstancesFilter.shouldRun()) {
+                continue;
+            }
+
             for (auto&& op : config->operations) {
                 try {
                     op->run();
