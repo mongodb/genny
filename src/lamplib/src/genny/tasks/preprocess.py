@@ -291,20 +291,20 @@ class _WorkloadParser(object):
             msg = "Invalid value for 'Expr', which must be a string," f" in following node: {input}"
             raise ParseException(msg)
 
-        parsedDict = {}  # Pass empty dict to avoid yaml to access context of this function
+        parsed_values = {}  # Pass empty dict to avoid yaml to access context of this function
         if "Dict" in input:
-            inputDict = input["Dict"]
-            parsedDict = self._recursive_parse(inputDict)
-            if not all(type(value) == int or type(value) == float for value in parsedDict.values()):
+            input_values = input["Dict"]
+            parsed_values = self._recursive_parse(input_values)
+            if not all(type(value) == int or type(value) == float for value in parsed_values.values()):
                 msg = (
                     "Invalid values for 'Dict' in '^NumExpr', only numerical values are allowed.\n"
-                    f"Node source: {inputDict}\n"
-                    f"Node eval: {parsedDict}\n"
+                    f"Node source: {input_values}\n"
+                    f"Node eval: {parsed_values}\n"
                 )
                 raise ParseException(msg)
 
         try:
-            return numexpr.evaluate(input["Expr"], parsedDict).tolist()
+            return numexpr.evaluate(input["Expr"], parsed_values).tolist()
         except KeyError as e:
             msg = (
                 "Key used in 'Expr' not found in 'Dict'\n"
