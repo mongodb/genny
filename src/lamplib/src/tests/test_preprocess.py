@@ -570,3 +570,61 @@ HighLevelKey:
 """
         output.seek(0)
         self.assertEqual(output.read(), expected)
+
+    def test_numexpr_no_dict(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+Test: {^NumExpr: {withExpression: "10 - 50"}}
+"""
+        expected = """SchemaVersion: '2018-07-01'
+Test: -40
+"""
+        self._assertYaml(yaml_input, expected)
+
+    def test_numexpr_with_dict(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+Test: {^NumExpr: {withExpression: "a - b", andValues: {a: 100, b: 25}}}
+"""
+
+        expected = """SchemaVersion: '2018-07-01'
+Test: 75
+"""
+        self._assertYaml(yaml_input, expected)
+
+    def test_numexpr_with_dict_parameter(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+Param1: &Param1 {^Parameter: {Name: "Name1", Default: 100}}
+Test: {^NumExpr: {withExpression: "a - b", andValues: {a: *Param1, b: 25}}}
+"""
+
+        expected = """SchemaVersion: '2018-07-01'
+Param1: 100
+Test: 75
+"""
+        self._assertYaml(yaml_input, expected)
+
+    def test_numexpr_within_document_generator_expression(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+Param1: &Param1 {^Parameter: {Name: "Name1", Default: 3}}
+Document: {^FastRandomString:{length:{^NumExpr: {withExpression: "a + 3", andValues: {a: *Param1}}}}}
+"""
+
+        expected = """SchemaVersion: '2018-07-01'
+Param1: 3
+Document:
+  ^FastRandomString:
+    length: 6
+"""
+        self._assertYaml(yaml_input, expected)
+
+    def test_numexpr_non_string_expr_throws(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+Test: {^NumExpr: {withExpression: 1}}
+"""
+        self._assertParseException(yaml_input)
+
+    def test_numexpr_with_dict_string_value_throws(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+Param1: &Param1 {^Parameter: {Name: "Name1", Default: 100}}
+Test: {^NumExpr: {withExpression: "a - b", andValues: {a: *Param1, b: "25"}}}
+"""
+        self._assertParseException(yaml_input)
