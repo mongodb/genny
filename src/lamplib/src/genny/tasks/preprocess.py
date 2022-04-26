@@ -283,38 +283,44 @@ class _WorkloadParser(object):
             return self._recursive_parse(defaultVal)
 
     def _replace_numexpr(self, input):
-        if "Expr" not in input:
-            msg = "Invalid keys for '^NumExpr', please set 'Expr'" f" in following node: {input}"
+        OP_KEY = "^NumExpr"
+        EXPR_KEY = "withExpression"
+        VALUE_KEY = "andValues"
+
+        if EXPR_KEY not in input:
+            msg = f"Invalid keys for '{OP_KEY}', please set '{EXPR_KEY}' in following node: {input}"
             raise ParseException(msg)
 
-        if type(input["Expr"]) != str:
-            msg = "Invalid value for 'Expr', which must be a string," f" in following node: {input}"
+        if type(input[EXPR_KEY]) != str:
+            msg = f"Invalid value for '{EXPR_KEY}', which must be a string, in following node: {input}"
             raise ParseException(msg)
 
         parsed_values = {}  # Pass empty dict to avoid yaml to access context of this function
-        if "Dict" in input:
-            input_values = input["Dict"]
+        if VALUE_KEY in input:
+            input_values = input[VALUE_KEY]
             parsed_values = self._recursive_parse(input_values)
-            if not all(type(value) == int or type(value) == float for value in parsed_values.values()):
+            if not all(
+                type(value) == int or type(value) == float for value in parsed_values.values()
+            ):
                 msg = (
-                    "Invalid values for 'Dict' in '^NumExpr', only numerical values are allowed.\n"
+                    f"Invalid values for '{VALUE_KEY}' in '{OP_KEY}', only numerical values are allowed.\n"
                     f"Node source: {input_values}\n"
                     f"Node eval: {parsed_values}\n"
                 )
                 raise ParseException(msg)
 
         try:
-            return numexpr.evaluate(input["Expr"], parsed_values).tolist()
+            return numexpr.evaluate(input[EXPR_KEY], parsed_values).tolist()
         except KeyError as e:
             msg = (
-                "Key used in 'Expr' not found in 'Dict'\n"
+                f"Key used in '{EXPR_KEY}' not found in '{VALUE_KEY}'\n"
                 f"Node source: {input}\n"
                 f"Faulting key: {e}\n"
             )
             raise ParseException(msg)
         except Exception as e:
             msg = (
-                "Failure trying to parse ^NumExpr node.\n"
+                "Failure trying to parse '{OP_KEY}' node.\n"
                 f"Node source: {input}\n"
                 f"Exception: {e}\n"
             )
