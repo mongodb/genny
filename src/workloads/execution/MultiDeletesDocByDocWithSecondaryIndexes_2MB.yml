@@ -32,8 +32,9 @@ LoadConfig:
     InsertBatchSize: 1
     ConfigurationFile: "../../phases/execution/config/MultiDeletes/WithSecondaryIndexes.yml"
 
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica-all-feature-flags
+# Uncomment AutoRun to enable this test in evergreen patches
+# AutoRun:
+# - When:
+#     mongodb_setup:
+#       $eq:
+#       - replica-all-feature-flags

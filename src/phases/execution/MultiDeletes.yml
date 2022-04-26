@@ -224,9 +224,3 @@ Actors:
       OperationCommand:
         Document:
           *DocumentToInsert
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica-all-feature-flags
-      - shard-lite-all-feature-flags

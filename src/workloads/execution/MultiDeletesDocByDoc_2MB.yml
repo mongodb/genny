@@ -30,8 +30,9 @@ LoadConfig:
     # No need to batch large docs
     InsertBatchSize: 1
 
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica-all-feature-flags
+# Uncomment AutoRun to enable this test in evergreen patches
+# AutoRun:
+# - When:
+#     mongodb_setup:
+#       $eq:
+#       - replica-all-feature-flags

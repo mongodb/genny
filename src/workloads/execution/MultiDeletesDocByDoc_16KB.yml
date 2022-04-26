@@ -28,8 +28,9 @@ LoadConfig:
     DocumentSizePaddingBytes: 16_384  # 16KB
     DocumentCount: 62_500
 
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica-all-feature-flags
+# Uncomment AutoRun to enable this test in evergreen patches
+# AutoRun:
+# - When:
+#     mongodb_setup:
+#       $eq:
+#       - replica-all-feature-flags
