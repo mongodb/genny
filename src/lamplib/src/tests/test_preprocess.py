@@ -602,6 +602,20 @@ Test: 75
 """
         self._assertYaml(yaml_input, expected)
 
+    def test_numexpr_within_document_generator_expression(self):
+        yaml_input = """SchemaVersion: 2018-07-01
+Param1: &Param1 {^Parameter: {Name: "Name1", Default: 3}}
+Document: {^FastRandomString:{length:{^NumExpr: {withExpression: "a + 3", andValues: {a: *Param1}}}}}
+"""
+
+        expected = """SchemaVersion: '2018-07-01'
+Param1: 3
+Document:
+  ^FastRandomString:
+    length: 6
+"""
+        self._assertYaml(yaml_input, expected)
+
     def test_numexpr_non_string_expr_throws(self):
         yaml_input = """SchemaVersion: 2018-07-01
 Test: {^NumExpr: {withExpression: 1}}
