@@ -26,7 +26,7 @@ Clients:
 LoadConfig:
   Path: "../../phases/execution/MultiDeletes.yml"
   Parameters:
-    DocumentSizePaddingBytes: 2_097_152  # 2MB
+    TargetDocumentSizeBytes: 2_097_152  # 2MB
     DocumentCount: 5_000
     # No need to batch large docs
     InsertBatchSize: 1

@@ -26,9 +26,7 @@ Clients:
 LoadConfig:
   Path: "../../phases/execution/MultiDeletes.yml"
   Parameters:
-    # We compensate the padding to keep document size at 1024. If TIG-4092 gets resolved the padding
-    # may be computed dynamically.
-    DocumentSizePaddingBytes: 904  # = 1KB - 120 bytes
+    TargetDocumentSizeBytes: 1_024  # = 1 KB
     DocumentCount: 10_000_000
     UseBatchedDeleteStage: 1
     ConfigurationFile: "../../phases/execution/config/MultiDeletes/WithSecondaryIndexes.yml"
