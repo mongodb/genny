@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: >
-  Configuration for the MultiDeletes workload. This configuration uses the _id index to delete.
+  Configuration for the MultiDeletes workload.
 
 InitializeDatabaseOps:
 - OperationName: RunCommand
