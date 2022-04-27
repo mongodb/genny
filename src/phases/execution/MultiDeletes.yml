@@ -32,7 +32,7 @@ GlobalDefaults:
       andValues: {target_size: *TargetDocumentSizeBytes, id_length: 22, field_count: 7, field_length: 8, value_length: &ValueLength 6}
   # Whether to use the BATCHED_DELETE query exec stage over DELETE.
   UseBatchedDeleteStage: &UseBatchedDeleteStage {^Parameter: {Name: "UseBatchedDeleteStage", Default: 0}}
-  # Configuration file to use: delete by primary (default) or delete with secondary indexes.
+  # Configuration file to use: with no secondary indexes (default) or creating secondaries for the non-padding fields.
   ConfigFile: &ConfigFile {^Parameter: {Name: "ConfigurationFile", Default: "../../phases/execution/config/MultiDeletes/Default.yml"}}
   # Insert same document for both default and with secondary indexes to remove one variable.
   InsertDocument: &DocumentToInsert
