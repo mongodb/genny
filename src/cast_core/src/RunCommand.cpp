@@ -90,6 +90,7 @@ struct RunCommandOperationConfig {
     explicit RunCommandOperationConfig(const genny::Node& node)
         : metricsName{node["OperationMetricsName"].maybe<std::string>().value_or("")},
           isQuiet{node["OperationIsQuiet"].maybe<bool>().value_or(false)},
+          logResult{node["OperationLogsResult"].maybe<bool>().value_or(false)},
           awaitStepdown{node["OperationAwaitStepdown"].maybe<bool>().value_or(false)} {
         if (auto opName = node["OperationName"].maybe<std::string>();
             opName != "RunCommand" && opName != "AdminCommand") {
@@ -102,6 +103,7 @@ struct RunCommandOperationConfig {
 
     const std::string metricsName = "";
     const bool isQuiet = false;
+    const bool logResult = false;
     const bool awaitStepdown = false;
 };
 
@@ -176,7 +178,10 @@ public:
                 if (_options.awaitStepdown) {
                     runThenAwaitStepdown(_database, view);
                 } else {
-                    _database.run_command(view);
+                    auto commandResult = _database.run_command(view);
+                    if (_options.logResult) {
+                        BOOST_LOG_TRIVIAL(info) << " Command result: " << bsoncxx::to_json(commandResult);
+                    }
                 }
 
                 if (maybeWatch) {

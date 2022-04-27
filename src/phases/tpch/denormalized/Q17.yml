@@ -15,6 +15,7 @@ TPCHDenormalizedQuery17:
   Operations:
   - OperationMetricsName: Query17
     OperationName: RunCommand
+    OperationLogsResult: true
     OperationCommand:
       explain:
         aggregate: part

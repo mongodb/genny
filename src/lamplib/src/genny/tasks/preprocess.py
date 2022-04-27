@@ -10,6 +10,7 @@ from contextlib import AbstractContextManager
 from omegaconf import OmegaConf
 import yaml
 import structlog
+import numexpr
 
 SLOG = structlog.get_logger(__name__)
 # Cannot be in the default config because yaml merges overwrite lists instead of appending.
@@ -234,6 +235,8 @@ class _WorkloadParser(object):
     def _preprocess(self, key, value, out):
         if key == "^Parameter":
             out = self._replace_param(value)
+        elif key == "^NumExpr":
+            out = self._replace_numexpr(value)
         elif key == "ActorTemplates":
             self._parse_templates(value)
         elif key == "ActorFromTemplate":
@@ -278,6 +281,50 @@ class _WorkloadParser(object):
             return self._recursive_parse(paramVal)
         else:
             return self._recursive_parse(defaultVal)
+
+    def _replace_numexpr(self, input):
+        OP_KEY = "^NumExpr"
+        EXPR_KEY = "withExpression"
+        VALUE_KEY = "andValues"
+
+        if EXPR_KEY not in input:
+            msg = f"Invalid keys for '{OP_KEY}', please set '{EXPR_KEY}' in following node: {input}"
+            raise ParseException(msg)
+
+        if type(input[EXPR_KEY]) != str:
+            msg = f"Invalid value for '{EXPR_KEY}', which must be a string, in following node: {input}"
+            raise ParseException(msg)
+
+        parsed_values = {}  # Pass empty dict to avoid yaml to access context of this function
+        if VALUE_KEY in input:
+            input_values = input[VALUE_KEY]
+            parsed_values = self._recursive_parse(input_values)
+            if not all(
+                type(value) == int or type(value) == float for value in parsed_values.values()
+            ):
+                msg = (
+                    f"Invalid values for '{VALUE_KEY}' in '{OP_KEY}', only numerical values are allowed.\n"
+                    f"Node source: {input_values}\n"
+                    f"Node eval: {parsed_values}\n"
+                )
+                raise ParseException(msg)
+
+        try:
+            return numexpr.evaluate(input[EXPR_KEY], parsed_values).tolist()
+        except KeyError as e:
+            msg = (
+                f"Key used in '{EXPR_KEY}' not found in '{VALUE_KEY}'\n"
+                f"Node source: {input}\n"
+                f"Faulting key: {e}\n"
+            )
+            raise ParseException(msg)
+        except Exception as e:
+            msg = (
+                "Failure trying to parse '{OP_KEY}' node.\n"
+                f"Node source: {input}\n"
+                f"Exception: {e}\n"
+            )
+            raise ParseException(msg)
 
     def _parse_templates(self, templates):
         for template_node in templates:

@@ -1,0 +1,179 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of querying for data in a timeseries collection using a 2dsphere index.
+
+  The phases are:
+  0. Create collection
+  1. Insert events + create index
+  2. Quiesce
+  3. $geoWithin
+  4. Quiesce
+  5. $geoNear
+
+GlobalDefaults:
+  # Schema constants.
+  dbname: &db test
+  fieldName: &field "numeric"
+  index: &index
+    keys: {location: '2dsphere'}
+
+  # Data distribution constants.
+  # To insert more efficiently, pick a big-ish batch size.
+  # This shouldn't really affect the resulting collection though.
+  insertBatchSize: &insertBatchSize 30000
+  # Events are 10 seconds apart: 10,000 ms.
+  docIntervalMillis: &docIntervalMillis 10000
+  # Let's generate 1000 series of data.
+  # Note that the timestamp does not restart when we change from one series to the next, which is
+  # unrealistic. In real life the events from all 1000 series would be happening around the same
+  # time. But it shouldn't matter for this test, because the query and the index both ignore the
+  # time field.
+  docsPerSeries: &docsPerSeries 1000
+  # Let's generate 120 days worth of data. That means (120 * 24 * 60 * 60) seconds, which is
+  # (120 * 24 * 60 * 60 / 10) = 1036800 events. This number is roughly 1,000,000, which means we
+  # have roughly 1,000 events in each of our 1,000 series.
+  documentCount: &documentCount 1036800
+  # Since we have a relatively small amount of data, we don't want to use an area that's too
+  # big (such as the entire Earth, or a whole continent). That would make the data very
+  # sparse over that area. These values roughly correspond to New York State, which is
+  # hopefully a good scale.
+  minX: &minX -80.0
+  maxX: &maxX -73.0
+  minY: &minY 40.0
+  maxY: &maxY 45.0
+  # Suppose each sensor moves at around 60 mph or 100 kph.
+  # This comes out to around 30 m/s.
+  # Events are 10 seconds apart, so that's 300m per event.
+  # 90 degrees of longitude or latitude is roughly 10,000 km = 10,000,000m.
+  # So (300m / event) * (90 deg / 10,000,000m) = 0.0027 deg / event.
+  # This is very rough, and doesn't account for how 1 degree longitude has a different length
+  # at different latitudes. The idea is just to get roughly the right scale.
+  # Another check: 0.0027 degrees per doc and 1,000 docs per series means 2.7 degrees per
+  # series, which is roughly the scale of our min/max X/Y.
+  distPerDoc: &distPerDoc 0.0027
+
+  # Other abbreviations.
+  nop: &Nop {Nop: true}
+
+
+Actors:
+- Name: CreateTimeSeriesCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *db
+    Operation:
+      OperationMetricsName: CreateTimeSeriesCollection
+      OperationName: RunCommand
+      OperationCommand:
+        # We have to call the collection 'Collection0' because that's the name that Loader
+        # chooses implicitly.
+        {create: &coll Collection0, timeseries: {timeField: "timestamp", metaField: "meta"}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: *documentCount
+    BatchSize: *insertBatchSize
+    Document:
+      timestamp: {^IncDate: {start: "2022-01-01", step: *docIntervalMillis}}
+      location: {^TwoDWalk: {
+        docsPerSeries: *docsPerSeries,
+        minX: *minX,
+        maxX: *maxX,
+        minY: *minY,
+        maxY: *maxY,
+        distPerDoc: *distPerDoc,
+      }}
+    Indexes:
+    - *index
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+
+- Name: GeoQueries
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Duration: 30 seconds
+    Database: *db
+    Operations:
+    - OperationMetricsName: GeoWithinQuery
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [
+          {$match: {location: {$geoWithin: {$centerSphere: [[
+            {^RandomDouble: { min: *minX, max: *maxX }},
+            {^RandomDouble: { min: *minY, max: *maxY }},
+          ], 0.001]}}}},
+          {$skip: 1e5},
+        ]
+        cursor: {}
+  - *Nop
+  - Duration: 30 seconds
+    Database: *db
+    Operations:
+    - OperationMetricsName: GeoNearQuery
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [
+          {$geoNear: {
+            key: 'location',
+            near: [
+              {^RandomDouble: { min: *minX, max: *maxX }},
+              {^RandomDouble: { min: *minY, max: *maxY }},
+            ],
+            spherical: true,
+            distanceField: 'd',
+            maxDistance: 0.001,
+          }},
+          {$skip: 1e5},
+        ]
+        cursor: {}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v5.1
+      - v5.2
+      - v5.3

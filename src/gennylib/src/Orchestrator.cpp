@@ -86,7 +86,7 @@ PhaseNumber Orchestrator::awaitPhaseStart(bool block, int addTokens) {
         for (auto&& cb : _prePhaseHooks) {
             cb(this);
         }
-        BOOST_LOG_TRIVIAL(debug) << "Beginning phase " << currentPhase;
+        BOOST_LOG_TRIVIAL(info) << "Beginning phase " << currentPhase;
         _phaseChange.notify_all();
         state = State::PhaseStarted;
     } else {
@@ -137,7 +137,7 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
 
     if (_currentTokens <= 0) {
         ++_current;
-        BOOST_LOG_TRIVIAL(debug) << "Ended phase " << (this->_current - 1);
+        BOOST_LOG_TRIVIAL(info) << "Ended phase " << (this->_current - 1);
         _phaseChange.notify_all();
         state = State::PhaseEnded;
     } else {

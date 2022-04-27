@@ -977,6 +977,57 @@ private:
     int64_t _currentIndex;
 };
 
+/** `{^Repeat: {numRepeats: 2, fromGenerator: {^Inc: {start: 1000}}}}` */
+class RepeatGenerator : public Appendable {
+
+public:
+    RepeatGenerator(const Node& node,
+                   GeneratorArgs generatorArgs,
+                   std::map<std::string, Parser<UniqueAppendable>> parsers)
+        : RepeatGenerator(
+              node, generatorArgs, parsers, extract(node, "count", "^Repeat").to<int64_t>()) {}
+
+    RepeatGenerator(const Node& node,
+                   GeneratorArgs generatorArgs,
+                   std::map<std::string, Parser<UniqueAppendable>> parsers,
+                   int64_t numRepeats)
+        : _numRepeats{numRepeats},
+        _repeatCounter{0},
+        _valueGen{valueGenerator<false, UniqueAppendable>(extract(node, "fromGenerator", "^Repeat"), generatorArgs, parsers)},
+          _item(getItem()) {}
+
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        auto itemView = _item.view();
+        builder.append(bsoncxx::builder::basic::kvp(key, itemView[0].get_value()));
+        updateIndex();
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        auto itemView = _item.view();
+        builder.append(itemView[0].get_value());
+        updateIndex();
+    }
+
+private:
+    bsoncxx::array::value getItem() {
+        bsoncxx::builder::basic::array builder{};
+        _valueGen->append(builder);
+        return builder.extract();
+    }
+
+    void updateIndex() {
+        _repeatCounter++;
+        if(_repeatCounter >= _numRepeats){
+            _repeatCounter = 0;
+            _item = getItem();
+        }
+    }
+
+    int64_t _numRepeats;
+    int64_t _repeatCounter;
+    UniqueAppendable _valueGen;
+    bsoncxx::array::value _item;
+};
+
 /** `{^Array: {of: {a: b}, number: 2}` */
 class ArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
@@ -1089,6 +1140,68 @@ public:
 private:
     int64_t _step;
     int64_t _counter;
+};
+
+
+class TwoDWalkGenerator : public Generator<bsoncxx::array::value> {
+public:
+    TwoDWalkGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _rng(generatorArgs.rng)
+        , _docsPerSeries{extract(node, "docsPerSeries", "TwoDWalk").maybe<int64_t>().value()}
+        , _distPerDoc{extract(node, "distPerDoc", "TwoDWalk").maybe<double>().value()}
+        , _genX{
+            extract(node, "minX", "TwoDWalk").maybe<double>().value(),
+            extract(node, "maxX", "TwoDWalk").maybe<double>().value(),
+        }
+        , _genY{
+            extract(node, "minY", "TwoDWalk").maybe<double>().value(),
+            extract(node, "maxY", "TwoDWalk").maybe<double>().value(),
+        }
+    {
+    }
+
+    bsoncxx::array::value evaluate() override {
+        if (_numGenerated % _docsPerSeries == 0) {
+            beginSeries();
+        }
+        ++_numGenerated;
+
+        _x += _vx;
+        _y += _vy;
+
+        bsoncxx::builder::basic::array builder{};
+        builder.append(_x);
+        builder.append(_y);
+        return builder.extract();
+    }
+
+private:
+    using Uniform = boost::random::uniform_real_distribution<double>;
+
+    // Pick a new random position and velocity.
+    void beginSeries() {
+        _x = _genX(_rng);
+        _y = _genY(_rng);
+
+        double pi = acos(-1);
+        double dir = Uniform{0, 2*pi}(_rng);
+        _vx = _distPerDoc * cos(dir);
+        _vy = _distPerDoc * sin(dir);
+    }
+
+    DefaultRandom& _rng;
+
+    // Initial arguments.
+    const int64_t _docsPerSeries;
+    const double _distPerDoc;
+    const Uniform _genX;
+    const Uniform _genY;
+
+    // Mutable state.
+    double _x, _y; // position
+    double _vx, _vy; // "velocity", in units per document.
+    int64_t _numGenerated{0};
+
 };
 
 
@@ -1262,6 +1375,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<IncGenerator>(node, generatorArgs);
      }},
+    {"^TwoDWalk",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<TwoDWalkGenerator>(node, generatorArgs);
+     }},
     {"^IncDate",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<IncDateGenerator>(node, generatorArgs);
@@ -1277,6 +1394,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^Cycle",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers);
+     }},
+    {"^Repeat",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<RepeatGenerator>(node, generatorArgs, allParsers);
      }},
     {"^FixedGeneratedValue",
      [](const Node& node, GeneratorArgs generatorArgs) {

@@ -561,7 +561,7 @@ Tests:
     GivenTemplate:
       a: {^Concat: {arrays: [{^Array: {of: 1, number: 1}}, {^Array: {of: 2, number: 2}}]}}
     ThenReturns:
-    - a: [1, 2, 2] 
+    - a: [1, 2, 2]
 
   - Name: Concat with generator and literal
     GivenTemplate:
@@ -962,6 +962,39 @@ Tests:
       - {a: qg}
       - {a: qg}
 
+  - Name: Repeat three pre-computed elements
+    GivenTemplate:
+      a: {^Repeat: {count: 3, fromGenerator: {^FastRandomString: {length: {^RandomInt: {min: 2, max: 5}}}}}}
+    ThenReturns:
+      - {a: qg}
+      - {a: qg}
+      - {a: qg}
+      - {a: kt}
+      - {a: kt}
+      - {a: kt}
+      - {a: JJP}
+      - {a: JJP}
+      - {a: JJP}
+
+  - Name: Repeat an integer generator
+    GivenTemplate:
+      a: {^Repeat: {count: 2, fromGenerator: {^RandomInt: {distribution: poisson, mean: 10000000000000}}}}
+    ThenReturns:
+      - {a: 9999997460716}
+      - {a: 9999997460716}
+      - {a: 9999996810402}
+      - {a: 9999996810402}
+      - {a: 9999995032424}
+      - {a: 9999995032424}
+
+  - Name: Repeat with count equal to one
+    GivenTemplate:
+      a: {^Repeat: {count: 1, fromGenerator: {^FastRandomString: {length: {^RandomInt: {min: 2, max: 5}}}}}}
+    ThenReturns:
+      - {a: qg}
+      - {a: kt}
+      - {a: JJP}
+
   - Name: FixedGenerated value for pre-computing, caching and re-using the result of an expensive generator
     GivenTemplate:
       a: {^FixedGeneratedValue: {fromGenerator: {^RandomInt: {distribution: poisson, mean: 10000000000000}}}}
@@ -1124,3 +1157,29 @@ Tests:
     ThenExecuteAndIgnore: true
     # The actual Value will be something like the following
     #   { "a" : { "$oid" : "61159412db9cbf4eec5d2061" } }
+
+  - Name: 2D Walk
+    GivenTemplate:
+      a: {^TwoDWalk: {
+        docsPerSeries: 3,
+        minX: 0,
+        maxX: 5,
+        minY: 100,
+        maxY: 120,
+        distPerDoc: 0.1,
+      }}
+    ThenReturns:
+      # The generator picks a starting point within the min/max bounds,
+      # picks a random direction, and steps forward 0.1 in that direction.
+      # After 3 docs it starts over with a new initial point and direction.
+      # The points can step outside the min/max bounds, but each starting point is
+      # generated within the bounds.
+      - { "a" : [0.87597770637753735734, 102.15711220843586204] }
+      - { "a" : [0.97500959934942732499, 102.17099328095940791] }
+      - { "a" : [1.0740414923213172926, 102.18487435348295378] }
+      - { "a" : [0.41177379749317610802, 106.78081568430897619] }
+      - { "a" : [0.45809298746253845902, 106.69218988309633289] }
+      - { "a" : [0.50441217743190081002, 106.6035640818836896] }
+      - { "a" : [3.9359523367534210436, 105.26147012586838514] }
+      - { "a" : [3.8554769964739108445, 105.32083105246911714] }
+      - { "a" : [3.7750016561944006455, 105.38019197906984914] }
