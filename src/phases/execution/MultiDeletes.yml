@@ -28,8 +28,8 @@ GlobalDefaults:
   # Compute document padding based on target size and field sizes
   DocumentPaddingSizeBytes: &DocumentPaddingSizeBytes
     ^NumExpr:
-      withExpression: "target_size - id_length - (field_count * (field_length+value_length))"
-      andValues: {target_size: *TargetDocumentSizeBytes, id_length: 22, field_count: 7, field_length: 8, value_length: &ValueLength 6}
+      withExpression: "target_size - id_length - (field_count * (field_length+value_length)) - padding_field"
+      andValues: {target_size: *TargetDocumentSizeBytes, id_length: 22, field_count: 7, field_length: 8, value_length: &ValueLength 6, padding_field: 14}
   # Whether to use the BATCHED_DELETE query exec stage over DELETE.
   UseBatchedDeleteStage: &UseBatchedDeleteStage {^Parameter: {Name: "UseBatchedDeleteStage", Default: 0}}
   # Configuration file to use: with no secondary indexes (default) or creating secondaries for the non-padding fields.
