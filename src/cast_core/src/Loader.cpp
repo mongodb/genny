@@ -98,7 +98,7 @@ struct Loader::PhaseConfig {
             if (thread == totalThreads - 1) {
                 // Pick up any extra collections left over by the division
                 numCollections +=
-                    context["CollectionCount"].to<uint>() % totalThreads();
+                    context["CollectionCount"].to<uint>() % totalThreads;
             }
         }
     }
