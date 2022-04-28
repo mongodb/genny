@@ -45,14 +45,9 @@ Actors:
   Threads: 10
   Phases:
   - Repeat: 1
-    # create 10 collection math.floor(Phase.CollectionCount / Phase.Threads) *  Actor.Threads.
-    #   1. Thread 0 creates and loads Collection0
-    #   2. Thread 1 creates and loads Collection1
-    # Thread 1 creates collection 6 to 11
-    # etc.
+    # create 10 collections and each thread takes 1
     Database: OneLoaderThreadPerCollection
     CollectionCount: 10
-    Threads: 10
     DocumentCount: &DocumentCount 200000
     BatchSize: &BatchSize 100000
     Document:
@@ -70,8 +65,7 @@ Actors:
     #   * Thread 1 creates collection 6 to 11
     # etc.
     Database: SixCollectionsPerThread
-    CollectionCount: 6
-    Threads: 1
+    CollectionCount: 60
     DocumentCount: *DocumentCount
     BatchSize: *BatchSize
     Document:
@@ -89,20 +83,7 @@ Actors:
     #   * Thread 1 creates collection 3 to 5
     # etc.
     Database: ThreeCollectionsPerThread
-    CollectionCount: 6
-    Threads: 2
-    DocumentCount: *DocumentCount
-    BatchSize: *BatchSize
-    Document:
-      a: {^RandomString: { length: 100 }}
-  - Repeat: 1
-    # create 10 collection math.floor(Phase.CollectionCount / Phase.Threads) *  Actor.Threads.
-    #   * Thread 0 creates collection 0 to 2
-    #   * Thread 1 creates collection 3 to 5
-    # etc.
-    Database: AlsoOneLoaderThreadPerCollection
-    CollectionCount: 6
-    Threads: 6
+    CollectionCount: 30
     DocumentCount: *DocumentCount
     BatchSize: *BatchSize
     Document:
@@ -113,20 +94,18 @@ Actors:
     #   * Thread 1 creates collection 2 to 3
     # etc.
     Database: TwoCollectionsPerThread
-    CollectionCount: 17
-    Threads: 6
+    CollectionCount: 20
     DocumentCount: *DocumentCount
     BatchSize: *BatchSize
     Document:
       a: {^RandomString: { length: 100 }}
   - Repeat: 1
-    # create 10 collection (Phase.CollectionCount / Phase.Threads) *  Actor.Threads.
+    # create 6 collection. The first 6 threads insert 1 collection, the rest do nothing
     #   * Thread 0 creates collection 0 to 2
     #   * Thread 1 creates collection 3 to 5
     # etc.
     Database: SixCollectionsSingleThread
     CollectionCount: 6
-    Threads: 8  # Any value between 7 (Phase.CollectionCount + 1) and Actor.Threads (10)
     DocumentCount: *DocumentCount
     BatchSize: *BatchSize
     Document:
@@ -135,7 +114,6 @@ Actors:
     # create 0 collection (Phase.CollectionCount / Phase.Threads) *  Actor.Threads.
     Database: ZeroCollections
     CollectionCount: 1
-    Threads: 20  # Any value greater than Actor.Threads (10) and Phase.CollectionCount (1)
     DocumentCount: *DocumentCount
     BatchSize: 100000
     Document:

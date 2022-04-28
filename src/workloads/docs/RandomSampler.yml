@@ -13,12 +13,11 @@ Clients:
 Actors:
 - Name: Loader
   Type: Loader
-  Threads: 50
+  Threads: 1
   Phases:
   - Repeat: 1
     Database: test
     CollectionCount: 1
-    Threads: 1
     DocumentCount: 100
     BatchSize: 100
     Document:

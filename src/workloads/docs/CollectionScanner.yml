@@ -7,12 +7,11 @@ Description: |
 Actors:
 - Name: Loader
   Type: Loader
-  Threads: 10
+  Threads: 1
   Phases:
   - Repeat: 1
     Database: cold
     CollectionCount: 6
-    Threads: 1
     DocumentCount: 200000
     BatchSize: 100000
     Document:
@@ -20,7 +19,6 @@ Actors:
   - Repeat: 1
     Database: hot
     CollectionCount: 6
-    Threads: 1
     DocumentCount: 200000
     BatchSize: 100000
     Document:
