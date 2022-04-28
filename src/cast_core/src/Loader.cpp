@@ -53,7 +53,7 @@ struct Loader::PhaseConfig {
           numCollections{multipleThreadsPerCollection
                              ? 1
                              : context["CollectionCount"].to<IntegerSpec>() /
-                                 context["Threads"].to<IntegerSpec>()},
+                                 totalThreads},
           numDocuments{context["DocumentCount"].to<IntegerSpec>()},
           batchSize{context["BatchSize"].to<IntegerSpec>()},
           documentExpr{context["Document"].to<DocumentGenerator>(context, id)},
@@ -77,11 +77,6 @@ struct Loader::PhaseConfig {
         };
 
         if (multipleThreadsPerCollection) {
-            if (context["Threads"]) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "Phase Config 'Threads' parameter is not supported if "
-                    "'MultipleThreadsPerCollection' is true."));
-            }
             uint collectionCount = context["CollectionCount"].to<IntegerSpec>();
             if (totalThreads % collectionCount != 0) {
                 std::ostringstream ss;
@@ -100,10 +95,10 @@ struct Loader::PhaseConfig {
             }
         } else {
             createIndexes();
-            if (thread == context["Threads"].to<int>() - 1) {
+            if (thread == totalThreads - 1) {
                 // Pick up any extra collections left over by the division
                 numCollections +=
-                    context["CollectionCount"].to<uint>() % context["Threads"].to<uint>();
+                    context["CollectionCount"].to<uint>() % totalThreads();
             }
         }
     }
