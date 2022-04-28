@@ -7,120 +7,156 @@ Description: >
 
 GlobalDefaults:
   RecordIdExtraPaddingParam: &RecordIdExtraPaddingParam {^Parameter: {Name: "RecordIdExtraPadding", Default: 0}}
+  PaddingGenerator: &PaddingGenerator {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}
+  Database: &Database test
+  Collection: &Collection Collection0
+  Namespace: &Namespace test.Collection0
+  DocumentCount: &docCount 1000000
+  MaxPhases: &MaxPhases 7
+
 
 Actors:
-
-# Phase 1: create collection
+# Phase 0: create collection
 - Name: Create
   Type: RunCommand
   Threads: 1
   Phases:
-  - Repeat: 1
-    Database: &db test
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        create: &coll Collection0
-        clusteredIndex: {key: {_id: 1}, unique: true}
-  - &Nop {Nop: true}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            create: *Collection
+            clusteredIndex: {key: {_id: 1}, unique: true}
+
+
+# Phase 1: Shard the collection
+- Name: ShardCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        # Until TIG-3290 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs
+        OnlyRunInInstance: sharded
+        Repeat: 1
+        Operations:
+        - OperationName: AdminCommand
+          OperationMetricsName: EnableShardingMetrics
+          OperationCommand:
+            enableSharding: *Database
+        - OperationName: AdminCommand
+          OperationMetricsName: ShardCollectionMetrics
+          OperationCommand:
+            shardCollection: *Namespace
+            key: {_id: "hashed"}
+            numInitialChunks: 12
 
 # Phase 2: insert. TODO Make multithreaded once TIG-2938 is resolved.
 - Name: Insert
   Type: Loader
   Threads: 1
   Phases:
-  - *Nop
-  - Repeat: 1
-    Database: *db
-    Threads: 1
-    CollectionCount: 1
-    DocumentCount: &docCount 1000000
-    BatchSize: 1000
-    Document:
-      # Start from {_id: "0000001"} in order to be able to set the ^RandomInt max bound to *docCount
-      # in the LookupByClusterKey phase. This works around TIG-3759.
-      _id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: 1}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}
-      a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}
-      b: {^FastRandomString: {length: 1024}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: *docCount
+        BatchSize: 1000
+        Document:
+          # Start from {_id: "0000001"} in order to be able to set the ^RandomInt max bound to *docCount
+          # in the LookupByClusterKey phase. This works around TIG-3759.
+          _id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: 1}}]}}, *PaddingGenerator]}}
+          a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}
+          b: {^FastRandomString: {length: 1024}}
 
 # Phase 3: Point _id lookups. TODO convert to range queries once TIG-3707 is implemented.
 - Name: LookupByClusterKey
   Type: CrudActor
-  Database: *db
+  Database: *Database
   Threads: 16
   Phases:
-  - *Nop
-  - *Nop
-  - Duration: 1 minute
-    Collection: *coll
-    Operations:
-    - OperationName: find
-      OperationCommand:
-        Filter: {_id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^RandomInt: {min: 1, max: *docCount}}]}}, {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}]}}}
-  - *Nop
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {_id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^RandomInt: {min: 1, max: *docCount}}]}}, *PaddingGenerator]}}}
+
 
 # Phase 4: Create a secondary index.
 - Name: BuildIndex
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Database: *db
-    Collection: *coll
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        createIndexes: *coll
-        indexes:
-        - key: {a: 1}
-          name: a
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *Collection
+            indexes:
+            - key: {a: 1}
+              name: a
+
 
 # Phase 5: Secondary index lookups.
 - Name: LookupBySecondaryIndex
   Type: CrudActor
-  Database: *db
+  Database: *Database
   Threads: 16
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 1 minute
-    Collection: *coll
-    Operations:
-    - OperationName: find
-      OperationCommand:
-        Filter: {a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}}
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}}
 
-# Phase 6: Point deletion. TODO convert to range deletions once TIG-3707 is implemented.
+
+# Phase 6: Point deletion.
 - Name: PointDeleter
-  Type: Deleter
-  Database: test
-  Threads: 16
+  Type: CrudActor
+  Database: *Database
+  Threads: &ThreadCount 16
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 3 minutes
-    Collection: *coll
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 3 minutes
+        Collection: *Collection
+        Operations:
+        - OperationName: deleteOne
+          OperationCommand:
+            Filter:
+              # Beware, ^Inc uses ActorId which is unique for each instance within the whole workload
+              # If there are N threads created before the PointDeleter, the first N documents will
+              # not be deleted. See TIG-4057
+              {_id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: 0, multiplier: 1, step: *ThreadCount}}]}}, *PaddingGenerator]}}}
 
 AutoRun:
 - When:
