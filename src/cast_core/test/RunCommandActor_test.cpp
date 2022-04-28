@@ -125,7 +125,7 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
                         writeConcern: {wtimeout: 5000}
 
             Metrics:
-              Format: csv 
+              Format: csv
         )");
     };
 
@@ -269,7 +269,7 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )");
         NodeSource ns{YAML::Dump(config), ""};
-        REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1), 
+        REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1),
                 Catch::Contains("Plural 'Operations' must be a sequence type"));
     }
 
@@ -367,7 +367,7 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )");
         NodeSource ns{YAML::Dump(config), ""};
-        REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1), 
+        REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1),
                 Catch::Contains("Either 'Operation' or 'Operations' required."));
     }
 
@@ -519,7 +519,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )",
                           "");
 
-        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1), 
+        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1),
                 Catch::Contains("AdminCommands can only be run on the 'admin' database"));
     }
 }
@@ -629,7 +629,7 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )",
                           "");
-        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1), 
+        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1),
                 Catch::Contains("Can't have both 'Operation' and 'Operations'."));
     }
 }
@@ -697,7 +697,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                   OperationCommand:
                     insert: testCollection
                     documents: [{rating: 10}]
-            Metrics: 
+            Metrics:
               Format: csv
         )",
                           "");
@@ -1030,6 +1030,47 @@ TEST_CASE_METHOD(MongoTestFixture,
 }
 
 TEST_CASE_METHOD(MongoTestFixture,
+                 "Check OnlyRunInInstance not specified runs unconditionally",
+                 "[standalone][sharded][single_node_replset][three_node_replset]") {
+
+    dropAllDatabases();
+    auto db = client.database("test");
+
+    SECTION("OnlyRunInInstance not specified does operation") {
+        auto config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+            Actors:
+            - Name: TestActor
+              Type: RunCommand
+              Threads: 1
+              Phases:
+              - Repeat: 1
+                Database: test
+                Operations:
+                - OperationName: RunCommand
+                  OperationCommand:
+                    insert: testCollection
+                    documents: [{rating: 10}]
+            Metrics:
+              Format: csv
+        )");
+        auto builder = bson_stream::document{};
+        bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
+        auto view = doc_value.view();
+        NodeSource nodeSource{YAML::Dump(config), ""};
+        ActorHelper ah(nodeSource.root(), 1);
+        auto verifyFn = [&db, view](const WorkloadContext& context) {
+            REQUIRE(db.has_collection("testCollection"));
+            REQUIRE(db.collection("testCollection").count_documents(view) == 1);
+        };
+        ah.runDefaultAndVerify(verifyFn);
+    }
+}
+
+TEST_CASE_METHOD(MongoTestFixture,
                  "Check OnlyRunInInstance inputs",
                  "[standalone][sharded][single_node_replset][three_node_replset]") {
     SECTION("OnlyRunInInstances throws on non-existing type") {
@@ -1055,7 +1096,7 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )", "");
 
-        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1), 
+        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1),
         Catch::Contains("OnlyRunInInstance or OnlyRunInInstances valid values are:"));
     }
 
@@ -1083,10 +1124,10 @@ TEST_CASE_METHOD(MongoTestFixture,
               Format: csv
         )", "");
 
-        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1), 
+        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1),
         Catch::Contains("Can't have both 'OnlyRunInInstance' and 'OnlyRunInInstances'."));
     }
-    
+
 }
 
 }  // namespace
