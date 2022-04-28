@@ -17,6 +17,12 @@ Description: |
   collection scan, which represents a conventional performance-sensitive OLTP workload
   that shouldn't be too affected by the long-running queries.
 
+Keywords:
+- collections
+- oltp
+- query
+- scale
+
 Clients:
   Default:
     QueryOptions:
