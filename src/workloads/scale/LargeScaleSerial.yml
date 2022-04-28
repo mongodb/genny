@@ -1,7 +1,21 @@
 SchemaVersion: 2018-07-01
 Owner: STM
 Description: |
-  TODO: TIG-3722
+  This config simulates a "typical" large-scale OLTP workload running in parallel with a
+  slower analytical operation. This is a use-case intended to improve with the addition of
+  durable history.
+
+  The first phase loads data while performing updates, lasts for one hour, and expects an
+  overall update throughput of ten updates per millisecond.
+
+  The second phase is a no-op.
+
+  The third phase lasts for another hour, and runs three parallel query operations: a
+  warmup that queries 100 collections, and two larger ones that query all 10K
+  collections. These aren't performance-sensitive, they just serve to keep various "older"
+  records around (hence the rate-limiting). The queries run in parallel with a full
+  collection scan, which represents a conventional performance-sensitive OLTP workload
+  that shouldn't be too affected by the long-running queries.
 
 Clients:
   Default:
