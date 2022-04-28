@@ -27,7 +27,7 @@ LoadConfig:
   Path: "../../phases/execution/MultiDeletes.yml"
   Parameters:
     TargetDocumentSizeBytes: 16_384  # 16KB
-    DocumentCount: 62_500
+    DocumentCount: 625_000
     UseBatchedDeleteStage: 1
     ConfigurationFile: "../../phases/execution/config/MultiDeletes/WithSecondaryIndexes.yml"
 
