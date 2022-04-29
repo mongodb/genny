@@ -9,18 +9,47 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
-- Name: TPCHNormalizedQuery22
+
+# At the start of the workload, the mongod will have been restarted and all caches will have been cleared.
+# This is when we start the cold data run. We use 'executionStats' here to cause each command to run its
+# execution plan until no documents remain, which ensures that the query executes in its entirety.
+# This is also configured to log an explain for the query plan to help debug regressions.
+- Name: TPCHNormalizedQuery22Cold
   Type: RunCommand
-  Database: tpch
+  Database: &db tpch
   Phases:
   - LoadConfig:
       Path: ../../../../phases/tpch/normalized/Q22.yml
+      Key: TPCHNormalizedQuery22Explain
+  - &Nop {Nop: true}
+  - *Nop
+
+# After the cold run, we need to warm up our caches. This is necessary since running aggregations
+# with explain normally does not result in caching of plans.
+- Name: TPCHNormalizedQuery22Warmup
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        LoadConfig:
+          Path: ../../../../phases/tpch/normalized/Q22.yml
+          Key: TPCHNormalizedQuery22Aggregation
+  - *Nop
+
+# After the cold run, our caches should be warmed up.
+- Name: TPCHNormalizedQuery22Hot
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - LoadConfig:
+      Path: ../../../../phases/tpch/normalized/Q22.yml
       Key: TPCHNormalizedQuery22
-      Parameters:  # This is a hack, because yml parses these strings into ints before outputting the pipeline.
-        Query22CountryCode1: {$toString: "13"}
-        Query22CountryCode2: {$toString: "31"}
-        Query22CountryCode3: {$toString: "23"}
-        Query22CountryCode4: {$toString: "29"}
-        Query22CountryCode5: {$toString: "30"}
-        Query22CountryCode6: {$toString: "18"}
-        Query22CountryCode7: {$toString: "17"}
+      Parameters:
+        Repeat: 3

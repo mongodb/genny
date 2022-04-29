@@ -9,14 +9,47 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
-- Name: TPCHDenormalizedQuery8
+
+# At the start of the workload, the mongod will have been restarted and all caches will have been cleared.
+# This is when we start the cold data run. We use 'executionStats' here to cause each command to run its
+# execution plan until no documents remain, which ensures that the query executes in its entirety.
+# This is also configured to log an explain for the query plan to help debug regressions.
+- Name: TPCHDenormalizedQuery8Cold
   Type: RunCommand
-  Database: tpch
+  Database: &db tpch
   Phases:
+  - LoadConfig:
+      Path: ../../../../phases/tpch/denormalized/Q8.yml
+      Key: TPCHDenormalizedQuery8Explain
+  - &Nop {Nop: true}
+  - *Nop
+
+# After the cold run, we need to warm up our caches. This is necessary since running aggregations
+# with explain normally does not result in caching of plans.
+- Name: TPCHDenormalizedQuery8Warmup
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/Q8.yml
+          Key: TPCHDenormalizedQuery8Aggregation
+  - *Nop
+
+# After the cold run, our caches should be warmed up.
+- Name: TPCHDenormalizedQuery8Hot
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
   - LoadConfig:
       Path: ../../../../phases/tpch/denormalized/Q8.yml
       Key: TPCHDenormalizedQuery8
       Parameters:
-        Query8Type: "ECONOMY ANODIZED STEEL"
-        Query8Region: "AMERICA"
-        Query8Nation: "BRAZIL"
+        Repeat: 3

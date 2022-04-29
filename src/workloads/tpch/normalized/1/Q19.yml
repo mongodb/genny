@@ -9,17 +9,48 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
-- Name: TPCHNormalizedQuery19
+
+# At the start of the workload, the mongod will have been restarted and all caches will have been cleared.
+# This is when we start the cold data run. We use 'executionStats' here to cause each command to run its
+# execution plan until no documents remain, which ensures that the query executes in its entirety.
+# This is also configured to log an explain for the query plan to help debug regressions.
+- Name: TPCHNormalizedQuery19Cold
   Type: RunCommand
-  Database: tpch
+  Database: &db tpch
   Phases:
   - LoadConfig:
       Path: ../../../../phases/tpch/normalized/Q19.yml
-      Key: TPCHNormalizedQuery19
-      Parameters:
-        Query19Brand1: "Brand#12"
-        Query19Quantity1: 1
-        Query19Brand2: "Brand#23"
-        Query19Quantity2: 10
-        Query19Brand3: "Brand#34"
-        Query19Quantity3: 20
+      Key: TPCHNormalizedQuery19Explain
+# TODO: uncomment once this query is sped up. >10 minute execution time.
+#   - &Nop {Nop: true}
+#   - *Nop
+
+# # After the cold run, we need to warm up our caches. This is necessary since running aggregations
+# # with explain normally does not result in caching of plans.
+# - Name: TPCHNormalizedQuery19Warmup
+#   Type: RunCommand
+#   Database: *db
+#   Phases:
+#   - *Nop
+#   - Repeat: 1
+#     Database: *db
+#     Operations:
+#     - OperationName: RunCommand
+#       OperationCommand:
+#         LoadConfig:
+#           Path: ../../../../phases/tpch/normalized/Q19.yml
+#           Key: TPCHNormalizedQuery19Aggregation
+#   - *Nop
+
+# # After the cold run, our caches should be warmed up.
+# - Name: TPCHNormalizedQuery19Hot
+#   Type: RunCommand
+#   Database: *db
+#   Phases:
+#   - *Nop
+#   - *Nop
+#   - LoadConfig:
+#       Path: ../../../../phases/tpch/normalized/Q19.yml
+#       Key: TPCHNormalizedQuery19
+#       Parameters:
+#         Repeat: 3
