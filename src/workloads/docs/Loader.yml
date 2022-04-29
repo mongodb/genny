@@ -131,15 +131,6 @@ Actors:
     BatchSize: *BatchSize
     Document:
       a: {^RandomString: { length: 100 }}
-  - Repeat: 1
-    # create 0 collection (Phase.CollectionCount / Phase.Threads) *  Actor.Threads.
-    Database: ZeroCollections
-    CollectionCount: 1
-    Threads: 20  # Any value greater than Actor.Threads (10) and Phase.CollectionCount (1)
-    DocumentCount: *DocumentCount
-    BatchSize: 100000
-    Document:
-      a: {^RandomString: { length: 100 }}
 - Name: MultipleLoadThreadsPerCollection
   Type: Loader
   Threads: 100
