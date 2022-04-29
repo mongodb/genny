@@ -26,11 +26,11 @@ LoadConfig:
   Path: "../../phases/execution/MultiDeletes.yml"
   Parameters:
     TargetDocumentSizeBytes: 16_384  # 16KB
-    DocumentCount: 625_000
+    DocumentCount: 1_500_000
 
 # Uncomment AutoRun to enable this test in evergreen patches
-# AutoRun:
-# - When:
-#     mongodb_setup:
-#       $eq:
-#       - replica-all-feature-flags
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-all-feature-flags

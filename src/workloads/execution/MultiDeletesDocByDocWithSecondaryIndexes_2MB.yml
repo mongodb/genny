@@ -27,14 +27,14 @@ LoadConfig:
   Path: "../../phases/execution/MultiDeletes.yml"
   Parameters:
     TargetDocumentSizeBytes: 2_097_152  # 2MB
-    DocumentCount: 5_000
+    DocumentCount: 40_000
     # No need to batch large docs
     InsertBatchSize: 1
     ConfigurationFile: "../../phases/execution/config/MultiDeletes/WithSecondaryIndexes.yml"
 
 # Uncomment AutoRun to enable this test in evergreen patches
-# AutoRun:
-# - When:
-#     mongodb_setup:
-#       $eq:
-#       - replica-all-feature-flags
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-all-feature-flags
