@@ -17,7 +17,7 @@ Actors:
   Phases:
   - Repeat: 1
     Database: test
-    CollectionCount: 1
+    CollectionCount: 50
     DocumentCount: 100
     BatchSize: 100
     Document:
