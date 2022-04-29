@@ -76,7 +76,7 @@ struct Loader::PhaseConfig {
             }
         };
 
-        if (context["Threads"] && context["Threads"] > totalThreads) {
+        if (context["Threads"] && context["Threads"].to<IntegerSpec>() > totalThreads) {
             BOOST_THROW_EXCEPTION(
                 InvalidConfigurationException("Phase Config 'Threads' parameter must be less than "
                                               "or equal to Actor Config 'Threads' in Loader actor"))
