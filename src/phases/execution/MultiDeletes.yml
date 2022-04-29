@@ -93,16 +93,16 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 3: Populate the collection for mass deletion. TODO Make multithreaded once TIG-2938 is resolved.
+# Phase 3: Populate the collection for mass deletion.
 - Name: PopulateInitialData0
   Type: Loader
-  Threads: 1
+  Threads: &LoaderThreads 4
   Phases:
   - *Nop
   - *Nop
   - Repeat: 1
     Database: *Database
-    Threads: 1
+    MultipleThreadsPerCollection: true
     CollectionCount: 1
     DocumentCount: *DocumentCount
     BatchSize: *InsertBatchSize
@@ -151,19 +151,19 @@ Actors:
   - *Nop
 
 # Phase 5: Populate the collection for mass deletion again, in preparation for phase 6 when concurrent writes will be
-# issued to another collection in the same database. TODO Make multithreaded once TIG-2938 is resolved.
+# issued to another collection in the same database.
 - Name: PopulateInitialData1
   Type: Loader
-  Threads: 1
+  Threads: *LoaderThreads
   Phases:
   - *Nop
   - *Nop
   - *Nop
   - *Nop
   - Repeat: 1
-    Threads: 1
     Database: *Database
     Collection: *MassDeletionsColl
+    MultipleThreadsPerCollection: true
     CollectionCount: 1
     DocumentCount: *DocumentCount
     BatchSize: *InsertBatchSize
