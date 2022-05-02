@@ -7,34 +7,67 @@ Description: >
   The mass deletion namespace is __internalBatchedDeletesTesting.Collection0
   The concurrent writes namespace is __internalBatchedDeletesTesting.concurrentWritesColl
 
+Keywords:
+- RunCommand
+- Loader
+- LoggingActor
+- CrudActor
+- insert
+- delete
+- batch
+- deleteMany
+- latency
+
 GlobalDefaults:
   # Configurable parameters.
   DocumentCount: &DocumentCount {^Parameter: {Name: "DocumentCount", Default: 100_000_000}}
+  # Number of documents to batch into an insert. This should be configurable because large docs may hit a memory limit if the batch size is fixed.
+  InsertBatchSize: &InsertBatchSize {^Parameter: {Name: "InsertBatchSize", Default: 1_000}}
   # The size of the documents inserted and deleted into collections during this test.
-  DocumentSizePaddingBytes: &DocumentSizePaddingBytes {^Parameter: {Name: "DocumentSizePaddingBytes", Default: 0}}
+  TargetDocumentSizeBytes: &TargetDocumentSizeBytes {^Parameter: {Name: "TargetDocumentSizeBytes", Default: 1_024}}
+  # Compute document padding based on target size and field sizes
+  DocumentPaddingSizeBytes: &DocumentPaddingSizeBytes
+    ^NumExpr:
+      withExpression: "target_size - id_length - (field_count * (field_length+value_length)) - padding_field"
+      andValues: {target_size: *TargetDocumentSizeBytes, id_length: 22, field_count: 7, field_length: 8, value_length: &ValueLength 6, padding_field: 14}
   # Whether to use the BATCHED_DELETE query exec stage over DELETE.
   UseBatchedDeleteStage: &UseBatchedDeleteStage {^Parameter: {Name: "UseBatchedDeleteStage", Default: 0}}
+  # Configuration file to use: with no secondary indexes (default) or creating secondaries for the non-padding fields.
+  ConfigFile: &ConfigFile {^Parameter: {Name: "ConfigurationFile", Default: "../../phases/execution/config/MultiDeletes/Default.yml"}}
+  # Insert same document for both default and with secondary indexes to remove one variable.
+  InsertDocument: &DocumentToInsert
+    a: &rs {^FastRandomString: {length: *ValueLength, alphabet: "0123456789"}}
+    b: *rs
+    c: *rs
+    d: *rs
+    e: *rs
+    f: *rs
+    g: *rs  # up to field_count fields
+    padding: {^FastRandomString: {length: *DocumentPaddingSizeBytes}}
+  # Delete by primary index always.
+  DeleteQuery: &DeleteQuery
+    {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
 
-# Constants
+# Constants.
 WriteRate: &WriteRate 1 per 500 microseconds  # 2000/second
 ConcurrentWritesColl: &ConcurrentWritesColl concurrentWritesColl
 
-# Constants hardcoded in server (see TIG-3945, TIG-3882)
+# Constants hardcoded in server (see TIG-3945, TIG-3882).
 Database: &Database __internalBatchedDeletesTesting
 MassDeletionsColl: &MassDeletionsColl Collection0
 
 Actors:
-
-# Phase 1: Drop the database.
-- Name: DropDatabase
+# Phase 1: Initialize the database.
+- Name: InitializeDatabase
   Type: RunCommand
   Threads: 1
   Phases:
   - Repeat: 1
     Database: *Database
     Operations:
-    - OperationName: RunCommand
-      OperationCommand: {dropDatabase: 1}
+      LoadConfig:
+        Path: *ConfigFile
+        Key: InitializeDatabaseOps
   - &Nop {Nop: true}
   - *Nop
   - *Nop
@@ -60,21 +93,21 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 3: Populate the collection for mass deletion. TODO Make multithreaded once TIG-2938 is resolved.
+# Phase 3: Populate the collection for mass deletion.
 - Name: PopulateInitialData0
   Type: Loader
-  Threads: 1
+  Threads: &LoaderThreads 4
   Phases:
   - *Nop
   - *Nop
   - Repeat: 1
     Database: *Database
-    Threads: 1
+    MultipleThreadsPerCollection: true
     CollectionCount: 1
     DocumentCount: *DocumentCount
-    BatchSize: 1000
+    BatchSize: *InsertBatchSize
     Document:
-      padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
+      *DocumentToInsert
   - *Nop
   - *Nop
   - *Nop
@@ -110,32 +143,32 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: deleteMany
-          # Filter by the smallest OID so all documents are included.
-          Filter: {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
+          Filter:
+            *DeleteQuery
           OperationOptions:
             WriteConcern: { Level: "majority" }
   - *Nop
   - *Nop
 
 # Phase 5: Populate the collection for mass deletion again, in preparation for phase 6 when concurrent writes will be
-# issued to another collection in the same database. TODO Make multithreaded once TIG-2938 is resolved.
+# issued to another collection in the same database.
 - Name: PopulateInitialData1
   Type: Loader
-  Threads: 1
+  Threads: *LoaderThreads
   Phases:
   - *Nop
   - *Nop
   - *Nop
   - *Nop
   - Repeat: 1
-    Threads: 1
     Database: *Database
     Collection: *MassDeletionsColl
+    MultipleThreadsPerCollection: true
     CollectionCount: 1
     DocumentCount: *DocumentCount
-    BatchSize: 1000
+    BatchSize: *InsertBatchSize
     Document:
-      padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
+      *DocumentToInsert
   - *Nop
 
 # Phase 5: Guard against timeout due to no logging during PopulateInitialData1.
@@ -170,8 +203,8 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: deleteMany
-          # Filter by the smallest OID so all documents are included.
-          Filter: {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
+          Filter:
+            *DeleteQuery
           OperationOptions:
             WriteConcern: { Level: "majority" }
 
@@ -193,10 +226,4 @@ Actors:
     - OperationName: insertOne
       OperationCommand:
         Document:
-          padding: {^FastRandomString: {length: *DocumentSizePaddingBytes}}
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica-all-feature-flags
-      - shard-lite-all-feature-flags
+          *DocumentToInsert

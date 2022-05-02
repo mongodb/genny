@@ -1,0 +1,39 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Deletes a range of documents using the DELETE query exec stage while performing writes on another collection.
+  Secondary indexes are created to see how they might affect performance. Documents are approximately of size ~10MB.
+
+Keywords:
+- RunCommand
+- Loader
+- LoggingActor
+- CrudActor
+- insert
+- delete
+- batch
+- deleteMany
+- latency
+- secondary indexes
+
+# TODO move the Clients section to src/phases/execution/MultiDeletes.yml once TIG-3950 is resolved.
+Clients:
+  Default:
+    QueryOptions:
+      # Allow for longer duration since the loading of the data may take a while.
+      socketTimeoutMS: 3_600_000  # = 1 hour
+
+LoadConfig:
+  Path: "../../phases/execution/MultiDeletes.yml"
+  Parameters:
+    TargetDocumentSizeBytes: 10_485_760  # 10MB
+    DocumentCount: 4_000
+    # Cannot batch insert more than INT_MAX bytes, also no need to batch large docs
+    InsertBatchSize: 1
+    ConfigurationFile: "../../phases/execution/config/MultiDeletes/WithSecondaryIndexes.yml"
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-all-feature-flags
