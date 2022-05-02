@@ -4,8 +4,8 @@ Description: >
   Runs a workload that deletes a large range of documents while performing writes on another collection.
   Allows for comparing the performance of the DELETE_STAGE vs the BATCHED_DELETE_STAGE, primarily in terms
   of deletion throughput, and w:majority latencies of the concurrent writes.
-  The mass deletion namespace is __internalBatchedDeletesTesting.Collection0
-  The concurrent writes namespace is __internalBatchedDeletesTesting.concurrentWritesColl
+  The mass deletion namespace is test.Collection0
+  The concurrent writes namespace is test.concurrentWritesColl
 
 Keywords:
 - RunCommand
@@ -52,8 +52,7 @@ GlobalDefaults:
 WriteRate: &WriteRate 1 per 500 microseconds  # 2000/second
 ConcurrentWritesColl: &ConcurrentWritesColl concurrentWritesColl
 
-# Constants hardcoded in server (see TIG-3945, TIG-3882).
-Database: &Database __internalBatchedDeletesTesting
+Database: &Database test
 MassDeletionsColl: &MassDeletionsColl Collection0
 
 Actors:
@@ -87,7 +86,7 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         setParameter: 1
-        internalBatchUserMultiDeletesForTest: *UseBatchedDeleteStage
+        batchUserMultiDeletes: *UseBatchedDeleteStage
   - *Nop
   - *Nop
   - *Nop
