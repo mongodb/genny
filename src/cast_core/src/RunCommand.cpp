@@ -180,8 +180,7 @@ public:
                 } else {
                     auto commandResult = _database.run_command(view);
                     if (_options.logResult) {
-                        BOOST_LOG_TRIVIAL(info)
-                            << " Command result: " << bsoncxx::to_json(commandResult);
+                        BOOST_LOG_TRIVIAL(info) << " Command result: " << bsoncxx::to_json(commandResult);
                     }
                 }
 
@@ -228,16 +227,19 @@ public:
             kStandalone,
             kSharded,
             kReplicaSet,
-            _size,           // Must before kNotInitialized
+            _size,          // Must before kNotInitialized
             kNotInitialized  // Must be last
         };
         static constexpr std::string_view kNames[Code::_size] = {
-            [kStandalone] = "standalone", [kSharded] = "sharded", [kReplicaSet] = "replica_set"};
+            [kStandalone] = "standalone",
+            [kSharded] = "sharded",
+            [kReplicaSet] = "replica_set"
+        };
 
         static std::string getValidOptionsListAsString() {
             std::stringstream listString;
-            for (int i = 0; i < Code::_size; ++i) {
-                if (i != 0) {
+            for(int i = 0; i < Code::_size; ++i) {
+                if(i != 0) {
                     listString << ", ";
                 }
                 listString << kNames[i];
@@ -246,8 +248,8 @@ public:
         }
 
         static std::optional<Code> stringToCode(std::string_view instanceType) {
-            for (int i = 0; i < Code::_size; ++i) {
-                if (kNames[i] == instanceType) {
+            for(int i = 0; i < Code::_size; ++i) {
+                if(kNames[i] == instanceType) {
                     return static_cast<Code>(i);
                 }
             }
@@ -256,13 +258,13 @@ public:
 
         static std::vector<Code> getCodesFromStrings(const std::vector<std::string>& options) {
             std::vector<Code> codeOptions;
-            for (auto& option : options) {
-                if (auto code = stringToCode(option)) {
+            for(auto &option : options) {
+                if(auto code = stringToCode(option)) {
                     codeOptions.push_back(*code);
                 } else {
                     std::stringstream errorMsg;
-                    errorMsg << Keys::kSingular << " or " << Keys::kPlural
-                             << " valid values are: " << Options::getValidOptionsListAsString();
+                    errorMsg << Keys::kSingular << " or " << Keys::kPlural << " valid values are: "
+                        << Options::getValidOptionsListAsString();
                     throw InvalidConfigurationException(errorMsg.str());
                 }
             }
@@ -270,22 +272,22 @@ public:
         }
     };
 
-    InstanceTypeFilter(PhaseContext& context, mongocxx::pool::entry& client) {
+    InstanceTypeFilter(PhaseContext &context, mongocxx::pool::entry& client) {
         std::vector<std::string> stringOptions;
         try {
             stringOptions = context.getPlural<std::string>(
                 Keys::kSingular, Keys::kPlural, [&](const Node& node) {
                     return node.to<std::string>();
-                });
-        } catch (const InvalidKeyException&) {
+            });
+        } catch(const InvalidKeyException&) {
             // Exception might be due to keys not found or other errors. If its due to keys not
             // found ignore the expception. Otherwise rethrow.
-            if (context[Keys::kSingular] || context[Keys::kPlural]) {
+            if(context[Keys::kSingular] || context[Keys::kPlural]) {
                 std::rethrow_exception(std::current_exception());
             }
         }
 
-        if (stringOptions.size()) {
+        if(stringOptions.size()) {
             _onlyRunInInstancesContext = Options::getCodesFromStrings(stringOptions);
             _adminDB = (*client)["admin"];
 
@@ -293,8 +295,8 @@ public:
             // done this requires excluding workloads using this functionality from the dry-run.
             _type = getInstanceType(_adminDB);
             _typeFoundInConfig = false;
-            for (const auto& configInstanceType : _onlyRunInInstancesContext) {
-                if (_type == configInstanceType) {
+            for(const auto &configInstanceType : _onlyRunInInstancesContext) {
+                if(_type == configInstanceType) {
                     _typeFoundInConfig = true;
                     break;
                 }
@@ -311,15 +313,15 @@ public:
 
     // The output of the "hello" command is parsed to check if we are running in a Mongos, a replica
     // set, or a standalone instance.
-    static Options::Code getInstanceType(mongocxx::database& db) {
+    static Options::Code getInstanceType(mongocxx::database &db) {
         using bsoncxx::builder::basic::kvp;
         using bsoncxx::builder::basic::make_document;
 
         auto helloResult = db.run_command(make_document(kvp("hello", 1)));
-        if (auto msg = helloResult.view()["msg"]) {
+        if(auto msg = helloResult.view()["msg"]) {
             return Options::Code::kSharded;
         }
-        if (auto msg = helloResult.view()["hosts"]) {
+        if(auto msg = helloResult.view()["hosts"]) {
             return Options::Code::kReplicaSet;
         }
         return Options::Code::kStandalone;
@@ -328,7 +330,7 @@ public:
 private:
     std::vector<Options::Code> _onlyRunInInstancesContext;
     bool _typeFoundInConfig;
-    Options::Code _type{Options::Code::kNotInitialized};
+    Options::Code _type {Options::Code::kNotInitialized};
     mongocxx::database _adminDB;
 };
 
@@ -339,7 +341,7 @@ struct actor::RunCommand::PhaseConfig {
                 mongocxx::pool::entry& client,
                 ActorId id)
         : throwOnFailure{context["ThrowOnFailure"].maybe<bool>().value_or(true)},
-          onlyRunInInstancesFilter(context, client) {
+            onlyRunInInstancesFilter(context, client) {
         auto actorType = actorContext["Type"].to<std::string>();
         auto database = context["Database"].maybe<std::string>().value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
@@ -363,7 +365,7 @@ struct actor::RunCommand::PhaseConfig {
 void actor::RunCommand::run() {
     for (auto&& config : _loop) {
         // Run ops when there is no OnlyRunInInstances option or when one of the options matches
-        if (!config.isNop() && !config->onlyRunInInstancesFilter.shouldRun()) {
+        if(!config.isNop() && !config->onlyRunInInstancesFilter.shouldRun()) {
             continue;
         }
         for (auto&& _ : config) {

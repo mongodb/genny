@@ -142,7 +142,8 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
                               : "inline-yaml"};
 
 
-    auto workloadContext = WorkloadContext{nodeSource.root(), orchestrator, globalCast()};
+    auto workloadContext =
+        WorkloadContext{nodeSource.root(), orchestrator, globalCast()};
 
     genny::metrics::Registry& metrics = workloadContext.getMetrics();
 
@@ -163,25 +164,26 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     std::atomic<DefaultDriver::OutcomeCode> outcomeCode = DefaultDriver::OutcomeCode::kSuccess;
 
     std::mutex reporting;
-    parallelRun(workloadContext.actors(), [&](const auto& actor) {
-        {
-            auto ctx = startedActors.start();
-            ctx.addDocuments(1);
+    parallelRun(workloadContext.actors(),
+                [&](const auto& actor) {
+                   {
+                       auto ctx = startedActors.start();
+                       ctx.addDocuments(1);
 
-            std::lock_guard<std::mutex> lk{reporting};
-            ctx.success();
-        }
+                       std::lock_guard<std::mutex> lk{reporting};
+                       ctx.success();
+                   }
 
-        runActor(actor, outcomeCode, orchestrator);
+                   runActor(actor, outcomeCode, orchestrator);
 
-        {
-            auto ctx = finishedActors.start();
-            ctx.addDocuments(1);
+                   {
+                       auto ctx = finishedActors.start();
+                       ctx.addDocuments(1);
 
-            std::lock_guard<std::mutex> lk{reporting};
-            ctx.success();
-        }
-    });
+                       std::lock_guard<std::mutex> lk{reporting};
+                       ctx.success();
+                   }
+               });
 
     if (metrics.getFormat().useCsv()) {
         const auto reporter = genny::metrics::Reporter{metrics};

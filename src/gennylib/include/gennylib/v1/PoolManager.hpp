@@ -47,7 +47,8 @@ public:
      * @param callback
      *   a callback to be invoked for every `mongocxx::events::command_started_event`
      */
-    PoolManager(OnCommandStartCallback callback) : _apmCallback{std::move(callback)} {}
+    PoolManager(OnCommandStartCallback callback)
+        : _apmCallback{std::move(callback)} {}
 
     /**
      * Obtain a connection or throw if none available.

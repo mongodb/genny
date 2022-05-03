@@ -67,9 +67,8 @@ WorkloadContext::WorkloadContext(const Node& node,
                                 << " is deprecated in favor of ftdc.";
     }
 
-    auto metricsPath = ((*this)["Metrics"]["Path"])
-                           .maybe<std::string>()
-                           .value_or("build/WorkloadOutput/CedarMetrics");
+    auto metricsPath =
+        ((*this)["Metrics"]["Path"]).maybe<std::string>().value_or("build/WorkloadOutput/CedarMetrics");
 
     _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
 
@@ -81,12 +80,13 @@ WorkloadContext::WorkloadContext(const Node& node,
     }
 
     ActorBucket bucket;
-    parallelRun(_actorContexts, [&](const auto& actorContext) {
-        auto rawActors = _constructActors(cast, actorContext);
-        for (auto&& actor : rawActors) {
-            bucket.addItem(std::move(actor));
-        }
-    });
+    parallelRun(_actorContexts,
+                   [&](const auto& actorContext) {
+                       auto rawActors = _constructActors(cast, actorContext);
+                       for (auto&& actor : rawActors) {
+                           bucket.addItem(std::move(actor));
+                       }
+                   });
 
     _actors = std::move(bucket.extractItems());
     _done = true;

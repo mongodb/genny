@@ -159,11 +159,11 @@ TEST_CASE("Topology maps the cluster correctly") {
         topology.accept(visitor);
 
         stringstream expected;
-        expected << "{primaryUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny, "
-                 << "nodes: [{replSetMemberMongodUri: "
-                    "mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny}, "
-                 << "{replSetMemberMongodUri: mongodb://host2:port2/?appName=Genny}, "
-                 << "{replSetMemberMongodUri: mongodb://host3:port3/?appName=Genny}]}";
+        expected
+            << "{primaryUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny, "
+            << "nodes: [{replSetMemberMongodUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny}, "
+            << "{replSetMemberMongodUri: mongodb://host2:port2/?appName=Genny}, "
+            << "{replSetMemberMongodUri: mongodb://host3:port3/?appName=Genny}]}";
 
         REQUIRE(expected.str() == visitor.str());
     }
@@ -267,8 +267,7 @@ TEST_CASE("Topology maps the cluster correctly") {
         stringstream expected;
         expected
             << "{configsvr: {primaryUri: mongodb://testConfigHost:testConfigPort/?appName=Genny, "
-            << "nodes: [{configSvrMemberMongodUri: "
-               "mongodb://testConfigHost:testConfigPort/?appName=Genny}]} "
+            << "nodes: [{configSvrMemberMongodUri: mongodb://testConfigHost:testConfigPort/?appName=Genny}]} "
             << "shards: [{primaryUri: mongodb://shardNode1:shardPort1/?appName=Genny, "
             << "nodes: [{replSetMemberMongodUri: mongodb://shardNode1:shardPort1/?appName=Genny}, "
             << "{replSetMemberMongodUri: mongodb://shardNode2:shardPort2/?appName=Genny}]}],  "

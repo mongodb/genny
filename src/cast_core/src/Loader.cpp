@@ -29,8 +29,8 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
 
-#include <bsoncxx/builder/stream/document.hpp>
 #include <value_generators/DocumentGenerator.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
 
 namespace genny::actor {
 
@@ -71,7 +71,8 @@ struct Loader::PhaseConfig {
                 indexes.emplace_back(
                     indexNode["keys"].to<DocumentGenerator>(context, id),
                     indexNode["options"].maybe<DocumentGenerator>(context, id),
-                    indexNode["options"]["name"].maybe<std::string>().value_or(indexName));
+                    indexNode["options"]["name"].maybe<std::string>().value_or(indexName)
+                );
             }
         };
 
@@ -100,9 +101,9 @@ struct Loader::PhaseConfig {
             }
         } else {
             if (context["Threads"] && context["Threads"].to<IntegerSpec>() > totalThreads) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "Phase Config 'Threads' parameter must be less than "
-                    "or equal to Actor Config 'Threads' in Loader actor"));
+                BOOST_THROW_EXCEPTION(
+                                      InvalidConfigurationException("Phase Config 'Threads' parameter must be less than "
+                                                                    "or equal to Actor Config 'Threads' in Loader actor"));
             }
             createIndexes();
             if (thread == context["Threads"].to<int>() - 1) {
@@ -160,27 +161,30 @@ void genny::actor::Loader::run() {
                 // Make the index
                 bool _indexReq = false;
                 builder::stream::document builder{};
-                auto indexCmd = builder << "createIndexes" << collectionName << "indexes"
-                                        << builder::stream::open_array;
+                auto indexCmd = builder << "createIndexes" << collectionName
+                                        <<  "indexes" << builder::stream::open_array;
                 for (auto&& [keys, options, indexName] : config->indexes) {
                     _indexReq = true;
                     auto indexKey = keys();
                     if (options) {
                         auto indexOptions = (*options)();
-                        indexCmd = indexCmd << builder::stream::open_document << "key"
-                                            << indexKey.view() << "name" << indexName
+                        indexCmd = indexCmd << builder::stream::open_document
+                                            << "key" << indexKey.view()
+                                            << "name" << indexName
                                             << builder::concatenate(indexOptions.view())
                                             << builder::stream::close_document;
 
                     } else {
-                        indexCmd = indexCmd << builder::stream::open_document << "key"
-                                            << indexKey.view() << "name" << indexName
+                        indexCmd = indexCmd << builder::stream::open_document
+                                            << "key" << indexKey.view()
+                                            << "name" << indexName
                                             << builder::stream::close_document;
                     }
                 }
                 auto doc = indexCmd << builder::stream::close_array << builder::stream::finalize;
                 if (_indexReq) {
-                    BOOST_LOG_TRIVIAL(debug) << "Building index" << to_json(doc.view());
+                    BOOST_LOG_TRIVIAL(debug)
+                            << "Building index" << to_json(doc.view());
                     auto indexOpCtx = _indexBuild.start();
                     config->database.run_command(doc.view());
                     indexOpCtx.success();
@@ -197,8 +201,7 @@ Loader::Loader(genny::ActorContext& context, uint thread, size_t totalThreads)
       _totalBulkLoad{context.operation("TotalBulkInsert", Loader::id())},
       _individualBulkLoad{context.operation("IndividualBulkInsert", Loader::id())},
       _indexBuild{context.operation("IndexBuild", Loader::id())},
-      _client{std::move(
-          context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
+      _client{std::move(context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
       _loop{context, _client, thread, totalThreads, Loader::id()} {}
 
 class LoaderProducer : public genny::ActorProducer {

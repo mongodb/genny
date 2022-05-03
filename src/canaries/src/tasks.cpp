@@ -15,12 +15,11 @@ Singleton* Singleton::getInstance(const std::string& mongoUri) {
 Singleton::Singleton(std::string mongoUri)
     : _poolManager{{}},
       ns{
-          R"(
+        R"(
           Clients:
             PingTask:
-              URI: )" +
-              mongoUri,
-          ""},
+              URI: )" + mongoUri, ""
+      },
       client{_poolManager.client("PingTask", 1, ns.root())},
       pingCmd{make_document(kvp("ping", 1))} {};
 }  // namespace genny::canaries::ping_task

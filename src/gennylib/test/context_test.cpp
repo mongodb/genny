@@ -43,9 +43,7 @@ using Catch::Matchers::StartsWith;
 // The driver checks the passed-in mongo uri for accuracy but doesn't actually
 // initiate a connection until a connection is retrieved from
 // the connection-pool
-static const std::string baseYaml =
-    "SchemaVersion: 2018-07-01\nClients: {Default: {URI: 'mongodb://localhost:27017'}}\nActors: "
-    "[]\n";
+static const std::string baseYaml = "SchemaVersion: 2018-07-01\nClients: {Default: {URI: 'mongodb://localhost:27017'}}\nActors: []\n";
 
 template <typename T, typename Arg, typename... Rest>
 auto& applyBracket(const T& t, Arg&& arg, Rest&&... rest) {
@@ -130,10 +128,7 @@ Actors:
     }
 
     SECTION("Invalid Schema Version") {
-        auto yaml = NodeSource(
-            "SchemaVersion: 2018-06-27\nClients: {Default: {URI: "
-            "'mongodb://localhost:27017'}}\nActors: []\n",
-            "");
+        auto yaml = NodeSource("SchemaVersion: 2018-06-27\nClients: {Default: {URI: 'mongodb://localhost:27017'}}\nActors: []\n", "");
 
         auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, cast); };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid Schema Version: 2018-06-27"));
@@ -242,9 +237,7 @@ Actors:
                 R"(Invalid key 'SchemaVersion': Tried to access node that doesn't exist. On node with path '/SchemaVersion': )"));
     }
     SECTION("No Actors") {
-        auto yaml = NodeSource(
-            "SchemaVersion: 2018-07-01\nClients: {Default: {URI: 'mongodb://localhost:27017'}}",
-            "");
+        auto yaml = NodeSource("SchemaVersion: 2018-07-01\nClients: {Default: {URI: 'mongodb://localhost:27017'}}", "");
         auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, cast); };
         test();
     }
@@ -270,8 +263,10 @@ Actors:
             using ActorProducer::ActorProducer;
 
             ActorVector produce(ActorContext& context) override {
-                workloadAssert = context.workload()["Actors"][0]["SomeList"][0].to<int>() == 100;
-                actorAssert = context["SomeList"][0].to<int>() == 100;
+                workloadAssert =
+                    context.workload()["Actors"][0]["SomeList"][0].to<int>() == 100;
+                actorAssert = 
+                    context["SomeList"][0].to<int>() == 100;
                 ++calls;
                 return ActorVector{};
             }
@@ -715,7 +710,7 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
 
     SECTION("Incorrect type value inputted") {
         auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, cast); };
-        REQUIRE_THROWS_WITH(test(),
-                            Catch::Contains("Unable to construct actors: No producer for 'Bar'"));
+        REQUIRE_THROWS_WITH(
+            test(), Catch::Contains("Unable to construct actors: No producer for 'Bar'"));
     }
 }

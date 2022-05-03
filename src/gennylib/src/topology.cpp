@@ -24,7 +24,11 @@
 
 namespace genny::v1 {
 
-enum class ClusterType { standalone, replSetMember, configSvrMember };
+enum class ClusterType {
+    standalone,
+    replSetMember,
+    configSvrMember
+};
 
 TopologyVisitor::~TopologyVisitor() {}
 
@@ -310,10 +314,10 @@ void ToJsonVisitor::onAfterMongoses(const ShardedDescription&) {
     _result << "]";
 }
 
-void ToJsonVisitor::onBeforeConfigSvr(const ConfigSvrDescription& desc) {
+void ToJsonVisitor::onBeforeConfigSvr(const ConfigSvrDescription& desc){
     _result << "configsvr: {primaryUri: " << desc.primaryUri << ", nodes: [";
 }
-void ToJsonVisitor::onAfterConfigSvr(const ConfigSvrDescription&) {
+void ToJsonVisitor::onAfterConfigSvr(const ConfigSvrDescription&){
     _result << "]}";
 }
 
