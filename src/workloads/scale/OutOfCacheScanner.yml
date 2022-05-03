@@ -16,20 +16,18 @@ Clients:
 Actors:
 - Name: Loader
   Type: Loader
-  Threads: 60
+  Threads: 1
   Phases:
   - Repeat: 1
     Database: cold
-    CollectionCount: 1
-    Threads: 1
+    CollectionCount: 60
     DocumentCount: 1600000
     BatchSize: 100000
     Document:
       a: {^RandomString: { length: 100 }}
   - Repeat: 1
     Database: hot
-    CollectionCount: 1
-    Threads: 1
+    CollectionCount: 60
     DocumentCount: 2700000
     BatchSize: 100000
     Document:

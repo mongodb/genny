@@ -116,7 +116,6 @@ Actors:
   Phases:
   - Repeat: 1
     BatchSize: 100
-    Threads: 1
     DocumentCount: *NumDocs
     Database: *dbname
     CollectionCount: *NumColls
