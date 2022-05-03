@@ -4,7 +4,6 @@ set -eou pipefail
 _pip() {
     /usr/bin/env python3 -m pip "$@" --isolated -q -q
     # /usr/bin/env python3 -m pip "$@" --isolated
-    fi
 }
 
 _genny_venv="genny_venv"
