@@ -1,0 +1,27 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Configuration for MultiDeletes workload. This configuration introduces secondary indexes.
+
+InitializeDatabaseOps:
+- OperationName: RunCommand
+  OperationCommand: {dropDatabase: 1}
+- OperationName: RunCommand
+  OperationCommand:
+    createIndexes: {^Parameter: {Name: "Collection", Default: Collection0}}
+    indexes:
+    - key: {a: 1}
+      name: a
+    - key: {b: 1}
+      name: b
+    - key: {c: 1}
+      name: c
+    - key: {d: 1}
+      name: d
+    - key: {e: 1}
+      name: e
+    - key: {f: 1}
+      name: f
+    - key: {g: 1}
+      name: g
+

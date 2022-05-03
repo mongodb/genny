@@ -1,7 +1,16 @@
 SchemaVersion: 2018-07-01
 Owner: STM
 Description: |
-  TODO: TIG-3722
+  See LargeScaleSerial.yml for a general overview of what this workload does. The main
+  difference here is that the update is parallel with the long-running query and
+  multi-collection scan. This adds some concurrent write load.
+
+Keywords:
+- collections
+- oltp
+- update
+- query
+- scale
 
 Clients:
   Default:
