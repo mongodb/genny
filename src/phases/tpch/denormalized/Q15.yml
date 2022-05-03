@@ -11,8 +11,7 @@ TPCHDenormalizedQuery15:
   Repeat: 1
   Database: tpch
   Operations:
-  - OperationMetricsName: Query15CreateView
-    OperationName: RunCommand
+  - OperationName: RunCommand
     OperationCommand:
       create: revenue
       viewOn: customer
