@@ -992,13 +992,13 @@ class RepeatGenerator : public Appendable {
 public:
     RepeatGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
-                   std::map<std::string, Parser<UniqueAppendable>> parsers)
+                   const std::map<std::string, Parser<UniqueAppendable>>& parsers)
         : RepeatGenerator(
               node, generatorArgs, parsers, extract(node, "count", "^Repeat").to<int64_t>()) {}
 
     RepeatGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
-                   std::map<std::string, Parser<UniqueAppendable>> parsers,
+                   const std::map<std::string, Parser<UniqueAppendable>>& parsers,
                    int64_t numRepeats)
         : _numRepeats{numRepeats},
         _repeatCounter{0},
@@ -1155,7 +1155,7 @@ private:
 class TwoDWalkGenerator : public Generator<bsoncxx::array::value> {
 public:
     TwoDWalkGenerator(const Node& node, GeneratorArgs generatorArgs)
-        : _rng(generatorArgs.rng),
+        : _rng{generatorArgs.rng},
           _docsPerSeries{extract(node, "docsPerSeries", "TwoDWalk").maybe<int64_t>().value()},
           _distPerDoc{extract(node, "distPerDoc", "TwoDWalk").maybe<double>().value()},
           _genX{
@@ -1165,7 +1165,12 @@ public:
           _genY{
               extract(node, "minY", "TwoDWalk").maybe<double>().value(),
               extract(node, "maxY", "TwoDWalk").maybe<double>().value(),
-          } {}
+          },
+          _x{},
+          _y{},
+          _vx{},
+          _vy{}
+           {}
 
     bsoncxx::array::value evaluate() override {
         if (_numGenerated % _docsPerSeries == 0) {
@@ -1406,7 +1411,7 @@ const std::map<std::string, Parser<UniqueAppendable>>& allParsers() {
          }},
         {"^Repeat",
      [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<RepeatGenerator>(node, generatorArgs, allParsers);
+         return std::make_unique<RepeatGenerator>(node, generatorArgs, allParsers());
      }},
     {"^FixedGeneratedValue",
          [](const Node& node, GeneratorArgs generatorArgs) {
