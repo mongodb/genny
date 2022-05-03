@@ -32,29 +32,27 @@ TEST_CASE("Parallel runner runs op") {
     std::vector<int> integers = {1, 2, 3, 4, 5};
     std::mutex _newIntLock;
     std::vector<int> newIntegers;
-    parallelRun(integers,
-               [&](const auto& integer) {
-                   std::lock_guard<std::mutex> lk(_newIntLock);
-                   newIntegers.push_back(integer + 5);
-               });
+    parallelRun(integers, [&](const auto& integer) {
+        std::lock_guard<std::mutex> lk(_newIntLock);
+        newIntegers.push_back(integer + 5);
+    });
 
     std::vector<int> expected = {6, 7, 8, 9, 10};
 
     REQUIRE(expected.size() == newIntegers.size());
     for (int i = 0; i < expected.size(); i++) {
         // The order of elements in newIntegers is nondeterministic.
-        REQUIRE(std::find(newIntegers.begin(), newIntegers.end(),
-                    expected[i]) != newIntegers.end());
+        REQUIRE(std::find(newIntegers.begin(), newIntegers.end(), expected[i]) !=
+                newIntegers.end());
     }
 }
 
 TEST_CASE("Parallel runner reraises exceptions") {
     std::vector<int> integers = {1, 2, 3, 4, 5};
     auto test = [&]() {
-        parallelRun(integers,
-                   [&](const auto& integer) {
-                       throw std::logic_error("This should be reraised.");
-                   });
+        parallelRun(integers, [&](const auto& integer) {
+            throw std::logic_error("This should be reraised.");
+        });
     };
     REQUIRE_THROWS_WITH(test(), Contains("This should be reraised."));
 }

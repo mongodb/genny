@@ -168,7 +168,8 @@ NodeSource createConfigurationYaml(YAML::Node operations) {
           SchemaVersion: 2018-07-01
           Clients:
             Default:
-              URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+              URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                   R"(
           Actors:
           - Name: CrudActor
             Type: CrudActor
@@ -190,7 +191,8 @@ NodeSource createConfigurationYamlPhase(YAML::Node phase) {
           SchemaVersion: 2018-07-01
           Clients:
             Default:
-              URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+              URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                   R"(
           Actors:
           - Name: CrudActor
             Type: CrudActor
@@ -206,7 +208,10 @@ NodeSource createConfigurationYamlPhase(YAML::Node phase) {
     }
     return NodeSource{YAML::Dump(config), "operationsConfig"};
 }
-void requireAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node tcase, int64_t numTransactionsBeforeTest) {
+void requireAfterState(mongocxx::pool::entry& client,
+                       ApmEvents& events,
+                       YAML::Node tcase,
+                       int64_t numTransactionsBeforeTest) {
     if (auto ocd = tcase["OutcomeData"]; ocd) {
         requireCounts(client, ocd);
     }
@@ -219,8 +224,10 @@ void requireAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::N
     if (auto expectCollections = tcase["ExpectedCollectionsExist"]; expectCollections) {
         requireExpectedCollectionsExist(client, events, expectCollections);
     }
-    if (auto expectedNumTransactions = tcase["AssertNumTransactionsCommitted"]; expectedNumTransactions) {
-        requireNumTransactions(client, numTransactionsBeforeTest, expectedNumTransactions.as<int64_t>());
+    if (auto expectedNumTransactions = tcase["AssertNumTransactionsCommitted"];
+        expectedNumTransactions) {
+        requireNumTransactions(
+            client, numTransactionsBeforeTest, expectedNumTransactions.as<int64_t>());
     }
 }
 
@@ -251,14 +258,14 @@ struct CrudActorTestCase {
                 str << config.root();
                 generatedYaml = str.str();
             }
-            genny::ActorHelper ah(
-                config.root(), 1, apmCallback);
+            genny::ActorHelper ah(config.root(), 1, apmCallback);
             auto client = ah.client();
             dropAllDatabases(*client);
             events.clear();
 
             auto numCommittedTransactionsBefore = 0;
-            if (auto expectedNumTransactions = tcase["AssertNumTransactionsCommitted"]; expectedNumTransactions) {
+            if (auto expectedNumTransactions = tcase["AssertNumTransactionsCommitted"];
+                expectedNumTransactions) {
                 numCommittedTransactionsBefore = getNumCommittedTransactions(client);
             }
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });

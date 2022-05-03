@@ -215,7 +215,7 @@ Actors:
         t.join();
 
         const auto state = getCurState();
-        
+
         // We may run the GlobalRate ops more or fewer, based on the randomness of thread
         // wakeup times coinciding with phase endings for non-blocking operations.
         // This is expected, so we can account for it by allowing more or fewer recurrence
@@ -277,7 +277,7 @@ Actors:
         auto& config = ns.root();
         int num_threads = 5;
 
-        auto fun = [&]() -> auto {
+        auto fun = [&]() -> auto{
             auto start = std::chrono::steady_clock::now();
             genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
             ah.run();
@@ -320,7 +320,7 @@ Actors:
         auto& config = ns.root();
         int num_threads = 3;
 
-        auto fun = [&]() -> auto {
+        auto fun = [&]() -> auto{
             auto start = std::chrono::steady_clock::now();
             genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
             ah.run();

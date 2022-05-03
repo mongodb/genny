@@ -37,7 +37,8 @@ TEST_CASE_METHOD(
         SchemaVersion: 2018-07-01
         Clients:
           Default:
-            URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+            URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                      R"(
         Actors:
         - Name: LoadInitialData
           Type: MonotonicSingleLoader

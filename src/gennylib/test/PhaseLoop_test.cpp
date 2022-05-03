@@ -484,7 +484,8 @@ TEST_CASE("Actual Actor Example") {
                 ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
                 ah.run();
             }()),
-            Catch::Contains("Value for genny::IntegerSpec can't be negative: -10 from config: -10"));
+            Catch::Contains(
+                "Value for genny::IntegerSpec can't be negative: -10 from config: -10"));
     }
 
     SECTION("SleepAfter and GlobalRate") {

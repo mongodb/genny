@@ -62,8 +62,7 @@ struct MonotonicLoader::PhaseConfig {
             indexes.emplace_back(
                 indexNode["keys"].to<DocumentGenerator>(context, id),
                 indexNode["options"].maybe<DocumentGenerator>(context, id),
-                indexNode["options"]["name"].maybe<std::string>().value_or(indexName)
-            );
+                indexNode["options"]["name"].maybe<std::string>().value_or(indexName));
         }
         if (thread == context["Threads"].to<int>() - 1) {
             // Pick up any extra collections left over by the division
@@ -104,8 +103,7 @@ void genny::actor::MonotonicLoader::run() {
                             auto builder = builder::stream::document();
                             builder << "_id" << ++id_num;
                             builder << builder::concatenate(tmpDoc.view());
-                            document::value newDoc = builder
-                                << builder::stream::finalize;
+                            document::value newDoc = builder << builder::stream::finalize;
                             docs.push_back(std::move(newDoc));
                         }
                         {
@@ -120,30 +118,27 @@ void genny::actor::MonotonicLoader::run() {
                 // Make the index
                 bool _indexReq = false;
                 builder::stream::document builder{};
-                auto indexCmd = builder << "createIndexes" << collectionName
-                                        <<  "indexes" << builder::stream::open_array;
+                auto indexCmd = builder << "createIndexes" << collectionName << "indexes"
+                                        << builder::stream::open_array;
                 for (auto&& [keys, options, indexName] : config->indexes) {
                     _indexReq = true;
                     auto indexKey = keys();
                     if (options) {
                         auto indexOptions = (*options)();
-                        indexCmd = indexCmd << builder::stream::open_document
-                                            << "key" << indexKey.view()
-                                            << "name" << indexName
+                        indexCmd = indexCmd << builder::stream::open_document << "key"
+                                            << indexKey.view() << "name" << indexName
                                             << builder::concatenate(indexOptions.view())
                                             << builder::stream::close_document;
 
                     } else {
-                        indexCmd = indexCmd << builder::stream::open_document
-                                            << "key" << indexKey.view()
-                                            << "name" << indexName
+                        indexCmd = indexCmd << builder::stream::open_document << "key"
+                                            << indexKey.view() << "name" << indexName
                                             << builder::stream::close_document;
                     }
                 }
                 auto doc = indexCmd << builder::stream::close_array << builder::stream::finalize;
                 if (_indexReq) {
-                    BOOST_LOG_TRIVIAL(debug)
-                            << "Building index" << to_json(doc.view());
+                    BOOST_LOG_TRIVIAL(debug) << "Building index" << to_json(doc.view());
                     auto indexOpCtx = _indexBuild.start();
                     config->database.run_command(doc.view());
                     indexOpCtx.success();

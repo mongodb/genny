@@ -20,10 +20,10 @@
 
 #include <bsoncxx/json.hpp>
 
+#include <bsoncxx/builder/stream/document.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
-#include <bsoncxx/builder/stream/document.hpp>
 
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
@@ -64,8 +64,7 @@ struct RandomSampler::PhaseConfig {
         // Setup the int distributions.
         collectionDistribution =
             boost::random::uniform_int_distribution(0, (int)collections.size() - 1);
-        documentDistribution =
-            boost::random::uniform_int_distribution(0, documentCount - 1);
+        documentDistribution = boost::random::uniform_int_distribution(0, documentCount - 1);
     }
 };
 
@@ -75,9 +74,12 @@ void RandomSampler::run() {
             auto statTracker = _activeCollectionScannerInstances > 0
                 ? config->readWithScanOperation.start()
                 : config->readOperation.start();
-            int collId = config->collections.size() > 1 ? config->collectionDistribution(_random) : 0;
+            int collId =
+                config->collections.size() > 1 ? config->collectionDistribution(_random) : 0;
             int recordId = config->documentDistribution(_random);
-            auto maybeResult = config->collections[collId].find_one(bsoncxx::builder::stream::document{} << "_id" << recordId << bsoncxx::builder::stream::finalize);
+            auto maybeResult = config->collections[collId].find_one(
+                bsoncxx::builder::stream::document{} << "_id" << recordId
+                                                     << bsoncxx::builder::stream::finalize);
             if (maybeResult) {
                 statTracker.addDocuments(1);
                 statTracker.addBytes(maybeResult->view().length());

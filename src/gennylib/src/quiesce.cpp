@@ -93,12 +93,13 @@ bool waitOplog(v1::Topology& topology) {
     return waitVisitor.success();
 }
 
-bool CheckForDroppedCollections(v1::Topology& topology, std::string dbName, SleepContext sleepContext) {
+bool CheckForDroppedCollections(v1::Topology& topology,
+                                std::string dbName,
+                                SleepContext sleepContext) {
     class CheckForDroppedCollectionsVisitor : public v1::TopologyVisitor {
     public:
         CheckForDroppedCollectionsVisitor(std::string dbName, SleepContext sleepContext)
-            : _dbName{dbName},
-              _sleepContext{sleepContext} {}
+            : _dbName{dbName}, _sleepContext{sleepContext} {}
 
         void onBeforeReplSet(const v1::ReplSetDescription& desc) override {
             mongocxx::client client(mongocxx::uri(desc.primaryUri));
@@ -136,9 +137,9 @@ bool CheckForDroppedCollections(v1::Topology& topology, std::string dbName, Slee
                 _sleepContext.sleep_for(std::chrono::seconds(1));
             }
             if (retries >= DROPPED_COLLECTION_RETRIES) {
-                BOOST_LOG_TRIVIAL(error) << "Timeout on waiting for collections to drop. "
-                                         << "Tried " << retries << " >= " << DROPPED_COLLECTION_RETRIES
-                                         << " max.";
+                BOOST_LOG_TRIVIAL(error)
+                    << "Timeout on waiting for collections to drop. "
+                    << "Tried " << retries << " >= " << DROPPED_COLLECTION_RETRIES << " max.";
                 return false;
             }
             return true;

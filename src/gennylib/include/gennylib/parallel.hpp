@@ -15,18 +15,18 @@
 #ifndef HEADER_5129031F_B241_46DD_8285_64596CB0C155_INCLUDED
 #define HEADER_5129031F_B241_46DD_8285_64596CB0C155_INCLUDED
 
-#include <boost/throw_exception.hpp>
 #include <boost/exception/exception.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <algorithm>
-#include <iterator>
-#include <variant>
-#include <thread>
-#include <mutex>
-#include <vector>
 #include <deque>
+#include <iterator>
+#include <mutex>
 #include <sstream>
+#include <thread>
+#include <variant>
+#include <vector>
 
 namespace genny {
 
@@ -57,7 +57,7 @@ public:
         _items = std::vector<T>();
         return std::move(temp);
     }
-    
+
 private:
     mutable std::mutex _mutex;
     std::vector<T> _items;
@@ -68,7 +68,6 @@ private:
  */
 class ExceptionBucket {
 public:
-
     ExceptionBucket() = default;
 
     /**
@@ -77,10 +76,11 @@ public:
      */
     class ParallelException : public std::exception {
     public:
-
-        ParallelException(std::vector<std::exception_ptr>&& exceptions) : _caughtExceptions{std::move(exceptions)} {
+        ParallelException(std::vector<std::exception_ptr>&& exceptions)
+            : _caughtExceptions{std::move(exceptions)} {
             if (_caughtExceptions.empty()) {
-                std::logic_error("Tried to construct ParallelException, but no exceptions were given.");
+                std::logic_error(
+                    "Tried to construct ParallelException, but no exceptions were given.");
             }
             std::stringstream ss;
             ss << "Error in parallel execution. First exception's what(): ";
@@ -121,7 +121,7 @@ public:
         _caughtExceptions.addItem(std::move(exc));
     }
 
-    
+
     /**
      * If any exceptions were caught, throw them
      * as a ParallelException.
@@ -143,21 +143,23 @@ private:
  *
  * Any exception thrown in any thread is gathered and rethrown in the calling thread.
  */
-template<typename IterableT, typename BinaryOperation>
+template <typename IterableT, typename BinaryOperation>
 void parallelRun(IterableT& iterable, BinaryOperation op) {
     auto threadsPtr = std::make_unique<std::vector<std::thread>>();
     threadsPtr->reserve(std::distance(cbegin(iterable), cend(iterable)));
     ExceptionBucket caughtExc;
-    std::transform(cbegin(iterable), cend(iterable), std::back_inserter(*threadsPtr),
-            [&](const typename IterableT::value_type& value) {
-                return std::thread{[&]() {
-                    try {
-                        op(value);
-                    } catch(...) {
-                        caughtExc.addException(std::move(std::current_exception()));
-                    }
-                }};
-            });
+    std::transform(cbegin(iterable),
+                   cend(iterable),
+                   std::back_inserter(*threadsPtr),
+                   [&](const typename IterableT::value_type& value) {
+                       return std::thread{[&]() {
+                           try {
+                               op(value);
+                           } catch (...) {
+                               caughtExc.addException(std::move(std::current_exception()));
+                           }
+                       }};
+                   });
 
     for (auto& thread : *threadsPtr) {
         thread.join();
@@ -165,6 +167,6 @@ void parallelRun(IterableT& iterable, BinaryOperation op) {
     caughtExc.throwIfExceptions();
 }
 
-} // namespace genny::v1
+}  // namespace genny
 
-#endif // HEADER_5129031F_B241_46DD_8285_64596CB0C155_INCLUDED
+#endif  // HEADER_5129031F_B241_46DD_8285_64596CB0C155_INCLUDED

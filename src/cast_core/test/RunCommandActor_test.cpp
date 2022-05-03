@@ -39,7 +39,8 @@ const auto dropAdminTestCollConfig = YAML::Load(R"(
     SchemaVersion: 2018-07-01
     Clients:
       Default:
-        URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+        URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                                R"(
     Actors:
     - Name: TestActor
       Type: AdminCommand
@@ -63,7 +64,8 @@ TEST_CASE_METHOD(MongoTestFixture,
         SchemaVersion: 2018-07-01
         Clients:
           Default:
-            URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+            URI: )" + MongoTestFixture::connectionUri().to_string() +
+                          R"(
         Actors:
         - Name: TestRunCommand
           Type: RunCommand
@@ -110,7 +112,8 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                          R"(
             Actors:
             - Name: TestInsertWriteConcern
               Type: RunCommand
@@ -157,8 +160,7 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
 
         NodeSource nodeSource{YAML::Dump(yamlConfig), ""};
         auto apmCallback = makeApmCallback(events);
-        ActorHelper ah{
-            nodeSource.root(), 1, apmCallback};
+        ActorHelper ah{nodeSource.root(), 1, apmCallback};
         ah.run();
         auto coll = MongoTestFixture::client["test"]["testCollection"];
         REQUIRE(events.size() > 0);
@@ -223,7 +225,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -256,7 +259,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -270,7 +274,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )");
         NodeSource ns{YAML::Dump(config), ""};
         REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1),
-                Catch::Contains("Plural 'Operations' must be a sequence type"));
+                            Catch::Contains("Plural 'Operations' must be a sequence type"));
     }
 
     SECTION("Insert a single document using the 'Operation' key name.") {
@@ -278,7 +282,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -310,7 +315,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -347,7 +353,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -368,7 +375,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )");
         NodeSource ns{YAML::Dump(config), ""};
         REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1),
-                Catch::Contains("Either 'Operation' or 'Operations' required."));
+                            Catch::Contains("Either 'Operation' or 'Operations' required."));
     }
 
     SECTION("Database should default to 'admin' when not specified in the the config.") {
@@ -376,7 +383,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -428,7 +436,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: AdminCommand
@@ -466,7 +475,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: AdminCommand
@@ -502,7 +512,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                              R"(
             Actors:
             - Name: TestActor
               Type: AdminCommand
@@ -519,8 +530,9 @@ TEST_CASE_METHOD(MongoTestFixture,
         )",
                           "");
 
-        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1),
-                Catch::Contains("AdminCommands can only be run on the 'admin' database"));
+        REQUIRE_THROWS_WITH(
+            ActorHelper(config.root(), 1),
+            Catch::Contains("AdminCommands can only be run on the 'admin' database"));
     }
 }
 
@@ -538,7 +550,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                              R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -577,7 +590,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                              R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -607,7 +621,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                              R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -630,7 +645,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )",
                           "");
         REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1),
-                Catch::Contains("Can't have both 'Operation' and 'Operations'."));
+                            Catch::Contains("Can't have both 'Operation' and 'Operations'."));
     }
 }
 
@@ -647,7 +662,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                              R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -684,7 +700,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                              R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -721,7 +738,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                              R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -765,7 +783,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                              R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -804,9 +823,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 }
 
-TEST_CASE_METHOD(MongoTestFixture,
-                 "Check OnlyRunInInstance in standalone",
-                 "[standalone]") {
+TEST_CASE_METHOD(MongoTestFixture, "Check OnlyRunInInstance in standalone", "[standalone]") {
 
     dropAllDatabases();
     auto db = client.database("test");
@@ -816,7 +833,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -849,7 +867,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -891,7 +910,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -924,7 +944,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -954,9 +975,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 }
 
-TEST_CASE_METHOD(MongoTestFixture,
-                 "Check OnlyRunInInstance in sharded",
-                 "[sharded]") {
+TEST_CASE_METHOD(MongoTestFixture, "Check OnlyRunInInstance in sharded", "[sharded]") {
 
     dropAllDatabases();
     auto db = client.database("test");
@@ -966,7 +985,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -999,7 +1019,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -1041,7 +1062,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                 R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -1078,7 +1100,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                              R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -1094,10 +1117,12 @@ TEST_CASE_METHOD(MongoTestFixture,
                     documents: [{rating: 10}]
             Metrics:
               Format: csv
-        )", "");
+        )",
+                          "");
 
-        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1),
-        Catch::Contains("OnlyRunInInstance or OnlyRunInInstances valid values are:"));
+        REQUIRE_THROWS_WITH(
+            ActorHelper(config.root(), 1),
+            Catch::Contains("OnlyRunInInstance or OnlyRunInInstances valid values are:"));
     }
 
     SECTION("OnlyRunInInstances throws with both plural and singular") {
@@ -1105,7 +1130,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                              R"(
             Actors:
             - Name: TestActor
               Type: RunCommand
@@ -1122,12 +1148,13 @@ TEST_CASE_METHOD(MongoTestFixture,
                     documents: [{rating: 10}]
             Metrics:
               Format: csv
-        )", "");
+        )",
+                          "");
 
-        REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1),
-        Catch::Contains("Can't have both 'OnlyRunInInstance' and 'OnlyRunInInstances'."));
+        REQUIRE_THROWS_WITH(
+            ActorHelper(config.root(), 1),
+            Catch::Contains("Can't have both 'OnlyRunInInstance' and 'OnlyRunInInstances'."));
     }
-
 }
 
 }  // namespace

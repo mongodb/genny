@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <bsoncxx/json.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/json.hpp>
 
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <yaml-cpp/yaml.h>
 
-#include <testlib/MongoTestFixture.hpp>
-#include <testlib/ActorHelper.hpp>
-#include <testlib/helpers.hpp>
-#include <regex>
 #include <gennylib/context.hpp>
+#include <regex>
+#include <testlib/ActorHelper.hpp>
+#include <testlib/MongoTestFixture.hpp>
+#include <testlib/helpers.hpp>
 
 namespace genny {
 namespace {
@@ -32,8 +32,9 @@ namespace bson_stream = bsoncxx::builder::stream;
 using std::regex_search;
 using namespace bsoncxx;
 
-TEST_CASE_METHOD(MongoTestFixture, "Loader - create records and add indexes",
-          "[standalone][single_node_replset-1][three_node_replset][sharded][Loader]") {
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Loader - create records and add indexes",
+                 "[standalone][single_node_replset-1][three_node_replset][sharded][Loader]") {
 
     dropAllDatabases();
     auto db = client.database("mydb");
@@ -42,7 +43,8 @@ TEST_CASE_METHOD(MongoTestFixture, "Loader - create records and add indexes",
         SchemaVersion: 2018-07-01
         Clients:
           Default:
-            URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+            URI: )" + MongoTestFixture::connectionUri().to_string() +
+                                      R"(
         Actors:
         - Name: Loader
           Type: Loader
@@ -76,7 +78,7 @@ TEST_CASE_METHOD(MongoTestFixture, "Loader - create records and add indexes",
               options: {sparse: true, expireAfterSeconds: 3600}
 
     )",
-    __FILE__);
+                                  __FILE__);
 
 
     SECTION("Inserts documents, create indexes and check if indexed and documents are created") {
@@ -87,32 +89,33 @@ TEST_CASE_METHOD(MongoTestFixture, "Loader - create records and add indexes",
 
             auto builder = bson_stream::document{};
             builder << bson_stream::finalize;
-            document::value doc = builder << "listIndexes" << "Collection0"
-                                  << builder::stream::finalize;
+            document::value doc = builder << "listIndexes"
+                                          << "Collection0" << builder::stream::finalize;
             auto indexes = db.run_command(doc.view());
             auto outputString = to_json(indexes.view());
             std::cmatch matches;
             std::regex_search(const_cast<char*>(outputString.c_str()), matches, indexRegex);
             std::string actual_response(matches[1]);
-            auto expected_response = " { \"v\" : 2, \"key\" : { \"_id\" : 1 }, "
-                                     "\"name\" : \"_id_\" }, "
-                                     "{ \"v\" : 2, \"key\" : { \"field1\" : 1, \"field2\" : -1 }, "
-                                     "\"name\" : \"field1_1_field2_-1\" }, "
-                                     "{ \"v\" : 2, \"key\" : { \"field1\" : -1, \"field2\" : -1 }, "
-                                     "\"name\" : \"field1_-1_field2_-1\" }, "
-                                     "{ \"v\" : 2, \"key\" : { \"field1\" : 1, \"field2\" : 1 }, "
-                                     "\"name\" : \"field1_1_field2_1\" }, "
-                                     "{ \"v\" : 2, \"key\" : { \"field2\" : 1, \"field1\" : 1 }, "
-                                     "\"name\" : \"field2_1_field1_1\" },"
-                                     " { \"v\" : 2, \"key\" : { \"field2\" : 1 },"
-                                     " \"name\" : \"a_index\", \"sparse\" : true },"
-                                     " { \"v\" : 2, \"key\" : { \"field1\" : 1 }, "
-                                     "\"name\" : \"field1_1\", \"sparse\" : true },"
-                                     " { \"v\" : 2, \"key\" : { \"field3\" : 1, \"field4\" : 1 }, "
-                                     "\"name\" : \"field3_1_field4_1\", \"sparse\" : true },"
-                                     " { \"v\" : 2, \"key\" : { \"field3\" : 4 }, "
-                                     "\"name\" : \"field3_4\", \"sparse\" : true, "
-                                     "\"expireAfterSeconds\" : 3600 } ";
+            auto expected_response =
+                " { \"v\" : 2, \"key\" : { \"_id\" : 1 }, "
+                "\"name\" : \"_id_\" }, "
+                "{ \"v\" : 2, \"key\" : { \"field1\" : 1, \"field2\" : -1 }, "
+                "\"name\" : \"field1_1_field2_-1\" }, "
+                "{ \"v\" : 2, \"key\" : { \"field1\" : -1, \"field2\" : -1 }, "
+                "\"name\" : \"field1_-1_field2_-1\" }, "
+                "{ \"v\" : 2, \"key\" : { \"field1\" : 1, \"field2\" : 1 }, "
+                "\"name\" : \"field1_1_field2_1\" }, "
+                "{ \"v\" : 2, \"key\" : { \"field2\" : 1, \"field1\" : 1 }, "
+                "\"name\" : \"field2_1_field1_1\" },"
+                " { \"v\" : 2, \"key\" : { \"field2\" : 1 },"
+                " \"name\" : \"a_index\", \"sparse\" : true },"
+                " { \"v\" : 2, \"key\" : { \"field1\" : 1 }, "
+                "\"name\" : \"field1_1\", \"sparse\" : true },"
+                " { \"v\" : 2, \"key\" : { \"field3\" : 1, \"field4\" : 1 }, "
+                "\"name\" : \"field3_1_field4_1\", \"sparse\" : true },"
+                " { \"v\" : 2, \"key\" : { \"field3\" : 4 }, "
+                "\"name\" : \"field3_4\", \"sparse\" : true, "
+                "\"expireAfterSeconds\" : 3600 } ";
             INFO("Actual Response:   " << actual_response);
             INFO("Expected Response: " << expected_response);
             REQUIRE(actual_response == expected_response);
