@@ -1,0 +1,420 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  This workload measures $lookup performance for scenarios that look up local integer key against
+
+  The workload consists of the following phases and actors:
+    0. Warm up cache.
+    1. Run queries without columnstore indexes.
+    2. Create columnstore indexes.
+    3. Warm up cache again for columnstore indexes.
+    4. Run queries with columnstore indexes.
+
+Keywords:
+- columnstore
+- analytics
+
+# Defines the database name.
+Database: &db charts-metrics
+
+# Defines the collection name.
+Collection: &Collection events
+
+TotalTenantCreatedQuery: &TotalTenantCreatedQuery
+  aggregate: *Collection
+  pipeline:
+    [
+      {"$match": {"metadata.target": "cloud"}},
+      {"$group": {"_id": {}, "__alias_0": {"$addToSet": "$metadata.tenant_id"}}},
+      {"$project": {"_id": 0, "__alias_0": {"$size": "$__alias_0"}}},
+      {"$project": {"value": "$__alias_0", "_id": 0}},
+      {"$limit": 5000}
+    ]
+  allowDiskUse: true
+  cursor: {batchSize: 2000}
+
+ActiveCloudUsersLastMonthQuery: &ActiveCloudUsersLastMonthQuery
+  aggregate: *Collection
+  pipeline:
+    [
+      {"$addFields": {"target": 3000}},
+      {
+        "$match": {
+          "metadata.target": {"$in": ["cloud"]},
+          "created_at": {"$gte": {"$date": "2020-03-09T01:10:04Z"}},
+          "resource": {"$in": ["Dashboard"]}
+        }
+      },
+      {"$group": {"_id": {}, "__alias_0": {"$addToSet": "$user_id"}, "__alias_1": {"$min": "$target"}}},
+      {"$project": {"_id": 0, "__alias_0": {"$size": "$__alias_0"}, "__alias_1": 1}},
+      {"$project": {"value": "$__alias_0", "target": "$__alias_1", "_id": 0}},
+      {"$limit": 5000}
+    ]
+  allowDiskUse: true
+  cursor: {batchSize: 2000}
+
+VersionsHistogramQuery: &VersionsHistogramQuery
+  aggregate: *Collection
+  pipeline:
+    [
+      {"$match": {"metadata.target": {"$exists": true}}},
+      {
+        "$match": {
+          "created_at": {"$gte": {"$date": "2020-04-02T01:10:52Z"}},
+          "metadata.version": {"$nin": [null]},
+          "resource": {"$nin": ["Error"]}
+        }
+      },
+      {
+        "$group": {
+          "_id": {"__alias_0": "$metadata.version", "__alias_1": "$metadata.target"},
+          "__alias_2": {"$sum": 1}
+        }
+      },
+      {"$project": {"_id": 0, "__alias_0": "$_id.__alias_0", "__alias_1": "$_id.__alias_1", "__alias_2": 1}},
+      {"$project": {"x": "$__alias_0", "y": "$__alias_2", "color": "$__alias_1", "_id": 0}},
+      {"$limit": 50000}
+    ]
+  allowDiskUse: true
+  cursor: {batchSize: 2000}
+
+UniqueUsersPerMonthQuery: &UniqueUsersPerMonthQuery
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        "$match": {
+          "resource": {"$in": ["Dashboard"]},
+          "created_at": {"$gte": {"$date": "2019-07-09T01:12:32Z"}},
+          "metadata.target": {"$nin": [null, ""]}
+        }
+      },
+      {
+        "$addFields": {
+          "created_at": {
+            "$cond": {
+              "if": {"$eq": [{"$type": "$created_at"}, "date"]},
+              "then": "$created_at",
+              "else": null
+            }
+          }
+        }
+      },
+      {
+        "$addFields": {
+          "__alias_0": {
+            "year": {"$year": "$created_at"},
+            "month": {"$subtract": [{"$month": "$created_at"}, 1]}
+          }
+        }
+      },
+      {
+        "$group": {
+          "_id": {"__alias_0": "$__alias_0", "__alias_1": "$metadata.target"},
+          "__alias_2": {"$addToSet": "$user_id"}
+        }
+      },
+      {
+        "$project": {
+          "_id": 0,
+          "__alias_0": "$_id.__alias_0",
+          "__alias_1": "$_id.__alias_1",
+          "__alias_2": {
+            "$size": "$__alias_2"
+          }
+        }
+      },
+      {"$project": {"x": "$__alias_0", "y": "$__alias_2", "color": "$__alias_1", "_id": 0}},
+      {"$sort": {"x.year": 1, "x.month": 1}},
+      {"$limit": 5000}
+    ]
+  allowDiskUse: true
+  cursor: {batchSize: 2000}
+
+TopErrorsQuery: &TopErrorsQuery
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        "$match": {
+          "created_at": {"$gte": {"$date": "2020-04-02T01:13:04Z"}},
+          "resource": {"$in": ["Error"]}
+        }
+      },
+      {
+        "$group": {
+          "_id": {
+            "__alias_0": "$metadata.message",
+            "__alias_1": "$metadata.name",
+            "__alias_2": "$metadata.version"
+          },
+          "__alias_3": {"$sum": 1},
+          "__alias_4": {"$addToSet": "$stitch_user_id"}
+        }
+      },
+      {
+        "$project": {
+          "_id": 0,
+          "__alias_0": "$_id.__alias_0",
+          "__alias_1": "$_id.__alias_1",
+          "__alias_2": "$_id.__alias_2",
+          "__alias_3": 1,
+          "__alias_4": {
+            "$size": "$__alias_4"
+          }
+        }
+      },
+      {
+        "$project": {
+          "group": "$__alias_0",
+          "value": "$__alias_3",
+          "group_series_0": "$__alias_1",
+          "group_series_1": "$__alias_2",
+          "value_series_0": "$__alias_4",
+          "_id": 0
+        }
+      },
+      {"$limit": 50000}
+    ]
+  allowDiskUse: true
+  cursor: {batchSize: 2000}
+
+NumberOfChartsPerTypeQuery: &NumberOfChartsPerTypeQuery
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        "$match": {
+          "resource": {"$in": ["DashboardItem"]},
+          "action": {"$in": ["added"]},
+          "metadata.version": {"$nin": [null, "0.0.0"]},
+          "created_at": {"$gte": {"$date": "2020-01-09T01:13:37Z"}}
+        }
+      },
+      {"$group": {"_id": {"__alias_0": "$metadata.chart_type"}, "__alias_1": {"$sum": 1}}},
+      {"$project": {"_id": 0, "__alias_0": "$_id.__alias_0", "__alias_1": 1}},
+      {"$project": {"x": "$__alias_1", "y": "$__alias_0", "_id": 0}},
+      {"$limit": 5000}
+    ]
+  allowDiskUse: true
+  cursor: {batchSize: 2000}
+
+EventsByVersionQuery: &EventsByVersionQuery
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        "$match": {
+          "created_at": {
+            "$gte": {"$date": "2020-04-08T01:14:07Z"}, "$lte": { "$date": "2020-04-09T01:14:07Z"}
+          },
+          "resource": {"$nin": []},
+          "metadata.version": {"$nin": [null]}
+        }
+      },
+      {
+        "$addFields": {
+          "created_at": {
+            "$cond": {"if": {"$eq": [{"$type": "$created_at"}, "date"]}, "then": "$created_at", "else": null}
+          }
+        }
+      },
+      {
+        "$addFields": {
+          "__alias_0": {
+            "year": {"$year": {"date": "$created_at", "timezone": "Australia/Sydney"}},
+            "month": {"$subtract": [{"$month": {"date": "$created_at", "timezone": "Australia/Sydney"}}, 1]},
+            "date": {"$dayOfMonth": {"date": "$created_at", "timezone": "Australia/Sydney"}},
+            "hours": {"$hour": {"date": "$created_at", "timezone": "Australia/Sydney"}}
+          }
+        }
+      },
+      {
+        "$group": {
+          "_id": {"__alias_0": "$__alias_0", "__alias_1": "$metadata.version"},
+          "__alias_2": {"$sum": 1}
+        }
+      },
+      {"$project": {"_id": 0, "__alias_0": "$_id.__alias_0", "__alias_1": "$_id.__alias_1", "__alias_2": 1}},
+      {"$project": {"x": "$__alias_0", "y": "$__alias_2", "color": "$__alias_1", "_id": 0}},
+      {"$sort": {"x.year": 1, "x.month": 1, "x.date": 1, "x.hours": 1}},
+      {"$limit": 5000}
+    ]
+  allowDiskUse: true
+  cursor: {batchSize: 2000}
+
+BrowserUsageByDistinctUserQuery: &BrowserUsageByDistinctUserQuery
+  aggregate: *Collection
+  pipeline:
+    [
+      {"$match": {"metadata.browser": {"$exists": true}}},
+      {
+        "$addFields": {
+          "metadata.browser_name": {
+            "$arrayElemAt": [{"$split": ["$metadata.browser", " "]}, 0]
+          }
+        }
+      },
+      {
+        "$match": {
+          "metadata.browser_name": {"$nin": [null, "", "null"]},
+          "created_at": {"$gte": {"$date": "2020-03-10T01:17:41Z"}}
+        }
+      },
+      {
+        "$group": {
+          "_id": {"__alias_0": "$metadata.browser_name"},
+          "__alias_1": {"$addToSet": "$user_id"}
+        }
+      },
+      {
+        "$project": {
+          "_id": 0, "__alias_0": "$_id.__alias_0", "__alias_1": { "$size": "$__alias_1"}
+        }
+      },
+      {"$project": {"label": "$__alias_0", "value": "$__alias_1", "_id": 0}},
+      {"$limit": 5000}
+    ]
+  allowDiskUse: true
+  cursor: {batchSize: 2000}
+
+TopTenantsByNoOfEventsQuery: &TopTenantsByNoOfEventsQuery
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        "$match": {
+          "created_at": {"$gte": {"$date": "2020-03-09T01:18:32Z"}},
+          "resource": {"$nin": ["DashboardItem", "EmbeddedChart", "Error"]},
+          "metadata.target": {"$nin": [null]},
+          "metadata.tenant_id": {"$nin": [null]}
+        }
+      },
+      {
+        "$group": {
+          "_id": {"__alias_0": "$metadata.target", "__alias_1": "$metadata.tenant_id"},
+          "__alias_2": {"$sum": 1}
+        }
+      },
+      {
+        "$project": {
+          "_id": 0, "__alias_0": "$_id.__alias_0", "__alias_1": "$_id.__alias_1", "__alias_2": 1
+        }
+      },
+      {"$project": {"color": "$__alias_0", "x": "$__alias_2", "y": "$__alias_1", "_id": 0}},
+      {"$limit": 50000}
+    ]
+  allowDiskUse: true
+  cursor: {batchSize: 2000}
+
+
+# Defines test operations.
+TestOperations: &TestOperations
+- OperationMetricsName: TotalTenantCreatedQuery
+  OperationName: RunCommand
+  OperationCommand: *TotalTenantCreatedQuery
+- OperationMetricsName: ActiveCloudUsersLastMonthQuery
+  OperationName: RunCommand
+  OperationCommand: *ActiveCloudUsersLastMonthQuery
+- OperationMetricsName: VersionsHistogramQuery
+  OperationName: RunCommand
+  OperationCommand: *VersionsHistogramQuery
+- OperationMetricsName: UniqueUsersPerMonthQuery
+  OperationName: RunCommand
+  OperationCommand: *UniqueUsersPerMonthQuery
+- OperationMetricsName: TopErrorsQuery
+  OperationName: RunCommand
+  OperationCommand: *TopErrorsQuery
+- OperationMetricsName: NumberOfChartsPerTypeQuery
+  OperationName: RunCommand
+  OperationCommand: *NumberOfChartsPerTypeQuery
+- OperationMetricsName: EventsByVersionQuery
+  OperationName: RunCommand
+  OperationCommand: *EventsByVersionQuery
+- OperationMetricsName: BrowserUsageByDistinctUserQuery
+  OperationName: RunCommand
+  OperationCommand: *BrowserUsageByDistinctUserQuery
+- OperationMetricsName: TopTenantsByNoOfEventsQuery
+  OperationName: RunCommand
+  OperationCommand: *TopTenantsByNoOfEventsQuery
+
+# Defines how many times each test operation is executed.
+TestRepeatCount: &TestRepeatCount 1
+
+Actors:
+# The 'WarmupCache1' actor warms up the buffer cache.
+- Name: WarmupCache1
+  Type: RunCommand
+  Database: *db
+  Thread: 1
+  Phases:
+  - Repeat: 1
+    Threads: 1
+    Database: *db
+    Operations: *TestOperations
+  - Phase: 1..4
+    Nop: true
+
+# The 'CollScan' actor measures the perf without columnar indexes.
+- Name: CollScan
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - &Nop {Nop: true}
+  - Repeat: *TestRepeatCount
+    Database: *db
+    Operations: *TestOperations
+  - Phase: 2..4
+    Nop: true
+
+# The 'CreateColumnstoreIndexes' actor create columnstore indexes.
+- Name: CreateColumnstoreIndexes
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+# The 'WarmupCache2' actor warms up the buffer cache for columnar indexes.
+- Name: WarmupCache2
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Threads: 1
+    Database: *db
+    Operations: *TestOperations
+  - *Nop
+
+# The 'ColumnstoreScan' actor measures the perf with columnar indexes.
+- Name: ColumnstoreScan
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *TestRepeatCount
+    Database: *db
+    Operations: *TestOperations
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v5.3
+      - v6.0
