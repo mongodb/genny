@@ -13,11 +13,8 @@
 // limitations under the License.
 
 #include <bsoncxx/builder/stream/document.hpp>
-#include <bsoncxx/json.hpp>
 
 #include <boost/exception/diagnostic_information.hpp>
-
-#include <yaml-cpp/yaml.h>
 
 #include <testlib/ActorHelper.hpp>
 #include <testlib/MongoTestFixture.hpp>

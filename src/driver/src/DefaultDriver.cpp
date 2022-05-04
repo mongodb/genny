@@ -26,8 +26,6 @@
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
 
-#include <yaml-cpp/yaml.h>
-
 #include <loki/ScopeGuard.h>
 
 #include <gennylib/Cast.hpp>

@@ -12,13 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <testlib/helpers.hpp>
-#include <yaml-cpp/yaml.h>
-
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <bsoncxx/json.hpp>
 
+#include <testlib/helpers.hpp>
 #include <testlib/ActorHelper.hpp>
 #include <testlib/MongoTestFixture.hpp>
 

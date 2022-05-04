@@ -16,8 +16,6 @@
 
 #include <memory>
 
-#include <yaml-cpp/yaml.h>
-
 #include <mongocxx/client.hpp>
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
