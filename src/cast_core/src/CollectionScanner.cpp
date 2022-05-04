@@ -194,7 +194,7 @@ struct CollectionScanner::PhaseConfig {
 
     void collectionsFromNameList(const mongocxx::database& db,
                                  const std::vector<std::string>& names,
-                                 std::vector<mongocxx::collection>& result) {
+                                 std::vector<mongocxx::collection>& result) const {
         std::vector<std::string> nameOrder = names;
         if (sortOrder == SortOrderType::kSortForward) {
             sort(nameOrder.begin(), nameOrder.end(), std::less<>());
@@ -222,7 +222,7 @@ auto evaluatePipeline(CollectionScanner::PhaseConfig* config) {
     auto expr = config->aggregatePipelineExpr->evaluate();
     bsoncxx::array::view pipeline{expr.view()["array"].get_array().value};
     mongocxx::pipeline pl{};
-    pl.append_stages(std::move(pipeline));
+    pl.append_stages(pipeline);
     return pl;
 }
 
@@ -269,7 +269,7 @@ void collectionScan(CollectionScanner::PhaseConfig* config,
                     scanFinished = true;
                     break;
                 }
-                if (rateLimiter && scanSize >= (scanMegabytes + 1) * 1e6) {
+                if (rateLimiter && scanSize >= (scanMegabytes + 1) * size_t(1e6)) {
                     // Perform an iteration for each megabyte since our rate will be MB/time.
                     rateLimiter->simpleLimitRate();
                     ++scanMegabytes;
@@ -309,8 +309,8 @@ void countScan(CollectionScanner::PhaseConfig* config,
 void pointInTimeScan(mongocxx::pool::entry& client,
                      CollectionScanner::PhaseConfig* config,
                      std::optional<bsoncxx::types::b_timestamp> readClusterTime) {
-    int64_t docCount = 0;
-    int64_t scanSize = 0;
+    size_t docCount = 0;
+    size_t scanSize = 0;
     bool scanFinished = false;
     mongocxx::options::client_session sessionOption;
     sessionOption.causal_consistency(false);
@@ -339,7 +339,7 @@ void pointInTimeScan(mongocxx::pool::entry& client,
                 << bson_stream::finalize;
 
             int64_t cursorId = 0;
-            int count, size;
+            size_t count, size;
             auto findTracker = config->scanOperation.start();
             try {
                 auto res = database.run_command(session, findCmd.view());
@@ -413,7 +413,6 @@ void pointInTimeScan(mongocxx::pool::entry& client,
 }
 
 void CollectionScanner::run() {
-    int i = 0;
     std::optional<bsoncxx::types::b_timestamp> readClusterTime;
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
@@ -508,11 +507,13 @@ void CollectionScanner::run() {
 
 CollectionScanner::CollectionScanner(genny::ActorContext& context)
     : Actor{context},
+      // TODO: _totalInserts is unused
       _totalInserts{context.operation("Insert", CollectionScanner::id())},
       _client{context.client()},
       _index{WorkloadContext::getActorSharedState<CollectionScanner, ActorCounter>().fetch_add(1)},
       _runningActorCounter{
           WorkloadContext::getActorSharedState<CollectionScanner, RunningActorCounter>()},
+          // TODO: _generateCollectionNames is unused
       _generateCollectionNames{context["GenerateCollectionNames"].maybe<bool>().value_or(false)},
       _databaseNames{context["Database"].to<std::string>()},
       _loop{context,
@@ -538,10 +539,10 @@ std::vector<std::string> distributeCollectionNames(size_t collectionCount,
         collectionCount % threadCount != 0) {
         throw std::invalid_argument("Thread count must be mutliple of database collection count");
     }
-    int collectionsPerActor = threadCount > collectionCount ? 1 : collectionCount / threadCount;
-    int collectionIndexStart = (actorId % collectionCount) * collectionsPerActor;
-    int collectionIndexEnd = collectionIndexStart + collectionsPerActor;
-    for (int i = collectionIndexStart; i < collectionIndexEnd; ++i) {
+    size_t collectionsPerActor = threadCount > collectionCount ? 1 : collectionCount / threadCount;
+    size_t collectionIndexStart = (actorId % collectionCount) * collectionsPerActor;
+    size_t collectionIndexEnd = collectionIndexStart + collectionsPerActor;
+    for (auto i = collectionIndexStart; i < collectionIndexEnd; ++i) {
         collectionNames.push_back("Collection" + std::to_string(i));
     }
     return collectionNames;

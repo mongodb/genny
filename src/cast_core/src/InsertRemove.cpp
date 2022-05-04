@@ -20,14 +20,10 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
 
-#include <yaml-cpp/yaml.h>
-
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
-
-#include <value_generators/DocumentGenerator.hpp>
 
 namespace genny::actor {
 

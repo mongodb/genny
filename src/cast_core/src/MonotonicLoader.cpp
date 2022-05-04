@@ -16,19 +16,15 @@
 
 #include <memory>
 
-#include <yaml-cpp/yaml.h>
-
 #include <bsoncxx/json.hpp>
 
 #include <mongocxx/client.hpp>
-#include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
 
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <gennylib/Cast.hpp>
-#include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
@@ -54,7 +50,7 @@ struct MonotonicLoader::PhaseConfig {
           collectionOffset{numCollections * thread} {
         auto& indexNodes = context["Indexes"];
         for (auto [k, indexNode] : indexNodes) {
-            std::string indexName = "";
+            std::string indexName;
             for (auto [key, value] : indexNode["keys"]) {
                 auto key_value = key.toString() + "_" + value.to<std::string>();
                 indexName = indexName.empty() ? key_value : indexName + "_" + key_value;
@@ -106,11 +102,11 @@ void genny::actor::MonotonicLoader::run() {
                             builder << builder::concatenate(tmpDoc.view());
                             document::value newDoc = builder
                                 << builder::stream::finalize;
-                            docs.push_back(std::move(newDoc));
+                            docs.emplace_back(std::move(newDoc));
                         }
                         {
                             auto individualOpCtx = _individualBulkLoad.start();
-                            auto result = collection.insert_many(std::move(docs));
+                            auto result = collection.insert_many(docs);
                             remainingInserts -= result->inserted_count();
                             individualOpCtx.success();
                         }
@@ -164,8 +160,10 @@ MonotonicLoader::MonotonicLoader(genny::ActorContext& context, uint thread)
 
 class MonotonicLoaderProducer : public genny::ActorProducer {
 public:
-    MonotonicLoaderProducer(const std::string_view& name) : ActorProducer(name) {}
-    genny::ActorVector produce(genny::ActorContext& context) {
+    explicit MonotonicLoaderProducer(const std::string_view& name) : ActorProducer(name) {}
+
+    [[nodiscard]]
+    genny::ActorVector produce(genny::ActorContext& context) override {
         if (context["Type"].to<std::string>() != "MonotonicLoader") {
             return {};
         }
