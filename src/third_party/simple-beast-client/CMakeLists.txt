@@ -7,7 +7,8 @@ find_package(Boost 1.66 REQUIRED COMPONENTS
 find_package(OpenSSL)
 find_package(Threads)
 find_package(cppcodec)
-target_include_directories(simple-beast-client INTERFACE
+# SYSTEM INTERFACE means we don't emit warnings.
+target_include_directories(simple-beast-client SYSTEM INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )

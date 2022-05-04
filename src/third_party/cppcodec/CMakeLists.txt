@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
-cmake_policy(SET CMP0048 OLD)
-project(cppcodec CXX)
-set(PROJECT_VERSION 0.1)
+cmake_policy(SET CMP0048 NEW)
+project(cppcodec VERSION 0.1 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 include(CTest)
@@ -10,26 +9,30 @@ include(CTest)
 # In your own project that uses cppcodec, you might want to specify a different standard or error level.
 
 # Request C++11, or let the user specify the standard on via -D command line option.
-if (NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 11)
-endif()
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+#if (NOT CMAKE_CXX_STANDARD)
+#  set(CMAKE_CXX_STANDARD 11)
+#endif()
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#set(CMAKE_CXX_EXTENSIONS OFF)
 
-if (MSVC)
-  # MSVC will respect CMAKE_CXX_STANDARD for CMake >= 3.10 and MSVC >= 19.0.24215
-  # (VS 2017 15.3). Older versions will use the compiler default, which should be
-  # fine for anything except ancient MSVC versions.
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+##
+# set(CMAKE_CXX_FLAGS applies globally - disable since we don't care about warnings from cppcodec.
+##
 
-  # CMake versions before 3.1 do not understand CMAKE_CXX_STANDARD.
-  # Remove this block once CMake >=3.1 has fixated in the ecosystem.
-  if(${CMAKE_VERSION} VERSION_LESS 3.1)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD}")
-  endif()
-endif()
+#if (MSVC)
+#  # MSVC will respect CMAKE_CXX_STANDARD for CMake >= 3.10 and MSVC >= 19.0.24215
+#  # (VS 2017 15.3). Older versions will use the compiler default, which should be
+#  # fine for anything except ancient MSVC versions.
+#  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+#else()
+#  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+#
+#  # CMake versions before 3.1 do not understand CMAKE_CXX_STANDARD.
+#  # Remove this block once CMake >=3.1 has fixated in the ecosystem.
+#  if(${CMAKE_VERSION} VERSION_LESS 3.1)
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD}")
+#  endif()
+#endif()
 
 set(PUBLIC_HEADERS
     # base32
