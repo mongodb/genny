@@ -313,30 +313,30 @@ TestOperations: &TestOperations
 - OperationMetricsName: TotalTenantCreatedQuery
   OperationName: RunCommand
   OperationCommand: *TotalTenantCreatedQuery
-- OperationMetricsName: ActiveCloudUsersLastMonthQuery
-  OperationName: RunCommand
-  OperationCommand: *ActiveCloudUsersLastMonthQuery
-- OperationMetricsName: VersionsHistogramQuery
-  OperationName: RunCommand
-  OperationCommand: *VersionsHistogramQuery
-- OperationMetricsName: UniqueUsersPerMonthQuery
-  OperationName: RunCommand
-  OperationCommand: *UniqueUsersPerMonthQuery
-- OperationMetricsName: TopErrorsQuery
-  OperationName: RunCommand
-  OperationCommand: *TopErrorsQuery
-- OperationMetricsName: NumberOfChartsPerTypeQuery
-  OperationName: RunCommand
-  OperationCommand: *NumberOfChartsPerTypeQuery
-- OperationMetricsName: EventsByVersionQuery
-  OperationName: RunCommand
-  OperationCommand: *EventsByVersionQuery
-- OperationMetricsName: BrowserUsageByDistinctUserQuery
-  OperationName: RunCommand
-  OperationCommand: *BrowserUsageByDistinctUserQuery
-- OperationMetricsName: TopTenantsByNoOfEventsQuery
-  OperationName: RunCommand
-  OperationCommand: *TopTenantsByNoOfEventsQuery
+# - OperationMetricsName: ActiveCloudUsersLastMonthQuery
+#   OperationName: RunCommand
+#   OperationCommand: *ActiveCloudUsersLastMonthQuery
+# - OperationMetricsName: VersionsHistogramQuery
+#   OperationName: RunCommand
+#   OperationCommand: *VersionsHistogramQuery
+# - OperationMetricsName: UniqueUsersPerMonthQuery
+#   OperationName: RunCommand
+#   OperationCommand: *UniqueUsersPerMonthQuery
+# - OperationMetricsName: TopErrorsQuery
+#   OperationName: RunCommand
+#   OperationCommand: *TopErrorsQuery
+# - OperationMetricsName: NumberOfChartsPerTypeQuery
+#   OperationName: RunCommand
+#   OperationCommand: *NumberOfChartsPerTypeQuery
+# - OperationMetricsName: EventsByVersionQuery
+#   OperationName: RunCommand
+#   OperationCommand: *EventsByVersionQuery
+# - OperationMetricsName: BrowserUsageByDistinctUserQuery
+#   OperationName: RunCommand
+#   OperationCommand: *BrowserUsageByDistinctUserQuery
+# - OperationMetricsName: TopTenantsByNoOfEventsQuery
+#   OperationName: RunCommand
+#   OperationCommand: *TopTenantsByNoOfEventsQuery
 
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 1
@@ -356,7 +356,7 @@ Actors:
     Nop: true
 
 # The 'CollScan' actor measures the perf without columnar indexes.
-- Name: CollScan
+- Name: ColumnstoreScan
   Type: RunCommand
   Database: *db
   Phases:
@@ -368,13 +368,20 @@ Actors:
     Nop: true
 
 # The 'CreateColumnstoreIndexes' actor create columnstore indexes.
-- Name: CreateColumnstoreIndexes
+- Name: DropColumnstoreIndex
   Type: RunCommand
   Database: *db
   Phases:
   - *Nop
   - *Nop
-  - *Nop
+  - Repeat: 1
+    Threads: 1
+    Database: *db
+    Operations:
+      - OperationName: RunCommand
+        OperationCommand:
+          dropIndexes: *Collection
+          index: $**_columnstore
   - *Nop
   - *Nop
 
@@ -393,7 +400,7 @@ Actors:
   - *Nop
 
 # The 'ColumnstoreScan' actor measures the perf with columnar indexes.
-- Name: ColumnstoreScan
+- Name: CollScan
   Type: RunCommand
   Database: *db
   Phases:
