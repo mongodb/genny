@@ -17,6 +17,7 @@ TPCHDenormalizedQuery13Aggregation: &TPCHDenormalizedQuery13Aggregation
       {$sort: {custdist: -1, c_count: -1}}
     ]
   cursor: {batchSize: *batchSize}
+  allowDiskUse: true
 
 TPCHDenormalizedQuery13:
   Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}

@@ -5,15 +5,16 @@ Description: |
   documents remain, which ensures that the query executes in its entirety.
 
 batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-# Sadly, using an array here parses as an array of numbers instead of as an array of strings.
-# To work around this, use separate parameters for each entry in the array.
-query22CountryCode1: &query22CountryCode1 {^Parameter: {Name: "Query22CountryCode1", Default: "13"}}
-query22CountryCode2: &query22CountryCode2 {^Parameter: {Name: "Query22CountryCode2", Default: "31"}}
-query22CountryCode3: &query22CountryCode3 {^Parameter: {Name: "Query22CountryCode3", Default: "23"}}
-query22CountryCode4: &query22CountryCode4 {^Parameter: {Name: "Query22CountryCode4", Default: "29"}}
-query22CountryCode5: &query22CountryCode5 {^Parameter: {Name: "Query22CountryCode5", Default: "30"}}
-query22CountryCode6: &query22CountryCode6 {^Parameter: {Name: "Query22CountryCode6", Default: "18"}}
-query22CountryCode7: &query22CountryCode7 {^Parameter: {Name: "Query22CountryCode7", Default: "17"}}
+# Use $toString as a hack, because yml parses these strings into ints before outputting the pipeline.
+query22CountryCodes: &query22CountryCodes {^Parameter: {Name: "Query22CountryCodes", Default: [
+  {$toString: "13"},
+  {$toString: "31"},
+  {$toString: "23"},
+  {$toString: "29"},
+  {$toString: "30"},
+  {$toString: "18"},
+  {$toString: "17"}
+]}}
 
 TPCHNormalizedQuery22Aggregation: &TPCHNormalizedQuery22Aggregation
   aggregate: customer
@@ -23,14 +24,7 @@ TPCHNormalizedQuery22Aggregation: &TPCHNormalizedQuery22Aggregation
       {$unwind: {path: "$custsale", preserveNullAndEmptyArrays: true}},
       {$addFields: {cntrycode: { $substr: ["$c_phone", 0, 2]}}},
       {$match: {$and: [
-        {$expr: {$in: ["$cntrycode", [
-          *query22CountryCode1,
-          *query22CountryCode2,
-          *query22CountryCode3,
-          *query22CountryCode4,
-          *query22CountryCode5,
-          *query22CountryCode6,
-          *query22CountryCode7]]}},
+        {$expr: {$in: ["$cntrycode", *query22CountryCodes]}},
         {custsale: null},
         {$expr: {$gt: ["$c_acctbal", 0.00]}}]}},
       {$facet: {

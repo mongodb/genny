@@ -8,7 +8,7 @@ batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
 query15Date: &query15Date {^Parameter: {Name: "Query15Date", Default: "1996-01-01"}}
 
 TPCHNormalizedQuery15CreateView: &TPCHNormalizedQuery15CreateView
-  create: &view revenue
+  create: &query15View revenue
   viewOn: lineitem
   pipeline:
     [
@@ -28,7 +28,7 @@ TPCHNormalizedQuery15CreateView: &TPCHNormalizedQuery15CreateView
     ]
 
 TPCHNormalizedQuery15Aggregation: &TPCHNormalizedQuery15Aggregation
-  aggregate: *view
+  aggregate: *query15View
   pipeline:
     [
       {$group: {_id: "$total_revenue", supplier_no: {$push: "$supplier_no"}}},
@@ -50,7 +50,7 @@ TPCHNormalizedQuery15Aggregation: &TPCHNormalizedQuery15Aggregation
   allowDiskUse: true
 
 TPCHNormalizedQuery15DropView: &TPCHNormalizedQuery15DropView
-  drop: *view
+  drop: *query15View
 
 TPCHNormalizedQuery15:
   Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
