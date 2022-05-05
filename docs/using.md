@@ -853,3 +853,9 @@ There are currently pathing issues when running integration tests locally. This 
 
 This is tracked in [TIG-3016](https://jira.mongodb.org/browse/TIG-3016) which will correct the issue.
 
+<a id="org97681a9"></a>
+
+## Two similarly-named workloads are not permitted to coexist
+
+This is tracked in [TIG-3700](https://jira.mongodb.org/browse/TIG-3700) which will correct the issue. 
+Note that the failure symptom when this occurs could be an infractrue provisioning error, even though the issue is unrelated to provisioning. 
