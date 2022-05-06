@@ -1,0 +1,34 @@
+# This workload is developed to test materialized view maintenance.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  Materialize views: Insert into the base collection.
+
+ExperimentParameters: &ExprParams
+  DbName: test
+  Transactional: false
+  NumInitialDocs: 100000
+  BaseDocumentSizePaddingBytes: 1000
+  NumGroupsAndDistribution: {^RandomInt: {distribution: uniform, min: 1, max: 10}}
+  ClientThreads: 1
+  NumInsertBatchesPerClinet: 100
+  NumInsertOpsPerClinetBatch: 100
+  ClientBatchInsertMode: "insertMany"
+  NumMatViews: 1
+  MatViewMaintenanceMode: "incremental"
+
+ExperimentDefaults:
+  PhasePath: &PhasePath ./MatViewParams.yml
+
+Actors:
+  LoadConfig:
+    Path: *PhasePath
+    Key: ActorsConf
+    Parameters: *ExprParams
+
+AutoRun:
+  LoadConfig:
+    Path: *PhasePath
+    Key: AutoRunConf
+    Parameters: *ExprParams
