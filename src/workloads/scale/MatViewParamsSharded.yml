@@ -29,7 +29,7 @@ ExperimentParams:
 
 
 GlobalDefaults:
-  DbName: &db {^Parameter: {Default: 10, Name: "DbName"}}
+  DbName: &db test
   Collection: &col Collection0 # This is the default collection populated by the Loader.
   FullName: &fullname test.Collection0
   Nop: &Nop {Nop: true}
@@ -76,6 +76,7 @@ InitDocument: &InitDoc
 
 Indexes: &Indexes
 - keys: {y: 1}
+- keys: {_id: hashed}
 
 LoaderPhase: &LoaderPhaseRef
   Repeat: 1
@@ -274,10 +275,48 @@ ActorsConf:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+- Name: EnableSharding
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *db
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+- Name: ShardCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: *fullname  # Collection0 is the default collection populated by the Loader.
+        key:
+          _id: hashed
+  - *Nop
+  - *Nop
+  - *Nop
 - Name: InitialBuildViewActor
   Type: RunCommand
   Threads: 1
   Phases:
+  - *Nop
+  - *Nop
   - *Nop
   - *InitialBuildViewPhaseRef
   - *Nop
@@ -289,12 +328,14 @@ ActorsConf:
   Phases:
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
   - *BaseCollInsertAndMatViewPhaseRef
   - *BaseCollDeletePhaseRef
 
 AutoRunConf:
-- When:
+  When:
     mongodb_setup:
       $eq:
-      - replica
-      - single-replica
+      - shard
+      - shard-lite

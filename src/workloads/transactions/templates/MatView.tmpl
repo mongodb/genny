@@ -6,7 +6,6 @@ Description: |
   Materialize views: Insert into the base collection.
 
 ExperimentParameters: &ExprParams
-  DbName: test
   Transactional: $__isTransactional__
   NumInitialDocs: $__numInitialDocs__
   BaseDocumentSizePaddingBytes: $__minBaseDocSizeBytes__
@@ -19,7 +18,7 @@ ExperimentParameters: &ExprParams
   MatViewMaintenanceMode: "$__matViewMode__"
 
 ExperimentDefaults:
-  PhasePath: &PhasePath ./MatViewParams.yml
+  PhasePath: &PhasePath ./$__matViewParamsFile__
 
 Actors:
   LoadConfig:
@@ -28,7 +27,7 @@ Actors:
     Parameters: *ExprParams
 
 AutoRun:
-  LoadConfig:
+- LoadConfig:
     Path: *PhasePath
     Key: AutoRunConf
     Parameters: *ExprParams
