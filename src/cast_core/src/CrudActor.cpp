@@ -746,8 +746,9 @@ struct MatViewOperation : public BaseOperation {
                                       updateFind.view(), updateExpr.view(), updateOptions);
                             if (!updateRes ||
                                 (updateRes->modified_count() != 1 && !updateRes->upserted_id())) {
-                                BOOST_THROW_EXCEPTION(
-                                    std::runtime_error("Incremental MatView failded."));
+                                // BOOST_THROW_EXCEPTION(
+                                //     std::runtime_error("Incremental MatView failded."));
+                                std::cout << "error: Incremental MatView failded." << std::endl;
                             } else {
                                 ctx.addDocuments(1);
                                 ctx.addBytes(sampleViewDoc.view().length());
@@ -773,41 +774,39 @@ struct MatViewOperation : public BaseOperation {
 
 
                             std::vector<bsoncxx::document::view_or_value> aggOutDocs;
-                            // try {
                             for (auto doc : aggOutRes) {
                                 aggOutDocs.push_back(doc);
                             }
-                            // } catch (mongocxx::operation_exception e) {
-                            //     std::cout << "error >> " << e.what() << std::endl;
-                            //     BOOST_THROW_EXCEPTION(e);
-                            // }
                             if (aggOutDocs.size() != 0L) {
-                                // try {
                                 auto templColl =
                                     db.create_collection(tempCollName, make_document() /*, wc*/);
                                 auto insertRes = templColl.insert_many(aggOutDocs, insertOptions);
                                 if (!insertRes ||
                                     insertRes->inserted_count() != aggOutDocs.size()) {
-                                    BOOST_THROW_EXCEPTION(
-                                        std::runtime_error("Inserting full-refresh results into "
-                                                           "temp collection failed."));
+                                    // BOOST_THROW_EXCEPTION(
+                                    //     std::runtime_error("Inserting full-refresh results into "
+                                    //                        "temp collection failed."));
+                                    std::cout << "error: Inserting full-refresh results into temp "
+                                                 "collection failed."
+                                              << std::endl;
                                 }
 
                                 ctx.addDocuments(aggOutDocs.size());
                                 ctx.addBytes(aggOutDocs.size() * sampleViewDoc.view().length());
                                 templColl.rename(targetViewName, true, wc);
-                                // } catch (mongocxx::operation_exception e) {
-                                //     std::cout << "error >> " << e.what() << std::endl;
-                                //     BOOST_THROW_EXCEPTION(e);
-                                // }
                             } else {
                                 auto deleteManyRes =
                                     db.collection(targetViewName)
                                         .delete_many(session, make_document(), deleteOptions);
                                 if (!deleteManyRes) {
-                                    BOOST_THROW_EXCEPTION(
-                                        std::runtime_error("Deleting existing documents from the "
-                                                           "mat-view failed (in full-refresh)."));
+                                    // BOOST_THROW_EXCEPTION(
+                                    //     std::runtime_error("Deleting existing documents from the
+                                    //     "
+                                    //                        "mat-view failed (in
+                                    //                        full-refresh)."));
+                                    std::cout << "error: Deleting existing documents from the "
+                                                 "mat-view failed (in full-refresh)."
+                                              << std::endl;
                                 } else {
                                     ctx.addDocuments(deleteManyRes->deleted_count());
                                 }
@@ -836,7 +835,9 @@ struct MatViewOperation : public BaseOperation {
                         ctx.addDocuments(result->inserted_count());
                         run_view_maintenance(*session, writeOps);
                     } else {
-                        BOOST_THROW_EXCEPTION(std::runtime_error("InsertMany failded in MatView."));
+                        // BOOST_THROW_EXCEPTION(std::runtime_error("InsertMany failded in
+                        // MatView."));
+                        std::cout << "error: InsertMany failded in MatView." << std::endl;
                     }
                 } else {
                     size_t i = 0;
@@ -854,8 +855,9 @@ struct MatViewOperation : public BaseOperation {
                             ctx.addDocuments(1);
                             run_view_maintenance(*session, {document});
                         } else {
-                            BOOST_THROW_EXCEPTION(
-                                std::runtime_error("InsertOne failded in MatView."));
+                            // BOOST_THROW_EXCEPTION(
+                            //     std::runtime_error("InsertOne failded in MatView."));
+                            std::cout << "error: InsertOne failded in MatView." << std::endl;
                         }
                     }
                 }
