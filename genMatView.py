@@ -10,6 +10,23 @@ file.close()
 
 temp_obj = Template(temp_str)
 
+nonshardedAutoRun = """
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - single-replica
+"""
+
+shardedAutoRun = """
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-lite
+"""
+
+
 isShardedOpts = [True, False]
 isTransactionalOpts = ['true', 'false']
 numInitialDocsOpts = ['100000']
@@ -56,6 +73,7 @@ for isSharded in isShardedOpts:
                                                 __insertMode__ = insertMode,
                                                 __numMatViews__ = numMatViews,
                                                 __matViewMode__ = matViewMode,
+                                                __autoRunConf__ = shardedAutoRun if isSharded else nonshardedAutoRun,
                                             )
                                             name=name_temp_obj.substitute(
                                                 sharded = "sharded_" if isSharded else "",
