@@ -27,7 +27,9 @@ Actors:
     Parameters: *ExprParams
 
 AutoRun:
-- LoadConfig:
-    Path: *PhasePath
-    Key: AutoRunConf
-    Parameters: *ExprParams
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - single-replica
+
