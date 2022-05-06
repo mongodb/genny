@@ -6,7 +6,6 @@ Description: |
   Materialize views: Insert into the base collection.
 
 ExperimentParameters: &ExprParams
-  DbName: test
   Transactional: false
   NumInitialDocs: 100000
   BaseDocumentSizePaddingBytes: 1000
@@ -28,7 +27,7 @@ Actors:
     Parameters: *ExprParams
 
 AutoRun:
-  LoadConfig:
+- LoadConfig:
     Path: *PhasePath
     Key: AutoRunConf
     Parameters: *ExprParams
