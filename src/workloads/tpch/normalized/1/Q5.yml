@@ -21,7 +21,7 @@ Actors:
   - LoadConfig:
       Path: ../../../../phases/tpch/normalized/Q5.yml
       Key: TPCHNormalizedQuery5Explain
-# TODO: uncomment once this query is sped up. >10 minute execution time.
+# TODO: PERF-2995 uncomment
 #   - &Nop {Nop: true}
 #   - *Nop
 

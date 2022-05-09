@@ -11,29 +11,19 @@ Clients:
 Actors:
 
 # This query creates a view before running any workloads, and then destroys the view afterwards.
-- Name: TPCHNormalizedQuery15Setup
+- Name: TPCHNormalizedQuery15SetupAndCleanup
   Type: RunCommand
   Database: &db tpch
   Phases:
-  - Repeat: 1
-    Database: *db
-    Operation:
-      OperationName: RunCommand
-      OperationCommand:
-        LoadConfig:
-          Path: ../../../../phases/tpch/normalized/Q15.yml
-          Key: TPCHNormalizedQuery15CreateView
+  - LoadConfig:
+      Path: ../../../../phases/tpch/normalized/Q15.yml
+      Key: TPCHNormalizedQuery15CreateView
   - &Nop {Nop: true}
   - *Nop
   - *Nop
-  - Repeat: 1
-    Database: *db
-    Operation:
-      OperationName: RunCommand
-      OperationCommand:
-        LoadConfig:
-          Path: ../../../../phases/tpch/normalized/Q15.yml
-          Key: TPCHNormalizedQuery15DropView
+  - LoadConfig:
+      Path: ../../../../phases/tpch/normalized/Q15.yml
+      Key: TPCHNormalizedQuery15DropView
 
 # At the start of the workload, the mongod will have been restarted and all caches will have been cleared.
 # This is when we start the cold data run. We use 'executionStats' here to cause each command to run its
