@@ -31,14 +31,9 @@ Actors:
   Database: *db
   Phases:
   - *Nop
-  - Repeat: 1
-    Database: *db
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        LoadConfig:
-          Path: ../../../../phases/tpch/normalized/Q8.yml
-          Key: TPCHNormalizedQuery8Aggregation
+  - LoadConfig:
+      Path: ../../../../phases/tpch/normalized/Q8.yml
+      Key: TPCHNormalizedQuery8Warmup
   - *Nop
 
 # After the cold run, our caches should be warmed up.

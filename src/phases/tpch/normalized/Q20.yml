@@ -10,37 +10,42 @@ query20Nation: &query20Nation {^Parameter: {Name: "Query20Nation", Default: "CAN
 query20Color: &query20Color {^Parameter: {Name: "Query20Color", Default: "^forest.*$"}}  # "^${color}.*$"
 query20Date: &query20Date {^Parameter: {Name: "Query20Date", Default: "1994-01-01"}}
 
-TPCHNormalizedQuery20Aggregation: &TPCHNormalizedQuery20Aggregation
-  aggregate: supplier
-  pipeline:
-    [
-      {$lookup: {from: "nation", localField: "s_nationkey", foreignField: "n_nationkey", as: "nation"}},
-      {$unwind: "$nation"},
-      {$match: {"nation.n_name": *query20Nation}},
-      {$lookup: {from: "partsupp", localField: "s_suppkey", foreignField: "ps_suppkey", as: "partsupp"}},
-      {$unwind: "$partsupp"},
-      {$lookup: {from: "part", localField: "partsupp.ps_partkey", foreignField: "p_partkey", as: "part"}},
-      {$unwind: "$part"},
-      {$match: {"part.p_name": {$regex: *query20Color, $options: "si"}}},
-      {$lookup: {from: "lineitem", localField: "partsupp.ps_partkey", foreignField: "l_partkey", let: {s_suppkey: "$s_suppkey"}, as: "lineitem", pipeline: [
-        {$match: {$and: [
-          {$expr: {$eq: ["$$s_suppkey", "$l_suppkey"]}},
-          {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: *query20Date}}]}},
-          {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query20Date}}, unit: "year", amount: 1}}]}}]}},
-        {$group: {_id: {}, quantity: {$sum: "$l_quantity"}}},
-        {$project: {_id: 0, quantity: {$multiply: ["$quantity", 0.5]}}}]}},
-      {$unwind: "$lineitem"},
-      {$match: {$expr: {$gt: ["$partsupp.ps_availqty", "$lineitem.quantity"]}}},
-      {$group: {_id: {s_name: "$s_name", s_address: "$s_address"}}},
-      {$project: {_id: 0, s_name: "$_id.s_name", s_address: "$_id.s_address"}},
-      {$sort: {s_name: 1}}
-    ]
-  cursor: {batchSize: *batchSize}
-  allowDiskUse: true
-
-TPCHNormalizedQuery20:
+TPCHNormalizedQuery20Warmup:
   Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
   Database: &db tpch
+  Operations:
+  - OperationName: RunCommand
+    OperationCommand: &TPCHNormalizedQuery20Aggregation
+      aggregate: supplier
+      pipeline:
+        [
+          {$lookup: {from: "nation", localField: "s_nationkey", foreignField: "n_nationkey", as: "nation"}},
+          {$unwind: "$nation"},
+          {$match: {"nation.n_name": *query20Nation}},
+          {$lookup: {from: "partsupp", localField: "s_suppkey", foreignField: "ps_suppkey", as: "partsupp"}},
+          {$unwind: "$partsupp"},
+          {$lookup: {from: "part", localField: "partsupp.ps_partkey", foreignField: "p_partkey", as: "part"}},
+          {$unwind: "$part"},
+          {$match: {"part.p_name": {$regex: *query20Color, $options: "si"}}},
+          {$lookup: {from: "lineitem", localField: "partsupp.ps_partkey", foreignField: "l_partkey", let: {s_suppkey: "$s_suppkey"}, as: "lineitem", pipeline: [
+            {$match: {$and: [
+              {$expr: {$eq: ["$$s_suppkey", "$l_suppkey"]}},
+              {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: *query20Date}}]}},
+              {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query20Date}}, unit: "year", amount: 1}}]}}]}},
+            {$group: {_id: {}, quantity: {$sum: "$l_quantity"}}},
+            {$project: {_id: 0, quantity: {$multiply: ["$quantity", 0.5]}}}]}},
+          {$unwind: "$lineitem"},
+          {$match: {$expr: {$gt: ["$partsupp.ps_availqty", "$lineitem.quantity"]}}},
+          {$group: {_id: {s_name: "$s_name", s_address: "$s_address"}}},
+          {$project: {_id: 0, s_name: "$_id.s_name", s_address: "$_id.s_address"}},
+          {$sort: {s_name: 1}}
+        ]
+      cursor: {batchSize: *batchSize}
+      allowDiskUse: true
+
+TPCHNormalizedQuery20:
+  Repeat: *Repeat
+  Database: *db
   Operations:
   - OperationMetricsName: Query20
     OperationName: RunCommand

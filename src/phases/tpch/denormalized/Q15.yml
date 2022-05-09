@@ -36,27 +36,32 @@ TPCHDenormalizedQuery15CreateView: &TPCHDenormalizedQuery15CreateView
           {$project: {_id: 0, supplier_no: "$_id", total_revenue: 1}},
         ]
 
-TPCHDenormalizedQuery15Aggregation: &TPCHDenormalizedQuery15Aggregation
-  aggregate: *query15View
-  pipeline:
-    [
-      {$group: {_id: "$total_revenue", supplier_no: {$push: "$supplier_no"}}},
-      {$sort: {_id: -1}},
-      {$limit: 1},
-      {$unwind: "$supplier_no"},
-      {$project: {_id: 0, total_revenue: "$_id", supplier_no: 1}},
-      {$lookup: {from: "supplier", localField: "supplier_no", foreignField: "s_suppkey", as: "supplier"}},
-      {$unwind: "$supplier"},
-      {$project: {
-        s_suppkey: "$supplier.s_suppkey",
-        s_name: "$supplier.s_name",
-        s_address: "$supplier.s_address",
-        s_phone: "$supplier.s_phone",
-        total_revenue: 1
-      }},
-    ]
-  cursor: {batchSize: *batchSize}
-  allowDiskUse: true
+TPCHDenormalizedQuery15Warmup:
+  Repeat: *Repeat
+  Database: *db
+  Operations:
+  - OperationName: RunCommand
+    OperationCommand: &TPCHDenormalizedQuery15Aggregation
+      aggregate: *query15View
+      pipeline:
+        [
+          {$group: {_id: "$total_revenue", supplier_no: {$push: "$supplier_no"}}},
+          {$sort: {_id: -1}},
+          {$limit: 1},
+          {$unwind: "$supplier_no"},
+          {$project: {_id: 0, total_revenue: "$_id", supplier_no: 1}},
+          {$lookup: {from: "supplier", localField: "supplier_no", foreignField: "s_suppkey", as: "supplier"}},
+          {$unwind: "$supplier"},
+          {$project: {
+            s_suppkey: "$supplier.s_suppkey",
+            s_name: "$supplier.s_name",
+            s_address: "$supplier.s_address",
+            s_phone: "$supplier.s_phone",
+            total_revenue: 1
+          }},
+        ]
+      cursor: {batchSize: *batchSize}
+      allowDiskUse: true
 
 TPCHDenormalizedQuery15DropView: &TPCHDenormalizedQuery15DropView
   Repeat: *Repeat

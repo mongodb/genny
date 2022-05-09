@@ -49,14 +49,9 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 1
-    Database: *db
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q15.yml
-          Key: TPCHDenormalizedQuery15Aggregation
+  - LoadConfig:
+      Path: ../../../../phases/tpch/denormalized/Q15.yml
+      Key: TPCHDenormalizedQuery15Warmup
   - *Nop
   - *Nop
 

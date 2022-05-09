@@ -7,34 +7,39 @@ Description: |
 batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
 query4Date: &query4Date {^Parameter: {Name: "Query4Date", Default: "1993-07-01"}}
 
-TPCHNormalizedQuery4Aggregation: &TPCHNormalizedQuery4Aggregation
-  aggregate: orders
-  pipeline:
-    [
-      {$match: {
-        $and: [
-          {$expr: {$gte: ["$o_orderdate", {$dateFromString: {dateString: *query4Date}}]}},
-          {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query4Date}}, unit: "month", amount: 3}}]}}]}},
-      {$lookup: {
-        from: "lineitem",
-        localField: "o_orderkey",
-        foreignField: "l_orderkey",
-        pipeline: [{$match: {$expr: {$lt: ["$l_commitdate", "$l_receiptdate"]}}}, {$count: "count"}],
-        as: "lineitem"}},
-      {$unwind: "$lineitem"},
-      {$match: {$expr: {$gt: ["$lineitem.count", 0]}}},
-      {$group: {
-        _id: "$o_orderpriority",
-        order_count: {$count: {}}}},
-      {$project: {_id: 0, o_orderpriority: "$_id", order_count: 1}},
-      {$sort: {o_orderpriority: 1}},
-    ]
-  cursor: {batchSize: *batchSize}
-  allowDiskUse: true
-
-TPCHNormalizedQuery4:
+TPCHNormalizedQuery4Warmup:
   Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
   Database: &db tpch
+  Operations:
+  - OperationName: RunCommand
+    OperationCommand: &TPCHNormalizedQuery4Aggregation
+      aggregate: orders
+      pipeline:
+        [
+          {$match: {
+            $and: [
+              {$expr: {$gte: ["$o_orderdate", {$dateFromString: {dateString: *query4Date}}]}},
+              {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query4Date}}, unit: "month", amount: 3}}]}}]}},
+          {$lookup: {
+            from: "lineitem",
+            localField: "o_orderkey",
+            foreignField: "l_orderkey",
+            pipeline: [{$match: {$expr: {$lt: ["$l_commitdate", "$l_receiptdate"]}}}, {$count: "count"}],
+            as: "lineitem"}},
+          {$unwind: "$lineitem"},
+          {$match: {$expr: {$gt: ["$lineitem.count", 0]}}},
+          {$group: {
+            _id: "$o_orderpriority",
+            order_count: {$count: {}}}},
+          {$project: {_id: 0, o_orderpriority: "$_id", order_count: 1}},
+          {$sort: {o_orderpriority: 1}},
+        ]
+      cursor: {batchSize: *batchSize}
+      allowDiskUse: true
+
+TPCHNormalizedQuery4:
+  Repeat: *Repeat
+  Database: *db
   Operations:
   - OperationMetricsName: Query4
     OperationName: RunCommand

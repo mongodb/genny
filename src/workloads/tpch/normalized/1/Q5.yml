@@ -32,14 +32,9 @@ Actors:
 #   Database: *db
 #   Phases:
 #   - *Nop
-#   - Repeat: 1
-#     Database: *db
-#     Operations:
-#     - OperationName: RunCommand
-#       OperationCommand:
-#         LoadConfig:
-#           Path: ../../../../phases/tpch/normalized/Q5.yml
-#           Key: TPCHNormalizedQuery5Aggregation
+# - LoadConfig:
+#     Path: ../../../../phases/tpch/normalized/Q5.yml
+#     Key: TPCHNormalizedQuery5Warmup
 #   - *Nop
 
 # # After the cold run, our caches should be warmed up.

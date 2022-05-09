@@ -31,14 +31,9 @@ Actors:
   Database: *db
   Phases:
   - *Nop
-  - Repeat: 1
-    Database: *db
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q22.yml
-          Key: TPCHDenormalizedQuery22Aggregation
+  - LoadConfig:
+      Path: ../../../../phases/tpch/denormalized/Q22.yml
+      Key: TPCHDenormalizedQuery22Warmup
   - *Nop
 
 # After the cold run, our caches should be warmed up.
