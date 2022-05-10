@@ -12,3 +12,4 @@ shrub.py==1.1.0
 black==19.10b0
 setuptools==51.0.0
 pytest==6.0.2
+numexpr==2.7.2

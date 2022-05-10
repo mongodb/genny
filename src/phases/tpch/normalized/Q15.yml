@@ -11,6 +11,7 @@ TPCHNormalizedQuery15CreateView: &TPCHNormalizedQuery15CreateView
   Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
   Database: &db tpch
   Operations:
+  # TODO: disable metrics collection once TIG-4128 is complete.
   - OperationName: RunCommand
     OperationCommand:
       create: &query15View revenue
@@ -63,6 +64,7 @@ TPCHNormalizedQuery15DropView: &TPCHNormalizedQuery15DropView
   Repeat: *Repeat
   Database: *db
   Operations:
+  # TODO: disable metrics collection once TIG-4128 is complete.
   - OperationName: RunCommand
     OperationCommand:
       drop: *query15View

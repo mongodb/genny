@@ -7,7 +7,7 @@ Description: |
 Actors:
 - Name: HelloWorld
   Type: HelloWorld
-  Threads: 2
+  Threads: &Threads 2
   Phases:
   - Message: Hello Phase 0 🐳
     Duration: 50 milliseconds
@@ -26,6 +26,13 @@ Actors:
       Key: UseMe  # Only load the YAML structure from this top-level key.
       Parameters:
         Repeat: 2
+  # To perform arithmetic use the ^NumExpr preprocessor directive
+  - Message: Hello Phase 3
+    TotalMessageCount: &TotalMessageCount 100
+    Repeat:
+      ^NumExpr:
+        withExpression: "messages / threads"
+        andValues: {messages: *TotalMessageCount, threads: *Threads}
 
 # As an alternate phase syntax, use the following for an actor that
 # runs a total of 3 phases, active in phases named 0 and 2 and Nop for the rest:

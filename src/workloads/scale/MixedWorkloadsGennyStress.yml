@@ -144,7 +144,7 @@ ActorTemplates:
 Actors:
 - Name: Setup
   Type: Loader
-  Threads: 1
+  Threads: 8
   Phases:
   - Repeat: 1
     BatchSize: 100
