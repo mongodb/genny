@@ -3,7 +3,6 @@
 set -eou pipefail
 _pip() {
     /usr/bin/env python3 -m pip "$@" --isolated -q -q
-    # /usr/bin/env python3 -m pip "$@" --isolated
 }
 
 _genny_venv="genny_venv"
@@ -113,8 +112,9 @@ if ! _pip --version >/dev/null 2>&1; then
 fi
 
 
-# Check for genny-setup-done-v2 which we create at the end of setup.
+# Check for genny-setup-done-v3 which we create at the end of setup.
 # This prevents half-setup environments.
+# (Bump the version number when changing dependencies. This will force a fresh venv upon pull/merge.)
 if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v3" ]]; then
     rm -rf "${GENNY_REPO_ROOT:?}/${_genny_venv}"
 
