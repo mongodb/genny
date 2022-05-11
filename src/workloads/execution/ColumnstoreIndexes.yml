@@ -1,14 +1,14 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-execution"
 Description: |
-  This workload measures $lookup performance for scenarios that look up local integer key against
+  This workload compares the query performance with columnar indexes to performances without them.
 
   The workload consists of the following phases and actors:
     0. Warm up cache.
-    1. Run queries without columnstore indexes.
-    2. Create columnstore indexes.
-    3. Warm up cache again for columnstore indexes.
-    4. Run queries with columnstore indexes.
+    1. Run queries with columnstore indexes.
+    2. Drop columnstore indexes.
+    3. Warm up cache again for regular scans.
+    4. Run queries without columnstore indexes.
 
 Keywords:
 - columnstore
@@ -353,30 +353,30 @@ TestOperations: &TestOperations
 - OperationMetricsName: TotalTenantCreatedQuery
   OperationName: RunCommand
   OperationCommand: *TotalTenantCreatedQuery
-# - OperationMetricsName: ActiveCloudUsersLastMonthQuery
-#   OperationName: RunCommand
-#   OperationCommand: *ActiveCloudUsersLastMonthQuery
-# - OperationMetricsName: VersionsHistogramQuery
-#   OperationName: RunCommand
-#   OperationCommand: *VersionsHistogramQuery
-# - OperationMetricsName: UniqueUsersPerMonthQuery
-#   OperationName: RunCommand
-#   OperationCommand: *UniqueUsersPerMonthQuery
-# - OperationMetricsName: TopErrorsQuery
-#   OperationName: RunCommand
-#   OperationCommand: *TopErrorsQuery
-# - OperationMetricsName: NumberOfChartsPerTypeQuery
-#   OperationName: RunCommand
-#   OperationCommand: *NumberOfChartsPerTypeQuery
-# - OperationMetricsName: EventsByVersionQuery
-#   OperationName: RunCommand
-#   OperationCommand: *EventsByVersionQuery
-# - OperationMetricsName: BrowserUsageByDistinctUserQuery
-#   OperationName: RunCommand
-#   OperationCommand: *BrowserUsageByDistinctUserQuery
-# - OperationMetricsName: TopTenantsByNoOfEventsQuery
-#   OperationName: RunCommand
-#   OperationCommand: *TopTenantsByNoOfEventsQuery
+- OperationMetricsName: ActiveCloudUsersLastMonthQuery
+  OperationName: RunCommand
+  OperationCommand: *ActiveCloudUsersLastMonthQuery
+- OperationMetricsName: VersionsHistogramQuery
+  OperationName: RunCommand
+  OperationCommand: *VersionsHistogramQuery
+- OperationMetricsName: UniqueUsersPerMonthQuery
+  OperationName: RunCommand
+  OperationCommand: *UniqueUsersPerMonthQuery
+- OperationMetricsName: TopErrorsQuery
+  OperationName: RunCommand
+  OperationCommand: *TopErrorsQuery
+- OperationMetricsName: NumberOfChartsPerTypeQuery
+  OperationName: RunCommand
+  OperationCommand: *NumberOfChartsPerTypeQuery
+- OperationMetricsName: EventsByVersionQuery
+  OperationName: RunCommand
+  OperationCommand: *EventsByVersionQuery
+- OperationMetricsName: BrowserUsageByDistinctUserQuery
+  OperationName: RunCommand
+  OperationCommand: *BrowserUsageByDistinctUserQuery
+- OperationMetricsName: TopTenantsByNoOfEventsQuery
+  OperationName: RunCommand
+  OperationCommand: *TopTenantsByNoOfEventsQuery
 
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 10
@@ -395,7 +395,7 @@ Actors:
   - Phase: 1..4
     Nop: true
 
-# The 'CollScan' actor measures the perf without columnar indexes.
+# The 'ColumnstoreScan' actor measures the perf with columnar indexes.
 - Name: ColumnstoreScan
   Type: RunCommand
   Database: *db
@@ -407,7 +407,7 @@ Actors:
   - Phase: 2..4
     Nop: true
 
-# The 'CreateColumnstoreIndexes' actor create columnstore indexes.
+# The 'DropColumnstoreIndexes' actor drops columnstore indexes.
 - Name: DropColumnstoreIndex
   Type: RunCommand
   Database: *db
@@ -425,7 +425,7 @@ Actors:
   - *Nop
   - *Nop
 
-# The 'WarmupCache2' actor warms up the buffer cache for columnar indexes.
+# The 'WarmupCache2' actor warms up the buffer cache for a regular scan.
 - Name: WarmupCache2
   Type: RunCommand
   Database: *db
@@ -439,7 +439,7 @@ Actors:
     Operations: *TestOperations
   - *Nop
 
-# The 'ColumnstoreScan' actor measures the perf with columnar indexes.
+# The 'CollScan' actor measures the perf without columnar indexes.
 - Name: CollScan
   Type: RunCommand
   Database: *db
