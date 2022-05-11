@@ -11,8 +11,8 @@ TPCHDenormalizedQuery15:
   Repeat: 1
   Database: tpch
   Operations:
-  - OperationMetricsName: Query15CreateView
-    OperationName: RunCommand
+  # TODO: disable metrics collection once TIG-4128 is complete.
+  - OperationName: RunCommand
     OperationCommand:
       create: revenue
       viewOn: customer
@@ -55,6 +55,7 @@ TPCHDenormalizedQuery15:
         allowDiskUse: true
       verbosity:
         executionStats
+  # TODO: disable metrics collection once TIG-4128 is complete.
   - OperationName: RunCommand
     OperationCommand:
       drop: revenue
