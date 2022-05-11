@@ -388,7 +388,7 @@ Actors:
   Database: *db
   Thread: 1
   Phases:
-  - Repeat: 1
+  - Repeat: 2
     Threads: 1
     Database: *db
     Operations: *TestOperations
@@ -433,7 +433,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: 1
+  - Repeat: 2
     Threads: 1
     Database: *db
     Operations: *TestOperations
