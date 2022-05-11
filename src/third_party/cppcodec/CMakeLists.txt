@@ -1,3 +1,7 @@
+#
+# This file is mostly vendored as-is from cppcodec.
+# Minimal changes were made to make compile less chatty and warning-y.
+#
 cmake_minimum_required(VERSION 2.8.12)
 cmake_policy(SET CMP0048 NEW)
 project(cppcodec VERSION 0.1 LANGUAGES CXX)
