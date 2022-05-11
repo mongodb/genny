@@ -31,12 +31,9 @@ Actors:
   Database: *db
   Phases:
   - *Nop
-  - Repeat: 1
-    Database: *db
-    Operations:
-    - LoadConfig:
-        Path: ../../../../phases/tpch/normalized/Q1.yml
-        Key: TPCHNormalizedQuery1Warmup
+  - LoadConfig:
+      Path: ../../../../phases/tpch/normalized/Q1.yml
+      Key: TPCHNormalizedQuery1Warmup
   - *Nop
 
 # After the cold run, our caches should be warmed up.
