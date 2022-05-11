@@ -20,6 +20,10 @@ def dry_run_workload(
         SLOG.info("Skipping dry run for workloads for future functionality.", file=yaml_file_path)
         return
 
+    # TODO(TIG-4141): Some workloads cannot be dry-run for various reasons.
+    # Let's let workloads themselves indicate they can't dry-run rather than
+    # hard-coding the list(s) here.
+
     if yaml_file_basename in [
         "MixedWorkloadsGennyStress.yml",
         "ClusteredCollection.yml",
