@@ -4,51 +4,60 @@ Description: |
   Run TPC-H query 22 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101  # The default batch size.
-# Sadly, using an array here parses as an array of numbers instead of as an array of strings.
-# To work around this, use separate parameters for each entry in the array.
-query22CountryCode1: &query22CountryCode1 {^Parameter: {Name: "Query22CountryCode1", Default: "13"}}
-query22CountryCode2: &query22CountryCode2 {^Parameter: {Name: "Query22CountryCode2", Default: "31"}}
-query22CountryCode3: &query22CountryCode3 {^Parameter: {Name: "Query22CountryCode3", Default: "23"}}
-query22CountryCode4: &query22CountryCode4 {^Parameter: {Name: "Query22CountryCode4", Default: "29"}}
-query22CountryCode5: &query22CountryCode5 {^Parameter: {Name: "Query22CountryCode5", Default: "30"}}
-query22CountryCode6: &query22CountryCode6 {^Parameter: {Name: "Query22CountryCode6", Default: "18"}}
-query22CountryCode7: &query22CountryCode7 {^Parameter: {Name: "Query22CountryCode7", Default: "17"}}
+batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+# Use $toString as a hack, because yml parses these strings into ints before outputting the pipeline.
+query22CountryCodes: &query22CountryCodes {^Parameter: {Name: "Query22CountryCodes", Default: [
+  {$toString: "13"},
+  {$toString: "31"},
+  {$toString: "23"},
+  {$toString: "29"},
+  {$toString: "30"},
+  {$toString: "18"},
+  {$toString: "17"}
+]}}
+
+TPCHDenormalizedQuery22Warmup:
+  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Database: &db tpch
+  Operations:
+  - OperationName: RunCommand
+    OperationCommand: &TPCHDenormalizedQuery22Aggregation
+      aggregate: customer
+      pipeline:
+        [
+          {$addFields: {custsale: "$orders", orders: "$$REMOVE"}},
+          {$unwind: {path: "$custsale", preserveNullAndEmptyArrays: true}},
+          {$addFields: {cntrycode: {$substr: ["$c_phone", 0, 2]}}},
+          {$match: {$and: [{$expr: {$in: ["$cntrycode", *query22CountryCodes]}}, {custsale: null}, {$expr: {$gt: ["$c_acctbal", 0.0]}}]}},
+          {$facet: {
+            customer: [{$project: {cntrycode: 1, c_acctbal: 1}}],
+            "avg(c_acctbal)": [{$group: {_id: {}, value: {$avg: "$c_acctbal"}}}, {$project: {_id: 0}}]}},
+          {$unwind: "$avg(c_acctbal)"},
+          {$unwind: "$customer"},
+          {$match: {$expr: {$gt: ["$customer.c_acctbal", "$avg(c_acctbal).value"]}}},
+          {$group: {_id: "$customer.cntrycode", numcust: {$count: {}}, totacctbal: {$sum: "$customer.c_acctbal"}}},
+          {$project: {_id: 0, cntrycode: "$_id", numcust: 1, totacctbal: 1}},
+          {$sort: {cntrycode: 1}}
+        ]
+      cursor: {batchSize: *batchSize}
+      allowDiskUse: true
 
 TPCHDenormalizedQuery22:
-  Repeat: 1
-  Database: tpch
+  Repeat: *Repeat
+  Database: *db
+  Operations:
+  - OperationMetricsName: Query22
+    OperationName: RunCommand
+    OperationCommand: *TPCHDenormalizedQuery22Aggregation
+
+TPCHDenormalizedQuery22Explain:
+  Repeat: *Repeat
+  Database: *db
   Operations:
   - OperationMetricsName: Query22
     OperationName: RunCommand
     OperationLogsResult: true
     OperationCommand:
-      explain:
-        aggregate: customer
-        pipeline:
-          [
-            {$addFields: {custsale: "$orders", orders: "$$REMOVE"}},
-            {$unwind: {path: "$custsale", preserveNullAndEmptyArrays: true}},
-            {$addFields: {cntrycode: {$substr: ["$c_phone", 0, 2]}}},
-            {$match: {$and: [{$expr: {$in: ["$cntrycode", [
-              *query22CountryCode1,
-              *query22CountryCode2,
-              *query22CountryCode3,
-              *query22CountryCode4,
-              *query22CountryCode5,
-              *query22CountryCode6,
-              *query22CountryCode7]]}}, {custsale: null}, {$expr: {$gt: ["$c_acctbal", 0.0]}}]}},
-            {$facet: {
-              customer: [{$project: {cntrycode: 1, c_acctbal: 1}}],
-              "avg(c_acctbal)": [{$group: {_id: {}, value: {$avg: "$c_acctbal"}}}, {$project: {_id: 0}}]}},
-            {$unwind: "$avg(c_acctbal)"},
-            {$unwind: "$customer"},
-            {$match: {$expr: {$gt: ["$customer.c_acctbal", "$avg(c_acctbal).value"]}}},
-            {$group: {_id: "$customer.cntrycode", numcust: {$count: {}}, totacctbal: {$sum: "$customer.c_acctbal"}}},
-            {$project: {_id: 0, cntrycode: "$_id", numcust: 1, totacctbal: 1}},
-            {$sort: {cntrycode: 1}}
-          ]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+      explain: *TPCHDenormalizedQuery22Aggregation
       verbosity:
         executionStats
