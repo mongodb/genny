@@ -739,6 +739,65 @@ protected:
     const size_t _alphabetLength;
 };
 
+class DataSetGenerator : public Generator<std::string> {
+public:
+    DataSetGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _rng{generatorArgs.rng},
+          _id{generatorArgs.actorId},
+          _path{node["path"].maybe<std::string>().value()},
+          _pathLength{_path.size()} {
+        if (_pathLength <= 0) {
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                "Random string requires non-empty alphabet if specified"));
+        }
+    }
+
+protected:
+    DefaultRandom& _rng;
+    ActorId _id;
+    UniqueGenerator<int64_t> _lengthGen;
+    std::string _path;
+    const size_t _pathLength;
+};
+
+/** `{^ChooseFromDataset:{...}` */
+class RandomDataFromDataset : public DataSetGenerator {
+public:
+
+    RandomDataFromDataset(const Node& node, GeneratorArgs generatorArgs)
+        : DataSetGenerator(node, generatorArgs) {}
+
+    std::string evaluate() override {        
+        std::ifstream dataSet(_path);
+
+        // Declared as static so we only read the content in memory once.
+        static std::vector<std::string> dataSetContent;
+        std::string line;
+
+        /** If dataSetContent is empty, we read the file and
+            store the data in a vector. If the file is not open
+            then we throw an exception. **/
+
+        if (dataSetContent.size() <= 0){
+            if (dataSet.is_open()){
+                while(std::getline(dataSet, line))
+                {
+                    std::string new_line;
+                    new_line = line;
+                    dataSetContent.push_back(new_line);
+                }
+            }
+            else {
+                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                    "The specified file cannot be opened or it does not exist"));
+            }
+        }
+        // Output a random string from the vector
+        auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataSetContent.size() - 1};
+        return dataSetContent[distribution(_rng)];
+    }
+};
+
 /** `{^RandomString:{...}` */
 class NormalRandomStringGenerator : public StringGenerator {
 public:
@@ -1324,6 +1383,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^RandomString",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
+     }},
+    {"^ChooseFromDataset",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<RandomDataFromDataset>(node, generatorArgs);
      }},
     {"^Join",
      [](const Node& node, GeneratorArgs generatorArgs) {
