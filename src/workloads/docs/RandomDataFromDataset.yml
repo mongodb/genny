@@ -13,7 +13,5 @@ Actors:
   Phases:
   - Collection: "inserts"
     Document:
-      familyname: {^ChooseFromDataset: {"path": "src/workloads/datasets/familynames.txt"}}
-      name: {^ChooseFromDataset: {"path": "src/workloads/datasets/names.txt"}}
-      airport: {^ChooseFromDataset: {"path": "src/workloads/datasets/airports_codes.txt"}}
-    Repeat: 10
+      a: {^ChooseFromDataset: {"path": "/home/ubuntu/dev/genny/src/workloads/datasets/airports_codes.txt"}}
+    Repeat: 1
