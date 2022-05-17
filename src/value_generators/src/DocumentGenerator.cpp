@@ -748,7 +748,7 @@ public:
           _pathLength{_path.size()} {
         if (_pathLength <= 0) {
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                "Random string requires non-empty alphabet if specified"));
+                "Data Set Generator requieres non-empty path"));
         }
     }
 
@@ -766,33 +766,22 @@ public:
 
     RandomDataFromDataset(const Node& node, GeneratorArgs generatorArgs)
         : DataSetGenerator(node, generatorArgs) {}
-
     std::string evaluate() override {        
         std::ifstream dataSet(_path);
-
-        // Declared as static so we only read the content in memory once.
-        static std::vector<std::string> dataSetContent;
+        std::vector<std::string> dataSetContent;
         std::string line;
-
-        /** If dataSetContent is empty, we read the file and
-            store the data in a vector. If the file is not open
-            then we throw an exception. **/
-
-        if (dataSetContent.size() <= 0){
-            if (dataSet.is_open()){
-                while(std::getline(dataSet, line))
-                {
-                    std::string new_line;
-                    new_line = line;
-                    dataSetContent.push_back(new_line);
-                }
-            }
-            else {
-                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                    "The specified file cannot be opened or it does not exist"));
+        
+        if (dataSet.is_open()){
+            while(std::getline(dataSet, line))
+            {
+                dataSetContent.push_back(line);
             }
         }
-        // Output a random string from the vector
+        else {
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                "The specified file cannot be opened or it does not exist"));
+        }
+
         auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataSetContent.size() - 1};
         return dataSetContent[distribution(_rng)];
     }

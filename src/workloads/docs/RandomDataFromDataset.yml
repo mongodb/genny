@@ -1,0 +1,18 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/product-perf"
+Description: |
+  This is an introductory workload that shows how to write a workload in Genny.
+  This workload inserts 10 documents with strings taken from a DataSet.
+
+Actors:
+- Name: Insert
+  Type: Insert
+  Threads: 1
+  Database: "test2"
+  Phases:
+  - Collection: "inserts"
+    Document:
+            type: simple
+            familyname: {^ChooseFromDataset: {"path" : "src/workloads/datasets/familynames.txt"}}
+            name: {^ChooseFromDataset: {"path" : "src/workloads/datasets/names.txt"}}
+    Repeat: 10
