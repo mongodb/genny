@@ -127,7 +127,7 @@ Actors:
             actorString: {^ActorIdString: {}}
 
             # Generate a random airport code from a dataset
-            airportDataSet: {^ChooseFromDataset: {"path": "src/workloads/datasets/airports_codes.txt"}}
+            airportDataSet: {^ChooseFromDataset: {"path": "src/genny/src/workloads/datasets/airports_codes.txt"}}
 
             # Generate the current Date
             now: {^Now: {}}
