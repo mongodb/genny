@@ -775,7 +775,10 @@ public:
             if (ifs.is_open()){
                 while(std::getline(ifs, line))
                 {
-                    dataSetContent.push_back(line);
+                    // Ignore emtpy lines
+                    if (line.size()!=0){
+                        dataSetContent.push_back(line);
+                    }
                 }
             }
             else {
@@ -788,7 +791,6 @@ public:
                     "The specified file is empty"));
                 }
         }
-
 
     std::string evaluate() override {   
         auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataSetContent.size() - 1};
