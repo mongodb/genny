@@ -13,7 +13,7 @@ Actors:
   Phases:
   - Collection: "inserts"
     Document:
-      familyname: {^ChooseFromDataset: {"path": "src/workloads/datasets/familynames.txt"}}
-      name: {^ChooseFromDataset: {"path": "src/workloads/datasets/names.txt"}}
-      airport: {^ChooseFromDataset: {"path": "src/workloads/datasets/airports_codes.txt"}}
+      familyname: {^ChooseFromDataset: {"path": "src/genny/src/workloads/datasets/familynames.txt"}}
+      name: {^ChooseFromDataset: {"path": "src/genny/src/workloads/datasets/names.txt"}}
+      airport: {^ChooseFromDataset: {"path": "src/genny/src/workloads/datasets/airports_codes.txt"}}
     Repeat: 10
