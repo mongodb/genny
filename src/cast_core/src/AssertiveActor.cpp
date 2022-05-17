@@ -51,6 +51,13 @@ struct AssertiveActor::PhaseConfig {
         for (auto [k, fieldNode] : phaseContext["IgnoreFields"]) {
             ignoreFields.insert(fieldNode.to<std::string>());
         }
+
+        // If no IgnoreFields are specified, set _id and num as the default fields to occlude
+        // from document comparison.
+        if (ignoreFields.empty()) {
+            ignoreFields.insert("_id");
+            ignoreFields.insert("num");
+        }
     }
 };
 
@@ -127,10 +134,7 @@ bool equal(AssertiveActor::PhaseConfig* config, const T& expectedVal, const T& a
 bool equalBSONDocs(AssertiveActor::PhaseConfig* config, const bsoncxx::document::view& expected, const bsoncxx::document::view& actual) {
     for (auto actualVal : actual) {
         auto key = actualVal.key();
-        if (key == "_id") {
-            continue;
-        }
-        if (key == "num") {
+        if (config->ignoreFields.find(std::string(key)) != config->ignoreFields.end()) {
             continue;
         }
         auto expectedVal = expected[key];
@@ -141,10 +145,7 @@ bool equalBSONDocs(AssertiveActor::PhaseConfig* config, const bsoncxx::document:
     }
     for (auto expectedVal: expected) {
         auto key = expectedVal.key();
-        if (key == "_id") {
-            continue;
-        }
-        if (key == "num") {
+        if (config->ignoreFields.find(std::string(key)) != config->ignoreFields.end()) {
             continue;
         }
         if (!actual[key]) {
