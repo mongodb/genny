@@ -782,12 +782,12 @@ public:
             }
             else {
                 BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                    "The specified file cannot be opened or it does not exist"));
+                    "The specified file for RandomDataFromDataset cannot be opened or it does not exist"));
                 }
 
             if (dataSetContent.size() == 0) {
                 BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                    "The specified file is empty"));
+                    "The specified file for RandomDataFromDataset is empty"));
                 }
         }
 
