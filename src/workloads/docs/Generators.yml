@@ -24,7 +24,8 @@ Description: |
 # 	"join" : "This is a joined string",
 # 	"ip" : "77.220.130.163",
 # 	"actorNum" : NumberLong(1),
-# 	"actorString" : "1"
+# 	"actorString" : "1",
+# 	"airportDataSet" : "KSC"
 # }
 
 
@@ -124,6 +125,9 @@ Actors:
             actorNum: {^ActorId: {}}
             # Generate the actor ID as a string
             actorString: {^ActorIdString: {}}
+
+            # Generate a random airport code from a dataset
+            airportDataSet: {^ChooseFromDataset: {"path": "src/workloads/datasets/airports_codes.txt"}}
 
             # Generate the current Date
             now: {^Now: {}}
