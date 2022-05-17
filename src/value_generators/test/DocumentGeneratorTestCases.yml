@@ -456,6 +456,22 @@ Tests:
       - {a: yz}
       - {a: xyxyx}
 
+  - Name: RandomDataFromDataset requieres a path
+    GivenTemplate:
+      a: {^ChooseFromDataset: {}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: RandomDataFromDataset requieres a file that exists
+    GivenTemplate:
+      a: {^ChooseFromDataset: {"path": "/tmp/itdoesnotexist"}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: RandomDataFromDataset returns airport code
+    GivenTemplate:
+      a: {^ChooseFromDataset: {"path": "src/workloads/datasets/airports_codes.txt"}}
+    ThenReturns:
+      - {a: LYX}
+
   - Name: FastRandom string
     GivenTemplate:
       a: {^FastRandomString: {length: 15}}

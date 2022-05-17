@@ -771,7 +771,7 @@ public:
             // to avoid doing it on each evaluate method call.
             std::string line;
             ifs.open(_path, std::ifstream::in);
-            
+
             if (ifs.is_open()){
                 while(std::getline(ifs, line))
                 {
