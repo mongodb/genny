@@ -762,29 +762,41 @@ protected:
 
 /** `{^ChooseFromDataset:{...}` */
 class RandomDataFromDataset : public DataSetGenerator {
+
 public:
-
     RandomDataFromDataset(const Node& node, GeneratorArgs generatorArgs)
-        : DataSetGenerator(node, generatorArgs) {}
-    std::string evaluate() override {        
-        std::ifstream dataSet(_path);
-        std::vector<std::string> dataSetContent;
-        std::string line;
-        
-        if (dataSet.is_open()){
-            while(std::getline(dataSet, line))
-            {
-                dataSetContent.push_back(line);
+        : DataSetGenerator(node, generatorArgs) {
+            
+            // Open and read the datasets in the constructor
+            // to avoid doing it on each evaluate method call.
+            std::string line;
+            ifs.open(_path, std::ifstream::in);
+            
+            if (ifs.is_open()){
+                while(std::getline(ifs, line))
+                {
+                    dataSetContent.push_back(line);
+                }
             }
-        }
-        else {
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                "The specified file cannot be opened or it does not exist"));
+            else {
+                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                    "The specified file cannot be opened or it does not exist"));
+                }
+
+            if (dataSetContent.size() == 0) {
+                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                    "The specified file is empty"));
+                }
         }
 
+
+    std::string evaluate() override {   
         auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataSetContent.size() - 1};
         return dataSetContent[distribution(_rng)];
     }
+private:
+    std::ifstream ifs;
+    std::vector<std::string> dataSetContent;
 };
 
 /** `{^RandomString:{...}` */
