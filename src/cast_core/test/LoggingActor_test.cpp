@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <yaml-cpp/yaml.h>
-
 #include <testlib/ActorHelper.hpp>
 #include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>

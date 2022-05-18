@@ -14,15 +14,11 @@
 
 #include <cast_core/actors/MonotonicSingleLoader.hpp>
 
-#include <yaml-cpp/yaml.h>
-
 #include <bsoncxx/builder/stream/document.hpp>
 
 #include <mongocxx/client.hpp>
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
-
-#include <boost/log/trivial.hpp>
 
 #include <gennylib/Cast.hpp>
 
@@ -82,7 +78,7 @@ void MonotonicSingleLoader::run() {
                     // Use ordered:false to increase write parallelism for sharded collections.
                     auto options = mongocxx::options::insert();
                     options.ordered(false);
-                    auto result = config->collection.insert_many(std::move(docs), options);
+                    auto result = config->collection.insert_many(docs, options);
 
                     totalOpCtx.addBytes(numBytes);
                     individualOpCtx.addBytes(numBytes);

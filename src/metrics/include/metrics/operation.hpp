@@ -34,9 +34,7 @@
 
 namespace genny::metrics {
 
-using count_type = long long;
-
-using actor_count_t = size_t;
+using count_type = size_t;
 
 enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
 

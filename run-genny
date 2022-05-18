@@ -112,9 +112,10 @@ if ! _pip --version >/dev/null 2>&1; then
 fi
 
 
-# Check for genny-setup-done-v2 which we create at the end of setup.
+# Check for genny-setup-done-v3 which we create at the end of setup.
 # This prevents half-setup environments.
-if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v2" ]]; then
+# (Bump the version number when changing dependencies. This will force a fresh venv upon pull/merge.)
+if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v3" ]]; then
     rm -rf "${GENNY_REPO_ROOT:?}/${_genny_venv}"
 
     python3 -m venv "${GENNY_REPO_ROOT}/${_genny_venv}"
@@ -124,6 +125,7 @@ if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_ge
     source "${GENNY_REPO_ROOT}/${_genny_venv}/bin/activate"
 
     # Install Genny requirements
+    _pip install "numpy==1.22.3"  # For some reason pip doesn't pick this up in requirements.txt?
     _pip install -r "${GENNY_REPO_ROOT}/src/lamplib/requirements.txt"
 
     _pip freeze > "pip-requirements.txt" 2>/dev/null
@@ -132,7 +134,7 @@ if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_ge
     # (Don't use the sha for now but might in the future to determine
     # if we need to run pip install again or something.)
     pushd "${GENNY_REPO_ROOT}" >/dev/null
-        git rev-parse HEAD > "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v2"
+        git rev-parse HEAD > "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v3"
     popd >/dev/null
 fi
 
