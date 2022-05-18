@@ -20,6 +20,8 @@
 #include <limits>
 #include <map>
 #include <sstream>
+#include <unordered_map>
+#include <mutex>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/date_time.hpp>
@@ -748,38 +750,52 @@ public:
           _id{generatorArgs.actorId},
           _path{node["path"].maybe<std::string>().value()},
           _pathLength{_path.size()}
-        {
+      {
+
+
         if (_pathLength <= 0) {
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
             "RandomDataFromDataset requieres non-empty path"));
             }
+
+            /* To avoid reading and storing the datasets multiple times
+               we check if the path already exists in the map (as key). If
+               it doesn't exist, we open the file and store its contents. 
+               Section locked with a mutex */
             
-            _ifs.open(_path, std::ifstream::in);
-            if (_ifs.is_open()){
-                while(std::getline(_ifs, _current_line))
-                {
-                    // Ignore emtpy lines
-                    if (_current_line.size()!=0){
-                        _dataSetContent.push_back(_current_line);
+            _dataset_mutex.lock();
+            if (_dataset.count(_path) == 0) {
+                std::cout << "I enter to open " << _path << std::endl;
+                _ifs.open(_path, std::ifstream::in);
+                if (_ifs.is_open()){
+                    while(std::getline(_ifs, _current_line))
+                    {
+                        // Ignore emtpy lines
+                        if (_current_line.size()!=0){
+                            _dataset[_path].push_back(_current_line);
+                        }
                     }
                 }
-            }
-
+            
             else {
+                _dataset_mutex.unlock();
                 BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                    "The specified file for RandomDataFromDataset cannot be opened or it does not exist"));
+                    "The specified file for RandomDataFromDataset cannot be opened or it does not exist")); }
+
+            if (_dataset[_path].size() == 0) {
+                _dataset_mutex.unlock();
+                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                    "The specified file for RandomDataFromDataset is empty")); }
                 }
 
-            if (_dataSetContent.size() == 0) {
-                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                    "The specified file for RandomDataFromDataset is empty"));
-                }
+            _dataset_mutex.unlock();
         }
 
     std::string evaluate() {   
-        auto distribution = boost::random::uniform_int_distribution<size_t>{0, _dataSetContent.size() - 1};
-        return _dataSetContent[distribution(_rng)];
+        auto distribution = boost::random::uniform_int_distribution<size_t>{0, _dataset[_path].size() - 1};
+        return _dataset[_path][distribution(_rng)];
     }
+    
 private:
     DefaultRandom& _rng;
     ActorId _id;
@@ -788,6 +804,8 @@ private:
     std::ifstream _ifs;
     std::vector<std::string> _dataSetContent;
     std::string _current_line;
+    static inline std::unordered_map<std::string, std::vector<std::string>> _dataset;
+    static inline std::mutex _dataset_mutex;
 };
 
 /** `{^RandomString:{...}` */
