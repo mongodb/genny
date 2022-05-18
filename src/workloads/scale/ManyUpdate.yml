@@ -69,3 +69,4 @@ AutoRun:
       - replica-1dayhistory-15gbwtcache
       - replica-all-feature-flags
       - single-replica
+      - standalone
