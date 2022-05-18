@@ -739,65 +739,55 @@ protected:
     const size_t _alphabetLength;
 };
 
-class DataSetGenerator : public Generator<std::string> {
-public:
-    DataSetGenerator(const Node& node, GeneratorArgs generatorArgs)
-        : _rng{generatorArgs.rng},
-          _id{generatorArgs.actorId},
-          _path{node["path"].maybe<std::string>().value()},
-          _pathLength{_path.size()} {
-        if (_pathLength <= 0) {
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                "Data Set Generator requieres non-empty path"));
-        }
-    }
-
-protected:
-    DefaultRandom& _rng;
-    ActorId _id;
-    UniqueGenerator<int64_t> _lengthGen;
-    std::string _path;
-    const size_t _pathLength;
-};
-
 /** `{^ChooseFromDataset:{...}` */
-class RandomDataFromDataset : public DataSetGenerator {
+class RandomDataFromDataset : public Generator<std::string> {
 
 public:
     RandomDataFromDataset(const Node& node, GeneratorArgs generatorArgs)
-        : DataSetGenerator(node, generatorArgs) {
+        : _rng{generatorArgs.rng},
+          _id{generatorArgs.actorId},
+          _path{node["path"].maybe<std::string>().value()},
+          _pathLength{_path.size()}
+        {
+        if (_pathLength <= 0) {
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+            "RandomDataFromDataset requieres non-empty path"));
+            }
             
-            // Open and read the datasets in the constructor
-            // to avoid doing it on each evaluate method call.
-            std::string line;
-            ifs.open(_path, std::ifstream::in);
-            if (ifs.is_open()){
-                while(std::getline(ifs, line))
+            _ifs.open(_path, std::ifstream::in);
+            if (_ifs.is_open()){
+                while(std::getline(_ifs, _current_line))
                 {
                     // Ignore emtpy lines
-                    if (line.size()!=0){
-                        dataSetContent.push_back(line);
+                    if (_current_line.size()!=0){
+                        _dataSetContent.push_back(_current_line);
                     }
                 }
             }
+
             else {
                 BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
                     "The specified file for RandomDataFromDataset cannot be opened or it does not exist"));
                 }
 
-            if (dataSetContent.size() == 0) {
+            if (_dataSetContent.size() == 0) {
                 BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
                     "The specified file for RandomDataFromDataset is empty"));
                 }
         }
 
-    std::string evaluate() override {   
-        auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataSetContent.size() - 1};
-        return dataSetContent[distribution(_rng)];
+    std::string evaluate() {   
+        auto distribution = boost::random::uniform_int_distribution<size_t>{0, _dataSetContent.size() - 1};
+        return _dataSetContent[distribution(_rng)];
     }
 private:
-    std::ifstream ifs;
-    std::vector<std::string> dataSetContent;
+    DefaultRandom& _rng;
+    ActorId _id;
+    std::string _path;
+    const size_t _pathLength;
+    std::ifstream _ifs;
+    std::vector<std::string> _dataSetContent;
+    std::string _current_line;
 };
 
 /** `{^RandomString:{...}` */
