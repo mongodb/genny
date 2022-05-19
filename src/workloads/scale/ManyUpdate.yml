@@ -5,6 +5,16 @@ Description: |
   small multi-update which touches all of them.  It is intended to measure the impact of the load of
   replication of many oplog entries on the primary.  Number of documents should be significantly
   greater than the maximum replication batch size of 5K (50K is a good minimum).
+  We will run this against standalone nodes and single-node replica sets as well as 3-node replica
+  sets to determine if any performance changes are due to replication overhead changes (if only
+  3-node replica sets are affected) or some other reason.
+
+Keywords:
+- RunCommand
+- Loader
+- CrudActor
+- updateMany
+- update
 
 Clients:
   Default:
@@ -33,6 +43,7 @@ Actors:
     Database: *DB
     CollectionCount: 1
     Threads: 10
+    MultipleThreadsPerCollection: true
     DocumentCount: 5e4
     BatchSize: 1000
     Document:  # Documents are approximately 100B in size
