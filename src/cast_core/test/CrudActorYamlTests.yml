@@ -176,7 +176,7 @@ Tests:
             WriteConcern:
               Timeout: 3000 milliseconds
               Journal: false
-    Error: '.*(Level|bad conversion).*'
+    Error: '.*bad conversion.*$'
 
   - Description: The 'test' collection is dropped with write concern majority.
     Operations:
@@ -334,7 +334,7 @@ Tests:
           Options:
             ReadPreference:
               MaxStaleness: 100 seconds
-    Error: '.*(ReadMode|bad conversion).*'
+    Error: '.*bad conversion.*'
 
   - Description: Read preference with invalid 'ReadMode' should throw.
     Operations:
@@ -344,7 +344,7 @@ Tests:
           Options:
             ReadPreference:
               ReadMode: badReadMode
-    Error: '.*(ReadMode|bad conversion).*'
+    Error: '.*bad conversion.*'
 
   - Description: estimatedDocumentCount can also specify ReadMode, MaxStaleness
     Operations:

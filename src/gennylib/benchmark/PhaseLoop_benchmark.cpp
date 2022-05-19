@@ -20,6 +20,8 @@
 #include <thread>
 #include <vector>
 
+#include <yaml-cpp/yaml.h>
+
 #include <boost/format.hpp>
 #include <boost/thread/barrier.hpp>
 
@@ -40,14 +42,14 @@ namespace {
 struct IncrementsActor : public Actor {
 
     struct PhaseConfig {
-        explicit PhaseConfig(PhaseContext& phaseContext) {}
+        PhaseConfig(PhaseContext& phaseContext) {}
     };
 
     static atomic_int increments;
 
     PhaseLoop<PhaseConfig> _loop;
 
-    explicit IncrementsActor(ActorContext& ctx) : Actor(ctx), _loop{ctx} {}
+    IncrementsActor(ActorContext& ctx) : Actor(ctx), _loop{ctx} {}
 
     void run() override {
         for (auto&& config : _loop) {
@@ -93,8 +95,6 @@ using clock = std::chrono::steady_clock;
 template <typename Runnables>
 int64_t timedRun(Runnables&& runnables) {
     std::vector<std::thread> threads;
-    threads.reserve(runnables.size());
-
     boost::barrier startWait(runnables.size() + 1);
     boost::barrier endWait(runnables.size() + 1);
     for (auto& runnable : runnables) {
@@ -119,10 +119,7 @@ int64_t timedRun(Runnables&& runnables) {
 
 auto runRegularThreads(int threads, long iterations) {
     IncrementsRunnable::increments = 0;
-
     std::vector<std::unique_ptr<IncrementsRunnable>> runners;
-    runners.reserve(threads);
-
     for (int i = 0; i < threads; ++i)
         runners.emplace_back(std::make_unique<IncrementsRunnable>(iterations));
     auto regDur = timedRun(runners);
@@ -182,7 +179,7 @@ void comparePerformance(int threads, long iterations, int tolerance) {
     // we're no less than tolerance times worse
     INFO("threads=" << threads << ",iterations=" << iterations << ", actor mean " << actMean
                     << " <= regular mean " << regMean << " * " << tolerance << "("
-                    << (regMean * tolerance) << "). Ratio = " << double(actMean) / double(regMean))
+                    << (regMean * tolerance) << "). Ratio = " << double(actMean) / double(regMean));
 
     REQUIRE(actMean <= regMean * tolerance);
 }

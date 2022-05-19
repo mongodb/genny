@@ -14,6 +14,12 @@
 
 #include <cast_core/actors/SampleHttpClient.hpp>
 
+#include <memory>
+
+#include <yaml-cpp/yaml.h>
+
+#include <bsoncxx/json.hpp>
+
 #include <mongocxx/client.hpp>
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
@@ -86,10 +92,14 @@ void SampleHttpClient::run() {
                 requests.success();
             } catch (mongocxx::operation_exception& e) {
                 requests.failure();
+                //
+                // MongoException lets you include a "causing" bson document in the
+                // exception message for help debugging.
+                //
                 BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
             } catch (...) {
                 requests.failure();
-                throw;
+                throw std::current_exception();
             }
         }
     }

@@ -194,6 +194,8 @@ cat << EOF
 
 #include <memory>
 
+#include <yaml-cpp/yaml.h>
+
 #include <bsoncxx/json.hpp>
 
 #include <mongocxx/client.hpp>
@@ -512,6 +514,8 @@ create_test() {
 #include <bsoncxx/builder/stream/document.hpp>
 
 #include <boost/exception/diagnostic_information.hpp>
+
+#include <yaml-cpp/yaml.h>
 
 #include <testlib/MongoTestFixture.hpp>
 #include <testlib/ActorHelper.hpp>
