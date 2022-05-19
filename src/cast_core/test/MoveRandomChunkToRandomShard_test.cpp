@@ -17,6 +17,8 @@
 
 #include <boost/exception/diagnostic_information.hpp>
 
+#include <yaml-cpp/yaml.h>
+
 #include <testlib/ActorHelper.hpp>
 #include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>

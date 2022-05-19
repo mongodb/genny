@@ -62,19 +62,16 @@ public:
     explicit HasNode(const Node& node) : _node{node} {}
 
     template <typename... Args>
-    [[nodiscard]]
     auto& get(Args&&... args) const {
         return this->_node.operator[](std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    [[nodiscard]]
     auto& operator[](Args&&... args) const {
         return this->_node.operator[](std::forward<Args>(args)...);
     }
 
     template <typename T, typename F = std::function<T(const Node&)>>
-    [[nodiscard]]
     auto getPlural(
         const std::string& singular,
         const std::string& plural,
@@ -83,7 +80,6 @@ public:
         return std::move(this->_node.getPlural<T, F>(singular, plural, std::forward<F>(f)));
     }
 
-    [[nodiscard]]
     auto path() const {
         return _node.path();
     }
@@ -338,11 +334,12 @@ class PhaseContext;
 class ActorContext final : public v1::HasNode {
 public:
     ActorContext(const Node& node, WorkloadContext& workloadContext)
-        : v1::HasNode{node}, _workload{&workloadContext}, _phaseContexts{},
-        _nextActorId{workloadContext.claimActorIds((*this)["Threads"].maybe<int>().value_or(1))} {
+        : v1::HasNode{node}, _workload{&workloadContext}, _phaseContexts{} {
         _phaseContexts = constructPhaseContexts(_node, this);
+        auto threads = (*this)["Threads"].maybe<int>().value_or(1);
         _actorType = (*this)["Type"].maybe<std::string>().value_or("no_type");
         _actorName = (*this)["Name"].maybe<std::string>().value_or("no_name");
+        _nextActorId = this->workload().claimActorIds(threads);
     }
 
     // no copy or move
@@ -429,8 +426,7 @@ public:
         return _phaseContexts;
     }
 
-    [[nodiscard]]
-    DefaultRandom& rng(ActorId id) const {
+    DefaultRandom& rng(ActorId id) {
         return this->workload().getRNGForThread(id);
     }
 
@@ -504,25 +500,21 @@ public:
     /**
      * Called in PhaseLoop during the IterationCompletionCheck constructor.
      */
-    [[nodiscard]]
     bool isNop() const;
 
     /**
      * @return the parent workload context
      */
-    [[nodiscard]]
     WorkloadContext& workload() const {
         return _actor->workload();
     }
 
-    [[nodiscard]]
     ActorContext& actor() const {
         return *_actor;
     }
 
-    [[nodiscard]]
     SleepContext getSleepContext() const {
-        return SleepContext{_phaseNumber, this->actor().orchestrator()};
+        return SleepContext(_phaseNumber, this->actor().orchestrator());
     }
 
     /**
@@ -536,7 +528,6 @@ public:
      * @param id the id of this Actor.
      * @param internal whether this operation is Genny-internal.
      */
-    [[nodiscard]]
     auto operation(const std::string& defaultMetricsName, ActorId id, bool internal = false) const {
         std::ostringstream stm;
         if (auto metricsName = this->_node["MetricsName"].maybe<std::string>()) {
@@ -553,8 +544,7 @@ public:
             internal);
     }
 
-    [[nodiscard]]
-    auto getPhaseNumber() const {
+    const auto getPhaseNumber() const {
         return _phaseNumber;
     }
 

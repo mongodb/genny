@@ -14,6 +14,8 @@
 
 #include <memory.h>
 
+#include <yaml-cpp/yaml.h>
+
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>

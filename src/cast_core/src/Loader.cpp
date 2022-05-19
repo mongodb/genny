@@ -22,6 +22,8 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
 
+#include <yaml-cpp/yaml.h>
+
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/Cast.hpp>
@@ -61,7 +63,7 @@ struct Loader::PhaseConfig {
         auto createIndexes = [&]() {
             auto& indexNodes = context["Indexes"];
             for (auto [k, indexNode] : indexNodes) {
-                std::string indexName;
+                std::string indexName = "";
                 for (auto [key, value] : indexNode["keys"]) {
                     auto key_value = key.toString() + "_" + value.to<std::string>();
                     indexName = indexName.empty() ? key_value : indexName + "_" + key_value;

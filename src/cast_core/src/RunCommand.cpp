@@ -18,13 +18,14 @@
 #include <thread>
 
 #include <boost/throw_exception.hpp>
-#include <boost/log/trivial.hpp>
 
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
 
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
+
+#include <boost/log/trivial.hpp>
 
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/MongoException.hpp>
@@ -198,7 +199,6 @@ public:
         }
     }
 
-    [[nodiscard]]
     bool isQuiet() const {
         return _options.isQuiet;
     }

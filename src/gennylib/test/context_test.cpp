@@ -12,10 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 #include <functional>
+#include <iomanip>
+#include <iostream>
 #include <optional>
 #include <string_view>
 #include <thread>
+
+#include <yaml-cpp/yaml.h>
 
 #include <bsoncxx/json.hpp>
 
@@ -38,11 +43,7 @@ using Catch::Matchers::StartsWith;
 // The driver checks the passed-in mongo uri for accuracy but doesn't actually
 // initiate a connection until a connection is retrieved from
 // the connection-pool
-static const std::string baseYaml() {
-    static std::string out {
-        "SchemaVersion: 2018-07-01\nClients: {Default: {URI: 'mongodb://localhost:27017'}}\nActors: []\n"};
-    return out;
-}
+static const std::string baseYaml = "SchemaVersion: 2018-07-01\nClients: {Default: {URI: 'mongodb://localhost:27017'}}\nActors: []\n";
 
 template <typename T, typename Arg, typename... Rest>
 auto& applyBracket(const T& t, Arg&& arg, Rest&&... rest) {
@@ -54,9 +55,9 @@ auto& applyBracket(const T& t, Arg&& arg, Rest&&... rest) {
 }
 
 template <class Out, class... Args>
-void errors(const string& yaml, const string& message, Args... args) {
+void errors(const string& yaml, string message, Args... args) {
     genny::Orchestrator orchestrator{};
-    string modified = baseYaml() + yaml;
+    string modified = baseYaml + yaml;
     NodeSource ns{modified, "errors-testcase"};
     auto test = [&]() {
         auto context = WorkloadContext{ns.root(), orchestrator, Cast{}};
@@ -70,7 +71,7 @@ template <class Out,
           class... Args>
 void gives(const string& yaml, OutV expect, Args... args) {
     genny::Orchestrator orchestrator{};
-    string modified = baseYaml() + yaml;
+    string modified = baseYaml + yaml;
     NodeSource ns{modified, "gives-test"};
     auto test = [&]() {
         auto context = WorkloadContext{ns.root(), orchestrator, Cast{}};
@@ -92,8 +93,7 @@ struct NopProducer : public ActorProducer {
 };
 
 struct OpProducer : public ActorProducer {
-    explicit OpProducer(std::function<void(ActorContext&)> op)
-    : ActorProducer("Op"), _op{std::move(op)} {}
+    OpProducer(std::function<void(ActorContext&)> op) : ActorProducer("Op"), _op(op) {}
 
     ActorVector produce(ActorContext& context) override {
         _op(context);
@@ -328,7 +328,7 @@ Actors:
     }
 }
 
-void onContext(const NodeSource& yaml, const std::function<void(ActorContext&)>& op) {
+void onContext(const NodeSource& yaml, std::function<void(ActorContext&)> op) {
     genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
@@ -468,7 +468,7 @@ TEST_CASE("No PhaseContexts") {
 
     SECTION("Empty PhaseContexts") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
-            REQUIRE(ctx.phases().empty());
+            REQUIRE(ctx.phases().size() == 0);
         };
         onContext(ns, op);
     }
@@ -505,14 +505,14 @@ TEST_CASE("PhaseContexts constructed correctly with PhaseRange syntax") {
 TEST_CASE("Actors Share WorkloadContext State") {
 
     struct PhaseConfig {
-        explicit PhaseConfig(PhaseContext& ctx) {}
+        PhaseConfig(PhaseContext& ctx) {}
     };
 
     class DummyInsert : public Actor {
     public:
         struct InsertCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
 
-        explicit DummyInsert(ActorContext& actorContext)
+        DummyInsert(ActorContext& actorContext)
             : Actor(actorContext),
               _loop{actorContext},
               _iCounter{WorkloadContext::getActorSharedState<DummyInsert, InsertCounter>()} {}
@@ -537,7 +537,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
 
     class DummyFind : public Actor {
     public:
-        explicit DummyFind(ActorContext& actorContext)
+        DummyFind(ActorContext& actorContext)
             : Actor(actorContext),
               _loop{actorContext},
               _iCounter{
@@ -593,7 +593,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
 
 struct TakesInt {
     int value;
-    explicit TakesInt(int x) : value{x} {
+    TakesInt(int x) : value{x} {
         if (x > 7) {
             throw std::logic_error("Expected");
         }
@@ -603,7 +603,7 @@ struct TakesInt {
 struct AnotherInt : public TakesInt {
     // need no-arg ctor to be able to do YAML::Node::as<>()
     AnotherInt() : AnotherInt(0) {}
-    explicit AnotherInt(int x) : TakesInt(x) {}
+    AnotherInt(int x) : TakesInt(x) {}
 };
 
 namespace YAML {
@@ -623,7 +623,7 @@ struct convert<AnotherInt> {
 
 // This test is slightly duplicated in context_test.cpp
 TEST_CASE("context getPlural") {
-    auto createYaml = [](const std::string& actorYaml) -> NodeSource {
+    auto createYaml = [](std::string actorYaml) -> NodeSource {
         auto doc = YAML::Load(R"(
 SchemaVersion: 2018-07-01
 Clients:
@@ -640,8 +640,7 @@ Actors: [{}]
 
     // can use built-in decode types
     onContext(createYaml("Foo: 5"), [](ActorContext& c) {
-        auto x = c.getPlural<TakesInt>("Foo", "Foos", [](const Node& n) { return TakesInt{n.to<int>()}; });
-        REQUIRE(!x.empty());
+        c.getPlural<TakesInt>("Foo", "Foos", [](const Node& n) { return TakesInt{n.to<int>()}; });
     });
 
     onContext(createYaml("Foo: 5"), [](ActorContext& c) {
@@ -650,16 +649,15 @@ Actors: [{}]
 
     onContext(createYaml("{}"), [](ActorContext& c) {
         REQUIRE_THROWS_WITH(
-            [&]() { auto x = c.getPlural<int>("Foo", "Foos"); }(),
+            [&]() { c.getPlural<int>("Foo", "Foos"); }(),
             Matches("Invalid key 'getPlural\\('Foo', 'Foos'\\)': Either 'Foo' or 'Foos' required. "
                     "On node with path '/Actors/0': \\{Type: Op\\}"));
     });
     onContext(createYaml("Foo: 81"), [](ActorContext& c) {
         REQUIRE_THROWS_WITH(
             [&]() {
-                auto x = c.getPlural<TakesInt>(
+                c.getPlural<TakesInt>(
                     "Foo", "Foos", [](const Node& n) { return TakesInt{n.to<int>()}; });
-                FAIL("unreachable");
             }(),
             Matches("Expected"));
     });
@@ -670,7 +668,7 @@ Actors: [{}]
 
     onContext(createYaml("Foos: 73"), [](ActorContext& c) {
         REQUIRE_THROWS_WITH(
-            [&]() { auto x = c.getPlural<int>("Foo", "Foos"); }(),
+            [&]() { c.getPlural<int>("Foo", "Foos"); }(),
             Matches("Invalid key 'getPlural\\('Foo', 'Foos'\\)': Plural 'Foos' must be a sequence "
                     "type. On node with path '/Actors/0': \\{Foos: 73, Type: Op\\}"));
     });
@@ -681,7 +679,7 @@ Actors: [{}]
 
     onContext(createYaml("{ Foo: 9, Foos: 1 }"), [](ActorContext& c) {
         REQUIRE_THROWS_WITH(
-            [&]() { auto x = c.getPlural<int>("Foo", "Foos"); }(),
+            [&]() { c.getPlural<int>("Foo", "Foos"); }(),
             Matches("Invalid key 'getPlural\\('Foo', 'Foos'\\)': Can't have both 'Foo' and 'Foos'. "
                     "On node with path '/Actors/0': \\{Foo: 9, Foos: 1, Type: Op\\}"));
     });

@@ -16,6 +16,8 @@
 
 #include <memory>
 
+#include <yaml-cpp/yaml.h>
+
 #include <bsoncxx/json.hpp>
 
 #include <mongocxx/client.hpp>
@@ -28,6 +30,8 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
+
+#include <value_generators/DocumentGenerator.hpp>
 
 #include <bsoncxx/builder/stream/document.hpp>
 

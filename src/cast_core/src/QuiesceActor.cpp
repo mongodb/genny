@@ -14,7 +14,14 @@
 
 #include <cast_core/actors/QuiesceActor.hpp>
 
+#include <memory>
+
+#include <yaml-cpp/yaml.h>
+
+#include <bsoncxx/json.hpp>
+
 #include <mongocxx/client.hpp>
+#include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
 
 #include <boost/log/trivial.hpp>
@@ -26,7 +33,7 @@
 namespace genny::actor {
 
 struct QuiesceActor::PhaseConfig {
-    explicit PhaseConfig(PhaseContext& context)
+    PhaseConfig(PhaseContext& context)
         : dbName{context.actor()["Database"].to<std::string>()},
           sleepContext{context.getSleepContext()} {
         auto threads = context.actor()["Threads"].to<int>();
