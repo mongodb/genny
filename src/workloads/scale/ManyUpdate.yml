@@ -45,7 +45,7 @@ Actors:
     Database: *DB
     CollectionCount: 1
     MultipleThreadsPerCollection: true
-    DocumentCount: 5e4
+    DocumentCount: 50000
     BatchSize: 1000
     Document:  # Documents are approximately 100B in size
       i: 0
