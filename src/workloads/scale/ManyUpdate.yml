@@ -15,6 +15,8 @@ Keywords:
 - CrudActor
 - updateMany
 - update
+- replication
+- oplogSourceOverhead
 
 Clients:
   Default:
@@ -42,7 +44,6 @@ Actors:
   - Repeat: 1
     Database: *DB
     CollectionCount: 1
-    Threads: 10
     MultipleThreadsPerCollection: true
     DocumentCount: 5e4
     BatchSize: 1000
@@ -58,7 +59,7 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - Duration: 1 minutes
+  - Duration: 5 minutes
     MetricsName: Update
     Collection: Collection0
     Operations:
