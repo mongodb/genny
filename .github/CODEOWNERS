@@ -3,6 +3,9 @@
 # global match unless overridden below
 * @10gen/dev-prod-tips
 
+# everyone in kernel contributors can work with workloads, unless overridden below
+src/workloads/ @mongodb/kernel
+
 # product-perf
 src/workloads/scale/* @mongodb/product-perf
 
