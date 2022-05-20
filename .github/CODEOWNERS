@@ -1,10 +1,14 @@
 # https://help.github.com/articles/about-code-owners/
 
 # global match unless overridden below
-* @10gen/dev-prod-tips
+* @mongodb/dev-prod-tips
+
+# everyone in kernel contributors can work with workloads, unless overridden below
+src/workloads/ @mongodb/kernel
+src/cast_core/ @mongodb/kernel
 
 # product-perf
-src/workloads/scale/* @mongodb/product-perf
+src/workloads/scale/* @mongodb/performance
 
 # service-architecture
 src/workloads/networking/* @mongodb/service-architecture
