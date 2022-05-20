@@ -7,7 +7,7 @@
 src/workloads/ @mongodb/kernel
 
 # product-perf
-src/workloads/scale/* @mongodb/product-perf
+src/workloads/scale/* @mongodb/performance
 
 # service-architecture
 src/workloads/networking/* @mongodb/service-architecture
