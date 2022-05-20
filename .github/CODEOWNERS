@@ -5,6 +5,7 @@
 
 # everyone in kernel contributors can work with workloads, unless overridden below
 src/workloads/ @mongodb/kernel
+src/cast_core/ @mongodb/kernel
 
 # product-perf
 src/workloads/scale/* @mongodb/performance
