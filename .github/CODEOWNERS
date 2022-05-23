@@ -3,9 +3,10 @@
 # global match unless overridden below
 * @mongodb/dev-prod-tips
 
-# everyone in kernel contributors can work with workloads, unless overridden below
-src/workloads/ @mongodb/kernel
-src/cast_core/ @mongodb/kernel
+# everyone can contribute to workloads and actors, they are unowned, unless overridden below
+src/workloads/*
+src/cast_core/*
+src/phases/*
 
 # product-perf
 src/workloads/scale/* @mongodb/performance
