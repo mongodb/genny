@@ -7,10 +7,9 @@ GlobalDefaults:
   dbname: &db test
   coll: &coll Collection0
   batchSize: &batchSize 101 # default initial batch size: https://www.mongodb.com/docs/manual/tutorial/iterate-a-cursor/
-  fieldName: &field "numeric"
   nop: &Nop {Nop: true}
 
-SortCmd: &SortCmd
+BoundedSortCmd: &BoundedSortCmd
   LoadConfig:
     Path: "../../phases/execution/TimeSeriesSortCommands.yml"
     Key: SortFirstBatchCmdTemplate
@@ -65,6 +64,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
 
 - Name: Queries
   Type: RunCommand
@@ -78,7 +78,7 @@ Actors:
     Operations:
     - OperationMetricsName: BoundedSortFirstBatch
       OperationName: RunCommand
-      OperationCommand: *SortCmd
+      OperationCommand: *BoundedSortCmd
   - *Nop
   - Repeat: 50
     Database: *db
