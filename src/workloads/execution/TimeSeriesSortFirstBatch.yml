@@ -6,7 +6,7 @@ Description: |
 GlobalDefaults:
   dbname: &db test
   coll: &coll Collection0
-  batchSize: &batchSize 101 # default initial batch size: https://www.mongodb.com/docs/manual/tutorial/iterate-a-cursor/
+  batchSize: &batchSize 101  # default initial batch size: https://www.mongodb.com/docs/manual/tutorial/iterate-a-cursor/
   nop: &Nop {Nop: true}
 
 BoundedSortCmd: &BoundedSortCmd
