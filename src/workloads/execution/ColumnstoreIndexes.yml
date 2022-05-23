@@ -381,9 +381,32 @@ TestOperations: &TestOperations
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 1
 
-MaxPhases: &MaxPhses 4
+SetupPhase: &SetupPhase 0
+WarmupCache1Phase: &WarmupCache1Phase 1
+ColumnstoreScanPhase: &ColumnstoreScanPhase 2
+DropColumnstoreIndexPhase: &DropColumnstoreIndexPhase 3
+WarmupCache2Phase: &WarmupCache2Phase 4
+CollScanPhase: &CollScanPhase 5
+MaxPhases: &MaxPhses 5
 
 Actors:
+- Name: Setup
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*SetupPhase]
+      NopInPhasesUpTo: *MaxPhses
+      PhaseConfig:
+        Repeat: 1
+        Thread: 1
+        Database: admin
+        Operations:
+          OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            internalQueryForceClassicEngine: false
+
 # The 'WarmupCache1' actor warms up the buffer cache.
 - Name: WarmupCache1
   Type: RunCommand
@@ -391,7 +414,7 @@ Actors:
   Thread: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [0]
+      Active: [*WarmupCache1Phase]
       NopInPhasesUpTo: *MaxPhses
       PhaseConfig:
         Repeat: 1
@@ -405,7 +428,7 @@ Actors:
   Database: *db
   Phases:
     OnlyActiveInPhases:
-      Active: [1]
+      Active: [*ColumnstoreScanPhase]
       NopInPhasesUpTo: *MaxPhses
       PhaseConfig:
         Repeat: *TestRepeatCount
@@ -418,7 +441,7 @@ Actors:
   Database: *db
   Phases:
     OnlyActiveInPhases:
-      Active: [2]
+      Active: [*DropColumnstoreIndexPhase]
       NopInPhasesUpTo: *MaxPhses
       PhaseConfig:
         Repeat: 1
@@ -436,7 +459,7 @@ Actors:
   Database: *db
   Phases:
     OnlyActiveInPhases:
-      Active: [3]
+      Active: [*WarmupCache2Phase]
       NopInPhasesUpTo: *MaxPhses
       PhaseConfig:
         Repeat: 1
@@ -450,7 +473,7 @@ Actors:
   Database: *db
   Phases:
     OnlyActiveInPhases:
-      Active: [4]
+      Active: [*CollScanPhase]
       NopInPhasesUpTo: *MaxPhses
       PhaseConfig:
         Repeat: *TestRepeatCount
