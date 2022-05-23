@@ -27,6 +27,7 @@ ActorTemplates:
     - *Nop
 
 # Note: since the queries are all read-only and we don't care about timing metrics here, we can just run all the queries simultaneously.
+# TODO: disable metrics collection once TIG-4128 is complete.
 Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate

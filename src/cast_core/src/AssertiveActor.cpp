@@ -35,7 +35,6 @@
 
 namespace genny::actor {
 
-
 struct AssertiveActor::PhaseConfig {
     mongocxx::database database;
     DocumentGenerator expectedExpr;
@@ -48,15 +47,17 @@ struct AssertiveActor::PhaseConfig {
           expectedExpr{phaseContext["Expected"].to<DocumentGenerator>(phaseContext, id)},
           actualExpr{phaseContext["Actual"].to<DocumentGenerator>(phaseContext, id)},
           message{phaseContext["Message"].maybe<std::string>()} {
-        for (auto [k, fieldNode] : phaseContext["IgnoreFields"]) {
-            ignoreFields.insert(fieldNode.to<std::string>());
-        }
-
-        // If no IgnoreFields are specified, set _id and num as the default fields to occlude
-        // from document comparison.
-        if (ignoreFields.empty()) {
-            ignoreFields.insert("_id");
-            ignoreFields.insert("num");
+        if (phaseContext["IgnoreFields"]) {
+            for (auto [k, fieldNode] : phaseContext["IgnoreFields"]) {
+                ignoreFields.insert(fieldNode.to<std::string>());
+            }
+        } else {
+            // If no IgnoreFields are specified, set _id and num as the default fields to occlude
+            // from document comparison.
+            if (ignoreFields.empty()) {
+                ignoreFields.insert("_id");
+                ignoreFields.insert("num");
+            }
         }
     }
 };
@@ -81,7 +82,7 @@ auto getBatchFromCommandResult(const bsoncxx::document::view& resView) {
         auto firstBatch = cursor["firstBatch"].get_array().value;
         return firstBatch;
     }
-    BOOST_THROW_EXCEPTION(AssertFailed("Failed to run command."));
+    BOOST_THROW_EXCEPTION(FailedAssertionException("Failed to run command."));
 }
 
 template <typename T>
@@ -94,7 +95,7 @@ double convertNumericToDouble(const T& numeric) {
         case bsoncxx::type::k_int64:
             return numeric.get_int64() * 1.0;
         default:
-            BOOST_THROW_EXCEPTION(AssertFailed("not a numeric"));
+            BOOST_THROW_EXCEPTION(FailedAssertionException("not a numeric"));
     }
 }
 
@@ -111,7 +112,9 @@ template <typename T>
 bool equal(AssertiveActor::PhaseConfig* config, const T& expectedVal, const T& actualVal) {
     auto type = expectedVal.type();
     if (isNumeric(type) && isNumeric(actualVal.type())) {
-        // Rounding may result in one value being a double while another is integral. Handle this case through double comparison.
+        // Small calculation errors in the aggregation pipeline may result
+        // in one value being a double while another is rounded to an integral.
+        // Handle this case through double comparison.
         auto expectedDouble = convertNumericToDouble<T>(expectedVal);
         auto actualDouble = convertNumericToDouble<T>(actualVal);
         // Accept a small difference in numeric types.
@@ -193,10 +196,9 @@ void AssertiveActor::run() {
                     BOOST_LOG_TRIVIAL(info) << prefix(config) << "passed: results are equal.";
                     assertOp.success();
                 } else {
-                    assertOp.failure();
-                    BOOST_THROW_EXCEPTION(AssertFailed("failed: results were unequal."));
+                    BOOST_THROW_EXCEPTION(FailedAssertionException("failed: results were unequal."));
                 }
-            } catch (AssertFailed& e) {
+            } catch (FailedAssertionException& e) {
                 BOOST_LOG_TRIVIAL(info) << prefix(config) << "Caught error " << e.what();
                 assertOp.failure();
                 throw;
