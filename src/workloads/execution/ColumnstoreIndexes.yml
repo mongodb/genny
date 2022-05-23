@@ -69,7 +69,7 @@ ActiveCloudUsersLastMonthQuery: &ActiveCloudUsersLastMonthQuery
       {
         "$match": {
           "metadata.target": {"$in": ["cloud"]},
-          "created_at": {"$gte": {"$date": "2020-03-09T01:10:04Z"}},
+          "created_at": {"$gte": ISODate("2020-03-09T01:10:04Z")},
           "resource": {"$in": ["Dashboard"]}
         }
       },
@@ -88,7 +88,7 @@ VersionsHistogramQuery: &VersionsHistogramQuery
       {"$match": {"metadata.target": {"$exists": true}}},
       {
         "$match": {
-          "created_at": {"$gte": {"$date": "2020-04-02T01:10:52Z"}},
+          "created_at": {"$gte": ISODate("2020-04-02T01:10:52Z")},
           "metadata.version": {"$nin": [null]},
           "resource": {"$nin": ["Error"]}
         }
@@ -113,7 +113,7 @@ UniqueUsersPerMonthQuery: &UniqueUsersPerMonthQuery
       {
         "$match": {
           "resource": {"$in": ["Dashboard"]},
-          "created_at": {"$gte": {"$date": "2019-07-09T01:12:32Z"}},
+          "created_at": {"$gte": ISODate("2019-07-09T01:12:32Z")},
           "metadata.target": {"$nin": [null, ""]}
         }
       },
@@ -165,7 +165,7 @@ TopErrorsQuery: &TopErrorsQuery
     [
       {
         "$match": {
-          "created_at": {"$gte": {"$date": "2020-04-02T01:13:04Z"}},
+          "created_at": {"$gte": ISODate("2020-04-02T01:13:04Z")},
           "resource": {"$in": ["Error"]}
         }
       },
@@ -216,7 +216,7 @@ NumberOfChartsPerTypeQuery: &NumberOfChartsPerTypeQuery
           "resource": {"$in": ["DashboardItem"]},
           "action": {"$in": ["added"]},
           "metadata.version": {"$nin": [null, "0.0.0"]},
-          "created_at": {"$gte": {"$date": "2020-01-09T01:13:37Z"}}
+          "created_at": {"$gte": ISODate("2020-01-09T01:13:37Z")}
         }
       },
       {"$group": {"_id": {"__alias_0": "$metadata.chart_type"}, "__alias_1": {"$sum": 1}}},
@@ -234,7 +234,7 @@ EventsByVersionQuery: &EventsByVersionQuery
       {
         "$match": {
           "created_at": {
-            "$gte": {"$date": "2020-04-08T01:14:07Z"}, "$lte": { "$date": "2020-04-09T01:14:07Z"}
+            "$gte": ISODate("2020-04-08T01:14:07Z"), "$lte": ISODate("2020-04-09T01:14:07Z")
           },
           "resource": {"$nin": []},
           "metadata.version": {"$nin": [null]}
@@ -286,7 +286,7 @@ BrowserUsageByDistinctUserQuery: &BrowserUsageByDistinctUserQuery
       {
         "$match": {
           "metadata.browser_name": {"$nin": [null, "", "null"]},
-          "created_at": {"$gte": {"$date": "2020-03-10T01:17:41Z"}}
+          "created_at": {"$gte": ISODate("2020-03-10T01:17:41Z")}
         }
       },
       {
@@ -312,7 +312,7 @@ TopTenantsByNoOfEventsQuery: &TopTenantsByNoOfEventsQuery
     [
       {
         "$match": {
-          "created_at": {"$gte": {"$date": "2020-03-09T01:18:32Z"}},
+          "created_at": {"$gte": ISODate("2020-03-09T01:18:32Z")},
           "resource": {"$nin": ["DashboardItem", "EmbeddedChart", "Error"]},
           "metadata.target": {"$nin": [null]},
           "metadata.tenant_id": {"$nin": [null]}
@@ -379,7 +379,9 @@ TestOperations: &TestOperations
   OperationCommand: *TopTenantsByNoOfEventsQuery
 
 # Defines how many times each test operation is executed.
-TestRepeatCount: &TestRepeatCount 10
+TestRepeatCount: &TestRepeatCount 1
+
+MaxPhases: &MaxPhses 4
 
 Actors:
 # The 'WarmupCache1' actor warms up the buffer cache.
@@ -388,69 +390,72 @@ Actors:
   Database: *db
   Thread: 1
   Phases:
-  - Repeat: 2
-    Threads: 1
-    Database: *db
-    Operations: *TestOperations
-  - Phase: 1..4
-    Nop: true
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhses
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Database: *db
+        Operations: *TestOperations
 
 # The 'ColumnstoreScan' actor measures the perf with columnar indexes.
 - Name: ColumnstoreScan
   Type: RunCommand
   Database: *db
   Phases:
-  - &Nop {Nop: true}
-  - Repeat: *TestRepeatCount
-    Database: *db
-    Operations: *TestOperations
-  - Phase: 2..4
-    Nop: true
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhses
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Operations: *TestOperations
 
 # The 'DropColumnstoreIndexes' actor drops columnstore indexes.
 - Name: DropColumnstoreIndex
   Type: RunCommand
   Database: *db
   Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Threads: 1
-    Database: *db
-    Operations:
-      - OperationName: RunCommand
-        OperationCommand:
-          dropIndexes: *Collection
-          index: $**_columnstore
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhses
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Database: *db
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            dropIndexes: *Collection
+            index: $**_columnstore
 
 # The 'WarmupCache2' actor warms up the buffer cache for a regular scan.
 - Name: WarmupCache2
   Type: RunCommand
   Database: *db
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 2
-    Threads: 1
-    Database: *db
-    Operations: *TestOperations
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhses
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Database: *db
+        Operations: *TestOperations
 
 # The 'CollScan' actor measures the perf without columnar indexes.
 - Name: CollScan
   Type: RunCommand
   Database: *db
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: *TestRepeatCount
-    Database: *db
-    Operations: *TestOperations
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhses
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Operations: *TestOperations
 
 AutoRun:
 - When:
