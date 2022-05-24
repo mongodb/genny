@@ -52,6 +52,7 @@ TPCHNormalizedQuery22:
   Operations:
   - OperationMetricsName: Query22
     OperationName: RunCommand
+    OperationCommand: *TPCHNormalizedQuery22Aggregation
 
 TPCHNormalizedQuery22Explain:
   Repeat: *Repeat

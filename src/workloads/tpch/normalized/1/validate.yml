@@ -32,7 +32,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 1
+      Query: Q1
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q1.yml
@@ -40,7 +40,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 2
+      Query: Q2
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q2.yml
@@ -48,7 +48,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 3
+      Query: Q3
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q3.yml
@@ -56,7 +56,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 4
+      Query: Q4
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q4.yml
@@ -64,7 +64,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 5
+      Query: Q5
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q5.yml
@@ -72,7 +72,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 6
+      Query: Q6
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q6.yml
@@ -80,7 +80,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 7
+      Query: Q7
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q7.yml
@@ -88,7 +88,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 8
+      Query: Q8
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q8.yml
@@ -96,7 +96,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 9
+      Query: Q9
       BatchSize: &q9BatchSize 175  # This query is expected to return more documents than the default batch size of 101.
       Actual:
         LoadConfig:
@@ -107,7 +107,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 10
+      Query: Q10
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q10.yml
@@ -115,7 +115,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 11
+      Query: Q11
       BatchSize: &q11BatchSize 1048  # This query is expected to return more documents than the default batch size of 101.
       Actual:
         LoadConfig:
@@ -126,7 +126,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 12
+      Query: Q12
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q12.yml
@@ -134,7 +134,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 13
+      Query: Q13
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q13.yml
@@ -142,7 +142,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 14
+      Query: Q14
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q14.yml
@@ -150,7 +150,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 15
+      Query: Q15
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q15.yml
@@ -170,7 +170,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 16
+      Query: Q16
       BatchSize: &q16BatchSize 18314  # This query is expected to return more documents than the default batch size of 101.
       Actual:
         LoadConfig:
@@ -181,7 +181,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 17
+      Query: Q17
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q17.yml
@@ -189,7 +189,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 18
+      Query: Q18
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q18.yml
@@ -197,7 +197,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 19
+      Query: Q19
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q19.yml
@@ -205,7 +205,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 20
+      Query: Q20
       BatchSize: &q20BatchSize 186  # This query is expected to return more documents than the default batch size of 101.
       Actual:
         LoadConfig:
@@ -216,7 +216,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 21
+      Query: Q21
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q21.yml
@@ -224,7 +224,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ValidateTPCHQueryActorTemplate
     TemplateParameters:
-      Query: 22
+      Query: Q22
       Actual:
         LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q22.yml

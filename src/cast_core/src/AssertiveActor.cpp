@@ -66,23 +66,19 @@ const std::string prefix(AssertiveActor::PhaseConfig* config) {
     return "Assert" +(config->message ? " \"" + *(config->message) + "\" ": "") + ": ";
 }
 
-auto runCommandAndGetResult(AssertiveActor::PhaseConfig* config, bsoncxx::document::value& command) {
+bsoncxx::document::value runCommandAndGetResult(AssertiveActor::PhaseConfig* config, bsoncxx::document::value& command) {
     auto cmdView = command.view();
-
     BOOST_LOG_TRIVIAL(info) << prefix(config) << bsoncxx::to_json(cmdView);
-    auto res = config->database.run_command(std::move(command));
-    auto resView = res.view();
-
-    return res;
+    return config->database.run_command(std::move(command));
 }
 
-auto getBatchFromCommandResult(const bsoncxx::document::view& resView) {
+bsoncxx::array::view getBatchFromCommandResult(const bsoncxx::document::view& resView) {
     if (resView["ok"]) {
         auto cursor = resView["cursor"].get_document().view();
         auto firstBatch = cursor["firstBatch"].get_array().value;
         return firstBatch;
     }
-    BOOST_THROW_EXCEPTION(FailedAssertionException("Failed to run command."));
+    BOOST_THROW_EXCEPTION(FailedAssertionException("Failed to obtain batch from command result"));
 }
 
 template <typename T>
@@ -95,7 +91,7 @@ double convertNumericToDouble(const T& numeric) {
         case bsoncxx::type::k_int64:
             return numeric.get_int64() * 1.0;
         default:
-            BOOST_THROW_EXCEPTION(FailedAssertionException("not a numeric"));
+            BOOST_THROW_EXCEPTION(FailedAssertionException("Not a numeric value"));
     }
 }
 
@@ -172,7 +168,7 @@ bool equalBSONArrays(AssertiveActor::PhaseConfig* config, const bsoncxx::array::
     for (auto actualVal : actual) {
         auto expectedVal = *expectedIt;
         if (!equal<bsoncxx::array::element>(config, expectedVal, actualVal)) {
-            BOOST_LOG_TRIVIAL(info) << prefix(config) << "Arrays differ in idx " << count;
+            BOOST_LOG_TRIVIAL(info) << prefix(config) << "Arrays differ in index " << count;
             return false;
         }
         ++expectedIt;

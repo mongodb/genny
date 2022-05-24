@@ -119,13 +119,14 @@ public:
 };
 
 TEST_CASE_METHOD(AssertiveActorTestFixture, "AssertiveActor passes an assert", "[standalone][single_node_replset][three_node_replset][sharded][AssertiveActor]") {
-    prepareDatabase();
-  
     // The test collections are empty, so this should trivially pass.
+    prepareDatabase();
     SECTION("Assert passes because empty collections are equivalent") {
         AssertiveActorTestFixture::expectAssertPasses("EmptyCollections");
     }
 
+    // Compare two identical collections containing the following documents:
+    // {a: 1, b: 'foo', c: {d: 1}, d: [1, 2, 3]}, {a: 1, e: 1.4}
     auto doc1 = bson_builder::make_document(
         bson_builder::kvp("a", 1),
         bson_builder::kvp("b", "foo"),
