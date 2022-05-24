@@ -4,9 +4,9 @@
 * @mongodb/dev-prod-tips
 
 # everyone can contribute to workloads and actors, they are unowned, unless overridden below
-src/workloads/*
-src/cast_core/*
-src/phases/*
+src/workloads/
+src/cast_core/
+src/phases/
 
 # product-perf
 src/workloads/scale/* @mongodb/performance
