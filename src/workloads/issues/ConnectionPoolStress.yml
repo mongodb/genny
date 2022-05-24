@@ -6,25 +6,25 @@ Description: |
   for this workload are the latencies and more specifically the Latency90thPercentile to Latency99thPercentile metrics.
 
 Keywords:
-  - reproducer
-  - connections
-  - secondaryPreferred
-  - sharding
-  - latency
+- reproducer
+- connections
+- secondaryPreferred
+- sharding
+- latency
 
 Parameters:
-  - ConnectionThreads: &GlobalConnectionThreads 8000
-  - ConnectionDuration: &GlobalConnectionDuration 600 seconds
-  - ShardingTaskExecutorPoolMaxSize: &GlobalShardingTaskExecutorPoolMaxSize 32767 # Essentially a noop as this is the default.
-  - ShardingTaskExecutorPoolMinSize: &GlobalShardingTaskExecutorPoolMinSize     1  # Essentially a noop as this is the default.
-  - ReadMode: &GlobalReadMode secondaryPreferred
-  - ClientPerThread: &GlobalSetClientPerThread false
-  - MaxPoolSize: &GlobalMaxPoolSize 15000
+- ConnectionThreads: &GlobalConnectionThreads 8000
+- ConnectionDuration: &GlobalConnectionDuration 600 seconds
+- ShardingTaskExecutorPoolMaxSize: &GlobalShardingTaskExecutorPoolMaxSize 32767  # Essentially a noop as this is the default.
+- ShardingTaskExecutorPoolMinSize: &GlobalShardingTaskExecutorPoolMinSize     1  # Essentially a noop as this is the default.
+- ReadMode: &GlobalReadMode secondaryPreferred
+- ClientPerThread: &GlobalSetClientPerThread false
+- MaxPoolSize: &GlobalMaxPoolSize 15000
 
 Constants:
-  - &MaxPhases 1
-  - Database: &Database test
-  - Collection: &Collection Collection0
+- &MaxPhases 1
+- Database: &Database test
+- Collection: &Collection Collection0
 
 Clients:
   Default:
@@ -48,11 +48,11 @@ Actors:
         Database: *Database
         Collection: *Collection
         Operations:
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: {_id: 0}
-              Update: {}
-              OperationOptions: {Upsert: true}
+        - OperationName: updateOne
+          OperationCommand:
+            Filter: {_id: 0}
+            Update: {}
+            OperationOptions: {Upsert: true}
 
 - Name: ShardingTaskExecutorPoolMaxSize
   Type: AdminCommand
@@ -100,12 +100,12 @@ Actors:
         Duration: *GlobalConnectionDuration
         Collection: *Collection
         Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: {_id: 0}
-              Options:
-                ReadPreference:
-                  ReadMode: *GlobalReadMode
+        - OperationName: find
+          OperationCommand:
+            Filter: {_id: 0}
+            Options:
+              ReadPreference:
+              ReadMode: *GlobalReadMode
 
 
 # to avoid connection closing
@@ -120,6 +120,6 @@ Actors:
 
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq: shard-single
+- When:
+    mongodb_setup:
+      $eq: shard-single
