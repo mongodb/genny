@@ -1,0 +1,95 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  Timeseries performance test
+
+Database: &db timeseries
+Collection: &coll Collection0
+
+TimeField: &time time
+MetaField: &meta meta
+ValueField: &value value
+DollarTimeField: &dollar_t {^Join: {array: [$, *time]}}
+DollarMetaField: &dollar_m {^Join: {array: [$, *meta]}}
+DollarValueField: &dollar_value {^Join: {array: [$, *value]}}
+
+MetaCount: &meta_count 10
+DocumentCount: &document_count 1000000
+TestRepeat: &test_repeat 10
+
+Actors:
+- Name: Setup
+  Type: RunCommand
+  Thread: 1
+  Phases:
+  - Repeat: 1
+    Database: *db
+    Operations:
+      - OperationName: RunCommand
+        OperationCommand: {dropDatabase: 1}
+      - OperationName: RunCommand
+        OperationCommand: {create: *coll, timeseries: {timeField: *time, metaField: *meta}}
+  - &nop {Nop: true}
+  - *nop
+
+- Name: Load
+  Type: Loader
+  Threads: 1
+  Phases:
+    - *nop
+    - Repeat: 1
+      Threads: 1
+      Database: *db
+      CollectionCount: 1
+      DocumentCount: *document_count
+      BatchSize: 1000
+      Document:
+        *time :
+          ^IncDate:
+            start: 2022-01-01
+            # 100ms step ensures full bucket of 1000 documents under 'seconds' granularity.
+            step: 100
+        *meta :
+          ^Cycle:
+            ofLength: *meta_count
+            fromGenerator:
+              ^RandomString:
+                length: 6
+                alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        *value :
+          ^RandomDouble:
+            min: 0.0
+            max: 100.0
+    - *nop
+
+- Name: Aggregate
+  Type: RunCommand
+  Phases:
+    - *nop
+    - *nop
+    - Repeat: *test_repeat
+      Database: *db
+      Operations:
+      - OperationName: RunCommand
+        OperationCommand:
+          aggregate: *coll
+          pipeline:
+            [
+              $group: {
+                _id: {
+                  meta: *dollar_m,
+                  time: {
+                    $dateTrunc: {
+                      date: *dollar_t,
+                      unit: 'month',
+                    }
+                  }
+                },
+                max: { $max: *dollar_value },
+                min: { $min: *dollar_value },
+                start: { $first: *dollar_value },
+                end: { $last: *dollar_value },
+              }
+            ]
+          cursor:
+            batchSize: 1000
