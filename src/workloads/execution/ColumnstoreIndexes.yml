@@ -402,7 +402,7 @@ Actors:
         Thread: 1
         Database: admin
         Operations:
-          OperationName: AdminCommand
+        - OperationName: AdminCommand
           OperationCommand:
             setParameter: 1
             internalQueryForceClassicEngine: false
