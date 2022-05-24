@@ -105,7 +105,7 @@ Actors:
             Filter: {_id: 0}
             Options:
               ReadPreference:
-              ReadMode: *GlobalReadMode
+                ReadMode: *GlobalReadMode
 
 
 # to avoid connection closing
