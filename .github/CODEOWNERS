@@ -9,8 +9,8 @@ src/cast_core/
 src/phases/
 
 # product-perf
-src/workloads/scale/* @mongodb/performance
+src/workloads/scale/ @mongodb/performance
 
 # service-architecture
-src/workloads/networking/* @mongodb/service-architecture
+src/workloads/networking/ @mongodb/service-architecture
 
