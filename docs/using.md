@@ -72,7 +72,7 @@ You should see output similar to the following:
 [2022-03-24 10:44:12.376903] [0x000070000af63000] [info]    Hello Phase 0 🐳
 .... (more lines of output) ....
 [2022-03-24 10:44:56.942097] [0x0000700010152000] [info]    Hello Phase 2
-[2022-03-24 10:44:56.942104] [0x00007000cf000] [info]    Hello Phase 2
+[2022-03-24 10:44:56.942104] [0x00007000100cf000] [info]    Hello Phase 2
 [2022-03-24 10:44:56.942112] [0x0000700010152000] [info]    Counter: 3369
 [2022-03-24 10:44:56.942119] [0x00007000100cf000] [info]    Counter: 3370
 [curator] 2022/03/24 10:44:58 [p=info]: poplar rpc service terminated
