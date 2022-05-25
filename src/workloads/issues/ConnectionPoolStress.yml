@@ -5,6 +5,14 @@ Description: |
   low performance, spikes in latency and excessive connection creation (on mongos processes). The metrics to look at
   for this workload are the latencies and more specifically the Latency90thPercentile to Latency99thPercentile metrics.
 
+  The workload performs the following steps:
+    - Phase 0
+      - Upsert a Single Document in the collection
+      - set ShardingTaskExecutorPoolMaxSize
+      - set ShardingTaskExecutorPoolMinSize
+    - Phase 1
+      - Execute a find command for GlobalConnectionDuration seconds in GlobalConnectionThreads threads.
+
 Keywords:
 - reproducer
 - connections
@@ -18,7 +26,6 @@ Parameters:
 - ShardingTaskExecutorPoolMaxSize: &GlobalShardingTaskExecutorPoolMaxSize 32767  # Essentially a noop as this is the default.
 - ShardingTaskExecutorPoolMinSize: &GlobalShardingTaskExecutorPoolMinSize     1  # Essentially a noop as this is the default.
 - ReadMode: &GlobalReadMode secondaryPreferred
-- ClientPerThread: &GlobalSetClientPerThread false
 - MaxPoolSize: &GlobalMaxPoolSize 15000
 
 Constants:
@@ -52,9 +59,11 @@ Actors:
           OperationCommand:
             Filter: {_id: 0}
             Update: {}
+            # Upsert means that this workload doesn't need to be reset when running locally.
+            # This is very situational.
             OperationOptions: {Upsert: true}
 
-- Name: ShardingTaskExecutorPoolMaxSize
+- Name: ShardingTaskExecutorPoolSizes
   Type: AdminCommand
   Threads: 1
   Phases:
@@ -64,24 +73,14 @@ Actors:
       PhaseConfig:
         Repeat: 1
         ThrowOnFailure: false
-        Operation:
-          OperationName: RunCommand
+        Operations:
+        - OperationMetricsName: ShardingTaskExecutorPoolMaxSize
+          OperationName: AdminCommand
           OperationCommand:
             setParameter: 1
             ShardingTaskExecutorPoolMaxSize: *GlobalShardingTaskExecutorPoolMaxSize
-
-- Name: ShardingTaskExecutorPoolMinSize
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        ThrowOnFailure: false
-        Operation:
-          OperationName: RunCommand
+        - OperationMetricsName: ShardingTaskExecutorPoolMinSize
+          OperationName: AdminCommand
           OperationCommand:
             setParameter: 1
             ShardingTaskExecutorPoolMinSize: *GlobalShardingTaskExecutorPoolMinSize
@@ -89,7 +88,6 @@ Actors:
 - Name: ConnectionPoolStress
   Type: CrudActor
   ClientName: PerThread
-  ClientPerThread: *GlobalSetClientPerThread
   Database: *Database
   Threads: *GlobalConnectionThreads
   Phases:
