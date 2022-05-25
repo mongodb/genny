@@ -72,7 +72,7 @@ You should see output similar to the following:
 [2022-03-24 10:44:12.376903] [0x000070000af63000] [info]    Hello Phase 0 🐳
 .... (more lines of output) ....
 [2022-03-24 10:44:56.942097] [0x0000700010152000] [info]    Hello Phase 2
-[2022-03-24 10:44:56.942104] [0x00007000100cf000] [info]    Hello Phase 2
+[2022-03-24 10:44:56.942104] [0x00007000cf000] [info]    Hello Phase 2
 [2022-03-24 10:44:56.942112] [0x0000700010152000] [info]    Counter: 3369
 [2022-03-24 10:44:56.942119] [0x00007000100cf000] [info]    Counter: 3370
 [curator] 2022/03/24 10:44:58 [p=info]: poplar rpc service terminated
@@ -258,7 +258,8 @@ Actors:
     Repeat: 100
 ```
 
-This Actor will execute the first phase for 50 milleseconds. It will perform iterations of its main loop (printing "Hello Phase 0") as many times as it can for that duration. It will then move on to the second phase, where it will perform exactly 100 iterations of its main loop (printing "Hello Phase 1"), regardless of how long it takes. Then the workload will end.
+This Actor will execute the first phase for 50 milleseconds. It will perform iterations of its main loop (printing "Hello Phase 0") as many times as it can for that duration. It will then move on to the second phase, where it will perform exactly 200 iterations (100 per thread) of its main loop
+(printing "Hello Phase 1"), regardless of how long it takes. Then the workload will end.
 
 Now consider a situation with two Actors:
 
@@ -284,7 +285,7 @@ Actors:
 
 Here we have the `HelloWorldSecondExample` Actor running for 10 milliseconds in each phase. However, the second phase will not begin after 10 milliseconds. It's important to note that phases are coordinated globally, and Actors configured with either `Repeat` or `Duration` will hold the phase open. In this case, `HelloWorldSecondExample` will operate for 10 milliseconds during the first phase, sleep for 40 milliseconds for the rest of the phase, then after `HelloWorldExample` finishes holding the phase open, both Actors will begin the next phase.
 
-Therefore, the logged output of this Actor would show many lines of `Hello Phase 0` interspersed with `Other Actor Phase 0`, then a long period of _only_ lines showing `Hello Phase 0`, then the next phase would begin with many lines of `Other Actor Phase 1` intersperesed with exactly 100 lines saying `Hello Phase 1`.
+Therefore, the logged output of this Actor would show many lines of `Hello Phase 0` interspersed with `Other Actor Phase 0`, then a long period of _only_ lines showing `Hello Phase 0`, then the next phase would begin with many lines of `Other Actor Phase 1` intersperesed with exactly 200 lines saying `Hello Phase 1`.
 
 Phase configurations accept the following main keys:
 
