@@ -36,7 +36,6 @@ TotalTenantCreatedQuery: &TotalTenantCreatedQuery
       {"$project": {"value": "$__alias_0", "_id": 0}},
       {"$limit": 5000}
     ]
-  allowDiskUse: true
   cursor: {batchSize: 5000}
 
 ActiveCloudUsersLastMonthQuery: &ActiveCloudUsersLastMonthQuery
@@ -56,7 +55,6 @@ ActiveCloudUsersLastMonthQuery: &ActiveCloudUsersLastMonthQuery
       {"$project": {"value": "$__alias_0", "target": "$__alias_1", "_id": 0}},
       {"$limit": 5000}
     ]
-  allowDiskUse: true
   cursor: {batchSize: 5000}
 
 VersionsHistogramQuery: &VersionsHistogramQuery
@@ -81,7 +79,6 @@ VersionsHistogramQuery: &VersionsHistogramQuery
       {"$project": {"x": "$__alias_0", "y": "$__alias_2", "color": "$__alias_1", "_id": 0}},
       {"$limit": 50000}
     ]
-  allowDiskUse: true
   cursor: {batchSize: 50000}
 
 UniqueUsersPerMonthQuery: &UniqueUsersPerMonthQuery
@@ -134,7 +131,6 @@ UniqueUsersPerMonthQuery: &UniqueUsersPerMonthQuery
       {"$sort": {"x.year": 1, "x.month": 1}},
       {"$limit": 5000}
     ]
-  allowDiskUse: true
   cursor: {batchSize: 5000}
 
 TopErrorsQuery: &TopErrorsQuery
@@ -182,7 +178,6 @@ TopErrorsQuery: &TopErrorsQuery
       },
       {"$limit": 50000}
     ]
-  allowDiskUse: true
   cursor: {batchSize: 50000}
 
 NumberOfChartsPerTypeQuery: &NumberOfChartsPerTypeQuery
@@ -202,7 +197,6 @@ NumberOfChartsPerTypeQuery: &NumberOfChartsPerTypeQuery
       {"$project": {"x": "$__alias_1", "y": "$__alias_0", "_id": 0}},
       {"$limit": 5000}
     ]
-  allowDiskUse: true
   cursor: {batchSize: 5000}
 
 EventsByVersionQuery: &EventsByVersionQuery
@@ -246,7 +240,6 @@ EventsByVersionQuery: &EventsByVersionQuery
       {"$sort": {"x.year": 1, "x.month": 1, "x.date": 1, "x.hours": 1}},
       {"$limit": 5000}
     ]
-  allowDiskUse: true
   cursor: {batchSize: 5000}
 
 BrowserUsageByDistinctUserQuery: &BrowserUsageByDistinctUserQuery
@@ -281,7 +274,6 @@ BrowserUsageByDistinctUserQuery: &BrowserUsageByDistinctUserQuery
       {"$project": {"label": "$__alias_0", "value": "$__alias_1", "_id": 0}},
       {"$limit": 5000}
     ]
-  allowDiskUse: true
   cursor: {batchSize: 5000}
 
 TopTenantsByNoOfEventsQuery: &TopTenantsByNoOfEventsQuery
@@ -310,7 +302,6 @@ TopTenantsByNoOfEventsQuery: &TopTenantsByNoOfEventsQuery
       {"$project": {"color": "$__alias_0", "x": "$__alias_2", "y": "$__alias_1", "_id": 0}},
       {"$limit": 50000}
     ]
-  allowDiskUse: true
   cursor: {batchSize: 50000}
 
 # Defines test operations.
