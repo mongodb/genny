@@ -89,6 +89,7 @@ TPCHDenormalizedQuery15Explain:
   Operations:
   - OperationMetricsName: Query15
     OperationName: RunCommand
+    OperationLogsResult: true
     OperationCommand:
       explain: *TPCHDenormalizedQuery15Aggregation
       verbosity:

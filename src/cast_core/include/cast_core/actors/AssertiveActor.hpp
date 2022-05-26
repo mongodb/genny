@@ -31,6 +31,13 @@ namespace genny::actor {
  * This actor asserts that the results of two aggregations (or any two valid database commands)
  * return equivalent results. This is primarily useful for validating the TPC-H workload queries.
  *
+ * Note: One important caveat to consider is around numeric type comparison. Because aggregations
+ * may result in small rounding errors, and in particular because doubles that are close to ints
+ * may round and be converted to ints (as is the case in the TPC-H validation workload),
+ * the AssertiveActor does not perform an exact comparison on ints. Instead, it considers any pair
+ * of numbers (even if their types differ) as equal if they are close enough according to a hard-coded
+ * limit in the actor.
+ *
  * ```yaml
  * SchemaVersion: 2017-07-01
  * Actors:

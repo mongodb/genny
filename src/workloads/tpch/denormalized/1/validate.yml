@@ -1,7 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Validate TPC_H denormalized queries for scale 1.
+  Validate TPC_H denormalized queries for scale 1. Note that numeric comparison is not exact in this workload;
+  the AssertiveActor only ensures that any two values of numeric type are approximately equal according to a hard-coded limit.
 
 Clients:
   Default:
