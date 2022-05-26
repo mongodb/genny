@@ -83,7 +83,7 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 10000
+    DocumentCount: 100000
     BatchSize: *batchSize
     Document:
       partitionKey: {^RandomInt: {min: 1, max: 100}}
