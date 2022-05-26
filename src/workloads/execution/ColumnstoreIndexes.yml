@@ -22,8 +22,7 @@ Collection: &Collection events
 
 CountPerActionQuery: &CountPerActionQuery
   aggregate: *Collection
-  pipeline:
-          [{"$group": {"_id": "$action", o: {$sum: 1}}}, {"$limit": 5000}]
+  pipeline: [{"$group": {"_id": "$action", o: {$sum: 1}}}, {"$limit": 5000}]
   allowDiskUse: true
   cursor: {batchSize: 5000}
 
