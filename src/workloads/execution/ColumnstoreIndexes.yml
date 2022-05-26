@@ -20,33 +20,12 @@ Database: &db charts-metrics
 # Defines the collection name.
 Collection: &Collection events
 
-DateFieldProjectionQuery: &DateFieldProjectionQuery
-  aggregate: *Collection
-  pipeline:
-    [{"$project": {"_id": 0, "created_at": 1}}]
-  allowDiskUse: true
-  cursor: {batchSize: 2000}
-
-DistinctStringFieldProjectionQuery: &DistinctStringFieldProjectionQuery
-  aggregate: *Collection
-  pipeline:
-    [{"$project": {"_id": 0, "metadata.tenant_id": 1}}]
-  allowDiskUse: true
-  cursor: {batchSize: 2000}
-
-DuplicatedStringFieldProjectionQuery: &DuplicatedStringFieldProjectionQuery
-  aggregate: *Collection
-  pipeline:
-    [{"$project": {"_id": 0, "action": 1}}]
-  allowDiskUse: true
-  cursor: {batchSize: 2000}
-
 CountPerActionQuery: &CountPerActionQuery
   aggregate: *Collection
   pipeline:
-    [{"$group": {"_id": "$action", o: {$sum: 1}}}]
+          [{"$group": {"_id": "$action", o: {$sum: 1}}}, {"$limit": 5000}]
   allowDiskUse: true
-  cursor: {batchSize: 2000}
+  cursor: {batchSize: 5000}
 
 TotalTenantCreatedQuery: &TotalTenantCreatedQuery
   aggregate: *Collection
@@ -59,7 +38,7 @@ TotalTenantCreatedQuery: &TotalTenantCreatedQuery
       {"$limit": 5000}
     ]
   allowDiskUse: true
-  cursor: {batchSize: 2000}
+  cursor: {batchSize: 5000}
 
 ActiveCloudUsersLastMonthQuery: &ActiveCloudUsersLastMonthQuery
   aggregate: *Collection
@@ -79,7 +58,7 @@ ActiveCloudUsersLastMonthQuery: &ActiveCloudUsersLastMonthQuery
       {"$limit": 5000}
     ]
   allowDiskUse: true
-  cursor: {batchSize: 2000}
+  cursor: {batchSize: 5000}
 
 VersionsHistogramQuery: &VersionsHistogramQuery
   aggregate: *Collection
@@ -104,7 +83,7 @@ VersionsHistogramQuery: &VersionsHistogramQuery
       {"$limit": 50000}
     ]
   allowDiskUse: true
-  cursor: {batchSize: 2000}
+  cursor: {batchSize: 50000}
 
 UniqueUsersPerMonthQuery: &UniqueUsersPerMonthQuery
   aggregate: *Collection
@@ -157,7 +136,7 @@ UniqueUsersPerMonthQuery: &UniqueUsersPerMonthQuery
       {"$limit": 5000}
     ]
   allowDiskUse: true
-  cursor: {batchSize: 2000}
+  cursor: {batchSize: 5000}
 
 TopErrorsQuery: &TopErrorsQuery
   aggregate: *Collection
@@ -205,7 +184,7 @@ TopErrorsQuery: &TopErrorsQuery
       {"$limit": 50000}
     ]
   allowDiskUse: true
-  cursor: {batchSize: 2000}
+  cursor: {batchSize: 50000}
 
 NumberOfChartsPerTypeQuery: &NumberOfChartsPerTypeQuery
   aggregate: *Collection
@@ -225,7 +204,7 @@ NumberOfChartsPerTypeQuery: &NumberOfChartsPerTypeQuery
       {"$limit": 5000}
     ]
   allowDiskUse: true
-  cursor: {batchSize: 2000}
+  cursor: {batchSize: 5000}
 
 EventsByVersionQuery: &EventsByVersionQuery
   aggregate: *Collection
@@ -269,7 +248,7 @@ EventsByVersionQuery: &EventsByVersionQuery
       {"$limit": 5000}
     ]
   allowDiskUse: true
-  cursor: {batchSize: 2000}
+  cursor: {batchSize: 5000}
 
 BrowserUsageByDistinctUserQuery: &BrowserUsageByDistinctUserQuery
   aggregate: *Collection
@@ -304,7 +283,7 @@ BrowserUsageByDistinctUserQuery: &BrowserUsageByDistinctUserQuery
       {"$limit": 5000}
     ]
   allowDiskUse: true
-  cursor: {batchSize: 2000}
+  cursor: {batchSize: 5000}
 
 TopTenantsByNoOfEventsQuery: &TopTenantsByNoOfEventsQuery
   aggregate: *Collection
@@ -333,20 +312,10 @@ TopTenantsByNoOfEventsQuery: &TopTenantsByNoOfEventsQuery
       {"$limit": 50000}
     ]
   allowDiskUse: true
-  cursor: {batchSize: 2000}
-
+  cursor: {batchSize: 50000}
 
 # Defines test operations.
 TestOperations: &TestOperations
-- OperationMetricsName: DateFieldProjectionQuery
-  OperationName: RunCommand
-  OperationCommand: *DateFieldProjectionQuery
-- OperationMetricsName: DistinctStringFieldProjectionQuery
-  OperationName: RunCommand
-  OperationCommand: *DistinctStringFieldProjectionQuery
-- OperationMetricsName: DuplicatedStringFieldProjectionQuery
-  OperationName: RunCommand
-  OperationCommand: *DuplicatedStringFieldProjectionQuery
 - OperationMetricsName: CountPerActionQuery
   OperationName: RunCommand
   OperationCommand: *CountPerActionQuery
