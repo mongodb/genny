@@ -53,13 +53,13 @@ Description: |
       echo "A.0" for 2 seconds.
 
       Actor B is configured to run its iteration in Phase 1
-      only 10 times. So it will echo "B.0" 10 times. Almost
-      certainly this will take less than 2 seconds (the amount
-      of time Actor A requires to complete Phase 0). In this
-      case, Actor B is "done" with its actions in the current
-      Phase so its 2 threads will wait and do nothing until
-      the next Phase. Compare this with what Actor A does in
-      Phase 1 described next.
+      only 10 times. So it will echo "B.0" 10 times per thread.
+      Almost certainly this will take less than 2 seconds (the
+      amount of time Actor A requires to complete Phase 0). In
+      this case, Actor B is "done" with its actions in the
+      current Phase so its 2 threads will wait and do nothing
+      until the next Phase. Compare this with what Actor A does
+      in Phase 1 described next.
 
   == Phase 1 ==
 
@@ -78,9 +78,9 @@ Description: |
   have some "background" operation such as doing a db.ping()
   or a collection.drop() etc.
 
-  Actor B's 2 threads will echo "B.1" 1e3 (1000) times and
-  Actor A's 10 threads will echo "A.1" for however long it
-  takes B to do this.
+  Actor B's 2 threads will echo "B.1" 1e3 (1000) times each
+  and Actor A's 10 threads will echo "A.1" for however long 
+  it takes B to do this.
 
   == Potential Gotchas ==
 
