@@ -23,8 +23,6 @@ Keywords:
 Parameters:
 - ConnectionThreads: &GlobalConnectionThreads 8000
 - ConnectionDuration: &GlobalConnectionDuration 600 seconds
-- ShardingTaskExecutorPoolMaxSize: &GlobalShardingTaskExecutorPoolMaxSize 32767  # Essentially a noop as this is the default.
-- ShardingTaskExecutorPoolMinSize: &GlobalShardingTaskExecutorPoolMinSize     1  # Essentially a noop as this is the default.
 - ReadMode: &GlobalReadMode secondaryPreferred
 - MaxPoolSize: &GlobalMaxPoolSize 15000
 
@@ -62,28 +60,6 @@ Actors:
             # Upsert means that this workload doesn't need to be reset when running locally.
             # This is very situational.
             OperationOptions: {Upsert: true}
-
-- Name: ShardingTaskExecutorPoolSizes
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        ThrowOnFailure: false
-        Operations:
-        - OperationMetricsName: ShardingTaskExecutorPoolMaxSize
-          OperationName: AdminCommand
-          OperationCommand:
-            setParameter: 1
-            ShardingTaskExecutorPoolMaxSize: *GlobalShardingTaskExecutorPoolMaxSize
-        - OperationMetricsName: ShardingTaskExecutorPoolMinSize
-          OperationName: AdminCommand
-          OperationCommand:
-            setParameter: 1
-            ShardingTaskExecutorPoolMinSize: *GlobalShardingTaskExecutorPoolMinSize
 
 - Name: ConnectionPoolStress
   Type: CrudActor
