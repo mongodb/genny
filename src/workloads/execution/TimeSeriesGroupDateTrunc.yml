@@ -1,7 +1,15 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-execution"
 Description: |
-  Timeseries performance test
+  This workload tests time-seires $group query with $dateTrunc expression as group id. There're following phases:
+  1. Clean and setup the collection.
+  2. Load the data, the shape of data can be controlled by meta_count and document_count.
+  3. Run the $group aggregation, the test repetition can be controlled by test_repeat.
+
+Keywords:
+  - timeseries
+  - aggregate
+  - group
 
 Database: &db timeseries
 Collection: &coll Collection0
@@ -25,6 +33,7 @@ Actors:
   - Repeat: 1
     Database: *db
     Operations:
+      # The dropDatabase command is used to facilitate local testing.
       - OperationName: RunCommand
         OperationCommand: {dropDatabase: 1}
       - OperationName: RunCommand
@@ -47,7 +56,7 @@ Actors:
         *time :
           ^IncDate:
             start: 2022-01-01
-            # 100ms step ensures full bucket of 1000 documents under 'seconds' granularity.
+            # 100ms step ensures full bucket of 1000 documents under the default 'seconds' granularity.
             step: 100
         *meta :
           ^Cycle:
