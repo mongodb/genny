@@ -87,8 +87,8 @@ Actors:
                 },
                 max: { $max: *dollar_value },
                 min: { $min: *dollar_value },
-                start: { $first: *dollar_value },
-                end: { $last: *dollar_value },
+                first: { $first: *dollar_value },
+                last: { $last: *dollar_value },
               }
             ]
           cursor:
