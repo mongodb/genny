@@ -53,19 +53,19 @@ Actors:
     DocumentCount: *document_count
     BatchSize: 1000
     Document:
-      *time :
+      *time:
         ^IncDate:
           start: 2022-01-01
           # 100ms step ensures full bucket of 1000 documents under the default 'seconds' granularity.
           step: 100
-      *meta :
+      *meta:
         ^Cycle:
           ofLength: *meta_count
           fromGenerator:
             ^RandomString:
               length: 6
               alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-      *value :
+      *value:
         ^RandomDouble:
           min: 0.0
           max: 100.0
