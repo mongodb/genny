@@ -3,13 +3,13 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  Materialize views experiments with $__numClientThreads__ client(s).
+  Materialize views experiments with 32 client(s).
 
 ExperimentParameters: &ExprParams
-  ClientThreads: $__numClientThreads__
+  ClientThreads: 32
 
 ExperimentDefaults:
-  PhasePath: &PhasePath ./$__matViewParamsFile__
+  PhasePath: &PhasePath ./MatViewParamsSharded.yml
 
 Actors:
   LoadConfig:
@@ -17,4 +17,10 @@ Actors:
     Key: ActorsConf
     Parameters: *ExprParams
 
-AutoRun:$__autoRunConf__
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-lite
+

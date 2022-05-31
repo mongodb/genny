@@ -1,0 +1,67 @@
+# This workload is developed to test the amount of time it takes to update a million documents in
+# a single replica set transaction. At the moment, the average time taken raises above the default
+# limit, so until we add a way to manually increase a transaction's lifetime, we must raise the
+# lifetime of all transactions.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  The parameters for materialized views experiments.
+
+ExperimentParameters: &ExprParams
+  ClientThreads: &clientThreads {^Parameter: {Default: 100, Name: "ClientThreads"}}
+
+MatViewParamsGenericDefaults:
+  PhasePath: &PhasePath ./MatViewParamsGeneric.yml
+  DbName: &db test
+  Collection: &col Collection0 # This is the default collection populated by the Loader.
+  FullName: &fullname test.Collection0
+  Nop: &Nop {Nop: true}
+
+ActorsConf:
+- Name: LoaderActor
+  Type: Loader
+  Threads: 1
+  Phases:
+  - LoadConfig:
+      Path: *PhasePath
+      Key: LoaderPhase
+      Parameters: *ExprParams
+  - *Nop
+  - *Nop
+  - *Nop
+- Name: InitialBuildViewActor
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - LoadConfig:
+      Path: *PhasePath
+      Key: InitialBuildViewPhase
+      Parameters: *ExprParams
+  - *Nop
+  - *Nop
+- Name: UpdateDocumentsInTransactionActor
+  Type: MatViewActor
+  Database: *db
+  Threads: *clientThreads
+  Phases:
+  - *Nop
+  - *Nop
+  - LoadConfig:
+      Path: *PhasePath
+      Key: BaseCollInsertAndMatViewPhase
+      Parameters: *ExprParams
+  - *Nop
+- Name: CleanupActor
+  Type: RunCommand
+  Database: *db
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - LoadConfig:
+      Path: *PhasePath
+      Key: BaseCollDeletePhase
+      Parameters: *ExprParams

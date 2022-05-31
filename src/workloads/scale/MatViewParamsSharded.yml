@@ -8,270 +8,25 @@ Owner: "@mongodb/query"
 Description: |
   The parameters for materialized views experiments.
 
-Clients:
-  Default:
-    QueryOptions:
-      minPoolSize: 1
-      maxPoolSize: 10000
-
-ExperimentParams:
-  Transactional: &isTransactional {^Parameter: {Default: true, Name: "Transactional"}}
-  NumInitialDocs: &numInitialDocs {^Parameter: {Default: 100000, Name: "NumInitialDocs"}}
-  BaseDocumentSizePaddingBytes: &baseDocumentSizePaddingBytes {^Parameter: {Default: 1000, Name: "BaseDocumentSizePaddingBytes"}}
-  NumGroupsAndDistribution: &numGroupsAndDistribution {^Parameter: {Default: {^RandomInt: {distribution: uniform, min: 0, max: 10}}, Name: "NumGroupsAndDistribution"}}
+ExperimentParameters: &ExprParams
   ClientThreads: &clientThreads {^Parameter: {Default: 100, Name: "ClientThreads"}}
-  NumInsertBatchesPerClinet: &numInsertBatchesPerClinet {^Parameter: {Default: 10, Name: "NumInsertBatchesPerClinet"}}
-  NumInsertOpsPerClinetBatch: &numInsertOpsPerClinetBatch {^Parameter: {Default: 10, Name: "NumInsertOpsPerClinetBatch"}}
-  ClientBatchInsertMode: &clientBatchInsertMode {^Parameter: {Default: "insertMany", Name: "ClientBatchInsertMode"}}
-  NumMatViews: &numMatViews {^Parameter: {Default: 0, Name: "NumMatViews"}}
-  MatViewMaintenanceMode: &matViewMaintenanceMode {^Parameter: {Default: "incremental", Name: "MatViewMaintenanceMode"}}
 
-
-
-GlobalDefaults:
+MatViewParamsGenericDefaults:
+  PhasePath: &PhasePath ./MatViewParamsGeneric.yml
   DbName: &db test
   Collection: &col Collection0 # This is the default collection populated by the Loader.
   FullName: &fullname test.Collection0
   Nop: &Nop {Nop: true}
-  Debug: &isDebug false
-  ThrowOnFailure: &throwOnFailure false # Transactions are allowed to fail.
-  BatchSize: &batchSize 10000
-
-InsertedDocument: &InsertedDoc
-  o: &docO {^Inc: {start: 0}}
-  t0: &docT0 {^RandomInt: {distribution: binomial, t: 100, p: 0.05}}
-  t1: &docT1 {^RandomInt: {distribution: poisson, mean: 100}}
-  t2: &docT2 {^RandomInt: {distribution: geometric, p: 0.1}}
-  t3: &docT3 {^RandomInt: {min: 0, max: 1000}}
-  t4: &docT4 {^RandomInt: {min: 0, max: 1000}}
-  t5: &docT5 {^RandomInt: {min: 0, max: 1000}}
-  t6: &docT6 {^RandomInt: {min: 0, max: 1000}}
-  t7: &docT7 {^RandomInt: {min: 0, max: 1000}}
-  t8: &docT8 {^RandomInt: {min: 0, max: 1000}}
-  t9: &docT9 {^RandomInt: {min: 0, max: 1000}}
-  w: &docW {^RandomInt: {distribution: geometric, p: 0.1}}
-  x: &docX 0
-  padding: &baseDocPadding {^FastRandomString: {length: *baseDocumentSizePaddingBytes}}
-  y: *numGroupsAndDistribution
-  z: &docZ {^RandomInt: {min: 0, max: 2147483647}}  # This is for max int for low probability of conflicts
-
-InitDocument: &InitDoc
-  _id: {^Inc: {start: 0}}
-  o: *docO
-  t0: *docT0
-  t1: *docT1
-  t2: *docT2
-  t3: *docT3
-  t4: *docT4
-  t5: *docT5
-  t6: *docT6
-  t7: *docT7
-  t8: *docT8
-  t9: *docT9
-  w: *docW
-  x: *docX
-  padding: *baseDocPadding
-  y: *numGroupsAndDistribution
-  z: *docZ
-
-Indexes: &Indexes
-- keys: {y: 1}
-- keys: {_id: hashed}
-
-LoaderPhase: &LoaderPhaseRef
-  Repeat: 1
-  Threads: 1
-  CollectionCount: 1
-  DocumentCount: *numInitialDocs
-  BatchSize: *batchSize
-  Document: *InitDoc
-  Database: *db
-  Indexes: *Indexes
-
-BaseCollInsert: &BaseCollInsertOp
-  OperationName: bulkWrite
-  OperationCommand:
-    WriteOperations:
-    - WriteCommand: insertOne
-      Document: *InsertedDoc
-    Options:
-      Ordered: true
-    # OnSession can also be overridden here, but it's unnecessary
-    # because OnSession is also present on withTransaction
-    OnSession: true
-
-BaseCollDeletePhase: &BaseCollDeletePhaseRef
-  Repeat: 1
-  Collection: *col
-  Operation:
-    OperationName: drop
-    OperationCommand:
-      Options:
-        WriteConcern:
-          Level: majority
-
-TransactionOpParams: &TransactionOpParams
-  # Use a non-default TransactionOption MaxCommitTimeMs.
-  MaxCommitTime: 500 milliseconds
-  WriteConcern:
-    Level: majority
-    Journal: true
-  ReadConcern:
-    Level: snapshot
-
-InitialBuildViewPhase: &InitialBuildViewPhaseRef
-  MetricsName: InitialBuildView
-  Repeat: 1
-  Database: *db
-  Collection: *col
-  Operations:
-  - OperationName: RunCommand
-    OperationCommand:
-      aggregate: *col
-      pipeline:
-        [
-          {$group: {
-            _id: '$y',
-            t0_sum: {$sum: '$t0'},
-          }},
-          {$out: "Collection0MatView0"}
-        ]
-      cursor: {batchSize: *batchSize}
-  - OperationName: RunCommand
-    OperationCommand:
-      aggregate: *col
-      pipeline:
-        [
-          {$group: {
-            _id: '$y',
-            t1_sum: {$sum: '$t1'},
-          }},
-          {$out: "Collection0MatView1"}
-        ]
-      cursor: {batchSize: *batchSize}
-  - OperationName: RunCommand
-    OperationCommand:
-      aggregate: *col
-      pipeline:
-        [
-          {$group: {
-            _id: '$y',
-            t2_sum: {$sum: '$t2'},
-          }},
-          {$out: "Collection0MatView2"}
-        ]
-      cursor: {batchSize: *batchSize}
-  - OperationName: RunCommand
-    OperationCommand:
-      aggregate: *col
-      pipeline:
-        [
-          {$group: {
-            _id: '$y',
-            t3_sum: {$sum: '$t3'},
-          }},
-          {$out: "Collection0MatView3"}
-        ]
-      cursor: {batchSize: *batchSize}
-  - OperationName: RunCommand
-    OperationCommand:
-      aggregate: *col
-      pipeline:
-        [
-          {$group: {
-            _id: '$y',
-            t4_sum: {$sum: '$t4'},
-          }},
-          {$out: "Collection0MatView4"}
-        ]
-      cursor: {batchSize: *batchSize}
-  - OperationName: RunCommand
-    OperationCommand:
-      aggregate: *col
-      pipeline:
-        [
-          {$group: {
-            _id: '$y',
-            t5_sum: {$sum: '$t5'},
-          }},
-          {$out: "Collection0MatView5"}
-        ]
-      cursor: {batchSize: *batchSize}
-  - OperationName: RunCommand
-    OperationCommand:
-      aggregate: *col
-      pipeline:
-        [
-          {$group: {
-            _id: '$y',
-            t6_sum: {$sum: '$t6'},
-          }},
-          {$out: "Collection0MatView6"}
-        ]
-      cursor: {batchSize: *batchSize}
-  - OperationName: RunCommand
-    OperationCommand:
-      aggregate: *col
-      pipeline:
-        [
-          {$group: {
-            _id: '$y',
-            t7_sum: {$sum: '$t7'},
-          }},
-          {$out: "Collection0MatView7"}
-        ]
-      cursor: {batchSize: *batchSize}
-  - OperationName: RunCommand
-    OperationCommand:
-      aggregate: *col
-      pipeline:
-        [
-          {$group: {
-            _id: '$y',
-            t8_sum: {$sum: '$t8'},
-          }},
-          {$out: "Collection0MatView8"}
-        ]
-      cursor: {batchSize: *batchSize}
-  - OperationName: RunCommand
-    OperationCommand:
-      aggregate: *col
-      pipeline:
-        [
-          {$group: {
-            _id: '$y',
-            t9_sum: {$sum: '$t9'},
-          }},
-          {$out: "Collection0MatView9"}
-        ]
-      cursor: {batchSize: *batchSize}
-
-BaseCollInsertAndMatViewPhase: &BaseCollInsertAndMatViewPhaseRef
-  MetricsName: MaintainView
-  Repeat: *numInsertBatchesPerClinet
-  Database: *db
-  Collection: *col
-  Operations:
-  - OperationName: matView
-    OperationCommand:
-      Debug: *isDebug
-      Database: *db
-      ThrowOnFailure: *throwOnFailure
-      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
-      OnSession: *isTransactional
-      TransactionOptions: *TransactionOpParams
-      WriteOp: *clientBatchInsertMode
-      InsertCount: *numInsertOpsPerClinetBatch
-      InsertDocument: *InsertedDoc
-      NumMatViews: *numMatViews
-      MatViewMaintenance: *matViewMaintenanceMode #fullRefresh, or incremental
 
 ActorsConf:
 - Name: LoaderActor
   Type: Loader
   Threads: 1
   Phases:
-  - *LoaderPhaseRef
+  - LoadConfig:
+      Path: *PhasePath
+      Key: LoaderPhase
+      Parameters: *ExprParams
   - *Nop
   - *Nop
   - *Nop
@@ -308,6 +63,432 @@ ActorsConf:
         shardCollection: *fullname  # Collection0 is the default collection populated by the Loader.
         key:
           _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView0_uniform_1_1_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView1_uniform_1_1_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView2_uniform_1_1_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView3_uniform_1_1_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView4_uniform_1_1_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView5_uniform_1_1_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView6_uniform_1_1_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView7_uniform_1_1_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView8_uniform_1_1_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView9_uniform_1_1_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView0_uniform_1_10_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView1_uniform_1_10_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView2_uniform_1_10_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView3_uniform_1_10_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView4_uniform_1_10_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView5_uniform_1_10_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView6_uniform_1_10_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView7_uniform_1_10_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView8_uniform_1_10_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView9_uniform_1_10_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView0_uniform_1_100_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView1_uniform_1_100_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView2_uniform_1_100_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView3_uniform_1_100_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView4_uniform_1_100_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView5_uniform_1_100_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView6_uniform_1_100_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView7_uniform_1_100_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView8_uniform_1_100_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView9_uniform_1_100_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView0_uniform_1_1000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView1_uniform_1_1000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView2_uniform_1_1000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView3_uniform_1_1000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView4_uniform_1_1000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView5_uniform_1_1000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView6_uniform_1_1000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView7_uniform_1_1000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView8_uniform_1_1000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView9_uniform_1_1000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView0_uniform_1_10000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView1_uniform_1_10000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView2_uniform_1_10000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView3_uniform_1_10000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView4_uniform_1_10000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView5_uniform_1_10000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView6_uniform_1_10000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView7_uniform_1_10000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView8_uniform_1_10000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView9_uniform_1_10000_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView0_binomial_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView1_binomial_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView2_binomial_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView3_binomial_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView4_binomial_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView5_binomial_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView6_binomial_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView7_binomial_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView8_binomial_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView9_binomial_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView0_geometric_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView1_geometric_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView2_geometric_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView3_geometric_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView4_geometric_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView5_geometric_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView6_geometric_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView7_geometric_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView8_geometric_Delta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView9_geometric_Delta
+        key:
+          _id: hashed
   - *Nop
   - *Nop
   - *Nop
@@ -318,11 +499,14 @@ ActorsConf:
   - *Nop
   - *Nop
   - *Nop
-  - *InitialBuildViewPhaseRef
+  - LoadConfig:
+      Path: *PhasePath
+      Key: InitialBuildViewPhase
+      Parameters: *ExprParams
   - *Nop
   - *Nop
 - Name: UpdateDocumentsInTransactionActor
-  Type: CrudActor
+  Type: MatViewActor
   Database: *db
   Threads: *clientThreads
   Phases:
@@ -330,5 +514,22 @@ ActorsConf:
   - *Nop
   - *Nop
   - *Nop
-  - *BaseCollInsertAndMatViewPhaseRef
-  - *BaseCollDeletePhaseRef
+  - LoadConfig:
+      Path: *PhasePath
+      Key: BaseCollInsertAndMatViewPhase
+      Parameters: *ExprParams
+  - *Nop
+- Name: CleanupActor
+  Type: RunCommand
+  Database: *db
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - LoadConfig:
+      Path: *PhasePath
+      Key: BaseCollDeletePhase
+      Parameters: *ExprParams

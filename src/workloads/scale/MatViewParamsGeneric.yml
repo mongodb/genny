@@ -1,0 +1,983 @@
+# This workload is developed to test the amount of time it takes to update a million documents in
+# a single replica set transaction. At the moment, the average time taken raises above the default
+# limit, so until we add a way to manually increase a transaction's lifetime, we must raise the
+# lifetime of all transactions.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  The parameters for materialized views experiments.
+
+Clients:
+  Default:
+    QueryOptions:
+      minPoolSize: 1
+      maxPoolSize: 10000
+
+ExperimentParams:
+  NumInitialDocs: &numInitialDocs 1000 #[ 100000 ]
+  BaseDocumentSizePaddingBytes: &baseDocumentSizePaddingBytes 1000 # [ 1000 ]
+  NumInsertBatchesPerClinet: &numInsertBatchesPerClinet 10 # [ 100 ]
+
+
+GlobalDefaults:
+  DbName: &db test
+  Collection: &col Collection0 # This is the default collection populated by the Loader.
+  FullName: &fullname test.Collection0
+  Nop: &Nop {Nop: true}
+  Debug: &isDebug true
+  ThrowOnFailure: &throwOnFailure false # Transactions are allowed to fail.
+  BatchSize: &batchSize 10000
+
+InsertedDocument: &InsertedDoc
+  o: &docO {^Inc: {start: 0}}
+  t0: &docT0 {^RandomInt: {distribution: binomial, t: 100, p: 0.05}}
+  t1: &docT1 {^RandomInt: {distribution: poisson, mean: 100}}
+  t2: &docT2 {^RandomInt: {distribution: geometric, p: 0.1}}
+  t3: &docT3 {^RandomInt: {min: 0, max: 1000}}
+  t4: &docT4 {^RandomInt: {min: 0, max: 1000}}
+  t5: &docT5 {^RandomInt: {min: 0, max: 1000}}
+  t6: &docT6 {^RandomInt: {min: 0, max: 1000}}
+  t7: &docT7 {^RandomInt: {min: 0, max: 1000}}
+  t8: &docT8 {^RandomInt: {min: 0, max: 1000}}
+  t9: &docT9 {^RandomInt: {min: 0, max: 1000}}
+  w: &docW {^RandomInt: {distribution: geometric, p: 0.1}}
+  x: &docX 0
+  padding: &baseDocPadding {^FastRandomString: {length: *baseDocumentSizePaddingBytes}}
+  y_uniform_1_1: &doc_y_uniform_1_1 {^RandomInt: {distribution: uniform, min: 1, max: 1}}
+  y_uniform_1_10: &doc_y_uniform_1_10 {^RandomInt: {distribution: uniform, min: 1, max: 10}}
+  y_uniform_1_100: &doc_y_uniform_1_100 {^RandomInt: {distribution: uniform, min: 1, max: 100}}
+  y_uniform_1_1000: &doc_y_uniform_1_1000 {^RandomInt: {distribution: uniform, min: 1, max: 1000}}
+  y_uniform_1_10000: &doc_y_uniform_1_10000 {^RandomInt: {distribution: uniform, min: 1, max: 10000}}
+  y_binomial: &doc_y_binomial {^RandomInt: {distribution: binomial, t: 100, p: 0.05}}
+  y_geometric: &doc_y_geometric {^RandomInt: {distribution: geometric, p: 0.1}}
+  z: &docZ {^RandomInt: {min: 0, max: 2147483647}}  # This is for max int for low probability of conflicts
+
+InitDocument: &InitDoc
+  _id: {^Inc: {start: 0}}
+  o: *docO
+  t0: *docT0
+  t1: *docT1
+  t2: *docT2
+  t3: *docT3
+  t4: *docT4
+  t5: *docT5
+  t6: *docT6
+  t7: *docT7
+  t8: *docT8
+  t9: *docT9
+  w: *docW
+  x: *docX
+  padding: *baseDocPadding
+  y_uniform_1_1: *doc_y_uniform_1_1
+  y_uniform_1_10: *doc_y_uniform_1_10
+  y_uniform_1_100: *doc_y_uniform_1_100
+  y_uniform_1_1000: *doc_y_uniform_1_1000
+  y_uniform_1_10000: *doc_y_uniform_1_10000
+  y_binomial: *doc_y_binomial
+  y_geometric: *doc_y_geometric
+  z: *docZ
+
+Indexes: &Indexes
+- keys: {y: 1}
+- keys: {_id: hashed}
+
+LoaderPhase: &LoaderPhaseRef
+  Repeat: 1
+  Threads: 1
+  CollectionCount: 1
+  DocumentCount: *numInitialDocs
+  BatchSize: *batchSize
+  Document: *InitDoc
+  Database: *db
+  Indexes: *Indexes
+
+BaseCollInsert: &BaseCollInsertOp
+  OperationName: bulkWrite
+  OperationCommand:
+    WriteOperations:
+    - WriteCommand: insertOne
+      Document: *InsertedDoc
+    Options:
+      Ordered: true
+    # OnSession can also be overridden here, but it's unnecessary
+    # because OnSession is also present on withTransaction
+    OnSession: true
+
+BaseCollDeletePhase: &BaseDatabaseDeletePhaseRef
+  Repeat: 1
+  Threads: 1
+  Database: *db
+  Operation:
+    OperationName: RunCommand
+    OperationCommand: {dropDatabase: 1}
+
+TransactionOpParams: &TransactionOpParams
+  # Use a non-default TransactionOption MaxCommitTimeMs.
+  MaxCommitTime: 500 milliseconds
+  WriteConcern:
+    Level: majority
+    Journal: true
+  ReadConcern:
+    Level: snapshot
+
+InitialBuildViewPhase: &InitialBuildViewPhaseRef
+  MetricsName: InitialBuildView
+  Repeat: 1
+  Database: *db
+  Collection: *col
+  Operations:
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1',
+            t0_sum: {$sum: '$t0'},
+          }},
+          {$out: "Collection0MatView0_uniform_1_1"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1',
+            t1_sum: {$sum: '$t1'},
+          }},
+          {$out: "Collection0MatView1_uniform_1_1"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1',
+            t2_sum: {$sum: '$t2'},
+          }},
+          {$out: "Collection0MatView2_uniform_1_1"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1',
+            t3_sum: {$sum: '$t3'},
+          }},
+          {$out: "Collection0MatView3_uniform_1_1"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1',
+            t4_sum: {$sum: '$t4'},
+          }},
+          {$out: "Collection0MatView4_uniform_1_1"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1',
+            t5_sum: {$sum: '$t5'},
+          }},
+          {$out: "Collection0MatView5_uniform_1_1"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1',
+            t6_sum: {$sum: '$t6'},
+          }},
+          {$out: "Collection0MatView6_uniform_1_1"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1',
+            t7_sum: {$sum: '$t7'},
+          }},
+          {$out: "Collection0MatView7_uniform_1_1"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1',
+            t8_sum: {$sum: '$t8'},
+          }},
+          {$out: "Collection0MatView8_uniform_1_1"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1',
+            t9_sum: {$sum: '$t9'},
+          }},
+          {$out: "Collection0MatView9_uniform_1_1"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10',
+            t0_sum: {$sum: '$t0'},
+          }},
+          {$out: "Collection0MatView0_uniform_1_10"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10',
+            t1_sum: {$sum: '$t1'},
+          }},
+          {$out: "Collection0MatView1_uniform_1_10"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10',
+            t2_sum: {$sum: '$t2'},
+          }},
+          {$out: "Collection0MatView2_uniform_1_10"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10',
+            t3_sum: {$sum: '$t3'},
+          }},
+          {$out: "Collection0MatView3_uniform_1_10"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10',
+            t4_sum: {$sum: '$t4'},
+          }},
+          {$out: "Collection0MatView4_uniform_1_10"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10',
+            t5_sum: {$sum: '$t5'},
+          }},
+          {$out: "Collection0MatView5_uniform_1_10"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10',
+            t6_sum: {$sum: '$t6'},
+          }},
+          {$out: "Collection0MatView6_uniform_1_10"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10',
+            t7_sum: {$sum: '$t7'},
+          }},
+          {$out: "Collection0MatView7_uniform_1_10"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10',
+            t8_sum: {$sum: '$t8'},
+          }},
+          {$out: "Collection0MatView8_uniform_1_10"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10',
+            t9_sum: {$sum: '$t9'},
+          }},
+          {$out: "Collection0MatView9_uniform_1_10"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_100',
+            t0_sum: {$sum: '$t0'},
+          }},
+          {$out: "Collection0MatView0_uniform_1_100"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_100',
+            t1_sum: {$sum: '$t1'},
+          }},
+          {$out: "Collection0MatView1_uniform_1_100"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_100',
+            t2_sum: {$sum: '$t2'},
+          }},
+          {$out: "Collection0MatView2_uniform_1_100"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_100',
+            t3_sum: {$sum: '$t3'},
+          }},
+          {$out: "Collection0MatView3_uniform_1_100"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_100',
+            t4_sum: {$sum: '$t4'},
+          }},
+          {$out: "Collection0MatView4_uniform_1_100"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_100',
+            t5_sum: {$sum: '$t5'},
+          }},
+          {$out: "Collection0MatView5_uniform_1_100"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_100',
+            t6_sum: {$sum: '$t6'},
+          }},
+          {$out: "Collection0MatView6_uniform_1_100"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_100',
+            t7_sum: {$sum: '$t7'},
+          }},
+          {$out: "Collection0MatView7_uniform_1_100"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_100',
+            t8_sum: {$sum: '$t8'},
+          }},
+          {$out: "Collection0MatView8_uniform_1_100"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_100',
+            t9_sum: {$sum: '$t9'},
+          }},
+          {$out: "Collection0MatView9_uniform_1_100"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1000',
+            t0_sum: {$sum: '$t0'},
+          }},
+          {$out: "Collection0MatView0_uniform_1_1000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1000',
+            t1_sum: {$sum: '$t1'},
+          }},
+          {$out: "Collection0MatView1_uniform_1_1000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1000',
+            t2_sum: {$sum: '$t2'},
+          }},
+          {$out: "Collection0MatView2_uniform_1_1000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1000',
+            t3_sum: {$sum: '$t3'},
+          }},
+          {$out: "Collection0MatView3_uniform_1_1000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1000',
+            t4_sum: {$sum: '$t4'},
+          }},
+          {$out: "Collection0MatView4_uniform_1_1000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1000',
+            t5_sum: {$sum: '$t5'},
+          }},
+          {$out: "Collection0MatView5_uniform_1_1000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1000',
+            t6_sum: {$sum: '$t6'},
+          }},
+          {$out: "Collection0MatView6_uniform_1_1000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1000',
+            t7_sum: {$sum: '$t7'},
+          }},
+          {$out: "Collection0MatView7_uniform_1_1000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1000',
+            t8_sum: {$sum: '$t8'},
+          }},
+          {$out: "Collection0MatView8_uniform_1_1000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_1000',
+            t9_sum: {$sum: '$t9'},
+          }},
+          {$out: "Collection0MatView9_uniform_1_1000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10000',
+            t0_sum: {$sum: '$t0'},
+          }},
+          {$out: "Collection0MatView0_uniform_1_10000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10000',
+            t1_sum: {$sum: '$t1'},
+          }},
+          {$out: "Collection0MatView1_uniform_1_10000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10000',
+            t2_sum: {$sum: '$t2'},
+          }},
+          {$out: "Collection0MatView2_uniform_1_10000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10000',
+            t3_sum: {$sum: '$t3'},
+          }},
+          {$out: "Collection0MatView3_uniform_1_10000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10000',
+            t4_sum: {$sum: '$t4'},
+          }},
+          {$out: "Collection0MatView4_uniform_1_10000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10000',
+            t5_sum: {$sum: '$t5'},
+          }},
+          {$out: "Collection0MatView5_uniform_1_10000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10000',
+            t6_sum: {$sum: '$t6'},
+          }},
+          {$out: "Collection0MatView6_uniform_1_10000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10000',
+            t7_sum: {$sum: '$t7'},
+          }},
+          {$out: "Collection0MatView7_uniform_1_10000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10000',
+            t8_sum: {$sum: '$t8'},
+          }},
+          {$out: "Collection0MatView8_uniform_1_10000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_uniform_1_10000',
+            t9_sum: {$sum: '$t9'},
+          }},
+          {$out: "Collection0MatView9_uniform_1_10000"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_binomial',
+            t0_sum: {$sum: '$t0'},
+          }},
+          {$out: "Collection0MatView0_binomial"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_binomial',
+            t1_sum: {$sum: '$t1'},
+          }},
+          {$out: "Collection0MatView1_binomial"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_binomial',
+            t2_sum: {$sum: '$t2'},
+          }},
+          {$out: "Collection0MatView2_binomial"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_binomial',
+            t3_sum: {$sum: '$t3'},
+          }},
+          {$out: "Collection0MatView3_binomial"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_binomial',
+            t4_sum: {$sum: '$t4'},
+          }},
+          {$out: "Collection0MatView4_binomial"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_binomial',
+            t5_sum: {$sum: '$t5'},
+          }},
+          {$out: "Collection0MatView5_binomial"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_binomial',
+            t6_sum: {$sum: '$t6'},
+          }},
+          {$out: "Collection0MatView6_binomial"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_binomial',
+            t7_sum: {$sum: '$t7'},
+          }},
+          {$out: "Collection0MatView7_binomial"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_binomial',
+            t8_sum: {$sum: '$t8'},
+          }},
+          {$out: "Collection0MatView8_binomial"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_binomial',
+            t9_sum: {$sum: '$t9'},
+          }},
+          {$out: "Collection0MatView9_binomial"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_geometric',
+            t0_sum: {$sum: '$t0'},
+          }},
+          {$out: "Collection0MatView0_geometric"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_geometric',
+            t1_sum: {$sum: '$t1'},
+          }},
+          {$out: "Collection0MatView1_geometric"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_geometric',
+            t2_sum: {$sum: '$t2'},
+          }},
+          {$out: "Collection0MatView2_geometric"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_geometric',
+            t3_sum: {$sum: '$t3'},
+          }},
+          {$out: "Collection0MatView3_geometric"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_geometric',
+            t4_sum: {$sum: '$t4'},
+          }},
+          {$out: "Collection0MatView4_geometric"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_geometric',
+            t5_sum: {$sum: '$t5'},
+          }},
+          {$out: "Collection0MatView5_geometric"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_geometric',
+            t6_sum: {$sum: '$t6'},
+          }},
+          {$out: "Collection0MatView6_geometric"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_geometric',
+            t7_sum: {$sum: '$t7'},
+          }},
+          {$out: "Collection0MatView7_geometric"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_geometric',
+            t8_sum: {$sum: '$t8'},
+          }},
+          {$out: "Collection0MatView8_geometric"}
+        ]
+      cursor: {batchSize: *batchSize}
+  - OperationName: RunCommand
+    OperationCommand:
+      aggregate: *col
+      pipeline:
+        [
+          {$group: {
+            _id: '$y_geometric',
+            t9_sum: {$sum: '$t9'},
+          }},
+          {$out: "Collection0MatView9_geometric"}
+        ]
+      cursor: {batchSize: *batchSize}
+
+BaseCollInsertAndMatViewPhase: &BaseCollInsertAndMatViewPhaseRef
+  MetricsName: MaintainView
+  Repeat: *numInsertBatchesPerClinet
+  Database: *db
+  Collection: *col
+  Operation:
+    OperationName: MatViewExp
+    Debug: *isDebug
+    Database: *db
+    ThrowOnFailure: *throwOnFailure
+    RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
+    InsertDocument: *InsertedDoc
+    TransactionOptions: *TransactionOpParams

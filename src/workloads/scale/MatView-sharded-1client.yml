@@ -1,0 +1,25 @@
+# This workload is developed to test materialized view maintenance.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  Materialize views experiments with 1 client(s) using a sharded cluster.
+
+ExperimentParameters: &ExprParams
+  ClientThreads: 1
+
+ExperimentDefaults:
+  PhasePath: &PhasePath ./MatViewParamsSharded.yml
+
+Actors:
+  LoadConfig:
+    Path: *PhasePath
+    Key: ActorsConf
+    Parameters: *ExprParams
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-lite
