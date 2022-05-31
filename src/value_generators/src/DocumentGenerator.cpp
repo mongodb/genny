@@ -748,58 +748,62 @@ protected:
 };
 
 /** `{^ChooseFromDataset:{...}` */
-class RandomDataFromDataset : public Generator<std::string> {
+class RandomStringFromDataset : public Generator<std::string> {
 
 public:
-    RandomDataFromDataset(const Node& node, GeneratorArgs generatorArgs)
+    RandomStringFromDataset(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng},
           _id{generatorArgs.actorId},
           _path{node["path"].maybe<std::string>().value()},
-          _pathLength{_path.size()}
+          _pathLength{_path.size()}{}
+
+    void loadDataset() {
       {
-
-
         if (_pathLength <= 0) {
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-            "RandomDataFromDataset requieres non-empty path"));
+            "ChooseFromDataset requieres non-empty path"));
             }
 
-            /* To avoid reading and storing the datasets multiple times
-               we check if the path already exists in the map (as key). If
-               it doesn't exist, we open the file and store its contents. 
-               Section locked with a mutex */
-            
-            _dataset_mutex.lock();
-            if (_dataset.count(_path) == 0) {
-                std::cout << "I enter to open " << _path << std::endl;
+        {
+            if (_all_datasets.count(_path) == 0){
+                std::cout << "we open the file" << std::endl;
                 _ifs.open(_path, std::ifstream::in);
                 if (_ifs.is_open()){
                     while(std::getline(_ifs, _current_line))
                     {
                         // Ignore emtpy lines
                         if (_current_line.size()!=0){
-                            _dataset[_path].push_back(_current_line);
+                            _all_datasets[_path].push_back(_current_line);
                         }
                     }
                 }
             
-            else {
-                _dataset_mutex.unlock();
-                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                    "The specified file for RandomDataFromDataset cannot be opened or it does not exist")); }
+                else {
+                    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                        "The specified file for ChooseFromDataset cannot be opened or it does not exist")); }
 
-            if (_dataset[_path].size() == 0) {
-                _dataset_mutex.unlock();
-                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                    "The specified file for RandomDataFromDataset is empty")); }
-                }
+                if (_all_datasets[_path].size() == 0) {
+                    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                        "The specified file for ChooseFromDataset is empty")); }
+            }
+        }
+      }
+    }
 
-            _dataset_mutex.unlock();
+    std::string evaluate() {
+        /* If path the doesn't exist in memory we load it.
+           To avoid reading and storing the datasets multiple times
+           we check if the path already exists in the map (as key). If
+           it doesn't exist, we open the file and store its contents. 
+        */
+
+        if (_all_datasets.count(_path) == 0){
+            std::lock_guard<std::mutex> lk(_dataset_mutex);
+            loadDataset();
         }
 
-    std::string evaluate() {   
-        auto distribution = boost::random::uniform_int_distribution<size_t>{0, _dataset[_path].size() - 1};
-        return _dataset[_path][distribution(_rng)];
+        auto distribution = boost::random::uniform_int_distribution<size_t>{0, _all_datasets[_path].size() - 1};
+        return _all_datasets[_path][distribution(_rng)];
     }
     
 private:
@@ -810,7 +814,7 @@ private:
     std::ifstream _ifs;
     std::vector<std::string> _dataSetContent;
     std::string _current_line;
-    static inline std::unordered_map<std::string, std::vector<std::string>> _dataset;
+    static inline std::unordered_map<std::string, std::vector<std::string>> _all_datasets;
     static inline std::mutex _dataset_mutex;
 };
 
@@ -1410,7 +1414,7 @@ const std::map<std::string, Parser<UniqueAppendable>>& allParsers() {
          }},
         {"^ChooseFromDataset",
         [](const Node& node, GeneratorArgs generatorArgs) {
-            return std::make_unique<RandomDataFromDataset>(node, generatorArgs);
+            return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
         }},
         {"^Join",
          [](const Node& node, GeneratorArgs generatorArgs) {
@@ -1709,6 +1713,10 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
          }},
+        {"^ChooseFromDataset",
+        [](const Node& node, GeneratorArgs generatorArgs) {
+            return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
+        }},
         {"^Join",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<JoinGenerator>(node, generatorArgs);

@@ -1,39 +1,40 @@
 
 # Table of Contents
 
-1.  [Introduction](#orgf1f92f6)
-2.  [Getting Started and Building](#org35e6dff)
-3.  [Core Concepts](#org1140a6b)
-    1.  [What is load generation?](#orgdcd1898)
-	2.  [What other load generation tools are there?](#orgc7988ae)
-    3.  [What is the system under test?](#orgc7904ae)
-    4.  [What is a workload?](#org3610c67)
-        1.  [How are workloads configured?](#orgdecc7ae)
-        2.  [What is an Actor?](#org51d4d33)
-        3.  [What is a phase?](#orgb655d69)
-        4.  [How do I run a workload?](#org32b8ad3)
-    5.  [Outputs](#orgec88ad4)
-    6.  [Workload Development](#org0e7c476)
-4.  [Further Concepts](#org61c719c)
-    1.  [Common Actors](#org78b250a)
-    2.  [AutoRun](#org2b04b49)
-        1.  [What is AutoRun?](#orgd0067d1)
-        2.  [Configuring AutoRun](#orgbfb0d8e)
-    3.  [Value Generators](#orgd89f221)
-    4.  [Preprocessor](#org2078b23)
-        1.  [LoadConfig](#orga6d35c7)
-        2.  [ActorTemplate](#orga45b1d8)
-        3.  [OnlyActiveInPhases](#orgf9c328f)
-        4.  [Defaults and Overrides](#org22b7a0f)
-    5.  [Connecting to the Server](#orgd6b0450)
-        1.  [Connection Strings and Pools](#orgd2659db)
-        2.  [Multiple Connection Strings](#orga591018)
-        3.  [Default](#org65830c2)
-    6.  [Creating an Actor](#org7e6c6bd)
-5.  [Pitfalls](#org3aaae9e)
-    1.  [pipe creation failed (24): Too many open files](#orga7ab911)
-    2.  [Actor integration tests fail locally](#orgb084b49)
-    3.  [The Loader agent requires thread count set on both Actor and phase level](#org97681a9)
+- [Table of Contents](#table-of-contents)
+- [Introduction](#introduction)
+- [Getting Started and Building](#getting-started-and-building)
+- [Core Concepts](#core-concepts)
+  - [What is load generation?](#what-is-load-generation)
+    - [What other load generation tools are there?](#what-other-load-generation-tools-are-there)
+  - [What is the system under test?](#what-is-the-system-under-test)
+  - [What is a workload?](#what-is-a-workload)
+    - [How are workloads configured?](#how-are-workloads-configured)
+    - [What is an Actor?](#what-is-an-actor)
+    - [What is a phase?](#what-is-a-phase)
+    - [How do I run a workload?](#how-do-i-run-a-workload)
+  - [Outputs](#outputs)
+  - [Workload Development](#workload-development)
+- [Further Concepts](#further-concepts)
+  - [Common Actors](#common-actors)
+  - [AutoRun](#autorun)
+    - [What is AutoRun?](#what-is-autorun)
+    - [Configuring AutoRun](#configuring-autorun)
+  - [Value Generators](#value-generators)
+  - [Preprocessor](#preprocessor)
+    - [LoadConfig](#loadconfig)
+    - [ActorTemplate](#actortemplate)
+    - [OnlyActiveInPhases](#onlyactiveinphases)
+    - [Defaults and Overrides](#defaults-and-overrides)
+  - [Connecting to the Server](#connecting-to-the-server)
+    - [Connection Strings and Pools](#connection-strings-and-pools)
+    - [Multiple Connection Strings](#multiple-connection-strings)
+    - [Default](#default)
+  - [Creating an Actor](#creating-an-actor)
+- [Pitfalls](#pitfalls)
+  - [pipe creation failed (24): Too many open files](#pipe-creation-failed-24-too-many-open-files)
+  - [Actor integration tests fail locally](#actor-integration-tests-fail-locally)
+  - [The Loader agent requires thread count set on both Actor and phase level](#the-loader-agent-requires-thread-count-set-on-both-actor-and-phase-level)
 
 
 <a id="orgf1f92f6"></a>
@@ -567,6 +568,13 @@ A few notes on the syntax:
 It is often necessary to use Genny to operate with large amounts of data which would be impractical to hardcode. Genny uses value generators for this. A value generator is a piece of code that generates pseudorandom values every time it is invoked, and which can be configured from the workload yaml. Notably, value generators use a hardcoded seed, which is always automatically reused by default, so repeated Genny executions should be deterministic with respect to generated values. A user wanting to vary the generated docs can vary the seed. See [./src/workloads/docs/GeneratorsSeeded.yml](../src/workloads/docs/GeneratorsSeeded.yml) for an example.
 
 Value generators are not a builtin feature of Genny, but must be integrated by each Actor for the configuration values that accept them. For examples of using value generators, see [./src/workloads/docs/Generators.yml](../src/workloads/docs/Generators.yml). To integrate generators into an Actor, use the [DocumentGenerator](../src/value_generators/include/value_generators/DocumentGenerator.hpp) with the yaml node you intend to generate documents from. (And see [here](#org7e6c6bd) for more details on creating an Actor in the first place.)
+
+Some Value Generators, like `ChooseFromDataset`, can read a dataset from the disk that store the values to choose from. Some example datasets are stored in [./src/workloads/datasets](../src/workloads/datasets). Four are included in the repo:
+
+- **airport_codes.txt:** includes all airport codes
+- **names.txt:** includes a list of the top 2000 names in USA. This is a dataset has been taken from [SecLists](https://github.com/danielmiessler/SecLists).
+- **familynames.txt:** includes a list of the top 1000 family names in the USA. This is a dataset has been taken from [SecLists](https://github.com/danielmiessler/SecLists).
+- **empty_test.txt:** this is an empty file to be used during unit testing.
 
 
 <a id="org2078b23"></a>
