@@ -630,8 +630,7 @@ struct MatViewOperation : public BaseOperation {
         if (opNode["NumMatViews"]) {
             _numMatViews = opNode["NumMatViews"].to<IntegerSpec>();
             if (opNode["MatViewMaintenance"]) {
-                _isIncrementalMatView =
-                    opNode["MatViewMaintenance"].to<std::string>() == "incremental";
+                _matViewMaintenanceMode = opNode["MatViewMaintenance"].to<std::string>();
             }
         }
 
@@ -657,18 +656,23 @@ struct MatViewOperation : public BaseOperation {
         return ret;
     }
 
-    std::unordered_map<int, int> combineInsertedDocs(
-        const std::vector<bsoncxx::document::view_or_value>& insertedDocs, size_t matViewIdx) {
-        std::unordered_map<int, int> combined;
+    std::unordered_map<int, std::tuple<bsoncxx::types::b_oid, int>> combineInsertedDocs(
+        const std::vector<bsoncxx::document::view_or_value>& insertedDocs,
+        std::map<std::size_t, bsoncxx::types::b_oid> insertedIds,
+        size_t matViewIdx) {
+        std::unordered_map<int, std::tuple<bsoncxx::types::b_oid, int>> combined;
+        size_t i = 0;
         for (const auto& doc : insertedDocs) {
             auto y = doc.view()["y"].get_int64();
             auto t = doc.view()["t" + std::to_string(matViewIdx)].get_int64();
             auto it = combined.find(y);
             if (it != combined.end()) {
-                it->second += t;
+                auto [_id, existing_t] = it->second;
+                it->second = std::make_tuple(_id, existing_t + t);
             } else {
-                combined[y] = t;
+                combined[y] = std::make_tuple(insertedIds[i], t);
             }
+            ++i;
         }
         return combined;
     }
@@ -700,7 +704,9 @@ struct MatViewOperation : public BaseOperation {
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto run_view_maintenance([&](mongocxx::client_session& session,
                                           const std::vector<bsoncxx::document::view_or_value>&
-                                              insertedDocs) {
+                                              insertedDocs,
+                                          std::map<std::size_t, bsoncxx::types::b_oid>
+                                              insertedIds) {
                 mongocxx::read_concern rc;
                 rc.acknowledge_level(mongocxx::read_concern::level::k_snapshot);
 
@@ -723,21 +729,23 @@ struct MatViewOperation : public BaseOperation {
                 }
 
                 auto db = session.client().database(_dbName);
-
-                if (_isIncrementalMatView) {
+                if (_matViewMaintenanceMode == "sync-incremental") {
                     if (_isDebug) {
-                        std::cout << "Running incremental view maintenance..." << std::endl;
+                        std::cout << "Running sync-incremental view maintenance..." << std::endl;
                     }
                     for (size_t matViewIdx = 0; matViewIdx < _numMatViews; ++matViewIdx) {
                         std::string targetViewName =
-                            "Collection0MatView" + std::to_string(matViewIdx);
-                        auto combinedInsertedDocs = combineInsertedDocs(insertedDocs, matViewIdx);
+                            "Collection0MatView" + std::to_string(matViewIdx) + "_";
+                        auto combinedInsertedDocs =
+                            combineInsertedDocs(insertedDocs, insertedIds, matViewIdx);
                         for (const auto& combinedDoc : combinedInsertedDocs) {
-                            const auto& updateFind = make_document(kvp("_id", combinedDoc.first));
+                            auto yVal = combinedDoc.first;
+                            auto [_, tVal] = combinedDoc.second;
+                            const auto& updateFind = make_document(kvp("_id", yVal));
                             const auto& updateExpr = make_document(
                                 kvp("$inc",
-                                    make_document(kvp("t" + std::to_string(matViewIdx) + "_sum",
-                                                      combinedDoc.second))));
+                                    make_document(
+                                        kvp("t" + std::to_string(matViewIdx) + "_sum", tVal))));
                             auto coll = db.collection(targetViewName);
                             auto updateRes = _isTransactional
                                 ? coll.update_one(
@@ -747,7 +755,8 @@ struct MatViewOperation : public BaseOperation {
                             if (!updateRes ||
                                 (updateRes->modified_count() != 1 && !updateRes->upserted_id())) {
                                 // BOOST_THROW_EXCEPTION(
-                                //     std::runtime_error("Incremental MatView failded."));
+                                //     std::runtime_error("Incremental MatView
+                                //     failded."));
                                 std::cout << "error: Incremental MatView failded." << std::endl;
                             } else {
                                 ctx.addDocuments(1);
@@ -755,7 +764,39 @@ struct MatViewOperation : public BaseOperation {
                             }
                         }
                     }
-                } else {
+                } else if (_matViewMaintenanceMode == "async-incremental-result-delta") {
+                    if (_isDebug) {
+                        std::cout << "Running async-incremental-result-delta view maintenance..."
+                                  << std::endl;
+                    }
+                    for (size_t matViewIdx = 0; matViewIdx < _numMatViews; ++matViewIdx) {
+                        std::string targetViewDeltaName =
+                            "Collection0MatView" + std::to_string(matViewIdx) + "_Delta";
+                        auto combinedInsertedDocs =
+                            combineInsertedDocs(insertedDocs, insertedIds, matViewIdx);
+                        std::vector<bsoncxx::document::view_or_value> deltaOutputDocs;
+                        for (const auto& combinedDoc : combinedInsertedDocs) {
+                            auto yVal = combinedDoc.first;
+                            auto [idVal, tVal] = combinedDoc.second;
+                            bsoncxx::document::view_or_value doc =
+                                make_document(kvp("_id", idVal),
+                                              kvp("y", yVal),
+                                              kvp("t" + std::to_string(matViewIdx), tVal));
+                            deltaOutputDocs.push_back(doc);
+                            ctx.addDocuments(1);
+                            ctx.addBytes(doc.view().length());
+                        }
+                        db.collection(targetViewDeltaName)
+                            .insert_many(deltaOutputDocs, insertOptions);
+                    }
+                } else if (_matViewMaintenanceMode == "async-incremental-base-delta") {
+                    if (_isDebug) {
+                        std::cout << "Running async-incremental-base-delta view maintenance..."
+                                  << std::endl;
+                    }
+                    std::string targetBaseDeltaName = "Collection0_Delta";
+                    db.collection(targetBaseDeltaName).insert_many(insertedDocs, insertOptions);
+                } else if (_matViewMaintenanceMode == "full-refresh") {
                     if (_isDebug) {
                         std::cout << "Running full-refresh view maintenance..." << std::endl;
                     }
@@ -818,6 +859,15 @@ struct MatViewOperation : public BaseOperation {
                             // TODO: validate aggOutRes
                         }
                     }
+                } else if (_matViewMaintenanceMode == "none" ||
+                           _matViewMaintenanceMode == "wild-card-index") {
+                    if (_isDebug) {
+                        std::cout << "No view maintenance: " << _matViewMaintenanceMode
+                                  << std::endl;
+                    }
+                } else {
+                    BOOST_THROW_EXCEPTION(
+                        std::runtime_error("Unknown view maintenance: " + _matViewMaintenanceMode));
                 }
             });
             auto run_txn_ops([&](mongocxx::client_session* session) {
@@ -833,7 +883,11 @@ struct MatViewOperation : public BaseOperation {
                         : _collection.insert_many(writeOps, insertOptions);
                     if (result) {
                         ctx.addDocuments(result->inserted_count());
-                        run_view_maintenance(*session, writeOps);
+                        std::map<std::size_t, bsoncxx::types::b_oid> insertedIds;
+                        for (const auto insertedId : result->inserted_ids()) {
+                            insertedIds[insertedId.first] = insertedId.second.get_oid();
+                        }
+                        run_view_maintenance(*session, writeOps, insertedIds);
                     } else {
                         // BOOST_THROW_EXCEPTION(std::runtime_error("InsertMany failded in
                         // MatView."));
@@ -853,7 +907,10 @@ struct MatViewOperation : public BaseOperation {
                             : _collection.insert_one(document.view(), insertOptions);
                         if (result) {
                             ctx.addDocuments(1);
-                            run_view_maintenance(*session, {document});
+                            run_view_maintenance(*session,
+                                                 {document},
+                                                 std::map<std::size_t, bsoncxx::types::b_oid>{
+                                                     {0, result->inserted_id().get_oid()}});
                         } else {
                             // BOOST_THROW_EXCEPTION(
                             //     std::runtime_error("InsertOne failded in MatView."));
@@ -896,7 +953,7 @@ private:
     DocumentGenerator _insertDocumentExpr;
     mongocxx::options::transaction _transactionOptions;
     int64_t _numMatViews = 0;
-    bool _isIncrementalMatView = false;
+    std::string _matViewMaintenanceMode;
     bool _isDebug = false;
 };
 

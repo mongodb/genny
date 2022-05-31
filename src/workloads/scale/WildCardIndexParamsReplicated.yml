@@ -24,7 +24,7 @@ ExperimentParams: &ExprParams
   NumInsertOpsPerClinetBatch: &numInsertOpsPerClinetBatch {^Parameter: {Default: 10, Name: "NumInsertOpsPerClinetBatch"}}
   ClientBatchInsertMode: &clientBatchInsertMode {^Parameter: {Default: "insertMany", Name: "ClientBatchInsertMode"}}
   NumMatViews: &numMatViews {^Parameter: {Default: 0, Name: "NumMatViews"}}
-  MatViewMaintenanceMode: &matViewMaintenanceMode {^Parameter: {Default: "incremental", Name: "MatViewMaintenanceMode"}}
+  MatViewMaintenanceMode: &matViewMaintenanceMode {^Parameter: {Default: "wild-card-index", Name: "MatViewMaintenanceMode"}}
 
 MatViewParamsGenericDefaults:
   PhasePath: &PhasePath ./MatViewParamsGeneric.yml
@@ -43,6 +43,23 @@ ActorsConf:
       Key: LoaderPhase
       Parameters: *ExprParams
   - *Nop
+  - *Nop
+  - *Nop
+- Name: IndexCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationMetricsName: CreateWildCardIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *col
+        indexes:
+        - key: { "$**": 1 }
+          name: wildCardIndex
   - *Nop
   - *Nop
 - Name: InitialBuildViewActor
