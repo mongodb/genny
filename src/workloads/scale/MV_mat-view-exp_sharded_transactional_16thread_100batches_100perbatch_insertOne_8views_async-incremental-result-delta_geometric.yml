@@ -1,0 +1,35 @@
+# This workload is developed to test the performance of materialized view maintenance.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  Materialize views experiments with 16 client(s).
+
+ExperimentParameters: &ExprParams
+  Transactional: True
+  NumInitialDocs: 10000
+  BaseDocumentSizePaddingBytes: 1000
+  NumGroupsAndDistribution: {^RandomInt: {distribution: geometric, p: 0.1}}
+  ClientThreads: 16
+  NumInsertBatchesPerClinet: 100
+  NumInsertOpsPerClinetBatch: 100
+  ClientBatchInsertMode: "insertOne"
+  NumMatViews: 8
+  MatViewMaintenanceMode: "async-incremental-result-delta"
+
+ExperimentDefaults:
+  PhasePath: &PhasePath ./MatViewParamsSharded.yml
+
+Actors:
+  LoadConfig:
+    Path: *PhasePath
+    Key: ActorsConf
+    Parameters: *ExprParams
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-lite
+
