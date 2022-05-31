@@ -14,6 +14,8 @@
 
 // Enable in TIG-3548
 /**
+#include <yaml-cpp/yaml.h>
+
 #include <testlib/ActorHelper.hpp>
 #include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>

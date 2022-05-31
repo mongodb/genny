@@ -1,11 +1,16 @@
 # https://help.github.com/articles/about-code-owners/
 
 # global match unless overridden below
-* @10gen/dev-prod-tips
+* @mongodb/dev-prod-tips
+
+# everyone can contribute to workloads and actors, they are unowned, unless overridden below
+src/workloads/
+src/cast_core/
+src/phases/
 
 # product-perf
-src/workloads/scale/* @mongodb/product-perf
+src/workloads/scale/ @mongodb/performance
 
 # service-architecture
-src/workloads/networking/* @mongodb/service-architecture
+src/workloads/networking/ @mongodb/service-architecture
 

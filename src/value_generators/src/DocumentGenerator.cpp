@@ -14,7 +14,9 @@
 
 #include <value_generators/DocumentGenerator.hpp>
 
+#include <fstream>
 #include <functional>
+#include <iostream>
 #include <limits>
 #include <map>
 #include <sstream>
@@ -65,16 +67,12 @@ public:
 
 namespace {
 using namespace genny;
-
-const boost::posix_time::ptime& epoch() {
-    static boost::posix_time::ptime out{boost::gregorian::date(1970, 1, 1)};
-    return out;
-}
+const static boost::posix_time::ptime epoch{boost::gregorian::date(1970, 1, 1)};
 
 template <typename T>
 class ConstantAppender : public Generator<T> {
 public:
-    explicit ConstantAppender(T value) : _value{std::move(value)} {}
+    explicit ConstantAppender(T value) : _value{value} {}
     explicit ConstantAppender() : _value{} {}
     T evaluate() override {
         return _value;
@@ -153,23 +151,17 @@ std::optional<std::string> getMetaKey(const Node& node) {
 }
 
 /** Default alphabet for string generators */
-const std::string& kDefaultAlphabet() {
-    static std::string out{
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz"
-        "0123456789+/"};
-    return out;
-}
+static const std::string kDefaultAlphabet = std::string{
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789+/"};
 
 // Useful typedefs
 
 template <typename O>
 using Parser = std::function<O(const Node&, GeneratorArgs)>;
 
-const boost::posix_time::ptime& maxDate() {
-    static boost::posix_time::ptime out{boost::gregorian::date(2150, 1, 1)};
-    return out;
-}
+const static boost::posix_time::ptime max_date{boost::gregorian::date(2150, 1, 1)};
 
 // Pre-declaring all at once
 // Documentation is at the implementations-site.
@@ -183,7 +175,7 @@ UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
 UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<int64_t> dateGenerator(const Node& node,
                                        GeneratorArgs generatorArgs,
-                                       const boost::posix_time::ptime& defaultTime = epoch());
+                                       const boost::posix_time::ptime& defaultTime = epoch);
 template <bool Verbatim, typename Out>
 Out valueGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
@@ -206,7 +198,6 @@ template <typename Distribution,
           const char* parameter2name>
 class DoubleGenerator2Parameter : public Generator<double> {
 public:
-    [[maybe_unused]]  // Used in instantiated templates. No need to warn on it.
     DoubleGenerator2Parameter(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng},
           _actorId{generatorArgs.actorId},
@@ -231,7 +222,6 @@ private:
 template <typename Distribution, const char* diststring, const char* parameter1name>
 class DoubleGenerator1Parameter : public Generator<double> {
 public:
-    [[maybe_unused]]  // Used in instantiated templates. No need to warn on it.
     DoubleGenerator1Parameter(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng},
           _actorId{generatorArgs.actorId},
@@ -251,38 +241,38 @@ private:
 };
 
 // Constant strings for arguments for templates
-const char astr[] = "a";
-const char bstr[] = "b";
-const char kstr[] = "k";
-const char mstr[] = "m";
-const char nstr[] = "n";
-const char sstr[] = "s";
-const char minstr[] = "min";
-const char maxstr[] = "max";
-const char stepstr[] = "step";
-const char startstr[] = "start";
-const char multiplierstr[] = "multiplier";
-const char alphastr[] = "alpha";
-const char betastr[] = "beta";
-const char lambdastr[] = "lambda";
-const char meanstr[] = "mean";
-const char medianstr[] = "median";
-const char sigmastr[] = "sigma";
+static const char astr[] = "a";
+static const char bstr[] = "b";
+static const char kstr[] = "k";
+static const char mstr[] = "m";
+static const char nstr[] = "n";
+static const char sstr[] = "s";
+static const char minstr[] = "min";
+static const char maxstr[] = "max";
+static const char stepstr[] = "step";
+static const char startstr[] = "start";
+static const char multiplierstr[] = "multiplier";
+static const char alphastr[] = "alpha";
+static const char betastr[] = "beta";
+static const char lambdastr[] = "lambda";
+static const char meanstr[] = "mean";
+static const char medianstr[] = "median";
+static const char sigmastr[] = "sigma";
 
 // constant strings for distribution names in templates
-const char uniformstr[] = "uniform";
-const char exponentialstr[] = "exponential";
-const char gammastr[] = "gamma";
-const char weibullstr[] = "weibull";
-const char extremestr[] = "extreme_value";
-const char laplacestr[] = "laplace";
-const char normalstr[] = "normal";
-const char lognormalstr[] = "lognormal";
-const char chisquaredstr[] = "chi_squared";
-const char noncentralchisquaredstr[] = "non_central_chi_squared";
-const char cauchystr[] = "cauchy";
-const char fisherfstr[] = "fisher_f";
-const char studenttstr[] = "student_t";
+static const char uniformstr[] = "uniform";
+static const char exponentialstr[] = "exponential";
+static const char gammastr[] = "gamma";
+static const char weibullstr[] = "weibull";
+static const char extremestr[] = "extreme_value";
+static const char laplacestr[] = "laplace";
+static const char normalstr[] = "normal";
+static const char lognormalstr[] = "lognormal";
+static const char chisquaredstr[] = "chi_squared";
+static const char noncentralchisquaredstr[] = "non_central_chi_squared";
+static const char cauchystr[] = "cauchy";
+static const char fisherfstr[] = "fisher_f";
+static const char studenttstr[] = "student_t";
 
 using UniformDoubleGenerator =
     DoubleGenerator2Parameter<boost::random::uniform_real_distribution<double>,
@@ -526,11 +516,15 @@ public:
         // Bitwise add with _subnetMask and add to _prefix
         // Note that _subnetMask and _prefix are always default values for now.
         auto distribution = boost::random::uniform_int_distribution<int32_t>{};
-        const uint32_t ipint = (distribution(_rng) & _subnetMask) + _prefix;
+        auto ipint = (distribution(_rng) & _subnetMask) + _prefix;
+        int32_t octets[4];
+        for (int i = 0; i < 4; i++) {
+            octets[i] = ipint & 255;
+            ipint = ipint >> 8;
+        }
         // convert to a string
         std::ostringstream ipout;
-        ipout << ((ipint >> 24) & 255) << "." << ((ipint >> 16) & 255) << "."
-              << ((ipint >> 8) & 255) << "." << (ipint & 255);
+        ipout << octets[3] << "." << octets[2] << "." << octets[1] << "." << octets[0];
         return ipout.str();
     }
 
@@ -661,7 +655,7 @@ class FormatStringGenerator : public Generator<std::string> {
 public:
     FormatStringGenerator(const Node& node,
                           GeneratorArgs generatorArgs,
-                          const std::map<std::string, Parser<UniqueAppendable>>& parsers)
+                          std::map<std::string, Parser<UniqueAppendable>> parsers)
         : _rng{generatorArgs.rng}, _format{node["format"].maybe<std::string>().value_or("")} {
         std::stringstream msg;
         if (!node["format"]) {
@@ -731,7 +725,7 @@ public:
         : _rng{generatorArgs.rng},
           _id{generatorArgs.actorId},
           _lengthGen{intGenerator(extract(node, "length", "^RandomString"), generatorArgs)},
-          _alphabet{node["alphabet"].maybe<std::string>().value_or(kDefaultAlphabet())},
+          _alphabet{node["alphabet"].maybe<std::string>().value_or(kDefaultAlphabet)},
           _alphabetLength{_alphabet.size()} {
         if (_alphabetLength <= 0) {
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
@@ -908,15 +902,12 @@ public:
 // see https://www.boost.org/doc/libs/1_75_0/doc/html/date_time/date_time_io.html.
 // We strive to use smart pointers where possible. In this case this is not possible
 // but not a huge deal as these objects are statically allocated.
-const auto& formats() {
-    static auto out = {
-        std::locale{std::locale::classic(),
-                    new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M:%s%ZP")},
-        std::locale{std::locale::classic(),
-                    new boost::local_time::local_time_input_facet("%Y-%m-%d %H:%M:%s%ZP")},
-    };
-    return out;
-}
+const static auto formats = {
+    std::locale(std::locale::classic(),
+                new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M:%s%ZP")),
+    std::locale(std::locale::classic(),
+                new boost::local_time::local_time_input_facet("%Y-%m-%d %H:%M:%s%ZP")),
+};
 
 class DateToIntGenerator : public Generator<int64_t> {
 public:
@@ -983,7 +974,7 @@ public:
         : _rng{generatorArgs.rng},
           _node{node},
           _minGen{dateGenerator(node["min"], generatorArgs)},
-          _maxGen{dateGenerator(node["max"], generatorArgs, maxDate())} {}
+          _maxGen{dateGenerator(node["max"], generatorArgs, max_date)} {}
 
     bsoncxx::types::b_date evaluate() override {
         auto min = _minGen->evaluate();
@@ -1011,13 +1002,13 @@ class CycleGenerator : public Appendable {
 public:
     CycleGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
-                   const std::map<std::string, Parser<UniqueAppendable>>& parsers)
+                   std::map<std::string, Parser<UniqueAppendable>> parsers)
         : CycleGenerator(
               node, generatorArgs, parsers, extract(node, "ofLength", "^Cycle").to<int64_t>()) {}
 
     CycleGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
-                   const std::map<std::string, Parser<UniqueAppendable>>& parsers,
+                   std::map<std::string, Parser<UniqueAppendable>> parsers,
                    int64_t ofLength)
         : _ofLength{ofLength},
           _cache{generateCache(
@@ -1039,7 +1030,7 @@ private:
     static bsoncxx::array::value generateCache(
         const Node& node,
         GeneratorArgs generatorArgs,
-        const std::map<std::string, Parser<UniqueAppendable>>& parsers,
+        std::map<std::string, Parser<UniqueAppendable>> parsers,
         int64_t size) {
         bsoncxx::builder::basic::array builder{};
         auto valueGen = valueGenerator<false, UniqueAppendable>(node, generatorArgs, parsers);
@@ -1064,19 +1055,18 @@ class RepeatGenerator : public Appendable {
 
 public:
     RepeatGenerator(const Node& node,
-                    GeneratorArgs generatorArgs,
-                    const std::map<std::string, Parser<UniqueAppendable>>& parsers)
+                   GeneratorArgs generatorArgs,
+                   std::map<std::string, Parser<UniqueAppendable>> parsers)
         : RepeatGenerator(
               node, generatorArgs, parsers, extract(node, "count", "^Repeat").to<int64_t>()) {}
 
     RepeatGenerator(const Node& node,
-                    GeneratorArgs generatorArgs,
-                    const std::map<std::string, Parser<UniqueAppendable>>& parsers,
-                    int64_t numRepeats)
+                   GeneratorArgs generatorArgs,
+                   std::map<std::string, Parser<UniqueAppendable>> parsers,
+                   int64_t numRepeats)
         : _numRepeats{numRepeats},
-          _repeatCounter{0},
-          _valueGen{valueGenerator<false, UniqueAppendable>(
-              extract(node, "fromGenerator", "^Repeat"), generatorArgs, parsers)},
+        _repeatCounter{0},
+        _valueGen{valueGenerator<false, UniqueAppendable>(extract(node, "fromGenerator", "^Repeat"), generatorArgs, parsers)},
           _item(getItem()) {}
 
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
@@ -1099,7 +1089,7 @@ private:
 
     void updateIndex() {
         _repeatCounter++;
-        if (_repeatCounter >= _numRepeats) {
+        if(_repeatCounter >= _numRepeats){
             _repeatCounter = 0;
             _item = getItem();
         }
@@ -1116,7 +1106,7 @@ class ArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
     ArrayGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
-                   const std::map<std::string, Parser<UniqueAppendable>>& parsers)
+                   std::map<std::string, Parser<UniqueAppendable>> parsers)
         : _rng{generatorArgs.rng},
           _node{node},
           _generatorArgs{generatorArgs},
@@ -1135,7 +1125,7 @@ public:
 private:
     DefaultRandom& _rng;
     const Node& _node;
-    const GeneratorArgs _generatorArgs;
+    const GeneratorArgs& _generatorArgs;
     const UniqueAppendable _valueGen;
     const UniqueGenerator<int64_t> _nTimesGen;
 };
@@ -1178,7 +1168,7 @@ class ObjectGenerator : public Generator<bsoncxx::document::value> {
 public:
     ObjectGenerator(const Node& node,
                     GeneratorArgs generatorArgs,
-                    const std::map<std::string, Parser<UniqueAppendable>>& parsers)
+                    std::map<std::string, Parser<UniqueAppendable>> parsers)
         : _rng{generatorArgs.rng},
           _node{node},
           _generatorArgs{generatorArgs},
@@ -1199,7 +1189,7 @@ public:
 private:
     DefaultRandom& _rng;
     const Node& _node;
-    const GeneratorArgs _generatorArgs;
+    const GeneratorArgs& _generatorArgs;
     const UniqueGenerator<std::string> _keyGen;
     const UniqueAppendable _valueGen;
     const UniqueGenerator<int64_t> _nTimesGen;
@@ -1229,21 +1219,19 @@ private:
 class TwoDWalkGenerator : public Generator<bsoncxx::array::value> {
 public:
     TwoDWalkGenerator(const Node& node, GeneratorArgs generatorArgs)
-        : _rng{generatorArgs.rng},
-          _docsPerSeries{extract(node, "docsPerSeries", "TwoDWalk").maybe<int64_t>().value()},
-          _distPerDoc{extract(node, "distPerDoc", "TwoDWalk").maybe<double>().value()},
-          _genX{
-              extract(node, "minX", "TwoDWalk").maybe<double>().value(),
-              extract(node, "maxX", "TwoDWalk").maybe<double>().value(),
-          },
-          _genY{
-              extract(node, "minY", "TwoDWalk").maybe<double>().value(),
-              extract(node, "maxY", "TwoDWalk").maybe<double>().value(),
-          },
-          _x{},
-          _y{},
-          _vx{},
-          _vy{} {}
+        : _rng(generatorArgs.rng)
+        , _docsPerSeries{extract(node, "docsPerSeries", "TwoDWalk").maybe<int64_t>().value()}
+        , _distPerDoc{extract(node, "distPerDoc", "TwoDWalk").maybe<double>().value()}
+        , _genX{
+            extract(node, "minX", "TwoDWalk").maybe<double>().value(),
+            extract(node, "maxX", "TwoDWalk").maybe<double>().value(),
+        }
+        , _genY{
+            extract(node, "minY", "TwoDWalk").maybe<double>().value(),
+            extract(node, "maxY", "TwoDWalk").maybe<double>().value(),
+        }
+    {
+    }
 
     bsoncxx::array::value evaluate() override {
         if (_numGenerated % _docsPerSeries == 0) {
@@ -1269,7 +1257,7 @@ private:
         _y = _genY(_rng);
 
         double pi = acos(-1);
-        double dir = Uniform{0, 2 * pi}(_rng);
+        double dir = Uniform{0, 2*pi}(_rng);
         _vx = _distPerDoc * cos(dir);
         _vy = _distPerDoc * sin(dir);
     }
@@ -1283,9 +1271,10 @@ private:
     const Uniform _genY;
 
     // Mutable state.
-    double _x, _y;    // position
-    double _vx, _vy;  // "velocity", in units per document.
+    double _x, _y; // position
+    double _vx, _vy; // "velocity", in units per document.
     int64_t _numGenerated{0};
+
 };
 
 
@@ -1324,9 +1313,7 @@ private:
  */
 template <typename O>
 std::optional<std::pair<Parser<O>, std::string>> extractKnownParser(
-    const Node& node,
-    GeneratorArgs generatorArgs,
-    const std::map<std::string, Parser<O>>& parsers) {
+    const Node& node, GeneratorArgs generatorArgs, std::map<std::string, Parser<O>> parsers) {
     if (!node || !node.isMap()) {
         return std::nullopt;
     }
@@ -1402,101 +1389,98 @@ Out valueGenerator(const Node& node,
     BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
 }
 
-const std::map<std::string, Parser<UniqueAppendable>>& allParsers() {
-    static const std::map<std::string, Parser<UniqueAppendable>> out{
-        {"^FastRandomString",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<FastRandomStringGenerator>(node, generatorArgs);
-         }},
-        {"^RandomString",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
-         }},
-        {"^ChooseFromDataset",
-        [](const Node& node, GeneratorArgs generatorArgs) {
-            return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
-        }},
-        {"^Join",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<JoinGenerator>(node, generatorArgs);
-         }},
-        {"^Concat",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ConcatGenerator>(node, generatorArgs);
-         }},
-        {"^FormatString",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers());
-         }},
-        {"^Choose",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ChooseGenerator>(node, generatorArgs);
-         }},
-        {"^IP",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<IPGenerator>(node, generatorArgs);
-         }},
-        {"^ActorIdString",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ActorIdStringGenerator>(node, generatorArgs);
-         }},
-        {"^ActorId",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ActorIdIntGenerator>(node, generatorArgs);
-         }},
-        {"^RandomInt", int64GeneratorBasedOnDistribution},
-        {"^RandomDouble", doubleGeneratorBasedOnDistribution},
-        {"^Now",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<NowGenerator>(node, generatorArgs);
-         }},
-        {"^RandomDate",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<RandomDateGenerator>(node, generatorArgs);
-         }},
-        {"^ObjectId",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ObjectIdGenerator>(node, generatorArgs);
-         }},
-        {"^Verbatim",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return valueGenerator<true, UniqueAppendable>(node, generatorArgs, allParsers());
-         }},
-        {"^Inc",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<IncGenerator>(node, generatorArgs);
-         }},
-        {"^TwoDWalk",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<TwoDWalkGenerator>(node, generatorArgs);
-         }},
-        {"^IncDate",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<IncDateGenerator>(node, generatorArgs);
-         }},
-        {"^Array",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers());
-         }},
-        {"^Object",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ObjectGenerator>(node, generatorArgs, allParsers());
-         }},
-        {"^Cycle",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers());
-         }},
-        {"^Repeat",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<RepeatGenerator>(node, generatorArgs, allParsers());
-         }},
-        {"^FixedGeneratedValue",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers(), 1);
-         }},
-    };
-    return out;
-}
+const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
+    {"^FastRandomString",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<FastRandomStringGenerator>(node, generatorArgs);
+     }},
+    {"^RandomString",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
+     }},
+    {"^ChooseFromDataset",
+    [](const Node& node, GeneratorArgs generatorArgs) {
+        return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
+    }},
+    {"^Join",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<JoinGenerator>(node, generatorArgs);
+     }},
+    {"^Concat",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<ConcatGenerator>(node, generatorArgs);
+     }},
+    {"^FormatString",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers);
+     }},
+    {"^Choose",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<ChooseGenerator>(node, generatorArgs);
+     }},
+    {"^IP",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<IPGenerator>(node, generatorArgs);
+     }},
+    {"^ActorIdString",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<ActorIdStringGenerator>(node, generatorArgs);
+     }},
+    {"^ActorId",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<ActorIdIntGenerator>(node, generatorArgs);
+     }},
+    {"^RandomInt", int64GeneratorBasedOnDistribution},
+    {"^RandomDouble", doubleGeneratorBasedOnDistribution},
+    {"^Now",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<NowGenerator>(node, generatorArgs);
+     }},
+    {"^RandomDate",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<RandomDateGenerator>(node, generatorArgs);
+     }},
+    {"^ObjectId",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<ObjectIdGenerator>(node, generatorArgs);
+     }},
+    {"^Verbatim",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return valueGenerator<true, UniqueAppendable>(node, generatorArgs, allParsers);
+     }},
+    {"^Inc",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<IncGenerator>(node, generatorArgs);
+     }},
+    {"^TwoDWalk",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<TwoDWalkGenerator>(node, generatorArgs);
+     }},
+    {"^IncDate",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<IncDateGenerator>(node, generatorArgs);
+     }},
+    {"^Array",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
+     }},
+    {"^Object",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<ObjectGenerator>(node, generatorArgs, allParsers);
+     }},
+    {"^Cycle",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers);
+     }},
+    {"^Repeat",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<RepeatGenerator>(node, generatorArgs, allParsers);
+     }},
+    {"^FixedGeneratedValue",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers, 1);
+     }},
+};
 
 
 /**
@@ -1527,7 +1511,7 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node,
     DocumentGenerator::Impl::Entries entries;
     for (const auto&& [k, v] : node) {
         auto key = k.toString();
-        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, generatorArgs, allParsers());
+        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, generatorArgs, allParsers);
         entries.emplace_back(key, std::move(valgen));
     }
     return std::make_unique<DocumentGenerator::Impl>(std::move(entries));
@@ -1544,7 +1528,7 @@ UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
                                                              GeneratorArgs generatorArgs) {
     LiteralArrayGenerator::ValueType entries;
     for (const auto&& [k, v] : node) {
-        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, generatorArgs, allParsers());
+        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, generatorArgs, allParsers);
         entries.push_back(std::move(valgen));
     }
     return std::make_unique<LiteralArrayGenerator>(std::move(entries));
@@ -1735,7 +1719,7 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
          }},
         {"^FormatString",
          [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers());
+             return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers);
          }},
     };
     if (auto parserPair = extractKnownParser(node, generatorArgs, stringParsers)) {
@@ -1761,7 +1745,7 @@ UniqueGenerator<bsoncxx::array::value> bsonArrayGenerator(const Node& node,
          }},
         {"^Array",
          [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers());
+             return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
          }},
         {"^Verbatim", [](const Node& node, GeneratorArgs generatorArgs) {
              if (!node.isSequence()) {
@@ -1792,7 +1776,7 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
     }
     for (const auto&& [k, v] : node["from"]) {
-        _choices.push_back(valueGenerator<false, UniqueAppendable>(v, generatorArgs, allParsers()));
+        _choices.push_back(valueGenerator<false, UniqueAppendable>(v, generatorArgs, allParsers));
     }
     if (node["weights"]) {
         for (const auto&& [k, v] : node["weights"]) {
@@ -1814,23 +1798,23 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
 int64_t parseStringToMillis(const std::string& datetime) {
     if (!datetime.empty()) {
         // TODO: PERF-2153 needs some investigation.
-        for (const auto& format : formats()) {
+        for (const auto& format : formats) {
             std::istringstream date_stream{datetime};
             date_stream.imbue(format);
             boost::local_time::local_date_time local_date{boost::local_time::not_a_date_time};
             if (date_stream >> local_date) {
-                return (local_date.utc_time() - epoch()).total_milliseconds();
+                return (local_date.utc_time() - epoch).total_milliseconds();
             }
         }
     }
     try {
         // Last gasp try to interpret unsigned long long.
-        return static_cast<int64_t>(std::stoull(datetime));
+        return std::stoull(datetime);
     } catch (const std::invalid_argument& _) {
         auto msg = "^RandomDate: Invalid Dateformat '" + datetime + "'";
         BOOST_THROW_EXCEPTION(InvalidDateFormat{msg});
     }
-}
+};
 
 /**
  * @private
@@ -1919,7 +1903,7 @@ UniqueGenerator<int64_t> dateGenerator(const Node& node,
     }
 
     // No value, get the appropriate default.
-    auto millis = (defaultTime - epoch()).total_milliseconds();
+    auto millis = (defaultTime - epoch).total_milliseconds();
     return std::make_unique<ConstantAppender<int64_t>>(millis);
 }
 }  // namespace
@@ -1962,11 +1946,8 @@ TypeGenerator<double> makeDoubleGenerator(const Node& node, GeneratorArgs genera
 
 template <class T>
 TypeGenerator<T>::~TypeGenerator() = default;
-
 template <class T>
-[[maybe_unused]]  // Used in instantiated templates. No need to warn on it.
 TypeGenerator<T>::TypeGenerator(TypeGenerator<T>&&) noexcept = default;
-
 template <class T>
 TypeGenerator<T>& TypeGenerator<T>::operator=(TypeGenerator<T>&&) noexcept = default;
 

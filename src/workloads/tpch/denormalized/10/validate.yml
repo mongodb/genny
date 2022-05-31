@@ -1,0 +1,17 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  The test control for TPC-H expects a validate.yml file to exist in all TPC-H scales.
+  We don't need validation on scale 10, so this is just a Nop.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHDenormalizedValidate
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - Nop: true

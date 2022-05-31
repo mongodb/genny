@@ -14,14 +14,25 @@
 
 #include <cast_core/actors/Deleter.hpp>
 
+#include <memory>
+
+#include <yaml-cpp/yaml.h>
+
+#include <bsoncxx/json.hpp>
+
 #include <mongocxx/client.hpp>
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
 
+#include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <gennylib/Cast.hpp>
+#include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
+
+#include <value_generators/DocumentGenerator.hpp>
+
 
 namespace genny::actor {
 struct Deleter::PhaseConfig {

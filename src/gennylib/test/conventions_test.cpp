@@ -53,7 +53,7 @@ TEST_CASE("Conventions used by PhaseLoop") {
     REQUIRE(phaseContext["Rate"].maybe<RateSpec>() == std::nullopt);
     REQUIRE(phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter") ==
             "defaultRateLimiter");
-}
+};
 
 TEST_CASE("genny::TimeSpec conversions") {
     SECTION("Can convert to genny::TimeSpec") {

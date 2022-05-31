@@ -33,32 +33,34 @@ TPCHNormalizedQuery15CreateView: &TPCHNormalizedQuery15CreateView
           {$project: {_id: 0, supplier_no: "$_id", total_revenue: 1}},
         ]
 
+TPCHNormalizedQuery15Aggregation: &TPCHNormalizedQuery15Aggregation
+  aggregate: *query15View
+  pipeline:
+    [
+      {$group: {_id: "$total_revenue", supplier_no: {$push: "$supplier_no"}}},
+      {$sort: {_id: -1}},
+      {$limit: 1},
+      {$unwind: "$supplier_no"},
+      {$project: {_id: 0, total_revenue: "$_id", supplier_no: 1}},
+      {$lookup: {from: "supplier", localField: "supplier_no", foreignField: "s_suppkey", as: "supplier"}},
+      {$unwind: "$supplier"},
+      {$project: {
+        s_suppkey: "$supplier.s_suppkey",
+        s_name: "$supplier.s_name",
+        s_address: "$supplier.s_address",
+        s_phone: "$supplier.s_phone",
+        total_revenue: 1
+      }},
+    ]
+  cursor: {batchSize: *batchSize}
+  allowDiskUse: true
+
 TPCHNormalizedQuery15Warmup:
   Repeat: *Repeat
   Database: *db
   Operations:
   - OperationName: RunCommand
-    OperationCommand: &TPCHNormalizedQuery15Aggregation
-      aggregate: *query15View
-      pipeline:
-        [
-          {$group: {_id: "$total_revenue", supplier_no: {$push: "$supplier_no"}}},
-          {$sort: {_id: -1}},
-          {$limit: 1},
-          {$unwind: "$supplier_no"},
-          {$project: {_id: 0, total_revenue: "$_id", supplier_no: 1}},
-          {$lookup: {from: "supplier", localField: "supplier_no", foreignField: "s_suppkey", as: "supplier"}},
-          {$unwind: "$supplier"},
-          {$project: {
-            s_suppkey: "$supplier.s_suppkey",
-            s_name: "$supplier.s_name",
-            s_address: "$supplier.s_address",
-            s_phone: "$supplier.s_phone",
-            total_revenue: 1
-          }},
-        ]
-      cursor: {batchSize: *batchSize}
-      allowDiskUse: true
+    OperationCommand: *TPCHNormalizedQuery15Aggregation
 
 TPCHNormalizedQuery15DropView: &TPCHNormalizedQuery15DropView
   Repeat: *Repeat
@@ -83,6 +85,7 @@ TPCHNormalizedQuery15Explain:
   Operations:
   - OperationMetricsName: Query15
     OperationName: RunCommand
+    OperationLogsResult: true
     OperationCommand:
       explain: *TPCHNormalizedQuery15Aggregation
       verbosity:
