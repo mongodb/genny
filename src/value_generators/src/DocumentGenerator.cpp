@@ -760,7 +760,6 @@ public:
 
         {
             if (_all_datasets.count(_path) == 0){
-                std::cout << "we open the file" << std::endl;
                 _ifs.open(_path, std::ifstream::in);
                 if (_ifs.is_open()){
                     while(std::getline(_ifs, _current_line))
