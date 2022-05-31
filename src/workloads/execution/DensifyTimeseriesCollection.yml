@@ -87,7 +87,7 @@ Actors:
     BatchSize: *batchSize
     Document:
       partitionKey: {^RandomInt: {min: 1, max: 100}}
-      timestamp: {^RandomDate: {min: "2021-01-01T00:00:00.000", max: "2021-01-01T00:01:00.000"}}
+      timestamp: {^IncDate: {start: "2021-01-01T00:00:00.000", step: 400}}
       # Test a subset of units that have different characteristics.
       numeric: {^RandomInt: {min: 0, max: 100}}  # Separate codepath for numeric DensifyValues.
     # $densify stages always add a $sort on the field that is being densified, so this phase adds
