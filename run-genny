@@ -112,9 +112,9 @@ if ! _pip --version >/dev/null 2>&1; then
 fi
 
 
-# Check for genny-setup-done-v2 which we create at the end of setup.
+# Check for genny-setup-done-v3 which we create at the end of setup.
 # This prevents half-setup environments.
-if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v2" ]]; then
+if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v3" ]]; then
     rm -rf "${GENNY_REPO_ROOT:?}/${_genny_venv}"
 
     python3 -m venv "${GENNY_REPO_ROOT}/${_genny_venv}"
@@ -132,7 +132,7 @@ if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_ge
     # (Don't use the sha for now but might in the future to determine
     # if we need to run pip install again or something.)
     pushd "${GENNY_REPO_ROOT}" >/dev/null
-        git rev-parse HEAD > "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v2"
+        git rev-parse HEAD > "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v3"
     popd >/dev/null
 fi
 
