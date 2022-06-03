@@ -123,6 +123,8 @@ if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_ge
     # shellcheck source=/dev/null
     source "${GENNY_REPO_ROOT}/${_genny_venv}/bin/activate"
 
+    _pip install --upgrade pip
+
     # Install Genny requirements
     _pip install -r "${GENNY_REPO_ROOT}/src/lamplib/requirements.txt"
 
