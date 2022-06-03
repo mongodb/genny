@@ -763,7 +763,13 @@ private:
                To avoid reading and storing the datasets multiple times
                we check if the path already exists in the map (as key). If
                it doesn't exist, we open the file and store its contents.
+               If the number of items is more than 0, it means the data is
+               loaded, so we can skip everything, including the mutex.
             */
+
+            if (_all_datasets.count(_path) > 0) {
+                return;
+            }
 
             {
                 std::mutex _dataset_mutex;
@@ -773,6 +779,11 @@ private:
                     std::string currentLine;
                     std::ifstream ifs;
 
+                    /* Add a first empty vector as soon as possible
+                       so new threads that are being created do not
+                       have to wait to acquire the mutex */
+
+                    _all_datasets[_path] = std::vector<std::string>();
                     ifs.open(_path, std::ifstream::in);
                     if (ifs.is_open()) {
                         while (std::getline(ifs, currentLine)) {
