@@ -79,7 +79,7 @@ Description: |
   or a collection.drop() etc.
 
   Actor B's 2 threads will echo "B.1" 1e3 (1000) times each
-  and Actor A's 10 threads will echo "A.1" for however long 
+  and Actor A's 10 threads will echo "A.1" for however long
   it takes B to do this.
 
   == Potential Gotchas ==
