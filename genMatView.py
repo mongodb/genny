@@ -30,24 +30,40 @@ def renameDist(d):
     return d.replace(" ", "").replace("{", "_").replace("}", "_").replace(":", "_").replace(",", "_").replace(".", "_")
 
 experimentTypeOpts = ["wild-card-index-exp", "mat-view-exp"]
-isShardedOpts = [True, False]
+isShardedOpts = [
+    True,
+    # False
+]
 isTransactionalOpts = [True, False]
 numInitialDocsOpts = ['10000']
 minBaseDocSizeBytesOpts = ['1000']
 numGroupsAndDistributionOpts = {
     'singlekey': '{distribution: uniform, min: 1, max: 1}',
-    'uniform10':'{distribution: uniform, min: 1, max: 10}',
+    # 'uniform10':'{distribution: uniform, min: 1, max: 10}',
     'uniform100':'{distribution: uniform, min: 1, max: 100}',
-    'uniform1000':'{distribution: uniform, min: 1, max: 1000}',
+    # 'uniform1000':'{distribution: uniform, min: 1, max: 1000}',
     'uniform10000':'{distribution: uniform, min: 1, max: 10000}',
-    'binomial':'{distribution: binomial, t: 100, p: 0.05}',
-    'geometric':'{distribution: geometric, p: 0.1}',
+    # 'binomial':'{distribution: binomial, t: 100, p: 0.05}',
+    # 'geometric':'{distribution: geometric, p: 0.1}',
 }
-numClientThreadsOpts = ['1', '2', '4', '8', '16', '32']
+numClientThreadsOpts = [
+    '1',
+    # '2',
+    '4',
+    # '8',
+    '16',
+    # '32',
+]
 numClientBatchesOpts = ['100']
 numInsertsPerClientBatchOpts = ['100']
 insertModeOpts = ['insertMany', 'insertOne']
-numMatViewsOpts= ['0', '1', '2', '4', '8']
+numMatViewsOpts= [
+    '0',
+    '1',
+    '2',
+    # '4',
+    # '8',
+]
 matViewModeOpts = [
     'sync-incremental',
     'async-incremental-result-delta',
