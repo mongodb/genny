@@ -21,7 +21,6 @@
 #include <map>
 #include <sstream>
 #include <unordered_map>
-#include <mutex>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/date_time.hpp>
@@ -748,67 +747,73 @@ public:
     RandomStringFromDataset(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng},
           _id{generatorArgs.actorId},
-          _path{node["path"].maybe<std::string>().value()},
-          _pathLength{_path.size()}{}
+          _path{node["path"].maybe<std::string>().value()} {
+        loadDataset();
+    }
 
+private:
     void loadDataset() {
-      {
-        if (_pathLength <= 0) {
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-            "ChooseFromDataset requieres non-empty path"));
+        {
+            if (_path.empty()) {
+                BOOST_THROW_EXCEPTION(
+                    InvalidValueGeneratorSyntax("ChooseFromDataset requieres non-empty path"));
             }
 
-        {
-            if (_all_datasets.count(_path) == 0){
-                _ifs.open(_path, std::ifstream::in);
-                if (_ifs.is_open()){
-                    while(std::getline(_ifs, _current_line))
-                    {
-                        // Ignore emtpy lines
-                        if (_current_line.size()!=0){
-                            _all_datasets[_path].push_back(_current_line);
+            /* If path the doesn't exist in memory we load it.
+               To avoid reading and storing the datasets multiple times
+               we check if the path already exists in the map (as key). If
+               it doesn't exist, we open the file and store its contents.
+            */
+
+            {
+                std::mutex _dataset_mutex;
+                std::lock_guard<std::mutex> lk(_dataset_mutex);
+
+                if (_all_datasets.count(_path) == 0) {
+                    std::string currentLine;
+                    std::ifstream ifs;
+
+                    ifs.open(_path, std::ifstream::in);
+                    if (ifs.is_open()) {
+                        while (std::getline(ifs, currentLine)) {
+                            // Ignore emtpy lines
+                            if (!currentLine.empty()) {
+                                _all_datasets[_path].push_back(currentLine);
+                            }
                         }
                     }
-                }
-            
-                else {
-                    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                        "The specified file for ChooseFromDataset cannot be opened or it does not exist")); }
 
-                if (_all_datasets[_path].size() == 0) {
-                    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                        "The specified file for ChooseFromDataset is empty")); }
+                    else {
+                        boost::filesystem::path cwd(boost::filesystem::current_path());
+                        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                            "The specified file for ChooseFromDataset cannot be opened or it does "
+                            "not exist. Specified path: " +
+                            _path + ". Current Working Directory: " + cwd.string()));
+                    }
+
+                    if (_all_datasets[_path].empty()) {
+                        boost::filesystem::path cwd(boost::filesystem::current_path());
+
+                        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                            "The specified file for ChooseFromDataset is empty. Specified path: " +
+                            _path + ". Current Working Directory: " + cwd.string()));
+                    }
+                }
             }
         }
-      }
     }
 
     std::string evaluate() {
-        /* If path the doesn't exist in memory we load it.
-           To avoid reading and storing the datasets multiple times
-           we check if the path already exists in the map (as key). If
-           it doesn't exist, we open the file and store its contents. 
-        */
-
-        if (_all_datasets.count(_path) == 0){
-            std::lock_guard<std::mutex> lk(_dataset_mutex);
-            loadDataset();
-        }
-
-        auto distribution = boost::random::uniform_int_distribution<size_t>{0, _all_datasets[_path].size() - 1};
+        auto distribution =
+            boost::random::uniform_int_distribution<size_t>{0, _all_datasets[_path].size() - 1};
         return _all_datasets[_path][distribution(_rng)];
     }
-    
+
 private:
     DefaultRandom& _rng;
     ActorId _id;
     std::string _path;
-    const size_t _pathLength;
-    std::ifstream _ifs;
-    std::vector<std::string> _dataSetContent;
-    std::string _current_line;
     static inline std::unordered_map<std::string, std::vector<std::string>> _all_datasets;
-    static inline std::mutex _dataset_mutex;
 };
 
 /** `{^RandomString:{...}` */
@@ -1054,18 +1059,19 @@ class RepeatGenerator : public Appendable {
 
 public:
     RepeatGenerator(const Node& node,
-                   GeneratorArgs generatorArgs,
-                   std::map<std::string, Parser<UniqueAppendable>> parsers)
+                    GeneratorArgs generatorArgs,
+                    std::map<std::string, Parser<UniqueAppendable>> parsers)
         : RepeatGenerator(
               node, generatorArgs, parsers, extract(node, "count", "^Repeat").to<int64_t>()) {}
 
     RepeatGenerator(const Node& node,
-                   GeneratorArgs generatorArgs,
-                   std::map<std::string, Parser<UniqueAppendable>> parsers,
-                   int64_t numRepeats)
+                    GeneratorArgs generatorArgs,
+                    std::map<std::string, Parser<UniqueAppendable>> parsers,
+                    int64_t numRepeats)
         : _numRepeats{numRepeats},
-        _repeatCounter{0},
-        _valueGen{valueGenerator<false, UniqueAppendable>(extract(node, "fromGenerator", "^Repeat"), generatorArgs, parsers)},
+          _repeatCounter{0},
+          _valueGen{valueGenerator<false, UniqueAppendable>(
+              extract(node, "fromGenerator", "^Repeat"), generatorArgs, parsers)},
           _item(getItem()) {}
 
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
@@ -1088,7 +1094,7 @@ private:
 
     void updateIndex() {
         _repeatCounter++;
-        if(_repeatCounter >= _numRepeats){
+        if (_repeatCounter >= _numRepeats) {
             _repeatCounter = 0;
             _item = getItem();
         }
@@ -1218,19 +1224,17 @@ private:
 class TwoDWalkGenerator : public Generator<bsoncxx::array::value> {
 public:
     TwoDWalkGenerator(const Node& node, GeneratorArgs generatorArgs)
-        : _rng(generatorArgs.rng)
-        , _docsPerSeries{extract(node, "docsPerSeries", "TwoDWalk").maybe<int64_t>().value()}
-        , _distPerDoc{extract(node, "distPerDoc", "TwoDWalk").maybe<double>().value()}
-        , _genX{
-            extract(node, "minX", "TwoDWalk").maybe<double>().value(),
-            extract(node, "maxX", "TwoDWalk").maybe<double>().value(),
-        }
-        , _genY{
-            extract(node, "minY", "TwoDWalk").maybe<double>().value(),
-            extract(node, "maxY", "TwoDWalk").maybe<double>().value(),
-        }
-    {
-    }
+        : _rng(generatorArgs.rng),
+          _docsPerSeries{extract(node, "docsPerSeries", "TwoDWalk").maybe<int64_t>().value()},
+          _distPerDoc{extract(node, "distPerDoc", "TwoDWalk").maybe<double>().value()},
+          _genX{
+              extract(node, "minX", "TwoDWalk").maybe<double>().value(),
+              extract(node, "maxX", "TwoDWalk").maybe<double>().value(),
+          },
+          _genY{
+              extract(node, "minY", "TwoDWalk").maybe<double>().value(),
+              extract(node, "maxY", "TwoDWalk").maybe<double>().value(),
+          } {}
 
     bsoncxx::array::value evaluate() override {
         if (_numGenerated % _docsPerSeries == 0) {
@@ -1256,7 +1260,7 @@ private:
         _y = _genY(_rng);
 
         double pi = acos(-1);
-        double dir = Uniform{0, 2*pi}(_rng);
+        double dir = Uniform{0, 2 * pi}(_rng);
         _vx = _distPerDoc * cos(dir);
         _vy = _distPerDoc * sin(dir);
     }
@@ -1270,10 +1274,9 @@ private:
     const Uniform _genY;
 
     // Mutable state.
-    double _x, _y; // position
-    double _vx, _vy; // "velocity", in units per document.
+    double _x, _y;    // position
+    double _vx, _vy;  // "velocity", in units per document.
     int64_t _numGenerated{0};
-
 };
 
 
@@ -1398,9 +1401,9 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
          return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
      }},
     {"^ChooseFromDataset",
-    [](const Node& node, GeneratorArgs generatorArgs) {
-        return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
-    }},
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
+     }},
     {"^Join",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<JoinGenerator>(node, generatorArgs);
@@ -1697,9 +1700,9 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
              return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
          }},
         {"^ChooseFromDataset",
-        [](const Node& node, GeneratorArgs generatorArgs) {
-            return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
-        }},
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
+         }},
         {"^Join",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<JoinGenerator>(node, generatorArgs);
