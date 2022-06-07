@@ -443,7 +443,7 @@ If you are running Genny through DSI in Evergreen, the FTDC contents are rolled 
 	cd ~/[path_to_evg_project_repo]
 	evergreen patch -p [evg_project]
 	cd ~/[path_to_genny]/genny
-	evergreen patch-set-module -i [patch_id_number] genny
+	evergreen patch-set-module -i [patch_id_number] -m genny
 	```
     
     You can then select `schedule_patch_auto_tasks` on a variant to schedule any modified or new Genny tasks created by AutoRun. Alternatively, you could select `schedule_variant_auto_tasks` to schedule all Genny tasks on that variant.
