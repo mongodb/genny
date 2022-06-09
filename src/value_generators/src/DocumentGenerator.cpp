@@ -741,6 +741,39 @@ protected:
 };
 
 
+class DataSetCache {
+public:
+    DataSetCache() {}
+
+    // This method creates a new space for a dataset to be filled out ...
+    std::vector<std::string>* createMemoryForDataset(const std::string& path) {
+        std::lock_guard<std::mutex> lk(_dataset_mutex);
+        if (_all_datasets.count(path) > 0) {
+            /* When multiple threads try to load a dataset,
+                all but the first thread will just return and do nothing.
+                This way, only the first thread will actually
+                load the data */
+            return nullptr;
+        }
+
+        /* Insert an empty vector and get its address. Once
+            the first vector is inserted, the waithing threads
+            will find that there is one element for that _path
+            and return. */
+        _all_datasets[path] = std::vector<std::string>();
+        return &_all_datasets[path];
+    }
+
+    const std::vector<std::string>& getDatasetForPath(const std::string& path) {
+        return _all_datasets[path];
+    }
+
+private:
+    std::unordered_map<std::string, std::vector<std::string>> _all_datasets;
+    std::mutex _dataset_mutex;
+};
+
+
 /** `{^ChooseFromDataset:{...}` */
 class RandomStringFromDataset : public Generator<std::string> {
 
@@ -756,51 +789,21 @@ public:
         loadDataset();
     }
 
+    std::string evaluate() {
+        auto dataset = _datasets.getDatasetForPath(_path);
+        auto distribution =
+            boost::random::uniform_int_distribution<size_t>{0, dataset.size() - 1};
+        return dataset[distribution(_rng)];
+    }
+
 private:
     void loadDataset() {
-
-        std::vector<std::string>* pd;
-        std::string currentLine;
-        std::ifstream ifs;
-
-        {
-            std::lock_guard<std::mutex> lk(_dataset_mutex);
-            if (_all_datasets.count(_path) > 0) {
-                /* When multiple threads try to load a dataset,
-                   all but the first thread will just return and do nothing.
-                   This way, only the first thread will actually
-                   load the data */
-                return;
-            }
-
-            else {
-                /* Insert an empty vector and get its address. Once
-                   the first vector is inserted, the waithing threads
-                   will find that there is one element for that _path
-                   and return. */
-                _all_datasets[_path] = std::vector<std::string>();
-                pd = &_all_datasets[_path];
-            }
+        auto pd = _datasets.createMemoryForDataset(_path);
+        if(pd == nullptr) {
+            // Another thread is creating the dataset
+            return;
         }
-
-        ifs.open(_path, std::ifstream::in);
-        if (ifs.is_open()) {
-
-            while (std::getline(ifs, currentLine)) {
-                // Ignore emtpy lines
-                if (!currentLine.empty()) {
-                    pd->push_back(currentLine);
-                }
-            }
-        }
-
-        else {
-            boost::filesystem::path cwd(boost::filesystem::current_path());
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                "The specified file for ChooseFromDataset cannot be opened or it does "
-                "not exist. Specified path: " +
-                _path + ". Current Working Directory: " + cwd.string()));
-        }
+        readFile(pd);
 
         if (pd->empty()) {
             boost::filesystem::path cwd(boost::filesystem::current_path());
@@ -811,18 +814,31 @@ private:
         }
     }
 
-    std::string evaluate() {
-        auto distribution =
-            boost::random::uniform_int_distribution<size_t>{0, _all_datasets[_path].size() - 1};
-        return _all_datasets[_path][distribution(_rng)];
+    void readFile(std::vector<std::string>* result) {
+        std::ifstream ifs;
+        std::string currentLine;
+        ifs.open(_path, std::ifstream::in);
+        if (!ifs.is_open()) {
+            boost::filesystem::path cwd(boost::filesystem::current_path());
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                "The specified file for ChooseFromDataset cannot be opened or it does "
+                "not exist. Specified path: " +
+                _path + ". Current Working Directory: " + cwd.string()));
+        }
+
+        while (std::getline(ifs, currentLine)) {
+            // Ignore emtpy lines
+            if (!currentLine.empty()) {
+                result->push_back(currentLine);
+            }
+        }
     }
 
 private:
     DefaultRandom& _rng;
     ActorId _id;
     std::string _path;
-    static inline std::unordered_map<std::string, std::vector<std::string>> _all_datasets;
-    static inline std::mutex _dataset_mutex;
+    static inline DataSetCache _datasets;
 };
 
 /** `{^RandomString:{...}` */
