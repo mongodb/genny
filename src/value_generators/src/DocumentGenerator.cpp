@@ -749,6 +749,9 @@ public:
         : _rng{generatorArgs.rng},
           _id{generatorArgs.actorId},
           _path{node["path"].maybe<std::string>().value()} {
+            if (_path.empty()) {
+                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("ChooseFromDataset requieres non-empty path"));
+            }
         loadDataset();
     }
 
@@ -758,11 +761,6 @@ private:
         std::vector<std::string>* pd;
         std::string currentLine;
         std::ifstream ifs;
-
-        if (_path.empty()) {
-            BOOST_THROW_EXCEPTION(
-                InvalidValueGeneratorSyntax("ChooseFromDataset requieres non-empty path"));
-        }
 
         {
             std::lock_guard<std::mutex> lk(_dataset_mutex);
