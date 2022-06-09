@@ -740,6 +740,7 @@ protected:
     const size_t _alphabetLength;
 };
 
+
 /** `{^ChooseFromDataset:{...}` */
 class RandomStringFromDataset : public Generator<std::string> {
 
@@ -753,64 +754,61 @@ public:
 
 private:
     void loadDataset() {
+
+        std::vector<std::string>* pd;
+        std::string currentLine;
+        std::ifstream ifs;
+
+        if (_path.empty()) {
+            BOOST_THROW_EXCEPTION(
+                InvalidValueGeneratorSyntax("ChooseFromDataset requieres non-empty path"));
+        }
+
         {
-            if (_path.empty()) {
-                BOOST_THROW_EXCEPTION(
-                    InvalidValueGeneratorSyntax("ChooseFromDataset requieres non-empty path"));
-            }
-
-            /* If path the doesn't exist in memory we load it.
-               To avoid reading and storing the datasets multiple times
-               we check if the path already exists in the map (as key). If
-               it doesn't exist, we open the file and store its contents.
-               If the number of items is more than 0, it means the data is
-               loaded, so we can skip everything, including the mutex.
-            */
-
+            std::lock_guard<std::mutex> lk(_dataset_mutex);
             if (_all_datasets.count(_path) > 0) {
+                /* When multiple threads try to load a dataset,
+                   all but the first thread will just return and do nothing.
+                   This way, only the first thread will actually
+                   load the data */
                 return;
             }
 
-            {
-                std::mutex _dataset_mutex;
-                std::lock_guard<std::mutex> lk(_dataset_mutex);
+            else {
+                /* Insert an empty vector and get its address. Once
+                   the first vector is inserted, the waithing threads
+                   will find that there is one element for that _path
+                   and return. */
+                _all_datasets[_path] = std::vector<std::string>();
+                pd = &_all_datasets[_path];
+            }
+        }
 
-                if (_all_datasets.count(_path) == 0) {
-                    std::string currentLine;
-                    std::ifstream ifs;
+        ifs.open(_path, std::ifstream::in);
+        if (ifs.is_open()) {
 
-                    /* Add a first empty vector as soon as possible
-                       so new threads that are being created do not
-                       have to wait to acquire the mutex */
-
-                    _all_datasets[_path] = std::vector<std::string>();
-                    ifs.open(_path, std::ifstream::in);
-                    if (ifs.is_open()) {
-                        while (std::getline(ifs, currentLine)) {
-                            // Ignore emtpy lines
-                            if (!currentLine.empty()) {
-                                _all_datasets[_path].push_back(currentLine);
-                            }
-                        }
-                    }
-
-                    else {
-                        boost::filesystem::path cwd(boost::filesystem::current_path());
-                        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                            "The specified file for ChooseFromDataset cannot be opened or it does "
-                            "not exist. Specified path: " +
-                            _path + ". Current Working Directory: " + cwd.string()));
-                    }
-
-                    if (_all_datasets[_path].empty()) {
-                        boost::filesystem::path cwd(boost::filesystem::current_path());
-
-                        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                            "The specified file for ChooseFromDataset is empty. Specified path: " +
-                            _path + ". Current Working Directory: " + cwd.string()));
-                    }
+            while (std::getline(ifs, currentLine)) {
+                // Ignore emtpy lines
+                if (!currentLine.empty()) {
+                    pd->push_back(currentLine);
                 }
             }
+        }
+
+        else {
+            boost::filesystem::path cwd(boost::filesystem::current_path());
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                "The specified file for ChooseFromDataset cannot be opened or it does "
+                "not exist. Specified path: " +
+                _path + ". Current Working Directory: " + cwd.string()));
+        }
+
+        if (pd->empty()) {
+            boost::filesystem::path cwd(boost::filesystem::current_path());
+
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                "The specified file for ChooseFromDataset is empty. Specified path: " + _path +
+                ". Current Working Directory: " + cwd.string()));
         }
     }
 
@@ -825,6 +823,7 @@ private:
     ActorId _id;
     std::string _path;
     static inline std::unordered_map<std::string, std::vector<std::string>> _all_datasets;
+    static inline std::mutex _dataset_mutex;
 };
 
 /** `{^RandomString:{...}` */
