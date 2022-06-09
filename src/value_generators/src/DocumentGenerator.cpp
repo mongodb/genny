@@ -745,21 +745,21 @@ class DataSetCache {
 public:
     DataSetCache() {}
 
-    // This method creates a new space for a dataset to be filled out ...
+    /* The dataset is stored in a map, using the path of the file as the key and a vector of strings
+    with file's content as the value. In this method the empty vector is created and return its
+    pointer */
     std::vector<std::string>* createMemoryForDataset(const std::string& path) {
         std::lock_guard<std::mutex> lk(_dataset_mutex);
         if (_all_datasets.count(path) > 0) {
-            /* When multiple threads try to load a dataset,
-                all but the first thread will just return and do nothing.
-                This way, only the first thread will actually
-                load the data */
+            /* When multiple threads try to load a dataset, all but the first thread will return
+               and do nothing. This way only the first thread will actually load the data.
+               Once the first vector is inserted and the first thread has finished running the
+               threads that were waiting on this mutex will find that there is already one element
+               for that _path and return a null pointer */
             return nullptr;
         }
 
-        /* Insert an empty vector and get its address. Once
-            the first vector is inserted, the waithing threads
-            will find that there is one element for that _path
-            and return. */
+        /* Insert an empty vector and return its pointer */
         _all_datasets[path] = std::vector<std::string>();
         return &_all_datasets[path];
     }
@@ -772,7 +772,6 @@ private:
     std::unordered_map<std::string, std::vector<std::string>> _all_datasets;
     std::mutex _dataset_mutex;
 };
-
 
 /** `{^ChooseFromDataset:{...}` */
 class RandomStringFromDataset : public Generator<std::string> {
@@ -798,10 +797,12 @@ public:
 private:
     void loadDataset() {
         auto pd = _datasets.createMemoryForDataset(_path);
+
         if (pd == nullptr) {
-            // Another thread is creating the dataset
+            /* No need to load the dataset because another thread is doing it */
             return;
         }
+
         readFile(pd);
 
         if (pd->empty()) {
@@ -813,6 +814,7 @@ private:
         }
     }
 
+    /* Read the file, line by line, and store it in the vector */
     void readFile(std::vector<std::string>* result) {
         std::ifstream ifs;
         std::string currentLine;
@@ -826,7 +828,7 @@ private:
         }
 
         while (std::getline(ifs, currentLine)) {
-            // Ignore emtpy lines
+            /* Ignore emtpy lines */
             if (!currentLine.empty()) {
                 result->push_back(currentLine);
             }
