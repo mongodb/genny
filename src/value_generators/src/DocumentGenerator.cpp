@@ -747,7 +747,8 @@ public:
 
     /* The dataset is stored in a map, using the path of the file as the key and a vector of strings
     with file's content as the value. In this method the empty vector is created and return its
-    pointer */
+    pointer. getDataSetForPath method doesn't need the lock because loading and evaluating are
+    separate stages in Genny */
     std::vector<std::string>* createMemoryForDataset(const std::string& path) {
         std::lock_guard<std::mutex> lk(_dataset_mutex);
         if (_all_datasets.count(path) > 0) {
