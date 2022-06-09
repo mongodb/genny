@@ -749,9 +749,10 @@ public:
         : _rng{generatorArgs.rng},
           _id{generatorArgs.actorId},
           _path{node["path"].maybe<std::string>().value()} {
-            if (_path.empty()) {
-                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("ChooseFromDataset requieres non-empty path"));
-            }
+        if (_path.empty()) {
+            BOOST_THROW_EXCEPTION(
+                InvalidValueGeneratorSyntax("ChooseFromDataset requieres non-empty path"));
+        }
         loadDataset();
     }
 
