@@ -791,15 +791,14 @@ public:
 
     std::string evaluate() {
         auto dataset = _datasets.getDatasetForPath(_path);
-        auto distribution =
-            boost::random::uniform_int_distribution<size_t>{0, dataset.size() - 1};
+        auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataset.size() - 1};
         return dataset[distribution(_rng)];
     }
 
 private:
     void loadDataset() {
         auto pd = _datasets.createMemoryForDataset(_path);
-        if(pd == nullptr) {
+        if (pd == nullptr) {
             // Another thread is creating the dataset
             return;
         }
