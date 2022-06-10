@@ -439,16 +439,19 @@ Actors:
         Database: *db
         Operations: *TestOperations
 
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone-all-feature-flags
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v5.3
-      - v6.0
+# TODO PERF-3094: Revive 'AutoRun' configuration when the project is near to a closure.
+# AutoRun:
+# - When:
+#     mongodb_setup:
+#       $eq:
+#       - standalone-all-feature-flags
+#     branch_name:
+#       $neq:
+#       - v4.0
+#       - v4.2
+#       - v4.4
+#       - v5.0
+#       - v5.3
+#       - v6.0
+#     ThenRun:
+#     - test_control: charts_events_1G
