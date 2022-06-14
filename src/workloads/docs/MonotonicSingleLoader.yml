@@ -1,7 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 Description: |
-  Loads a large set of documents in test.mycoll (Collection0 by default if mycoll is not specified where `field` is assigned a random value between 0 and 100.
+  Loads a large set of documents in test.mycoll (Collection0 by default if mycoll is not specified
+  where `field` is assigned a random value between 0 and 100.
 
 Actors:
 - Name: LoadInitialData
