@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 Description: |
-  TODO: TIG-3320
+  Shards collection test.Collection0 and creates a series of indexes on the collection.
 
 Actors:
 - Name: EnableSharding

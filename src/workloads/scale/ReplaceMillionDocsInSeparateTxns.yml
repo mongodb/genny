@@ -1,10 +1,8 @@
-# This workload is developed to test the amount of time it takes to remove and re-insert one
-# million documents, with a fixed transaction batch size of one hundred.
-
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 Description: |
-  TODO: TIG-3320
+  This workload is developed to test the amount of time it takes to remove and re-insert one
+  million documents, with a fixed transaction batch size of one hundred.
 
 Document: &Doc  # The size of each document is about 2kb.
   a: 1
