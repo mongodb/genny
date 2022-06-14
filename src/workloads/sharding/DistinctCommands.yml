@@ -8,8 +8,8 @@ Clients:
       maxPoolSize: 20000
 
 Keywords:
-  - Distinct
-  - Large Strings
+- Distinct
+- Large Strings
 
 Actors:
 - Name: Loader
@@ -35,11 +35,11 @@ Actors:
   - Duration: 5 minutes
     Database: test
     Operations:
-      - OperationMetricsName: Distinct
-        OperationName: RunCommand
-        OperationCommand:
-          distinct: Collection0
-          key: shardKey
+    - OperationMetricsName: Distinct
+      OperationName: RunCommand
+      OperationCommand:
+        distinct: Collection0
+        key: shardKey
   - {Nop: true}
 
 - Name: Finds
@@ -52,13 +52,13 @@ Actors:
     Database: test
     Collection: Collection0
     Operations:
-      - OperationName: findOne
-        OperationCommand:
-          Filter: {shardKey: *RandomString}
+    - OperationName: findOne
+      OperationCommand:
+        Filter: {shardKey: *RandomString}
   - Duration: 5 minutes
     Database: test
     Collection: Collection0
     Operations:
-      - OperationName: findOne
-        OperationCommand:
-          Filter: {shardKey: *RandomString}
+    - OperationName: findOne
+      OperationCommand:
+        Filter: {shardKey: *RandomString}
