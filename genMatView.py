@@ -65,9 +65,10 @@ numMatViewsOpts= [
     # '8',
 ]
 matViewModeOpts = [
-    'sync-incremental',
-    'async-incremental-result-delta',
-    'async-incremental-base-delta',
+    # 'sync-incremental',
+    # 'async-incremental-result-delta',
+    # 'async-incremental-base-delta',
+    'async-incremental-result-delta-not-colocated',
     # 'full-refresh'
 ]
 
