@@ -106,61 +106,121 @@ ActorsConf:
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0MatView0_Delta
+        shardCollection: test.Collection0MatView0_CODelta
         key:
           _id: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0MatView1_Delta
+        shardCollection: test.Collection0MatView1_CODelta
         key:
           _id: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0MatView2_Delta
+        shardCollection: test.Collection0MatView2_CODelta
         key:
           _id: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0MatView3_Delta
+        shardCollection: test.Collection0MatView3_CODelta
         key:
           _id: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0MatView4_Delta
+        shardCollection: test.Collection0MatView4_CODelta
         key:
           _id: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0MatView5_Delta
+        shardCollection: test.Collection0MatView5_CODelta
         key:
           _id: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0MatView6_Delta
+        shardCollection: test.Collection0MatView6_CODelta
         key:
           _id: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0MatView7_Delta
+        shardCollection: test.Collection0MatView7_CODelta
         key:
           _id: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0MatView8_Delta
+        shardCollection: test.Collection0MatView8_CODelta
         key:
           _id: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0MatView9_Delta
+        shardCollection: test.Collection0MatView9_CODelta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView0_NCDelta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView1_NCDelta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView2_NCDelta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView3_NCDelta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView4_NCDelta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView5_NCDelta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView6_NCDelta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView7_NCDelta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView8_NCDelta
+        key:
+          _id: hashed
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0MatView9_NCDelta
         key:
           _id: hashed
   - *Nop

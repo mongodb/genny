@@ -764,24 +764,38 @@ struct MatViewOperation : public BaseOperation {
                             }
                         }
                     }
-                } else if (_matViewMaintenanceMode == "async-incremental-result-delta") {
+                } else if (_matViewMaintenanceMode == "async-incremental-result-delta" ||
+                           _matViewMaintenanceMode ==
+                               "async-incremental-result-delta-not-colocated") {
+                    bool isResultDeltaColocated = true;
+                    if (_matViewMaintenanceMode == "async-incremental-result-delta-not-colocated") {
+                        isResultDeltaColocated = false;
+                    }
                     if (_isDebug) {
                         std::cout << "Running async-incremental-result-delta view maintenance..."
                                   << std::endl;
                     }
                     for (size_t matViewIdx = 0; matViewIdx < _numMatViews; ++matViewIdx) {
-                        std::string targetViewDeltaName =
-                            "Collection0MatView" + std::to_string(matViewIdx) + "_Delta";
+                        std::string targetViewDeltaName = "Collection0MatView" +
+                            std::to_string(matViewIdx) +
+                            (isResultDeltaColocated ? "_CODelta"    // Colocated Delta
+                                                    : "_NCDelta");  // Non-Colocated Delta
                         auto combinedInsertedDocs =
                             combineInsertedDocs(insertedDocs, insertedIds, matViewIdx);
                         std::vector<bsoncxx::document::view_or_value> deltaOutputDocs;
                         for (const auto& combinedDoc : combinedInsertedDocs) {
                             auto yVal = combinedDoc.first;
                             auto [idVal, tVal] = combinedDoc.second;
-                            bsoncxx::document::view_or_value doc =
-                                make_document(kvp("_id", idVal),
-                                              kvp("y", yVal),
-                                              kvp("t" + std::to_string(matViewIdx), tVal));
+                            bsoncxx::document::view_or_value doc = isResultDeltaColocated
+                                ? make_document(kvp("_id", idVal),
+                                                kvp("y", yVal),
+                                                kvp("t" + std::to_string(matViewIdx), tVal))
+                                : make_document(kvp("_id", yVal),
+                                                kvp("y",
+                                                    yVal),  // Keep this field to keep the amount of
+                                                            // data the same in both cases
+                                                            // (co-located and non-co-located)
+                                                kvp("t" + std::to_string(matViewIdx), tVal));
                             deltaOutputDocs.push_back(doc);
                             ctx.addDocuments(1);
                             ctx.addBytes(doc.view().length());
