@@ -32,7 +32,7 @@ def renameDist(d):
 experimentTypeOpts = ["wild-card-index-exp", "mat-view-exp"]
 isShardedOpts = [
     True,
-    # False
+    False
 ]
 isTransactionalOpts = [True, False]
 numInitialDocsOpts = ['10000']
