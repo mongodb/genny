@@ -765,10 +765,9 @@ struct MatViewOperation : public BaseOperation {
                         }
                     }
                 } else if (_matViewMaintenanceMode == "async-incremental-result-delta" ||
-                           _matViewMaintenanceMode ==
-                               "async-incremental-result-delta-not-colocated") {
+                           _matViewMaintenanceMode == "async-inc-result-delta-nc") {
                     bool isResultDeltaColocated = true;
-                    if (_matViewMaintenanceMode == "async-incremental-result-delta-not-colocated") {
+                    if (_matViewMaintenanceMode == "async-inc-result-delta-nc") {
                         isResultDeltaColocated = false;
                     }
                     if (_isDebug) {
