@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 Description: |
-  Shards test.collection0 and moves a random chunk to a random shard. 
+  Shards a test collection and does a random move chunk.
 
 Actors:
 - Name: CreateShardedCollection
