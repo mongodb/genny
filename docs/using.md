@@ -443,7 +443,7 @@ If you are running Genny through DSI in Evergreen, the FTDC contents are rolled 
 	cd ~/[path_to_evg_project_repo]
 	evergreen patch -p [evg_project]
 	cd ~/[path_to_genny]/genny
-	evergreen patch-set-module -i [patch_id_number] genny
+	evergreen patch-set-module -i [patch_id_number] -m genny
 	```
     
     You can then select `schedule_patch_auto_tasks` on a variant to schedule any modified or new Genny tasks created by AutoRun. Alternatively, you could select `schedule_variant_auto_tasks` to schedule all Genny tasks on that variant.
@@ -569,6 +569,7 @@ It is often necessary to use Genny to operate with large amounts of data which w
 
 Value generators are not a builtin feature of Genny, but must be integrated by each Actor for the configuration values that accept them. For examples of using value generators, see [./src/workloads/docs/Generators.yml](../src/workloads/docs/Generators.yml). To integrate generators into an Actor, use the [DocumentGenerator](../src/value_generators/include/value_generators/DocumentGenerator.hpp) with the yaml node you intend to generate documents from. (And see [here](#org7e6c6bd) for more details on creating an Actor in the first place.)
 
+You can also find some example datasets that can be used with generators like `ChooseStringFromDataset`. For more information check [./src/workloads/datasets/README.md](../src/workloads/datasets/README.md).
 
 <a id="org2078b23"></a>
 
