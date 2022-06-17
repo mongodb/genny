@@ -12,18 +12,12 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  # Drop
-  - Repeat: 1
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        drop: &Collection CommitLatencySingleUpdates
   # Load data
   - Repeat: 1
     Operations:
     - OperationName: RunCommand
       OperationCommand:
-        insert: *Collection
+        insert: &Collection CommitLatencySingleUpdates
         documents: [{_id: 1, n: 0}]
   # Tests
   - MetricsName: SingleThreadUpdate_w0
@@ -90,3 +84,12 @@ Actors:
         update: *Collection
         updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
         writeConcern: {w: majority, j: true}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-noflowcontrol
+      - replica-all-feature-flags
+
