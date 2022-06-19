@@ -3,6 +3,10 @@ Owner: "@mongodb/sharding"
 Description: |
   Shards a test collection and does a random move chunk.
 
+Keywords:
+- sharding
+- moveChunk
+
 Actors:
 - Name: CreateShardedCollection
   Type: AdminCommand

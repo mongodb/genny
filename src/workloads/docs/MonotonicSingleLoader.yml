@@ -3,6 +3,9 @@ Owner: "@mongodb/sharding"
 Description: |
   Loads a large set of documents with a random value assinged to `field`.
 
+Keywords:
+- insert
+
 Actors:
 - Name: LoadInitialData
   Type: MonotonicSingleLoader

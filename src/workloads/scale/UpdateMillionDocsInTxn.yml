@@ -6,6 +6,11 @@ Description: |
   limit, so until we add a way to manually increase a transaction's lifetime, we must raise the
   lifetime of all transactions.
 
+Keywords:
+- transactions
+- stress
+- time
+
 Actors:
 - Name: Loader
   Type: Loader

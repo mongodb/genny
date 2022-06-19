@@ -4,6 +4,11 @@ Description: |
   This workload is developed to test the amount of time it takes to remove and re-insert one
   million documents, with a fixed transaction batch size of one hundred.
 
+Keywords:
+- transactions
+- stress
+- time
+
 Document: &Doc  # The size of each document is about 2kb.
   a: 1
   x: {^RandomInt: {min: 0, max: 2147483647}}

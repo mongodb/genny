@@ -3,6 +3,10 @@ Owner: "@mongodb/sharding"
 Description: |
   Shards a test collection and creates a series of indexes on the collection.
 
+Keywords:
+- sharding
+- indexes
+
 Actors:
 - Name: EnableSharding
   Type: AdminCommand
