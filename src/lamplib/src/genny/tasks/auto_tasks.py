@@ -464,7 +464,10 @@ class ConfigWriter:
                     f"{raised if raised else ''}"
                 )
                 if self.op.execution != 0:
-                    SLOG.warning("Repeated executions will not re-generate tasks.", execution=self.op.execution)
+                    SLOG.warning(
+                        "Repeated executions will not re-generate tasks.",
+                        execution=self.op.execution,
+                    )
         return config
 
     @staticmethod
