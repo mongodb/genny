@@ -22,7 +22,6 @@ Actors:
     Database: test
 
 
-
 AutoRun:
 - When:
     mongodb_setup:
