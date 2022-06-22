@@ -134,7 +134,7 @@ class CLIOperation(NamedTuple):
         mode = OpName.ALL_TASKS
         variant = None
 
-        execution = reader.load(workspace_root, "expansions.yml")["build_variant"]
+        execution = int(reader.load(workspace_root, "expansions.yml")["execution"])
         if mode_name == "all_tasks":
             mode = OpName.ALL_TASKS
         if mode_name == "patch_tasks":
