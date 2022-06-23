@@ -111,3 +111,4 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
+      - single-replica-classic-query-engine

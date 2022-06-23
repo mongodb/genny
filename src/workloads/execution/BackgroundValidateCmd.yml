@@ -125,9 +125,7 @@ Actors:
 AutoRun:
 - When:
     mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-classic-query-engine
+      $eq: standalone
     branch_name:
       $neq:
       - v4.0

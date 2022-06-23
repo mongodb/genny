@@ -80,4 +80,6 @@ Actors:
 AutoRun:
 - When:
     mongodb_setup:
-      $eq: replica
+      $eq: 
+      - replica
+      - single-replica-classic-query-engine

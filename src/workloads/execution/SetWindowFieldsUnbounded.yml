@@ -183,7 +183,6 @@ AutoRun:
     mongodb_setup:
       $eq: 
       - standalone
-      - standalone-classic-query-engine
     branch_name:
       $neq:
       - v4.0

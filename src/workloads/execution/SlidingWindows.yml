@@ -137,7 +137,6 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
-      - standalone-classic-query-engine
       - replica
       - replica-all-feature-flags
       - shard-lite
