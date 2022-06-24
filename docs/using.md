@@ -258,7 +258,8 @@ Actors:
     Repeat: 100
 ```
 
-This Actor will execute the first phase for 50 milleseconds. It will perform iterations of its main loop (printing "Hello Phase 0") as many times as it can for that duration. It will then move on to the second phase, where it will perform exactly 100 iterations of its main loop (printing "Hello Phase 1"), regardless of how long it takes. Then the workload will end.
+This Actor will execute the first phase for 50 milleseconds. It will perform iterations of its main loop (printing "Hello Phase 0") as many times as it can for that duration. It will then move on to the second phase, where it will perform exactly 200 iterations (100 per thread) of its main loop
+(printing "Hello Phase 1"), regardless of how long it takes. Then the workload will end.
 
 Now consider a situation with two Actors:
 
@@ -284,7 +285,7 @@ Actors:
 
 Here we have the `HelloWorldSecondExample` Actor running for 10 milliseconds in each phase. However, the second phase will not begin after 10 milliseconds. It's important to note that phases are coordinated globally, and Actors configured with either `Repeat` or `Duration` will hold the phase open. In this case, `HelloWorldSecondExample` will operate for 10 milliseconds during the first phase, sleep for 40 milliseconds for the rest of the phase, then after `HelloWorldExample` finishes holding the phase open, both Actors will begin the next phase.
 
-Therefore, the logged output of this Actor would show many lines of `Hello Phase 0` interspersed with `Other Actor Phase 0`, then a long period of _only_ lines showing `Hello Phase 0`, then the next phase would begin with many lines of `Other Actor Phase 1` intersperesed with exactly 100 lines saying `Hello Phase 1`.
+Therefore, the logged output of this Actor would show many lines of `Hello Phase 0` interspersed with `Other Actor Phase 0`, then a long period of _only_ lines showing `Hello Phase 0`, then the next phase would begin with many lines of `Other Actor Phase 1` intersperesed with exactly 200 lines saying `Hello Phase 1`.
 
 Phase configurations accept the following main keys:
 
@@ -442,7 +443,7 @@ If you are running Genny through DSI in Evergreen, the FTDC contents are rolled 
 	cd ~/[path_to_evg_project_repo]
 	evergreen patch -p [evg_project]
 	cd ~/[path_to_genny]/genny
-	evergreen patch-set-module -i [patch_id_number] genny
+	evergreen patch-set-module -i [patch_id_number] -m genny
 	```
     
     You can then select `schedule_patch_auto_tasks` on a variant to schedule any modified or new Genny tasks created by AutoRun. Alternatively, you could select `schedule_variant_auto_tasks` to schedule all Genny tasks on that variant.
@@ -568,6 +569,7 @@ It is often necessary to use Genny to operate with large amounts of data which w
 
 Value generators are not a builtin feature of Genny, but must be integrated by each Actor for the configuration values that accept them. For examples of using value generators, see [./src/workloads/docs/Generators.yml](../src/workloads/docs/Generators.yml). To integrate generators into an Actor, use the [DocumentGenerator](../src/value_generators/include/value_generators/DocumentGenerator.hpp) with the yaml node you intend to generate documents from. (And see [here](#org7e6c6bd) for more details on creating an Actor in the first place.)
 
+You can also find some example datasets that can be used with generators like `ChooseStringFromDataset`. For more information check [./src/workloads/datasets/README.md](../src/workloads/datasets/README.md).
 
 <a id="org2078b23"></a>
 
@@ -853,3 +855,9 @@ There are currently pathing issues when running integration tests locally. This 
 
 This is tracked in [TIG-3016](https://jira.mongodb.org/browse/TIG-3016) which will correct the issue.
 
+<a id="org97681a9"></a>
+
+## Two similarly-named workloads are not permitted to coexist
+
+This is tracked in [TIG-3700](https://jira.mongodb.org/browse/TIG-3700) which will correct the issue. 
+Note that the failure symptom when this occurs could be an infractrue provisioning error, even though the issue is unrelated to provisioning. 

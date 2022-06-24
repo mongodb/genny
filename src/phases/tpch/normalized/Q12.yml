@@ -4,63 +4,80 @@ Description: |
   Run TPC-H query 12 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize 101  # The default batch size.
+batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
 
 query12ShipMode1: &query12ShipMode1 {^Parameter: {Name: "Query12ShipMode1", Default: "MAIL"}}
 query12ShipMode2: &query12ShipMode2 {^Parameter: {Name: "Query12ShipMode2", Default: "SHIP"}}
 query12Date: &query12Date {^Parameter: {Name: "Query12Date", Default: "1994-01-01"}}
 
+TPCHNormalizedQuery12Aggregation: &TPCHNormalizedQuery12Aggregation
+  aggregate: lineitem
+  pipeline:
+    [
+      {$match: {
+        $and: [
+          {$or: [{l_shipmode: *query12ShipMode1}, {l_shipmode: *query12ShipMode2}]},
+          {$expr: {$lt: ["$l_commitdate", "$l_receiptdate"]}},
+          {$expr: {$lt: ["$l_shipdate", "$l_commitdate"]}},
+          {$expr: {$gte: ["$l_receiptdate", {$dateFromString: {dateString: *query12Date}}]}},
+          {$expr: {$lt: [
+            "$l_receiptdate",
+            {$dateAdd: {startDate: {$dateFromString: {dateString: *query12Date}}, unit: "year", amount: 1}}]}}]}},
+      {$lookup: {from: "orders", localField: "l_orderkey", foreignField: "o_orderkey", as: "orders"}},
+      {$unwind: "$orders"},
+      {$group: {
+        _id: "$l_shipmode",
+        high_line_count: {
+          $sum: {
+            $cond: {
+              if: {
+                $or: [
+                  {$eq: ["$orders.o_orderpriority", "1-URGENT"]},
+                  {$eq: ["$orders.o_orderpriority", "2-HIGH"]}]},
+              then: 1,
+              else: 0}}},
+        low_line_count: {
+          $sum: {
+            $cond: {
+              if: {
+                $and: [
+                  {$ne: ["$orders.o_orderpriority", "1-URGENT"]},
+                  {$ne: ["$orders.o_orderpriority", "2-HIGH"]}]},
+              then: 1,
+              else: 0}}}}},
+      {$project: {
+        _id: 0,
+        l_shipmode: "$_id",
+        high_line_count: 1,
+        low_line_count: 1}},
+      {$sort: {l_shipmode: 1}},
+    ]
+  cursor: {batchSize: *batchSize}
+  allowDiskUse: true
+
+TPCHNormalizedQuery12Warmup:
+  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Database: &db tpch
+  Operations:
+  - OperationName: RunCommand
+    OperationCommand: *TPCHNormalizedQuery12Aggregation
+
 TPCHNormalizedQuery12:
-  Repeat: 1
-  Database: tpch
+  Repeat: *Repeat
+  Database: *db
+  Operations:
+  - OperationMetricsName: Query12
+    OperationName: RunCommand
+    OperationCommand: *TPCHNormalizedQuery12Aggregation
+
+TPCHNormalizedQuery12Explain:
+  Repeat: *Repeat
+  Database: *db
   Operations:
   - OperationMetricsName: Query12
     OperationName: RunCommand
     OperationLogsResult: true
     OperationCommand:
-      explain:
-        aggregate: lineitem
-        pipeline:
-          [
-            {$match: {
-              $and: [
-                {$or: [{l_shipmode: *query12ShipMode1}, {l_shipmode: *query12ShipMode2}]},
-                {$expr: {$lt: ["$l_commitdate", "$l_receiptdate"]}},
-                {$expr: {$lt: ["$l_shipdate", "$l_commitdate"]}},
-                {$expr: {$gte: ["$l_receiptdate", {$dateFromString: {dateString: *query12Date}}]}},
-                {$expr: {$lt: [
-                  "$l_receiptdate",
-                  {$dateAdd: {startDate: {$dateFromString: {dateString: *query12Date}}, unit: "year", amount: 1}}]}}]}},
-            {$lookup: {from: "orders", localField: "l_orderkey", foreignField: "o_orderkey", as: "orders"}},
-            {$unwind: "$orders"},
-            {$group: {
-              _id: "$l_shipmode",
-              high_line_count: {
-                $sum: {
-                  $cond: {
-                    if: {
-                      $or: [
-                        {$eq: ["$orders.o_orderpriority", "1-URGENT"]},
-                        {$eq: ["$orders.o_orderpriority", "2-HIGH"]}]},
-                    then: 1,
-                    else: 0}}},
-              low_line_count: {
-                $sum: {
-                  $cond: {
-                    if: {
-                      $and: [
-                        {$ne: ["$orders.o_orderpriority", "1-URGENT"]},
-                        {$ne: ["$orders.o_orderpriority", "2-HIGH"]}]},
-                    then: 1,
-                    else: 0}}}}},
-            {$project: {
-              _id: 0,
-              l_shipmode: "$_id",
-              high_line_count: 1,
-              low_line_count: 1}},
-            {$sort: {l_shipmode: 1}},
-          ]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+      explain: *TPCHNormalizedQuery12Aggregation
       verbosity:
         executionStats

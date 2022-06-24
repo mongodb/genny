@@ -1,0 +1,25 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 22 against the normalized schema for scale 10.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHNormalizedQuery22Explain
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - Nop: true
+
+# TODO: PERF-2995 uncomment
+# - Name: TPCHNormalizedQuery22Explain
+#   Type: RunCommand
+#   Database: tpch
+#   Phases:
+#   - LoadConfig:
+#       Path: ../../../../phases/tpch/normalized/Q22.yml
+#       Key: TPCHNormalizedQuery22Explain

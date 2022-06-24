@@ -113,7 +113,7 @@ if ! _pip --version >/dev/null 2>&1; then
 fi
 
 
-# Check for genny-setup-done-v2 which we create at the end of setup.
+# Check for genny-setup-done-v3 which we create at the end of setup.
 # This prevents half-setup environments.
 if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v3" ]]; then
     rm -rf "${GENNY_REPO_ROOT:?}/${_genny_venv}"
@@ -123,6 +123,8 @@ if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_ge
     export VIRTUAL_ENV_DISABLE_PROMPT=1  # prevent undefined $PS1 variable
     # shellcheck source=/dev/null
     source "${GENNY_REPO_ROOT}/${_genny_venv}/bin/activate"
+
+    _pip install --upgrade pip
 
     # Install Genny requirements
     _pip install "numpy==1.22.3"  # For some reason pip doesn't pick this up in requirements.txt?
