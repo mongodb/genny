@@ -2,7 +2,9 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
   This workload runs different types of aggregations where the query results
-  will be merged on a mongos node.
+  will be merged on a mongos node. This workload reproduces a SERVER-29446,
+  and results in an error when run that says the $sample stage could not
+  find a non-duplicate document.
 GlobalDefaults:
   MaxPhases: &MaxPhases 10
   NumDocs: &NumDocs 5000000
