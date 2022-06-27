@@ -32,4 +32,6 @@ Actors:
 AutoRun:
 - When:
     mongodb_setup:
-      $eq: standalone-dsi-integration-test
+      $eq: 
+      - standalone-dsi-integration-test
+      - standalone-classic-query-engine

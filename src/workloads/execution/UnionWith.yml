@@ -266,6 +266,7 @@ AutoRun:
       - replica-all-feature-flags
       - shard-lite
       - standalone
+      - standalone-classic-query-engine
     branch_name:
       $neq:
       - v4.0

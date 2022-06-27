@@ -385,6 +385,7 @@ AutoRun:
       $eq:
       - standalone
       - standalone-all-feature-flags
+      - standalone-classic-query-engine
     branch_name:
       $neq:
       - v4.0
