@@ -123,6 +123,7 @@ class CLIOperation(NamedTuple):
 
     mode: OpName
     variant: Optional[str]
+    execution: Optional[str]
     genny_repo_root: str
     workspace_root: str
 
@@ -133,6 +134,7 @@ class CLIOperation(NamedTuple):
         mode = OpName.ALL_TASKS
         variant = None
 
+        execution = int(reader.load(workspace_root, "expansions.yml")["execution"])
         if mode_name == "all_tasks":
             mode = OpName.ALL_TASKS
         if mode_name == "patch_tasks":
@@ -142,7 +144,7 @@ class CLIOperation(NamedTuple):
             mode = OpName.VARIANT_TASKS
             variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
         return CLIOperation(
-            mode, variant, genny_repo_root=genny_repo_root, workspace_root=workspace_root
+            mode, variant, execution, genny_repo_root=genny_repo_root, workspace_root=workspace_root
         )
 
 
@@ -461,6 +463,11 @@ class ConfigWriter:
                     f"{'Succeeded' if success else 'Failed'} to write to {output_file} from cwd={os.getcwd()}."
                     f"{raised if raised else ''}"
                 )
+                if self.op.execution != 0:
+                    SLOG.warning(
+                        "Repeated executions will not re-generate tasks.",
+                        execution=self.op.execution,
+                    )
         return config
 
     @staticmethod
