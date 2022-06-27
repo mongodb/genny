@@ -489,7 +489,8 @@ AutoRun searches in `./src/*/src/workloads` and assumes that all repos, includin
 
 After performing the above integration, your Evergreen project should have a `schedule_variant_auto_tasks` task on each variant, which can be used to schedule all Genny workloads that are configured to run on this variant. There will also be the `schedule_patch_auto_tasks` task which will schedule any new or modified Genny workloads. If you want to run an unmodified workload, make a small edit (such as inserting whitespace) to force it to be picked up by that latter task.
 
-Both of the above tasks will have a dependency on `schedule_global_auto_tasks`, which invokes `./run-genny auto-tasks` to create all possible tasks, viewable in the `TaskJson` directory of that task's DSI artifacts. The variant-specific task generator task will then schedule the appropriate task, based on the workload configurations described below.
+Both of the above tasks will have a dependency on `schedule_global_auto_tasks`, which invokes `./run-genny auto-tasks` to create all possible tasks, viewable in the `TaskJson` directory of that task's DSI artifacts. The variant-specific task generator task will then schedule the appropriate task, based on the workload configurations described below. Note that task execution only occurs once per patch, even if a task is re-executed. If testing changes to task generation configuration, creating a new patch will be necessary.
+
 
 
 <a id="orgbfb0d8e"></a>
