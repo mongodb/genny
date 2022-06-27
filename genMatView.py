@@ -29,12 +29,18 @@ shardedAutoRun = """
 def renameDist(d):
     return d.replace(" ", "").replace("{", "_").replace("}", "_").replace(":", "_").replace(",", "_").replace(".", "_")
 
-experimentTypeOpts = ["wild-card-index-exp", "mat-view-exp"]
+experimentTypeOpts = [
+    # "wild-card-index-exp",
+    "mat-view-exp"
+]
 isShardedOpts = [
     True,
     False
 ]
-isTransactionalOpts = [True, False]
+isTransactionalOpts = [
+    True,
+    # False
+]
 numInitialDocsOpts = ['10000']
 minBaseDocSizeBytesOpts = ['1000']
 numGroupsAndDistributionOpts = {
@@ -52,11 +58,14 @@ numClientThreadsOpts = [
     '4',
     # '8',
     '16',
-    # '32',
+    '32',
 ]
 numClientBatchesOpts = ['100']
 numInsertsPerClientBatchOpts = ['100']
-insertModeOpts = ['insertMany', 'insertOne']
+insertModeOpts = [
+    'insertMany',
+    'insertOne'
+]
 numMatViewsOpts= [
     '0',
     '1',
@@ -66,8 +75,8 @@ numMatViewsOpts= [
 ]
 matViewModeOpts = [
     # 'sync-incremental',
-    # 'async-incremental-result-delta',
-    # 'async-incremental-base-delta',
+    'async-incremental-result-delta',
+    'async-incremental-base-delta',
     'async-inc-result-delta-nc', #async-incremental-result-delta-not-colocated
     # 'full-refresh'
 ]

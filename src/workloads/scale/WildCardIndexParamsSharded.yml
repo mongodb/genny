@@ -168,61 +168,61 @@ ActorsConf:
       OperationCommand:
         shardCollection: test.Collection0MatView0_NCDelta
         key:
-          _id: hashed
+          y: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0MatView1_NCDelta
         key:
-          _id: hashed
+          y: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0MatView2_NCDelta
         key:
-          _id: hashed
+          y: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0MatView3_NCDelta
         key:
-          _id: hashed
+          y: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0MatView4_NCDelta
         key:
-          _id: hashed
+          y: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0MatView5_NCDelta
         key:
-          _id: hashed
+          y: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0MatView6_NCDelta
         key:
-          _id: hashed
+          y: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0MatView7_NCDelta
         key:
-          _id: hashed
+          y: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0MatView8_NCDelta
         key:
-          _id: hashed
+          y: hashed
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0MatView9_NCDelta
         key:
-          _id: hashed
+          y: hashed
   - *Nop
   - *Nop
   - *Nop

@@ -789,18 +789,20 @@ struct MatViewOperation : public BaseOperation {
                                 ? make_document(kvp("_id", idVal),
                                                 kvp("y", yVal),
                                                 kvp("t" + std::to_string(matViewIdx), tVal))
-                                : make_document(kvp("_id", yVal),
-                                                kvp("y",
-                                                    yVal),  // Keep this field to keep the amount of
-                                                            // data the same in both cases
-                                                            // (co-located and non-co-located)
+                                : make_document(kvp("y",
+                                                    yVal),  // the collection is sharded on y
                                                 kvp("t" + std::to_string(matViewIdx), tVal));
                             deltaOutputDocs.push_back(doc);
                             ctx.addDocuments(1);
                             ctx.addBytes(doc.view().length());
                         }
-                        db.collection(targetViewDeltaName)
-                            .insert_many(deltaOutputDocs, insertOptions);
+                        if (_isTransactional) {
+                            db.collection(targetViewDeltaName)
+                                .insert_many(session, deltaOutputDocs, insertOptions);
+                        } else {
+                            db.collection(targetViewDeltaName)
+                                .insert_many(deltaOutputDocs, insertOptions);
+                        }
                     }
                 } else if (_matViewMaintenanceMode == "async-incremental-base-delta") {
                     if (_isDebug) {
@@ -808,7 +810,12 @@ struct MatViewOperation : public BaseOperation {
                                   << std::endl;
                     }
                     std::string targetBaseDeltaName = "Collection0_Delta";
-                    db.collection(targetBaseDeltaName).insert_many(insertedDocs, insertOptions);
+                    if (_isTransactional) {
+                        db.collection(targetBaseDeltaName)
+                            .insert_many(session, insertedDocs, insertOptions);
+                    } else {
+                        db.collection(targetBaseDeltaName).insert_many(insertedDocs, insertOptions);
+                    }
                 } else if (_matViewMaintenanceMode == "full-refresh") {
                     if (_isDebug) {
                         std::cout << "Running full-refresh view maintenance..." << std::endl;
@@ -834,7 +841,10 @@ struct MatViewOperation : public BaseOperation {
                             if (aggOutDocs.size() != 0L) {
                                 auto templColl =
                                     db.create_collection(tempCollName, make_document() /*, wc*/);
-                                auto insertRes = templColl.insert_many(aggOutDocs, insertOptions);
+                                auto insertRes = (_isTransactional)
+                                    ? templColl.insert_many(session, aggOutDocs, insertOptions)
+                                    : templColl.insert_many(aggOutDocs, insertOptions);
+
                                 if (!insertRes ||
                                     insertRes->inserted_count() != aggOutDocs.size()) {
                                     // BOOST_THROW_EXCEPTION(
