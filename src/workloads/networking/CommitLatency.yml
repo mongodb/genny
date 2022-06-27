@@ -16,23 +16,22 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  - &DropCollection
-    Repeat: 1
-    Database: test
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        drop: &Collection CommitLatency
   - &Load
     Repeat: 1
     Database: test
     Operations:
     - OperationName: RunCommand
       OperationCommand:
-        insert: *Collection
+        insert: &Collection CommitLatency
         documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
   - &Nop {Nop: true}
-  - *DropCollection
+  - &DropCollection
+    Repeat: 1
+    Database: test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
   - *Load
   - *Nop
   - *DropCollection
@@ -71,7 +70,6 @@ Actors:
   Database: test
   Phases:
   - *Nop  # Load phase is different actor
-  - *Nop
   - MetricsName: CommitLatency_w0_local
     Collection: *Collection
     Repeat: 500
@@ -207,3 +205,12 @@ Actors:
     ReadPreference:
       ReadMode: primary
     Transaction: true  # Implies Session
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-noflowcontrol
+      - replica-all-feature-flags
+

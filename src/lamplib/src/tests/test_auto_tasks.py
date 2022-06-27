@@ -97,7 +97,7 @@ TIMEOUT_COMMAND = {
 
 
 def expansions_mock(exp_vars) -> MockFile:
-    yaml_conts = {"build_variant": "some-build-variant"}
+    yaml_conts = {"build_variant": "some-build-variant", "execution": "0"}
     yaml_conts.update(exp_vars)
     return MockFile(base_name="expansions.yml", modified=False, yaml_conts=yaml_conts,)
 
@@ -514,7 +514,9 @@ def test_dry_run_all_tasks():
             f"This is set when you run through the 'run-genny' wrapper"
         )
     try:
-        with patch.object(CurrentBuildInfo, "expansions", return_value={}):
+        with patch.object(CurrentBuildInfo, "expansions", return_value={}), patch.object(
+            YamlReader, "load", return_value={"execution": "0"}
+        ):
             reader = YamlReader()
             build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
             op = CLIOperation.create(

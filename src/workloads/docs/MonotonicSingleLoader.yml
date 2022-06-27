@@ -1,7 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 Description: |
-  TODO: TIG-3320
+  Loads a large set of documents with a random value assinged to `field`.
+
+Keywords:
+- insert
 
 Actors:
 - Name: LoadInitialData

@@ -12,4 +12,10 @@ shrub.py==1.1.0
 black==19.10b0
 setuptools==51.0.0
 pytest==6.0.2
-numexpr==2.7.2
+
+# Force a binary distribution of numpy on macOS:
+# https://github.com/numpy/numpy/issues/15947
+numpy==1.20.1 --only-binary=numpy; platform_system == 'darwin'
+numpy==1.20.1;                     platform_system != 'darwin'
+
+numexpr==2.8.1
