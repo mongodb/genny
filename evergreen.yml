@@ -122,13 +122,13 @@ buildvariants:
   tasks:
   - name: tg_compile
 
-    # - name: macos-1014
-    #   display_name: macOS Mojave
-    #   modules: [mongo]
-    #   run_on:
-    #   - macos-1014
-    #   tasks:
-    #   - name: tg_compile
+# - name: macos-1014
+#   display_name: macOS Mojave
+#   modules: [mongo]
+#   run_on:
+#   - macos-1014
+#   tasks:
+#   - name: tg_compile
 
 # - name: centos6-perf
 #   display_name: CentOS 6 for Performance
