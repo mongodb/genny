@@ -375,6 +375,9 @@ TopTenantsByNoOfEventsQuery: &TopTenantsByNoOfEventsQuery
   cursor: {}
 
 # Defines test operations.
+# Here we use explain with verbosity = execustionStats instead of using plain aggregate command
+# so that aggregate pipeline runs to completion but yet we don't need to exhaust cursor. As of now
+# we don't have an easy way to exhaust cursor.
 TestOperations: &TestOperations
 - OperationMetricsName: CountPerActionQuery
   OperationName: RunCommand
