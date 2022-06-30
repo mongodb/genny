@@ -179,7 +179,6 @@ for isSharded in isShardedOpts:
                                                             10,
                                                             matViewMode,
                                                         )
-                                                        break
                                                     else:
                                                         for numGroupsAndDistributionKey, numGroupsAndDistribution in numGroupsAndDistributionOpts.items():
                                                             createExperiment(
