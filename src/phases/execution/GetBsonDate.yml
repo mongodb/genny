@@ -1,0 +1,15 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+
+# Get a BSON-compatible date from a date in a string format
+# The 'date' argument must be specified up to seconds.
+GetBsonDate: &GetBsonDate
+  ^RandomDate:
+    min:
+      ^FormatString:
+        format: "%s.000Z"
+        withArgs: [{^Parameter: {Name: "date", Default: "1970-01-01T00:00:00"}}]
+    max:
+      ^FormatString:
+        format: "%s.001Z"
+        withArgs: [{^Parameter: {Name: "date", Default: "1970-01-01T00:00:00"}}]
