@@ -1,5 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-execution"
+Description: |
+  This file defines a parameterized configuration 'GetBsonDate' to work around the issue of
+  ISODate.
 
 # Get a BSON-compatible date from a date in a string format
 # The 'date' argument must be specified up to seconds.
