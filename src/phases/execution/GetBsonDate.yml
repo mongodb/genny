@@ -4,6 +4,8 @@ Description: |
   This file defines a parameterized configuration 'GetBsonDate' to work around the issue of
   ISODate.
 
+  TODO PERF-3132 Use the date generator instead of this workaround.
+
 # Get a BSON-compatible date from a date in a string format
 # The 'date' argument must be specified up to seconds.
 GetBsonDate: &GetBsonDate
