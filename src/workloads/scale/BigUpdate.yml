@@ -12,7 +12,7 @@ Keywords:
 - indexes
 - update
 - find
-- cold data
+- coldData
 
 Clients:
   Default:
