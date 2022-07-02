@@ -445,12 +445,10 @@ TestRepeatCount: &TestRepeatCount 1
 
 SetupPhase: &SetupPhase 0
 BuildColumnStoreIndexPhase: &BuildColumnStoreIndexPhase 1
-WarmupCache1Phase: &WarmupCache1Phase 2
-ColumnstoreScanPhase: &ColumnstoreScanPhase 3
-DropColumnstoreIndexPhase: &DropColumnstoreIndexPhase 4
-WarmupCache2Phase: &WarmupCache2Phase 5
-CollScanPhase: &CollScanPhase 6
-MaxPhases: &MaxPhases 6
+ColumnstoreScanPhase: &ColumnstoreScanPhase 2
+DropColumnstoreIndexPhase: &DropColumnstoreIndexPhase 3
+CollScanPhase: &CollScanPhase 4
+MaxPhases: &MaxPhases 4
 
 ColumnStoreIndexName: &ColumnStoreIndexName $**_columnstore
 
@@ -492,21 +490,6 @@ Actors:
             - key: {"$**": "columnstore"}
               name: *ColumnStoreIndexName
 
-# The 'WarmupCache1' actor warms up the buffer cache.
-- Name: WarmupCache1
-  Type: RunCommand
-  Database: *db
-  Thread: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [*WarmupCache1Phase]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Database: *db
-        Operations: *TestOperations
-
 # The 'ColumnstoreScan' actor measures the perf with columnar indexes.
 - Name: ColumnstoreScan
   Type: RunCommand
@@ -537,20 +520,6 @@ Actors:
           OperationCommand:
             dropIndexes: *Collection
             index: *ColumnStoreIndexName
-
-# The 'WarmupCache2' actor warms up the buffer cache for a regular scan.
-- Name: WarmupCache2
-  Type: RunCommand
-  Database: *db
-  Phases:
-    OnlyActiveInPhases:
-      Active: [*WarmupCache2Phase]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Database: *db
-        Operations: *TestOperations
 
 # The 'CollScan' actor measures the perf without columnar indexes.
 - Name: CollScan
