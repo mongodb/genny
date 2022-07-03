@@ -14,6 +14,13 @@ Keywords:
 - columnstore
 - analytics
 
+Clients:
+  Default:
+    QueryOptions:
+      # Allow for longer duration since column store index build may take a while.
+      socketTimeoutMS: 3_600_000  # = 1 hour
+      connectTimeoutMS: 3_600_000
+
 # Defines the database name.
 Database: &db charts-metrics
 
@@ -24,7 +31,7 @@ CountPerActionQuery: &CountPerActionQuery
   aggregate: *Collection
   pipeline: [{"$group": {"_id": "$action", o: {$sum: 1}}}, {"$limit": 5000}]
   allowDiskUse: true
-  cursor: {batchSize: 5000}
+  cursor: {}
 
 TotalTenantCreatedQuery: &TotalTenantCreatedQuery
   aggregate: *Collection
@@ -36,7 +43,14 @@ TotalTenantCreatedQuery: &TotalTenantCreatedQuery
       {"$project": {"value": "$__alias_0", "_id": 0}},
       {"$limit": 5000}
     ]
-  cursor: {batchSize: 5000}
+  cursor: {}
+
+Date1: &DateForActiveCloudUsersLastMonthQuery
+  LoadConfig:
+    Path: "../../phases/execution/GetBsonDate.yml"
+    Key: GetBsonDate
+    Parameters:
+      date: "2020-03-09T01:10:04"
 
 ActiveCloudUsersLastMonthQuery: &ActiveCloudUsersLastMonthQuery
   aggregate: *Collection
@@ -46,7 +60,7 @@ ActiveCloudUsersLastMonthQuery: &ActiveCloudUsersLastMonthQuery
       {
         "$match": {
           "metadata.target": {"$in": ["cloud"]},
-          "created_at": {"$gte": ISODate("2020-03-09T01:10:04Z")},
+          "created_at": {"$gte": *DateForActiveCloudUsersLastMonthQuery},
           "resource": {"$in": ["Dashboard"]}
         }
       },
@@ -55,7 +69,14 @@ ActiveCloudUsersLastMonthQuery: &ActiveCloudUsersLastMonthQuery
       {"$project": {"value": "$__alias_0", "target": "$__alias_1", "_id": 0}},
       {"$limit": 5000}
     ]
-  cursor: {batchSize: 5000}
+  cursor: {}
+
+Date2: &DateForVersionHistogramQuery
+  LoadConfig:
+    Path: "../../phases/execution/GetBsonDate.yml"
+    Key: GetBsonDate
+    Parameters:
+      date: "2020-04-02T01:10:52"
 
 VersionsHistogramQuery: &VersionsHistogramQuery
   aggregate: *Collection
@@ -64,7 +85,7 @@ VersionsHistogramQuery: &VersionsHistogramQuery
       {"$match": {"metadata.target": {"$exists": true}}},
       {
         "$match": {
-          "created_at": {"$gte": ISODate("2020-04-02T01:10:52Z")},
+          "created_at": {"$gte": *DateForVersionHistogramQuery},
           "metadata.version": {"$nin": [null]},
           "resource": {"$nin": ["Error"]}
         }
@@ -79,7 +100,14 @@ VersionsHistogramQuery: &VersionsHistogramQuery
       {"$project": {"x": "$__alias_0", "y": "$__alias_2", "color": "$__alias_1", "_id": 0}},
       {"$limit": 50000}
     ]
-  cursor: {batchSize: 50000}
+  cursor: {}
+
+Date3: &DateForUniqueUsersPerMonthQuery
+  LoadConfig:
+    Path: "../../phases/execution/GetBsonDate.yml"
+    Key: GetBsonDate
+    Parameters:
+      date: "2019-07-09T01:12:32"
 
 UniqueUsersPerMonthQuery: &UniqueUsersPerMonthQuery
   aggregate: *Collection
@@ -88,7 +116,7 @@ UniqueUsersPerMonthQuery: &UniqueUsersPerMonthQuery
       {
         "$match": {
           "resource": {"$in": ["Dashboard"]},
-          "created_at": {"$gte": ISODate("2019-07-09T01:12:32Z")},
+          "created_at": {"$gte": *DateForUniqueUsersPerMonthQuery},
           "metadata.target": {"$nin": [null, ""]}
         }
       },
@@ -131,7 +159,14 @@ UniqueUsersPerMonthQuery: &UniqueUsersPerMonthQuery
       {"$sort": {"x.year": 1, "x.month": 1}},
       {"$limit": 5000}
     ]
-  cursor: {batchSize: 5000}
+  cursor: {}
+
+Date4: &DateForTopErrorsQuery
+  LoadConfig:
+    Path: "../../phases/execution/GetBsonDate.yml"
+    Key: GetBsonDate
+    Parameters:
+      date: "2020-04-02T01:13:04"
 
 TopErrorsQuery: &TopErrorsQuery
   aggregate: *Collection
@@ -139,7 +174,7 @@ TopErrorsQuery: &TopErrorsQuery
     [
       {
         "$match": {
-          "created_at": {"$gte": ISODate("2020-04-02T01:13:04Z")},
+          "created_at": {"$gte": *DateForTopErrorsQuery},
           "resource": {"$in": ["Error"]}
         }
       },
@@ -178,7 +213,14 @@ TopErrorsQuery: &TopErrorsQuery
       },
       {"$limit": 50000}
     ]
-  cursor: {batchSize: 50000}
+  cursor: {}
+
+Date5: &DateForNumberOfChartsPerTypeQuery
+  LoadConfig:
+    Path: "../../phases/execution/GetBsonDate.yml"
+    Key: GetBsonDate
+    Parameters:
+      date: "2020-01-09T01:13:37"
 
 NumberOfChartsPerTypeQuery: &NumberOfChartsPerTypeQuery
   aggregate: *Collection
@@ -189,7 +231,7 @@ NumberOfChartsPerTypeQuery: &NumberOfChartsPerTypeQuery
           "resource": {"$in": ["DashboardItem"]},
           "action": {"$in": ["added"]},
           "metadata.version": {"$nin": [null, "0.0.0"]},
-          "created_at": {"$gte": ISODate("2020-01-09T01:13:37Z")}
+          "created_at": {"$gte": *DateForNumberOfChartsPerTypeQuery}
         }
       },
       {"$group": {"_id": {"__alias_0": "$metadata.chart_type"}, "__alias_1": {"$sum": 1}}},
@@ -197,7 +239,21 @@ NumberOfChartsPerTypeQuery: &NumberOfChartsPerTypeQuery
       {"$project": {"x": "$__alias_1", "y": "$__alias_0", "_id": 0}},
       {"$limit": 5000}
     ]
-  cursor: {batchSize: 5000}
+  cursor: {}
+
+Date6: &StartDateForEventsByVersionQuery
+  LoadConfig:
+    Path: "../../phases/execution/GetBsonDate.yml"
+    Key: GetBsonDate
+    Parameters:
+      date: "2020-04-08T01:14:07"
+
+Date7: &EndDateForEventsByVersionQuery
+  LoadConfig:
+    Path: "../../phases/execution/GetBsonDate.yml"
+    Key: GetBsonDate
+    Parameters:
+      date: "2020-04-09T01:14:07"
 
 EventsByVersionQuery: &EventsByVersionQuery
   aggregate: *Collection
@@ -206,7 +262,7 @@ EventsByVersionQuery: &EventsByVersionQuery
       {
         "$match": {
           "created_at": {
-            "$gte": ISODate("2020-04-08T01:14:07Z"), "$lte": ISODate("2020-04-09T01:14:07Z")
+            "$gte": *StartDateForEventsByVersionQuery, "$lte": *EndDateForEventsByVersionQuery
           },
           "resource": {"$nin": []},
           "metadata.version": {"$nin": [null]}
@@ -240,7 +296,14 @@ EventsByVersionQuery: &EventsByVersionQuery
       {"$sort": {"x.year": 1, "x.month": 1, "x.date": 1, "x.hours": 1}},
       {"$limit": 5000}
     ]
-  cursor: {batchSize: 5000}
+  cursor: {}
+
+Date8: &DateForBrowserUsageByDistinctUserQuery
+  LoadConfig:
+    Path: "../../phases/execution/GetBsonDate.yml"
+    Key: GetBsonDate
+    Parameters:
+      date: "2020-03-10T01:17:41"
 
 BrowserUsageByDistinctUserQuery: &BrowserUsageByDistinctUserQuery
   aggregate: *Collection
@@ -257,7 +320,7 @@ BrowserUsageByDistinctUserQuery: &BrowserUsageByDistinctUserQuery
       {
         "$match": {
           "metadata.browser_name": {"$nin": [null, "", "null"]},
-          "created_at": {"$gte": ISODate("2020-03-10T01:17:41Z")}
+          "created_at": {"$gte": *DateForBrowserUsageByDistinctUserQuery}
         }
       },
       {
@@ -274,7 +337,14 @@ BrowserUsageByDistinctUserQuery: &BrowserUsageByDistinctUserQuery
       {"$project": {"label": "$__alias_0", "value": "$__alias_1", "_id": 0}},
       {"$limit": 5000}
     ]
-  cursor: {batchSize: 5000}
+  cursor: {}
+
+Date9: &DateForTopTenantsByNoOfEventsQuery
+  LoadConfig:
+    Path: "../../phases/execution/GetBsonDate.yml"
+    Key: GetBsonDate
+    Parameters:
+      date: "2020-03-10T01:17:41"
 
 TopTenantsByNoOfEventsQuery: &TopTenantsByNoOfEventsQuery
   aggregate: *Collection
@@ -282,7 +352,7 @@ TopTenantsByNoOfEventsQuery: &TopTenantsByNoOfEventsQuery
     [
       {
         "$match": {
-          "created_at": {"$gte": ISODate("2020-03-09T01:18:32Z")},
+          "created_at": {"$gte": *DateForTopTenantsByNoOfEventsQuery},
           "resource": {"$nin": ["DashboardItem", "EmbeddedChart", "Error"]},
           "metadata.target": {"$nin": [null]},
           "metadata.tenant_id": {"$nin": [null]}
@@ -302,51 +372,87 @@ TopTenantsByNoOfEventsQuery: &TopTenantsByNoOfEventsQuery
       {"$project": {"color": "$__alias_0", "x": "$__alias_2", "y": "$__alias_1", "_id": 0}},
       {"$limit": 50000}
     ]
-  cursor: {batchSize: 50000}
+  cursor: {}
 
 # Defines test operations.
+# Here we use explain with verbosity = execustionStats instead of using plain aggregate command
+# so that aggregate pipeline runs to completion but yet we don't need to exhaust cursor. As of now
+# we don't have an easy way to exhaust cursor.
 TestOperations: &TestOperations
 - OperationMetricsName: CountPerActionQuery
   OperationName: RunCommand
-  OperationCommand: *CountPerActionQuery
+  OperationCommand:
+    explain: *CountPerActionQuery
+    verbosity:
+      executionStats
 - OperationMetricsName: TotalTenantCreatedQuery
   OperationName: RunCommand
-  OperationCommand: *TotalTenantCreatedQuery
+  OperationCommand:
+    explain: *TotalTenantCreatedQuery
+    verbosity:
+      executionStats
 - OperationMetricsName: ActiveCloudUsersLastMonthQuery
   OperationName: RunCommand
-  OperationCommand: *ActiveCloudUsersLastMonthQuery
+  OperationCommand:
+    explain: *ActiveCloudUsersLastMonthQuery
+    verbosity:
+      executionStats
 - OperationMetricsName: VersionsHistogramQuery
   OperationName: RunCommand
-  OperationCommand: *VersionsHistogramQuery
+  OperationCommand:
+    explain: *VersionsHistogramQuery
+    verbosity:
+      executionStats
 - OperationMetricsName: UniqueUsersPerMonthQuery
   OperationName: RunCommand
-  OperationCommand: *UniqueUsersPerMonthQuery
+  OperationCommand:
+    explain: *UniqueUsersPerMonthQuery
+    verbosity:
+      executionStats
 - OperationMetricsName: TopErrorsQuery
   OperationName: RunCommand
-  OperationCommand: *TopErrorsQuery
+  OperationCommand:
+    explain: *TopErrorsQuery
+    verbosity:
+      executionStats
 - OperationMetricsName: NumberOfChartsPerTypeQuery
   OperationName: RunCommand
-  OperationCommand: *NumberOfChartsPerTypeQuery
+  OperationCommand:
+    explain: *NumberOfChartsPerTypeQuery
+    verbosity:
+      executionStats
 - OperationMetricsName: EventsByVersionQuery
   OperationName: RunCommand
-  OperationCommand: *EventsByVersionQuery
+  OperationCommand:
+    explain: *EventsByVersionQuery
+    verbosity:
+      executionStats
 - OperationMetricsName: BrowserUsageByDistinctUserQuery
   OperationName: RunCommand
-  OperationCommand: *BrowserUsageByDistinctUserQuery
+  OperationCommand:
+    explain: *BrowserUsageByDistinctUserQuery
+    verbosity:
+      executionStats
 - OperationMetricsName: TopTenantsByNoOfEventsQuery
   OperationName: RunCommand
-  OperationCommand: *TopTenantsByNoOfEventsQuery
+  OperationCommand:
+    explain: *TopTenantsByNoOfEventsQuery
+    verbosity:
+      executionStats
 
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 1
 
 SetupPhase: &SetupPhase 0
-WarmupCache1Phase: &WarmupCache1Phase 1
-ColumnstoreScanPhase: &ColumnstoreScanPhase 2
-DropColumnstoreIndexPhase: &DropColumnstoreIndexPhase 3
-WarmupCache2Phase: &WarmupCache2Phase 4
-CollScanPhase: &CollScanPhase 5
-MaxPhases: &MaxPhses 5
+BuildColumnStoreIndexPhase: &BuildColumnStoreIndexPhase 1
+WarmupCache1Phase: &WarmupCache1Phase 2
+ColumnstoreScanPhase: &ColumnstoreScanPhase 3
+DropColumnstoreIndexPhase: &DropColumnstoreIndexPhase 4
+WarmupCache2Phase: &WarmupCache2Phase 5
+CollScanPhase: &CollScanPhase 6
+MaxPhases: &MaxPhases 6
+
+ColumnStoreIndexName: &ColumnStoreIndexName $**_columnstore
 
 Actors:
 - Name: Setup
@@ -355,7 +461,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [*SetupPhase]
-      NopInPhasesUpTo: *MaxPhses
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
         Thread: 1
@@ -366,6 +472,26 @@ Actors:
             setParameter: 1
             internalQueryForceClassicEngine: false
 
+- Name: BuildColumnStoreIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*BuildColumnStoreIndexPhase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Thread: 1
+        Database: *db
+        Operations:
+        - OperationMetricsName: BulkBuildColumnStoreIndex
+          OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *Collection
+            indexes:
+            - key: {"$**": "columnstore"}
+              name: *ColumnStoreIndexName
+
 # The 'WarmupCache1' actor warms up the buffer cache.
 - Name: WarmupCache1
   Type: RunCommand
@@ -374,7 +500,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [*WarmupCache1Phase]
-      NopInPhasesUpTo: *MaxPhses
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
         Threads: 1
@@ -388,7 +514,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [*ColumnstoreScanPhase]
-      NopInPhasesUpTo: *MaxPhses
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *TestRepeatCount
         Database: *db
@@ -401,7 +527,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [*DropColumnstoreIndexPhase]
-      NopInPhasesUpTo: *MaxPhses
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
         Threads: 1
@@ -410,7 +536,7 @@ Actors:
         - OperationName: RunCommand
           OperationCommand:
             dropIndexes: *Collection
-            index: $**_columnstore
+            index: *ColumnStoreIndexName
 
 # The 'WarmupCache2' actor warms up the buffer cache for a regular scan.
 - Name: WarmupCache2
@@ -419,7 +545,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [*WarmupCache2Phase]
-      NopInPhasesUpTo: *MaxPhses
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
         Threads: 1
@@ -433,7 +559,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [*CollScanPhase]
-      NopInPhasesUpTo: *MaxPhses
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *TestRepeatCount
         Database: *db
