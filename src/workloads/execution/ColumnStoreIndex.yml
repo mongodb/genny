@@ -4,9 +4,10 @@ Description: |
   This workload compares the query performance with columnar indexes to performances without them.
 
   The workload consists of the following phases and actors:
-    1. Run queries with columnstore indexes.
-    2. Drop columnstore indexes.
-    3. Run queries without columnstore indexes.
+    1. Build column store index.
+    2. Run queries with columnstore indexes.
+    3. Drop columnstore indexes.
+    4. Run queries without columnstore indexes.
 
 Keywords:
 - columnstore
