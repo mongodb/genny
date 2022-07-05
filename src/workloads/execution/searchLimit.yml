@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  TODO
+  Note that this test requires mongot to run properly, which is currently not supported by genny on evergreen. This test should not be pushed to master.
 
 GlobalDefaults:
   dbname: &db test
