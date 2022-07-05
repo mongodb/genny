@@ -1,0 +1,104 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  TODO
+
+GlobalDefaults:
+  dbname: &db test
+  MaxPhases: &MaxPhases 20
+  batchSize: &batchSize 30000
+  textField: &field "searchableField"
+  nop: &Nop {Nop: true}
+  searchQuery: &defaultSearch {
+            index: "default", 
+            text: {
+              path: "searchableField", 
+              query: {^FastRandomString: {length: {^RandomInt: {min: 1, max: 3}}, alphabet: "abcd"}},
+              fuzzy: {
+                maxEdits: 2
+              }
+            }
+            }
+
+Clients:
+  Default:
+    URI: "mongodb://__system:keyfile@localhost:27017/local"
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *db
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 100000
+    BatchSize: *batchSize
+    Document:
+      searchableField: {^FastRandomString: {length: {^RandomInt: {min: 1, max: 3}}, alphabet: "abcd"}}
+      otherFieldFirst: {^RandomInt: {min: 0, max: 10000}}
+      otherFieldSecond: {^FastRandomString: {length: {^RandomInt: {min: 20, max: 100}}, alphabet: "abcdefghijklmnopqrstuvwxyz"}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+
+- Name: Search 
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  # - *Nop
+  - Repeat: 10
+    Database: *db
+    Operations:
+    - OperationMetricsName: SearchLimit 
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [
+          {$search: *defaultSearch},
+          {$limit: 10}  
+        ]
+        cursor: {batchSize: *batchSize}
+  - Repeat: 10
+    Database: *db
+    Operations:
+    - OperationMetricsName: SearchSortLimit 
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [
+          {$search: *defaultSearch},
+          {$sort: {otherFieldFirst: 1}},
+          {$limit: 10}  
+        ]
+        cursor: {batchSize: *batchSize}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v5.1
+      - v5.2
+      - v5.3
