@@ -279,7 +279,6 @@ ActorTemplates:
           ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
           ScanType: snapshot
           ScanContinuous: true
-          GenerateCollectionNames: true
           CollectionSortOrder: forward
           FindOptions:
             BatchSize: 1000

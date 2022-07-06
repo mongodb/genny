@@ -39,7 +39,7 @@ Actors:
   # This flag will assume the collection names have been created
   # by the Loader actor and try to use them automatically.
   # Additionally, it allows the collections being scanned to be
-  # distributed fairly among the threads. It requires q collection
+  # distributed fairly among the threads. It requires a collection
   # count.
   GenerateCollectionNames: true
   Phases:

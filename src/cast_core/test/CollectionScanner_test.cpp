@@ -201,7 +201,6 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerGenerateCollectionNames", "
         Type: CollectionScanner
         Threads: 1
         Database: db0
-        Collection: Collection0-db
         GenerateCollectionNames: false
         Phases:
         - Duration: 5 seconds
@@ -240,7 +239,6 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerGenerateCollectionNames", "
         Type: CollectionScanner
         Threads: 1
         Database: db0
-        Collection: Collection0-db
         GenerateCollectionNames: false
         Phases:
         - Duration: 5 seconds
@@ -280,7 +278,6 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerGenerateCollectionNames", "
         Type: CollectionScanner
         Threads: 1
         Database: db0
-        Collection: Collection0-db
         GenerateCollectionNames: true
         Phases:
         - Duration: 5 seconds
