@@ -61,7 +61,6 @@ private:
     RunningActorCounter& _runningActorCounter;
     std::string _databaseNames;
     PhaseLoop<PhaseConfig> _loop;
-    bool _generateCollectionNames;
     GlobalRateLimiter* _rateLimiter;
 };
 

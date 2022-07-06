@@ -186,4 +186,167 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerAll", "[standalone][Collect
         }
     }
 }
+
+
+TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerGenerateCollectionNames", "[standalone][CollectionScanner]") {
+
+    SECTION("Scan no limits") {
+        genny::NodeSource config2(R"(
+      SchemaVersion: 2018-07-01
+      Clients:
+        Default:
+          URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+      Actors:
+      - Name: SnapshotScannerAll
+        Type: CollectionScanner
+        Threads: 1
+        Database: db0
+        Collection: Collection0-db
+        GenerateCollectionNames: false
+        Phases:
+        - Duration: 5 seconds
+          ScanType: snapshot
+          CollectionSortOrder: forward
+          GlobalRate: 1 per 3 seconds
+      Metrics:
+        Format: csv
+      )",
+                                  "");
+
+        try {
+            dropAllDatabases();
+            populate(client);
+
+            // Don't generate the collection names, get them from the database.
+            testOneActor(config2,
+                         5,
+                         "listCollections:find:find:listCollections:find:find:");
+
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Scan GenerateCollectionNames false") {
+        genny::NodeSource config2(R"(
+      SchemaVersion: 2018-07-01
+      Clients:
+        Default:
+          URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+      Actors:
+      - Name: ScannerWithListCollections
+        Type: CollectionScanner
+        Threads: 1
+        Database: db0
+        Collection: Collection0-db
+        GenerateCollectionNames: false
+        Phases:
+        - Duration: 5 seconds
+          ScanType: standard
+          CollectionSortOrder: forward
+          GlobalRate: 1 per 3 seconds
+      Metrics:
+        Format: csv
+      )",
+                                  "");
+
+        try {
+            dropAllDatabases();
+            populate(client);
+
+            // Don't generate the collection names, get them from the database.
+            testOneActor(config2,
+                         5,
+                         "listCollections:find:find:listCollections:find:find:");
+
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+
+    SECTION("Scan GenerateCollectionNames true no count") {
+        genny::NodeSource config2(R"(
+      SchemaVersion: 2018-07-01
+      Clients:
+        Default:
+          URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+      Actors:
+      - Name: ScanWithGeneratedNames
+        Type: CollectionScanner
+        Threads: 1
+        Database: db0
+        Collection: Collection0-db
+        GenerateCollectionNames: true
+        Phases:
+        - Duration: 5 seconds
+          ScanType: standard
+          CollectionSortOrder: forward
+          GlobalRate: 1 per 3 seconds
+      Metrics:
+        Format: csv
+      )",
+                                  "");
+
+        try {
+            dropAllDatabases();
+            populate(client);
+
+            // Invalid generate collection names config with missing count.
+            REQUIRE_THROWS_WITH(testOneActor(config2, 5, ""),
+                                Catch::Contains("CollectionCount must be greater than 0 when GenerateCollectionNames is true"));
+
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+
+    SECTION("Scan GenerateCollectionNames true") {
+        genny::NodeSource config2(R"(
+      SchemaVersion: 2018-07-01
+      Clients:
+        Default:
+          URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
+      Actors:
+      - Name: SnapshotScannerAll
+        Type: CollectionScanner
+        Threads: 1
+        Database: db0
+        Collection: Collection0-db
+        GenerateCollectionNames: true
+        CollectionCount: 1
+        Phases:
+        - Duration: 5 seconds
+          ScanType: standard
+          CollectionSortOrder: forward
+          GlobalRate: 1 per 3 seconds
+      Metrics:
+        Format: csv
+      )",
+                                  "");
+
+        try {
+            dropAllDatabases();
+            populate(client);
+
+            // Generate the collection names.
+            testOneActor(config2,
+                         5,
+                         "find:find:");
+
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+}
 }  // namespace
