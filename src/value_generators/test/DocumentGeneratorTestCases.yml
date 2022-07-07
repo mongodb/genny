@@ -710,17 +710,17 @@ Tests:
     ThenReturns:
       - { "date" : { "$date" : { "$numberLong" : "0" } } }
 
-  - Name: Date
-    GivenTemplate:
-      date: {^Date: "2020-01-01"}
-    ThenReturns:
-      - { "date" : { "$date" : { "$numberLong" : "0" } } }
-
-  - Name: Date
+  - Name: Date1990
     GivenTemplate:
       date: {^Date: "1990-01-01T00:00:00"}
     ThenReturns:
-      - { "date" : { "$date" : { "$numberLong" : "631152000" } } }
+      - { "date" : { "$date" : { "$numberLong" : "631152000000" } } }
+
+  - Name: Date2020
+    GivenTemplate:
+      date: {^Date: "2020-01-01"}
+    ThenReturns:
+      - { "date" : { "$date" : { "$numberLong" : "1577836800000" } } }
 
   # Date: min equal max is invalid.
   - Name: RandomDateMinEqualMax
