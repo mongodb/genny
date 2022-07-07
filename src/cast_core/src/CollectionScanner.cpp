@@ -177,6 +177,10 @@ struct CollectionScanner::PhaseConfig {
         }
 
         if (generateCollectionNames) {
+            if (collectionCount <= 0) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "CollectionCount must be greater than 0 when GenerateCollectionNames is true"));
+            }
             queryCollectionList = false;
             BOOST_LOG_TRIVIAL(info) << " Generating collection names";
             for (const auto& collectionName :
@@ -513,7 +517,6 @@ CollectionScanner::CollectionScanner(genny::ActorContext& context)
       _index{WorkloadContext::getActorSharedState<CollectionScanner, ActorCounter>().fetch_add(1)},
       _runningActorCounter{
           WorkloadContext::getActorSharedState<CollectionScanner, RunningActorCounter>()},
-      _generateCollectionNames{context["GenerateCollectionNames"].maybe<bool>().value_or(false)},
       _databaseNames{context["Database"].to<std::string>()},
       _loop{context,
             this,

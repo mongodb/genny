@@ -36,16 +36,16 @@ Actors:
   Threads: 1
   Database: cold
   CollectionCount: 60
+  # This flag will assume the collection names have been created
+  # by the Loader actor and try to use them automatically.
+  # Additionally, it allows the collections being scanned to be
+  # distributed fairly among the threads. It requires a collection
+  # count.
+  GenerateCollectionNames: true
   Phases:
   - {Nop: true}
   - {Nop: true}
   - Duration: 2 minutes
-    # This flag will assume the collection names have been created
-    # by the Loader actor and try to use them automatically.
-    # Additionally it allows the collections being scanned to be
-    # distributed fairly among the threads. It requires collection
-    # count to be specified at the top level.
-    GenerateCollectionNames: true
     GlobalRate: 1 per 10 seconds
     ScanType: count
   - {Nop: true}
