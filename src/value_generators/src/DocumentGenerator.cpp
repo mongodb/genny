@@ -978,6 +978,21 @@ private:
     const UniqueGenerator<std::string> _generator;
 };
 
+/** `{^Date: "2015-01-01"}` */
+class DateGenerator : public Generator<bsoncxx::types::b_date> {
+public:
+    DateGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _date{dateGenerator(node, generatorArgs)} {}
+
+    bsoncxx::types::b_date evaluate() override {
+        auto millis = _date->evaluate();
+        return bsoncxx::types::b_date{std::chrono::milliseconds{millis}};
+    }
+
+private:
+    const UniqueGenerator<int64_t> _date;
+};
+
 /** `{^IncDate: {start: "2022-01-01", step: 10000, multiplier: 0}}` */
 class IncDateGenerator : public Generator<bsoncxx::types::b_date> {
 public:
@@ -1131,6 +1146,27 @@ private:
     int64_t _repeatCounter;
     UniqueAppendable _valueGen;
     bsoncxx::array::value _item;
+};
+
+/** `{^Extended: {json: ...}}` */
+class ExtendedGenerator : public Appendable {
+
+public:
+    ExtendedGenerator(const Node& node,
+                    GeneratorArgs generatorArgs)
+        : _json{node["json"].maybe<std::string>().value_or("{}")} {}
+
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        auto itemView = bsoncxx::from_json(_json);
+        builder.append(bsoncxx::builder::basic::kvp(key, itemView));
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        auto itemView = bsoncxx::from_json(_json);
+        builder.append(itemView);
+    }
+
+private:
+    std::string _json;
 };
 
 /** `{^Array: {of: {a: b}, number: 2}` */
@@ -1468,6 +1504,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^RandomDate",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<RandomDateGenerator>(node, generatorArgs);
+     }},
+    {"^Date",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<DateGenerator>(node, generatorArgs);
      }},
     {"^ObjectId",
      [](const Node& node, GeneratorArgs generatorArgs) {
@@ -1840,7 +1880,7 @@ int64_t parseStringToMillis(const std::string& datetime) {
         // Last gasp try to interpret unsigned long long.
         return std::stoull(datetime);
     } catch (const std::invalid_argument& _) {
-        auto msg = "^RandomDate: Invalid Dateformat '" + datetime + "'";
+        auto msg = "Invalid Dateformat '" + datetime + "'";
         BOOST_THROW_EXCEPTION(InvalidDateFormat{msg});
     }
 };
@@ -1888,6 +1928,10 @@ UniqueGenerator<int64_t> dateTimeGenerator(const Node& node, GeneratorArgs gener
         {"^RandomDate",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<RandomDateGenerator>(node, generatorArgs);
+         }},
+        {"^Date",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<DateGenerator>(node, generatorArgs);
          }},
     };
 

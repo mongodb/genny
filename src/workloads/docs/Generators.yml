@@ -164,8 +164,8 @@ Actors:
             # Generate a random date less than 2015 (but greater than 1970-01-01)
             lessThan2105: {^RandomDate: {max: "2015-01-01"}}
 
-            # Generate the exact Date 2015-01-01T00:00:00Z (as the min / max range only contains one possibility).
-            exact: {^RandomDate: {min: "2015-01-01", max: "2015-01-01 00:00:00.001"}}
+            # Generate the exact Date 2015-01-01T00:00:00Z.
+            exact: {^Date: "2015-01-01"}
 
             # Generate a random date.
             zulu: {^RandomDate: {min: "2015-01-01T00:00:00Z", max: "2016-01-01T00:00:00Z"}}

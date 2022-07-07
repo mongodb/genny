@@ -704,6 +704,24 @@ Tests:
       date: {^Now: {}}
     ThenExecuteAndIgnore: true
 
+  - Name: Date
+    GivenTemplate:
+      date: {^Date: "1970-01-01"}
+    ThenReturns:
+      - { "date" : { "$date" : { "$numberLong" : "0" } } }
+
+  - Name: Date
+    GivenTemplate:
+      date: {^Date: "2020-01-01"}
+    ThenReturns:
+      - { "date" : { "$date" : { "$numberLong" : "0" } } }
+
+  - Name: Date
+    GivenTemplate:
+      date: {^Date: "1990-01-01T00:00:00"}
+    ThenReturns:
+      - { "date" : { "$date" : { "$numberLong" : "631152000" } } }
+
   # Date: min equal max is invalid.
   - Name: RandomDateMinEqualMax
     GivenTemplate:
