@@ -1148,27 +1148,6 @@ private:
     bsoncxx::array::value _item;
 };
 
-/** `{^Extended: {json: ...}}` */
-class ExtendedGenerator : public Appendable {
-
-public:
-    ExtendedGenerator(const Node& node,
-                    GeneratorArgs generatorArgs)
-        : _json{node["json"].maybe<std::string>().value_or("{}")} {}
-
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        auto itemView = bsoncxx::from_json(_json);
-        builder.append(bsoncxx::builder::basic::kvp(key, itemView));
-    }
-    void append(bsoncxx::builder::basic::array& builder) override {
-        auto itemView = bsoncxx::from_json(_json);
-        builder.append(itemView);
-    }
-
-private:
-    std::string _json;
-};
-
 /** `{^Array: {of: {a: b}, number: 2}` */
 class ArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
