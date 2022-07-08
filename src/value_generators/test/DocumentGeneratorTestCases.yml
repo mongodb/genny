@@ -710,17 +710,47 @@ Tests:
     ThenReturns:
       - { "date" : { "$date" : { "$numberLong" : "0" } } }
 
-  - Name: Date1990
+  - Name: Datetime
     GivenTemplate:
       date: {^Date: "1990-01-01T00:00:00"}
     ThenReturns:
       - { "date" : { "$date" : { "$numberLong" : "631152000000" } } }
 
-  - Name: Date2020
+  - Name: Datetime Zulu
     GivenTemplate:
-      date: {^Date: "2020-01-01"}
+      date: {^Date: "1990-01-01T00:00:00Z"}
     ThenReturns:
-      - { "date" : { "$date" : { "$numberLong" : "1577836800000" } } }
+      - { "date" : { "$date" : { "$numberLong" : "631152000000" } } }
+
+  - Name: Datetime +tz
+    GivenTemplate:
+      date: {^Date: "1990-01-01T00:00:00+12:00"}
+    ThenReturns:
+      - { "date" : { "$date" : { "$numberLong" : "631108800000" } } }
+
+  - Name: Datetime -tz
+    GivenTemplate:
+      date: {^Date: "1990-01-01T00:00:00-06:00"}
+    ThenReturns:
+      - { "date" : { "$date" : { "$numberLong" : "631173600000" } } }
+
+  - Name: Date Mongo Log format
+    GivenTemplate:
+      date: {^Date: "1990-01-01T00:00:00.858+00:00"}
+    ThenReturns:
+      - { "date" : { "$date" : { "$numberLong" : "631152000858" } } }
+
+  - Name: Date Mongo log format -tz
+    GivenTemplate:
+      date: {^Date: "1990-01-01T00:00:00.858-06:00"}
+    ThenReturns:
+      - { "date" : { "$date" : { "$numberLong" : "631173600858" } } }
+
+  - Name: Date Mongo log format +tz
+    GivenTemplate:
+      date: {^Date: "1990-01-01T00:00:00.858+06:00"}
+    ThenReturns:
+      - { "date" : { "$date" : { "$numberLong" : "631130400858" } } }
 
   # Date: min equal max is invalid.
   - Name: RandomDateMinEqualMax

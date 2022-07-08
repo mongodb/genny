@@ -938,6 +938,8 @@ const static auto formats = {
                 new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M:%s%ZP")),
     std::locale(std::locale::classic(),
                 new boost::local_time::local_time_input_facet("%Y-%m-%d %H:%M:%s%ZP")),
+    std::locale(std::locale::classic(),
+                new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M:%S%F%ZP *")),
 };
 
 class DateToIntGenerator : public Generator<int64_t> {
