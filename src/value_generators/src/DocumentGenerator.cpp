@@ -1914,6 +1914,10 @@ UniqueGenerator<int64_t> dateTimeGenerator(const Node& node, GeneratorArgs gener
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<DateGenerator>(node, generatorArgs);
          }},
+        {"^IncDate",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<IncDateGenerator>(node, generatorArgs);
+         }},
     };
 
     if (auto parserPair = extractKnownParser(node, generatorArgs, dateParsers)) {

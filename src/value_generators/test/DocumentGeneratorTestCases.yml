@@ -386,7 +386,7 @@ Tests:
   - Name: Poisson distribution
     GivenTemplate:
       a: {^RandomInt: {distribution: poisson, mean: 10000000000000}}
-    ThenReturns:
+    ThenReturns::
       - {a: 9999997460716}
       - {a: 9999996810402}
       - {a: 9999995032424}
@@ -751,6 +751,13 @@ Tests:
       date: {^Date: "1990-01-01T00:00:00.858+06:00"}
     ThenReturns:
       - { "date" : { "$date" : { "$numberLong" : "631130400858" } } }
+
+  # This doesn't make a lot of sense, but it should be possible.
+  - Name: Date with IncDate
+    GivenTemplate:
+      date: {^Date: {^IncDate: {start: "1990-01-01T00:00:00", step: 400}}}
+    ThenReturns:
+      - { "date" : { "$date" : { "$numberLong" : "631152000000" } } }
 
   # Date: min equal max is invalid.
   - Name: RandomDateMinEqualMax
