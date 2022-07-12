@@ -929,7 +929,7 @@ public:
     }
 };
 
-// The 2 formats also cover "%Y-%m-%d". Timezones require local_time_input_facet AND local_date_time
+// The following formats also cover "%Y-%m-%d". Timezones require local_time_input_facet AND local_date_time
 // see https://www.boost.org/doc/libs/1_75_0/doc/html/date_time/date_time_io.html.
 // We strive to use smart pointers where possible. In this case this is not possible
 // but not a huge deal as these objects are statically allocated.
@@ -938,6 +938,8 @@ const static auto formats = {
                 new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M:%s%ZP")),
     std::locale(std::locale::classic(),
                 new boost::local_time::local_time_input_facet("%Y-%m-%d %H:%M:%s%ZP")),
+    std::locale(std::locale::classic(),
+                new boost::local_time::local_time_input_facet("%Y-%m-%dT%H:%M:%S%F%ZP *")),
 };
 
 class DateToIntGenerator : public Generator<int64_t> {
@@ -976,6 +978,21 @@ public:
 
 private:
     const UniqueGenerator<std::string> _generator;
+};
+
+/** `{^Date: "2015-01-01"}` */
+class DateGenerator : public Generator<bsoncxx::types::b_date> {
+public:
+    DateGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _date{dateGenerator(node, generatorArgs)} {}
+
+    bsoncxx::types::b_date evaluate() override {
+        auto millis = _date->evaluate();
+        return bsoncxx::types::b_date{std::chrono::milliseconds{millis}};
+    }
+
+private:
+    const UniqueGenerator<int64_t> _date;
 };
 
 /** `{^IncDate: {start: "2022-01-01", step: 10000, multiplier: 0}}` */
@@ -1469,6 +1486,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<RandomDateGenerator>(node, generatorArgs);
      }},
+    {"^Date",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<DateGenerator>(node, generatorArgs);
+     }},
     {"^ObjectId",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<ObjectIdGenerator>(node, generatorArgs);
@@ -1840,7 +1861,7 @@ int64_t parseStringToMillis(const std::string& datetime) {
         // Last gasp try to interpret unsigned long long.
         return std::stoull(datetime);
     } catch (const std::invalid_argument& _) {
-        auto msg = "^RandomDate: Invalid Dateformat '" + datetime + "'";
+        auto msg = "Invalid Dateformat '" + datetime + "'";
         BOOST_THROW_EXCEPTION(InvalidDateFormat{msg});
     }
 };
@@ -1888,6 +1909,14 @@ UniqueGenerator<int64_t> dateTimeGenerator(const Node& node, GeneratorArgs gener
         {"^RandomDate",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<RandomDateGenerator>(node, generatorArgs);
+         }},
+        {"^Date",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<DateGenerator>(node, generatorArgs);
+         }},
+        {"^IncDate",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<IncDateGenerator>(node, generatorArgs);
          }},
     };
 
