@@ -91,11 +91,7 @@ void reportMetrics(genny::metrics::Registry& metrics,
 /**
  * Filter to remove any nodes inside dedicated "ignore" values.
  */
-UnusedNodes removeIgnored(UnusedNodes unused, const bool dryrun) {
-    std::vector<std::string> ignored{".yml/Description", ".yml/Owner", ".yml/AutoRun", ".yml/Keywords"};
-    if (dryrun) {
-        ignored.push_back(".yml/Clients");
-    }
+UnusedNodes removeIgnored(const UnusedNodes& unused, const std::vector<std::string>& ignored) {
     UnusedNodes out{};
     std::copy_if(
         unused.begin(), unused.end(), std::back_inserter(out), [&](const std::string& path) {
@@ -107,16 +103,24 @@ UnusedNodes removeIgnored(UnusedNodes unused, const bool dryrun) {
     return out;
 }
 
+/**
+ * Log a message showing the unused yaml structures.
+ */
 void reportUnused(const NodeSource& nodeSource, const bool dryrun) {
     auto raw = nodeSource.unused();
 
-    auto unused = removeIgnored(raw, dryrun);
+    std::vector<std::string> ignored{".yml/Description", ".yml/Owner", ".yml/AutoRun", ".yml/Keywords"};
+    if (dryrun) {
+        ignored.push_back(".yml/Clients");
+    }
+
+    auto unused = removeIgnored(raw, ignored);
     auto many = std::distance(unused.begin(), unused.end());
     auto verb = many == 1 ? "was" : "were";
     auto plural = many == 1 ? "" : "s";
     auto action = dryrun ? "constructing" : "running";
     std::stringstream message;
-    message << std::endl << "<BETA FEATURE>" << std::endl;
+    message << std::endl << "<BETA FEATURE> - YAML Usage Check" << std::endl;
     
     if (!unused.empty()) {
         message << "There " << verb << " " << many << " YAML structure" << plural
@@ -128,8 +132,8 @@ void reportUnused(const NodeSource& nodeSource, const bool dryrun) {
                 << " this workload." << std::endl;
     }
     message << "Incorrect results are possible. "
-            << "Please let us know in the #performance-tooling-users slack channel "
-            << "if this looks wrong." << std::endl;
+            << "Please file a TIG ticket on the TIPS backlog, or otherwise let us know in the "
+            << "#performance-tooling-users slack channel if this looks wrong." << std::endl;
     message << "</BETA FEATURE>";
     if (unused.empty()) {
         BOOST_LOG_TRIVIAL(info) << message.str();
