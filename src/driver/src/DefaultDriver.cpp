@@ -17,6 +17,7 @@
 #include <thread>
 #include <vector>
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/exception/exception.hpp>
 #include <boost/filesystem.hpp>
@@ -87,6 +88,56 @@ void reportMetrics(genny::metrics::Registry& metrics,
     actorSetup.report(std::move(finishTime), std::move(duration), std::move(outcome));
 }
 
+/**
+ * Filter to remove any nodes inside dedicated "ignore" values.
+ */
+UnusedNodes removeIgnored(UnusedNodes unused, const bool dryrun) {
+    std::vector<std::string> ignored{".yml/Description", ".yml/Owner", ".yml/AutoRun", ".yml/Keywords"};
+    if (dryrun) {
+        ignored.push_back(".yml/Clients");
+    }
+    UnusedNodes out{};
+    std::copy_if(
+        unused.begin(), unused.end(), std::back_inserter(out), [&](const std::string& path) {
+            return !std::any_of(ignored.begin(), ignored.end(), [&](const std::string& ignore) {
+                return path.find(ignore) != std::string::npos;
+            });
+        }
+    );
+    return out;
+}
+
+void reportUnused(const NodeSource& nodeSource, const bool dryrun) {
+    auto raw = nodeSource.unused();
+
+    auto unused = removeIgnored(raw, dryrun);
+    auto many = std::distance(unused.begin(), unused.end());
+    auto verb = many == 1 ? "was" : "were";
+    auto plural = many == 1 ? "" : "s";
+    auto action = dryrun ? "constructing" : "running";
+    std::stringstream message;
+    message << std::endl << "<BETA FEATURE>" << std::endl;
+    
+    if (!unused.empty()) {
+        message << "There " << verb << " " << many << " YAML structure" << plural
+                            << " unused when " << action << " the workload." << std::endl;
+        message << "\n\t" << boost::algorithm::join(unused, "\n\t") << std::endl;
+        
+    } else {
+        message << "All YAML structures appear to have been used when " << action
+                << " this workload." << std::endl;
+    }
+    message << "Incorrect results are possible. "
+            << "Please let us know in the #performance-tooling-users slack channel "
+            << "if this looks wrong." << std::endl;
+    message << "</BETA FEATURE>";
+    if (unused.empty()) {
+        BOOST_LOG_TRIVIAL(info) << message.str();
+    } else {
+        BOOST_LOG_TRIVIAL(warning) << message.str();
+    }
+}
+
 DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& options) {
     // setup logging as the first thing we do.
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= options.logVerbosity);
@@ -150,6 +201,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     if (options.runMode == DefaultDriver::RunMode::kDryRun) {
         std::cout << "Workload context constructed without errors." << std::endl;
         reportMetrics(metrics, workloadName, "Setup", true, startTime);
+        reportUnused(nodeSource, true);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
@@ -200,6 +252,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     // names for timing files.
     reportMetrics(metrics, "WorkloadTimingRecorder", "Workload", true, startTime);
 
+    reportUnused(nodeSource, false);
     return outcomeCode;
 }
 

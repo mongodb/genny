@@ -21,6 +21,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <typeinfo>
 
 #include <boost/exception/all.hpp>
 #include <boost/exception/error_info.hpp>
@@ -31,6 +32,8 @@
 #include <yaml-cpp/yaml.h>
 
 namespace genny {
+
+using UnusedNodes = std::vector<std::string>;
 
 /**
  * Source of all `genny::Node` instances.
@@ -59,6 +62,8 @@ public:
      *   Likely a file-path from where the yaml was loaded.
      */
     NodeSource(std::string yaml, std::string path);
+
+    UnusedNodes unused() const;
 
 private:
     const YAML::Node _yaml;
@@ -453,6 +458,7 @@ public:
         if (!*this) {
             return std::nullopt;
         }
+
         try {
             return _maybeImpl<O, Args...>(std::forward<Args>(args)...);
         } catch (const YAML::BadConversion& x) {
@@ -557,6 +563,8 @@ public:
 
     // Only intended to be used internally
     explicit Node(const v1::NodeKey::Path& path, const YAML::Node yaml);
+
+    UnusedNodes unused() const;
 
 private:
     friend class NodeImpl;
