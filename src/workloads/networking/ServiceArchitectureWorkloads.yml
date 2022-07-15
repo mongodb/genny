@@ -3,7 +3,7 @@ Owner: "@mongodb/service-architecture"
 Description: |
   This workload runs find operations with 'primary' readPreference and 'local' readConcern. There
   are 100 threads allocated to run the find operations, with a rate limit of 1 thread acting per
-  1 microsecond. A stepdown is also initiated during the workload to measure the effects of primary
+  microsecond. A stepdown is also initiated during the workload to measure the effects of primary
   reads during an election.
 
 Clients:
