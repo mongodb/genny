@@ -1,7 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/service-architecture"
 Description: |
-  TODO: TIG-3323
+  This workload runs find operations with 'secondary' readPreference and 'local' readConcern. There
+  are 100 threads allocated to run the find operations, with a rate limit of 1 thread acting per
+  microsecond. A stepdown is also initiated during the workload to measure the effects of
+  secondary reads during an election.
 
 Clients:
   Default:
