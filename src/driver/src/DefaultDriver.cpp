@@ -131,6 +131,9 @@ void reportUnused(const NodeSource& nodeSource, const bool dryrun) {
         message << "All YAML structures appear to have been used when " << action
                 << " this workload." << std::endl;
     }
+    message << "The following nodes were ignored in this analysis:" << std::endl;
+    message << "\n\t" << boost::algorithm::join(ignored, "\n\t") << std::endl;
+
     message << "Incorrect results are possible. "
             << "Please file a TIG ticket on the TIPS backlog, or otherwise let us know in the "
             << "#performance-tooling-users slack channel if this looks wrong." << std::endl;
