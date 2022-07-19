@@ -54,8 +54,13 @@ On macOS, you can `brew install zstd`. On Ubuntu, you can apt-install zstd.
 
 After installing this dependency, running `./run-genny clean` and then re-running the `./run-genny install` phase above should work.
 
-# macOS Unable to get local issuer certificate
+### macOS Unable to get local issuer certificate
 If you are on macOS and you see python errors such as when trying `./run-genny install` that contain `ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate` this is likely a problem with the python `requests` library. Here is a [StackOverflow answer](https://stackoverflow.com/questions/44649449/brew-installation-of-python-3-6-1-ssl-certificate-verify-failed-certificate/44649450#44649450) which addresses the problem.
+
+### Handling incomplete installations
+If any of the `./run-genny install` steps fail, and you're not able to re-execute the install, try running `./run-genny clean` and repeating the process.
+Sometimes, certain files are left around after incomplete installations, and they cause retries of the installation to fail with unexpected errors.
+`./run-genny clean` will ensure a fresh start.
 
 ## IDEs and Whatnot
 
