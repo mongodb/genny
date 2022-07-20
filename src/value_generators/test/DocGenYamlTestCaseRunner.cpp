@@ -4,6 +4,8 @@
 
 #include <bsoncxx/json.hpp>
 
+#include <catch2/catch_template_test_macros.hpp>
+
 #include <testlib/yamlTest.hpp>
 #include <testlib/yamlToBson.hpp>
 

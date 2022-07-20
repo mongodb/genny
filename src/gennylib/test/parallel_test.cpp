@@ -25,6 +25,8 @@
 
 #include <testlib/helpers.hpp>
 
+#include <catch2/matchers/catch_matchers_all.hpp>
+
 using namespace genny;
 using Catch::Matchers::Contains;
 
@@ -56,5 +58,5 @@ TEST_CASE("Parallel runner reraises exceptions") {
                        throw std::logic_error("This should be reraised.");
                    });
     };
-    REQUIRE_THROWS_WITH(test(), Contains("This should be reraised."));
+    REQUIRE_THROWS_WITH(test(), Catch::Matchers::ContainsSubstring("This should be reraised."));
 }

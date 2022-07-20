@@ -74,8 +74,8 @@ TEST_CASE_METHOD(MongoTestFixture,
                 << "_id"
                 << "test.collection0" << bsoncxx::builder::stream::finalize;
             auto collectionDocOpt = configDatabase["collections"].find_one(collectionFilter.view());
-            REQUIRE(collectionDocOpt.is_initialized());
-            auto uuid = collectionDocOpt.get().view()["uuid"].get_binary();
+            REQUIRE(collectionDocOpt);
+            auto uuid = collectionDocOpt->view()["uuid"].get_binary();
 
             // Get the chunk information, the lower bound (for comparison) and the shard id.
             bsoncxx::document::value uuidDoc = bsoncxx::builder::stream::document()
@@ -94,9 +94,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             // There is only one chunk, store the initial shard id.
             auto chunkOpt =
                 configDatabase["chunks"].find_one(chunksFilter.view(), chunkFindOptions);
-            REQUIRE(chunkOpt.is_initialized());
+            REQUIRE(chunkOpt);
 
-            auto initialShardId = chunkOpt.get().view()["shard"].get_utf8().value.to_string();
+            auto initialShardId = chunkOpt->view()["shard"].get_utf8().value.to_string();
 
             // Run the actor.
             genny::ActorHelper ah(nodes.root(), 1);
@@ -106,9 +106,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             auto afterMigrationChunkOpt =
                 configDatabase["chunks"].find_one(chunksFilter.view(), chunkFindOptions);
 
-            REQUIRE(afterMigrationChunkOpt.is_initialized());
+            REQUIRE(afterMigrationChunkOpt);
             auto finalShardId =
-                afterMigrationChunkOpt.get().view()["shard"].get_utf8().value.to_string();
+                afterMigrationChunkOpt->view()["shard"].get_utf8().value.to_string();
 
             REQUIRE(initialShardId != finalShardId);
         } catch (const std::exception& e) {

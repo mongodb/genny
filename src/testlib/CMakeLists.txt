@@ -29,5 +29,5 @@ CreateGennyTargets(
         Catch2::Catch2
         yaml-cpp
     TEST_DEPENDS
-        Catch2::Catch2
+        Catch2::Catch2WithMain
 )

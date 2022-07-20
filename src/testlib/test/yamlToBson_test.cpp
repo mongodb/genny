@@ -22,9 +22,9 @@
 #include <testlib/helpers.hpp>
 #include <testlib/yamlToBson.hpp>
 
-namespace genny::testing {
+#include <catch2/matchers/catch_matchers.hpp>
 
-using Catch::Matchers::Matches;
+namespace genny::testing {
 
 namespace {
 bsoncxx::document::value bson(const std::string& json) {

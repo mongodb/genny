@@ -15,6 +15,8 @@
 #include <testlib/helpers.hpp>
 #include <yaml-cpp/yaml.h>
 
+#include <catch2/matchers/catch_matchers_string.hpp>
+
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <bsoncxx/json.hpp>
@@ -295,7 +297,7 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerGenerateCollectionNames", "
 
             // Invalid generate collection names config with missing count.
             REQUIRE_THROWS_WITH(testOneActor(config2, 5, ""),
-                                Catch::Contains("CollectionCount must be greater than 0 when GenerateCollectionNames is true"));
+                                Catch::Matchers::ContainsSubstring("CollectionCount must be greater than 0 when GenerateCollectionNames is true"));
 
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);

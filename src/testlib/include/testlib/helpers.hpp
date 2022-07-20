@@ -15,8 +15,6 @@
 #ifndef HEADER_E501BBB0_810A_4185_96B2_60CE322C4B78_INCLUDED
 #define HEADER_E501BBB0_810A_4185_96B2_60CE322C4B78_INCLUDED
 
-#include <catch2/catch_all.hpp>
-
 #include <string>
 
 #include <boost/regex.hpp>
@@ -26,6 +24,9 @@
 
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
+
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
 
 #include <yaml-cpp/yaml.h>
 

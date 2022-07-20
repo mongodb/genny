@@ -1,9 +1,10 @@
 #include <gennylib/Node.hpp>
 
-#include <catch2/catch_all.hpp>
-
 #include <map>
 #include <vector>
+
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 namespace genny {
 
@@ -99,7 +100,7 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(bool(yaml[0]) == false);
             // ...but it does barf when treating a scalar like a sequence
             REQUIRE_THROWS_WITH([&]() { yaml["foo"][0]; }(),
-                                Catch2::Matches("operator\\[\\] call on a scalar \\(key: \"0\"\\)"));
+                                Catch::Matchers::Matches("operator\\[\\] call on a scalar \\(key: \"0\"\\)"));
         }
 
         {
@@ -119,15 +120,15 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(bool(yaml["foos"]["a"]) == false);
             // ...but it does barf when treating a scalar like a sequence
             REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].as<int>(); }(),
-                                Catch::Matches("bad conversion"));
+                                Catch::Matchers::Matches("bad conversion"));
         }
         {
             NodeSource nodeSource("foos: [{a: 1}]", "");
             auto& yaml{nodeSource.root()};
             REQUIRE(bool(yaml["foos"]["a"]) == false);
             REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].to<int>(); }(),
-                                Catch::Matches("Invalid key 'a': Tried to access node that doesn't "
-                                               "exist. On node with path '/foos/a': "));
+                                Catch::Matchers::Matches("Invalid key 'a': Tried to access node that doesn't "
+                                                         "exist. On node with path '/foos/a': "));
             // this is arguably "incorrect" but it's at least consistent with YAML::Node's behavior
             REQUIRE(yaml["foos"]["a"].maybe<int>().value_or(7) == 7);
         }
@@ -244,12 +245,12 @@ TEST_CASE("YAML::Node Equivalency") {
             // we throw rather than returning the fallback if the conversion fails
             REQUIRE_THROWS_WITH(
                 [&]() { yaml["a"].maybe<int>(); }(),
-                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
-                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
+                Catch::Matchers::Matches("Couldn't convert to 'int': 'bad conversion' at "
+                                         "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
             REQUIRE_THROWS_WITH(
                 [&]() { yaml["a"].to<int>(); }(),
-                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
-                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
+                Catch::Matchers::Matches("Couldn't convert to 'int': 'bad conversion' at "
+                                        "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
         }
     }
 
@@ -292,7 +293,7 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(bool(yaml["a"]["wtf"]) == false);
             REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
             REQUIRE_THROWS_WITH([&]() { yaml["a"]["wtf"]["even_deeper"].as<int>(); }(),
-                                Catch::Matches("bad conversion"));
+                                Catch::Matchers::Matches("bad conversion"));
         }
         {
             NodeSource nodeSource("a: [0,1]", "");
@@ -311,8 +312,8 @@ TEST_CASE("YAML::Node Equivalency") {
                     yaml["a"]["wtf"]["even_deeper"].to<int>();
                     // We could do a better job at reporting that 'a' is a sequence
                 }(),
-                Catch::Matches("Invalid key 'even_deeper': Tried to access node that doesn't "
-                               "exist. On node with path '/a/wtf/even_deeper': "));
+                Catch::Matchers::Matches("Invalid key 'even_deeper': Tried to access node that doesn't "
+                                         "exist. On node with path '/a/wtf/even_deeper': "));
         }
     }
 }
@@ -393,22 +394,22 @@ nope: false
     //    REQUIRE_THROWS_WITH([&](){}(), Catch::Matches(""));
     REQUIRE_THROWS_WITH(
         [&]() { node[0].to<int>(); }(),
-        Catch::Matches(
+        Catch::Matchers::Matches(
             "Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
     REQUIRE_THROWS_WITH([&]() { node["seven"][0].to<int>(); }(),
-                        Catch::Matches("Invalid key '0': Tried to access node that doesn't exist. "
-                                       "On node with path '/seven/0': "));
+                        Catch::Matchers::Matches("Invalid key '0': Tried to access node that doesn't exist. "
+                                                 "On node with path '/seven/0': "));
 
     REQUIRE_THROWS_WITH([&]() { node["bee"].to<int>(); }(),
-                        Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
-                                       "\\(Line:Column\\)=\\(2:5\\). On node with path '/bee': b"));
+                        Catch::Matchers::Matches("Couldn't convert to 'int': 'bad conversion' at "
+                                                 "\\(Line:Column\\)=\\(2:5\\). On node with path '/bee': b"));
 }
 
 TEST_CASE("Invalid YAML") {
     REQUIRE_THROWS_WITH(
         [&]() { NodeSource n("foo: {", "foo.yaml"); }(),
-        Catch::Matches("Invalid YAML: 'end of map flow not found' at \\(Line:Column\\)=\\(0:0\\). "
-                       "On node with path 'foo.yaml'."));
+        Catch::Matchers::Matches("Invalid YAML: 'end of map flow not found' at \\(Line:Column\\)=\\(0:0\\). "
+                                 "On node with path 'foo.yaml'."));
 }
 
 
@@ -896,7 +897,7 @@ Two: {}
 
     REQUIRE_THROWS_WITH(
         node["One"]["foo"].to<std::string>(),
-        Catch::Matches(
+        Catch::Matchers::Matches(
             R"(Invalid key 'foo': Tried to access node that doesn't exist. On node with path '/One/foo': )"));
 }
 
@@ -1024,7 +1025,7 @@ TEST_CASE("Node getPlural") {
 
         REQUIRE_THROWS_WITH(
             [&]() { node.getPlural<int>("Foo", "Foos"); }(),
-            Catch::Matches(
+            Catch::Matchers::Matches(
                 R"(Invalid key 'getPlural\('Foo', 'Foos'\)': Either 'Foo' or 'Foos' required. On node with path '': \{\})"));
     }
 
@@ -1034,7 +1035,7 @@ TEST_CASE("Node getPlural") {
 
         REQUIRE_THROWS_WITH(
             [&]() { node.getPlural<int>("Foo", "Foos"); }(),
-            Catch::Matches(
+            Catch::Matchers::Matches(
                 R"(Invalid key 'getPlural\('Foo', 'Foos'\)': Plural 'Foos' must be a sequence type. On node with path '': \{Foos: 7\})"));
     }
 
@@ -1044,7 +1045,7 @@ TEST_CASE("Node getPlural") {
 
         REQUIRE_THROWS_WITH(
             [&]() { node.getPlural<int>("Foo", "Foos"); }(),
-            Catch::Matches(
+            Catch::Matchers::Matches(
                 R"(Invalid key 'getPlural\('Foo', 'Foos'\)': Can't have both 'Foo' and 'Foos'. On node with path '': \{Foo: 8, Foos: \[1, 2\]\})"));
     }
 }

@@ -24,6 +24,8 @@
 #include <testlib/clocks.hpp>
 #include <testlib/helpers.hpp>
 
+#include <catch2/matchers/catch_matchers_string.hpp>
+
 using namespace genny;
 using namespace genny::v1;
 using namespace std;
@@ -217,7 +219,7 @@ TEST_CASE("Combinations of duration and iterations") {
                 std::make_unique<v1::IterationChecker>(
                     make_optional(TimeSpec{-1}), nullopt, false, 0_ts, 0_ts, nullopt),
                 0}),
-            Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
+            Catch::Matchers::ContainsSubstring("Need non-negative duration. Gave -1 milliseconds"));
     }
 }
 
@@ -484,7 +486,7 @@ TEST_CASE("Actual Actor Example") {
                 ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
                 ah.run();
             }()),
-            Catch::Contains("Value for genny::IntegerSpec can't be negative: -10 from config: -10"));
+            Catch::Matchers::ContainsSubstring("Value for genny::IntegerSpec can't be negative: -10 from config: -10"));
     }
 
     SECTION("SleepAfter and GlobalRate") {
@@ -509,7 +511,7 @@ TEST_CASE("Actual Actor Example") {
                                 ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
                                 ah.run();
                             }()),
-                            Catch::Contains("GlobalRate must *not* be specified alongside"));
+                            Catch::Matchers::ContainsSubstring("GlobalRate must *not* be specified alongside"));
     }
 
     SECTION("SleepBefore = 0") {
@@ -557,6 +559,6 @@ TEST_CASE("Actual Actor Example") {
                                 ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
                                 ah.run();
                             }()),
-                            Catch::Contains("Must specify 'Blocking: None'"));
+                            Catch::Matchers::ContainsSubstring("Must specify 'Blocking: None'"));
     }
 }

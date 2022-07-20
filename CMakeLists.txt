@@ -78,6 +78,10 @@ find_package(
 find_package(yaml-cpp CONFIG REQUIRED)
 # <yaml-cpp>
 
+# <catch2>
+find_package(Catch2 REQUIRED)
+# </catch2>
+
 # <mongo-cxx-driver>
 find_package(mongocxx CONFIG REQUIRED)
 find_package(bsoncxx CONFIG REQUIRED)

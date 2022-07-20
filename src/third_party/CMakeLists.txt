@@ -1,10 +1,3 @@
-# <Catch2>
-add_subdirectory(catch2)
-# </Catch2>
-IF(NOT TARGET Catch2::Catch2)
-    message(MESSAGE "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX NOT TARGET Catch2::Catch2")
-ENDIF()
-
 # <Loki>
 add_subdirectory(loki)
 # </Loki>

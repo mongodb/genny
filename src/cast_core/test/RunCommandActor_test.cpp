@@ -29,6 +29,8 @@
 #include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>
 
+#include <catch2/matchers/catch_matchers_all.hpp>
+
 namespace genny {
 namespace {
 
@@ -270,7 +272,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )");
         NodeSource ns{YAML::Dump(config), ""};
         REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1),
-                Catch::Contains("Plural 'Operations' must be a sequence type"));
+                            Catch::Matchers::ContainsSubstring("Plural 'Operations' must be a sequence type"));
     }
 
     SECTION("Insert a single document using the 'Operation' key name.") {
@@ -368,7 +370,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )");
         NodeSource ns{YAML::Dump(config), ""};
         REQUIRE_THROWS_WITH(ActorHelper(ns.root(), 1),
-                Catch::Contains("Either 'Operation' or 'Operations' required."));
+                            Catch::Matchers::ContainsSubstring("Either 'Operation' or 'Operations' required."));
     }
 
     SECTION("Database should default to 'admin' when not specified in the the config.") {
@@ -520,7 +522,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                           "");
 
         REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1),
-                Catch::Contains("AdminCommands can only be run on the 'admin' database"));
+                            Catch::Matchers::ContainsSubstring("AdminCommands can only be run on the 'admin' database"));
     }
 }
 
@@ -630,7 +632,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )",
                           "");
         REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1),
-                Catch::Contains("Can't have both 'Operation' and 'Operations'."));
+                            Catch::Matchers::ContainsSubstring("Can't have both 'Operation' and 'Operations'."));
     }
 }
 
@@ -1097,7 +1099,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )", "");
 
         REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1),
-        Catch::Contains("OnlyRunInInstance or OnlyRunInInstances valid values are:"));
+                            Catch::Matchers::ContainsSubstring("OnlyRunInInstance or OnlyRunInInstances valid values are:"));
     }
 
     SECTION("OnlyRunInInstances throws with both plural and singular") {
@@ -1125,7 +1127,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )", "");
 
         REQUIRE_THROWS_WITH(ActorHelper(config.root(), 1),
-        Catch::Contains("Can't have both 'OnlyRunInInstance' and 'OnlyRunInInstances'."));
+                            Catch::Matchers::ContainsSubstring("Can't have both 'OnlyRunInInstance' and 'OnlyRunInInstances'."));
     }
 
 }

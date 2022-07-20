@@ -25,6 +25,8 @@
 #include <testlib/clocks.hpp>
 #include <testlib/helpers.hpp>
 
+#include <catch2/matchers/catch_matchers_all.hpp>
+
 namespace genny::testing {
 
 namespace {

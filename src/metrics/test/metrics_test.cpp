@@ -25,6 +25,7 @@
 #include <testlib/clocks.hpp>
 #include <testlib/helpers.hpp>
 
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 namespace genny::metrics {
 
@@ -492,7 +493,7 @@ TEST_CASE("Phases can set metrics") {
         ah.run();
 
         const auto metrics = ah.getMetricsOutput();
-        REQUIRE_THAT(std::string(metrics), Catch::Contains("Phase1Metrics_bytes,13"));
+        REQUIRE_THAT(std::string(metrics), Catch::Matchers::ContainsSubstring("Phase1Metrics_bytes,13"));
     }
 
     SECTION("With default metrics name") {
@@ -516,7 +517,7 @@ TEST_CASE("Phases can set metrics") {
         ah.run();
 
         const auto metrics = ah.getMetricsOutput();
-        REQUIRE_THAT(std::string(metrics), Catch::Contains("DefaultMetricsName.0_bytes,13"));
+        REQUIRE_THAT(std::string(metrics), Catch::Matchers::ContainsSubstring("DefaultMetricsName.0_bytes,13"));
     }
 }
 

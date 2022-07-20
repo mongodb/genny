@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <vector>
+#include <string_view>
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/exception/detail/exception_ptr.hpp>
@@ -107,7 +108,7 @@ void requireEvent(ApmEvent& event, YAML::Node requirements) {
         if (isNumeric(w)) {
             REQUIRE(event.command["writeConcern"]["w"].get_int32() == w.as<int32_t>());
         } else {
-            REQUIRE(event.command["writeConcern"]["w"].get_utf8().value == w.as<std::string>());
+            REQUIRE(bsoncxx::stdx::string_view(w.as<std::string>()) == event.command["writeConcern"]["w"].get_utf8().value);
         }
     }
     if (auto j = requirements["writeConcern"]["j"]; j) {
@@ -124,7 +125,7 @@ void requireEvent(ApmEvent& event, YAML::Node requirements) {
     }
     if (auto readPref = requirements["$readPreference"]["mode"]; readPref) {
         REQUIRE(event.command["$readPreference"]["mode"].get_utf8().value ==
-                readPref.as<std::string>());
+                bsoncxx::stdx::string_view(readPref.as<std::string>()));
     }
     if (auto staleness = requirements["$readPreference"]["maxStalenessSeconds"]) {
         REQUIRE(event.command["$readPreference"]["maxStalenessSeconds"].get_int64() ==
