@@ -5,7 +5,6 @@
 #
 # Modifications to the base file have "GENNY CHANGE" comments.
 #
-
 #==================================================================================================#
 #  supported macros                                                                                #
 #    - TEST_CASE,                                                                                  #
@@ -65,7 +64,7 @@
 #==================================================================================================#
 
 if (CMAKE_MINIMUM_REQUIRED_VERSION VERSION_LESS 2.8.8)
-    message(FATAL_ERROR "ParseAndAddCatchTests requires CMake 2.8.8 or newer")
+  message(FATAL_ERROR "ParseAndAddCatchTests requires CMake 2.8.8 or newer")
 endif()
 
 option(PARSE_CATCH_TESTS_VERBOSE "Print Catch to CTest parser debug messages" OFF)
@@ -76,7 +75,7 @@ option(PARSE_CATCH_TESTS_ADD_TO_CONFIGURE_DEPENDS "Add test file to CMAKE_CONFIG
 
 function(ParseAndAddCatchTests_PrintDebugMessage)
     if(PARSE_CATCH_TESTS_VERBOSE)
-        message(STATUS "ParseAndAddCatchTests: ${ARGV}")
+            message(STATUS "ParseAndAddCatchTests: ${ARGV}")
     endif()
 endfunction()
 
@@ -86,14 +85,14 @@ endfunction()
 # contents have been read into '${CppCode}'.
 # !keep partial line comments
 function(ParseAndAddCatchTests_RemoveComments CppCode)
-    string(ASCII 2 CMakeBeginBlockComment)
-    string(ASCII 3 CMakeEndBlockComment)
-    string(REGEX REPLACE "/\\*" "${CMakeBeginBlockComment}" ${CppCode} "${${CppCode}}")
-    string(REGEX REPLACE "\\*/" "${CMakeEndBlockComment}" ${CppCode} "${${CppCode}}")
-    string(REGEX REPLACE "${CMakeBeginBlockComment}[^${CMakeEndBlockComment}]*${CMakeEndBlockComment}" "" ${CppCode} "${${CppCode}}")
-    string(REGEX REPLACE "\n[ \t]*//+[^\n]+" "\n" ${CppCode} "${${CppCode}}")
+  string(ASCII 2 CMakeBeginBlockComment)
+  string(ASCII 3 CMakeEndBlockComment)
+  string(REGEX REPLACE "/\\*" "${CMakeBeginBlockComment}" ${CppCode} "${${CppCode}}")
+  string(REGEX REPLACE "\\*/" "${CMakeEndBlockComment}" ${CppCode} "${${CppCode}}")
+  string(REGEX REPLACE "${CMakeBeginBlockComment}[^${CMakeEndBlockComment}]*${CMakeEndBlockComment}" "" ${CppCode} "${${CppCode}}")
+  string(REGEX REPLACE "\n[ \t]*//+[^\n]+" "\n" ${CppCode} "${${CppCode}}")
 
-    set(${CppCode} "${${CppCode}}" PARENT_SCOPE)
+  set(${CppCode} "${${CppCode}}" PARENT_SCOPE)
 endfunction()
 
 # Worker function
@@ -120,12 +119,12 @@ function(ParseAndAddCatchTests_ParseFile SourceFile TestTarget)
     string(REGEX MATCHALL "[ \t]*(CATCH_)?(TEMPLATE_)?(TEST_CASE_METHOD|SCENARIO|TEST_CASE)[ \t]*\\([ \t\n]*\"[^\"]*\"[ \t\n]*(,[ \t\n]*\"[^\"]*\")?(,[ \t\n]*[^\,\)]*)*\\)[ \t\n]*\{+[ \t]*(//[^\n]*[Tt][Ii][Mm][Ee][Oo][Uu][Tt][ \t]*[0-9]+)*" Tests "${Contents}")
 
     if(PARSE_CATCH_TESTS_ADD_TO_CONFIGURE_DEPENDS AND Tests)
-        ParseAndAddCatchTests_PrintDebugMessage("Adding ${SourceFile} to CMAKE_CONFIGURE_DEPENDS property")
-        set_property(
-                DIRECTORY
-                APPEND
-                PROPERTY CMAKE_CONFIGURE_DEPENDS ${SourceFile}
-        )
+      ParseAndAddCatchTests_PrintDebugMessage("Adding ${SourceFile} to CMAKE_CONFIGURE_DEPENDS property")
+      set_property(
+        DIRECTORY
+        APPEND
+        PROPERTY CMAKE_CONFIGURE_DEPENDS ${SourceFile}
+      )
     endif()
 
     # check CMP0110 policy for new add_test() behavior
@@ -183,8 +182,8 @@ function(ParseAndAddCatchTests_ParseFile SourceFile TestTarget)
             string(REPLACE "]" ";" Tags "${Tags}")
             string(REPLACE "[" "" Tags "${Tags}")
         else()
-            # unset tags variable from previous loop
-            unset(Tags)
+          # unset tags variable from previous loop
+          unset(Tags)
         endif()
 
         list(APPEND Labels ${Tags})
@@ -208,7 +207,7 @@ function(ParseAndAddCatchTests_ParseFile SourceFile TestTarget)
             # Escape commas in the test spec
             string(REPLACE "," "\\," Name ${Name})
 
-            # Work around CMake 3.18.0 change in `add_test()`, before the escaped quotes were neccessary,
+            # Work around CMake 3.18.0 change in `add_test()`, before the escaped quotes were necessary,
             # only with CMake 3.18.0 the escaped double quotes confuse the call. This change is reverted in 3.18.1
             # And properly introduced in 3.19 with the CMP0110 policy
             if(_cmp0110_value STREQUAL "NEW" OR ${CMAKE_VERSION} VERSION_EQUAL "3.18")
@@ -220,7 +219,7 @@ function(ParseAndAddCatchTests_ParseFile SourceFile TestTarget)
 
             # Handle template test cases
             if("${TestTypeAndFixture}" MATCHES ".*TEMPLATE_.*")
-                set(Name "${Name} - *")
+              set(Name "${Name} - *")
             endif()
 
             # Escape double-quoting in CTestName due to above cmp0110
@@ -235,28 +234,32 @@ function(ParseAndAddCatchTests_ParseFile SourceFile TestTarget)
             )
             # GENNY CHANGE: ADDED THE --reporter LINE
 
+
             # Old CMake versions do not document VERSION_GREATER_EQUAL, so we use VERSION_GREATER with 3.8 instead
             if(PARSE_CATCH_TESTS_NO_HIDDEN_TESTS AND ${HiddenTagFound} AND ${CMAKE_VERSION} VERSION_GREATER "3.8")
                 ParseAndAddCatchTests_PrintDebugMessage("Setting DISABLED test property")
                 set_tests_properties("${CTestName}" PROPERTIES DISABLED ON)
             else()
                 set_tests_properties("${CTestName}" PROPERTIES FAIL_REGULAR_EXPRESSION "No tests ran"
-                        LABELS "${Labels}")
+                                                        LABELS "${Labels}")
             endif()
             set_property(
-                    TARGET ${TestTarget}
-                    APPEND
-                    PROPERTY ParseAndAddCatchTests_TESTS "${CTestName}")
+              TARGET ${TestTarget}
+              APPEND
+              PROPERTY ParseAndAddCatchTests_TESTS "${CTestName}")
             set_property(
-                    SOURCE ${SourceFile}
-                    APPEND
-                    PROPERTY ParseAndAddCatchTests_TESTS "${CTestName}")
+              SOURCE ${SourceFile}
+              APPEND
+              PROPERTY ParseAndAddCatchTests_TESTS "${CTestName}")
         endif()
+
+
     endforeach()
 endfunction()
 
 # entry point
 function(ParseAndAddCatchTests TestTarget)
+    message(DEPRECATION "ParseAndAddCatchTest: function deprecated because of possibility of missed test cases. Consider using 'catch_discover_tests' from 'Catch.cmake'")
     ParseAndAddCatchTests_PrintDebugMessage("Started parsing ${TestTarget}")
     get_target_property(SourceFiles ${TestTarget} SOURCES)
     ParseAndAddCatchTests_PrintDebugMessage("Found the following sources: ${SourceFiles}")
@@ -265,3 +268,4 @@ function(ParseAndAddCatchTests TestTarget)
     endforeach()
     ParseAndAddCatchTests_PrintDebugMessage("Finished parsing ${TestTarget}")
 endfunction()
+
