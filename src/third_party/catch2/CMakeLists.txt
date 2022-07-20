@@ -15,8 +15,13 @@
 project(catch2 VERSION 0.0.1 LANGUAGES CXX)
 
 # <Catch2>
-find_package(Catch2 CONFIG REQUIRED)
+find_package(Catch2 REQUIRED)
 # </Catch2>
+
+IF(NOT TARGET Catch2::Catch2)
+    message(MESSAGE "====================================== NOT TARGET Catch2::Catch2")
+ENDIF()
+
 
 # Wrapper around vanilla catch2 to automatically provide a main() functin.
 CreateGennyTargets(

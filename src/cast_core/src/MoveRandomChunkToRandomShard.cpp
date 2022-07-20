@@ -55,8 +55,8 @@ void MoveRandomChunkToRandomShard::run() {
                 auto collectionDocOpt =
                     configDatabase["collections"].find_one(collectionFilter.view());
                 // There must be a collection with the provided namespace.
-                assert(collectionDocOpt.is_initialized());
-                auto uuid = collectionDocOpt.get().view()["uuid"].get_binary();
+                assert(collectionDocOpt);
+                auto uuid = collectionDocOpt->view()["uuid"].get_binary();
 
                 // Select a random chunk.
                 bsoncxx::document::value uuidDoc = bsoncxx::builder::stream::document()

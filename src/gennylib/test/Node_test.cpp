@@ -1,6 +1,6 @@
 #include <gennylib/Node.hpp>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <map>
 #include <vector>
@@ -99,7 +99,7 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(bool(yaml[0]) == false);
             // ...but it does barf when treating a scalar like a sequence
             REQUIRE_THROWS_WITH([&]() { yaml["foo"][0]; }(),
-                                Catch::Matches("operator\\[\\] call on a scalar \\(key: \"0\"\\)"));
+                                Catch2::Matches("operator\\[\\] call on a scalar \\(key: \"0\"\\)"));
         }
 
         {

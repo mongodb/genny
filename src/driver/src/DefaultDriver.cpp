@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <algorithm>
+#include <fstream>
 #include <sstream>
 #include <thread>
 #include <vector>

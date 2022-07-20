@@ -59,7 +59,13 @@ def cmake(
         toolchain_info.toolchain_dir, "scripts/buildsystems/vcpkg.cmake"
     )
 
+    # cmake_cmd = [
+    #     "cmake", "--debug-find", "--log-level", "TRACE", "--find-package", "-DNAME=mongocxx", "-DCOMPILER_ID=GNU", "-DLANGUAGE=CXX", "-DMODE=LINK"
+    # ]
+
     cmake_cmd += [
+        "--debug-find", "--log-level", "TRACE",
+        
         "-DGENNY_WORKSPACE_ROOT={}".format(workspace_root),
         # "-DGENNY_REPO_ROOT={}".format(genny_repo_root),  # Not needed (yet).
         "-DCMAKE_PREFIX_PATH={}".format(";".join(cmake_prefix_paths)),
