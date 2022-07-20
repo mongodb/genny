@@ -20,8 +20,8 @@ CreateGennyTargets(
     DEPENDS
         gennylib
         cast_core
-        MongoCxx::mongocxx
-        MongoCxx::bsoncxx
+        mongo::mongocxx_static
+        mongo::bsoncxx_static
         Boost::boost
         Boost::filesystem
         Boost::log

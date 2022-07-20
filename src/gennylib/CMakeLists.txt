@@ -26,6 +26,6 @@ CreateGennyTargets(
         value_generators
         Boost::boost
         Boost::log
-        MongoCxx::mongocxx
+        mongo::mongocxx_static
     TEST_DEPENDS    testlib
 )

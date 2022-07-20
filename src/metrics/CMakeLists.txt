@@ -18,7 +18,7 @@ CreateGennyTargets(
     NAME    metrics
     TYPE    INTERFACE
     DEPENDS
-        MongoCxx::bsoncxx
+        mongo::bsoncxx_static
         yaml-cpp
         Boost::boost
         Boost::log

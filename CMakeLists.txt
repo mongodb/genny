@@ -78,6 +78,11 @@ find_package(
 find_package(yaml-cpp CONFIG REQUIRED)
 # <yaml-cpp>
 
+# <mongo-cxx-driver>
+find_package(mongocxx CONFIG REQUIRED)
+find_package(bsoncxx CONFIG REQUIRED)
+# <mongo-cxx-driver>
+
 # Required CMAKE options
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS                OFF     CACHE BOOL "")
