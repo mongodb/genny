@@ -25,4 +25,5 @@ CreateGennyTargets(
         poplarlib
     TEST_DEPENDS
         testlib
+        Catch2::Catch2WithMain
 )
