@@ -28,8 +28,8 @@ def _create_compile_environment(
 
     # For cmake and ctest
     cmake_bin_relative_dir = {
-        "linux": "downloads/tools/cmake-3.20.2-linux/cmake-3.20.2-linux-x86_64/bin",
-        "osx-genny": "downloads/tools/cmake-3.20.2-osx/cmake-3.20.2-Darwin-x86_64/CMake.app/Contents/bin",
+        "linux": "downloads/tools/cmake-3.20.2-linux/cmake-3.20.2-osx/bin",
+        "osx-genny": "downloads/tools/cmake-3.20.2-osx/cmake-3.20.2-osx/CMake.app/Contents/bin",
     }[triplet_os]
     paths.insert(0, os.path.join(toolchain_dir, cmake_bin_relative_dir))
 
