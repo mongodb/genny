@@ -122,11 +122,11 @@ buildvariants:
   tasks:
   - name: tg_compile
 
-- name: macos-1014
-  display_name: macOS Mojave
+- name: macos-1100
+  display_name: MacOS Big Sur
   modules: [mongo]
   run_on:
-  - macos-1014
+  - macos-1100
   tasks:
   - name: tg_compile
 
