@@ -35,7 +35,7 @@ def _create_compile_environment(
 
     # For ninja
     ninja_bin_dir = os.path.join(
-        toolchain_dir, f"downloads/tools/ninja/1.10.2-{triplet_os}")
+        toolchain_dir, f"downloads/tools/ninja/1.10.2-{triplet_os}"
     )
     paths.insert(0, ninja_bin_dir)
     SLOG.debug("Augmented PATH", paths=paths)
