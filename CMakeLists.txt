@@ -59,9 +59,10 @@ if(NOT Boost_USE_STATIC_LIBS)
 endif()
 
 # Prevent cmake from finding system boost instead of toolchain boost.
-set(Boost_NO_BOOST_CMAKE ON)
-set(Boost_USE_MULTITHREADED ON)
+set(Boost_NO_BOOST_CMAKE     ON )
+set(Boost_USE_MULTITHREADED  ON )
 set(Boost_USE_STATIC_RUNTIME OFF)
+set(Boost_NO_SYSTEM_PATHS    ON )
 find_package(
         Boost
         1.75
