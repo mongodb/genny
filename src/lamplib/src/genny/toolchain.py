@@ -10,7 +10,7 @@ from genny.download import Downloader
 SLOG = structlog.get_logger(__name__)
 
 # Map of platform.system() to vcpkg's OS names.
-_triplet_os_map = {"Darwin": "osx", "Linux": "linux", "NT": "windows"}
+_triplet_os_map = {"Darwin": "osx-genny", "Linux": "linux", "NT": "windows"}
 
 
 # Define complex operations as private methods on the module to keep the
@@ -29,7 +29,7 @@ def _create_compile_environment(
     # For cmake and ctest
     cmake_bin_relative_dir = {
         "linux": "downloads/tools/cmake-3.20.2-linux/cmake-3.20.2-linux-x86_64/bin",
-        "osx": "downloads/tools/cmake-3.20.2-osx/cmake-3.20.2-Darwin-x86_64/CMake.app/Contents/bin",
+        "osx-genny": "downloads/tools/cmake-3.20.2-osx/cmake-3.20.2-Darwin-x86_64/CMake.app/Contents/bin",
     }[triplet_os]
     paths.insert(0, os.path.join(toolchain_dir, cmake_bin_relative_dir))
 
@@ -52,7 +52,7 @@ class ToolchainInfo(NamedTuple):
 
     @property
     def is_darwin(self) -> bool:
-        return self.triplet_os == "osx"
+        return self.triplet_os == "osx-genny"
 
     def to_dict(self):
         return {
@@ -158,11 +158,14 @@ class ToolchainDownloader(Downloader):
     # https://evergreen.mongodb.com/waterfall/genny-toolchain
     # Find a compile task (for any build variant) and modify the URL:
     # genny_toolchain_archlinux_t_compile_82eb7c32ad09726f3ef0ddc8d7f24a18b03d9644_21_11_23_16_37_21
-    # =>                                  82eb7c32ad09726f3ef0ddc8d7f24a18b03d9644_21_11_23_16_37_21
+    # genny_toolchain_archlinux_t_compile_patch_678c0ea99b778c7871e648182d61e1db7cee8892_62d968953066155eda4e6835_22_07_21_14_54_29
+    # genny_toolchain_macos_1100_t_compile_patch_678c0ea99b778c7871e648182d61e1db7cee8892_62d9826f3e8e86231997c270_22_07_21_16_44_45
+    # genny_toolchain_macos_1100_          patch_678c0ea99b778c7871e648182d61e1db7cee8892_62d997553066155eda4eca26_22_07_21_18_14_23
+    # =>                                   patch_678c0ea99b778c7871e648182d61e1db7cee8892_62d997553066155eda4eca26_22_07_21_18_14_23
+    #
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
-
-    TOOLCHAIN_BUILD_ID = "fc5ec55493f12c0791739e66bd9ffc6db78468e1_22_01_31_16_45_23"
+    TOOLCHAIN_BUILD_ID = "patch_678c0ea99b778c7871e648182d61e1db7cee8892_62d997553066155eda4eca26_22_07_21_18_14_23"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
     TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
@@ -185,7 +188,7 @@ class ToolchainDownloader(Downloader):
         self.ignore_toolchain_version = ignore_toolchain_version
 
     def _get_url(self):
-        prefix = "macos_1014" if self._os_family == "Darwin" else self._linux_distro
+        prefix = "macos_1100" if self._os_family == "Darwin" else self._linux_distro
         return (
             "https://s3.amazonaws.com/mciuploads/genny-toolchain/"
             "genny_toolchain_{}_{}/gennytoolchain.tgz".format(
