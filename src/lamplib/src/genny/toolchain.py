@@ -34,12 +34,13 @@ def _create_compile_environment(
     paths.insert(0, os.path.join(toolchain_dir, cmake_bin_relative_dir))
 
     # For ninja
-    ninja_bin_dir = os.path.join(
-        toolchain_dir, f"downloads/tools/ninja/1.10.2-{triplet_os}"
-    )
-    paths.insert(0, ninja_bin_dir)
-    SLOG.debug("Augmented PATH", paths=paths)
+    ninja_bin_relative_dir = {
+        "linux": "downloads/tools/ninja/1.10.2-linux",
+        "osx-genny": "downloads/tools/ninja/1.10.2-osx",
+    }[triplet_os]
+    paths.insert(0, os.path.join(toolchain_dir, ninja_bin_relative_dir))
 
+    SLOG.debug("Augmented PATH", paths=paths)
     out["PATH"] = ":".join(paths)
     out["NINJA_STATUS"] = "[%f/%t (%p) %es] "  # make the ninja output even nicer
     return out
@@ -166,7 +167,9 @@ class ToolchainDownloader(Downloader):
     #
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
-    TOOLCHAIN_BUILD_ID = "patch_678c0ea99b778c7871e648182d61e1db7cee8892_62d997553066155eda4eca26_22_07_21_18_14_23"
+    TOOLCHAIN_BUILD_ID = (
+        "patch_678c0ea99b778c7871e648182d61e1db7cee8892_62d997553066155eda4eca26_22_07_21_18_14_23"
+    )
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
     TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
