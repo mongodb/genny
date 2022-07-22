@@ -1,6 +1,7 @@
 #include <utility>
 
 #include <map>
+#include <atomic>
 
 #include <gennylib/Node.hpp>
 
