@@ -90,6 +90,10 @@ void reportMetrics(genny::metrics::Registry& metrics,
 
 /**
  * Filter to remove any nodes inside dedicated "ignore" values.
+ *
+ * Basically re-implementing the following python logic:
+ *  ignored = set("foo","bar")
+ *  return [u for u in unused if not any(ignore in u for ignore in ignored)]
  */
 UnusedNodes removeIgnored(const UnusedNodes& unused, const std::vector<std::string>& ignored) {
     UnusedNodes out{};

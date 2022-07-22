@@ -21,7 +21,6 @@
 #include <utility>
 #include <variant>
 #include <vector>
-#include <typeinfo>
 
 #include <boost/exception/all.hpp>
 #include <boost/exception/error_info.hpp>
