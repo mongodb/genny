@@ -75,7 +75,6 @@ public:
     explicit ConstantAppender(T value) : _value{value} {}
     explicit ConstantAppender() : _value{} {}
     T evaluate() override {
-        // std::cout << "in constant evaluate\n";
         return _value;
     }
 
@@ -366,7 +365,6 @@ private:
     ActorId _id;
     UniqueGenerator<int64_t> _minGen;
     UniqueGenerator<int64_t> _maxGen;
-    //matt123 TODO make this boost::optional
     bool constArgs = false;
     boost::random::uniform_int_distribution<int64_t> constArgsDistribution;
 };
