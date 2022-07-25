@@ -340,8 +340,8 @@ public:
           _minGen{intGenerator(extract(node, "min", "uniform"), generatorArgs)},
           _maxGen{intGenerator(extract(node, "max", "uniform"), generatorArgs)} {
 
-            auto* minGenAsConstGen = static_cast<ConstantAppender<int64_t>*>(_minGen.get());
-            auto* maxGenAsConstGen = static_cast<ConstantAppender<int64_t>*>(_maxGen.get());
+            auto* minGenAsConstGen = dynamic_cast<ConstantAppender<int64_t>*>(_minGen.get());
+            auto* maxGenAsConstGen = dynamic_cast<ConstantAppender<int64_t>*>(_maxGen.get());
             if(minGenAsConstGen != nullptr && maxGenAsConstGen != nullptr){
                 constArgs = true;
                 int64_t min = minGenAsConstGen->evaluate();
