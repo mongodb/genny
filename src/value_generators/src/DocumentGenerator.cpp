@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
 #include <value_generators/DocumentGenerator.hpp>
 
 #include <fstream>
@@ -74,6 +75,7 @@ public:
     explicit ConstantAppender(T value) : _value{value} {}
     explicit ConstantAppender() : _value{} {}
     T evaluate() override {
+        // std::cout << "in constant evaluate\n";
         return _value;
     }
 
@@ -337,9 +339,22 @@ public:
         : _rng{generatorArgs.rng},
           _id{generatorArgs.actorId},
           _minGen{intGenerator(extract(node, "min", "uniform"), generatorArgs)},
-          _maxGen{intGenerator(extract(node, "max", "uniform"), generatorArgs)} {}
+          _maxGen{intGenerator(extract(node, "max", "uniform"), generatorArgs)} {
+
+            auto* minGenAsConstGen = static_cast<ConstantAppender<int64_t>*>(_minGen.get());
+            auto* maxGenAsConstGen = static_cast<ConstantAppender<int64_t>*>(_maxGen.get());
+            if(minGenAsConstGen != nullptr && maxGenAsConstGen != nullptr){
+                constArgs = true;
+                int64_t min = minGenAsConstGen->evaluate();
+                int64_t max = minGenAsConstGen->evaluate();
+                constArgsDistribution = boost::random::uniform_int_distribution<int64_t>{min, max};
+            }
+          }
 
     int64_t evaluate() override {
+        if(constArgs){
+            return constArgsDistribution(_rng);
+        }
         auto min = _minGen->evaluate();
         auto max = _maxGen->evaluate();
         auto distribution = boost::random::uniform_int_distribution<int64_t>{min, max};
@@ -351,6 +366,9 @@ private:
     ActorId _id;
     UniqueGenerator<int64_t> _minGen;
     UniqueGenerator<int64_t> _maxGen;
+    //matt123 TODO make this boost::optional
+    bool constArgs = false;
+    boost::random::uniform_int_distribution<int64_t> constArgsDistribution;
 };
 
 /** `{^RandomInt:{distribution:binomial ...}}` */
