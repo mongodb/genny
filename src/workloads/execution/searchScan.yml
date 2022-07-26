@@ -60,7 +60,7 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 3
+  - Repeat: 10
     Database: *db
     Operations:
     - OperationMetricsName: Search
@@ -71,6 +71,7 @@ Actors:
           {
             "$search": {
               index: "default",
+              returnStoredSource: false,
               text: {
                 path: "searchableField",
                 query: "abc",
@@ -84,7 +85,7 @@ Actors:
           {$group: {"_id": null, "count": {"$sum": 1} ,"sum": {"$sum": "$otherFieldFirst"}}}
         ]
         cursor: {batchSize: *batchSize}
-  - Repeat: 3
+  - Repeat: 10
     Database: *db
     Operations:
     - OperationMetricsName: IXScan
