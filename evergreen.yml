@@ -55,10 +55,10 @@ buildvariants:
   - amazon2-build
   expansions:
     distro: amazon2
-    # latest successful build from master as of 2020-10-01 on "Amazon Linux 2" compile task "Binaries" file
+    # latest successful build from master as of 2022-06-29 on "Amazon Linux 2" compile task "Binaries" file
     # commit should match that in get-mongo-source.sh
     mongodb_archive_url:
-      https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/amazon/cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3/binaries/mongo-mongodb_mongo_master_amazon_cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3_21_12_03_09_47_48.tgz
+      https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_amazon2_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz
   tasks:
   - name: tg_compile_and_test_with_server
 
