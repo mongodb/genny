@@ -168,7 +168,7 @@ _canned_artifacts = {
     "osx": "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/macos/6e2dcc5a39eb2de9d2e8209271115c078ae16470/binaries/mongo-mongodb_mongo_master_macos_6e2dcc5a39eb2de9d2e8209271115c078ae16470_21_12_03_09_47_48.tgz",
     "amazon2": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_amazon2_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz",
     "ubuntu1804": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_enterprise_ubuntu1804_64_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz",
-    "ubuntu2004": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_enterprise_ubuntu2004_arm64_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz",
+    "ubuntu2004": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_ubuntu2004_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz",
     "rhel70": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_rhel70_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz",
     "rhel8": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_enterprise_rhel_80_64_bit_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz",
 }
