@@ -2,8 +2,8 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
   This workload was created to reproduce SERVER-21697 - Plan ranking should take query and index
-  keys into consideration for breaking ties. First, it inserts 1000 documents 2 uniformly
-  distributed fields, and creates indexes on both fields. Then it runs a pipeline, which will be
+  keys into consideration for breaking ties. First, it inserts 1000 documents with 4 uniformly
+  distributed fields, and creates several compound indexes. Then it runs a pipeline, which will be
   slow due to incorrect plan selection.
 
 GlobalDefaults:
