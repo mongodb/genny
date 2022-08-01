@@ -470,7 +470,7 @@ Actors:
         - OperationName: AdminCommand
           OperationCommand:
             setParameter: 1
-            internalQueryForceClassicEngine: false
+            internalQueryFrameworkControl: "trySbeEngine" 
 
 - Name: BuildColumnStoreIndex
   Type: RunCommand
