@@ -166,8 +166,19 @@ The toolchain isn't instrumented with sanitizers, so you may get
 [false-positives][fp] for Boost, hence the `ASAN_OPTIONS` flag.
 
 
+## Updating canned artifacts for re-smoke tests
+The canned artifacts used for re-smoke tests can get outdated over time and will be required to update periodically.
+Here is how to update the canned artifacts.
+
+1. Download the latest artifacts and upload them to the S3 bucket.
+  - Download artifacts for a specific OS from Evergreen. [Here](https://evergreen.mongodb.com/task/mongodb_mongo_v6.0_ubuntu1804_debug_aubsan_lite_required_archive_dist_test_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44##hidden=Final+cache+hit+ratio%252CNode.Node+class%252CNode.FS.File+class%252CNode.FS.Dir+class%252CNode.FS.Base+class%252CExecutor.Null+class%252CExecutor.Executor+class%252CEnvironment.OverrideEnvironment+class%252CEnvironment.EnvironmentClone+class%252CEnvironment.Base+class%252CBuilder.OverrideWarner+class%252CBuilder.CompositeBuilder+class%252CBuilder.BuilderBase+class%252CAction.ListAction+class%252CAction.LazyAction+class%252CAction.FunctionAction+class%252CAction.CommandGeneratorAction+class%252CAction.CommandAction+class%252CTotal+command+execution+time%252CTotal+SCons+execution+time%252CTotal+SConscript+file+execution+time%252CTotal+build+time%252CMemory+after+building+targets%252CMemory+before+building+targets%252CMemory+after+reading+SConscript+files%252CMemory+before+reading+SConscript+files&threads=all&selected.Final+cache+hit+ratio=&selected.Node.Node+class=&selected.Node.FS.File+class=&selected.Node.FS.Dir+class=&selected.Node.FS.Base+class=&selected.Executor.Null+class=&selected.Executor.Executor+class=&selected.Environment.OverrideEnvironment+class=&selected.Environment.EnvironmentClone+class=&selected.Environment.Base+class=&selected.Builder.OverrideWarner+class=&selected.Builder.CompositeBuilder+class=&selected.Builder.BuilderBase+class=&selected.Action.ListAction+class=&selected.Action.LazyAction+class=&selected.Action.FunctionAction+class=&selected.Action.CommandGeneratorAction+class=&selected.Action.CommandAction+class=&selected.Total+command+execution+time=&selected.Total+SCons+execution+time=&selected.Total+SConscript+file+execution+time=&selected.Total+build+time=&selected.Memory+after+building+targets=&selected.Memory+before+building+targets=&selected.Memory+after+reading+SConscript+files=&selected.Memory+before+reading+SConscript+files=) is an example for Ubuntu 18.04, commit - 6e2dcc5. The artifacts should be under "Files -> Binaries."
+  - The downloaded artifacts should be uploaded to S3 bucket - s3://dsi-donot-remove/compile_artifacts/. Make sure to make the uploaded file public.
+2. Update [run_tests.py](https://github.com/mongodb/genny/blob/master/src/lamplib/src/genny/tasks/run_tests.py) with new S3 URLs
+  - CANNED_ARTIFACTS needs to be updated with the new S3 URL.
+  - MONGO_COMMIT needs to be updated with the commit corresponding to the new canned artifacts.
+3. Update [evergreen.yml](https://github.com/mongodb/genny/blob/master/evergreen.yml)
+  - [mongodb_archive_url](https://github.com/mongodb/genny/blob/3da82fd0acb99799caec2ab13047520405833f72/evergreen.yml#L61) needs to be updated to reflect the canned artifact.
+  - [f_fetch_source](https://github.com/mongodb/genny/blob/3da82fd0acb99799caec2ab13047520405833f72/evergreen.yml#L286) mongo revision needs to be updated.
 
 [fp]: https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow#false-positives
 [pi]: https://github.com/mongodb/genny/blob/762b08ee3b71184d5f521e82f7ce6d6eeb3c0cc9/src/workloads/docs/ParallelInsert.yml#L183-L189
-
-
