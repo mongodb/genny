@@ -1,0 +1,52 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload was created to reproduce SERVER-21697 - Plan ranking should take query and index
+  keys into consideration for breaking ties. First, it inserts 1000 documents with 4 uniformly
+  distributed fields, and creates several compound indexes. Then it runs a pipeline, which will be
+  slow due to incorrect plan selection.
+
+GlobalDefaults:
+  Database: &Database residualpredcosting
+  Collection: &Collection Collection0
+  DocumentCount: &docCount 1000
+  Nop: &Nop {Nop: true}
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *Database
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: *docCount
+    BatchSize: 1000
+    Indexes:
+    - keys: {a: 1, b: 1, c: 1, d: 1}
+    - keys: {a: 1, b: 1, d: 1}
+    - keys: {a: 1, d: 1}
+    Document:
+      a: {^Cycle: {ofLength: 10, fromGenerator: {^Inc: {start: 0}}}}
+      b: {^Cycle: {ofLength: 10, fromGenerator: {^Inc: {start: 0}}}}
+      c: {^Cycle: {ofLength: 10, fromGenerator: {^Inc: {start: 0}}}}
+      d: {^Cycle: {ofLength: 10, fromGenerator: {^Inc: {start: 0}}}}
+  - *Nop
+
+- Name: Match
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 500
+    Database: *Database
+    Operations:
+    - OperationMetricsName: MatchQuery
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *Collection
+        pipeline: [
+          {$match: {a: {$eq: 0}, b: {$eq: 0}, c: {$eq: 0}}}, {$sort: {d: 1}}
+        ]
+        cursor: {}
