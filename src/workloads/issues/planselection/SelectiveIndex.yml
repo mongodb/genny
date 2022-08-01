@@ -1,0 +1,49 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload was created to reproduce SERVER-20616 - Plan ranker sampling from the beginning of
+  a query's execution can result in poor plan selection. First, it inserts 1000 documents 2
+  uniformly distributed fields, and creates indexes on both fields. Then it runs a pipeline, which
+  will be slow due to incorrect plan selection.
+
+GlobalDefaults:
+  Database: &Database selectiveindex
+  Collection: &Collection Collection0
+  DocumentCount: &docCount 1000
+  Nop: &Nop {Nop: true}
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *Database
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: *docCount
+    BatchSize: 1000
+    Indexes:
+    - keys: {a: 1}
+    - keys: {b: 1}
+    Document:
+      a: {^Cycle: {ofLength: 10, fromGenerator: {^Inc: {start: 0}}}}
+      b: {^Inc: {start: 0}}
+  - *Nop
+
+- Name: Match
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 500
+    Database: *Database
+    Operations:
+    - OperationMetricsName: MatchQuery
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *Collection
+        pipeline: [
+          {$match: {'a': {$eq: 0}, 'b': {$eq: 0}}}
+        ]
+        cursor: {}
