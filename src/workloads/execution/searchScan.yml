@@ -52,7 +52,7 @@ Actors:
   - *Nop
   - Repeat: 1 
   - *Nop
-  - *Nop
+#  - *Nop
 
 - Name: SearchScan
   Type: RunCommand
@@ -60,7 +60,7 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 10
+  - Repeat: 100
     Database: *db
     Operations:
     - OperationMetricsName: Search
@@ -82,18 +82,6 @@ Actors:
               }
             }
           }, 
-          {$group: {"_id": null, "count": {"$sum": 1} ,"sum": {"$sum": "$otherFieldFirst"}}}
-        ]
-        cursor: {batchSize: *batchSize}
-  - Repeat: 10
-    Database: *db
-    Operations:
-    - OperationMetricsName: IXScan
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline: [
-          {$match: {searchableField: {"$lt": "b"}}}, 
           {$group: {"_id": null, "count": {"$sum": 1} ,"sum": {"$sum": "$otherFieldFirst"}}}
         ]
         cursor: {batchSize: *batchSize}
