@@ -26,6 +26,7 @@
 #include <boost/date_time.hpp>
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/math/special_functions/pow.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
@@ -34,6 +35,55 @@
 #include <bsoncxx/oid.hpp>
 #include <bsoncxx/types/bson_value/view.hpp>
 
+namespace {
+
+template <class RealType = double>
+class zipfian_distribution {
+public:
+    explicit zipfian_distribution(RealType alpha,  int n)
+        : _alpha{alpha}, _n{n}
+        {}
+
+    template<class URNG>
+    RealType operator()(URNG& urng) const {
+        return generate(urng);
+    }
+
+private:
+    // Shape parameter for the distribution.
+    RealType _alpha;
+    // Normalization constant for the distribution.
+    RealType _c = 0;
+    // Number of elements in the distribution.
+    RealType _n;
+
+    template<class URNG>
+    RealType generate(URNG& urng) {
+        if (!_c) {
+            calculateNormalizationConstant();
+        }
+
+        RealType sum = 0;
+
+        for (int i = 1; i <= urng; ++i) {
+            sum += boost::math::pow(i, _alpha);
+            if (sum >= urng * _c) {
+                return i;
+            }
+        }
+    }
+
+    void calculateNormalizationConstant() {
+        for (int i = 1; i <= _n; ++i) {
+            _c += boost::math::pow(i, _alpha);
+        }
+
+        _c = 1 / _c;
+    }
+};
+
+using UniqueAppendable = std::unique_ptr<Appendable>;
+}  // namespace
 
 namespace {
 using bsoncxx::oid;
@@ -272,6 +322,7 @@ static const char noncentralchisquaredstr[] = "non_central_chi_squared";
 static const char cauchystr[] = "cauchy";
 static const char fisherfstr[] = "fisher_f";
 static const char studenttstr[] = "student_t";
+static const char zipfianstr[] = "zipfian";
 
 using UniformDoubleGenerator =
     DoubleGenerator2Parameter<boost::random::uniform_real_distribution<double>,
@@ -315,6 +366,8 @@ using CauchyDoubleGenerator = DoubleGenerator2Parameter<boost::random::cauchy_di
                                                         cauchystr,
                                                         medianstr,
                                                         sigmastr>;
+using ZipfianDoubleGenerator =
+    DoubleGenerator2Parameter<zipfian_distribution<double>, zipfianstr, alphastr, nstr>;
 
 // The NonCentralChiSquaredDoubleGenerator, FisherF, and StudentT distributions
 // behave differently on different platforms.
@@ -1632,6 +1685,8 @@ UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
         return std::make_unique<FisherFDoubleGenerator>(node, generatorArgs);
     } else if (distribution == "student_t") {
         return std::make_unique<StudentTDoubleGenerator>(node, generatorArgs);
+    } else if (distribution == "zipfian") {
+        return std::make_unique<ZipfianDoubleGenerator>(node, generatorArgs);
     } else {
         std::stringstream error;
         error << "Unknown distribution '" << distribution << "'";
