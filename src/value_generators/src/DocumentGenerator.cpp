@@ -21,6 +21,7 @@
 #include <map>
 #include <sstream>
 #include <unordered_map>
+#include <cmath>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/date_time.hpp>
@@ -40,12 +41,11 @@ namespace {
 template <class RealType = double>
 class zipfian_distribution {
 public:
-    explicit zipfian_distribution(RealType alpha,  int n)
-        : _alpha{alpha}, _n{n}
-        {}
+    explicit zipfian_distribution(RealType alpha, RealType n)
+        : _alpha{alpha}, _n{n} {}
 
     template<class URNG>
-    RealType operator()(URNG& urng) const {
+    RealType operator()(URNG& urng) {
         return generate(urng);
     }
 
@@ -59,30 +59,29 @@ private:
 
     template<class URNG>
     RealType generate(URNG& urng) {
+        RealType sum = 0;
+        auto randomUniformInt = urng();
+
         if (!_c) {
             calculateNormalizationConstant();
         }
 
-        RealType sum = 0;
-
-        for (int i = 1; i <= urng; ++i) {
-            sum += boost::math::pow(i, _alpha);
-            if (sum >= urng * _c) {
+        for (auto i = 1; i <= randomUniformInt; ++i) {
+            sum += std::pow(i, _alpha);
+            if (sum >= randomUniformInt * _c) {
                 return i;
             }
         }
     }
 
     void calculateNormalizationConstant() {
-        for (int i = 1; i <= _n; ++i) {
-            _c += boost::math::pow(i, _alpha);
+        for (auto i = 1; i <= _n; ++i) {
+            _c += std::pow(i, _alpha);
         }
 
         _c = 1 / _c;
     }
 };
-
-using UniqueAppendable = std::unique_ptr<Appendable>;
 }  // namespace
 
 namespace {
