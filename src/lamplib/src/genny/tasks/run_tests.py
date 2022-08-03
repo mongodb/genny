@@ -179,7 +179,7 @@ def _setup_resmoke(
     genny_repo_root: str,
     mongo_dir: Optional[str],
     mongodb_archive_url: Optional[str],
-    mongodb_commit: Optional[str]
+    mongodb_commit: Optional[str],
 ):
     if mongodb_commit is None:
         mongodb_commit = MONGO_COMMIT
@@ -217,9 +217,7 @@ def _setup_resmoke(
         capture=False,
     )
     from_tarball = os.path.join(mongo_repo_path, "bin", "mongod")
-    info = toolchain.toolchain_info(
-        genny_repo_root=genny_repo_root, workspace_root=workspace_root
-    )
+    info = toolchain.toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     if mongodb_archive_url is None:
         if info.is_darwin:
             artifact_key = "osx"
@@ -282,7 +280,7 @@ def resmoke_test(
     mongo_dir: Optional[str],
     env: dict,
     mongodb_archive_url: Optional[str],
-    mongodb_commit=Optional[str]
+    mongodb_commit=Optional[str],
 ):
     if (not suites) and (not is_cnats):
         raise ValueError('Must specify either "--suites" or "--create-new-actor-test-suite"')
@@ -298,7 +296,7 @@ def resmoke_test(
         genny_repo_root=genny_repo_root,
         mongo_dir=mongo_dir,
         mongodb_archive_url=mongodb_archive_url,
-        mongodb_commit=mongodb_commit
+        mongodb_commit=mongodb_commit,
     )
 
     mongod = os.path.join(bin_dir, "mongod")

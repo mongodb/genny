@@ -171,7 +171,7 @@ The canned artifacts used for re-smoke tests can get outdated over time and will
 Here is how to update the canned artifacts.
 
 1. Download the latest artifacts and upload them to the S3 bucket.
-	- Download the tgz package the sepecific platform
+	- Download the tgz package for a sepecific platform
   	- The downloaded package should be uploaded to ithis S3 bucket - s3://dsi-donot-remove/compile_artifacts/. Make sure to make the uploaded file public.
 2. Update [run_tests.py](https://github.com/mongodb/genny/blob/master/src/lamplib/src/genny/tasks/run_tests.py) with new S3 URLs
   	- CANNED_ARTIFACTS needs to be updated with the new S3 URL.

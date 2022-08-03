@@ -46,16 +46,7 @@ def cli(ctx: click.Context, verbose: bool) -> None:
     "--linux-distro",
     required=False,
     default="not-linux",
-    type=click.Choice(
-        [
-            "ubuntu1804",
-            "ubuntu2004",
-            "rhel8",
-            "rhel70",
-            "amazon2",
-            "not-linux",
-        ]
-    ),
+    type=click.Choice(["ubuntu1804", "ubuntu2004", "rhel8", "rhel70", "amazon2", "not-linux",]),
     help=(
         "Specify the linux distro you're on; if your system isn't available,"
         " please contact us at #workload-generation. The not-linux value is useful on macOS."
@@ -454,7 +445,7 @@ def resmoke_test(
     create_new_actor_test_suite: bool,
     mongo_dir: Optional[str],
     mongodb_archive_url: Optional[str],
-    mongodb_commit: Optional[str]		
+    mongodb_commit: Optional[str],
 ):
     from genny.tasks import run_tests
 
@@ -466,7 +457,7 @@ def resmoke_test(
         mongo_dir=mongo_dir,
         env=os.environ.copy(),
         mongodb_archive_url=mongodb_archive_url,
-        mongodb_commit=mongodb_commit
+        mongodb_commit=mongodb_commit,
     )
 
 
