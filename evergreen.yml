@@ -62,15 +62,6 @@ buildvariants:
   tasks:
   - name: tg_compile_and_test_with_server
 
-- name: archlinux
-  display_name: Arch Linux
-  modules: [mongo]
-  expansions:
-    distro: archlinux
-  run_on:
-  - archlinux-large
-  tasks:
-  - name: tg_compile
 
 - name: rhel70
   display_name: RHEL 7
@@ -89,16 +80,6 @@ buildvariants:
     distro: rhel8
   run_on:
   - rhel80-test
-  tasks:
-  - name: tg_compile
-
-- name: ubuntu1604
-  display_name: Ubuntu 16.04
-  modules: [mongo]
-  expansions:
-    distro: ubuntu1604
-  run_on:
-  - ubuntu1604-large
   tasks:
   - name: tg_compile
 
