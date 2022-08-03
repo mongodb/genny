@@ -15,12 +15,12 @@ SLOG = structlog.get_logger(__name__)
 # The binaries must be compatible with the version of the mongo repo checked out in use for resmoke,
 # which is the sha "6e2dcc5a39eb2de9d2e8209271115c078ae16470" mentioned below.
 CANNED_ARTIFACTS = {
-    "osx": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_enterprise_macos_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz",
-    "amazon2": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_amazon2_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz",
-    "ubuntu1804": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_enterprise_ubuntu1804_64_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz",
-    "ubuntu2004": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_ubuntu2004_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz",
-    "rhel70": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_rhel70_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz",
-    "rhel8": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongo-mongodb_mongo_v6.0_enterprise_rhel_80_64_bit_6e2dcc5a39eb2de9d2e8209271115c078ae16470_22_06_29_21_31_44.tgz",
+    "osx": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-macos-x86_64-6.0.0.tgz",
+    "amazon2": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-amazon2-6.0.0.tgz",
+    "ubuntu1804": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-ubuntu1804-6.0.0.tgz",
+    "ubuntu2004": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-ubuntu2004-6.0.0.tgz",
+    "rhel70": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-rhel70-6.0.0.tgz",
+    "rhel8": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-rhel80-6.0.0.tgz",
 }
 MONGO_COMMIT = "6e2dcc5a39eb2de9d2e8209271115c078ae16470"
 
@@ -179,7 +179,10 @@ def _setup_resmoke(
     genny_repo_root: str,
     mongo_dir: Optional[str],
     mongodb_archive_url: Optional[str],
+    mongodb_commit: Optional[str]
 ):
+    if mongodb_commit is None:
+        mongodb_commit = MONGO_COMMIT
     if mongo_dir is not None:
         mongo_repo_path = mongo_dir
     else:
@@ -205,79 +208,46 @@ def _setup_resmoke(
             check=True,
             capture=False,
         )
-        cmd_runner.run_command(
-            # If changing this sha, you may need to use later binaries
-            # in the CANNED_ARTIFACTS dict.
-            cmd=["git", "checkout", MONGO_COMMIT],
-            cwd=mongo_repo_path,
-            check=True,
-            capture=False,
-        )
-    else:
-        SLOG.info("Using existing mongo repo checkout", mongo_repo_path=mongo_repo_path)
-        cmd_runner.run_command(
-            cmd=["git", "rev-parse", "HEAD"], check=False, cwd=mongo_repo_path, capture=False,
-        )
-
-    # Look for mongod in
-    # build/opt/mongo/db/mongod
-    # build/install/bin/mongod
-    # bin/
-    # opt = os.path.join(mongo_repo_path, "build", "opt", "mongo", "db", "mongod")
-    # install = os.path.join(mongo_repo_path, "build", "install", "bin", "mongod")
-    # from_tarball = os.path.join(mongo_repo_path, "bin", "mongod")
-    # if os.path.exists(opt):
-    #     mongod = opt
-    # elif os.path.exists(install):
-    #     mongod = install
-    # elif os.path.exists(from_tarball):
-    #     mongod = from_tarball
-    # else:
-    #     mongod = None
-
-    # if mongod is not None and mongodb_archive_url is not None:
-    #     SLOG.info(
-    #         "Found existing mongod so will not download artifacts.",
-    #         existing_mongod=mongod,
-    #         wont_download_artifacts_from=mongodb_archive_url,
-    #     )
-
-    if mongod is None:
-        SLOG.info(
-            "Fetching and installing mongod.",
-            looked_at=(opt, install, from_tarball),
-            fetching=mongodb_archive_url,
-        )
-        if mongodb_archive_url is None:
-            info = toolchain.toolchain_info(
-                genny_repo_root=genny_repo_root, workspace_root=workspace_root
+    cmd_runner.run_command(
+        # If changing this sha, you may need to use later binaries
+        # in the CANNED_ARTIFACTS dict.
+        cmd=["git", "checkout", mongodb_commit],
+        cwd=mongo_repo_path,
+        check=True,
+        capture=False,
+    )
+    from_tarball = os.path.join(mongo_repo_path, "bin", "mongod")
+    info = toolchain.toolchain_info(
+        genny_repo_root=genny_repo_root, workspace_root=workspace_root
+    )
+    if mongodb_archive_url is None:
+        if info.is_darwin:
+            artifact_key = "osx"
+        elif info.linux_distro in CANNED_ARTIFACTS:
+            artifact_key = info.linux_distro
+        else:
+            raise Exception(
+                f"No pre-built artifacts for distro {info.linux_distro}. You can either:"
+                f"1. compile/install a local mongo checkout in ./src/mongo."
+                f"2. Modify the CANNED_ARTIFACTS dict in the genny python to include an artifact from a waterfall build."
+                f"3. Pass in the --mongodb-archive-url parameter to force a canned artifact."
             )
-            if info.is_darwin:
-                artifact_key = "osx"
-            elif info.linux_distro in CANNED_ARTIFACTS:
-                artifact_key = info.linux_distro
-            else:
-                raise Exception(
-                    f"No pre-built artifacts for distro {info.linux_distro}. You can either:"
-                    f"1. compile/install a local mongo checkout in ./src/mongo."
-                    f"2. Modify the CANNED_ARTIFACTS dict in the genny python to include an artifact from a waterfall build."
-                    f"3. Pass in the --mongodb-archive-url parameter to force a canned artifact."
-                )
-            mongodb_archive_url = CANNED_ARTIFACTS[artifact_key]
+        mongodb_archive_url = CANNED_ARTIFACTS[artifact_key]
 
-            cmd_runner.run_command(
-                cmd=["curl", "-LSs", mongodb_archive_url, "-o", "mongodb.tgz"],
-                cwd=mongo_repo_path,
-                capture=False,
-                check=True,
-            )
-            cmd_runner.run_command(
-                cmd=["tar", "--strip-components=1", "-zxf", "mongodb.tgz"],
-                cwd=mongo_repo_path,
-                capture=False,
-                check=True,
-            )
-            mongod = from_tarball
+    SLOG.info("Fetching and installing mongod.", fetching=mongodb_archive_url)
+    cmd_runner.run_command(
+        cmd=["curl", "-LSs", mongodb_archive_url, "-o", "mongodb.tgz"],
+        cwd=mongo_repo_path,
+        capture=False,
+        check=True,
+    )
+    cmd_runner.run_command(
+        cmd=["tar", "--strip-components=1", "-zxf", "mongodb.tgz"],
+        cwd=mongo_repo_path,
+        capture=False,
+        check=True,
+    )
+    mongod = from_tarball
     bin_dir = os.path.dirname(mongod)
 
     # Setup resmoke venv unless exists
@@ -312,6 +282,7 @@ def resmoke_test(
     mongo_dir: Optional[str],
     env: dict,
     mongodb_archive_url: Optional[str],
+    mongodb_commit=Optional[str]
 ):
     if (not suites) and (not is_cnats):
         raise ValueError('Must specify either "--suites" or "--create-new-actor-test-suite"')
@@ -327,6 +298,7 @@ def resmoke_test(
         genny_repo_root=genny_repo_root,
         mongo_dir=mongo_dir,
         mongodb_archive_url=mongodb_archive_url,
+        mongodb_commit=mongodb_commit
     )
 
     mongod = os.path.join(bin_dir, "mongod")
