@@ -226,9 +226,8 @@ def _setup_resmoke(
         else:
             raise Exception(
                 f"No pre-built artifacts for distro {info.linux_distro}. You can either:"
-                f"1. compile/install a local mongo checkout in ./src/mongo."
-                f"2. Modify the CANNED_ARTIFACTS dict in the genny python to include an artifact from a waterfall build."
-                f"3. Pass in the --mongodb-archive-url parameter to force a canned artifact."
+                f"1. Modify the CANNED_ARTIFACTS dict in the genny python to include an artifact from a waterfall build."
+                f"2. Pass in the --mongodb-archive-url parameter to force a canned artifact."
             )
         mongodb_archive_url = CANNED_ARTIFACTS[artifact_key]
 
