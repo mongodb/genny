@@ -38,37 +38,37 @@
 
 namespace {
 
-template <class RealType = double>
+template <class RealType = int64_t>
 class zipfian_distribution {
 public:
-    explicit zipfian_distribution(RealType alpha, RealType n)
+    explicit zipfian_distribution(double alpha, RealType n)
         : _alpha{alpha}, _n{n} {}
 
-    template<class URNG>
+    template <class URNG>
     RealType operator()(URNG& urng) {
         return generate(urng);
     }
 
 private:
     // Shape parameter for the distribution.
-    RealType _alpha;
+    double _alpha;
     // Normalization constant for the distribution.
-    RealType _c = 0;
-    // Number of elements in the distribution.
+    double _c = 0;
+    // Number of distinct elements in the distribution.
     RealType _n;
 
     template<class URNG>
     RealType generate(URNG& urng) {
-        RealType sum = 0;
-        RealType num = (double)urng() / (double)urng.max();
+        double sum = 0;
+        double randomNumber = (double)urng() / (double)urng.max();
 
         if (!_c) {
             calculateNormalizationConstant();
         }
 
-        for (auto i = 1; i <= _n; ++i) {
+        for (RealType i = 1; i <= _n; ++i) {
             sum += 1.0 / std::pow(i, _alpha);
-            if (sum >= num * _c) {
+            if (sum >= randomNumber * _c) {
                 std::cout << i << "," << std::endl;
                 return i;
             }
@@ -76,7 +76,7 @@ private:
     }
 
     void calculateNormalizationConstant() {
-        for (auto i = 1; i <= _n; ++i) {
+        for (RealType i = 1; i <= _n; ++i) {
             _c += 1.0 / std::pow(i, _alpha);
         }
     }
@@ -320,7 +320,6 @@ static const char noncentralchisquaredstr[] = "non_central_chi_squared";
 static const char cauchystr[] = "cauchy";
 static const char fisherfstr[] = "fisher_f";
 static const char studenttstr[] = "student_t";
-static const char zipfianstr[] = "zipfian";
 
 using UniformDoubleGenerator =
     DoubleGenerator2Parameter<boost::random::uniform_real_distribution<double>,
@@ -364,8 +363,6 @@ using CauchyDoubleGenerator = DoubleGenerator2Parameter<boost::random::cauchy_di
                                                         cauchystr,
                                                         medianstr,
                                                         sigmastr>;
-using ZipfianDoubleGenerator =
-    DoubleGenerator2Parameter<zipfian_distribution<double>, zipfianstr, alphastr, nstr>;
 
 // The NonCentralChiSquaredDoubleGenerator, FisherF, and StudentT distributions
 // behave differently on different platforms.
@@ -487,6 +484,28 @@ private:
     DefaultRandom& _rng;
     ActorId _id;
     const double _p;
+};
+
+/** `{^RandomInt:{distribution:zipfian...}}` */
+class ZipfianInt64Generator : public Generator<int64_t> {
+public:
+    /** @param node `{alpha:double, n:<int>}` */
+    ZipfianInt64Generator(const Node& node, GeneratorArgs generatorArgs)
+        : _rng{generatorArgs.rng},
+          _id{generatorArgs.actorId},
+          _alpha{extract(node, "alpha", "zipfian").to<double>()},
+          _nGen{intGenerator(extract(node, "n", "zipfian"), generatorArgs)} {}
+
+    int64_t evaluate() override {
+        auto distribution = zipfian_distribution<int64_t>{_alpha, _nGen->evaluate()};
+        return distribution(_rng);
+    }
+
+private:
+    DefaultRandom& _rng;
+    ActorId _id;
+    const double _alpha;
+    UniqueGenerator<int64_t> _nGen;
 };
 
 // This generator allows choosing any valid generator, incuding documents. As such it cannot be used
@@ -1683,8 +1702,6 @@ UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
         return std::make_unique<FisherFDoubleGenerator>(node, generatorArgs);
     } else if (distribution == "student_t") {
         return std::make_unique<StudentTDoubleGenerator>(node, generatorArgs);
-    } else if (distribution == "zipfian") {
-        return std::make_unique<ZipfianDoubleGenerator>(node, generatorArgs);
     } else {
         std::stringstream error;
         error << "Unknown distribution '" << distribution << "'";
@@ -1722,6 +1739,8 @@ UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
         return std::make_unique<PoissonInt64Generator>(node, generatorArgs);
     } else if (distribution == "geometric") {
         return std::make_unique<GeometricInt64Generator>(node, generatorArgs);
+    } else if (distribution == "zipfian") {
+        return std::make_unique<ZipfianInt64Generator>(node, generatorArgs);
     } else {
         std::stringstream error;
         error << "Unknown distribution '" << distribution << "'";
