@@ -60,15 +60,16 @@ private:
     template<class URNG>
     RealType generate(URNG& urng) {
         RealType sum = 0;
-        auto randomUniformInt = urng();
+        RealType num = (double)urng() / (double)urng.max();
 
         if (!_c) {
             calculateNormalizationConstant();
         }
 
-        for (auto i = 1; i <= randomUniformInt; ++i) {
-            sum += std::pow(i, _alpha);
-            if (sum >= randomUniformInt * _c) {
+        for (auto i = 1; i <= _n; ++i) {
+            sum += 1.0 / std::pow(i, _alpha);
+            if (sum >= num * _c) {
+                std::cout << i << "," << std::endl;
                 return i;
             }
         }
@@ -76,10 +77,8 @@ private:
 
     void calculateNormalizationConstant() {
         for (auto i = 1; i <= _n; ++i) {
-            _c += std::pow(i, _alpha);
+            _c += 1.0 / std::pow(i, _alpha);
         }
-
-        _c = 1 / _c;
     }
 };
 }  // namespace
