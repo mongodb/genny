@@ -41,8 +41,8 @@ namespace {
 template <class RealType = int64_t>
 class zipfian_distribution {
 public:
-    explicit zipfian_distribution(double alpha, RealType n)
-        : _alpha{alpha}, _n{n} {}
+    explicit zipfian_distribution(double alpha, RealType n, double c)
+        : _alpha{alpha}, _n{n}, _c{c} {}
 
     template <class URNG>
     RealType operator()(URNG& urng) {
@@ -53,31 +53,24 @@ private:
     // Shape parameter for the distribution.
     double _alpha;
     // Normalization constant for the distribution.
-    double _c = 0;
+    double _c;
     // Number of distinct elements in the distribution.
     RealType _n;
 
     template<class URNG>
     RealType generate(URNG& urng) {
         double sum = 0;
-        double randomNumber = (double)urng() / (double)urng.max();
-
-        if (!_c) {
-            calculateNormalizationConstant();
+        double randomNumber = 0;
+        
+        while (randomNumber <= 0) {
+            randomNumber = (double)urng() / (double)urng.max();
         }
 
         for (RealType i = 1; i <= _n; ++i) {
             sum += 1.0 / std::pow(i, _alpha);
             if (sum >= randomNumber * _c) {
-                std::cout << i << "," << std::endl;
                 return i;
             }
-        }
-    }
-
-    void calculateNormalizationConstant() {
-        for (RealType i = 1; i <= _n; ++i) {
-            _c += 1.0 / std::pow(i, _alpha);
         }
     }
 };
@@ -497,11 +490,19 @@ public:
           _nGen{intGenerator(extract(node, "n", "zipfian"), generatorArgs)} {}
 
     int64_t evaluate() override {
-        auto distribution = zipfian_distribution<int64_t>{_alpha, _nGen->evaluate()};
+        if (!_c) calculateNormalizationConstant();
+        auto distribution = zipfian_distribution<int64_t>{_alpha, _nGen->evaluate(), _c};
         return distribution(_rng);
     }
 
+    void calculateNormalizationConstant() {
+        for (int64_t i = 1; i <= _nGen->evaluate(); ++i) {
+            _c += 1.0 / std::pow(i, _alpha);
+        }
+    }
+
 private:
+    double _c = 0;
     DefaultRandom& _rng;
     ActorId _id;
     const double _alpha;
