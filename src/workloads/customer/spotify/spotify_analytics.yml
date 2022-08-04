@@ -1,0 +1,270 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/mongo"
+Description: |
+ This is my first Genny workload! Oh, yeah!
+
+Keyworkds:
+- Index
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 100
+
+PlaylistSize: &PlaylistSize {^Parameter: {Name: PlaylistSize, Default: 10}}
+
+Actors:
+- Name: AnalyticsQueries
+  Type: RunCommand
+  Threads: 10
+  Phases:
+  - Repeat: 100
+    Database: Spotify
+    Operations:
+    - OperationMetricsName: TopArtistQuery
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: playlists
+        pipeline:
+          [
+              {
+                  '$match': {
+                      'pid': {
+                          '$in': {^Array: {of: {^RandomInt: {min: 0, max: 200000, distribution: uniform}}, number: *PlaylistSize}}
+                      }
+                  }
+              }, {
+                  '$unwind': {
+                      'path': '$tracks'
+                  }
+              }, {
+                  '$group': {
+                      '_id': '$tracks.artist_name', 
+                      'count': {
+                          '$sum': 1
+                      }
+                  }
+              }, {
+                  '$sort': {
+                      'count': -1
+                  }
+              }, {
+                  '$limit': 10
+              }
+          ]
+        cursor: {batchSize: 100}
+        allowDiskUse: true
+  - Repeat: 100
+    Database: Spotify
+    Operations:
+    - OperationMetricsName: TopGenreQuery
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: playlists
+        pipeline:
+          [
+            {
+                '$match': {
+                    'pid': {
+                        '$in': {^Array: {of: {^RandomInt: {min: 0, max: 200000, distribution: uniform}}, number: *PlaylistSize}}
+                    }
+                }
+            }, {
+                '$unwind': {
+                    'path': '$tracks'
+                }
+            }, {
+                '$group': {
+                    '_id': '$tracks.album_uri', 
+                    'count': {
+                        '$sum': 1
+                    }
+                }
+            }, {
+                '$project': {
+                    'album_id': {
+                        '$ltrim': {
+                            'input': '$_id', 
+                            'chars': 'spotify:album:'
+                        }
+                    }, 
+                    'count': 1, 
+                    '_id': 0
+                }
+            }, {
+                '$lookup': {
+                    'from': 'album', 
+                    'localField': 'album_id', 
+                    'foreignField': 'id', 
+                    'as': 'result'
+                }
+            }, {
+                '$unwind': {
+                    'path': '$result'
+                }
+            }, {
+                '$match': {
+                    'result.genre': {
+                        '$exists': True
+                    }, 
+                    '$expr': {
+                        '$not': [
+                            {
+                                '$in': [
+                                    '$result.genre', [
+                                        None, ''
+                                    ]
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }, {
+                '$group': {
+                    '_id': '$result.genre', 
+                    'count': {
+                        '$sum': '$count'
+                    }
+                }
+            }, {
+                '$sort': {
+                    'count': -1
+                }
+            }
+        ]
+        cursor: {batchSize: 100}
+        allowDiskUse: true
+    - OperationMetricsName: TrackTasteQuery
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: playlists
+        pipeline:
+          [
+              {
+                  '$match': {
+                      'pid': {
+                          '$in': {^Array: {of: {^RandomInt: {min: 0, max: 200000, distribution: uniform}}, number: *PlaylistSize}}
+                      }
+                  }
+              }, {
+                  '$unwind': {
+                      'path': '$tracks'
+                  }
+              }, {
+                  '$group': {
+                      '_id': '$tracks.track_uri', 
+                      'count': {
+                          '$sum': 1
+                      }
+                  }
+              }, {
+                  '$project': {
+                      'track_id': {
+                          '$ltrim': {
+                              'input': '$_id', 
+                              'chars': 'spotify:track:'
+                          }
+                      }, 
+                      'count': 1, 
+                      '_id': 0
+                  }
+              }, {
+                  '$lookup': {
+                      'from': 'tracks', 
+                      'localField': 'track_id', 
+                      'foreignField': 'id', 
+                      'as': 'result'
+                  }
+              }, {
+                  '$unwind': {
+                      'path': '$result'
+                  }
+              }, {
+                  '$group': {
+                      '_id': 'result', 
+                      'energy': {
+                          '$avg': '$result.energy'
+                      }, 
+                      'danceability': {
+                          '$avg': '$result.danceability'
+                      }, 
+                      'loudness': {
+                          '$avg': '$result.loudness'
+                      }, 
+                      'acousticness': {
+                          '$avg': '$result.acousticness'
+                      }, 
+                      'instrumentalness': {
+                          '$avg': '$result.instrumentalness'
+                      }, 
+                      'liveness': {
+                          '$avg': '$result.liveness'
+                      }, 
+                      'valence': {
+                          '$avg': '$result.valence'
+                      }, 
+                      'tempo': {
+                          '$avg': '$result.tempo'
+                      }, 
+                      'duration_ms': {
+                          '$avg': '$result.duration_ms'
+                      }, 
+                      'energy_max': {
+                          '$max': '$result.energy'
+                      }, 
+                      'danceability_max': {
+                          '$max': '$result.danceability'
+                      }, 
+                      'loudness_max': {
+                          '$max': '$result.loudness'
+                      }, 
+                      'acousticness_max': {
+                          '$max': '$result.acousticness'
+                      }, 
+                      'instrumentalness_max': {
+                          '$max': '$result.instrumentalness'
+                      }, 
+                      'liveness_max': {
+                          '$max': '$result.liveness'
+                      }, 
+                      'valence_max': {
+                          '$max': '$result.valence'
+                      }, 
+                      'tempo_max': {
+                          '$max': '$result.tempo'
+                      }, 
+                      'duration_ms_max': {
+                          '$max': '$result.duration_ms'
+                      }, 
+                      'energy_min': {
+                          '$min': '$result.energy'
+                      }, 
+                      'danceability_min': {
+                          '$min': '$result.danceability'
+                      }, 
+                      'loudness_min': {
+                          '$min': '$result.loudness'
+                      }, 
+                      'acousticness_min': {
+                          '$min': '$result.acousticness'
+                      }, 
+                      'instrumentalness_min': {
+                          '$min': '$result.instrumentalness'
+                      }, 
+                      'liveness_min': {
+                          '$min': '$result.liveness'
+                      }, 
+                      'valence_min': {
+                          '$min': '$result.valence'
+                      }, 
+                      'tempo_min': {
+                          '$min': '$result.tempo'
+                      }, 
+                      'duration_ms_min': {
+                          '$min': '$result.duration_ms'
+                      }
+                  }
+              }
+          ]
+        cursor: {batchSize: 100}
+        allowDiskUse: true
