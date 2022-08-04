@@ -1590,12 +1590,10 @@ UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
  *   E.g. if higher-up has `{^RandomInt:{v}}`, this will have `node={v}`
  */
 //
-// We need this additional lookup function for int64s (but not for other types)
-// because we do "double-dispatch" for ^RandomInt. So int64Operand determines
-// if we're looking at ^RandomInt or a constant. If we're looking at ^RandomInt
-// it dispatches to here to determine which Int64Generator to use.
-//
-// An alternative would have been to have ^RandomIntUniform etc.
+// We need this additional lookup function because we do "double-dispatch"
+// for ^RandomDouble. So doubleOperand determines if we're looking at 
+// ^RandomDouble or a constant. If we're looking at ^RandomDouble
+// it dispatches to here to determine which doubleGenerator to use.
 //
 UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
                                                            GeneratorArgs generatorArgs) {
@@ -1711,7 +1709,7 @@ UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorA
  * @param node
  *   a top-level document value i.e. either a scalar or a `^RandomInt` value
  * @return
- *   either a `^RantomInt` generator (etc--see `intParsers`)
+ *   either a `^RandomDouble` generator (etc--see `intParsers`)
  *   or a constant generator if given a constant/scalar.
  */
 UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generatorArgs) {
