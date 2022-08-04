@@ -1,10 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  This workload sends bursts of finds that use large $ins. The workload 
+  This workload sends bursts of finds that use large $ins. The workload
   causes high CPU load as the server becomes bottlenecked on tcmalloc
   spinlocks during the find operations.
-  
+
   Improvements or regressions in this aspect of the allocator should
   be measurable by the average CPU usage during this test as well as
   the latency of the find operations.
