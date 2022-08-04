@@ -113,7 +113,7 @@ UnusedNodes removeIgnored(const UnusedNodes& unused, const std::vector<std::stri
 void reportUnused(const NodeSource& nodeSource, const bool dryrun) {
     auto raw = nodeSource.unused();
 
-    std::vector<std::string> ignored{".yml/Description", ".yml/Owner", ".yml/AutoRun", ".yml/Keywords"};
+    std::vector<std::string> ignored{".yml/Description", ".yml/Owner", ".yml/AutoRun", ".yml/Keywords", ".yml/Clients"};
     if (dryrun) {
         ignored.push_back(".yml/Clients");
     }
