@@ -642,7 +642,6 @@ Tests:
       lognormal: {^RandomDouble: {distribution: lognormal, m: 1.0, s: 2.0}}
       chisquared: {^RandomDouble: {distribution: chi_squared, n: 10}}
       cauchy: {^RandomDouble: {distribution: cauchy, median: 17.2, sigma: 2.3}}
-      zipfian: {^RandomDouble: {distribution: zipfian, alpha: 0.4, n: 100}}
 # The fisherf, studentt, and noncentralchi distributions give different results on different platforms.
 #      fisherf: {^RandomDouble: {distribution: fisher_f, m: 12, n: 7}}
 #      studentt: {^RandomDouble: {distribution: student_t, n: 17}}
@@ -675,7 +674,6 @@ Tests:
        "lognormal" : { "$numberDouble" : "48.802737274357745889" }
        "chisquared" : { "$numberDouble" : "15.57650159382534838" }
        "cauchy" : { "$numberDouble" : "24.815926471674302434" }
-       "zipfian" : { "$numberDouble" : "24.815926471674302434" }
 #      "fisherf": { "$numberDouble": "-14.948314077879224726" }
 #      "studentt": { "$numberDouble": "-0.14294359511856821743" }
 #      "noncentralchi": { "$numberDouble": "13.356763702336033717" }
