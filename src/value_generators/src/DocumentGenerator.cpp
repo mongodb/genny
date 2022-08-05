@@ -1586,8 +1586,8 @@ UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
 
 /**
  * @param node
- *   the *value* from a `^RandomInt` node.
- *   E.g. if higher-up has `{^RandomInt:{v}}`, this will have `node={v}`
+ *   the *value* from a `^RandomDouble` node.
+ *   E.g. if higher-up has `{^RandomDouble:{v}}`, this will have `node={v}`
  */
 //
 // We need this additional lookup function because we do "double-dispatch"
