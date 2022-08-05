@@ -1707,7 +1707,7 @@ UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorA
 
 /**
  * @param node
- *   a top-level document value i.e. either a scalar or a `^RandomInt` value
+ *   a top-level document value i.e. either a scalar or a `^RandomDouble` value
  * @return
  *   either a `^RandomDouble` generator (etc--see `doubleParsers`)
  *   or a constant generator if given a constant/scalar.
