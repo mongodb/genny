@@ -55,8 +55,6 @@ buildvariants:
   - amazon2-build
   expansions:
     distro: amazon2
-    # latest successful build from master as of 2022-06-29 on "Amazon Linux 2" compile task "Binaries" file
-    # commit should match that in get-mongo-source.sh
     mongodb_archive_url:
       https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-amazon2-6.0.0.tgz
   tasks:
