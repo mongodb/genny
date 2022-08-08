@@ -6,10 +6,17 @@ Description: |
   distributed fields, and creates several compound indexes. Then it runs a pipeline, which will be
   slow due to incorrect plan selection.
 
+Keywords:
+ - plan
+ - ranking
+ - selection
+ - indexes
+ - compound
+
 GlobalDefaults:
-  Database: &Database residualpredcosting
+  Database: &Database ResidualPredCosting
   Collection: &Collection Collection0
-  DocumentCount: &docCount 1000
+  DocumentCount: &docCount 1000000
   Nop: &Nop {Nop: true}
 
 Actors:

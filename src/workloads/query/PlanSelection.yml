@@ -5,10 +5,16 @@ Description: |
   First, it inserts 1000 documents with 2 uniformly distributed fields, and creates indexes on
   both fields. Then it runs several pipelines, which will be slow due to incorrect plan selection.
 
+Keywords:
+ - plan
+ - ranking
+ - selection
+ - indexes
+
 GlobalDefaults:
-  Database: &Database planselection
+  Database: &Database PlanSelection
   Collection: &Collection Collection0
-  DocumentCount: &docCount 1000
+  DocumentCount: &docCount 1000000
   Nop: &Nop {Nop: true}
 
 Actors:
