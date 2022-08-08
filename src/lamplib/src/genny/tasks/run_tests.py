@@ -208,14 +208,14 @@ def _setup_resmoke(
             check=True,
             capture=False,
         )
-    cmd_runner.run_command(
-        # If changing this sha, you may need to use later binaries
-        # in the CANNED_ARTIFACTS dict.
-        cmd=["git", "checkout", mongodb_commit],
-        cwd=mongo_repo_path,
-        check=True,
-        capture=False,
-    )
+        cmd_runner.run_command(
+            # If changing this sha, you may need to use later binaries
+            # in the CANNED_ARTIFACTS dict.
+            cmd=["git", "checkout", mongodb_commit],
+            cwd=mongo_repo_path,
+            check=True,
+            capture=False,
+        )
     from_tarball = os.path.join(mongo_repo_path, "bin", "mongod")
     info = toolchain.toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     if mongodb_archive_url is None:

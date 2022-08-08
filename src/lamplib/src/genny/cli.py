@@ -425,7 +425,6 @@ def canaries(ctx: click.Context, canary_args: List[str]):
     default=None,
     help=(
         "The commit corresponding to the mongodb binary passed with -mongodb-archive-url option."
-        "Not needed if you are not passing --mongodb-archive-url."
     ),
 )
 @optgroup.group("Type of resmoke task to run", cls=RequiredMutuallyExclusiveOptionGroup)
