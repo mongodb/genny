@@ -57,6 +57,10 @@ private:
     // Number of distinct elements in the distribution.
     RealType _n;
 
+    // This implementation is based on https://cse.usf.edu/~kchriste/tools/genzipf.c, 
+    // it uses the inverse transform sampling method for generating random numbers.
+    // This method is not the most accurate and efficient for heavy tailed distributions,
+    // but is sufficient for our current purposes.
     template<class URNG>
     RealType generate(URNG& urng) {
         double sum = 0;
@@ -67,6 +71,8 @@ private:
         }
 
         for (RealType i = 1; i <= _n; ++i) {
+            // std::pow might be a point for optimization, although fast calculation
+            // of powers might reduce accuracy, so this is TBD.
             sum += 1.0 / std::pow(i, _alpha);
             if (sum >= randomNumber * _c) {
                 return i;
@@ -495,6 +501,10 @@ public:
         return distribution(_rng);
     }
 
+    // This is part of the inverse transform sampling method. Since the normalization
+    // constant is reused for as many numbers as we need to generate, and the distribution
+    // class is constructed and destructed in every call of evaluate(), we want to save
+    // computation time.
     void calculateNormalizationConstant() {
         for (int64_t i = 1; i <= _nGen->evaluate(); ++i) {
             _c += 1.0 / std::pow(i, _alpha);
