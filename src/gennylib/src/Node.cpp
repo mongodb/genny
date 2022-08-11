@@ -1,6 +1,7 @@
 #include <utility>
 
 #include <map>
+#include <atomic>
 
 #include <gennylib/Node.hpp>
 
@@ -64,6 +65,10 @@ NodeSource::NodeSource(std::string yaml, std::string path)
       _root{std::make_unique<Node>(v1::NodeKey::Path{v1::NodeKey{path}}, _yaml)} {}
 
 NodeSource::~NodeSource() = default;
+
+UnusedNodes NodeSource::unused() const {
+    return this->_root->unused();
+}
 
 
 //
@@ -161,7 +166,33 @@ public:
     }
 
     const YAML::Node yaml() const {
+        this->_used = true;
         return _yaml;
+    }
+
+    UnusedNodes unused() const {
+
+        // Ignore cases where we did something like node["does not exist"].maybe<int>()
+        // since technically there is a "zombie" node that the yaml-cpp internals creates.
+        if (_self->_impl->_yaml == _zombie) {
+            return {};
+        }
+
+        // Depth-first.
+        UnusedNodes out{};
+        for (auto&& [_, child] : this->_children) {
+            const auto childUnused = child->unused();
+            for (auto&& u : childUnused) {
+                out.push_back(u);
+            }
+        }
+
+        // Base-case: no children and unused.
+        if (this->_children.empty() && !this->_used) {
+            out.push_back(this->path());
+        }
+
+        return out;
     }
 
     Node::Type type() const {
@@ -252,6 +283,8 @@ private:
     // these 2 need to be mutable to generate placeholder nodes for non-existent keys.
     mutable ChildKeys _keyOrder;  // maintain insertion-order
     mutable Children _children;
+    // Atomic since yaml may see multi-threaded access during actor init.
+    mutable std::atomic_bool _used = false;
     const YAML::Node _yaml;
     const v1::NodeKey::Path _path;
 };
@@ -310,6 +343,10 @@ size_t Node::size() const {
 
 const YAML::Node Node::yaml() const {
     return _impl->yaml();
+}
+
+UnusedNodes Node::unused() const {
+    return _impl->unused();
 }
 
 Node::operator bool() const {
