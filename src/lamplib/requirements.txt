@@ -1,4 +1,4 @@
-wheel==0.36.2
+wheel==0.37.1
 pymongo>=3.9
 click==7.1.2
 click-option-group==0.5.2
@@ -15,7 +15,7 @@ pytest==6.0.2
 
 # Force a binary distribution of numpy on macOS:
 # https://github.com/numpy/numpy/issues/15947
-numpy==1.20.1 --only-binary=numpy; platform_system == 'darwin'
-numpy==1.20.1;                     platform_system != 'darwin'
+numpy==1.23.1 --only-binary=numpy; platform_system == 'darwin'
+numpy==1.23.1;                     platform_system != 'darwin'
 
-numexpr==2.8.1
+numexpr==2.8.3

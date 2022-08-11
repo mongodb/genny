@@ -164,7 +164,7 @@ class ToolchainDownloader(Downloader):
 
     TOOLCHAIN_BUILD_ID = "fc5ec55493f12c0791739e66bd9ffc6db78468e1_22_01_31_16_45_23"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
-    TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
+    # TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
     def __init__(
         self,
@@ -179,7 +179,7 @@ class ToolchainDownloader(Downloader):
             workspace_root=workspace_root,
             os_family=os_family,
             linux_distro=linux_distro,
-            install_dir=ToolchainDownloader.TOOLCHAIN_ROOT,
+            install_dir=os.path.join(workspace_root, "build", "toolchain"),
             name="gennytoolchain",
         )
         self.ignore_toolchain_version = ignore_toolchain_version

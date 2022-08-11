@@ -66,9 +66,9 @@ set_target_properties(cppcodec PROPERTIES LINKER_LANGUAGE CXX)
 add_subdirectory(tool)
 add_subdirectory(example)
 
-if (BUILD_TESTING)
-    add_subdirectory(test)
-endif()
+# if (BUILD_TESTING)
+#     add_subdirectory(test)
+# endif()
 
 foreach(h ${PUBLIC_HEADERS})
     get_filename_component(FINAL_PATH ${h} PATH) # use DIRECTORY instead of PATH once requiring CMake 3.0
