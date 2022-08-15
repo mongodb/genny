@@ -239,6 +239,69 @@ TEST_CASE("PoolFactory behavior") {
         REQUIRE(pool);
     }
 
+    SECTION("Make a pool with client-side encryption enabled") {
+        constexpr auto kSourceUri = "mongodb://127.0.0.1:27017";
+        constexpr auto kEncryptionConfig = R"({
+            KeyVaultDatabase: 'keyvault_db',
+            KeyVaultCollection: 'datakeys',
+            EncryptedCollections: [
+                { Database: 'accounts',
+                  Collection: 'balances',
+                  EncryptionType: 'fle',
+                  EncryptedFields: {
+                    name: {type: "string", algorithm: "random", keyId: "7aa359e0-1cdd-11ed-a2cd-bf985b6c5087"},
+                    amount: {type: "int", algorithm: "deterministic", keyId: "8936e9ea-1cdd-11ed-be0d-b3f21cd2701f"}
+                  }
+                },
+                { Database: 'accounts',
+                  Collection: 'ratings',
+                  EncryptionType: 'fle',
+                  EncryptedFields: {
+                    ssn: {type: "string", algorithm: "random", keyId: "8936e9ea-1cdd-11ed-be0d-b3f21cd2701f"},
+                    score: {type: "int", algorithm: "random", keyId: "7aa359e0-1cdd-11ed-a2cd-bf985b6c5087"}
+                  }
+                }
+            ]
+        })";
+
+        genny::NodeSource ns{kEncryptionConfig, ""};
+
+        auto factory = genny::v1::PoolFactory(kSourceUri);
+        auto encryption = std::make_shared<genny::v1::EncryptionContext>(ns.root(), kSourceUri);
+
+        factory.setEncryptionContext(encryption);
+
+        auto factoryOpts = factory.makeOptions();
+        REQUIRE(factoryOpts.client_opts().auto_encryption_opts().has_value());
+
+        auto autoEncOpts = *factoryOpts.client_opts().auto_encryption_opts();
+        REQUIRE(autoEncOpts.key_vault_namespace().has_value());
+        REQUIRE(autoEncOpts.key_vault_namespace().value() == encryption->getKeyVaultNamespace());
+        REQUIRE(autoEncOpts.kms_providers().has_value());
+        REQUIRE(autoEncOpts.kms_providers().value() == encryption->generateKMSProvidersDoc());
+        REQUIRE(autoEncOpts.schema_map().has_value());
+        REQUIRE(autoEncOpts.schema_map().value() == encryption->generateSchemaMapDoc());
+        REQUIRE(autoEncOpts.extra_options().has_value());
+        REQUIRE(autoEncOpts.extra_options().value() == encryption->generateExtraOptionsDoc());
+
+        auto pool = factory.makePool();
+        REQUIRE(pool);
+    }
+
+    SECTION("Empty encryption context means encryption disabled") {
+        constexpr auto kSourceUri = "mongodb://127.0.0.1:27017";
+        auto factory = genny::v1::PoolFactory(kSourceUri);
+        auto encryption = std::make_shared<genny::v1::EncryptionContext>();
+
+        factory.setEncryptionContext(encryption);
+
+        auto factoryOpts = factory.makeOptions();
+        REQUIRE(factoryOpts.client_opts().auto_encryption_opts().has_value() == false);
+
+        auto pool = factory.makePool();
+        REQUIRE(pool);
+    }
+
     SECTION("PoolManager can construct multiple pools") {
         genny::v1::PoolManager manager{{}};
         genny::NodeSource ns{"Clients: {Default: {URI: 'mongodb:://localhost:27017'}, Foo: {URI: 'mongodb:://localhost:27017'}, Bar: {URI: 'mongodb:://localhost:27018'}}", ""};

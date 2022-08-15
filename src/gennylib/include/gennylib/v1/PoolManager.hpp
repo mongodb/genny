@@ -24,6 +24,7 @@
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/Node.hpp>
+#include <gennylib/encryption.hpp>
 
 namespace genny::v1 {
 
@@ -47,8 +48,7 @@ public:
      * @param callback
      *   a callback to be invoked for every `mongocxx::events::command_started_event`
      */
-    PoolManager(OnCommandStartCallback callback)
-        : _apmCallback{std::move(callback)} {}
+    PoolManager(OnCommandStartCallback callback) : _apmCallback{std::move(callback)} {}
 
     /**
      * Obtain a connection or throw if none available.
@@ -77,7 +77,10 @@ private:
     /** callback passed into ctor */
     OnCommandStartCallback _apmCallback;
 
-    using Pools = std::unordered_map<size_t, std::unique_ptr<mongocxx::pool>>;
+    struct Pools {
+        std::shared_ptr<EncryptionContext> encryption;
+        std::unordered_map<size_t, std::unique_ptr<mongocxx::pool>> instances;
+    };
     // pair each map ↑ with a mutex for adding new pools
     using LockAndPools = std::pair<std::mutex, Pools>;
 

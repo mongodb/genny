@@ -21,6 +21,7 @@ namespace {
 
 auto createPool(const std::string& name,
                 PoolManager::OnCommandStartCallback& apmCallback,
+                std::shared_ptr<EncryptionContext> encryption,
                 const Node& context) {
 
     auto mongoUri = context["Clients"][name]["URI"].to<std::string>();
@@ -38,7 +39,16 @@ auto createPool(const std::string& name,
         poolFactory.setOptions(genny::v1::PoolFactory::kAccessOption, *accessOpts);
     }
 
+    poolFactory.setEncryptionContext(std::move(encryption));
     return poolFactory.makePool();
+}
+
+auto setupEncryption(const std::string& name, const Node& context) {
+    auto mongoUri = context["Clients"][name]["URI"].to<std::string>();
+    auto encryption = std::make_shared<EncryptionContext>(
+        context["Clients"][name]["EncryptionOptions"], std::move(mongoUri));
+    encryption->setupKeyVault();
+    return encryption;
 }
 
 }  // namespace
@@ -62,9 +72,13 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
 
     Pools& pools = lap.second;
 
-    auto& pool = pools[instance];
+    if (!pools.encryption) {
+        pools.encryption = setupEncryption(name, context);
+    }
+
+    auto& pool = pools.instances[instance];
     if (pool == nullptr) {
-        pool = createPool(name, this->_apmCallback, context);
+        pool = createPool(name, this->_apmCallback, pools.encryption, context);
     }
 
     // no need to keep it past this point; pool is thread-safe
@@ -87,7 +101,7 @@ std::unordered_map<std::string, size_t> genny::v1::PoolManager::instanceCount() 
 
     auto out = std::unordered_map<std::string, size_t>();
     for (auto&& [k, v] : this->_pools) {
-        out[k] = v.second.size();
+        out[k] = v.second.instances.size();
     }
     return out;
 }

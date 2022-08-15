@@ -23,6 +23,7 @@
 #include <string>
 #include <string_view>
 
+#include <gennylib/encryption.hpp>
 #include <gennylib/v1/PoolManager.hpp>
 
 #include <mongocxx/pool.hpp>
@@ -65,6 +66,8 @@ public:
      *  socketTimeoutMS
      */
     void setOption(OptionType type, const std::string& option, std::string value);
+
+    void setEncryptionContext(std::shared_ptr<EncryptionContext> encryption);
 
     /**
      * Replace the host(s) with a given vector of host(s).
