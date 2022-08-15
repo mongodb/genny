@@ -171,14 +171,10 @@ The canned artifacts used for re-smoke tests can get outdated over time and will
 Here is how to update the canned artifacts.
 
 1. Download the latest artifacts and upload them to the S3 bucket.
-	- Download the tgz package for a sepecific platform
+	- Download the tgz package for a specific platform
   	- The downloaded package should be uploaded to S3 bucket - s3://dsi-donot-remove/compile_artifacts/. Make sure to make the uploaded file public.
 2. Update [run_tests.py](https://github.com/mongodb/genny/blob/master/src/lamplib/src/genny/tasks/run_tests.py) with new S3 URLs
   	- CANNED_ARTIFACTS needs to be updated with the new S3 URL.
-  	- MONGO_COMMIT needs to be updated with the commit corresponding to the new canned artifacts.
-3. Update [evergreen.yml](https://github.com/mongodb/genny/blob/master/evergreen.yml)
-  	- [mongodb_archive_url](https://github.com/mongodb/genny/blob/3da82fd0acb99799caec2ab13047520405833f72/evergreen.yml#L61) needs to be updated to reflect the canned artifact.
-  	- [f_fetch_source](https://github.com/mongodb/genny/blob/3da82fd0acb99799caec2ab13047520405833f72/evergreen.yml#L286) mongo revision needs to be updated.
 
 [fp]: https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow#false-positives
 [pi]: https://github.com/mongodb/genny/blob/762b08ee3b71184d5f521e82f7ce6d6eeb3c0cc9/src/workloads/docs/ParallelInsert.yml#L183-L189

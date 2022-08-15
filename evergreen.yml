@@ -55,8 +55,6 @@ buildvariants:
   - amazon2-build
   expansions:
     distro: amazon2
-    mongodb_archive_url:
-      https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-amazon2-6.0.0.tgz
   tasks:
   - name: tg_compile_and_test_with_server
 
@@ -261,8 +259,8 @@ functions:
   - command: git.get_project
     params:
       directory: src/genny
-      revisions:
-        mongo: 6e2dcc5a39eb2de9d2e8209271115c078ae16470
+  #      revisions:
+  #        mongo: 6e2dcc5a39eb2de9d2e8209271115c078ae16470
 
   ##
   # Compile the project in src/build.

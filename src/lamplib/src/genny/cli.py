@@ -418,15 +418,6 @@ def canaries(ctx: click.Context, canary_args: List[str]):
         "Not needed if you have built/installed these tools in hte --mongo-dir."
     ),
 )
-@click.option(
-    "--mongodb-commit",
-    type=str,
-    required=False,
-    default=None,
-    help=(
-        "The commit corresponding to the mongodb binary passed with -mongodb-archive-url option."
-    ),
-)
 @optgroup.group("Type of resmoke task to run", cls=RequiredMutuallyExclusiveOptionGroup)
 @optgroup.option("--suites", help='equivalent to resmoke.py\'s "--suites" option')
 @optgroup.option(
@@ -444,7 +435,6 @@ def resmoke_test(
     create_new_actor_test_suite: bool,
     mongo_dir: Optional[str],
     mongodb_archive_url: Optional[str],
-    mongodb_commit: Optional[str],
 ):
     from genny.tasks import run_tests
 
@@ -456,7 +446,6 @@ def resmoke_test(
         mongo_dir=mongo_dir,
         env=os.environ.copy(),
         mongodb_archive_url=mongodb_archive_url,
-        mongodb_commit=mongodb_commit,
     )
 
 

@@ -3,7 +3,7 @@ import os
 import sys
 import shutil
 import subprocess
-
+import re
 from typing import Callable, TypeVar, Tuple, Optional
 
 from genny import curator, cmd_runner, toolchain
@@ -22,7 +22,6 @@ CANNED_ARTIFACTS = {
     "rhel70": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-rhel70-6.0.0.tgz",
     "rhel8": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-rhel80-6.0.0.tgz",
 }
-MONGO_COMMIT = "6e2dcc5a39eb2de9d2e8209271115c078ae16470"
 
 # We rely on catch2 to report test failures, but it doesn't always do so.
 # See https://github.com/catchorg/Catch2/issues/1210
@@ -174,15 +173,28 @@ def _check_create_new_actor_test_report(workspace_root: str) -> Callable[[str], 
     return out
 
 
+def _get_mongo_commit(mongod_path, genny_repo_root):
+    mongo_version_cmd = [mongod_path, "--version"]
+    workdir = os.path.join(genny_repo_root, "build")
+    output: cmd_runner.RunCommandOutput = cmd_runner.run_command(
+        cmd=mongo_version_cmd, cwd=workdir, capture=True, check=True
+    )
+    commit_regex = r"\"gitVersion\":\s\"([\da-z]+)\""
+    commit = None
+    if output.returncode == 0:
+        matches = re.search(commit_regex, str(output.stdout), re.MULTILINE)
+        if matches:
+            commit = matches.group(1)
+    SLOG.info(f"Identified Mongo commit", commit=commit)
+    return commit
+
+
 def _setup_resmoke(
     workspace_root: str,
     genny_repo_root: str,
     mongo_dir: Optional[str],
     mongodb_archive_url: Optional[str],
-    mongodb_commit: Optional[str],
 ):
-    if mongodb_commit is None:
-        mongodb_commit = MONGO_COMMIT
     if mongo_dir is not None:
         mongo_repo_path = mongo_dir
     else:
@@ -200,6 +212,7 @@ def _setup_resmoke(
     resmoke_python: str = os.path.join(resmoke_venv, "bin", "python3")
 
     # Clone repo unless exists
+    checkout_required = False
     if not os.path.exists(mongo_repo_path):
         SLOG.info("Mongo repo doesn't exist. Checking it out.", mongo_repo_path=mongo_repo_path)
         cmd_runner.run_command(
@@ -208,14 +221,8 @@ def _setup_resmoke(
             check=True,
             capture=False,
         )
-        cmd_runner.run_command(
-            # If changing this sha, you may need to use later binaries
-            # in the CANNED_ARTIFACTS dict.
-            cmd=["git", "checkout", mongodb_commit],
-            cwd=mongo_repo_path,
-            check=True,
-            capture=False,
-        )
+        checkout_required = True
+
     from_tarball = os.path.join(mongo_repo_path, "bin", "mongod")
     info = toolchain.toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     if mongodb_archive_url is None:
@@ -247,6 +254,13 @@ def _setup_resmoke(
     mongod = from_tarball
     bin_dir = os.path.dirname(mongod)
 
+    if checkout_required:
+        # checking out the commit corresponding to the mongod binary
+        # only required if the local repo didn't exist and had to be cloned
+        mongodb_commit = _get_mongo_commit(mongod, workspace_root)
+        cmd_runner.run_command(
+            cmd=["git", "checkout", mongodb_commit], cwd=mongo_repo_path, check=True, capture=False,
+        )
     # Setup resmoke venv unless exists
     resmoke_setup_sentinel = os.path.join(resmoke_venv, "setup-done")
     if not os.path.exists(resmoke_setup_sentinel):
@@ -279,7 +293,6 @@ def resmoke_test(
     mongo_dir: Optional[str],
     env: dict,
     mongodb_archive_url: Optional[str],
-    mongodb_commit=Optional[str],
 ):
     if (not suites) and (not is_cnats):
         raise ValueError('Must specify either "--suites" or "--create-new-actor-test-suite"')
@@ -295,7 +308,6 @@ def resmoke_test(
         genny_repo_root=genny_repo_root,
         mongo_dir=mongo_dir,
         mongodb_archive_url=mongodb_archive_url,
-        mongodb_commit=mongodb_commit,
     )
 
     mongod = os.path.join(bin_dir, "mongod")
