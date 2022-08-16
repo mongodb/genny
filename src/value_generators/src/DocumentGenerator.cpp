@@ -44,8 +44,9 @@ public:
     explicit zipfian_distribution(double alpha, RealType n)
         : _alpha{alpha}, _n{n}, _c{calculateNormalizationConstant(n, alpha)} {}
 
-    RealType operator()() {
-        return generate();
+    template <class URNG>
+    RealType operator()(URNG& urng) {
+        return generate(urng);
     }
 
 private:
@@ -60,9 +61,10 @@ private:
     // it uses the inverse transform sampling method for generating random numbers.
     // This method is not the most accurate and efficient for heavy tailed distributions,
     // but is sufficient for our current purposes.
-    RealType generate() {
+    template <class URNG>
+    RealType generate(URNG& urng) {
         boost::random::uniform_01<> _uniform01{};
-        double randomNumber = 1.0 - _uniform01();
+        double randomNumber = 1.0 - _uniform01(urng);
         double sum = 0;
 
         for (RealType i = 1; i <= _n; ++i) {
@@ -70,6 +72,7 @@ private:
             // of powers might reduce accuracy, so this is TBD.
             sum += 1.0 / std::pow(i, _alpha);
             if (sum >= randomNumber * _c) {
+                std::cout << i << "," << std::endl;
                 return i;
             }
         }
@@ -84,6 +87,7 @@ private:
         for (int64_t i = 1; i <= n; ++i) {
             constant += 1.0 / std::pow(i, _alpha);
         }
+        return constant;
     }
 };
 }  // namespace
@@ -496,17 +500,19 @@ class ZipfianInt64Generator : public Generator<int64_t> {
 public:
     /** @param node `{alpha:double, n:<int>}` */
     ZipfianInt64Generator(const Node& node, GeneratorArgs generatorArgs)
-        : _id{generatorArgs.actorId},
+        : _rng{generatorArgs.rng},
+          _id{generatorArgs.actorId},
           _distribution{extract(node, "alpha", "zipfian").to<double>(), 
                         intGenerator(extract(node, "n", "zipfian"), generatorArgs)->evaluate()} {}
 
     int64_t evaluate() override {
-        return _distribution();
+        return _distribution(_rng);
     }
 
 private:
     double _c = 0;
     ActorId _id;
+    DefaultRandom& _rng;
     zipfian_distribution<int64_t> _distribution;
 };
 
