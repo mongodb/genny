@@ -41,12 +41,11 @@ namespace {
 template <class RealType = int64_t>
 class zipfian_distribution {
 public:
-    explicit zipfian_distribution(double alpha, RealType n, double c)
-        : _alpha{alpha}, _n{n}, _c{c} {}
+    explicit zipfian_distribution(double alpha, RealType n)
+        : _alpha{alpha}, _n{n}, _c{calculateNormalizationConstant(n, alpha)} {}
 
-    template <class URNG>
-    RealType operator()(URNG& urng) {
-        return generate(urng);
+    RealType operator()() {
+        return generate();
     }
 
 private:
@@ -61,14 +60,10 @@ private:
     // it uses the inverse transform sampling method for generating random numbers.
     // This method is not the most accurate and efficient for heavy tailed distributions,
     // but is sufficient for our current purposes.
-    template<class URNG>
-    RealType generate(URNG& urng) {
+    RealType generate() {
+        boost::random::uniform_01<> _uniform01{};
+        double randomNumber = 1.0 - _uniform01();
         double sum = 0;
-        double randomNumber = 0;
-        
-        while (randomNumber <= 0) {
-            randomNumber = (double)urng() / (double)urng.max();
-        }
 
         for (RealType i = 1; i <= _n; ++i) {
             // std::pow might be a point for optimization, although fast calculation
@@ -77,6 +72,17 @@ private:
             if (sum >= randomNumber * _c) {
                 return i;
             }
+        }
+    }
+
+    // This is part of the inverse transform sampling method. Since the normalization
+    // constant is reused for as many numbers as we need to generate, and the distribution
+    // class is constructed and destructed in every call of evaluate(), we want to save
+    // computation time.
+    double calculateNormalizationConstant(RealType n, double alpha) {
+        double constant = 0;
+        for (int64_t i = 1; i <= n; ++i) {
+            constant += 1.0 / std::pow(i, _alpha);
         }
     }
 };
@@ -490,33 +496,18 @@ class ZipfianInt64Generator : public Generator<int64_t> {
 public:
     /** @param node `{alpha:double, n:<int>}` */
     ZipfianInt64Generator(const Node& node, GeneratorArgs generatorArgs)
-        : _rng{generatorArgs.rng},
-          _id{generatorArgs.actorId},
-          _alpha{extract(node, "alpha", "zipfian").to<double>()},
-          _nGen{intGenerator(extract(node, "n", "zipfian"), generatorArgs)} {}
+        : _id{generatorArgs.actorId},
+          _distribution{extract(node, "alpha", "zipfian").to<double>(), 
+                        intGenerator(extract(node, "n", "zipfian"), generatorArgs)->evaluate()} {}
 
     int64_t evaluate() override {
-        if (!_c) calculateNormalizationConstant();
-        auto distribution = zipfian_distribution<int64_t>{_alpha, _nGen->evaluate(), _c};
-        return distribution(_rng);
-    }
-
-    // This is part of the inverse transform sampling method. Since the normalization
-    // constant is reused for as many numbers as we need to generate, and the distribution
-    // class is constructed and destructed in every call of evaluate(), we want to save
-    // computation time.
-    void calculateNormalizationConstant() {
-        for (int64_t i = 1; i <= _nGen->evaluate(); ++i) {
-            _c += 1.0 / std::pow(i, _alpha);
-        }
+        return _distribution();
     }
 
 private:
     double _c = 0;
-    DefaultRandom& _rng;
     ActorId _id;
-    const double _alpha;
-    UniqueGenerator<int64_t> _nGen;
+    zipfian_distribution<int64_t> _distribution;
 };
 
 // This generator allows choosing any valid generator, incuding documents. As such it cannot be used
