@@ -7,7 +7,7 @@ Here're the steps to get Genny up and running locally:
     - Arch Linux
     - RHEL 8, 7, 6.2
     - Amazon Linux 2
-    - macOS
+    - macOS (as of 2022-08-16 we don't yet support the M1. We need to update dependencies.)
 
     If you attempt to install Genny on an unsupported platform, compile isn't
     guaranteed to succeed. If you would like to add support for a platform,
