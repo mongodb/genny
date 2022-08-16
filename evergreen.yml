@@ -123,7 +123,7 @@ buildvariants:
 tasks:
 - name: t_compile
   commands:
-  # - func: f_fetch_source
+  - func: f_fetch_source
   - func: f_compile
   - func: f_dry_run_workloads
 
@@ -259,8 +259,8 @@ functions:
   - command: git.get_project
     params:
       directory: src/genny
-  #      revisions:
-  #        mongo: 6e2dcc5a39eb2de9d2e8209271115c078ae16470
+      revisions:
+        mongo: 6e2dcc5a39eb2de9d2e8209271115c078ae16470
 
   ##
   # Compile the project in src/build.
