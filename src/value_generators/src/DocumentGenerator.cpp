@@ -72,7 +72,6 @@ private:
             // of powers might reduce accuracy, so this is TBD.
             sum += 1.0 / std::pow(i, _alpha);
             if (sum >= randomNumber * _c) {
-                std::cout << i << "," << std::endl;
                 return i;
             }
         }
