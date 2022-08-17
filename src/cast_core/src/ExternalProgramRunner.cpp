@@ -35,6 +35,7 @@
 
 #include <iostream>
 #include <string>
+#include <cstdlib>
 
 namespace genny::actor {
 
@@ -144,7 +145,7 @@ struct ExternalProgramRunner::PhaseConfig {
     // documentation in `context.hpp`.
     //
 
-    PhaseConfig(PhaseContext& phaseContext, mongocxx::database&& db, ActorId id)
+    PhaseConfig(PhaseContext& phaseContext, ActorId id)
         : configFilename{phaseContext["Setup"].to<std::string>()},
           programFilename{phaseContext["Run"].to<std::string>()} {}
         //   database{db},
@@ -205,8 +206,11 @@ void ExternalProgramRunner::run() {
             // Convention is to log generated documents and "normal" events at the
             // debug level.
             //
-            BOOST_LOG_TRIVIAL(debug) << " ExternalProgramRunner setting up "
+            BOOST_LOG_TRIVIAL(info) << " ExternalProgramRunner setting up "
                                     << config->configFilename;
+
+
+            system(config->configFilename + " >stdout1.txt");
 
             //
             // ⚠️ If your Actor throws any uncaught exceptions, the whole Workload will
@@ -239,8 +243,10 @@ void ExternalProgramRunner::run() {
             //     BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
             // }
 
-            BOOST_LOG_TRIVIAL(debug) << " ExternalProgramRunner running "
+            BOOST_LOG_TRIVIAL(warning) << " ExternalProgramRunner running "
                                     << config->programFilename;
+
+            system(config->programFilename + " >stdout2.txt");
         }
     }
 }
@@ -248,7 +254,7 @@ void ExternalProgramRunner::run() {
 ExternalProgramRunner::ExternalProgramRunner(genny::ActorContext& context)
     : Actor{context},
     //   _totalInserts{context.operation("Insert", ExternalProgramRunner::id())},
-      _client{context.client()},
+    //   _client{context.client()},
       //
       // Pass any additional constructor parameters that your `PhaseConfig` needs.
       //
@@ -256,7 +262,7 @@ ExternalProgramRunner::ExternalProgramRunner(genny::ActorContext& context)
       // `PhaseLoop` reads the `PhaseContext`s from there and constructs one
       // instance for each Phase.
       //
-      _loop{context, (*_client)[context["Database"].to<std::string>()], ExternalProgramRunner::id()} {}
+      _loop{context, ExternalProgramRunner::id()} {}
 
 namespace {
 //

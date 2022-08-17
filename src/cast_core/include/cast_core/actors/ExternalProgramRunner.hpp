@@ -96,7 +96,7 @@ private:
     // more than one connection open per Actor instance but of course you do
     // you™️.
     //
-    mongocxx::pool::entry _client;
+    // mongocxx::pool::entry _client;
 
     //
     // Your Actor can record an arbitrary number of different metrics which are
