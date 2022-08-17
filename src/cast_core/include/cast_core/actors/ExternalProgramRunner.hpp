@@ -88,8 +88,6 @@ public:
 
 private:
 
-    std::string_view configFilename;
-
     //
     // Each Actor can get its own connection from a number of connection-pools
     // configured in the `Clients` section of the workload yaml. Since each

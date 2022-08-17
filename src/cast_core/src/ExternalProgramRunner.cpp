@@ -106,9 +106,9 @@ namespace genny::actor {
 struct ExternalProgramRunner::PhaseConfig {
     std::string configFilename;
     std::string programFilename;
-    mongocxx::database database;
+    // mongocxx::database database;
 
-    mongocxx::collection collection;
+    // mongocxx::collection collection;
 
     //
     // DocumentGenerator is a powerful mini-templating-engine that lets you
@@ -133,7 +133,7 @@ struct ExternalProgramRunner::PhaseConfig {
     // All document-generators are deterministically seeded so all runs of the
     // same workload produce the same set of documents.
     //
-    DocumentGenerator documentExpr;
+    // DocumentGenerator documentExpr
 
 
     //
@@ -146,10 +146,10 @@ struct ExternalProgramRunner::PhaseConfig {
 
     PhaseConfig(PhaseContext& phaseContext, mongocxx::database&& db, ActorId id)
         : configFilename{phaseContext["Setup"].to<std::string>()},
-          programFilename{phaseContext["Run"].to<std::string>()},
-          database{db},
-          collection{database[phaseContext["Collection"].to<std::string>()]},
-          documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext, id)} {}
+          programFilename{phaseContext["Run"].to<std::string>()} {}
+        //   database{db},
+        //   collection{database[phaseContext["Collection"].to<std::string>()]},
+        //   documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext, id)} {}
 };
 
 
