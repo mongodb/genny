@@ -33,6 +33,8 @@
 
 #include <value_generators/DocumentGenerator.hpp>
 
+#include <iostream>
+#include <string>
 
 namespace genny::actor {
 
@@ -102,6 +104,8 @@ namespace genny::actor {
 //
 
 struct ExternalProgramRunner::PhaseConfig {
+    std::string configFilename;
+    std::string programFilename;
     mongocxx::database database;
 
     mongocxx::collection collection;
@@ -141,7 +145,9 @@ struct ExternalProgramRunner::PhaseConfig {
     //
 
     PhaseConfig(PhaseContext& phaseContext, mongocxx::database&& db, ActorId id)
-        : database{db},
+        : configFilename{phaseContext["Setup"].to<std::string>()},
+          programFilename{phaseContext["Run"].to<std::string>()},
+          database{db},
           collection{database[phaseContext["Collection"].to<std::string>()]},
           documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext, id)} {}
 };
@@ -176,7 +182,7 @@ void ExternalProgramRunner::run() {
             //
             // Evaluate the DocumentGenerator template:
             //
-            auto document = config->documentExpr();
+            // auto document = config->documentExpr();
 
             //
             // The clock starts running only when you call `.start()`. The returned object
@@ -192,15 +198,15 @@ void ExternalProgramRunner::run() {
             // would argue we even start until after we've done the below log
             // statement. You decide.
             //
-            auto inserts = _totalInserts.start();
+            // auto inserts = _totalInserts.start();
 
             //
             // You have the full power of boost logging which is rendered to stdout.
             // Convention is to log generated documents and "normal" events at the
             // debug level.
             //
-            BOOST_LOG_TRIVIAL(debug) << " ExternalProgramRunner Inserting "
-                                    << bsoncxx::to_json(document.view());
+            BOOST_LOG_TRIVIAL(debug) << " ExternalProgramRunner setting up "
+                                    << config->configFilename;
 
             //
             // ⚠️ If your Actor throws any uncaught exceptions, the whole Workload will
@@ -217,28 +223,31 @@ void ExternalProgramRunner::run() {
             // wouldn't consider this to be programmer-error (or a configuration-
             // error) so we catch try/catch with the expected exception types.
             //
-            try {
+            // try {
 
-                config->collection.insert_one(document.view());
+            //     config->collection.insert_one(document.view());
 
-                inserts.addDocuments(1);
-                inserts.addBytes(document.view().length());
-                inserts.success();
-            } catch(mongocxx::operation_exception& e) {
-                inserts.failure();
-                //
-                // MongoException lets you include a "causing" bson document in the
-                // exception message for help debugging.
-                //
-                BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
-            }
+            //     inserts.addDocuments(1);
+            //     inserts.addBytes(document.view().length());
+            //     inserts.success();
+            // } catch(mongocxx::operation_exception& e) {
+            //     inserts.failure();
+            //     //
+            //     // MongoException lets you include a "causing" bson document in the
+            //     // exception message for help debugging.
+            //     //
+            //     BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
+            // }
+
+            BOOST_LOG_TRIVIAL(debug) << " ExternalProgramRunner running "
+                                    << config->programFilename;
         }
     }
 }
 
 ExternalProgramRunner::ExternalProgramRunner(genny::ActorContext& context)
     : Actor{context},
-      _totalInserts{context.operation("Insert", ExternalProgramRunner::id())},
+    //   _totalInserts{context.operation("Insert", ExternalProgramRunner::id())},
       _client{context.client()},
       //
       // Pass any additional constructor parameters that your `PhaseConfig` needs.
