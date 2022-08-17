@@ -38,14 +38,14 @@
 
 namespace {
 
-template <class RealType = int64_t>
+template <class IntType = int64_t>
 class zipfian_distribution {
 public:
-    explicit zipfian_distribution(double alpha, RealType n)
+    explicit zipfian_distribution(double alpha, IntType n)
         : _alpha{alpha}, _n{n}, _c{calculateNormalizationConstant(n, alpha)} {}
 
     template <class URNG>
-    RealType operator()(URNG& urng) {
+    IntType operator()(URNG& urng) {
         return generate(urng);
     }
 
@@ -55,21 +55,23 @@ private:
     // Normalization constant for the distribution.
     double _c;
     // Number of distinct elements in the distribution.
-    RealType _n;
+    IntType _n;
 
     // This implementation is based on https://cse.usf.edu/~kchriste/tools/genzipf.c, 
     // it uses the inverse transform sampling method for generating random numbers.
     // This method is not the most accurate and efficient for heavy tailed distributions,
-    // but is sufficient for our current purposes.
+    // but is sufficient for our current purposes as we're not doing any numerical analysis.
     template <class URNG>
-    RealType generate(URNG& urng) {
+    IntType generate(URNG& urng) {
         boost::random::uniform_01<> _uniform01{};
         double randomNumber = 1.0 - _uniform01(urng);
         double sum = 0;
 
-        for (RealType i = 1; i <= _n; ++i) {
+        for (IntType i = 1; i <= _n; ++i) {
             // std::pow might be a point for optimization, although fast calculation
             // of powers might reduce accuracy, so this is TBD.
+            // Another point for optimization is to hold these cumulative sum values
+            // in a precomputed array since they are the same for generate() calls.
             sum += 1.0 / std::pow(i, _alpha);
             if (sum >= randomNumber * _c) {
                 return i;
@@ -77,14 +79,10 @@ private:
         }
     }
 
-    // This is part of the inverse transform sampling method. Since the normalization
-    // constant is reused for as many numbers as we need to generate, and the distribution
-    // class is constructed and destructed in every call of evaluate(), we want to save
-    // computation time.
-    double calculateNormalizationConstant(RealType n, double alpha) {
+    double calculateNormalizationConstant(IntType n, double alpha) {
         double constant = 0;
         for (int64_t i = 1; i <= n; ++i) {
-            constant += 1.0 / std::pow(i, _alpha);
+            constant += 1.0 / std::pow(i, alpha);
         }
         return constant;
     }
@@ -509,7 +507,6 @@ public:
     }
 
 private:
-    double _c = 0;
     ActorId _id;
     DefaultRandom& _rng;
     zipfian_distribution<int64_t> _distribution;
