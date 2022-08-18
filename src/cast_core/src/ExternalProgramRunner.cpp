@@ -63,14 +63,14 @@ void ExternalProgramRunner::run() {
             BOOST_LOG_TRIVIAL(info) << " ExternalProgramRunner setting up "
                                     << config->setupFilename;
 
-            auto setupCmd = "./" + config->setupFilename + " >stdout1.txt";
+            auto setupCmd = "./" + config->setupFilename + " >stdout-setup.txt";
             const char* setupCmdPtr = &*setupCmd.begin();
             system(setupCmdPtr);
 
             BOOST_LOG_TRIVIAL(warning) << " ExternalProgramRunner running "
                                     << config->programFilename;
 
-            auto programCommand = "./" + config->programFilename + " >stdout2.txt";
+            auto programCommand = "./" + config->programFilename + " >stdout-run.txt";
             const char* programCmdPtr = &*programCommand.begin();
             system(programCmdPtr);
         }
