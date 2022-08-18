@@ -403,6 +403,36 @@ Tests:
       a: {^RandomInt: {distribution: poisson}}
     ThenThrows: InvalidValueGeneratorSyntax
 
+  - Name: Zipfian distribution
+    GivenTemplate:
+      a: {^RandomInt: {distribution: zipfian, alpha: 1.0, n: 10000}}
+    ThenReturns:
+      - a: { "$numberLong" : "2185" }
+      - a: { "$numberLong" : "3504" }
+      - a: { "$numberLong" : "8050" }
+      - a: { "$numberLong" : "4890" }
+      - a: { "$numberLong" : "347" }
+      - a: { "$numberLong" : "3" }
+      - a: { "$numberLong" : "4" }
+      - a: { "$numberLong" : "784" }
+      - a: { "$numberLong" : "202" }
+      - a: { "$numberLong" : "2590" }
+
+  - Name: Zipfian distribution requires alpha and n
+    GivenTemplate:
+      a: {^RandomInt: {distribution: zipfian}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Zipfian distribution requires alpha
+    GivenTemplate:
+      a: {^RandomInt: {distribution: zipfian, n: 10000}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Zipfian distribution requires n
+    GivenTemplate:
+      a: {^RandomInt: {distribution: zipfian, alpha: 1.0}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
   - Name: Invalid distribution
     GivenTemplate:
       a: {^RandomInt: {distribution: non_existent}}

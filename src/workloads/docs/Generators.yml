@@ -15,6 +15,7 @@ Description: |
 # 	"int4" : NumberLong(1835),
 # 	"int5" : NumberLong(3),
 # 	"int6" : NumberLong(112),
+# 	"int7" : NumberLong(3),
 # 	"double" : 12.830223930995928,
 # 	"string1" : "T336d",
 # 	"string2" : "B2A54",
@@ -82,6 +83,8 @@ Actors:
             int5: {^RandomInt: {distribution: geometric, p: 0.05}}
             # Poisson distribution with parameter mean
             int6: {^RandomInt: {distribution: poisson, mean: 100}}
+            # Zipfian distribution with parameters alpha and n
+            int7: {^RandomInt: {distribution: zipfian, alpha: 1.0, n: 10000}}
 
             # Can generate random doubles as well. They are 64 bit numbers. Supported distributions
             # include: uniform, exponential, gamma, weibull, extreme_value, beta, laplace, normal,
