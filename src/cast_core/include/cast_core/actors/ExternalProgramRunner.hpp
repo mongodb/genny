@@ -16,6 +16,7 @@
 #define HEADER_25AE844D_6E55_42EB_9E93_56C7CB727F54_INCLUDED
 
 #include <string_view>
+#include <string>
 
 #include <mongocxx/pool.hpp>
 
@@ -122,6 +123,7 @@ private:
     /** @private */
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
+    std::string _setupCmd;
 };
 
 }  // namespace genny::actor

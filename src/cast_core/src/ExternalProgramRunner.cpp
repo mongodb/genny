@@ -36,40 +36,40 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
+#include <filesystem>
 
 namespace genny::actor {
 
 struct ExternalProgramRunner::PhaseConfig {
-    std::string setupFilename;
     std::string programFilename;
 
     PhaseConfig(PhaseContext& phaseContext, ActorId id)
-        : setupFilename{phaseContext["Setup"].to<std::string>()},
-          programFilename{phaseContext["Run"].to<std::string>()} {}
+        : programFilename{phaseContext["Run"].to<std::string>()} {}
 };
 
 void ExternalProgramRunner::run() {
+    // auto setupPermissionCmd = "chmod u+x " + _setupCmd;
+    // const char* setupPermissionCmdPtr = &*setupPermissionCmd.begin();
+    // system(setupPermissionCmdPtr);
+
+    BOOST_LOG_TRIVIAL(info) << "ExternalProgramRunner setting up "
+                            << _setupCmd;
+
+    // std::filesystem::permissions(_setupCmd, std::filesystem::perms::owner_exec);
+    auto setupCmd = "./" + _setupCmd + " >stdout-setup.txt";
+    const char* setupCmdPtr = &*setupCmd.begin();
+    system(setupCmdPtr);
+
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
+            // auto programPermissionCmd = "chmod u+x " + config->programFilename;
+            // const char* programPermissionCmdPtr = &*programPermissionCmd.begin();
+            // system(programPermissionCmdPtr);
 
-            auto setupPermissionCmd = "chmod u+x " + config->setupFilename;
-            const char* setupPermissionCmdPtr = &*setupPermissionCmd.begin();
-            system(setupPermissionCmdPtr);
-
-            auto programPermissionCmd = "chmod u+x " + config->programFilename;
-            const char* programPermissionCmdPtr = &*programPermissionCmd.begin();
-            system(programPermissionCmdPtr);
-
-            BOOST_LOG_TRIVIAL(info) << " ExternalProgramRunner setting up "
-                                    << config->setupFilename;
-
-            auto setupCmd = "./" + config->setupFilename + " >stdout-setup.txt";
-            const char* setupCmdPtr = &*setupCmd.begin();
-            system(setupCmdPtr);
-
-            BOOST_LOG_TRIVIAL(warning) << " ExternalProgramRunner running "
+            BOOST_LOG_TRIVIAL(info) << "ExternalProgramRunner running "
                                     << config->programFilename;
 
+            // std::filesystem::permissions(config->programFilename, std::filesystem::perms::owner_exec);
             auto programCommand = "./" + config->programFilename + " >stdout-run.txt";
             const char* programCmdPtr = &*programCommand.begin();
             system(programCmdPtr);
@@ -79,6 +79,7 @@ void ExternalProgramRunner::run() {
 
 ExternalProgramRunner::ExternalProgramRunner(genny::ActorContext& context)
     : Actor{context},
+      _setupCmd{std::move(context.get("Setup").maybe<std::string>().value_or(""))},
       _loop{context, ExternalProgramRunner::id()} {}
 
 namespace {
