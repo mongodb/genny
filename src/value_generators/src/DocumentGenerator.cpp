@@ -21,11 +21,13 @@
 #include <map>
 #include <sstream>
 #include <unordered_map>
+#include <cmath>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/date_time.hpp>
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/math/special_functions/pow.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
@@ -34,6 +36,58 @@
 #include <bsoncxx/oid.hpp>
 #include <bsoncxx/types/bson_value/view.hpp>
 
+namespace {
+
+template <class IntType = int64_t>
+class zipfian_distribution {
+public:
+    explicit zipfian_distribution(double alpha, IntType n)
+        : _alpha{alpha}, _n{n}, _c{calculateNormalizationConstant(n, alpha)} {}
+
+    template <class URNG>
+    IntType operator()(URNG& urng) {
+        return generate(urng);
+    }
+
+private:
+    // Shape parameter for the distribution.
+    double _alpha;
+    // Normalization constant for the distribution.
+    double _c;
+    // Number of distinct elements in the distribution.
+    IntType _n;
+
+    // This implementation is based on https://cse.usf.edu/~kchriste/tools/genzipf.c, 
+    // it uses the inverse transform sampling method for generating random numbers.
+    // This method is not the most accurate and efficient for heavy tailed distributions,
+    // but is sufficient for our current purposes as we're not doing any numerical analysis.
+    template <class URNG>
+    IntType generate(URNG& urng) {
+        boost::random::uniform_01<> _uniform01{};
+        double randomNumber = 1.0 - _uniform01(urng);
+        double sum = 0;
+
+        for (IntType i = 1; i <= _n; ++i) {
+            // std::pow might be a point for optimization, although fast calculation
+            // of powers might reduce accuracy, so this is TBD.
+            // Another point for optimization is to hold these cumulative sum values
+            // in a precomputed array since they are the same for generate() calls.
+            sum += 1.0 / std::pow(i, _alpha);
+            if (sum >= randomNumber * _c) {
+                return i;
+            }
+        }
+    }
+
+    double calculateNormalizationConstant(IntType n, double alpha) {
+        double constant = 0;
+        for (int64_t i = 1; i <= n; ++i) {
+            constant += 1.0 / std::pow(i, alpha);
+        }
+        return constant;
+    }
+};
+}  // namespace
 
 namespace {
 using bsoncxx::oid;
@@ -436,6 +490,26 @@ private:
     DefaultRandom& _rng;
     ActorId _id;
     const double _p;
+};
+
+/** `{^RandomInt:{distribution:zipfian...}}` */
+class ZipfianInt64Generator : public Generator<int64_t> {
+public:
+    /** @param node `{alpha:double, n:<int>}` */
+    ZipfianInt64Generator(const Node& node, GeneratorArgs generatorArgs)
+        : _rng{generatorArgs.rng},
+          _id{generatorArgs.actorId},
+          _distribution{extract(node, "alpha", "zipfian").to<double>(), 
+                        intGenerator(extract(node, "n", "zipfian"), generatorArgs)->evaluate()} {}
+
+    int64_t evaluate() override {
+        return _distribution(_rng);
+    }
+
+private:
+    ActorId _id;
+    DefaultRandom& _rng;
+    zipfian_distribution<int64_t> _distribution;
 };
 
 // This generator allows choosing any valid generator, incuding documents. As such it cannot be used
@@ -1667,6 +1741,8 @@ UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
         return std::make_unique<PoissonInt64Generator>(node, generatorArgs);
     } else if (distribution == "geometric") {
         return std::make_unique<GeometricInt64Generator>(node, generatorArgs);
+    } else if (distribution == "zipfian") {
+        return std::make_unique<ZipfianInt64Generator>(node, generatorArgs);
     } else {
         std::stringstream error;
         error << "Unknown distribution '" << distribution << "'";
