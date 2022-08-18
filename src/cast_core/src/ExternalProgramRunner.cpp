@@ -36,41 +36,35 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 namespace genny::actor {
 
 struct ExternalProgramRunner::PhaseConfig {
     std::string programFilename;
+    std::string outputFilename;
 
     PhaseConfig(PhaseContext& phaseContext, ActorId id)
-        : programFilename{phaseContext["Run"].to<std::string>()} {}
+        : programFilename{phaseContext["Run"].to<std::string>()},
+          outputFilename{phaseContext["Output"].to<std::string>()} {}
 };
 
 void ExternalProgramRunner::run() {
-    // auto setupPermissionCmd = "chmod u+x " + _setupCmd;
-    // const char* setupPermissionCmdPtr = &*setupPermissionCmd.begin();
-    // system(setupPermissionCmdPtr);
-
     BOOST_LOG_TRIVIAL(info) << "ExternalProgramRunner setting up "
                             << _setupCmd;
 
-    // std::filesystem::permissions(_setupCmd, std::filesystem::perms::owner_exec);
-    auto setupCmd = "./" + _setupCmd + " >stdout-setup.txt";
+    boost::filesystem::permissions(_setupCmd, boost::filesystem::perms::owner_all);
+    auto setupCmd = "./" + _setupCmd + " >setup.txt";
     const char* setupCmdPtr = &*setupCmd.begin();
     system(setupCmdPtr);
 
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
-            // auto programPermissionCmd = "chmod u+x " + config->programFilename;
-            // const char* programPermissionCmdPtr = &*programPermissionCmd.begin();
-            // system(programPermissionCmdPtr);
-
             BOOST_LOG_TRIVIAL(info) << "ExternalProgramRunner running "
                                     << config->programFilename;
 
-            // std::filesystem::permissions(config->programFilename, std::filesystem::perms::owner_exec);
-            auto programCommand = "./" + config->programFilename + " >stdout-run.txt";
+            boost::filesystem::permissions(config->programFilename, boost::filesystem::perms::owner_all);
+            auto programCommand = "./" + config->programFilename + " >" + config->outputFilename;
             const char* programCmdPtr = &*programCommand.begin();
             system(programCmdPtr);
         }
