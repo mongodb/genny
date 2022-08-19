@@ -284,7 +284,6 @@ def _setup_resmoke(
             cmd=["git", "checkout", mongodb_commit], cwd=mongo_repo_path, check=True, capture=False,
         )
 
-    raise Exception("Forced exit")
     # Setup resmoke venv unless exists
     resmoke_setup_sentinel = os.path.join(resmoke_venv, "setup-done")
     if not os.path.exists(resmoke_setup_sentinel):
