@@ -260,7 +260,7 @@ functions:
     params:
       directory: src/genny
       revisions:
-        mongo: 6e2dcc5a39eb2de9d2e8209271115c078ae16470
+        mongo: e61bf27c2f6a83fed36e5a13c008a32d563babe2
 
   ##
   # Compile the project in src/build.
