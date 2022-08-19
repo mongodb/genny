@@ -13,7 +13,8 @@ Keywords:
 
 GlobalDefaults:
   aggregate: &collName Collection0
-  pipeline: &aggPipe [{$project: {array: 0}}, {$sort: {integer: 1}}]
+  exclusionPpipeline: &exclusionPipe [{$project: {array: 0}}, {$sort: {integer: 1}}]
+  inclusionPipeline: &inclusionPipe [{$project: {integer: 1, double: 1}}, {$sort: {integer: 1}}]
 
 Actors:
 - Name: InsertData
@@ -49,10 +50,16 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: BuildIndex
   Type: RunCommand
   Phases:
+  - *Nop
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -64,6 +71,8 @@ Actors:
       OperationCommand:
         createIndexes: *collName
         indexes: &IndexSpec [{key: {"integer": 1}, name: "int_1"}]
+  - *Nop
+  - *Nop
   - *Nop
   - *Nop
 
@@ -80,8 +89,12 @@ Actors:
   - *Nop
   - Repeat: 1
   - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
 
-- Name: AggregateNoIndex
+- Name: AggregateNoIndexExclusion
   Type: RunCommand
   Threads: 1
   Phases:
@@ -94,17 +107,47 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *collName
-        pipeline: *aggPipe
+        pipeline: *exclusionPipe
         cursor: {batchSize: *docCount}
   - *Nop
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
-- Name: AggregateIndex
+- Name: AggregateNoIndexInclusion
   Type: RunCommand
   Threads: 1
   Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *aggRepeat
+    Database: *db
+    Operations:
+    - OperationMetricsName: AggregateNoIndex
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *collName
+        pipeline: *inclusionPipe
+        cursor: {batchSize: *docCount}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: AggregateIndexExclusion
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -118,7 +161,33 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *collName
-        pipeline: *aggPipe
+        pipeline: *exclusionPipe
+        cursor: {batchSize: *docCount}
+  - *Nop
+  - *Nop
+
+- Name: AggregateIndexInclusion
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *aggRepeat
+    Database: *db
+    Operations:
+    - OperationMetricsName: AggregateIndex
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *collName
+        pipeline: *inclusionPipe
         cursor: {batchSize: *docCount}
 
 AutoRun:
