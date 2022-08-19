@@ -14,6 +14,7 @@ SLOG = structlog.get_logger(__name__)
 # These are the "Binaries" evergreen artifact URLs for mongodb-mongo compile tasks.
 # The binaries must be compatible with the version of the mongo repo checked out in use for resmoke,
 # which is the sha "6e2dcc5a39eb2de9d2e8209271115c078ae16470" mentioned below.
+MONGO_COMMIT = "e61bf27c2f6a83fed36e5a13c008a32d563babe2"
 CANNED_ARTIFACTS = {
     "osx": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-macos-x86_64-6.0.0.tgz",
     "amazon2": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-amazon2-6.0.0.tgz",
@@ -195,6 +196,11 @@ def _setup_resmoke(
     mongo_dir: Optional[str],
     mongodb_archive_url: Optional[str],
 ):
+    # If artifact is not overridden by user then use the default commit
+    expected_commit = None
+    if mongodb_archive_url is None:
+        expected_commit = MONGO_COMMIT
+
     if mongo_dir is not None:
         mongo_repo_path = mongo_dir
     else:
@@ -223,34 +229,50 @@ def _setup_resmoke(
         )
         checkout_required = True
 
+    # Download and install mongod if it already doesn't exist or is not the expected version
     from_tarball = os.path.join(mongo_repo_path, "bin", "mongod")
-    info = toolchain.toolchain_info(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
-    if mongodb_archive_url is None:
-        if info.is_darwin:
-            artifact_key = "osx"
-        elif info.linux_distro in CANNED_ARTIFACTS:
-            artifact_key = info.linux_distro
+    download_required = True
+    if os.path.exists(from_tarball):
+        mongodb_commit = _get_mongo_commit(from_tarball, workspace_root)
+        if mongodb_commit == expected_commit:
+            SLOG.info("Mongo binary exist and is the correct version")
+            download_required = False
         else:
-            raise Exception(
-                f"No pre-built artifacts for distro {info.linux_distro}. You can either:"
-                f"1. Modify the CANNED_ARTIFACTS dict in the genny python to include an artifact from a waterfall build."
-                f"2. Pass in the --mongodb-archive-url parameter to force a canned artifact."
+            SLOG.info(
+                "Mongo binary exist, but is not the correct version. Mongo will be dowloaded from the canned artifact."
             )
-        mongodb_archive_url = CANNED_ARTIFACTS[artifact_key]
 
-    SLOG.info("Fetching and installing mongod.", fetching=mongodb_archive_url)
-    cmd_runner.run_command(
-        cmd=["curl", "-LSs", mongodb_archive_url, "-o", "mongodb.tgz"],
-        cwd=mongo_repo_path,
-        capture=False,
-        check=True,
-    )
-    cmd_runner.run_command(
-        cmd=["tar", "--strip-components=1", "-zxf", "mongodb.tgz"],
-        cwd=mongo_repo_path,
-        capture=False,
-        check=True,
-    )
+    if download_required:
+        info = toolchain.toolchain_info(
+            genny_repo_root=genny_repo_root, workspace_root=workspace_root
+        )
+        if mongodb_archive_url is None:
+            if info.is_darwin:
+                artifact_key = "osx"
+            elif info.linux_distro in CANNED_ARTIFACTS:
+                artifact_key = info.linux_distro
+            else:
+                raise Exception(
+                    f"No pre-built artifacts for distro {info.linux_distro}. You can either:"
+                    f"1. Modify the CANNED_ARTIFACTS dict in the genny python to include an artifact from a waterfall build."
+                    f"2. Pass in the --mongodb-archive-url parameter to force a canned artifact."
+                )
+            mongodb_archive_url = CANNED_ARTIFACTS[artifact_key]
+
+        SLOG.info("Fetching and installing mongod.", fetching=mongodb_archive_url)
+        cmd_runner.run_command(
+            cmd=["curl", "-LSs", mongodb_archive_url, "-o", "mongodb.tgz"],
+            cwd=mongo_repo_path,
+            capture=False,
+            check=True,
+        )
+        cmd_runner.run_command(
+            cmd=["tar", "--strip-components=1", "-zxf", "mongodb.tgz"],
+            cwd=mongo_repo_path,
+            capture=False,
+            check=True,
+        )
+
     mongod = from_tarball
     bin_dir = os.path.dirname(mongod)
 
@@ -261,6 +283,8 @@ def _setup_resmoke(
         cmd_runner.run_command(
             cmd=["git", "checkout", mongodb_commit], cwd=mongo_repo_path, check=True, capture=False,
         )
+
+    raise Exception("Forced exit")
     # Setup resmoke venv unless exists
     resmoke_setup_sentinel = os.path.join(resmoke_venv, "setup-done")
     if not os.path.exists(resmoke_setup_sentinel):
