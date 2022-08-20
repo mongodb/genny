@@ -248,7 +248,7 @@ TEST_CASE("PoolFactory behavior") {
                 { Database: 'accounts',
                   Collection: 'balances',
                   EncryptionType: 'fle',
-                  EncryptedFields: {
+                  FLEEncryptedFields: {
                     name: {type: "string", algorithm: "random", keyId: "7aa359e0-1cdd-11ed-a2cd-bf985b6c5087"},
                     amount: {type: "int", algorithm: "deterministic", keyId: "8936e9ea-1cdd-11ed-be0d-b3f21cd2701f"}
                   }
@@ -256,7 +256,7 @@ TEST_CASE("PoolFactory behavior") {
                 { Database: 'accounts',
                   Collection: 'ratings',
                   EncryptionType: 'fle',
-                  EncryptedFields: {
+                  FLEEncryptedFields: {
                     ssn: {type: "string", algorithm: "random", keyId: "8936e9ea-1cdd-11ed-be0d-b3f21cd2701f"},
                     score: {type: "int", algorithm: "random", keyId: "7aa359e0-1cdd-11ed-a2cd-bf985b6c5087"}
                   }

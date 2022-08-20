@@ -1,11 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@10gen/server-security"
 Description: |
-  Example workload demonstrating FLE support in Genny's client pools.
-  The CrudActor in this workload performs FLE-encrypted operations using a Client
-  that is configured with the FLE auto encryption options.
+  Example workload demonstrating encryption support in Genny's client pools.
+  The CrudActor in this workload performs encrypted operations using a Client
+  that is configured with the FLE and Queryable auto encryption options.
 
-  Encryption with FLE is configured per Client. Under the EncryptionOptions
+  Encryption is configured per Client. Under the EncryptionOptions
   element of a Client instance, the following fields must be provided:
 
     KeyVaultDatabase     - the name of the keyvault database
@@ -15,23 +15,34 @@ Description: |
   Each encrypted collection descriptor under the EncryptedCollections sequence
   must define the following fields:
 
-    Database         - the name of the encrypted database
-    Collection       - the name of the encrypted collection
-    EncryptedType    - the type of client-side encryption used (either 'fle' or 'queryable')
-    EncryptedFields: - maps the path of an encrypted field in the collection to its
-                       encryption parameters. This defines the schema of encrypted fields.
+    Database           - the name of the encrypted database
+    Collection         - the name of the encrypted collection
+    EncryptionType     - the type of client-side encryption used (either 'fle' or 'queryable')
 
-  Each subnode of EncryptedFields is a key-value pair where the key is the field path, and
-  the value is an object whose schema depends on the encryption type specified in EncryptedType.
+  Depending on the EncryptionType, the encryption schema may be specified using either:
+    FLEEncryptedFields        - if EncryptionType is "fle"
+    QueryableEncryptedFields  - if EncryptionType is "queryable"
 
-  Field paths cannot be a prefix of another path under the same EncryptedField map. For instance,
-  "pii" and "pii.ssn" are not allowed, since "pii" is a path prefix of the other.
+  These map the path of an encrypted field in the collection to its encryption parameters.
+  Both can appear under a collection descriptor node, but only the node that matches the specified
+  EncryptionType will apply throughout the workload.
 
-  For FLE-encrypted collections, each value must have the following fields:
+  Each subnode of FLEEncryptedFields or QueryableEncryptedFields is a key-value pair where
+  the key is the field path, and the value is an object whose required fields depend on the type.
+
+  Field paths cannot be a prefix of another path under the same FLEEncryptedFields or
+  QueryableEncryptedFields map. For instance, "pii" and "pii.ssn" are not allowed, since "pii" is
+  a path prefix of the other.
+
+  Under FLEEncryptedFields, each object mapped to a path must have the following fields:
     type      - the BSON type of values for this field
     algorithm - the encryption algorithm: either "random" or "deterministic"
                 "deterministic" means that the ciphertext is always the same for the same
                 plaintext value, which means that this field can be used on queries.
+
+  Under QueryableEncryptedFields, each object mapped to a path must have the following fields:
+    type      - the BSON type of values for this field
+    queries   - an array of objects that specify "queryType" and other parameters for QE.
 
   An Actor that wishes to perform encrypted operations on an encrypted collection must
   be using the Client pool under which the schema for that encrypted collection is defined.
@@ -62,7 +73,7 @@ Clients:
       - Database: *encrypted_db
         Collection: "accounts"
         EncryptionType: "fle"
-        EncryptedFields:
+        FLEEncryptedFields:
           name: { type: "string", algorithm: "random" }
           credit: { type: "long", algorithm: "random" }
           pii.ssn: { type: "string", algorithm: "deterministic" }
@@ -73,7 +84,7 @@ Clients:
       - Database: *encrypted_db
         Collection: "medical"
         EncryptionType: "fle"
-        EncryptedFields:
+        FLEEncryptedFields:
           patient_id: { type: "string", algorithm: "deterministic" }
           insurance: { type: "string", algorithm: "random" }
           conditions: { type: "array", algorithm: "random" }

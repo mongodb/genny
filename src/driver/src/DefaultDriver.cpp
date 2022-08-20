@@ -142,8 +142,11 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
                               : "inline-yaml"};
 
 
-    auto workloadContext =
-        WorkloadContext{nodeSource.root(), orchestrator, globalCast()};
+    auto workloadContext = WorkloadContext{nodeSource.root(),
+                                           orchestrator,
+                                           globalCast(),
+                                           {},
+                                           options.runMode == DefaultDriver::RunMode::kDryRun};
 
     genny::metrics::Registry& metrics = workloadContext.getMetrics();
 

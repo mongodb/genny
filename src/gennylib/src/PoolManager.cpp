@@ -43,11 +43,13 @@ auto createPool(const std::string& name,
     return poolFactory.makePool();
 }
 
-auto setupEncryption(const std::string& name, const Node& context) {
+auto setupEncryption(const std::string& name, const Node& context, bool dryRun) {
     auto mongoUri = context["Clients"][name]["URI"].to<std::string>();
     auto encryption = std::make_shared<EncryptionContext>(
         context["Clients"][name]["EncryptionOptions"], std::move(mongoUri));
-    encryption->setupKeyVault();
+    if (!dryRun) {
+        encryption->setupKeyVault();
+    }
     return encryption;
 }
 
@@ -73,7 +75,7 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
     Pools& pools = lap.second;
 
     if (!pools.encryption) {
-        pools.encryption = setupEncryption(name, context);
+        pools.encryption = setupEncryption(name, context, _dryRun);
     }
 
     auto& pool = pools.instances[instance];

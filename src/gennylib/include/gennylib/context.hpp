@@ -135,15 +135,19 @@ class WorkloadContext : public v1::HasNode {
 public:
     /**
      * @param node top-level (file-level) YAML node
-     * @param registry metrics registry to use in ActorContext::counter() etc
      * @param orchestrator to control Phasing
      * @param cast source of Actors to use. Actors are constructed
      * from the cast at construction-time.
+     * @param callback a callback to be invoked for every
+     * `mongocxx::events::command_started_event`
+     * @param dryRun whether the workload is a dry run, meaning operations that
+     * require a server connection are skipped.
      */
     WorkloadContext(const Node& node,
                     Orchestrator& orchestrator,
                     const Cast& cast,
-                    v1::PoolManager::OnCommandStartCallback apmCallback = {});
+                    v1::PoolManager::OnCommandStartCallback apmCallback = {},
+                    bool dryRun = false);
 
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;

@@ -37,11 +37,12 @@ auto RNG_SEED_BASE = 269849313357703264;
 WorkloadContext::WorkloadContext(const Node& node,
                                  Orchestrator& orchestrator,
                                  const Cast& cast,
-                                 v1::PoolManager::OnCommandStartCallback apmCallback)
+                                 v1::PoolManager::OnCommandStartCallback apmCallback,
+                                 bool dryRun)
     : v1::HasNode{node},
       _orchestrator{&orchestrator},
       _rateLimiters{10},
-      _poolManager{apmCallback} {
+      _poolManager{apmCallback, dryRun} {
 
     std::set<std::string> validSchemaVersions{"2018-07-01"};
 

@@ -58,7 +58,7 @@ struct FLEFieldPathNode {
         if (subnodes.empty()) {
             subdoc.append(kvp(name, [&](sub_document fieldDoc) {
                 fieldDoc.append(kvp("encrypt", [&](sub_document encryptDoc) {
-                    field->appendFLEEncryptInfo(encryptDoc);
+                    field->appendEncryptInfo(encryptDoc);
                 }));
             }));
         } else if (!root) {
@@ -112,18 +112,6 @@ using bsoncxx::types::bson_value::view_or_value;
 EncryptedField::EncryptedField(const Node& yaml) {
     _path = yaml.key();
     _type = yaml["type"].to<std::string>();
-    _algorithm = yaml["algorithm"].to<std::string>();
-
-    if (_algorithm == "random") {
-        _algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Random";
-    } else if (_algorithm == "deterministic") {
-        _algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic";
-    } else {
-        std::ostringstream ss;
-        ss << "'EncryptedField' has an invalid 'algorithm' value of '" << _algorithm
-           << "'. Valid values are 'random' and 'deterministic'.";
-        throw InvalidConfigurationException(ss.str());
-    }
 
     if (yaml["keyId"]) {
         auto keyId = yaml["keyId"].to<std::string>();
@@ -167,108 +155,40 @@ std::optional<view_or_value> EncryptedField::keyId() const {
     return _keyId;
 }
 
-EncryptedField& EncryptedField::algorithm(std::string algorithm) {
+FLEEncryptedField::FLEEncryptedField(const Node& yaml) : EncryptedField(yaml) {
+    _algorithm = yaml["algorithm"].to<std::string>();
+
+    if (_algorithm == "random") {
+        _algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Random";
+    } else if (_algorithm == "deterministic") {
+        _algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic";
+    } else {
+        std::ostringstream ss;
+        ss << "'EncryptedField' has an invalid 'algorithm' value of '" << _algorithm
+           << "'. Valid values are 'random' and 'deterministic'.";
+        throw InvalidConfigurationException(ss.str());
+    }
+}
+
+FLEEncryptedField& FLEEncryptedField::algorithm(std::string algorithm) {
     _algorithm = std::move(algorithm);
     return *this;
 }
 
-const std::string& EncryptedField::algorithm() const {
+const std::string& FLEEncryptedField::algorithm() const {
     return _algorithm;
 }
 
-void EncryptedField::appendFLEEncryptInfo(sub_document subdoc) const {
-    subdoc.append(kvp("keyId", [&](sub_array keyIdArray) {
-        if (!_keyId.has_value()) {
-            std::ostringstream ss;
-            ss << "EncryptedField '" << _path << "' has no key ID.";
-            throw InvalidConfigurationException(ss.str());
-        }
-        keyIdArray.append(_keyId.value());
-    }));
+void FLEEncryptedField::appendEncryptInfo(sub_document subdoc) const {
     subdoc.append(kvp("bsonType", _type));
     subdoc.append(kvp("algorithm", _algorithm));
-}
-
-EncryptedCollection::EncryptedCollection(const Node& yaml) {
-    _database = yaml["Database"].to<std::string>();
-    _collection = yaml["Collection"].to<std::string>();
-    auto typeStr = yaml["EncryptionType"].to<std::string>();
-
-    if (_database.empty()) {
-        throw InvalidConfigurationException(
-            "'EncryptedCollection' requires a non-empty 'Database' name.");
-    }
-    if (_collection.empty()) {
-        throw InvalidConfigurationException(
-            "'EncryptedCollection' requires a non-empty 'Collection' name.");
-    }
-
-    if (typeStr == "fle") {
-        _type = EncryptionType::FLE;
-    } else if (typeStr == "queryable") {
-        _type = EncryptionType::QUERYABLE;
-    } else {
-        std::ostringstream ss;
-        ss << "'EncryptedCollection' has an invalid 'EncryptionType' value of '" << typeStr
-           << "'. Valid values are 'fle' and 'queryable'.";
-        throw InvalidConfigurationException(ss.str());
-    }
-
-    const auto& fieldsNode = yaml["EncryptedFields"];
-    if (fieldsNode) {
-        if (!fieldsNode.isMap()) {
-            throw InvalidConfigurationException(
-                "'EncryptedCollection' requires an 'EncryptedFields' node of map type.");
-        }
-        for (const auto& [_, v] : fieldsNode) {
-            addField(v.to<EncryptedField>());
-        }
+    if (_keyId.has_value()) {
+        subdoc.append(
+            kvp("keyId", [&](sub_array keyIdArray) { keyIdArray.append(_keyId.value()); }));
     }
 }
 
-EncryptedCollection& EncryptedCollection::database(std::string dbName) {
-    _database = std::move(dbName);
-    return *this;
-}
-
-const std::string& EncryptedCollection::database() const {
-    return _database;
-}
-
-EncryptedCollection& EncryptedCollection::collection(std::string collName) {
-    _collection = std::move(collName);
-    return *this;
-}
-
-const std::string& EncryptedCollection::collection() const {
-    return _collection;
-}
-
-EncryptedCollection& EncryptedCollection::encryptionType(EncryptionType type) {
-    _type = type;
-    return *this;
-}
-
-EncryptionType EncryptedCollection::encryptionType() const {
-    return _type;
-}
-
-EncryptedCollection& EncryptedCollection::fields(EncryptedCollection::EncryptedFieldMap fields) {
-    _fields = std::move(fields);
-    return *this;
-}
-
-const EncryptedCollection::EncryptedFieldMap& EncryptedCollection::fields() const {
-    return _fields;
-}
-
-EncryptedCollection& EncryptedCollection::addField(EncryptedField field) {
-    auto key = field.path();
-    _fields.emplace(std::move(key), std::move(field));
-    return *this;
-}
-
-void EncryptedCollection::appendFLESchema(sub_document subdoc) const {
+void FLEEncryptedCollection::appendSchema(sub_document subdoc) const {
     if (_fields.empty()) {
         return;
     }
@@ -295,8 +215,8 @@ void EncryptedCollection::appendFLESchema(sub_document subdoc) const {
                 // or the current part is the last one.
                 if (nitr->subnodes.empty() || &part == &parts.back()) {
                     std::ostringstream ss;
-                    ss << "'EncryptedField' with path '" << field.path()
-                       << "' conflicts with another 'EncryptedField' with path '"
+                    ss << "'FLEEncryptedField' with path '" << field.path()
+                       << "' conflicts with another 'FLEEncryptedField' with path '"
                        << nitr->field->path() << "'";
                     throw InvalidConfigurationException(ss.str());
                 }
@@ -312,8 +232,16 @@ void EncryptedCollection::appendFLESchema(sub_document subdoc) const {
     root.append(subdoc, true);
 }
 
-EncryptionContext::EncryptionContext(const Node& encryptionOptsNode, std::string keyVaultUri)
-    : _keyVaultUri(std::move(keyVaultUri)) {
+void FLEEncryptedCollection::createCollection(const mongocxx::client& client) const {
+    client[_database].create_collection(_collection);
+}
+
+void FLEEncryptedCollection::dropCollection(const mongocxx::client& client) const {
+    client[_database][_collection].drop();
+}
+
+EncryptionContext::EncryptionContext(const Node& encryptionOptsNode, std::string uri)
+    : _uri(std::move(uri)) {
 
     if (!encryptionOptsNode) {
         return;
@@ -338,13 +266,31 @@ EncryptionContext::EncryptionContext(const Node& encryptionOptsNode, std::string
     if (!collsSequence.isSequence()) {
         throw InvalidConfigurationException("'EncryptedCollections' node must be a sequence type.");
     }
-    for (const auto& [_, v] : collsSequence) {
-        auto coll = v.to<EncryptedCollection>();
-        auto key = coll.database() + "." + coll.collection();
-        if (!_collections.emplace(std::move(key), std::move(coll)).second) {
+
+    auto checkUniqueNamespace = [&](const std::string& nss) {
+        if (_fleCollections.find(nss) != _fleCollections.end()) {
             std::ostringstream ss;
-            ss << "Collection with namespace '" << key
+            ss << "Collection with namespace '" << nss
                << "' already exists in 'EncryptionCollections'";
+            throw InvalidConfigurationException(ss.str());
+        }
+    };
+
+    for (const auto& [k, v] : collsSequence) {
+        auto typeStr = v["EncryptionType"].to<std::string>();
+
+        if (typeStr == "fle") {
+            auto coll = std::make_unique<FLEEncryptedCollection>(v);
+            auto nss = coll->database() + "." + coll->collection();
+            checkUniqueNamespace(nss);
+            _fleCollections.emplace(std::move(nss), std::move(coll));
+        } else if (typeStr == "queryable") {
+            // TODO: PERF-3187 add queryable encryption support
+        } else {
+            std::ostringstream ss;
+            ss << "'EncryptedCollections." << k.toString()
+               << "' has an invalid 'EncryptionType' value of '" << typeStr
+               << "'. Valid values are 'fle' and 'queryable'.";
             throw InvalidConfigurationException(ss.str());
         }
     }
@@ -355,7 +301,7 @@ void EncryptionContext::setupKeyVault() {
         return;
     }
 
-    mongocxx::uri uri{_keyVaultUri};
+    mongocxx::uri uri{_uri};
     mongocxx::client client{uri};
     auto coll = client[_keyVaultDb][_keyVaultColl];
     auto kvNs = _keyVaultDb + "." + _keyVaultColl;
@@ -383,8 +329,8 @@ void EncryptionContext::setupKeyVault() {
     // For each encrypted collection, create the data keys to be used for encrypting
     // the values for each encrypted field in that collection. Update the keyIds of
     // each encrypted field with the UUID of the newly-created data key.
-    for (auto& [_, encryptedColl] : _collections) {
-        auto fieldsCopy = encryptedColl.fields();
+    for (auto& [_, encryptedColl] : _fleCollections) {
+        auto fieldsCopy = encryptedColl->fields();
         for (auto& [_, field] : fieldsCopy) {
             try {
                 field.keyId(clientEncryption.create_data_key("local"));
@@ -393,11 +339,11 @@ void EncryptionContext::setupKeyVault() {
                     << bsoncxx::to_json(make_document(kvp("keyId", field.keyId().value())));
             } catch (const mongocxx::exception& e) {
                 BOOST_LOG_TRIVIAL(error) << "Failed to create data key on key vault '" << kvNs
-                                         << "' at '" << _keyVaultUri << ": " << e.what();
+                                         << "' at '" << _uri << ": " << e.what();
                 throw e;
             }
         }
-        encryptedColl.fields(std::move(fieldsCopy));
+        encryptedColl->fields(std::move(fieldsCopy));
     }
 };
 
@@ -424,11 +370,8 @@ std::pair<std::string, std::string> EncryptionContext::getKeyVaultNamespace() co
 
 bsoncxx::document::value EncryptionContext::generateSchemaMapDoc() const {
     bsoncxx::builder::basic::document mapDoc{};
-    for (auto& [nss, coll] : _collections) {
-        if (coll.encryptionType() != EncryptionType::FLE) {
-            continue;
-        }
-        mapDoc.append(kvp(nss, [&](sub_document subdoc) { coll.appendFLESchema(subdoc); }));
+    for (auto& [nss, coll] : _fleCollections) {
+        mapDoc.append(kvp(nss, [&](sub_document subdoc) { coll->appendSchema(subdoc); }));
     }
     auto v = mapDoc.extract();
     BOOST_LOG_TRIVIAL(debug) << "Generated schema map: " << bsoncxx::to_json(v);
@@ -436,11 +379,11 @@ bsoncxx::document::value EncryptionContext::generateSchemaMapDoc() const {
 }
 
 bsoncxx::document::value EncryptionContext::generateExtraOptionsDoc() const {
-    return make_document(kvp("mongocryptdBypassSpawn", true));
+    return make_document(kvp("mongocryptdBypassSpawn", true), kvp("cryptSharedLibRequired", false));
 }
 
 bool EncryptionContext::encryptionEnabled() const {
-    return !_collections.empty();
+    return !_fleCollections.empty();
 }
 
 }  // namespace genny::v1

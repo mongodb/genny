@@ -47,8 +47,12 @@ public:
      *
      * @param callback
      *   a callback to be invoked for every `mongocxx::events::command_started_event`
+     * @param dryRun
+     *   whether the workload is a dry run. If true, setup that requires a connection
+     *   to a server will not be run (e.g. setting up data keys for encryption).
      */
-    PoolManager(OnCommandStartCallback callback) : _apmCallback{std::move(callback)} {}
+    PoolManager(OnCommandStartCallback callback, bool dryRun = false)
+        : _apmCallback{std::move(callback)}, _dryRun(dryRun) {}
 
     /**
      * Obtain a connection or throw if none available.
@@ -88,6 +92,9 @@ private:
     std::unordered_map<std::string, LockAndPools> _pools;
     /** lock on finding/creating the LockAndPools for a given string */
     std::mutex _poolsLock;
+
+    /** whether setup that needs a server connection should be skipped on client pool creation */
+    bool _dryRun;
 };
 
 }  // namespace genny::v1

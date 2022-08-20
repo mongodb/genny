@@ -227,7 +227,7 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
     if (useEncryption) {
         const auto& encryption = *_config->encryptionCtxt;
         mongocxx::options::auto_encryption autoEncryptionOptions{};
-        try{
+        try {
             autoEncryptionOptions.key_vault_namespace(encryption.getKeyVaultNamespace());
             autoEncryptionOptions.kms_providers(encryption.generateKMSProvidersDoc());
             autoEncryptionOptions.schema_map(encryption.generateSchemaMapDoc());
