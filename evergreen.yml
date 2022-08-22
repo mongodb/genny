@@ -55,22 +55,9 @@ buildvariants:
   - amazon2-build
   expansions:
     distro: amazon2
-    # latest successful build from master as of 2020-10-01 on "Amazon Linux 2" compile task "Binaries" file
-    # commit should match that in get-mongo-source.sh
-    mongodb_archive_url:
-      https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/amazon/cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3/binaries/mongo-mongodb_mongo_master_amazon_cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3_21_12_03_09_47_48.tgz
   tasks:
   - name: tg_compile_and_test_with_server
 
-- name: archlinux
-  display_name: Arch Linux
-  modules: [mongo]
-  expansions:
-    distro: archlinux
-  run_on:
-  - archlinux-large
-  tasks:
-  - name: tg_compile
 
 - name: rhel70
   display_name: RHEL 7
@@ -89,16 +76,6 @@ buildvariants:
     distro: rhel8
   run_on:
   - rhel80-test
-  tasks:
-  - name: tg_compile
-
-- name: ubuntu1604
-  display_name: Ubuntu 16.04
-  modules: [mongo]
-  expansions:
-    distro: ubuntu1604
-  run_on:
-  - ubuntu1604-large
   tasks:
   - name: tg_compile
 
@@ -283,7 +260,7 @@ functions:
     params:
       directory: src/genny
       revisions:
-        mongo: cf8ddbdf99ae7fb2d96ca9f350224ffa193e40b3
+        mongo: e61bf27c2f6a83fed36e5a13c008a32d563babe2
 
   ##
   # Compile the project in src/build.

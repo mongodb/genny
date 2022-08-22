@@ -166,8 +166,15 @@ The toolchain isn't instrumented with sanitizers, so you may get
 [false-positives][fp] for Boost, hence the `ASAN_OPTIONS` flag.
 
 
+## Updating canned artifacts for re-smoke tests
+The canned artifacts used for re-smoke tests can get outdated over time and will be required to update periodically.
+Here is how to update the canned artifacts.
+
+1. Download the latest artifacts and upload them to the S3 bucket.
+	- Download the tgz package for a specific platform
+  	- The downloaded package should be uploaded to S3 bucket - s3://dsi-donot-remove/compile_artifacts/. Make sure to make the uploaded file public.
+2. Update [run_tests.py](https://github.com/mongodb/genny/blob/master/src/lamplib/src/genny/tasks/run_tests.py) with new S3 URLs
+  	- CANNED_ARTIFACTS needs to be updated with the new S3 URL.
 
 [fp]: https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow#false-positives
 [pi]: https://github.com/mongodb/genny/blob/762b08ee3b71184d5f521e82f7ce6d6eeb3c0cc9/src/workloads/docs/ParallelInsert.yml#L183-L189
-
-
