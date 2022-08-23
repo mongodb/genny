@@ -35,26 +35,26 @@ namespace genny::actor {
  * ```yaml
  * SchemaVersion: 2017-07-01
  * Actors:
- * - Name: ExternalProgramRunner
- *   Type: ExternalProgramRunner
+ * - Name: ExternalScriptRunner
+ *   Type: ExternalScriptRunner
  *   Phases:
  *   - Document: foo
  * ```
  *
- * Or you can fill out the generated workloads/docs/ExternalProgramRunner.yml
+ * Or you can fill out the generated workloads/docs/ExternalScriptRunner.yml
  * file with extended documentation. If you do this, please mention
- * that extended documentation can be found in the docs/ExternalProgramRunner.yml
+ * that extended documentation can be found in the docs/ExternalScriptRunner.yml
  * file.
  *
  * Owner: TODO (which github team owns this Actor?)
  */
-class ExternalProgramRunner : public Actor {
+class ExternalScriptRunner : public Actor {
 
     //
     // This generated Actor does a simple `collection.insert_one()` operation.
     // You may need to add a few private fields to this header file, but most
-    // of the work is in the associated `ExternalProgramRunner.cpp` file and its
-    // assocated `ExternalProgramRunner_test.cpp` integration-test file.
+    // of the work is in the associated `ExternalScriptRunner.cpp` file and its
+    // assocated `ExternalScriptRunner_test.cpp` integration-test file.
     //
 
 public:
@@ -63,8 +63,8 @@ public:
     // collaborators. More details and examples are given in the
     // .cpp file.
     //
-    explicit ExternalProgramRunner(ActorContext& context);
-    ~ExternalProgramRunner() = default;
+    explicit ExternalScriptRunner(ActorContext& context);
+    ~ExternalScriptRunner() = default;
 
     //
     // Genny starts all Actor instances in their own threads and waits for all
@@ -77,14 +77,16 @@ public:
     //
     void run() override;
 
+    std::string exec(const char* cmd);
+
     //
-    // This is how Genny knows that `Type: ExternalProgramRunner` in workload YAMLs
+    // This is how Genny knows that `Type: ExternalScriptRunner` in workload YAMLs
     // corresponds to this Actor class. It it also used by
     // the `genny list-actors` command. Typically this should be the same as the
     // class name.
     //
     static std::string_view defaultName() {
-        return "ExternalProgramRunner";
+        return "ExternalScriptRunner";
     }
 
 private:
@@ -113,7 +115,7 @@ private:
 
     //
     // The below struct and PhaseConfig are discussed in depth in the
-    // `ExternalProgramRunner.cpp` implementation file.
+    // `ExternalScriptRunner.cpp` implementation file.
     //
     // Note that since `PhaseLoop` uses pointers internally you don't need to
     // define anything about this type in this header, it just needs to be
@@ -123,7 +125,7 @@ private:
     /** @private */
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
-    std::string _setupCmd;
+    std::string _command;
 };
 
 }  // namespace genny::actor

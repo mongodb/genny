@@ -544,6 +544,16 @@ public:
             internal);
     }
 
+    auto namedOperation(const std::string& metricsName, ActorId id, bool internal = false) const {
+
+        return this->workload()._registry.operation(
+            this->_actor->operator[]("Name").to<std::string>(),
+            metricsName,
+            id,
+            _phaseNumber,
+            internal);
+    }
+
     const auto getPhaseNumber() const {
         return _phaseNumber;
     }

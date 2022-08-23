@@ -35,41 +35,30 @@ namespace bson_stream = bsoncxx::builder::stream;
 // an exercise in reading and testing your Actor. ⚠️
 //
 
-TEST_CASE_METHOD(MongoTestFixture, "ExternalProgramRunner successfully connects to a MongoDB instance.",
-          "[standalone][single_node_replset][three_node_replset][sharded][ExternalProgramRunner]") {
+TEST_CASE_METHOD(MongoTestFixture, "ExternalScriptRunner successfully executed.",
+          "[standalone][single_node_replset][three_node_replset][sharded][ExternalScriptRunner]") {
 
     dropAllDatabases();
     auto db = client.database("mydb");
 
     NodeSource nodes = NodeSource(R"(
         SchemaVersion: 2018-07-01
-        Clients:
-          Default:
-            URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
         Actors:
-        - Name: ExternalProgramRunner
-          Type: ExternalProgramRunner
-          Database: mydb
+        - Name: ShellScriptRunner
+          Type: ExternalScriptRunner
+          Command: "sh"
+          Threads: 5
           Phases:
-          - Repeat: 100
-            Collection: mycoll
-            Document: {foo: {^RandomInt: {min: 0, max: 100}}}
+          - Repeat: 5
+            MetricsName: MyMetrics
+            Script: "echo 1"
     )", __FILE__);
 
 
-    SECTION("Inserts documents into the database.") {
+    SECTION("Run external script.") {
         try {
             genny::ActorHelper ah(nodes.root(), 1);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-
-            auto builder = bson_stream::document{};
-            builder << "foo" << bson_stream::open_document
-                    << "$gte" << "0" << bson_stream::close_document
-                    << bson_stream::finalize;
-
-            auto count = db.collection("mycoll").count_documents(builder.view());
-            // TODO: fixme
-            REQUIRE(count == 101);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
             INFO("CAUGHT " << diagInfo);

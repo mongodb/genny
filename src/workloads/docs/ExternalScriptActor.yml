@@ -1,0 +1,32 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload was created to test an external script runner as per PERF-3198.
+  The execution stats of the script will be collected with metrics name "ExternalScript"
+  If the script writes and only writes an integer to stdout as result, the result will be collected to the specified metrics name (DefaultMetricsName as default)
+Actors:
+- Name: MongoshScriptRunner # Run JS script without connecting to a mongo db server
+  Type: ExternalScriptRunner
+  Command: "mongosh" # script command
+  Threads: 5
+  Phases:
+  - Repeat: 5
+    MetricsName: MyMetrics
+    Script: "console.log(1)"
+- Name: MongoshScriptRunnerWithDB # Connect to mongodb server and run JS script
+  Type: ExternalScriptRunner
+  Command: "mongosh" # script command
+  Threads: 5
+  Phases:
+  - Repeat: 5
+    MongoServerURI: "localhost:27017"
+    MetricsName: MyMetrics
+    Script: "db.collection.countDocuments({})"
+- Name: ShellScriptRunner # Run shell script
+  Type: ExternalScriptRunner
+  Command: "sh" # script command
+  Threads: 5
+  Phases:
+  - Repeat: 5
+    MetricsName: MyMetrics
+    Script: "echo 1"
