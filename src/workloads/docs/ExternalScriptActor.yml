@@ -6,20 +6,20 @@ Description: |
   If the script writes and only writes an integer to stdout as result, the result will be collected to the specified metrics name (DefaultMetricsName as default)
 Actors:
 # Run JS script without connecting to a mongo db server
-- Name: MongoshScriptRunner 
+- Name: MongoshScriptRunner
   Type: ExternalScriptRunner
   # script command
-  Command: "mongosh" 
+  Command: "mongosh"
   Threads: 5
   Phases:
   - Repeat: 5
     MetricsName: MyMetrics
     Script: "console.log(1)"
 # Connect to mongodb server and run JS script
-- Name: MongoshScriptRunnerWithDB 
+- Name: MongoshScriptRunnerWithDB
   Type: ExternalScriptRunner
   # script command
-  Command: "mongosh" 
+  Command: "mongosh"
   Threads: 5
   Phases:
   - Repeat: 5
@@ -27,10 +27,10 @@ Actors:
     MetricsName: MyMetrics
     Script: "db.collection.countDocuments({})"
 # Run shell script
-- Name: ShellScriptRunner 
+- Name: ShellScriptRunner
   Type: ExternalScriptRunner
   # script command
-  Command: "sh" 
+  Command: "sh"
   Threads: 5
   Phases:
   - Repeat: 5
