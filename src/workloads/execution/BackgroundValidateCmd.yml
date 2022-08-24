@@ -2,10 +2,9 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: |
   This workload tests the performance of a successful background validation of a collection with a
-  high load. This helps us visualize impact on throughput and latency. This workload has 4 phases.
+  high load. This helps us visualize impact on throughput and latency. This workload has 3 phases.
   First, we will create initial test data. Next, we will run a series of CRUD operations without
-  validation in the background. Then, we set maxValidateMBperSec to 1mbps in order to purposely
-  throttle background validation. Finally, we run a series of CRUD operations with background
+  validation in the background. Finally, we run a series of CRUD operations with background
   validation concurrently.
 Actors:
 - Name: InsertData
@@ -46,7 +45,6 @@ Actors:
     - keys: {loc2dSphere: "2dsphere"}
   - &Nop {Nop: true}
   - *Nop
-  - *Nop
 
 - Name: CrudWithoutValidation
   Type: CrudActor
@@ -71,14 +69,12 @@ Actors:
       OperationCommand:
         Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
   - *Nop
-  - *Nop
 
 - Name: CrudWithValidation
   Type: CrudActor
   Database: *db
   Threads: 25
   Phases:
-  - *Nop
   - *Nop
   - *Nop
   - Duration: 5 minutes
@@ -104,14 +100,6 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 1
-    Database: admin
-    Operation:
-      OperationMetricsName: MaxValidateMBperSec
-      OperationName: RunCommand
-      OperationCommand:
-        setParameter: 1
-        maxValidateMBperSec: 1
   - Duration: 5 minutes
     Database: *db
     Operation:
