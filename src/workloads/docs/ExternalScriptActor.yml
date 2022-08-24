@@ -5,26 +5,32 @@ Description: |
   The execution stats of the script will be collected with metrics name "ExternalScript"
   If the script writes and only writes an integer to stdout as result, the result will be collected to the specified metrics name (DefaultMetricsName as default)
 Actors:
-- Name: MongoshScriptRunner # Run JS script without connecting to a mongo db server
+# Run JS script without connecting to a mongo db server
+- Name: MongoshScriptRunner 
   Type: ExternalScriptRunner
-  Command: "mongosh" # script command
+  # script command
+  Command: "mongosh" 
   Threads: 5
   Phases:
   - Repeat: 5
     MetricsName: MyMetrics
     Script: "console.log(1)"
-- Name: MongoshScriptRunnerWithDB # Connect to mongodb server and run JS script
+# Connect to mongodb server and run JS script
+- Name: MongoshScriptRunnerWithDB 
   Type: ExternalScriptRunner
-  Command: "mongosh" # script command
+  # script command
+  Command: "mongosh" 
   Threads: 5
   Phases:
   - Repeat: 5
     MongoServerURI: "localhost:27017"
     MetricsName: MyMetrics
     Script: "db.collection.countDocuments({})"
-- Name: ShellScriptRunner # Run shell script
+# Run shell script
+- Name: ShellScriptRunner 
   Type: ExternalScriptRunner
-  Command: "sh" # script command
+  # script command
+  Command: "sh" 
   Threads: 5
   Phases:
   - Repeat: 5
