@@ -39,7 +39,7 @@ auto createPool(const std::string& name,
         poolFactory.setOptions(genny::v1::PoolFactory::kAccessOption, *accessOpts);
     }
 
-    poolFactory.setEncryptionContext(std::move(encryption));
+    poolFactory.setEncryptionContext(encryption);
     return poolFactory.makePool();
 }
 

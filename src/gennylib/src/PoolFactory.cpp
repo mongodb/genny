@@ -220,7 +220,7 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
             tlsOptions = tlsOptions.pem_file(pemKeyFile.data());
         }
         BOOST_LOG_TRIVIAL(debug) << "Adding tls options to pool...";
-        clientOptions.tls_opts(std::move(tlsOptions));
+        clientOptions.tls_opts(tlsOptions);
     }
 
     if (useEncryption) {
@@ -235,7 +235,7 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
         clientOptions.apm_opts(apmOptions);
     }
 
-    return mongocxx::options::pool{std::move(clientOptions)};
+    return mongocxx::options::pool(clientOptions);
 }
 
 std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
@@ -254,7 +254,7 @@ void PoolFactory::setOption(OptionType type, const std::string& option, std::str
 }
 
 void PoolFactory::setEncryptionContext(std::shared_ptr<EncryptionContext> encryption) {
-    _config->encryptionCtxt = std::move(encryption);
+    _config->encryptionCtxt = encryption;
 }
 
 void PoolFactory::overrideHosts(const std::set<std::string>& hosts) {
