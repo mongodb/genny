@@ -312,20 +312,20 @@ BrowserUsageByDistinctUserQuery: &BrowserUsageByDistinctUserQuery
       {"$match": {"metadata.browser": {"$exists": true}}},
       {
         "$addFields": {
-          "metadata.browser_name": {
+          "firstWordOfBrowser": {
             "$arrayElemAt": [{"$split": ["$metadata.browser", " "]}, 0]
           }
         }
       },
       {
         "$match": {
-          "metadata.browser_name": {"$nin": [null, "", "null"]},
+          "firstWordOfBrowser": {"$nin": [null, "", "null"]},
           "created_at": {"$gte": *DateForBrowserUsageByDistinctUserQuery}
         }
       },
       {
         "$group": {
-          "_id": {"__alias_0": "$metadata.browser_name"},
+          "_id": {"__alias_0": "$firstWordOfBrowser"},
           "__alias_1": {"$addToSet": "$user_id"}
         }
       },
