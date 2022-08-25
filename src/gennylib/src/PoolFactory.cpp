@@ -21,7 +21,6 @@
 #include <sstream>
 
 #include <boost/log/trivial.hpp>
-#include <mongocxx/options/auto_encryption.hpp>
 #include <mongocxx/uri.hpp>
 
 #include <gennylib/InvalidConfigurationException.hpp>
@@ -226,18 +225,8 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
 
     if (useEncryption) {
         const auto& encryption = *_config->encryptionCtxt;
-        mongocxx::options::auto_encryption autoEncryptionOptions{};
-        try {
-            autoEncryptionOptions.key_vault_namespace(encryption.getKeyVaultNamespace());
-            autoEncryptionOptions.kms_providers(encryption.generateKMSProvidersDoc());
-            autoEncryptionOptions.schema_map(encryption.generateSchemaMapDoc());
-            autoEncryptionOptions.extra_options(encryption.generateExtraOptionsDoc());
-        } catch (const InvalidConfigurationException& e) {
-            BOOST_LOG_TRIVIAL(error) << "Failed to set auto encryption options: " << e.what();
-            throw e;
-        }
         BOOST_LOG_TRIVIAL(debug) << "Adding encryption options to pool...";
-        clientOptions.auto_encryption_opts(std::move(autoEncryptionOptions));
+        clientOptions.auto_encryption_opts(encryption.getAutoEncryptionOptions());
     }
 
     if (_apmCallback) {

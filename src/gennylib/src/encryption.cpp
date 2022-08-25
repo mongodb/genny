@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/exception/exception.hpp>
@@ -81,20 +84,11 @@ struct FLEFieldPathNode {
  */
 std::vector<std::string> splitDottedPath(const std::string& path) {
     std::vector<std::string> parts;
-    for (size_t start = 0; start != std::string::npos;) {
-        auto dot = path.find('.', start);
-        if (dot != std::string::npos) {
-            parts.push_back(path.substr(start, dot - start));
-            start = dot + 1;
-        } else {
-            parts.push_back(path.substr(start));
-            start = dot;
-        }
-        if (parts.back().empty()) {
-            std::ostringstream ss;
-            ss << "Field path \"" << path << "\" is not a valid path";
-            throw genny::InvalidConfigurationException(ss.str());
-        }
+    boost::split(parts, path, boost::is_any_of("."));
+    if (std::any_of(parts.begin(), parts.end(), [](auto& part) { return part.empty(); })) {
+        std::ostringstream ss;
+        ss << "Field path \"" << path << "\" is not a valid path";
+        throw genny::InvalidConfigurationException(ss.str());
     }
     return parts;
 }
@@ -366,6 +360,15 @@ bsoncxx::document::value EncryptionContext::generateKMSProvidersDoc() const {
 
 std::pair<std::string, std::string> EncryptionContext::getKeyVaultNamespace() const {
     return {_keyVaultDb, _keyVaultColl};
+}
+
+mongocxx::options::auto_encryption EncryptionContext::getAutoEncryptionOptions() const {
+    mongocxx::options::auto_encryption opts{};
+    opts.key_vault_namespace(getKeyVaultNamespace());
+    opts.kms_providers(generateKMSProvidersDoc());
+    opts.schema_map(generateSchemaMapDoc());
+    opts.extra_options(generateExtraOptionsDoc());
+    return opts;
 }
 
 bsoncxx::document::value EncryptionContext::generateSchemaMapDoc() const {

@@ -23,6 +23,7 @@
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/types/bson_value/view_or_value.hpp>
 #include <mongocxx/client.hpp>
+#include <mongocxx/options/auto_encryption.hpp>
 #include <mongocxx/uri.hpp>
 
 #include <gennylib/InvalidConfigurationException.hpp>
@@ -167,6 +168,7 @@ public:
     EncryptionContext(const Node& encryptionOptsNode, std::string uri);
 
     std::pair<std::string, std::string> getKeyVaultNamespace() const;
+    mongocxx::options::auto_encryption getAutoEncryptionOptions() const;
 
     void setupKeyVault();
 
