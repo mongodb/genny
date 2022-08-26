@@ -157,14 +157,36 @@ public:
     void dropCollection(const mongocxx::client& client) const override;
 };
 
-class EncryptionContext {
+class EncryptionOptions {
 public:
-    // maps a namespace string to an EncryptedCollectionT type
+    // maps a namespace string to an EncryptedCollectionT unique pointer type
     template <class EncryptedCollectionT>
     using EncryptedCollectionMap =
         std::unordered_map<std::string, std::unique_ptr<EncryptedCollectionT>>;
 
-    EncryptionContext(){};
+    EncryptionOptions(const Node& encryptionOptsNode);
+
+    const std::string& keyVaultDb() const {
+        return _keyVaultDb;
+    }
+    const std::string& keyVaultColl() const {
+        return _keyVaultColl;
+    }
+    bool hasCollections() const {
+        return !_fleCollections.empty();
+    }
+    const EncryptedCollectionMap<FLEEncryptedCollection>& fleCollections() const {
+        return _fleCollections;
+    }
+
+private:
+    EncryptedCollectionMap<FLEEncryptedCollection> _fleCollections;
+    std::string _keyVaultDb;
+    std::string _keyVaultColl;
+};
+
+class EncryptionContext {
+public:
     EncryptionContext(const Node& encryptionOptsNode, std::string uri);
 
     std::pair<std::string, std::string> getKeyVaultNamespace() const;
@@ -178,10 +200,8 @@ public:
     bool encryptionEnabled() const;
 
 private:
-    EncryptedCollectionMap<FLEEncryptedCollection> _fleCollections;
+    std::unique_ptr<EncryptionOptions> _encryptionOpts;
     std::string _uri;
-    std::string _keyVaultDb;
-    std::string _keyVaultColl;
 };
 
 }  // namespace genny::v1

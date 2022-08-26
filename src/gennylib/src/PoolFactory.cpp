@@ -195,7 +195,6 @@ std::string PoolFactory::makeUri() const {
 mongocxx::options::pool PoolFactory::makeOptions() const {
     mongocxx::options::client clientOptions;
     auto useTls = _config->getFlag(OptionType::kQueryOption, "tls");
-    auto useEncryption = _config->encryptionCtxt && _config->encryptionCtxt->encryptionEnabled();
 
     if (useTls) {
         mongocxx::options::tls tlsOptions;
@@ -223,10 +222,9 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
         clientOptions.tls_opts(tlsOptions);
     }
 
-    if (useEncryption) {
-        const auto& encryption = *_config->encryptionCtxt;
+    if (_config->encryptionCtxt) {
         BOOST_LOG_TRIVIAL(debug) << "Adding encryption options to pool...";
-        clientOptions.auto_encryption_opts(encryption.getAutoEncryptionOptions());
+        clientOptions.auto_encryption_opts(_config->encryptionCtxt->getAutoEncryptionOptions());
     }
 
     if (_apmCallback) {

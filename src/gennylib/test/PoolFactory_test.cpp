@@ -288,20 +288,6 @@ TEST_CASE("PoolFactory behavior") {
         REQUIRE(pool);
     }
 
-    SECTION("Empty encryption context means encryption disabled") {
-        constexpr auto kSourceUri = "mongodb://127.0.0.1:27017";
-        auto factory = genny::v1::PoolFactory(kSourceUri);
-        auto encryption = std::make_shared<genny::v1::EncryptionContext>();
-
-        factory.setEncryptionContext(encryption);
-
-        auto factoryOpts = factory.makeOptions();
-        REQUIRE(factoryOpts.client_opts().auto_encryption_opts().has_value() == false);
-
-        auto pool = factory.makePool();
-        REQUIRE(pool);
-    }
-
     SECTION("PoolManager can construct multiple pools") {
         genny::v1::PoolManager manager{{}};
         genny::NodeSource ns{"Clients: {Default: {URI: 'mongodb:://localhost:27017'}, Foo: {URI: 'mongodb:://localhost:27017'}, Bar: {URI: 'mongodb:://localhost:27018'}}", ""};

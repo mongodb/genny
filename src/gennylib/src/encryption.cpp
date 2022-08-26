@@ -234,13 +234,7 @@ void FLEEncryptedCollection::dropCollection(const mongocxx::client& client) cons
     client[_database][_collection].drop();
 }
 
-EncryptionContext::EncryptionContext(const Node& encryptionOptsNode, std::string uri)
-    : _uri(std::move(uri)) {
-
-    if (!encryptionOptsNode) {
-        return;
-    }
-
+EncryptionOptions::EncryptionOptions(const Node& encryptionOptsNode) {
     _keyVaultDb = encryptionOptsNode["KeyVaultDatabase"].to<std::string>();
     _keyVaultColl = encryptionOptsNode["KeyVaultCollection"].to<std::string>();
 
@@ -290,15 +284,16 @@ EncryptionContext::EncryptionContext(const Node& encryptionOptsNode, std::string
     }
 }
 
-void EncryptionContext::setupKeyVault() {
-    if (!encryptionEnabled()) {
-        return;
-    }
+EncryptionContext::EncryptionContext(const Node& encryptionOptsNode, std::string uri)
+    : _uri(std::move(uri)),
+    _encryptionOpts(std::make_unique<EncryptionOptions>(encryptionOptsNode)) {}
 
+void EncryptionContext::setupKeyVault() {
     mongocxx::uri uri{_uri};
     mongocxx::client client{uri};
-    auto coll = client[_keyVaultDb][_keyVaultColl];
-    auto kvNs = _keyVaultDb + "." + _keyVaultColl;
+    auto kvNsPair = getKeyVaultNamespace();
+    auto coll = client[kvNsPair.first][kvNsPair.second];
+    auto kvNs = kvNsPair.first + "." + kvNsPair.second;
 
     BOOST_LOG_TRIVIAL(info) << "Setting up key vault at namespace '" << kvNs << "'";
 
@@ -315,7 +310,7 @@ void EncryptionContext::setupKeyVault() {
     coll.create_index(make_document(kvp("keyAltNames", 1)), indexOptions);
 
     mongocxx::options::client_encryption clientEncryptionOpts;
-    clientEncryptionOpts.key_vault_namespace(getKeyVaultNamespace());
+    clientEncryptionOpts.key_vault_namespace(kvNsPair);
     clientEncryptionOpts.kms_providers(generateKMSProvidersDoc());
     clientEncryptionOpts.key_vault_client(&client);
     mongocxx::client_encryption clientEncryption{std::move(clientEncryptionOpts)};
@@ -323,7 +318,7 @@ void EncryptionContext::setupKeyVault() {
     // For each encrypted collection, create the data keys to be used for encrypting
     // the values for each encrypted field in that collection. Update the keyIds of
     // each encrypted field with the UUID of the newly-created data key.
-    for (auto& [_, encryptedColl] : _fleCollections) {
+    for (auto& [_, encryptedColl] : _encryptionOpts->fleCollections()) {
         auto fieldsCopy = encryptedColl->fields();
         for (auto& [_, field] : fieldsCopy) {
             try {
@@ -359,7 +354,7 @@ bsoncxx::document::value EncryptionContext::generateKMSProvidersDoc() const {
 }
 
 std::pair<std::string, std::string> EncryptionContext::getKeyVaultNamespace() const {
-    return {_keyVaultDb, _keyVaultColl};
+    return {_encryptionOpts->keyVaultDb(), _encryptionOpts->keyVaultColl()};
 }
 
 mongocxx::options::auto_encryption EncryptionContext::getAutoEncryptionOptions() const {
@@ -373,7 +368,7 @@ mongocxx::options::auto_encryption EncryptionContext::getAutoEncryptionOptions()
 
 bsoncxx::document::value EncryptionContext::generateSchemaMapDoc() const {
     bsoncxx::builder::basic::document mapDoc{};
-    for (auto& [nss, coll] : _fleCollections) {
+    for (auto& [nss, coll] : _encryptionOpts->fleCollections()) {
         mapDoc.append(kvp(nss, [&](sub_document subdoc) { coll->appendSchema(subdoc); }));
     }
     auto v = mapDoc.extract();
@@ -383,10 +378,6 @@ bsoncxx::document::value EncryptionContext::generateSchemaMapDoc() const {
 
 bsoncxx::document::value EncryptionContext::generateExtraOptionsDoc() const {
     return make_document(kvp("mongocryptdBypassSpawn", true), kvp("cryptSharedLibRequired", false));
-}
-
-bool EncryptionContext::encryptionEnabled() const {
-    return !_fleCollections.empty();
 }
 
 }  // namespace genny::v1

@@ -44,6 +44,9 @@ auto createPool(const std::string& name,
 }
 
 auto setupEncryption(const std::string& name, const Node& context, bool dryRun) {
+    if (!context["Clients"][name]["EncryptionOptions"]) {
+        return std::shared_ptr<EncryptionContext>(nullptr);
+    }
     auto mongoUri = context["Clients"][name]["URI"].to<std::string>();
     auto encryption = std::make_shared<EncryptionContext>(
         context["Clients"][name]["EncryptionOptions"], std::move(mongoUri));
@@ -74,7 +77,9 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
 
     Pools& pools = lap.second;
 
-    if (!pools.encryption) {
+    if (pools.instances.empty() && !pools.encryption) {
+        // set up encryption context when the first instance of this
+        // pool is about to be created.
         pools.encryption = setupEncryption(name, context, _dryRun);
     }
 
