@@ -282,6 +282,9 @@ EncryptedField::EncryptedField(const Node& yaml) {
     _path = yaml.key();
     _type = yaml["type"].to<std::string>();
 
+    // verify path is valid
+    splitDottedPath(_path);
+
     if (yaml["keyId"]) {
         auto keyId = yaml["keyId"].to<std::string>();
         try {
@@ -306,7 +309,7 @@ FLEEncryptedField::FLEEncryptedField(const Node& yaml) : EncryptedField(yaml) {
         _algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic";
     } else {
         std::ostringstream ss;
-        ss << "'EncryptedField' has an invalid 'algorithm' value of '" << _algorithm
+        ss << "'" << _path << "' has an invalid 'algorithm' value of '" << _algorithm
            << "'. Valid values are 'random' and 'deterministic'.";
         throw InvalidConfigurationException(ss.str());
     }
@@ -398,7 +401,7 @@ EncryptionOptions::EncryptionOptions(const Node& encryptionOptsNode) {
         if (_fleCollections.find(nss) != _fleCollections.end()) {
             std::ostringstream ss;
             ss << "Collection with namespace '" << nss
-               << "' already exists in 'EncryptionCollections'";
+               << "' already exists in 'EncryptedCollections'";
             throw InvalidConfigurationException(ss.str());
         }
     };
