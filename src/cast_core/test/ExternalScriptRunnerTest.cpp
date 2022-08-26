@@ -46,10 +46,10 @@ TEST_CASE_METHOD(MongoTestFixture, "ExternalScriptRunner successfully executed."
         Actors:
         - Name: ShellScriptRunner
           Type: ExternalScriptRunner
-          Command: "sh"
           Threads: 5
           Phases:
           - Repeat: 5
+            Command: "sh"
             MetricsName: MyMetrics
             Script: "echo 1"
     )", __FILE__);
