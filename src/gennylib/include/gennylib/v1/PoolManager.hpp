@@ -21,12 +21,33 @@
 #include <string>
 #include <unordered_map>
 
+#include <bsoncxx/types/bson_value/value.hpp>
+#include <mongocxx/options/auto_encryption.hpp>
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/Node.hpp>
-#include <gennylib/encryption.hpp>
 
 namespace genny::v1 {
+
+class EncryptionOptions;
+class EncryptionContext {
+public:
+    EncryptionContext(const Node& encryptionOptsNode, std::string uri);
+    ~EncryptionContext();
+
+    std::pair<std::string, std::string> getKeyVaultNamespace() const;
+    mongocxx::options::auto_encryption getAutoEncryptionOptions() const;
+
+    void setupKeyVault();
+
+    bsoncxx::document::value generateKMSProvidersDoc() const;
+    bsoncxx::document::value generateSchemaMapDoc() const;
+    bsoncxx::document::value generateExtraOptionsDoc() const;
+
+private:
+    std::unique_ptr<EncryptionOptions> _encryptionOpts;
+    std::string _uri;
+};
 
 /**
  * A wrapper atop `PoolFactory` that manages a set of pools' lifecycles.

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
@@ -24,7 +24,182 @@
 #include <mongocxx/exception/operation_exception.hpp>
 
 #include <gennylib/InvalidConfigurationException.hpp>
-#include <gennylib/encryption.hpp>
+#include <gennylib/v1/PoolManager.hpp>
+
+namespace genny::v1 {
+
+enum class EncryptionType {
+    UNENCRYPTED = 0,
+    FLE,
+    QUERYABLE,
+};
+
+class EncryptedField {
+public:
+    EncryptedField(const Node& yaml);
+
+    EncryptedField& path(std::string path) {
+        _path = std::move(path);
+        return *this;
+    }
+    const std::string& path() const {
+        return _path;
+    }
+
+    EncryptedField& type(std::string type) {
+        _type = std::move(type);
+        return *this;
+    }
+    const std::string& type() const {
+        return _type;
+    }
+
+    EncryptedField& keyId(bsoncxx::types::bson_value::view_or_value keyId) {
+        _keyId = std::move(keyId);
+        return *this;
+    }
+    std::optional<bsoncxx::types::bson_value::view_or_value> keyId() const {
+        return _keyId;
+    }
+
+    virtual void appendEncryptInfo(bsoncxx::builder::basic::sub_document subdoc) const = 0;
+
+protected:
+    std::string _path;
+    std::string _type;
+    std::optional<bsoncxx::types::bson_value::view_or_value> _keyId;
+};
+
+class FLEEncryptedField : public EncryptedField {
+public:
+    inline static const std::string kParentNodeName = "FLEEncryptedFields";
+
+    FLEEncryptedField(const Node& yaml);
+
+    FLEEncryptedField& algorithm(std::string algorithm) {
+        _algorithm = std::move(algorithm);
+        return *this;
+    }
+    const std::string& algorithm() const {
+        return _algorithm;
+    }
+
+    void appendEncryptInfo(bsoncxx::builder::basic::sub_document subdoc) const override;
+
+private:
+    std::string _algorithm;
+};
+
+template <EncryptionType enctype, class FieldType>
+class EncryptedCollection {
+public:
+    using EncryptedFieldMap = std::unordered_map<std::string, FieldType>;
+
+    EncryptedCollection(const Node& yaml) : _type(enctype) {
+        _database = yaml["Database"].to<std::string>();
+        _collection = yaml["Collection"].to<std::string>();
+        if (_database.empty()) {
+            throw InvalidConfigurationException(
+                "'EncryptedCollection' requires a non-empty 'Database' name.");
+        }
+        if (_collection.empty()) {
+            throw InvalidConfigurationException(
+                "'EncryptedCollection' requires a non-empty 'Collection' name.");
+        }
+
+        const auto& fieldsNodeName = FieldType::kParentNodeName;
+
+        const auto& fieldsNode = yaml[fieldsNodeName];
+        if (fieldsNode) {
+            if (!fieldsNode.isMap()) {
+                throw InvalidConfigurationException("'" + fieldsNodeName +
+                                                    "' node must be of map type");
+            }
+            for (const auto& [_, v] : fieldsNode) {
+                addField(v.template to<FieldType>());
+            }
+        }
+    }
+
+    EncryptedCollection& database(std::string dbName) {
+        _database = std::move(dbName);
+        return *this;
+    }
+    const std::string& database() const {
+        return _database;
+    }
+
+    EncryptedCollection& collection(std::string collName) {
+        _collection = std::move(collName);
+        return *this;
+    }
+    const std::string& collection() const {
+        return _collection;
+    }
+
+    EncryptionType encryptionType() const {
+        return _type;
+    }
+
+    EncryptedCollection& fields(EncryptedFieldMap fields) {
+        _fields = std::move(fields);
+        return *this;
+    }
+    const EncryptedFieldMap& fields() const {
+        return _fields;
+    }
+
+    EncryptedCollection& addField(FieldType field) {
+        auto key = field.path();
+        _fields.emplace(std::move(key), std::move(field));
+        return *this;
+    }
+
+    virtual void createCollection(const mongocxx::client& client) const = 0;
+    virtual void dropCollection(const mongocxx::client& client) const = 0;
+
+protected:
+    std::string _database;
+    std::string _collection;
+    EncryptionType _type;
+    EncryptedFieldMap _fields;
+};
+
+class FLEEncryptedCollection : public EncryptedCollection<EncryptionType::FLE, FLEEncryptedField> {
+public:
+    FLEEncryptedCollection(const Node& yaml)
+        : EncryptedCollection<EncryptionType::FLE, FLEEncryptedField>(yaml) {}
+    void appendSchema(bsoncxx::builder::basic::sub_document builder) const;
+    void createCollection(const mongocxx::client& client) const override;
+    void dropCollection(const mongocxx::client& client) const override;
+};
+
+class EncryptionOptions {
+public:
+    // maps a namespace string to an EncryptedCollectionT unique pointer type
+    template <class EncryptedCollectionT>
+    using EncryptedCollectionMap =
+        std::unordered_map<std::string, std::unique_ptr<EncryptedCollectionT>>;
+
+    EncryptionOptions(const Node& encryptionOptsNode);
+
+    const std::string& keyVaultDb() const {
+        return _keyVaultDb;
+    }
+    const std::string& keyVaultColl() const {
+        return _keyVaultColl;
+    }
+    const EncryptedCollectionMap<FLEEncryptedCollection>& fleCollections() const {
+        return _fleCollections;
+    }
+
+private:
+    EncryptedCollectionMap<FLEEncryptedCollection> _fleCollections;
+    std::string _keyVaultDb;
+    std::string _keyVaultColl;
+};
+
+}  // namespace genny::v1
 
 namespace {
 
@@ -122,33 +297,6 @@ EncryptedField::EncryptedField(const Node& yaml) {
     }
 }
 
-EncryptedField& EncryptedField::path(std::string path) {
-    _path = std::move(path);
-    return *this;
-}
-
-const std::string& EncryptedField::path() const {
-    return _path;
-}
-
-EncryptedField& EncryptedField::type(std::string type) {
-    _type = std::move(type);
-    return *this;
-}
-
-const std::string& EncryptedField::type() const {
-    return _type;
-}
-
-EncryptedField& EncryptedField::keyId(view_or_value keyId) {
-    _keyId = std::move(keyId);
-    return *this;
-}
-
-std::optional<view_or_value> EncryptedField::keyId() const {
-    return _keyId;
-}
-
 FLEEncryptedField::FLEEncryptedField(const Node& yaml) : EncryptedField(yaml) {
     _algorithm = yaml["algorithm"].to<std::string>();
 
@@ -162,15 +310,6 @@ FLEEncryptedField::FLEEncryptedField(const Node& yaml) : EncryptedField(yaml) {
            << "'. Valid values are 'random' and 'deterministic'.";
         throw InvalidConfigurationException(ss.str());
     }
-}
-
-FLEEncryptedField& FLEEncryptedField::algorithm(std::string algorithm) {
-    _algorithm = std::move(algorithm);
-    return *this;
-}
-
-const std::string& FLEEncryptedField::algorithm() const {
-    return _algorithm;
 }
 
 void FLEEncryptedField::appendEncryptInfo(sub_document subdoc) const {
@@ -286,7 +425,9 @@ EncryptionOptions::EncryptionOptions(const Node& encryptionOptsNode) {
 
 EncryptionContext::EncryptionContext(const Node& encryptionOptsNode, std::string uri)
     : _uri(std::move(uri)),
-    _encryptionOpts(std::make_unique<EncryptionOptions>(encryptionOptsNode)) {}
+      _encryptionOpts(std::make_unique<EncryptionOptions>(encryptionOptsNode)) {}
+
+EncryptionContext::~EncryptionContext() {}
 
 void EncryptionContext::setupKeyVault() {
     mongocxx::uri uri{_uri};

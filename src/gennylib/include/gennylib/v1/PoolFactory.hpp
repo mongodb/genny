@@ -23,7 +23,6 @@
 #include <string>
 #include <string_view>
 
-#include <gennylib/encryption.hpp>
 #include <gennylib/v1/PoolManager.hpp>
 
 #include <mongocxx/pool.hpp>
