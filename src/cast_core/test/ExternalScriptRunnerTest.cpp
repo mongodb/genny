@@ -30,11 +30,6 @@ namespace {
 using namespace genny::testing;
 namespace bson_stream = bsoncxx::builder::stream;
 
-//
-// ⚠️ There is a "known" failure that you should find and fix as a bit of
-// an exercise in reading and testing your Actor. ⚠️
-//
-
 TEST_CASE_METHOD(MongoTestFixture, "ExternalScriptRunner successfully executed.",
           "[standalone][single_node_replset][three_node_replset][sharded][ExternalScriptRunner]") {
 
