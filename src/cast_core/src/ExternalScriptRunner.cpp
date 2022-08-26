@@ -14,41 +14,16 @@
 
 #include <cast_core/actors/ExternalScriptRunner.hpp>
 
-#include <memory>
-
-#include <yaml-cpp/yaml.h>
-
-#include <bsoncxx/json.hpp>
-
-#include <mongocxx/client.hpp>
-#include <mongocxx/collection.hpp>
-#include <mongocxx/database.hpp>
-
-#include <boost/log/trivial.hpp>
-#include <boost/throw_exception.hpp>
-
-#include <gennylib/Cast.hpp>
-#include <gennylib/MongoException.hpp>
-#include <gennylib/context.hpp>
-
-#include <value_generators/DocumentGenerator.hpp>
-
-#include <iostream>
-#include <string>
-#include <cstdlib>
-#include <boost/filesystem.hpp>
-#include <cstdio>
-#include <stdexcept>
-#include <array>
-#include <stdio.h>
-#include <unistd.h>
-
 namespace genny::actor {
 
 struct ExternalScriptRunner::PhaseConfig {
     std::string script;
 
     std::string mongoServerURI;
+
+    std::string command;
+
+    std::string programCommand;
 
     // Record data retruned by the script
     metrics::Operation operation;
@@ -58,23 +33,42 @@ struct ExternalScriptRunner::PhaseConfig {
 
     PhaseConfig(PhaseContext& phaseContext, ActorId id)
         : script{phaseContext["Script"].to<std::string>()},
+          // TODO: try to get the default server URI from DSI
           mongoServerURI{phaseContext["MongoServerURI"].maybe<std::string>().value_or("--nodb")},
+          command{phaseContext["Command"].to<std::string>()},
+          // This metric tracks the execution time of the script. User can define the MetricsName in
+          // the workload yaml file
           operation{phaseContext.operation("DefaultMetricsName", id)},
-          scriptOperation{phaseContext.namedOperation("ExternalScript", id)} {}
+          // This metric tracks the output of the external script.
+          // The external script can write a integer to the stdout and this actor will log it as ms.
+          // If nothing is written or the output can't be parsed as integer, this metric will be
+          // ignored.
+          scriptOperation{phaseContext.namedOperation("ExternalScript", id)} {
+
+            // The script should not have double quotes
+            assert(script.find("\"") == std::string::npos);
+            if (command == "mongosh") {
+                programCommand = "mongosh " + mongoServerURI + " --quiet --eval \"" + script + "\"";
+            } else if (command == "sh") {
+                programCommand = "sh -c \"" + script + "\"";
+            } else {
+                throw std::runtime_error("Script type " + command + " is not supported.");
+            }
+        }
 };
 
 /**
  * @brief Execute external script
- * 
- * @param cmd 
- * @return std::string 
+ *
+ * @param cmd
+ * @return std::string
  */
 std::string ExternalScriptRunner::exec(const char* cmd) {
     std::array<char, 128> buffer;
     std::string result;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
     if (!pipe) {
-        throw std::runtime_error("popen() failed!");
+        throw std::runtime_error("Execution of command " + std::string(cmd) + " failed!");
     }
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
@@ -88,39 +82,24 @@ void ExternalScriptRunner::run() {
 
     for (auto&& config : _loop) {
 
-        std::string programCommand = "";
-        
-        if (_command == "mongosh") {
-            programCommand = "mongosh " + config->mongoServerURI + " --quiet --eval \"" + config->script + "\"";
-        }
-        else if (_command == "sh") {
-            programCommand = "sh -c \"" + config->script + "\"";
-        }
-        else {
-            throw std::runtime_error("Script type " + _command + " is not supported.");
-        }
-        
-        BOOST_LOG_TRIVIAL(info) << "ExternalScriptRunner running "
-                                << programCommand;
+        BOOST_LOG_TRIVIAL(debug) << "ExternalScriptRunner running " << config->programCommand;
 
         for (const auto&& _ : config) {
 
             // Execute the script and read result from stdout
             auto ctx = config->scriptOperation.start();
-            const char* programCmdPtr = &*programCommand.begin();
+            const char* programCmdPtr = const_cast<char*>(config->programCommand.c_str());
             std::string result = exec(programCmdPtr);
             ctx.success();
 
             try {
-
                 // If the result from stdout can be parsed as integer, report the operation metrics
                 // Otherwise, ignore the result
                 int num = std::stoi(result);
-                config->operation.report(metrics::clock::now(),
-                                              std::chrono::milliseconds{num}); 
-            }
-            catch(std::exception& err) {
-                BOOST_LOG_TRIVIAL(info) << err.what();
+                config->operation.report(metrics::clock::now(), std::chrono::milliseconds{num});
+            } catch (std::exception& err) {
+                BOOST_LOG_TRIVIAL(debug) << "Command " << config->programCommand
+                                         << " wrote non-integer output: " << result;
             }
         }
     }
@@ -128,9 +107,7 @@ void ExternalScriptRunner::run() {
 
 ExternalScriptRunner::ExternalScriptRunner(genny::ActorContext& context)
     // These are the attributes for the actor.
-    : Actor{context},
-      _command{std::move(context.get("Command").maybe<std::string>().value_or(""))},
-      _loop{context, ExternalScriptRunner::id()} {}
+    : Actor{context}, _loop{context, ExternalScriptRunner::id()} {}
 
 namespace {
 auto registerExternalScriptRunner = Cast::registerDefault<ExternalScriptRunner>();

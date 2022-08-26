@@ -8,31 +8,31 @@ Actors:
 # Run JS script without connecting to a mongo db server
 - Name: MongoshScriptRunner
   Type: ExternalScriptRunner
-  # script command
-  Command: "mongosh"
   Threads: 5
   Phases:
   - Repeat: 5
+    # script command
+    Command: "mongosh"
     MetricsName: MyMetrics
     Script: "console.log(1)"
 # Connect to mongodb server and run JS script
 - Name: MongoshScriptRunnerWithDB
   Type: ExternalScriptRunner
-  # script command
-  Command: "mongosh"
   Threads: 5
   Phases:
   - Repeat: 5
+    # script command
+    Command: "mongosh"
     MongoServerURI: "localhost:27017"
     MetricsName: MyMetrics
     Script: "db.collection.countDocuments({})"
 # Run shell script
 - Name: ShellScriptRunner
   Type: ExternalScriptRunner
-  # script command
-  Command: "sh"
   Threads: 5
   Phases:
   - Repeat: 5
+    # script command
+    Command: "sh"
     MetricsName: MyMetrics
     Script: "echo 1"

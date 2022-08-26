@@ -544,6 +544,19 @@ public:
             internal);
     }
 
+    /**
+     * @brief [Experimental] Create a metrics::Operation with the specified name
+     * 
+     * The current operation() function will always return the same operation if MetricsName is specified. 
+     * According to the HelloWorld actor, it seems not the expected behavior
+     * But it is too risky to change the behavior without thoroughly exam the impact
+     * Created TIG-4328 to track this work
+     * 
+     * @param metricsName name of the metric
+     * @param id 
+     * @param internal 
+     * @return auto 
+     */
     auto namedOperation(const std::string& metricsName, ActorId id, bool internal = false) const {
 
         return this->workload()._registry.operation(
