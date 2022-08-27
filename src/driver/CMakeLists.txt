@@ -21,6 +21,8 @@ CreateGennyTargets(
         cast_core
         gennylib
         Boost::program_options
-    TEST_DEPENDS    testlib
+    TEST_DEPENDS
+        testlib
+        Catch2::Catch2WithMain
     EXECUTABLE      genny_core
 )

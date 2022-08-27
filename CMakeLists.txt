@@ -59,9 +59,10 @@ if(NOT Boost_USE_STATIC_LIBS)
 endif()
 
 # Prevent cmake from finding system boost instead of toolchain boost.
-set(Boost_NO_BOOST_CMAKE ON)
-set(Boost_USE_MULTITHREADED ON)
+set(Boost_NO_BOOST_CMAKE     ON )
+set(Boost_USE_MULTITHREADED  ON )
 set(Boost_USE_STATIC_RUNTIME OFF)
+set(Boost_NO_SYSTEM_PATHS    ON )
 find_package(
         Boost
         1.75
@@ -77,6 +78,15 @@ find_package(
 # <yaml-cpp>
 find_package(yaml-cpp CONFIG REQUIRED)
 # <yaml-cpp>
+
+# <catch2>
+find_package(Catch2 REQUIRED)
+# </catch2>
+
+# <mongo-cxx-driver>
+find_package(mongocxx CONFIG REQUIRED)
+find_package(bsoncxx CONFIG REQUIRED)
+# <mongo-cxx-driver>
 
 # Required CMAKE options
 set(CMAKE_CXX_STANDARD 17)

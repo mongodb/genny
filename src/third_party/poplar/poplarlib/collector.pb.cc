@@ -14,169 +14,156 @@
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
-extern PROTOBUF_INTERNAL_EXPORT_google_2fprotobuf_2fduration_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Duration_google_2fprotobuf_2fduration_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_google_2fprotobuf_2ftimestamp_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Timestamp_google_2fprotobuf_2ftimestamp_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_collector_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_EventMetricsCounters_collector_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_collector_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_EventMetricsGauges_collector_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_collector_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_EventMetricsTimers_collector_2eproto;
+
+PROTOBUF_PRAGMA_INIT_SEG
+
+namespace _pb = ::PROTOBUF_NAMESPACE_ID;
+namespace _pbi = _pb::internal;
+
 namespace poplar {
-class CollectorNameDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<CollectorName> _instance;
-} _CollectorName_default_instance_;
-class EventMetricsDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<EventMetrics> _instance;
-} _EventMetrics_default_instance_;
-class EventMetricsCountersDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<EventMetricsCounters> _instance;
-} _EventMetricsCounters_default_instance_;
-class EventMetricsTimersDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<EventMetricsTimers> _instance;
-} _EventMetricsTimers_default_instance_;
-class EventMetricsGaugesDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<EventMetricsGauges> _instance;
-} _EventMetricsGauges_default_instance_;
+PROTOBUF_CONSTEXPR CollectorName::CollectorName(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct CollectorNameDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR CollectorNameDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~CollectorNameDefaultTypeInternal() {}
+  union {
+    CollectorName _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CollectorNameDefaultTypeInternal _CollectorName_default_instance_;
+PROTOBUF_CONSTEXPR EventMetrics::EventMetrics(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.time_)*/nullptr
+  , /*decltype(_impl_.counters_)*/nullptr
+  , /*decltype(_impl_.timers_)*/nullptr
+  , /*decltype(_impl_.gauges_)*/nullptr
+  , /*decltype(_impl_.id_)*/int64_t{0}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct EventMetricsDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR EventMetricsDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~EventMetricsDefaultTypeInternal() {}
+  union {
+    EventMetrics _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 EventMetricsDefaultTypeInternal _EventMetrics_default_instance_;
+PROTOBUF_CONSTEXPR EventMetricsCounters::EventMetricsCounters(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.number_)*/int64_t{0}
+  , /*decltype(_impl_.ops_)*/int64_t{0}
+  , /*decltype(_impl_.size_)*/int64_t{0}
+  , /*decltype(_impl_.errors_)*/int64_t{0}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct EventMetricsCountersDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR EventMetricsCountersDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~EventMetricsCountersDefaultTypeInternal() {}
+  union {
+    EventMetricsCounters _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 EventMetricsCountersDefaultTypeInternal _EventMetricsCounters_default_instance_;
+PROTOBUF_CONSTEXPR EventMetricsTimers::EventMetricsTimers(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.total_)*/nullptr
+  , /*decltype(_impl_.duration_)*/nullptr
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct EventMetricsTimersDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR EventMetricsTimersDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~EventMetricsTimersDefaultTypeInternal() {}
+  union {
+    EventMetricsTimers _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 EventMetricsTimersDefaultTypeInternal _EventMetricsTimers_default_instance_;
+PROTOBUF_CONSTEXPR EventMetricsGauges::EventMetricsGauges(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.state_)*/int64_t{0}
+  , /*decltype(_impl_.workers_)*/int64_t{0}
+  , /*decltype(_impl_.failed_)*/false
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct EventMetricsGaugesDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR EventMetricsGaugesDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~EventMetricsGaugesDefaultTypeInternal() {}
+  union {
+    EventMetricsGauges _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 EventMetricsGaugesDefaultTypeInternal _EventMetricsGauges_default_instance_;
 }  // namespace poplar
-static void InitDefaultsscc_info_CollectorName_collector_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
+static ::_pb::Metadata file_level_metadata_collector_2eproto[5];
+static constexpr ::_pb::EnumDescriptor const** file_level_enum_descriptors_collector_2eproto = nullptr;
+static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_collector_2eproto = nullptr;
 
-  {
-    void* ptr = &::poplar::_CollectorName_default_instance_;
-    new (ptr) ::poplar::CollectorName();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::poplar::CollectorName::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_CollectorName_collector_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_CollectorName_collector_2eproto}, {}};
-
-static void InitDefaultsscc_info_EventMetrics_collector_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::poplar::_EventMetrics_default_instance_;
-    new (ptr) ::poplar::EventMetrics();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::poplar::EventMetrics::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<4> scc_info_EventMetrics_collector_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 4, 0, InitDefaultsscc_info_EventMetrics_collector_2eproto}, {
-      &scc_info_Timestamp_google_2fprotobuf_2ftimestamp_2eproto.base,
-      &scc_info_EventMetricsCounters_collector_2eproto.base,
-      &scc_info_EventMetricsTimers_collector_2eproto.base,
-      &scc_info_EventMetricsGauges_collector_2eproto.base,}};
-
-static void InitDefaultsscc_info_EventMetricsCounters_collector_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::poplar::_EventMetricsCounters_default_instance_;
-    new (ptr) ::poplar::EventMetricsCounters();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::poplar::EventMetricsCounters::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_EventMetricsCounters_collector_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_EventMetricsCounters_collector_2eproto}, {}};
-
-static void InitDefaultsscc_info_EventMetricsGauges_collector_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::poplar::_EventMetricsGauges_default_instance_;
-    new (ptr) ::poplar::EventMetricsGauges();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::poplar::EventMetricsGauges::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_EventMetricsGauges_collector_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_EventMetricsGauges_collector_2eproto}, {}};
-
-static void InitDefaultsscc_info_EventMetricsTimers_collector_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::poplar::_EventMetricsTimers_default_instance_;
-    new (ptr) ::poplar::EventMetricsTimers();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::poplar::EventMetricsTimers::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_EventMetricsTimers_collector_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_EventMetricsTimers_collector_2eproto}, {
-      &scc_info_Duration_google_2fprotobuf_2fduration_2eproto.base,}};
-
-static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_collector_2eproto[5];
-static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_collector_2eproto = nullptr;
-static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_collector_2eproto = nullptr;
-
-const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_collector_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+const uint32_t TableStruct_collector_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::poplar::CollectorName, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::poplar::CollectorName, name_),
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::poplar::CollectorName, _impl_.name_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, name_),
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, time_),
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, id_),
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, counters_),
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, timers_),
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, gauges_),
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, _impl_.name_),
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, _impl_.time_),
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, _impl_.id_),
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, _impl_.counters_),
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, _impl_.timers_),
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetrics, _impl_.gauges_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsCounters, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsCounters, number_),
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsCounters, ops_),
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsCounters, size_),
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsCounters, errors_),
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsCounters, _impl_.number_),
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsCounters, _impl_.ops_),
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsCounters, _impl_.size_),
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsCounters, _impl_.errors_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsTimers, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsTimers, total_),
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsTimers, duration_),
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsTimers, _impl_.total_),
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsTimers, _impl_.duration_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsGauges, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsGauges, state_),
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsGauges, workers_),
-  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsGauges, failed_),
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsGauges, _impl_.state_),
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsGauges, _impl_.workers_),
+  PROTOBUF_FIELD_OFFSET(::poplar::EventMetricsGauges, _impl_.failed_),
 };
-static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, -1, sizeof(::poplar::CollectorName)},
-  { 6, -1, sizeof(::poplar::EventMetrics)},
-  { 17, -1, sizeof(::poplar::EventMetricsCounters)},
-  { 26, -1, sizeof(::poplar::EventMetricsTimers)},
-  { 33, -1, sizeof(::poplar::EventMetricsGauges)},
+static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+  { 0, -1, -1, sizeof(::poplar::CollectorName)},
+  { 7, -1, -1, sizeof(::poplar::EventMetrics)},
+  { 19, -1, -1, sizeof(::poplar::EventMetricsCounters)},
+  { 29, -1, -1, sizeof(::poplar::EventMetricsTimers)},
+  { 37, -1, -1, sizeof(::poplar::EventMetricsGauges)},
 };
 
-static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_CollectorName_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_EventMetrics_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_EventMetricsCounters_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_EventMetricsTimers_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_EventMetricsGauges_default_instance_),
+static const ::_pb::Message* const file_default_instances[] = {
+  &::poplar::_CollectorName_default_instance_._instance,
+  &::poplar::_EventMetrics_default_instance_._instance,
+  &::poplar::_EventMetricsCounters_default_instance_._instance,
+  &::poplar::_EventMetricsTimers_default_instance_._instance,
+  &::poplar::_EventMetricsGauges_default_instance_._instance,
 };
 
 const char descriptor_table_protodef_collector_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
@@ -206,132 +193,148 @@ const char descriptor_table_protodef_collector_2eproto[] PROTOBUF_SECTION_VARIAB
   "plar.PoplarID\032\026.poplar.PoplarResponseB\nZ"
   "\010internalb\006proto3"
   ;
-static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_collector_2eproto_deps[3] = {
+static const ::_pbi::DescriptorTable* const descriptor_table_collector_2eproto_deps[3] = {
   &::descriptor_table_google_2fprotobuf_2fduration_2eproto,
   &::descriptor_table_google_2fprotobuf_2ftimestamp_2eproto,
   &::descriptor_table_poplar_2eproto,
 };
-static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_collector_2eproto_sccs[5] = {
-  &scc_info_CollectorName_collector_2eproto.base,
-  &scc_info_EventMetrics_collector_2eproto.base,
-  &scc_info_EventMetricsCounters_collector_2eproto.base,
-  &scc_info_EventMetricsGauges_collector_2eproto.base,
-  &scc_info_EventMetricsTimers_collector_2eproto.base,
+static ::_pbi::once_flag descriptor_table_collector_2eproto_once;
+const ::_pbi::DescriptorTable descriptor_table_collector_2eproto = {
+    false, false, 977, descriptor_table_protodef_collector_2eproto,
+    "collector.proto",
+    &descriptor_table_collector_2eproto_once, descriptor_table_collector_2eproto_deps, 3, 5,
+    schemas, file_default_instances, TableStruct_collector_2eproto::offsets,
+    file_level_metadata_collector_2eproto, file_level_enum_descriptors_collector_2eproto,
+    file_level_service_descriptors_collector_2eproto,
 };
-static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_collector_2eproto_once;
-static bool descriptor_table_collector_2eproto_initialized = false;
-const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_collector_2eproto = {
-  &descriptor_table_collector_2eproto_initialized, descriptor_table_protodef_collector_2eproto, "collector.proto", 977,
-  &descriptor_table_collector_2eproto_once, descriptor_table_collector_2eproto_sccs, descriptor_table_collector_2eproto_deps, 5, 3,
-  schemas, file_default_instances, TableStruct_collector_2eproto::offsets,
-  file_level_metadata_collector_2eproto, 5, file_level_enum_descriptors_collector_2eproto, file_level_service_descriptors_collector_2eproto,
-};
+PROTOBUF_ATTRIBUTE_WEAK const ::_pbi::DescriptorTable* descriptor_table_collector_2eproto_getter() {
+  return &descriptor_table_collector_2eproto;
+}
 
 // Force running AddDescriptors() at dynamic initialization time.
-static bool dynamic_init_dummy_collector_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_collector_2eproto), true);
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY2 static ::_pbi::AddDescriptorsRunner dynamic_init_dummy_collector_2eproto(&descriptor_table_collector_2eproto);
 namespace poplar {
 
 // ===================================================================
 
-void CollectorName::InitAsDefaultInstance() {
-}
 class CollectorName::_Internal {
  public:
 };
 
-CollectorName::CollectorName()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:poplar.CollectorName)
+CollectorName::CollectorName(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:poplar.CollectorName)
 }
 CollectorName::CollectorName(const CollectorName& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  CollectorName* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.name_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (!from._internal_name().empty()) {
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+    _this->_impl_.name_.Set(from._internal_name(), 
+      _this->GetArenaForAllocation());
   }
   // @@protoc_insertion_point(copy_constructor:poplar.CollectorName)
 }
 
-void CollectorName::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_CollectorName_collector_2eproto.base);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void CollectorName::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.name_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 CollectorName::~CollectorName() {
   // @@protoc_insertion_point(destructor:poplar.CollectorName)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void CollectorName::SharedDtor() {
-  name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void CollectorName::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.name_.Destroy();
 }
 
 void CollectorName::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const CollectorName& CollectorName::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_CollectorName_collector_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void CollectorName::Clear() {
 // @@protoc_insertion_point(message_clear_start:poplar.CollectorName)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  name_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  _internal_metadata_.Clear();
+  _impl_.name_.ClearToEmpty();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* CollectorName::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* CollectorName::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // string name = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_name();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "poplar.CollectorName.name"));
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+          CHK_(::_pbi::VerifyUTF8(str, "poplar.CollectorName.name"));
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* CollectorName::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* CollectorName::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:poplar.CollectorName)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string name = 1;
-  if (this->name().size() > 0) {
+  if (!this->_internal_name().empty()) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
@@ -341,8 +344,8 @@ failure:
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:poplar.CollectorName)
   return target;
@@ -352,59 +355,39 @@ size_t CollectorName::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:poplar.CollectorName)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // string name = 1;
-  if (this->name().size() > 0) {
+  if (!this->_internal_name().empty()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_name());
   }
 
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
-        _internal_metadata_, total_size, &_cached_size_);
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
-void CollectorName::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:poplar.CollectorName)
-  GOOGLE_DCHECK_NE(&from, this);
-  const CollectorName* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<CollectorName>(
-          &from);
-  if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:poplar.CollectorName)
-    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:poplar.CollectorName)
-    MergeFrom(*source);
-  }
-}
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData CollectorName::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    CollectorName::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*CollectorName::GetClassData() const { return &_class_data_; }
 
-void CollectorName::MergeFrom(const CollectorName& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:poplar.CollectorName)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+
+void CollectorName::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<CollectorName*>(&to_msg);
+  auto& from = static_cast<const CollectorName&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:poplar.CollectorName)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.name().size() > 0) {
-
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+  if (!from._internal_name().empty()) {
+    _this->_internal_set_name(from._internal_name());
   }
-}
-
-void CollectorName::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:poplar.CollectorName)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void CollectorName::CopyFrom(const CollectorName& from) {
@@ -420,231 +403,251 @@ bool CollectorName::IsInitialized() const {
 
 void CollectorName::InternalSwap(CollectorName* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.name_, lhs_arena,
+      &other->_impl_.name_, rhs_arena
+  );
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata CollectorName::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_collector_2eproto_getter, &descriptor_table_collector_2eproto_once,
+      file_level_metadata_collector_2eproto[0]);
 }
-
 
 // ===================================================================
 
-void EventMetrics::InitAsDefaultInstance() {
-  ::poplar::_EventMetrics_default_instance_._instance.get_mutable()->time_ = const_cast< PROTOBUF_NAMESPACE_ID::Timestamp*>(
-      PROTOBUF_NAMESPACE_ID::Timestamp::internal_default_instance());
-  ::poplar::_EventMetrics_default_instance_._instance.get_mutable()->counters_ = const_cast< ::poplar::EventMetricsCounters*>(
-      ::poplar::EventMetricsCounters::internal_default_instance());
-  ::poplar::_EventMetrics_default_instance_._instance.get_mutable()->timers_ = const_cast< ::poplar::EventMetricsTimers*>(
-      ::poplar::EventMetricsTimers::internal_default_instance());
-  ::poplar::_EventMetrics_default_instance_._instance.get_mutable()->gauges_ = const_cast< ::poplar::EventMetricsGauges*>(
-      ::poplar::EventMetricsGauges::internal_default_instance());
-}
 class EventMetrics::_Internal {
  public:
-  static const PROTOBUF_NAMESPACE_ID::Timestamp& time(const EventMetrics* msg);
+  static const ::PROTOBUF_NAMESPACE_ID::Timestamp& time(const EventMetrics* msg);
   static const ::poplar::EventMetricsCounters& counters(const EventMetrics* msg);
   static const ::poplar::EventMetricsTimers& timers(const EventMetrics* msg);
   static const ::poplar::EventMetricsGauges& gauges(const EventMetrics* msg);
 };
 
-const PROTOBUF_NAMESPACE_ID::Timestamp&
+const ::PROTOBUF_NAMESPACE_ID::Timestamp&
 EventMetrics::_Internal::time(const EventMetrics* msg) {
-  return *msg->time_;
+  return *msg->_impl_.time_;
 }
 const ::poplar::EventMetricsCounters&
 EventMetrics::_Internal::counters(const EventMetrics* msg) {
-  return *msg->counters_;
+  return *msg->_impl_.counters_;
 }
 const ::poplar::EventMetricsTimers&
 EventMetrics::_Internal::timers(const EventMetrics* msg) {
-  return *msg->timers_;
+  return *msg->_impl_.timers_;
 }
 const ::poplar::EventMetricsGauges&
 EventMetrics::_Internal::gauges(const EventMetrics* msg) {
-  return *msg->gauges_;
+  return *msg->_impl_.gauges_;
 }
 void EventMetrics::clear_time() {
-  if (GetArenaNoVirtual() == nullptr && time_ != nullptr) {
-    delete time_;
+  if (GetArenaForAllocation() == nullptr && _impl_.time_ != nullptr) {
+    delete _impl_.time_;
   }
-  time_ = nullptr;
+  _impl_.time_ = nullptr;
 }
-EventMetrics::EventMetrics()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:poplar.EventMetrics)
+EventMetrics::EventMetrics(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:poplar.EventMetrics)
 }
 EventMetrics::EventMetrics(const EventMetrics& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  EventMetrics* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.name_){}
+    , decltype(_impl_.time_){nullptr}
+    , decltype(_impl_.counters_){nullptr}
+    , decltype(_impl_.timers_){nullptr}
+    , decltype(_impl_.gauges_){nullptr}
+    , decltype(_impl_.id_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (!from._internal_name().empty()) {
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+    _this->_impl_.name_.Set(from._internal_name(), 
+      _this->GetArenaForAllocation());
   }
   if (from._internal_has_time()) {
-    time_ = new PROTOBUF_NAMESPACE_ID::Timestamp(*from.time_);
-  } else {
-    time_ = nullptr;
+    _this->_impl_.time_ = new ::PROTOBUF_NAMESPACE_ID::Timestamp(*from._impl_.time_);
   }
   if (from._internal_has_counters()) {
-    counters_ = new ::poplar::EventMetricsCounters(*from.counters_);
-  } else {
-    counters_ = nullptr;
+    _this->_impl_.counters_ = new ::poplar::EventMetricsCounters(*from._impl_.counters_);
   }
   if (from._internal_has_timers()) {
-    timers_ = new ::poplar::EventMetricsTimers(*from.timers_);
-  } else {
-    timers_ = nullptr;
+    _this->_impl_.timers_ = new ::poplar::EventMetricsTimers(*from._impl_.timers_);
   }
   if (from._internal_has_gauges()) {
-    gauges_ = new ::poplar::EventMetricsGauges(*from.gauges_);
-  } else {
-    gauges_ = nullptr;
+    _this->_impl_.gauges_ = new ::poplar::EventMetricsGauges(*from._impl_.gauges_);
   }
-  id_ = from.id_;
+  _this->_impl_.id_ = from._impl_.id_;
   // @@protoc_insertion_point(copy_constructor:poplar.EventMetrics)
 }
 
-void EventMetrics::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_EventMetrics_collector_2eproto.base);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  ::memset(&time_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&id_) -
-      reinterpret_cast<char*>(&time_)) + sizeof(id_));
+inline void EventMetrics::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.name_){}
+    , decltype(_impl_.time_){nullptr}
+    , decltype(_impl_.counters_){nullptr}
+    , decltype(_impl_.timers_){nullptr}
+    , decltype(_impl_.gauges_){nullptr}
+    , decltype(_impl_.id_){int64_t{0}}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 EventMetrics::~EventMetrics() {
   // @@protoc_insertion_point(destructor:poplar.EventMetrics)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void EventMetrics::SharedDtor() {
-  name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (this != internal_default_instance()) delete time_;
-  if (this != internal_default_instance()) delete counters_;
-  if (this != internal_default_instance()) delete timers_;
-  if (this != internal_default_instance()) delete gauges_;
+inline void EventMetrics::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.name_.Destroy();
+  if (this != internal_default_instance()) delete _impl_.time_;
+  if (this != internal_default_instance()) delete _impl_.counters_;
+  if (this != internal_default_instance()) delete _impl_.timers_;
+  if (this != internal_default_instance()) delete _impl_.gauges_;
 }
 
 void EventMetrics::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const EventMetrics& EventMetrics::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_EventMetrics_collector_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void EventMetrics::Clear() {
 // @@protoc_insertion_point(message_clear_start:poplar.EventMetrics)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  name_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (GetArenaNoVirtual() == nullptr && time_ != nullptr) {
-    delete time_;
+  _impl_.name_.ClearToEmpty();
+  if (GetArenaForAllocation() == nullptr && _impl_.time_ != nullptr) {
+    delete _impl_.time_;
   }
-  time_ = nullptr;
-  if (GetArenaNoVirtual() == nullptr && counters_ != nullptr) {
-    delete counters_;
+  _impl_.time_ = nullptr;
+  if (GetArenaForAllocation() == nullptr && _impl_.counters_ != nullptr) {
+    delete _impl_.counters_;
   }
-  counters_ = nullptr;
-  if (GetArenaNoVirtual() == nullptr && timers_ != nullptr) {
-    delete timers_;
+  _impl_.counters_ = nullptr;
+  if (GetArenaForAllocation() == nullptr && _impl_.timers_ != nullptr) {
+    delete _impl_.timers_;
   }
-  timers_ = nullptr;
-  if (GetArenaNoVirtual() == nullptr && gauges_ != nullptr) {
-    delete gauges_;
+  _impl_.timers_ = nullptr;
+  if (GetArenaForAllocation() == nullptr && _impl_.gauges_ != nullptr) {
+    delete _impl_.gauges_;
   }
-  gauges_ = nullptr;
-  id_ = PROTOBUF_LONGLONG(0);
-  _internal_metadata_.Clear();
+  _impl_.gauges_ = nullptr;
+  _impl_.id_ = int64_t{0};
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* EventMetrics::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* EventMetrics::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // string name = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_name();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "poplar.EventMetrics.name"));
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+          CHK_(::_pbi::VerifyUTF8(str, "poplar.EventMetrics.name"));
+        } else
+          goto handle_unusual;
         continue;
       // .google.protobuf.Timestamp time = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ctx->ParseMessage(_internal_mutable_time(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // int64 id = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
-          id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // .poplar.EventMetricsCounters counters = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_counters(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // .poplar.EventMetricsTimers timers = 5;
       case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
           ptr = ctx->ParseMessage(_internal_mutable_timers(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // .poplar.EventMetricsGauges gauges = 6;
       case 6:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 50)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
           ptr = ctx->ParseMessage(_internal_mutable_gauges(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* EventMetrics::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* EventMetrics::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:poplar.EventMetrics)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string name = 1;
-  if (this->name().size() > 0) {
+  if (!this->_internal_name().empty()) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
@@ -654,46 +657,42 @@ failure:
   }
 
   // .google.protobuf.Timestamp time = 2;
-  if (this->has_time()) {
-    target = stream->EnsureSpace(target);
+  if (this->_internal_has_time()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        2, _Internal::time(this), target, stream);
+      InternalWriteMessage(2, _Internal::time(this),
+        _Internal::time(this).GetCachedSize(), target, stream);
   }
 
   // int64 id = 3;
-  if (this->id() != 0) {
+  if (this->_internal_id() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(3, this->_internal_id(), target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(3, this->_internal_id(), target);
   }
 
   // .poplar.EventMetricsCounters counters = 4;
-  if (this->has_counters()) {
-    target = stream->EnsureSpace(target);
+  if (this->_internal_has_counters()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        4, _Internal::counters(this), target, stream);
+      InternalWriteMessage(4, _Internal::counters(this),
+        _Internal::counters(this).GetCachedSize(), target, stream);
   }
 
   // .poplar.EventMetricsTimers timers = 5;
-  if (this->has_timers()) {
-    target = stream->EnsureSpace(target);
+  if (this->_internal_has_timers()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        5, _Internal::timers(this), target, stream);
+      InternalWriteMessage(5, _Internal::timers(this),
+        _Internal::timers(this).GetCachedSize(), target, stream);
   }
 
   // .poplar.EventMetricsGauges gauges = 6;
-  if (this->has_gauges()) {
-    target = stream->EnsureSpace(target);
+  if (this->_internal_has_gauges()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        6, _Internal::gauges(this), target, stream);
+      InternalWriteMessage(6, _Internal::gauges(this),
+        _Internal::gauges(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:poplar.EventMetrics)
   return target;
@@ -703,109 +702,91 @@ size_t EventMetrics::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:poplar.EventMetrics)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // string name = 1;
-  if (this->name().size() > 0) {
+  if (!this->_internal_name().empty()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_name());
   }
 
   // .google.protobuf.Timestamp time = 2;
-  if (this->has_time()) {
+  if (this->_internal_has_time()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *time_);
+        *_impl_.time_);
   }
 
   // .poplar.EventMetricsCounters counters = 4;
-  if (this->has_counters()) {
+  if (this->_internal_has_counters()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *counters_);
+        *_impl_.counters_);
   }
 
   // .poplar.EventMetricsTimers timers = 5;
-  if (this->has_timers()) {
+  if (this->_internal_has_timers()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *timers_);
+        *_impl_.timers_);
   }
 
   // .poplar.EventMetricsGauges gauges = 6;
-  if (this->has_gauges()) {
+  if (this->_internal_has_gauges()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *gauges_);
+        *_impl_.gauges_);
   }
 
   // int64 id = 3;
-  if (this->id() != 0) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
-        this->_internal_id());
+  if (this->_internal_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_id());
   }
 
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
-        _internal_metadata_, total_size, &_cached_size_);
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
-void EventMetrics::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:poplar.EventMetrics)
-  GOOGLE_DCHECK_NE(&from, this);
-  const EventMetrics* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<EventMetrics>(
-          &from);
-  if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:poplar.EventMetrics)
-    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:poplar.EventMetrics)
-    MergeFrom(*source);
-  }
-}
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData EventMetrics::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    EventMetrics::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*EventMetrics::GetClassData() const { return &_class_data_; }
 
-void EventMetrics::MergeFrom(const EventMetrics& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:poplar.EventMetrics)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+
+void EventMetrics::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<EventMetrics*>(&to_msg);
+  auto& from = static_cast<const EventMetrics&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:poplar.EventMetrics)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.name().size() > 0) {
-
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+  if (!from._internal_name().empty()) {
+    _this->_internal_set_name(from._internal_name());
   }
-  if (from.has_time()) {
-    _internal_mutable_time()->PROTOBUF_NAMESPACE_ID::Timestamp::MergeFrom(from._internal_time());
+  if (from._internal_has_time()) {
+    _this->_internal_mutable_time()->::PROTOBUF_NAMESPACE_ID::Timestamp::MergeFrom(
+        from._internal_time());
   }
-  if (from.has_counters()) {
-    _internal_mutable_counters()->::poplar::EventMetricsCounters::MergeFrom(from._internal_counters());
+  if (from._internal_has_counters()) {
+    _this->_internal_mutable_counters()->::poplar::EventMetricsCounters::MergeFrom(
+        from._internal_counters());
   }
-  if (from.has_timers()) {
-    _internal_mutable_timers()->::poplar::EventMetricsTimers::MergeFrom(from._internal_timers());
+  if (from._internal_has_timers()) {
+    _this->_internal_mutable_timers()->::poplar::EventMetricsTimers::MergeFrom(
+        from._internal_timers());
   }
-  if (from.has_gauges()) {
-    _internal_mutable_gauges()->::poplar::EventMetricsGauges::MergeFrom(from._internal_gauges());
+  if (from._internal_has_gauges()) {
+    _this->_internal_mutable_gauges()->::poplar::EventMetricsGauges::MergeFrom(
+        from._internal_gauges());
   }
-  if (from.id() != 0) {
-    _internal_set_id(from._internal_id());
+  if (from._internal_id() != 0) {
+    _this->_internal_set_id(from._internal_id());
   }
-}
-
-void EventMetrics::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:poplar.EventMetrics)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void EventMetrics::CopyFrom(const EventMetrics& from) {
@@ -821,167 +802,192 @@ bool EventMetrics::IsInitialized() const {
 
 void EventMetrics::InternalSwap(EventMetrics* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(time_, other->time_);
-  swap(counters_, other->counters_);
-  swap(timers_, other->timers_);
-  swap(gauges_, other->gauges_);
-  swap(id_, other->id_);
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.name_, lhs_arena,
+      &other->_impl_.name_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(EventMetrics, _impl_.id_)
+      + sizeof(EventMetrics::_impl_.id_)
+      - PROTOBUF_FIELD_OFFSET(EventMetrics, _impl_.time_)>(
+          reinterpret_cast<char*>(&_impl_.time_),
+          reinterpret_cast<char*>(&other->_impl_.time_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata EventMetrics::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_collector_2eproto_getter, &descriptor_table_collector_2eproto_once,
+      file_level_metadata_collector_2eproto[1]);
 }
-
 
 // ===================================================================
 
-void EventMetricsCounters::InitAsDefaultInstance() {
-}
 class EventMetricsCounters::_Internal {
  public:
 };
 
-EventMetricsCounters::EventMetricsCounters()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:poplar.EventMetricsCounters)
+EventMetricsCounters::EventMetricsCounters(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:poplar.EventMetricsCounters)
 }
 EventMetricsCounters::EventMetricsCounters(const EventMetricsCounters& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::memcpy(&number_, &from.number_,
-    static_cast<size_t>(reinterpret_cast<char*>(&errors_) -
-    reinterpret_cast<char*>(&number_)) + sizeof(errors_));
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  EventMetricsCounters* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.number_){}
+    , decltype(_impl_.ops_){}
+    , decltype(_impl_.size_){}
+    , decltype(_impl_.errors_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::memcpy(&_impl_.number_, &from._impl_.number_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.errors_) -
+    reinterpret_cast<char*>(&_impl_.number_)) + sizeof(_impl_.errors_));
   // @@protoc_insertion_point(copy_constructor:poplar.EventMetricsCounters)
 }
 
-void EventMetricsCounters::SharedCtor() {
-  ::memset(&number_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&errors_) -
-      reinterpret_cast<char*>(&number_)) + sizeof(errors_));
+inline void EventMetricsCounters::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.number_){int64_t{0}}
+    , decltype(_impl_.ops_){int64_t{0}}
+    , decltype(_impl_.size_){int64_t{0}}
+    , decltype(_impl_.errors_){int64_t{0}}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
 }
 
 EventMetricsCounters::~EventMetricsCounters() {
   // @@protoc_insertion_point(destructor:poplar.EventMetricsCounters)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void EventMetricsCounters::SharedDtor() {
+inline void EventMetricsCounters::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
 }
 
 void EventMetricsCounters::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const EventMetricsCounters& EventMetricsCounters::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_EventMetricsCounters_collector_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void EventMetricsCounters::Clear() {
 // @@protoc_insertion_point(message_clear_start:poplar.EventMetricsCounters)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  ::memset(&number_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&errors_) -
-      reinterpret_cast<char*>(&number_)) + sizeof(errors_));
-  _internal_metadata_.Clear();
+  ::memset(&_impl_.number_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.errors_) -
+      reinterpret_cast<char*>(&_impl_.number_)) + sizeof(_impl_.errors_));
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* EventMetricsCounters::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* EventMetricsCounters::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // int64 number = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          number_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.number_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // int64 ops = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          ops_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.ops_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // int64 size = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
-          size_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.size_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // int64 errors = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
-          errors_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.errors_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* EventMetricsCounters::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* EventMetricsCounters::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:poplar.EventMetricsCounters)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // int64 number = 1;
-  if (this->number() != 0) {
+  if (this->_internal_number() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(1, this->_internal_number(), target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_number(), target);
   }
 
   // int64 ops = 2;
-  if (this->ops() != 0) {
+  if (this->_internal_ops() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(2, this->_internal_ops(), target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(2, this->_internal_ops(), target);
   }
 
   // int64 size = 3;
-  if (this->size() != 0) {
+  if (this->_internal_size() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(3, this->_internal_size(), target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(3, this->_internal_size(), target);
   }
 
   // int64 errors = 4;
-  if (this->errors() != 0) {
+  if (this->_internal_errors() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(4, this->_internal_errors(), target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(4, this->_internal_errors(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:poplar.EventMetricsCounters)
   return target;
@@ -991,88 +997,61 @@ size_t EventMetricsCounters::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:poplar.EventMetricsCounters)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // int64 number = 1;
-  if (this->number() != 0) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
-        this->_internal_number());
+  if (this->_internal_number() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_number());
   }
 
   // int64 ops = 2;
-  if (this->ops() != 0) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
-        this->_internal_ops());
+  if (this->_internal_ops() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_ops());
   }
 
   // int64 size = 3;
-  if (this->size() != 0) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
-        this->_internal_size());
+  if (this->_internal_size() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_size());
   }
 
   // int64 errors = 4;
-  if (this->errors() != 0) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
-        this->_internal_errors());
+  if (this->_internal_errors() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_errors());
   }
 
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
-        _internal_metadata_, total_size, &_cached_size_);
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
-void EventMetricsCounters::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:poplar.EventMetricsCounters)
-  GOOGLE_DCHECK_NE(&from, this);
-  const EventMetricsCounters* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<EventMetricsCounters>(
-          &from);
-  if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:poplar.EventMetricsCounters)
-    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:poplar.EventMetricsCounters)
-    MergeFrom(*source);
-  }
-}
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData EventMetricsCounters::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    EventMetricsCounters::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*EventMetricsCounters::GetClassData() const { return &_class_data_; }
 
-void EventMetricsCounters::MergeFrom(const EventMetricsCounters& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:poplar.EventMetricsCounters)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+
+void EventMetricsCounters::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<EventMetricsCounters*>(&to_msg);
+  auto& from = static_cast<const EventMetricsCounters&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:poplar.EventMetricsCounters)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.number() != 0) {
-    _internal_set_number(from._internal_number());
+  if (from._internal_number() != 0) {
+    _this->_internal_set_number(from._internal_number());
   }
-  if (from.ops() != 0) {
-    _internal_set_ops(from._internal_ops());
+  if (from._internal_ops() != 0) {
+    _this->_internal_set_ops(from._internal_ops());
   }
-  if (from.size() != 0) {
-    _internal_set_size(from._internal_size());
+  if (from._internal_size() != 0) {
+    _this->_internal_set_size(from._internal_size());
   }
-  if (from.errors() != 0) {
-    _internal_set_errors(from._internal_errors());
+  if (from._internal_errors() != 0) {
+    _this->_internal_set_errors(from._internal_errors());
   }
-}
-
-void EventMetricsCounters::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:poplar.EventMetricsCounters)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void EventMetricsCounters::CopyFrom(const EventMetricsCounters& from) {
@@ -1088,183 +1067,188 @@ bool EventMetricsCounters::IsInitialized() const {
 
 void EventMetricsCounters::InternalSwap(EventMetricsCounters* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(number_, other->number_);
-  swap(ops_, other->ops_);
-  swap(size_, other->size_);
-  swap(errors_, other->errors_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(EventMetricsCounters, _impl_.errors_)
+      + sizeof(EventMetricsCounters::_impl_.errors_)
+      - PROTOBUF_FIELD_OFFSET(EventMetricsCounters, _impl_.number_)>(
+          reinterpret_cast<char*>(&_impl_.number_),
+          reinterpret_cast<char*>(&other->_impl_.number_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata EventMetricsCounters::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_collector_2eproto_getter, &descriptor_table_collector_2eproto_once,
+      file_level_metadata_collector_2eproto[2]);
 }
-
 
 // ===================================================================
 
-void EventMetricsTimers::InitAsDefaultInstance() {
-  ::poplar::_EventMetricsTimers_default_instance_._instance.get_mutable()->total_ = const_cast< PROTOBUF_NAMESPACE_ID::Duration*>(
-      PROTOBUF_NAMESPACE_ID::Duration::internal_default_instance());
-  ::poplar::_EventMetricsTimers_default_instance_._instance.get_mutable()->duration_ = const_cast< PROTOBUF_NAMESPACE_ID::Duration*>(
-      PROTOBUF_NAMESPACE_ID::Duration::internal_default_instance());
-}
 class EventMetricsTimers::_Internal {
  public:
-  static const PROTOBUF_NAMESPACE_ID::Duration& total(const EventMetricsTimers* msg);
-  static const PROTOBUF_NAMESPACE_ID::Duration& duration(const EventMetricsTimers* msg);
+  static const ::PROTOBUF_NAMESPACE_ID::Duration& total(const EventMetricsTimers* msg);
+  static const ::PROTOBUF_NAMESPACE_ID::Duration& duration(const EventMetricsTimers* msg);
 };
 
-const PROTOBUF_NAMESPACE_ID::Duration&
+const ::PROTOBUF_NAMESPACE_ID::Duration&
 EventMetricsTimers::_Internal::total(const EventMetricsTimers* msg) {
-  return *msg->total_;
+  return *msg->_impl_.total_;
 }
-const PROTOBUF_NAMESPACE_ID::Duration&
+const ::PROTOBUF_NAMESPACE_ID::Duration&
 EventMetricsTimers::_Internal::duration(const EventMetricsTimers* msg) {
-  return *msg->duration_;
+  return *msg->_impl_.duration_;
 }
 void EventMetricsTimers::clear_total() {
-  if (GetArenaNoVirtual() == nullptr && total_ != nullptr) {
-    delete total_;
+  if (GetArenaForAllocation() == nullptr && _impl_.total_ != nullptr) {
+    delete _impl_.total_;
   }
-  total_ = nullptr;
+  _impl_.total_ = nullptr;
 }
 void EventMetricsTimers::clear_duration() {
-  if (GetArenaNoVirtual() == nullptr && duration_ != nullptr) {
-    delete duration_;
+  if (GetArenaForAllocation() == nullptr && _impl_.duration_ != nullptr) {
+    delete _impl_.duration_;
   }
-  duration_ = nullptr;
+  _impl_.duration_ = nullptr;
 }
-EventMetricsTimers::EventMetricsTimers()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:poplar.EventMetricsTimers)
+EventMetricsTimers::EventMetricsTimers(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:poplar.EventMetricsTimers)
 }
 EventMetricsTimers::EventMetricsTimers(const EventMetricsTimers& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  EventMetricsTimers* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.total_){nullptr}
+    , decltype(_impl_.duration_){nullptr}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_total()) {
-    total_ = new PROTOBUF_NAMESPACE_ID::Duration(*from.total_);
-  } else {
-    total_ = nullptr;
+    _this->_impl_.total_ = new ::PROTOBUF_NAMESPACE_ID::Duration(*from._impl_.total_);
   }
   if (from._internal_has_duration()) {
-    duration_ = new PROTOBUF_NAMESPACE_ID::Duration(*from.duration_);
-  } else {
-    duration_ = nullptr;
+    _this->_impl_.duration_ = new ::PROTOBUF_NAMESPACE_ID::Duration(*from._impl_.duration_);
   }
   // @@protoc_insertion_point(copy_constructor:poplar.EventMetricsTimers)
 }
 
-void EventMetricsTimers::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_EventMetricsTimers_collector_2eproto.base);
-  ::memset(&total_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&duration_) -
-      reinterpret_cast<char*>(&total_)) + sizeof(duration_));
+inline void EventMetricsTimers::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.total_){nullptr}
+    , decltype(_impl_.duration_){nullptr}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
 }
 
 EventMetricsTimers::~EventMetricsTimers() {
   // @@protoc_insertion_point(destructor:poplar.EventMetricsTimers)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void EventMetricsTimers::SharedDtor() {
-  if (this != internal_default_instance()) delete total_;
-  if (this != internal_default_instance()) delete duration_;
+inline void EventMetricsTimers::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (this != internal_default_instance()) delete _impl_.total_;
+  if (this != internal_default_instance()) delete _impl_.duration_;
 }
 
 void EventMetricsTimers::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const EventMetricsTimers& EventMetricsTimers::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_EventMetricsTimers_collector_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void EventMetricsTimers::Clear() {
 // @@protoc_insertion_point(message_clear_start:poplar.EventMetricsTimers)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  if (GetArenaNoVirtual() == nullptr && total_ != nullptr) {
-    delete total_;
+  if (GetArenaForAllocation() == nullptr && _impl_.total_ != nullptr) {
+    delete _impl_.total_;
   }
-  total_ = nullptr;
-  if (GetArenaNoVirtual() == nullptr && duration_ != nullptr) {
-    delete duration_;
+  _impl_.total_ = nullptr;
+  if (GetArenaForAllocation() == nullptr && _impl_.duration_ != nullptr) {
+    delete _impl_.duration_;
   }
-  duration_ = nullptr;
-  _internal_metadata_.Clear();
+  _impl_.duration_ = nullptr;
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* EventMetricsTimers::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* EventMetricsTimers::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // .google.protobuf.Duration total = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           ptr = ctx->ParseMessage(_internal_mutable_total(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // .google.protobuf.Duration duration = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ctx->ParseMessage(_internal_mutable_duration(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* EventMetricsTimers::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* EventMetricsTimers::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:poplar.EventMetricsTimers)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // .google.protobuf.Duration total = 1;
-  if (this->has_total()) {
-    target = stream->EnsureSpace(target);
+  if (this->_internal_has_total()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        1, _Internal::total(this), target, stream);
+      InternalWriteMessage(1, _Internal::total(this),
+        _Internal::total(this).GetCachedSize(), target, stream);
   }
 
   // .google.protobuf.Duration duration = 2;
-  if (this->has_duration()) {
-    target = stream->EnsureSpace(target);
+  if (this->_internal_has_duration()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        2, _Internal::duration(this), target, stream);
+      InternalWriteMessage(2, _Internal::duration(this),
+        _Internal::duration(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:poplar.EventMetricsTimers)
   return target;
@@ -1274,68 +1258,51 @@ size_t EventMetricsTimers::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:poplar.EventMetricsTimers)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // .google.protobuf.Duration total = 1;
-  if (this->has_total()) {
+  if (this->_internal_has_total()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *total_);
+        *_impl_.total_);
   }
 
   // .google.protobuf.Duration duration = 2;
-  if (this->has_duration()) {
+  if (this->_internal_has_duration()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *duration_);
+        *_impl_.duration_);
   }
 
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
-        _internal_metadata_, total_size, &_cached_size_);
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
-void EventMetricsTimers::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:poplar.EventMetricsTimers)
-  GOOGLE_DCHECK_NE(&from, this);
-  const EventMetricsTimers* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<EventMetricsTimers>(
-          &from);
-  if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:poplar.EventMetricsTimers)
-    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:poplar.EventMetricsTimers)
-    MergeFrom(*source);
-  }
-}
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData EventMetricsTimers::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    EventMetricsTimers::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*EventMetricsTimers::GetClassData() const { return &_class_data_; }
 
-void EventMetricsTimers::MergeFrom(const EventMetricsTimers& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:poplar.EventMetricsTimers)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+
+void EventMetricsTimers::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<EventMetricsTimers*>(&to_msg);
+  auto& from = static_cast<const EventMetricsTimers&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:poplar.EventMetricsTimers)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.has_total()) {
-    _internal_mutable_total()->PROTOBUF_NAMESPACE_ID::Duration::MergeFrom(from._internal_total());
+  if (from._internal_has_total()) {
+    _this->_internal_mutable_total()->::PROTOBUF_NAMESPACE_ID::Duration::MergeFrom(
+        from._internal_total());
   }
-  if (from.has_duration()) {
-    _internal_mutable_duration()->PROTOBUF_NAMESPACE_ID::Duration::MergeFrom(from._internal_duration());
+  if (from._internal_has_duration()) {
+    _this->_internal_mutable_duration()->::PROTOBUF_NAMESPACE_ID::Duration::MergeFrom(
+        from._internal_duration());
   }
-}
-
-void EventMetricsTimers::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:poplar.EventMetricsTimers)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void EventMetricsTimers::CopyFrom(const EventMetricsTimers& from) {
@@ -1351,149 +1318,170 @@ bool EventMetricsTimers::IsInitialized() const {
 
 void EventMetricsTimers::InternalSwap(EventMetricsTimers* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(total_, other->total_);
-  swap(duration_, other->duration_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(EventMetricsTimers, _impl_.duration_)
+      + sizeof(EventMetricsTimers::_impl_.duration_)
+      - PROTOBUF_FIELD_OFFSET(EventMetricsTimers, _impl_.total_)>(
+          reinterpret_cast<char*>(&_impl_.total_),
+          reinterpret_cast<char*>(&other->_impl_.total_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata EventMetricsTimers::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_collector_2eproto_getter, &descriptor_table_collector_2eproto_once,
+      file_level_metadata_collector_2eproto[3]);
 }
-
 
 // ===================================================================
 
-void EventMetricsGauges::InitAsDefaultInstance() {
-}
 class EventMetricsGauges::_Internal {
  public:
 };
 
-EventMetricsGauges::EventMetricsGauges()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:poplar.EventMetricsGauges)
+EventMetricsGauges::EventMetricsGauges(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:poplar.EventMetricsGauges)
 }
 EventMetricsGauges::EventMetricsGauges(const EventMetricsGauges& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::memcpy(&state_, &from.state_,
-    static_cast<size_t>(reinterpret_cast<char*>(&failed_) -
-    reinterpret_cast<char*>(&state_)) + sizeof(failed_));
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  EventMetricsGauges* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.state_){}
+    , decltype(_impl_.workers_){}
+    , decltype(_impl_.failed_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::memcpy(&_impl_.state_, &from._impl_.state_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.failed_) -
+    reinterpret_cast<char*>(&_impl_.state_)) + sizeof(_impl_.failed_));
   // @@protoc_insertion_point(copy_constructor:poplar.EventMetricsGauges)
 }
 
-void EventMetricsGauges::SharedCtor() {
-  ::memset(&state_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&failed_) -
-      reinterpret_cast<char*>(&state_)) + sizeof(failed_));
+inline void EventMetricsGauges::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.state_){int64_t{0}}
+    , decltype(_impl_.workers_){int64_t{0}}
+    , decltype(_impl_.failed_){false}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
 }
 
 EventMetricsGauges::~EventMetricsGauges() {
   // @@protoc_insertion_point(destructor:poplar.EventMetricsGauges)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void EventMetricsGauges::SharedDtor() {
+inline void EventMetricsGauges::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
 }
 
 void EventMetricsGauges::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const EventMetricsGauges& EventMetricsGauges::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_EventMetricsGauges_collector_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void EventMetricsGauges::Clear() {
 // @@protoc_insertion_point(message_clear_start:poplar.EventMetricsGauges)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  ::memset(&state_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&failed_) -
-      reinterpret_cast<char*>(&state_)) + sizeof(failed_));
-  _internal_metadata_.Clear();
+  ::memset(&_impl_.state_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.failed_) -
+      reinterpret_cast<char*>(&_impl_.state_)) + sizeof(_impl_.failed_));
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* EventMetricsGauges::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* EventMetricsGauges::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // int64 state = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          state_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.state_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // int64 workers = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          workers_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.workers_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // bool failed = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
-          failed_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.failed_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* EventMetricsGauges::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* EventMetricsGauges::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:poplar.EventMetricsGauges)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // int64 state = 1;
-  if (this->state() != 0) {
+  if (this->_internal_state() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(1, this->_internal_state(), target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_state(), target);
   }
 
   // int64 workers = 2;
-  if (this->workers() != 0) {
+  if (this->_internal_workers() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(2, this->_internal_workers(), target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(2, this->_internal_workers(), target);
   }
 
   // bool failed = 3;
-  if (this->failed() != 0) {
+  if (this->_internal_failed() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(3, this->_internal_failed(), target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(3, this->_internal_failed(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:poplar.EventMetricsGauges)
   return target;
@@ -1503,76 +1491,53 @@ size_t EventMetricsGauges::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:poplar.EventMetricsGauges)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // int64 state = 1;
-  if (this->state() != 0) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
-        this->_internal_state());
+  if (this->_internal_state() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_state());
   }
 
   // int64 workers = 2;
-  if (this->workers() != 0) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
-        this->_internal_workers());
+  if (this->_internal_workers() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_workers());
   }
 
   // bool failed = 3;
-  if (this->failed() != 0) {
+  if (this->_internal_failed() != 0) {
     total_size += 1 + 1;
   }
 
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
-        _internal_metadata_, total_size, &_cached_size_);
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
-void EventMetricsGauges::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:poplar.EventMetricsGauges)
-  GOOGLE_DCHECK_NE(&from, this);
-  const EventMetricsGauges* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<EventMetricsGauges>(
-          &from);
-  if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:poplar.EventMetricsGauges)
-    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:poplar.EventMetricsGauges)
-    MergeFrom(*source);
-  }
-}
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData EventMetricsGauges::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    EventMetricsGauges::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*EventMetricsGauges::GetClassData() const { return &_class_data_; }
 
-void EventMetricsGauges::MergeFrom(const EventMetricsGauges& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:poplar.EventMetricsGauges)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+
+void EventMetricsGauges::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<EventMetricsGauges*>(&to_msg);
+  auto& from = static_cast<const EventMetricsGauges&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:poplar.EventMetricsGauges)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.state() != 0) {
-    _internal_set_state(from._internal_state());
+  if (from._internal_state() != 0) {
+    _this->_internal_set_state(from._internal_state());
   }
-  if (from.workers() != 0) {
-    _internal_set_workers(from._internal_workers());
+  if (from._internal_workers() != 0) {
+    _this->_internal_set_workers(from._internal_workers());
   }
-  if (from.failed() != 0) {
-    _internal_set_failed(from._internal_failed());
+  if (from._internal_failed() != 0) {
+    _this->_internal_set_failed(from._internal_failed());
   }
-}
-
-void EventMetricsGauges::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:poplar.EventMetricsGauges)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void EventMetricsGauges::CopyFrom(const EventMetricsGauges& from) {
@@ -1588,34 +1553,43 @@ bool EventMetricsGauges::IsInitialized() const {
 
 void EventMetricsGauges::InternalSwap(EventMetricsGauges* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(state_, other->state_);
-  swap(workers_, other->workers_);
-  swap(failed_, other->failed_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(EventMetricsGauges, _impl_.failed_)
+      + sizeof(EventMetricsGauges::_impl_.failed_)
+      - PROTOBUF_FIELD_OFFSET(EventMetricsGauges, _impl_.state_)>(
+          reinterpret_cast<char*>(&_impl_.state_),
+          reinterpret_cast<char*>(&other->_impl_.state_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata EventMetricsGauges::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_collector_2eproto_getter, &descriptor_table_collector_2eproto_once,
+      file_level_metadata_collector_2eproto[4]);
 }
-
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace poplar
 PROTOBUF_NAMESPACE_OPEN
-template<> PROTOBUF_NOINLINE ::poplar::CollectorName* Arena::CreateMaybeMessage< ::poplar::CollectorName >(Arena* arena) {
-  return Arena::CreateInternal< ::poplar::CollectorName >(arena);
+template<> PROTOBUF_NOINLINE ::poplar::CollectorName*
+Arena::CreateMaybeMessage< ::poplar::CollectorName >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::poplar::CollectorName >(arena);
 }
-template<> PROTOBUF_NOINLINE ::poplar::EventMetrics* Arena::CreateMaybeMessage< ::poplar::EventMetrics >(Arena* arena) {
-  return Arena::CreateInternal< ::poplar::EventMetrics >(arena);
+template<> PROTOBUF_NOINLINE ::poplar::EventMetrics*
+Arena::CreateMaybeMessage< ::poplar::EventMetrics >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::poplar::EventMetrics >(arena);
 }
-template<> PROTOBUF_NOINLINE ::poplar::EventMetricsCounters* Arena::CreateMaybeMessage< ::poplar::EventMetricsCounters >(Arena* arena) {
-  return Arena::CreateInternal< ::poplar::EventMetricsCounters >(arena);
+template<> PROTOBUF_NOINLINE ::poplar::EventMetricsCounters*
+Arena::CreateMaybeMessage< ::poplar::EventMetricsCounters >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::poplar::EventMetricsCounters >(arena);
 }
-template<> PROTOBUF_NOINLINE ::poplar::EventMetricsTimers* Arena::CreateMaybeMessage< ::poplar::EventMetricsTimers >(Arena* arena) {
-  return Arena::CreateInternal< ::poplar::EventMetricsTimers >(arena);
+template<> PROTOBUF_NOINLINE ::poplar::EventMetricsTimers*
+Arena::CreateMaybeMessage< ::poplar::EventMetricsTimers >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::poplar::EventMetricsTimers >(arena);
 }
-template<> PROTOBUF_NOINLINE ::poplar::EventMetricsGauges* Arena::CreateMaybeMessage< ::poplar::EventMetricsGauges >(Arena* arena) {
-  return Arena::CreateInternal< ::poplar::EventMetricsGauges >(arena);
+template<> PROTOBUF_NOINLINE ::poplar::EventMetricsGauges*
+Arena::CreateMaybeMessage< ::poplar::EventMetricsGauges >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::poplar::EventMetricsGauges >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

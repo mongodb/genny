@@ -14,169 +14,150 @@
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
-extern PROTOBUF_INTERNAL_EXPORT_metrics_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_SummaryDouble_metrics_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_metrics_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_SummaryDoubleSlice_metrics_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_metrics_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_SummaryInteger_metrics_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_metrics_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_SummaryIntegerSlice_metrics_2eproto;
+
+PROTOBUF_PRAGMA_INIT_SEG
+
+namespace _pb = ::PROTOBUF_NAMESPACE_ID;
+namespace _pbi = _pb::internal;
+
 namespace poplar {
-class IntervalSummaryDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<IntervalSummary> _instance;
-  const ::poplar::SummaryInteger* number_;
-  const ::poplar::SummaryIntegerSlice* number_values_;
-  const ::poplar::SummaryDouble* point_;
-  const ::poplar::SummaryDoubleSlice* point_values_;
-} _IntervalSummary_default_instance_;
-class SummaryIntegerSliceDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<SummaryIntegerSlice> _instance;
-} _SummaryIntegerSlice_default_instance_;
-class SummaryIntegerDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<SummaryInteger> _instance;
-} _SummaryInteger_default_instance_;
-class SummaryDoubleSliceDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<SummaryDoubleSlice> _instance;
-} _SummaryDoubleSlice_default_instance_;
-class SummaryDoubleDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<SummaryDouble> _instance;
-} _SummaryDouble_default_instance_;
+PROTOBUF_CONSTEXPR IntervalSummary::IntervalSummary(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.collector_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.value_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_._oneof_case_)*/{}} {}
+struct IntervalSummaryDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR IntervalSummaryDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~IntervalSummaryDefaultTypeInternal() {}
+  union {
+    IntervalSummary _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 IntervalSummaryDefaultTypeInternal _IntervalSummary_default_instance_;
+PROTOBUF_CONSTEXPR SummaryIntegerSlice::SummaryIntegerSlice(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.value_)*/{}
+  , /*decltype(_impl_._value_cached_byte_size_)*/{0}
+  , /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct SummaryIntegerSliceDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR SummaryIntegerSliceDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~SummaryIntegerSliceDefaultTypeInternal() {}
+  union {
+    SummaryIntegerSlice _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SummaryIntegerSliceDefaultTypeInternal _SummaryIntegerSlice_default_instance_;
+PROTOBUF_CONSTEXPR SummaryInteger::SummaryInteger(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.value_)*/int64_t{0}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct SummaryIntegerDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR SummaryIntegerDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~SummaryIntegerDefaultTypeInternal() {}
+  union {
+    SummaryInteger _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SummaryIntegerDefaultTypeInternal _SummaryInteger_default_instance_;
+PROTOBUF_CONSTEXPR SummaryDoubleSlice::SummaryDoubleSlice(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.value_)*/{}
+  , /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct SummaryDoubleSliceDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR SummaryDoubleSliceDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~SummaryDoubleSliceDefaultTypeInternal() {}
+  union {
+    SummaryDoubleSlice _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SummaryDoubleSliceDefaultTypeInternal _SummaryDoubleSlice_default_instance_;
+PROTOBUF_CONSTEXPR SummaryDouble::SummaryDouble(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.value_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct SummaryDoubleDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR SummaryDoubleDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~SummaryDoubleDefaultTypeInternal() {}
+  union {
+    SummaryDouble _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SummaryDoubleDefaultTypeInternal _SummaryDouble_default_instance_;
 }  // namespace poplar
-static void InitDefaultsscc_info_IntervalSummary_metrics_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
+static ::_pb::Metadata file_level_metadata_metrics_2eproto[5];
+static constexpr ::_pb::EnumDescriptor const** file_level_enum_descriptors_metrics_2eproto = nullptr;
+static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_metrics_2eproto = nullptr;
 
-  {
-    void* ptr = &::poplar::_IntervalSummary_default_instance_;
-    new (ptr) ::poplar::IntervalSummary();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::poplar::IntervalSummary::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<4> scc_info_IntervalSummary_metrics_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 4, 0, InitDefaultsscc_info_IntervalSummary_metrics_2eproto}, {
-      &scc_info_SummaryInteger_metrics_2eproto.base,
-      &scc_info_SummaryIntegerSlice_metrics_2eproto.base,
-      &scc_info_SummaryDouble_metrics_2eproto.base,
-      &scc_info_SummaryDoubleSlice_metrics_2eproto.base,}};
-
-static void InitDefaultsscc_info_SummaryDouble_metrics_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::poplar::_SummaryDouble_default_instance_;
-    new (ptr) ::poplar::SummaryDouble();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::poplar::SummaryDouble::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_SummaryDouble_metrics_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_SummaryDouble_metrics_2eproto}, {}};
-
-static void InitDefaultsscc_info_SummaryDoubleSlice_metrics_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::poplar::_SummaryDoubleSlice_default_instance_;
-    new (ptr) ::poplar::SummaryDoubleSlice();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::poplar::SummaryDoubleSlice::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_SummaryDoubleSlice_metrics_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_SummaryDoubleSlice_metrics_2eproto}, {}};
-
-static void InitDefaultsscc_info_SummaryInteger_metrics_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::poplar::_SummaryInteger_default_instance_;
-    new (ptr) ::poplar::SummaryInteger();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::poplar::SummaryInteger::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_SummaryInteger_metrics_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_SummaryInteger_metrics_2eproto}, {}};
-
-static void InitDefaultsscc_info_SummaryIntegerSlice_metrics_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::poplar::_SummaryIntegerSlice_default_instance_;
-    new (ptr) ::poplar::SummaryIntegerSlice();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::poplar::SummaryIntegerSlice::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_SummaryIntegerSlice_metrics_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_SummaryIntegerSlice_metrics_2eproto}, {}};
-
-static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_metrics_2eproto[5];
-static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_metrics_2eproto = nullptr;
-static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_metrics_2eproto = nullptr;
-
-const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_metrics_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+const uint32_t TableStruct_metrics_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::poplar::IntervalSummary, _internal_metadata_),
   ~0u,  // no _extensions_
-  PROTOBUF_FIELD_OFFSET(::poplar::IntervalSummary, _oneof_case_[0]),
+  PROTOBUF_FIELD_OFFSET(::poplar::IntervalSummary, _impl_._oneof_case_[0]),
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::poplar::IntervalSummary, collector_),
-  offsetof(::poplar::IntervalSummaryDefaultTypeInternal, number_),
-  offsetof(::poplar::IntervalSummaryDefaultTypeInternal, number_values_),
-  offsetof(::poplar::IntervalSummaryDefaultTypeInternal, point_),
-  offsetof(::poplar::IntervalSummaryDefaultTypeInternal, point_values_),
-  PROTOBUF_FIELD_OFFSET(::poplar::IntervalSummary, value_),
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::poplar::IntervalSummary, _impl_.collector_),
+  ::_pbi::kInvalidFieldOffsetTag,
+  ::_pbi::kInvalidFieldOffsetTag,
+  ::_pbi::kInvalidFieldOffsetTag,
+  ::_pbi::kInvalidFieldOffsetTag,
+  PROTOBUF_FIELD_OFFSET(::poplar::IntervalSummary, _impl_.value_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::poplar::SummaryIntegerSlice, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::poplar::SummaryIntegerSlice, name_),
-  PROTOBUF_FIELD_OFFSET(::poplar::SummaryIntegerSlice, value_),
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::poplar::SummaryIntegerSlice, _impl_.name_),
+  PROTOBUF_FIELD_OFFSET(::poplar::SummaryIntegerSlice, _impl_.value_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::poplar::SummaryInteger, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::poplar::SummaryInteger, name_),
-  PROTOBUF_FIELD_OFFSET(::poplar::SummaryInteger, value_),
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::poplar::SummaryInteger, _impl_.name_),
+  PROTOBUF_FIELD_OFFSET(::poplar::SummaryInteger, _impl_.value_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::poplar::SummaryDoubleSlice, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::poplar::SummaryDoubleSlice, name_),
-  PROTOBUF_FIELD_OFFSET(::poplar::SummaryDoubleSlice, value_),
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::poplar::SummaryDoubleSlice, _impl_.name_),
+  PROTOBUF_FIELD_OFFSET(::poplar::SummaryDoubleSlice, _impl_.value_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::poplar::SummaryDouble, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::poplar::SummaryDouble, name_),
-  PROTOBUF_FIELD_OFFSET(::poplar::SummaryDouble, value_),
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::poplar::SummaryDouble, _impl_.name_),
+  PROTOBUF_FIELD_OFFSET(::poplar::SummaryDouble, _impl_.value_),
 };
-static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, -1, sizeof(::poplar::IntervalSummary)},
-  { 11, -1, sizeof(::poplar::SummaryIntegerSlice)},
-  { 18, -1, sizeof(::poplar::SummaryInteger)},
-  { 25, -1, sizeof(::poplar::SummaryDoubleSlice)},
-  { 32, -1, sizeof(::poplar::SummaryDouble)},
+static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+  { 0, -1, -1, sizeof(::poplar::IntervalSummary)},
+  { 12, -1, -1, sizeof(::poplar::SummaryIntegerSlice)},
+  { 20, -1, -1, sizeof(::poplar::SummaryInteger)},
+  { 28, -1, -1, sizeof(::poplar::SummaryDoubleSlice)},
+  { 36, -1, -1, sizeof(::poplar::SummaryDouble)},
 };
 
-static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_IntervalSummary_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_SummaryIntegerSlice_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_SummaryInteger_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_SummaryDoubleSlice_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::poplar::_SummaryDouble_default_instance_),
+static const ::_pb::Message* const file_default_instances[] = {
+  &::poplar::_IntervalSummary_default_instance_._instance,
+  &::poplar::_SummaryIntegerSlice_default_instance_._instance,
+  &::poplar::_SummaryInteger_default_instance_._instance,
+  &::poplar::_SummaryDoubleSlice_default_instance_._instance,
+  &::poplar::_SummaryDouble_default_instance_._instance,
 };
 
 const char descriptor_table_protodef_metrics_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
@@ -202,41 +183,28 @@ const char descriptor_table_protodef_metrics_2eproto[] PROTOBUF_SECTION_VARIABLE
   "lSummary\032\026.poplar.PoplarResponseB\nZ\010inte"
   "rnalb\006proto3"
   ;
-static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_metrics_2eproto_deps[1] = {
+static const ::_pbi::DescriptorTable* const descriptor_table_metrics_2eproto_deps[1] = {
   &::descriptor_table_poplar_2eproto,
 };
-static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_metrics_2eproto_sccs[5] = {
-  &scc_info_IntervalSummary_metrics_2eproto.base,
-  &scc_info_SummaryDouble_metrics_2eproto.base,
-  &scc_info_SummaryDoubleSlice_metrics_2eproto.base,
-  &scc_info_SummaryInteger_metrics_2eproto.base,
-  &scc_info_SummaryIntegerSlice_metrics_2eproto.base,
+static ::_pbi::once_flag descriptor_table_metrics_2eproto_once;
+const ::_pbi::DescriptorTable descriptor_table_metrics_2eproto = {
+    false, false, 812, descriptor_table_protodef_metrics_2eproto,
+    "metrics.proto",
+    &descriptor_table_metrics_2eproto_once, descriptor_table_metrics_2eproto_deps, 1, 5,
+    schemas, file_default_instances, TableStruct_metrics_2eproto::offsets,
+    file_level_metadata_metrics_2eproto, file_level_enum_descriptors_metrics_2eproto,
+    file_level_service_descriptors_metrics_2eproto,
 };
-static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_metrics_2eproto_once;
-static bool descriptor_table_metrics_2eproto_initialized = false;
-const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_metrics_2eproto = {
-  &descriptor_table_metrics_2eproto_initialized, descriptor_table_protodef_metrics_2eproto, "metrics.proto", 812,
-  &descriptor_table_metrics_2eproto_once, descriptor_table_metrics_2eproto_sccs, descriptor_table_metrics_2eproto_deps, 5, 1,
-  schemas, file_default_instances, TableStruct_metrics_2eproto::offsets,
-  file_level_metadata_metrics_2eproto, 5, file_level_enum_descriptors_metrics_2eproto, file_level_service_descriptors_metrics_2eproto,
-};
+PROTOBUF_ATTRIBUTE_WEAK const ::_pbi::DescriptorTable* descriptor_table_metrics_2eproto_getter() {
+  return &descriptor_table_metrics_2eproto;
+}
 
 // Force running AddDescriptors() at dynamic initialization time.
-static bool dynamic_init_dummy_metrics_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_metrics_2eproto), true);
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY2 static ::_pbi::AddDescriptorsRunner dynamic_init_dummy_metrics_2eproto(&descriptor_table_metrics_2eproto);
 namespace poplar {
 
 // ===================================================================
 
-void IntervalSummary::InitAsDefaultInstance() {
-  ::poplar::_IntervalSummary_default_instance_.number_ = const_cast< ::poplar::SummaryInteger*>(
-      ::poplar::SummaryInteger::internal_default_instance());
-  ::poplar::_IntervalSummary_default_instance_.number_values_ = const_cast< ::poplar::SummaryIntegerSlice*>(
-      ::poplar::SummaryIntegerSlice::internal_default_instance());
-  ::poplar::_IntervalSummary_default_instance_.point_ = const_cast< ::poplar::SummaryDouble*>(
-      ::poplar::SummaryDouble::internal_default_instance());
-  ::poplar::_IntervalSummary_default_instance_.point_values_ = const_cast< ::poplar::SummaryDoubleSlice*>(
-      ::poplar::SummaryDoubleSlice::internal_default_instance());
-}
 class IntervalSummary::_Internal {
  public:
   static const ::poplar::SummaryInteger& number(const IntervalSummary* msg);
@@ -247,105 +215,124 @@ class IntervalSummary::_Internal {
 
 const ::poplar::SummaryInteger&
 IntervalSummary::_Internal::number(const IntervalSummary* msg) {
-  return *msg->value_.number_;
+  return *msg->_impl_.value_.number_;
 }
 const ::poplar::SummaryIntegerSlice&
 IntervalSummary::_Internal::number_values(const IntervalSummary* msg) {
-  return *msg->value_.number_values_;
+  return *msg->_impl_.value_.number_values_;
 }
 const ::poplar::SummaryDouble&
 IntervalSummary::_Internal::point(const IntervalSummary* msg) {
-  return *msg->value_.point_;
+  return *msg->_impl_.value_.point_;
 }
 const ::poplar::SummaryDoubleSlice&
 IntervalSummary::_Internal::point_values(const IntervalSummary* msg) {
-  return *msg->value_.point_values_;
+  return *msg->_impl_.value_.point_values_;
 }
 void IntervalSummary::set_allocated_number(::poplar::SummaryInteger* number) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaNoVirtual();
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   clear_value();
   if (number) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena = nullptr;
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(number);
     if (message_arena != submessage_arena) {
       number = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, number, submessage_arena);
     }
     set_has_number();
-    value_.number_ = number;
+    _impl_.value_.number_ = number;
   }
   // @@protoc_insertion_point(field_set_allocated:poplar.IntervalSummary.number)
 }
 void IntervalSummary::set_allocated_number_values(::poplar::SummaryIntegerSlice* number_values) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaNoVirtual();
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   clear_value();
   if (number_values) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena = nullptr;
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(number_values);
     if (message_arena != submessage_arena) {
       number_values = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, number_values, submessage_arena);
     }
     set_has_number_values();
-    value_.number_values_ = number_values;
+    _impl_.value_.number_values_ = number_values;
   }
   // @@protoc_insertion_point(field_set_allocated:poplar.IntervalSummary.number_values)
 }
 void IntervalSummary::set_allocated_point(::poplar::SummaryDouble* point) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaNoVirtual();
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   clear_value();
   if (point) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena = nullptr;
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(point);
     if (message_arena != submessage_arena) {
       point = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, point, submessage_arena);
     }
     set_has_point();
-    value_.point_ = point;
+    _impl_.value_.point_ = point;
   }
   // @@protoc_insertion_point(field_set_allocated:poplar.IntervalSummary.point)
 }
 void IntervalSummary::set_allocated_point_values(::poplar::SummaryDoubleSlice* point_values) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaNoVirtual();
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   clear_value();
   if (point_values) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena = nullptr;
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(point_values);
     if (message_arena != submessage_arena) {
       point_values = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, point_values, submessage_arena);
     }
     set_has_point_values();
-    value_.point_values_ = point_values;
+    _impl_.value_.point_values_ = point_values;
   }
   // @@protoc_insertion_point(field_set_allocated:poplar.IntervalSummary.point_values)
 }
-IntervalSummary::IntervalSummary()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:poplar.IntervalSummary)
+IntervalSummary::IntervalSummary(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:poplar.IntervalSummary)
 }
 IntervalSummary::IntervalSummary(const IntervalSummary& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  collector_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  IntervalSummary* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.collector_){}
+    , decltype(_impl_.value_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , /*decltype(_impl_._oneof_case_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.collector_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.collector_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (!from._internal_collector().empty()) {
-    collector_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.collector_);
+    _this->_impl_.collector_.Set(from._internal_collector(), 
+      _this->GetArenaForAllocation());
   }
   clear_has_value();
   switch (from.value_case()) {
     case kNumber: {
-      _internal_mutable_number()->::poplar::SummaryInteger::MergeFrom(from._internal_number());
+      _this->_internal_mutable_number()->::poplar::SummaryInteger::MergeFrom(
+          from._internal_number());
       break;
     }
     case kNumberValues: {
-      _internal_mutable_number_values()->::poplar::SummaryIntegerSlice::MergeFrom(from._internal_number_values());
+      _this->_internal_mutable_number_values()->::poplar::SummaryIntegerSlice::MergeFrom(
+          from._internal_number_values());
       break;
     }
     case kPoint: {
-      _internal_mutable_point()->::poplar::SummaryDouble::MergeFrom(from._internal_point());
+      _this->_internal_mutable_point()->::poplar::SummaryDouble::MergeFrom(
+          from._internal_point());
       break;
     }
     case kPointValues: {
-      _internal_mutable_point_values()->::poplar::SummaryDoubleSlice::MergeFrom(from._internal_point_values());
+      _this->_internal_mutable_point_values()->::poplar::SummaryDoubleSlice::MergeFrom(
+          from._internal_point_values());
       break;
     }
     case VALUE_NOT_SET: {
@@ -355,143 +342,169 @@ IntervalSummary::IntervalSummary(const IntervalSummary& from)
   // @@protoc_insertion_point(copy_constructor:poplar.IntervalSummary)
 }
 
-void IntervalSummary::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_IntervalSummary_metrics_2eproto.base);
-  collector_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void IntervalSummary::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.collector_){}
+    , decltype(_impl_.value_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , /*decltype(_impl_._oneof_case_)*/{}
+  };
+  _impl_.collector_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.collector_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   clear_has_value();
 }
 
 IntervalSummary::~IntervalSummary() {
   // @@protoc_insertion_point(destructor:poplar.IntervalSummary)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void IntervalSummary::SharedDtor() {
-  collector_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void IntervalSummary::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.collector_.Destroy();
   if (has_value()) {
     clear_value();
   }
 }
 
 void IntervalSummary::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const IntervalSummary& IntervalSummary::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_IntervalSummary_metrics_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void IntervalSummary::clear_value() {
 // @@protoc_insertion_point(one_of_clear_start:poplar.IntervalSummary)
   switch (value_case()) {
     case kNumber: {
-      delete value_.number_;
+      if (GetArenaForAllocation() == nullptr) {
+        delete _impl_.value_.number_;
+      }
       break;
     }
     case kNumberValues: {
-      delete value_.number_values_;
+      if (GetArenaForAllocation() == nullptr) {
+        delete _impl_.value_.number_values_;
+      }
       break;
     }
     case kPoint: {
-      delete value_.point_;
+      if (GetArenaForAllocation() == nullptr) {
+        delete _impl_.value_.point_;
+      }
       break;
     }
     case kPointValues: {
-      delete value_.point_values_;
+      if (GetArenaForAllocation() == nullptr) {
+        delete _impl_.value_.point_values_;
+      }
       break;
     }
     case VALUE_NOT_SET: {
       break;
     }
   }
-  _oneof_case_[0] = VALUE_NOT_SET;
+  _impl_._oneof_case_[0] = VALUE_NOT_SET;
 }
 
 
 void IntervalSummary::Clear() {
 // @@protoc_insertion_point(message_clear_start:poplar.IntervalSummary)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  collector_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.collector_.ClearToEmpty();
   clear_value();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* IntervalSummary::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* IntervalSummary::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // string collector = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_collector();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "poplar.IntervalSummary.collector"));
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+          CHK_(::_pbi::VerifyUTF8(str, "poplar.IntervalSummary.collector"));
+        } else
+          goto handle_unusual;
         continue;
       // .poplar.SummaryInteger number = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ctx->ParseMessage(_internal_mutable_number(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // .poplar.SummaryIntegerSlice number_values = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           ptr = ctx->ParseMessage(_internal_mutable_number_values(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // .poplar.SummaryDouble point = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_point(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // .poplar.SummaryDoubleSlice point_values = 5;
       case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
           ptr = ctx->ParseMessage(_internal_mutable_point_values(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* IntervalSummary::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* IntervalSummary::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:poplar.IntervalSummary)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string collector = 1;
-  if (this->collector().size() > 0) {
+  if (!this->_internal_collector().empty()) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       this->_internal_collector().data(), static_cast<int>(this->_internal_collector().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
@@ -502,39 +515,35 @@ failure:
 
   // .poplar.SummaryInteger number = 2;
   if (_internal_has_number()) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        2, _Internal::number(this), target, stream);
+      InternalWriteMessage(2, _Internal::number(this),
+        _Internal::number(this).GetCachedSize(), target, stream);
   }
 
   // .poplar.SummaryIntegerSlice number_values = 3;
   if (_internal_has_number_values()) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        3, _Internal::number_values(this), target, stream);
+      InternalWriteMessage(3, _Internal::number_values(this),
+        _Internal::number_values(this).GetCachedSize(), target, stream);
   }
 
   // .poplar.SummaryDouble point = 4;
   if (_internal_has_point()) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        4, _Internal::point(this), target, stream);
+      InternalWriteMessage(4, _Internal::point(this),
+        _Internal::point(this).GetCachedSize(), target, stream);
   }
 
   // .poplar.SummaryDoubleSlice point_values = 5;
   if (_internal_has_point_values()) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        5, _Internal::point_values(this), target, stream);
+      InternalWriteMessage(5, _Internal::point_values(this),
+        _Internal::point_values(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:poplar.IntervalSummary)
   return target;
@@ -544,12 +553,12 @@ size_t IntervalSummary::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:poplar.IntervalSummary)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // string collector = 1;
-  if (this->collector().size() > 0) {
+  if (!this->_internal_collector().empty()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_collector());
@@ -560,97 +569,81 @@ size_t IntervalSummary::ByteSizeLong() const {
     case kNumber: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *value_.number_);
+          *_impl_.value_.number_);
       break;
     }
     // .poplar.SummaryIntegerSlice number_values = 3;
     case kNumberValues: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *value_.number_values_);
+          *_impl_.value_.number_values_);
       break;
     }
     // .poplar.SummaryDouble point = 4;
     case kPoint: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *value_.point_);
+          *_impl_.value_.point_);
       break;
     }
     // .poplar.SummaryDoubleSlice point_values = 5;
     case kPointValues: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *value_.point_values_);
+          *_impl_.value_.point_values_);
       break;
     }
     case VALUE_NOT_SET: {
       break;
     }
   }
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
-        _internal_metadata_, total_size, &_cached_size_);
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
-void IntervalSummary::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:poplar.IntervalSummary)
-  GOOGLE_DCHECK_NE(&from, this);
-  const IntervalSummary* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<IntervalSummary>(
-          &from);
-  if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:poplar.IntervalSummary)
-    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:poplar.IntervalSummary)
-    MergeFrom(*source);
-  }
-}
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData IntervalSummary::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    IntervalSummary::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*IntervalSummary::GetClassData() const { return &_class_data_; }
 
-void IntervalSummary::MergeFrom(const IntervalSummary& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:poplar.IntervalSummary)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+
+void IntervalSummary::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<IntervalSummary*>(&to_msg);
+  auto& from = static_cast<const IntervalSummary&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:poplar.IntervalSummary)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.collector().size() > 0) {
-
-    collector_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.collector_);
+  if (!from._internal_collector().empty()) {
+    _this->_internal_set_collector(from._internal_collector());
   }
   switch (from.value_case()) {
     case kNumber: {
-      _internal_mutable_number()->::poplar::SummaryInteger::MergeFrom(from._internal_number());
+      _this->_internal_mutable_number()->::poplar::SummaryInteger::MergeFrom(
+          from._internal_number());
       break;
     }
     case kNumberValues: {
-      _internal_mutable_number_values()->::poplar::SummaryIntegerSlice::MergeFrom(from._internal_number_values());
+      _this->_internal_mutable_number_values()->::poplar::SummaryIntegerSlice::MergeFrom(
+          from._internal_number_values());
       break;
     }
     case kPoint: {
-      _internal_mutable_point()->::poplar::SummaryDouble::MergeFrom(from._internal_point());
+      _this->_internal_mutable_point()->::poplar::SummaryDouble::MergeFrom(
+          from._internal_point());
       break;
     }
     case kPointValues: {
-      _internal_mutable_point_values()->::poplar::SummaryDoubleSlice::MergeFrom(from._internal_point_values());
+      _this->_internal_mutable_point_values()->::poplar::SummaryDoubleSlice::MergeFrom(
+          from._internal_point_values());
       break;
     }
     case VALUE_NOT_SET: {
       break;
     }
   }
-}
-
-void IntervalSummary::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:poplar.IntervalSummary)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void IntervalSummary::CopyFrom(const IntervalSummary& from) {
@@ -666,131 +659,160 @@ bool IntervalSummary::IsInitialized() const {
 
 void IntervalSummary::InternalSwap(IntervalSummary* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  collector_.Swap(&other->collector_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(value_, other->value_);
-  swap(_oneof_case_[0], other->_oneof_case_[0]);
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.collector_, lhs_arena,
+      &other->_impl_.collector_, rhs_arena
+  );
+  swap(_impl_.value_, other->_impl_.value_);
+  swap(_impl_._oneof_case_[0], other->_impl_._oneof_case_[0]);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata IntervalSummary::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_metrics_2eproto_getter, &descriptor_table_metrics_2eproto_once,
+      file_level_metadata_metrics_2eproto[0]);
 }
-
 
 // ===================================================================
 
-void SummaryIntegerSlice::InitAsDefaultInstance() {
-}
 class SummaryIntegerSlice::_Internal {
  public:
 };
 
-SummaryIntegerSlice::SummaryIntegerSlice()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:poplar.SummaryIntegerSlice)
+SummaryIntegerSlice::SummaryIntegerSlice(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:poplar.SummaryIntegerSlice)
 }
 SummaryIntegerSlice::SummaryIntegerSlice(const SummaryIntegerSlice& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
-      value_(from.value_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  SummaryIntegerSlice* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.value_){from._impl_.value_}
+    , /*decltype(_impl_._value_cached_byte_size_)*/{0}
+    , decltype(_impl_.name_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (!from._internal_name().empty()) {
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+    _this->_impl_.name_.Set(from._internal_name(), 
+      _this->GetArenaForAllocation());
   }
   // @@protoc_insertion_point(copy_constructor:poplar.SummaryIntegerSlice)
 }
 
-void SummaryIntegerSlice::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_SummaryIntegerSlice_metrics_2eproto.base);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void SummaryIntegerSlice::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.value_){arena}
+    , /*decltype(_impl_._value_cached_byte_size_)*/{0}
+    , decltype(_impl_.name_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 SummaryIntegerSlice::~SummaryIntegerSlice() {
   // @@protoc_insertion_point(destructor:poplar.SummaryIntegerSlice)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void SummaryIntegerSlice::SharedDtor() {
-  name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void SummaryIntegerSlice::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.value_.~RepeatedField();
+  _impl_.name_.Destroy();
 }
 
 void SummaryIntegerSlice::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const SummaryIntegerSlice& SummaryIntegerSlice::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_SummaryIntegerSlice_metrics_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void SummaryIntegerSlice::Clear() {
 // @@protoc_insertion_point(message_clear_start:poplar.SummaryIntegerSlice)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  value_.Clear();
-  name_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  _internal_metadata_.Clear();
+  _impl_.value_.Clear();
+  _impl_.name_.ClearToEmpty();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* SummaryIntegerSlice::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* SummaryIntegerSlice::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // string name = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_name();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "poplar.SummaryIntegerSlice.name"));
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+          CHK_(::_pbi::VerifyUTF8(str, "poplar.SummaryIntegerSlice.name"));
+        } else
+          goto handle_unusual;
         continue;
       // repeated int64 value = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedInt64Parser(_internal_mutable_value(), ptr, ctx);
           CHK_(ptr);
-        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16) {
-          _internal_add_value(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+        } else if (static_cast<uint8_t>(tag) == 16) {
+          _internal_add_value(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr));
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* SummaryIntegerSlice::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* SummaryIntegerSlice::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:poplar.SummaryIntegerSlice)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string name = 1;
-  if (this->name().size() > 0) {
+  if (!this->_internal_name().empty()) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
@@ -801,7 +823,7 @@ failure:
 
   // repeated int64 value = 2;
   {
-    int byte_size = _value_cached_byte_size_.load(std::memory_order_relaxed);
+    int byte_size = _impl_._value_cached_byte_size_.load(std::memory_order_relaxed);
     if (byte_size > 0) {
       target = stream->WriteInt64Packed(
           2, _internal_value(), byte_size, target);
@@ -809,8 +831,8 @@ failure:
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:poplar.SummaryIntegerSlice)
   return target;
@@ -820,75 +842,54 @@ size_t SummaryIntegerSlice::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:poplar.SummaryIntegerSlice)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // repeated int64 value = 2;
   {
-    size_t data_size = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      Int64Size(this->value_);
+    size_t data_size = ::_pbi::WireFormatLite::
+      Int64Size(this->_impl_.value_);
     if (data_size > 0) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-            static_cast<::PROTOBUF_NAMESPACE_ID::int32>(data_size));
+        ::_pbi::WireFormatLite::Int32Size(static_cast<int32_t>(data_size));
     }
-    int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(data_size);
-    _value_cached_byte_size_.store(cached_size,
+    int cached_size = ::_pbi::ToCachedSize(data_size);
+    _impl_._value_cached_byte_size_.store(cached_size,
                                     std::memory_order_relaxed);
     total_size += data_size;
   }
 
   // string name = 1;
-  if (this->name().size() > 0) {
+  if (!this->_internal_name().empty()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_name());
   }
 
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
-        _internal_metadata_, total_size, &_cached_size_);
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
-void SummaryIntegerSlice::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:poplar.SummaryIntegerSlice)
-  GOOGLE_DCHECK_NE(&from, this);
-  const SummaryIntegerSlice* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<SummaryIntegerSlice>(
-          &from);
-  if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:poplar.SummaryIntegerSlice)
-    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:poplar.SummaryIntegerSlice)
-    MergeFrom(*source);
-  }
-}
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData SummaryIntegerSlice::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    SummaryIntegerSlice::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*SummaryIntegerSlice::GetClassData() const { return &_class_data_; }
 
-void SummaryIntegerSlice::MergeFrom(const SummaryIntegerSlice& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:poplar.SummaryIntegerSlice)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+
+void SummaryIntegerSlice::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<SummaryIntegerSlice*>(&to_msg);
+  auto& from = static_cast<const SummaryIntegerSlice&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:poplar.SummaryIntegerSlice)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  value_.MergeFrom(from.value_);
-  if (from.name().size() > 0) {
-
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+  _this->_impl_.value_.MergeFrom(from._impl_.value_);
+  if (!from._internal_name().empty()) {
+    _this->_internal_set_name(from._internal_name());
   }
-}
-
-void SummaryIntegerSlice::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:poplar.SummaryIntegerSlice)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void SummaryIntegerSlice::CopyFrom(const SummaryIntegerSlice& from) {
@@ -904,128 +905,154 @@ bool SummaryIntegerSlice::IsInitialized() const {
 
 void SummaryIntegerSlice::InternalSwap(SummaryIntegerSlice* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  value_.InternalSwap(&other->value_);
-  name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.value_.InternalSwap(&other->_impl_.value_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.name_, lhs_arena,
+      &other->_impl_.name_, rhs_arena
+  );
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata SummaryIntegerSlice::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_metrics_2eproto_getter, &descriptor_table_metrics_2eproto_once,
+      file_level_metadata_metrics_2eproto[1]);
 }
-
 
 // ===================================================================
 
-void SummaryInteger::InitAsDefaultInstance() {
-}
 class SummaryInteger::_Internal {
  public:
 };
 
-SummaryInteger::SummaryInteger()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:poplar.SummaryInteger)
+SummaryInteger::SummaryInteger(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:poplar.SummaryInteger)
 }
 SummaryInteger::SummaryInteger(const SummaryInteger& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  SummaryInteger* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.name_){}
+    , decltype(_impl_.value_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (!from._internal_name().empty()) {
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+    _this->_impl_.name_.Set(from._internal_name(), 
+      _this->GetArenaForAllocation());
   }
-  value_ = from.value_;
+  _this->_impl_.value_ = from._impl_.value_;
   // @@protoc_insertion_point(copy_constructor:poplar.SummaryInteger)
 }
 
-void SummaryInteger::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_SummaryInteger_metrics_2eproto.base);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  value_ = PROTOBUF_LONGLONG(0);
+inline void SummaryInteger::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.name_){}
+    , decltype(_impl_.value_){int64_t{0}}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 SummaryInteger::~SummaryInteger() {
   // @@protoc_insertion_point(destructor:poplar.SummaryInteger)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void SummaryInteger::SharedDtor() {
-  name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void SummaryInteger::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.name_.Destroy();
 }
 
 void SummaryInteger::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const SummaryInteger& SummaryInteger::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_SummaryInteger_metrics_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void SummaryInteger::Clear() {
 // @@protoc_insertion_point(message_clear_start:poplar.SummaryInteger)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  name_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  value_ = PROTOBUF_LONGLONG(0);
-  _internal_metadata_.Clear();
+  _impl_.name_.ClearToEmpty();
+  _impl_.value_ = int64_t{0};
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* SummaryInteger::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* SummaryInteger::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // string name = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_name();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "poplar.SummaryInteger.name"));
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+          CHK_(::_pbi::VerifyUTF8(str, "poplar.SummaryInteger.name"));
+        } else
+          goto handle_unusual;
         continue;
       // int64 value = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          value_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.value_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* SummaryInteger::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* SummaryInteger::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:poplar.SummaryInteger)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string name = 1;
-  if (this->name().size() > 0) {
+  if (!this->_internal_name().empty()) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
@@ -1035,14 +1062,14 @@ failure:
   }
 
   // int64 value = 2;
-  if (this->value() != 0) {
+  if (this->_internal_value() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(2, this->_internal_value(), target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(2, this->_internal_value(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:poplar.SummaryInteger)
   return target;
@@ -1052,69 +1079,47 @@ size_t SummaryInteger::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:poplar.SummaryInteger)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // string name = 1;
-  if (this->name().size() > 0) {
+  if (!this->_internal_name().empty()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_name());
   }
 
   // int64 value = 2;
-  if (this->value() != 0) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
-        this->_internal_value());
+  if (this->_internal_value() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_value());
   }
 
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
-        _internal_metadata_, total_size, &_cached_size_);
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
-void SummaryInteger::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:poplar.SummaryInteger)
-  GOOGLE_DCHECK_NE(&from, this);
-  const SummaryInteger* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<SummaryInteger>(
-          &from);
-  if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:poplar.SummaryInteger)
-    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:poplar.SummaryInteger)
-    MergeFrom(*source);
-  }
-}
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData SummaryInteger::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    SummaryInteger::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*SummaryInteger::GetClassData() const { return &_class_data_; }
 
-void SummaryInteger::MergeFrom(const SummaryInteger& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:poplar.SummaryInteger)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+
+void SummaryInteger::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<SummaryInteger*>(&to_msg);
+  auto& from = static_cast<const SummaryInteger&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:poplar.SummaryInteger)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.name().size() > 0) {
-
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+  if (!from._internal_name().empty()) {
+    _this->_internal_set_name(from._internal_name());
   }
-  if (from.value() != 0) {
-    _internal_set_value(from._internal_value());
+  if (from._internal_value() != 0) {
+    _this->_internal_set_value(from._internal_value());
   }
-}
-
-void SummaryInteger::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:poplar.SummaryInteger)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void SummaryInteger::CopyFrom(const SummaryInteger& from) {
@@ -1130,130 +1135,157 @@ bool SummaryInteger::IsInitialized() const {
 
 void SummaryInteger::InternalSwap(SummaryInteger* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(value_, other->value_);
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.name_, lhs_arena,
+      &other->_impl_.name_, rhs_arena
+  );
+  swap(_impl_.value_, other->_impl_.value_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata SummaryInteger::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_metrics_2eproto_getter, &descriptor_table_metrics_2eproto_once,
+      file_level_metadata_metrics_2eproto[2]);
 }
-
 
 // ===================================================================
 
-void SummaryDoubleSlice::InitAsDefaultInstance() {
-}
 class SummaryDoubleSlice::_Internal {
  public:
 };
 
-SummaryDoubleSlice::SummaryDoubleSlice()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:poplar.SummaryDoubleSlice)
+SummaryDoubleSlice::SummaryDoubleSlice(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:poplar.SummaryDoubleSlice)
 }
 SummaryDoubleSlice::SummaryDoubleSlice(const SummaryDoubleSlice& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
-      value_(from.value_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  SummaryDoubleSlice* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.value_){from._impl_.value_}
+    , decltype(_impl_.name_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (!from._internal_name().empty()) {
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+    _this->_impl_.name_.Set(from._internal_name(), 
+      _this->GetArenaForAllocation());
   }
   // @@protoc_insertion_point(copy_constructor:poplar.SummaryDoubleSlice)
 }
 
-void SummaryDoubleSlice::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_SummaryDoubleSlice_metrics_2eproto.base);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void SummaryDoubleSlice::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.value_){arena}
+    , decltype(_impl_.name_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 SummaryDoubleSlice::~SummaryDoubleSlice() {
   // @@protoc_insertion_point(destructor:poplar.SummaryDoubleSlice)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void SummaryDoubleSlice::SharedDtor() {
-  name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void SummaryDoubleSlice::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.value_.~RepeatedField();
+  _impl_.name_.Destroy();
 }
 
 void SummaryDoubleSlice::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const SummaryDoubleSlice& SummaryDoubleSlice::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_SummaryDoubleSlice_metrics_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void SummaryDoubleSlice::Clear() {
 // @@protoc_insertion_point(message_clear_start:poplar.SummaryDoubleSlice)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  value_.Clear();
-  name_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  _internal_metadata_.Clear();
+  _impl_.value_.Clear();
+  _impl_.name_.ClearToEmpty();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* SummaryDoubleSlice::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* SummaryDoubleSlice::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // string name = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_name();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "poplar.SummaryDoubleSlice.name"));
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+          CHK_(::_pbi::VerifyUTF8(str, "poplar.SummaryDoubleSlice.name"));
+        } else
+          goto handle_unusual;
         continue;
       // repeated double value = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedDoubleParser(_internal_mutable_value(), ptr, ctx);
           CHK_(ptr);
-        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 17) {
+        } else if (static_cast<uint8_t>(tag) == 17) {
           _internal_add_value(::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr));
           ptr += sizeof(double);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* SummaryDoubleSlice::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* SummaryDoubleSlice::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:poplar.SummaryDoubleSlice)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string name = 1;
-  if (this->name().size() > 0) {
+  if (!this->_internal_name().empty()) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
@@ -1268,8 +1300,8 @@ failure:
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:poplar.SummaryDoubleSlice)
   return target;
@@ -1279,7 +1311,7 @@ size_t SummaryDoubleSlice::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:poplar.SummaryDoubleSlice)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -1289,65 +1321,41 @@ size_t SummaryDoubleSlice::ByteSizeLong() const {
     size_t data_size = 8UL * count;
     if (data_size > 0) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-            static_cast<::PROTOBUF_NAMESPACE_ID::int32>(data_size));
+        ::_pbi::WireFormatLite::Int32Size(static_cast<int32_t>(data_size));
     }
-    int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(data_size);
-    _value_cached_byte_size_.store(cached_size,
-                                    std::memory_order_relaxed);
     total_size += data_size;
   }
 
   // string name = 1;
-  if (this->name().size() > 0) {
+  if (!this->_internal_name().empty()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_name());
   }
 
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
-        _internal_metadata_, total_size, &_cached_size_);
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
-void SummaryDoubleSlice::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:poplar.SummaryDoubleSlice)
-  GOOGLE_DCHECK_NE(&from, this);
-  const SummaryDoubleSlice* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<SummaryDoubleSlice>(
-          &from);
-  if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:poplar.SummaryDoubleSlice)
-    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:poplar.SummaryDoubleSlice)
-    MergeFrom(*source);
-  }
-}
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData SummaryDoubleSlice::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    SummaryDoubleSlice::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*SummaryDoubleSlice::GetClassData() const { return &_class_data_; }
 
-void SummaryDoubleSlice::MergeFrom(const SummaryDoubleSlice& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:poplar.SummaryDoubleSlice)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+
+void SummaryDoubleSlice::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<SummaryDoubleSlice*>(&to_msg);
+  auto& from = static_cast<const SummaryDoubleSlice&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:poplar.SummaryDoubleSlice)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  value_.MergeFrom(from.value_);
-  if (from.name().size() > 0) {
-
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+  _this->_impl_.value_.MergeFrom(from._impl_.value_);
+  if (!from._internal_name().empty()) {
+    _this->_internal_set_name(from._internal_name());
   }
-}
-
-void SummaryDoubleSlice::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:poplar.SummaryDoubleSlice)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void SummaryDoubleSlice::CopyFrom(const SummaryDoubleSlice& from) {
@@ -1363,128 +1371,154 @@ bool SummaryDoubleSlice::IsInitialized() const {
 
 void SummaryDoubleSlice::InternalSwap(SummaryDoubleSlice* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  value_.InternalSwap(&other->value_);
-  name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.value_.InternalSwap(&other->_impl_.value_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.name_, lhs_arena,
+      &other->_impl_.name_, rhs_arena
+  );
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata SummaryDoubleSlice::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_metrics_2eproto_getter, &descriptor_table_metrics_2eproto_once,
+      file_level_metadata_metrics_2eproto[3]);
 }
-
 
 // ===================================================================
 
-void SummaryDouble::InitAsDefaultInstance() {
-}
 class SummaryDouble::_Internal {
  public:
 };
 
-SummaryDouble::SummaryDouble()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:poplar.SummaryDouble)
+SummaryDouble::SummaryDouble(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:poplar.SummaryDouble)
 }
 SummaryDouble::SummaryDouble(const SummaryDouble& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  SummaryDouble* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.name_){}
+    , decltype(_impl_.value_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (!from._internal_name().empty()) {
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+    _this->_impl_.name_.Set(from._internal_name(), 
+      _this->GetArenaForAllocation());
   }
-  value_ = from.value_;
+  _this->_impl_.value_ = from._impl_.value_;
   // @@protoc_insertion_point(copy_constructor:poplar.SummaryDouble)
 }
 
-void SummaryDouble::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_SummaryDouble_metrics_2eproto.base);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  value_ = 0;
+inline void SummaryDouble::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.name_){}
+    , decltype(_impl_.value_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 SummaryDouble::~SummaryDouble() {
   // @@protoc_insertion_point(destructor:poplar.SummaryDouble)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void SummaryDouble::SharedDtor() {
-  name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void SummaryDouble::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.name_.Destroy();
 }
 
 void SummaryDouble::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const SummaryDouble& SummaryDouble::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_SummaryDouble_metrics_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void SummaryDouble::Clear() {
 // @@protoc_insertion_point(message_clear_start:poplar.SummaryDouble)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  name_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  value_ = 0;
-  _internal_metadata_.Clear();
+  _impl_.name_.ClearToEmpty();
+  _impl_.value_ = 0;
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* SummaryDouble::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* SummaryDouble::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // string name = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_name();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "poplar.SummaryDouble.name"));
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+          CHK_(::_pbi::VerifyUTF8(str, "poplar.SummaryDouble.name"));
+        } else
+          goto handle_unusual;
         continue;
       // double value = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 17)) {
-          value_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 17)) {
+          _impl_.value_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
           ptr += sizeof(double);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* SummaryDouble::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* SummaryDouble::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:poplar.SummaryDouble)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string name = 1;
-  if (this->name().size() > 0) {
+  if (!this->_internal_name().empty()) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
@@ -1494,14 +1528,18 @@ failure:
   }
 
   // double value = 2;
-  if (!(this->value() <= 0 && this->value() >= 0)) {
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_value = this->_internal_value();
+  uint64_t raw_value;
+  memcpy(&raw_value, &tmp_value, sizeof(tmp_value));
+  if (raw_value != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteDoubleToArray(2, this->_internal_value(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(2, this->_internal_value(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:poplar.SummaryDouble)
   return target;
@@ -1511,67 +1549,55 @@ size_t SummaryDouble::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:poplar.SummaryDouble)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // string name = 1;
-  if (this->name().size() > 0) {
+  if (!this->_internal_name().empty()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_name());
   }
 
   // double value = 2;
-  if (!(this->value() <= 0 && this->value() >= 0)) {
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_value = this->_internal_value();
+  uint64_t raw_value;
+  memcpy(&raw_value, &tmp_value, sizeof(tmp_value));
+  if (raw_value != 0) {
     total_size += 1 + 8;
   }
 
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
-        _internal_metadata_, total_size, &_cached_size_);
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
-void SummaryDouble::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:poplar.SummaryDouble)
-  GOOGLE_DCHECK_NE(&from, this);
-  const SummaryDouble* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<SummaryDouble>(
-          &from);
-  if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:poplar.SummaryDouble)
-    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:poplar.SummaryDouble)
-    MergeFrom(*source);
-  }
-}
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData SummaryDouble::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    SummaryDouble::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*SummaryDouble::GetClassData() const { return &_class_data_; }
 
-void SummaryDouble::MergeFrom(const SummaryDouble& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:poplar.SummaryDouble)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+
+void SummaryDouble::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<SummaryDouble*>(&to_msg);
+  auto& from = static_cast<const SummaryDouble&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:poplar.SummaryDouble)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.name().size() > 0) {
-
-    name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
+  if (!from._internal_name().empty()) {
+    _this->_internal_set_name(from._internal_name());
   }
-  if (!(from.value() <= 0 && from.value() >= 0)) {
-    _internal_set_value(from._internal_value());
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_value = from._internal_value();
+  uint64_t raw_value;
+  memcpy(&raw_value, &tmp_value, sizeof(tmp_value));
+  if (raw_value != 0) {
+    _this->_internal_set_value(from._internal_value());
   }
-}
-
-void SummaryDouble::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:poplar.SummaryDouble)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void SummaryDouble::CopyFrom(const SummaryDouble& from) {
@@ -1587,34 +1613,44 @@ bool SummaryDouble::IsInitialized() const {
 
 void SummaryDouble::InternalSwap(SummaryDouble* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(value_, other->value_);
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.name_, lhs_arena,
+      &other->_impl_.name_, rhs_arena
+  );
+  swap(_impl_.value_, other->_impl_.value_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata SummaryDouble::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_metrics_2eproto_getter, &descriptor_table_metrics_2eproto_once,
+      file_level_metadata_metrics_2eproto[4]);
 }
-
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace poplar
 PROTOBUF_NAMESPACE_OPEN
-template<> PROTOBUF_NOINLINE ::poplar::IntervalSummary* Arena::CreateMaybeMessage< ::poplar::IntervalSummary >(Arena* arena) {
-  return Arena::CreateInternal< ::poplar::IntervalSummary >(arena);
+template<> PROTOBUF_NOINLINE ::poplar::IntervalSummary*
+Arena::CreateMaybeMessage< ::poplar::IntervalSummary >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::poplar::IntervalSummary >(arena);
 }
-template<> PROTOBUF_NOINLINE ::poplar::SummaryIntegerSlice* Arena::CreateMaybeMessage< ::poplar::SummaryIntegerSlice >(Arena* arena) {
-  return Arena::CreateInternal< ::poplar::SummaryIntegerSlice >(arena);
+template<> PROTOBUF_NOINLINE ::poplar::SummaryIntegerSlice*
+Arena::CreateMaybeMessage< ::poplar::SummaryIntegerSlice >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::poplar::SummaryIntegerSlice >(arena);
 }
-template<> PROTOBUF_NOINLINE ::poplar::SummaryInteger* Arena::CreateMaybeMessage< ::poplar::SummaryInteger >(Arena* arena) {
-  return Arena::CreateInternal< ::poplar::SummaryInteger >(arena);
+template<> PROTOBUF_NOINLINE ::poplar::SummaryInteger*
+Arena::CreateMaybeMessage< ::poplar::SummaryInteger >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::poplar::SummaryInteger >(arena);
 }
-template<> PROTOBUF_NOINLINE ::poplar::SummaryDoubleSlice* Arena::CreateMaybeMessage< ::poplar::SummaryDoubleSlice >(Arena* arena) {
-  return Arena::CreateInternal< ::poplar::SummaryDoubleSlice >(arena);
+template<> PROTOBUF_NOINLINE ::poplar::SummaryDoubleSlice*
+Arena::CreateMaybeMessage< ::poplar::SummaryDoubleSlice >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::poplar::SummaryDoubleSlice >(arena);
 }
-template<> PROTOBUF_NOINLINE ::poplar::SummaryDouble* Arena::CreateMaybeMessage< ::poplar::SummaryDouble >(Arena* arena) {
-  return Arena::CreateInternal< ::poplar::SummaryDouble >(arena);
+template<> PROTOBUF_NOINLINE ::poplar::SummaryDouble*
+Arena::CreateMaybeMessage< ::poplar::SummaryDouble >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::poplar::SummaryDouble >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

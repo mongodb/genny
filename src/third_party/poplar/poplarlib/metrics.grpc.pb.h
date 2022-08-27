@@ -13,28 +13,17 @@
 #include <grpcpp/impl/codegen/client_callback.h>
 #include <grpcpp/impl/codegen/client_context.h>
 #include <grpcpp/impl/codegen/completion_queue.h>
-#include <grpcpp/impl/codegen/method_handler_impl.h>
+#include <grpcpp/impl/codegen/message_allocator.h>
+#include <grpcpp/impl/codegen/method_handler.h>
 #include <grpcpp/impl/codegen/proto_utils.h>
 #include <grpcpp/impl/codegen/rpc_method.h>
 #include <grpcpp/impl/codegen/server_callback.h>
+#include <grpcpp/impl/codegen/server_callback_handlers.h>
 #include <grpcpp/impl/codegen/server_context.h>
 #include <grpcpp/impl/codegen/service_type.h>
 #include <grpcpp/impl/codegen/status.h>
 #include <grpcpp/impl/codegen/stub_options.h>
 #include <grpcpp/impl/codegen/sync_stream.h>
-
-namespace grpc_impl {
-class CompletionQueue;
-class ServerCompletionQueue;
-class ServerContext;
-}  // namespace grpc_impl
-
-namespace grpc {
-namespace experimental {
-template <typename RequestT, typename ResponseT>
-class MessageAllocator;
-}  // namespace experimental
-}  // namespace grpc
 
 namespace poplar {
 
@@ -81,32 +70,24 @@ class PoplarMetricsCollector final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>> PrepareAsyncAdd(::grpc::ClientContext* context, const ::poplar::IntervalSummary& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>>(PrepareAsyncAddRaw(context, request, cq));
     }
-    class experimental_async_interface {
+    class async_interface {
      public:
-      virtual ~experimental_async_interface() {}
+      virtual ~async_interface() {}
       virtual void CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void CreateCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      virtual void CreateCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void CloseCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      virtual void CloseCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void ResetSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void ResetSample(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void ResetSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      virtual void ResetSample(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void ResetSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void FlushSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void FlushSample(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void FlushSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      virtual void FlushSample(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void FlushSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void Add(::grpc::ClientContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Add(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Add(::grpc::ClientContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      virtual void Add(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void Add(::grpc::ClientContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
-    virtual class experimental_async_interface* experimental_async() { return nullptr; }
-  private:
+    typedef class async_interface experimental_async_interface;
+    virtual class async_interface* async() { return nullptr; }
+    class async_interface* experimental_async() { return async(); }
+   private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>* AsyncCreateCollectorRaw(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>* PrepareAsyncCreateCollectorRaw(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>* AsyncCloseCollectorRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) = 0;
@@ -120,7 +101,7 @@ class PoplarMetricsCollector final {
   };
   class Stub final : public StubInterface {
    public:
-    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel);
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
     ::grpc::Status CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::poplar::PoplarResponse* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>> AsyncCreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>>(AsyncCreateCollectorRaw(context, request, cq));
@@ -156,40 +137,30 @@ class PoplarMetricsCollector final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>> PrepareAsyncAdd(::grpc::ClientContext* context, const ::poplar::IntervalSummary& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>>(PrepareAsyncAddRaw(context, request, cq));
     }
-    class experimental_async final :
-      public StubInterface::experimental_async_interface {
+    class async final :
+      public StubInterface::async_interface {
      public:
       void CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
-      void CreateCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
-      void CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      void CreateCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
       void CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
-      void CloseCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
-      void CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      void CloseCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
       void ResetSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
-      void ResetSample(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
-      void ResetSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      void ResetSample(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void ResetSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
       void FlushSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
-      void FlushSample(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
-      void FlushSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      void FlushSample(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void FlushSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
       void Add(::grpc::ClientContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
-      void Add(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
-      void Add(::grpc::ClientContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      void Add(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void Add(::grpc::ClientContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
       friend class Stub;
-      explicit experimental_async(Stub* stub): stub_(stub) { }
+      explicit async(Stub* stub): stub_(stub) { }
       Stub* stub() { return stub_; }
       Stub* stub_;
     };
-    class experimental_async_interface* experimental_async() override { return &async_stub_; }
+    class async* async() override { return &async_stub_; }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
-    class experimental_async async_stub_{this};
+    class async async_stub_{this};
     ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* AsyncCreateCollectorRaw(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PrepareAsyncCreateCollectorRaw(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* AsyncCloseCollectorRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) override;
@@ -221,7 +192,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithAsyncMethod_CreateCollector : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_CreateCollector() {
       ::grpc::Service::MarkMethodAsync(0);
@@ -230,7 +201,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CreateCollector(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status CreateCollector(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -241,7 +212,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithAsyncMethod_CloseCollector : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_CloseCollector() {
       ::grpc::Service::MarkMethodAsync(1);
@@ -250,7 +221,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CloseCollector(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status CloseCollector(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -261,7 +232,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithAsyncMethod_ResetSample : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_ResetSample() {
       ::grpc::Service::MarkMethodAsync(2);
@@ -270,7 +241,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ResetSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status ResetSample(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -281,7 +252,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithAsyncMethod_FlushSample : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_FlushSample() {
       ::grpc::Service::MarkMethodAsync(3);
@@ -290,7 +261,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status FlushSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status FlushSample(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -301,7 +272,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithAsyncMethod_Add : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_Add() {
       ::grpc::Service::MarkMethodAsync(4);
@@ -310,7 +281,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Add(::grpc::ServerContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status Add(::grpc::ServerContext* /*context*/, const ::poplar::IntervalSummary* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -320,165 +291,146 @@ class PoplarMetricsCollector final {
   };
   typedef WithAsyncMethod_CreateCollector<WithAsyncMethod_CloseCollector<WithAsyncMethod_ResetSample<WithAsyncMethod_FlushSample<WithAsyncMethod_Add<Service > > > > > AsyncService;
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_CreateCollector : public BaseClass {
+  class WithCallbackMethod_CreateCollector : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_CreateCollector() {
-      ::grpc::Service::experimental().MarkMethodCallback(0,
-        new ::grpc_impl::internal::CallbackUnaryHandler< ::poplar::CreateOptions, ::poplar::PoplarResponse>(
-          [this](::grpc::ServerContext* context,
-                 const ::poplar::CreateOptions* request,
-                 ::poplar::PoplarResponse* response,
-                 ::grpc::experimental::ServerCallbackRpcController* controller) {
-                   return this->CreateCollector(context, request, response, controller);
-                 }));
-    }
+    WithCallbackMethod_CreateCollector() {
+      ::grpc::Service::MarkMethodCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::poplar::CreateOptions, ::poplar::PoplarResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) { return this->CreateCollector(context, request, response); }));}
     void SetMessageAllocatorFor_CreateCollector(
-        ::grpc::experimental::MessageAllocator< ::poplar::CreateOptions, ::poplar::PoplarResponse>* allocator) {
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::poplar::CreateOptions, ::poplar::PoplarResponse>*>(
-          ::grpc::Service::experimental().GetHandler(0))
+        ::grpc::MessageAllocator< ::poplar::CreateOptions, ::poplar::PoplarResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::poplar::CreateOptions, ::poplar::PoplarResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_CreateCollector() override {
+    ~WithCallbackMethod_CreateCollector() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CreateCollector(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status CreateCollector(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void CreateCollector(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual ::grpc::ServerUnaryReactor* CreateCollector(
+      ::grpc::CallbackServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_CloseCollector : public BaseClass {
+  class WithCallbackMethod_CloseCollector : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_CloseCollector() {
-      ::grpc::Service::experimental().MarkMethodCallback(1,
-        new ::grpc_impl::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>(
-          [this](::grpc::ServerContext* context,
-                 const ::poplar::PoplarID* request,
-                 ::poplar::PoplarResponse* response,
-                 ::grpc::experimental::ServerCallbackRpcController* controller) {
-                   return this->CloseCollector(context, request, response, controller);
-                 }));
-    }
+    WithCallbackMethod_CloseCollector() {
+      ::grpc::Service::MarkMethodCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) { return this->CloseCollector(context, request, response); }));}
     void SetMessageAllocatorFor_CloseCollector(
-        ::grpc::experimental::MessageAllocator< ::poplar::PoplarID, ::poplar::PoplarResponse>* allocator) {
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>*>(
-          ::grpc::Service::experimental().GetHandler(1))
+        ::grpc::MessageAllocator< ::poplar::PoplarID, ::poplar::PoplarResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_CloseCollector() override {
+    ~WithCallbackMethod_CloseCollector() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CloseCollector(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status CloseCollector(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void CloseCollector(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual ::grpc::ServerUnaryReactor* CloseCollector(
+      ::grpc::CallbackServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_ResetSample : public BaseClass {
+  class WithCallbackMethod_ResetSample : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_ResetSample() {
-      ::grpc::Service::experimental().MarkMethodCallback(2,
-        new ::grpc_impl::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>(
-          [this](::grpc::ServerContext* context,
-                 const ::poplar::PoplarID* request,
-                 ::poplar::PoplarResponse* response,
-                 ::grpc::experimental::ServerCallbackRpcController* controller) {
-                   return this->ResetSample(context, request, response, controller);
-                 }));
-    }
+    WithCallbackMethod_ResetSample() {
+      ::grpc::Service::MarkMethodCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) { return this->ResetSample(context, request, response); }));}
     void SetMessageAllocatorFor_ResetSample(
-        ::grpc::experimental::MessageAllocator< ::poplar::PoplarID, ::poplar::PoplarResponse>* allocator) {
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>*>(
-          ::grpc::Service::experimental().GetHandler(2))
+        ::grpc::MessageAllocator< ::poplar::PoplarID, ::poplar::PoplarResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_ResetSample() override {
+    ~WithCallbackMethod_ResetSample() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ResetSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status ResetSample(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void ResetSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual ::grpc::ServerUnaryReactor* ResetSample(
+      ::grpc::CallbackServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_FlushSample : public BaseClass {
+  class WithCallbackMethod_FlushSample : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_FlushSample() {
-      ::grpc::Service::experimental().MarkMethodCallback(3,
-        new ::grpc_impl::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>(
-          [this](::grpc::ServerContext* context,
-                 const ::poplar::PoplarID* request,
-                 ::poplar::PoplarResponse* response,
-                 ::grpc::experimental::ServerCallbackRpcController* controller) {
-                   return this->FlushSample(context, request, response, controller);
-                 }));
-    }
+    WithCallbackMethod_FlushSample() {
+      ::grpc::Service::MarkMethodCallback(3,
+          new ::grpc::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) { return this->FlushSample(context, request, response); }));}
     void SetMessageAllocatorFor_FlushSample(
-        ::grpc::experimental::MessageAllocator< ::poplar::PoplarID, ::poplar::PoplarResponse>* allocator) {
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>*>(
-          ::grpc::Service::experimental().GetHandler(3))
+        ::grpc::MessageAllocator< ::poplar::PoplarID, ::poplar::PoplarResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(3);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_FlushSample() override {
+    ~WithCallbackMethod_FlushSample() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status FlushSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status FlushSample(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void FlushSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual ::grpc::ServerUnaryReactor* FlushSample(
+      ::grpc::CallbackServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_Add : public BaseClass {
+  class WithCallbackMethod_Add : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_Add() {
-      ::grpc::Service::experimental().MarkMethodCallback(4,
-        new ::grpc_impl::internal::CallbackUnaryHandler< ::poplar::IntervalSummary, ::poplar::PoplarResponse>(
-          [this](::grpc::ServerContext* context,
-                 const ::poplar::IntervalSummary* request,
-                 ::poplar::PoplarResponse* response,
-                 ::grpc::experimental::ServerCallbackRpcController* controller) {
-                   return this->Add(context, request, response, controller);
-                 }));
-    }
+    WithCallbackMethod_Add() {
+      ::grpc::Service::MarkMethodCallback(4,
+          new ::grpc::internal::CallbackUnaryHandler< ::poplar::IntervalSummary, ::poplar::PoplarResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response) { return this->Add(context, request, response); }));}
     void SetMessageAllocatorFor_Add(
-        ::grpc::experimental::MessageAllocator< ::poplar::IntervalSummary, ::poplar::PoplarResponse>* allocator) {
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::poplar::IntervalSummary, ::poplar::PoplarResponse>*>(
-          ::grpc::Service::experimental().GetHandler(4))
+        ::grpc::MessageAllocator< ::poplar::IntervalSummary, ::poplar::PoplarResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(4);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::poplar::IntervalSummary, ::poplar::PoplarResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_Add() override {
+    ~WithCallbackMethod_Add() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Add(::grpc::ServerContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status Add(::grpc::ServerContext* /*context*/, const ::poplar::IntervalSummary* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void Add(::grpc::ServerContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual ::grpc::ServerUnaryReactor* Add(
+      ::grpc::CallbackServerContext* /*context*/, const ::poplar::IntervalSummary* /*request*/, ::poplar::PoplarResponse* /*response*/)  { return nullptr; }
   };
-  typedef ExperimentalWithCallbackMethod_CreateCollector<ExperimentalWithCallbackMethod_CloseCollector<ExperimentalWithCallbackMethod_ResetSample<ExperimentalWithCallbackMethod_FlushSample<ExperimentalWithCallbackMethod_Add<Service > > > > > ExperimentalCallbackService;
+  typedef WithCallbackMethod_CreateCollector<WithCallbackMethod_CloseCollector<WithCallbackMethod_ResetSample<WithCallbackMethod_FlushSample<WithCallbackMethod_Add<Service > > > > > CallbackService;
+  typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_CreateCollector : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_CreateCollector() {
       ::grpc::Service::MarkMethodGeneric(0);
@@ -487,7 +439,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CreateCollector(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status CreateCollector(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -495,7 +447,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithGenericMethod_CloseCollector : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_CloseCollector() {
       ::grpc::Service::MarkMethodGeneric(1);
@@ -504,7 +456,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CloseCollector(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status CloseCollector(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -512,7 +464,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithGenericMethod_ResetSample : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_ResetSample() {
       ::grpc::Service::MarkMethodGeneric(2);
@@ -521,7 +473,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ResetSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status ResetSample(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -529,7 +481,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithGenericMethod_FlushSample : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_FlushSample() {
       ::grpc::Service::MarkMethodGeneric(3);
@@ -538,7 +490,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status FlushSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status FlushSample(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -546,7 +498,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithGenericMethod_Add : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_Add() {
       ::grpc::Service::MarkMethodGeneric(4);
@@ -555,7 +507,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Add(::grpc::ServerContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status Add(::grpc::ServerContext* /*context*/, const ::poplar::IntervalSummary* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -563,7 +515,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithRawMethod_CreateCollector : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_CreateCollector() {
       ::grpc::Service::MarkMethodRaw(0);
@@ -572,7 +524,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CreateCollector(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status CreateCollector(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -583,7 +535,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithRawMethod_CloseCollector : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_CloseCollector() {
       ::grpc::Service::MarkMethodRaw(1);
@@ -592,7 +544,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CloseCollector(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status CloseCollector(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -603,7 +555,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithRawMethod_ResetSample : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_ResetSample() {
       ::grpc::Service::MarkMethodRaw(2);
@@ -612,7 +564,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ResetSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status ResetSample(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -623,7 +575,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithRawMethod_FlushSample : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_FlushSample() {
       ::grpc::Service::MarkMethodRaw(3);
@@ -632,7 +584,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status FlushSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status FlushSample(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -643,7 +595,7 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithRawMethod_Add : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_Add() {
       ::grpc::Service::MarkMethodRaw(4);
@@ -652,7 +604,7 @@ class PoplarMetricsCollector final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Add(::grpc::ServerContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status Add(::grpc::ServerContext* /*context*/, const ::poplar::IntervalSummary* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -661,144 +613,136 @@ class PoplarMetricsCollector final {
     }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_CreateCollector : public BaseClass {
+  class WithRawCallbackMethod_CreateCollector : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_CreateCollector() {
-      ::grpc::Service::experimental().MarkMethodRawCallback(0,
-        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-          [this](::grpc::ServerContext* context,
-                 const ::grpc::ByteBuffer* request,
-                 ::grpc::ByteBuffer* response,
-                 ::grpc::experimental::ServerCallbackRpcController* controller) {
-                   this->CreateCollector(context, request, response, controller);
-                 }));
+    WithRawCallbackMethod_CreateCollector() {
+      ::grpc::Service::MarkMethodRawCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->CreateCollector(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_CreateCollector() override {
+    ~WithRawCallbackMethod_CreateCollector() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CreateCollector(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status CreateCollector(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void CreateCollector(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual ::grpc::ServerUnaryReactor* CreateCollector(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_CloseCollector : public BaseClass {
+  class WithRawCallbackMethod_CloseCollector : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_CloseCollector() {
-      ::grpc::Service::experimental().MarkMethodRawCallback(1,
-        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-          [this](::grpc::ServerContext* context,
-                 const ::grpc::ByteBuffer* request,
-                 ::grpc::ByteBuffer* response,
-                 ::grpc::experimental::ServerCallbackRpcController* controller) {
-                   this->CloseCollector(context, request, response, controller);
-                 }));
+    WithRawCallbackMethod_CloseCollector() {
+      ::grpc::Service::MarkMethodRawCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->CloseCollector(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_CloseCollector() override {
+    ~WithRawCallbackMethod_CloseCollector() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CloseCollector(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status CloseCollector(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void CloseCollector(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual ::grpc::ServerUnaryReactor* CloseCollector(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_ResetSample : public BaseClass {
+  class WithRawCallbackMethod_ResetSample : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_ResetSample() {
-      ::grpc::Service::experimental().MarkMethodRawCallback(2,
-        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-          [this](::grpc::ServerContext* context,
-                 const ::grpc::ByteBuffer* request,
-                 ::grpc::ByteBuffer* response,
-                 ::grpc::experimental::ServerCallbackRpcController* controller) {
-                   this->ResetSample(context, request, response, controller);
-                 }));
+    WithRawCallbackMethod_ResetSample() {
+      ::grpc::Service::MarkMethodRawCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->ResetSample(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_ResetSample() override {
+    ~WithRawCallbackMethod_ResetSample() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ResetSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status ResetSample(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void ResetSample(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual ::grpc::ServerUnaryReactor* ResetSample(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_FlushSample : public BaseClass {
+  class WithRawCallbackMethod_FlushSample : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_FlushSample() {
-      ::grpc::Service::experimental().MarkMethodRawCallback(3,
-        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-          [this](::grpc::ServerContext* context,
-                 const ::grpc::ByteBuffer* request,
-                 ::grpc::ByteBuffer* response,
-                 ::grpc::experimental::ServerCallbackRpcController* controller) {
-                   this->FlushSample(context, request, response, controller);
-                 }));
+    WithRawCallbackMethod_FlushSample() {
+      ::grpc::Service::MarkMethodRawCallback(3,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->FlushSample(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_FlushSample() override {
+    ~WithRawCallbackMethod_FlushSample() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status FlushSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status FlushSample(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void FlushSample(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual ::grpc::ServerUnaryReactor* FlushSample(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_Add : public BaseClass {
+  class WithRawCallbackMethod_Add : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_Add() {
-      ::grpc::Service::experimental().MarkMethodRawCallback(4,
-        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-          [this](::grpc::ServerContext* context,
-                 const ::grpc::ByteBuffer* request,
-                 ::grpc::ByteBuffer* response,
-                 ::grpc::experimental::ServerCallbackRpcController* controller) {
-                   this->Add(context, request, response, controller);
-                 }));
+    WithRawCallbackMethod_Add() {
+      ::grpc::Service::MarkMethodRawCallback(4,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Add(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_Add() override {
+    ~WithRawCallbackMethod_Add() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Add(::grpc::ServerContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status Add(::grpc::ServerContext* /*context*/, const ::poplar::IntervalSummary* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void Add(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual ::grpc::ServerUnaryReactor* Add(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_CreateCollector : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_CreateCollector() {
       ::grpc::Service::MarkMethodStreamed(0,
-        new ::grpc::internal::StreamedUnaryHandler< ::poplar::CreateOptions, ::poplar::PoplarResponse>(std::bind(&WithStreamedUnaryMethod_CreateCollector<BaseClass>::StreamedCreateCollector, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::poplar::CreateOptions, ::poplar::PoplarResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::poplar::CreateOptions, ::poplar::PoplarResponse>* streamer) {
+                       return this->StreamedCreateCollector(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_CreateCollector() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status CreateCollector(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status CreateCollector(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -808,17 +752,24 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_CloseCollector : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_CloseCollector() {
       ::grpc::Service::MarkMethodStreamed(1,
-        new ::grpc::internal::StreamedUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>(std::bind(&WithStreamedUnaryMethod_CloseCollector<BaseClass>::StreamedCloseCollector, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::poplar::PoplarID, ::poplar::PoplarResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::poplar::PoplarID, ::poplar::PoplarResponse>* streamer) {
+                       return this->StreamedCloseCollector(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_CloseCollector() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status CloseCollector(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status CloseCollector(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -828,17 +779,24 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_ResetSample : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_ResetSample() {
       ::grpc::Service::MarkMethodStreamed(2,
-        new ::grpc::internal::StreamedUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>(std::bind(&WithStreamedUnaryMethod_ResetSample<BaseClass>::StreamedResetSample, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::poplar::PoplarID, ::poplar::PoplarResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::poplar::PoplarID, ::poplar::PoplarResponse>* streamer) {
+                       return this->StreamedResetSample(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_ResetSample() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status ResetSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status ResetSample(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -848,17 +806,24 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_FlushSample : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_FlushSample() {
       ::grpc::Service::MarkMethodStreamed(3,
-        new ::grpc::internal::StreamedUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>(std::bind(&WithStreamedUnaryMethod_FlushSample<BaseClass>::StreamedFlushSample, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::poplar::PoplarID, ::poplar::PoplarResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::poplar::PoplarID, ::poplar::PoplarResponse>* streamer) {
+                       return this->StreamedFlushSample(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_FlushSample() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status FlushSample(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status FlushSample(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -868,17 +833,24 @@ class PoplarMetricsCollector final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_Add : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service *service) {}
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_Add() {
       ::grpc::Service::MarkMethodStreamed(4,
-        new ::grpc::internal::StreamedUnaryHandler< ::poplar::IntervalSummary, ::poplar::PoplarResponse>(std::bind(&WithStreamedUnaryMethod_Add<BaseClass>::StreamedAdd, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::poplar::IntervalSummary, ::poplar::PoplarResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::poplar::IntervalSummary, ::poplar::PoplarResponse>* streamer) {
+                       return this->StreamedAdd(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_Add() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status Add(::grpc::ServerContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response) override {
+    ::grpc::Status Add(::grpc::ServerContext* /*context*/, const ::poplar::IntervalSummary* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }

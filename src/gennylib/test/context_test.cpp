@@ -34,6 +34,8 @@
 
 #include <value_generators/DocumentGenerator.hpp>
 
+#include <catch2/matchers/catch_matchers_string.hpp>
+
 using namespace genny;
 using namespace std;
 
@@ -431,7 +433,7 @@ TEST_CASE("Duplicate Phase Numbers") {
         auto& yaml = ns.root();
 
         REQUIRE_THROWS_WITH((WorkloadContext{yaml, orchestrator, cast}),
-                            Catch::Matches("Duplicate phase 0"));
+                            Catch::Matchers::Matches("Duplicate phase 0"));
     }
 
     SECTION("PhaseRange syntax") {
@@ -450,7 +452,7 @@ TEST_CASE("Duplicate Phase Numbers") {
         auto& yaml = ns.root();
 
         REQUIRE_THROWS_WITH((WorkloadContext{yaml, orchestrator, cast}),
-                            Catch::Matches("Duplicate phase 0"));
+                            Catch::Matchers::Matches("Duplicate phase 0"));
     }
 }
 
@@ -711,6 +713,6 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
     SECTION("Incorrect type value inputted") {
         auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, cast); };
         REQUIRE_THROWS_WITH(
-            test(), Catch::Contains("Unable to construct actors: No producer for 'Bar'"));
+            test(), Catch::Matchers::ContainsSubstring("Unable to construct actors: No producer for 'Bar'"));
     }
 }

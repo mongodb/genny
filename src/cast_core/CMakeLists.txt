@@ -23,5 +23,7 @@ CreateGennyTargets(
         gennylib
         cppcodec::cppcodec
         simple-beast-client
-    TEST_DEPENDS    testlib
+    TEST_DEPENDS
+        testlib
+        Catch2::Catch2WithMain
 )

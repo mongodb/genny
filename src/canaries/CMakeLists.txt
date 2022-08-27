@@ -22,6 +22,8 @@ CreateGennyTargets(
         metrics
         Boost::program_options
         Boost::filesystem
-    TEST_DEPENDS  testlib
+    TEST_DEPENDS
+        testlib
+        Catch2::Catch2WithMain
     EXECUTABLE    genny-canaries
 )

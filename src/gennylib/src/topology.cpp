@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string_view>
+
 #include <boost/log/trivial.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/json.hpp>
@@ -248,7 +250,7 @@ void Topology::update(DBConnection& connection) {
     auto res = connection.runAdminCommand("isMaster");
     auto msg = res.view()["msg"];
     if (msg && msg.type() == bsoncxx::type::k_utf8) {
-        isMongos = msg.get_utf8().value == "isdbgrid";
+        isMongos = bsoncxx::stdx::string_view("isdbgrid") == msg.get_utf8().value;
     }
 
     if (isMongos) {

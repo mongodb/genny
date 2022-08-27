@@ -20,14 +20,14 @@ CreateGennyTargets(
     DEPENDS
         gennylib
         cast_core
-        MongoCxx::mongocxx
-        MongoCxx::bsoncxx
+        mongo::mongocxx_static
+        mongo::bsoncxx_static
         Boost::boost
         Boost::filesystem
         Boost::log
         Boost::regex
-        catch2
+        Catch2::Catch2
         yaml-cpp
     TEST_DEPENDS
-        catch2
+        Catch2::Catch2WithMain
 )
