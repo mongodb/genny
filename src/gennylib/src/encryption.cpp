@@ -14,6 +14,7 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/format.hpp>
 
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
@@ -288,13 +289,13 @@ EncryptedField::EncryptedField(const Node& yaml) {
     if (yaml["keyId"]) {
         auto keyId = yaml["keyId"].to<std::string>();
         try {
-            auto jsonDoc = R"({"v": {"$uuid": ")" + keyId + R"("}})";
-            auto uuidDoc = bsoncxx::from_json(jsonDoc);
+            auto uuidDoc = bsoncxx::from_json(
+                boost::str(boost::format(R"({"v": {"$uuid": "%1%" }})") % keyId));
             _keyId = uuidDoc.view()["v"].get_owning_value();
         } catch (const bsoncxx::exception& e) {
             std::ostringstream ss;
             ss << "'EncryptedField' has an invalid 'keyId' value of '" << keyId
-               << "'. Value must a UUID string.";
+               << "'. Value must be a UUID string.";
             throw InvalidConfigurationException(ss.str());
         }
     }
@@ -433,13 +434,12 @@ EncryptionContext::EncryptionContext(const Node& encryptionOptsNode, std::string
 EncryptionContext::~EncryptionContext() {}
 
 void EncryptionContext::setupKeyVault() {
-    mongocxx::uri uri{_uri};
-    mongocxx::client client{uri};
+    mongocxx::client client{mongocxx::uri(_uri)};
     auto kvNsPair = getKeyVaultNamespace();
     auto coll = client[kvNsPair.first][kvNsPair.second];
     auto kvNs = kvNsPair.first + "." + kvNsPair.second;
 
-    BOOST_LOG_TRIVIAL(info) << "Setting up key vault at namespace '" << kvNs << "'";
+    BOOST_LOG_TRIVIAL(debug) << "Setting up key vault at namespace '" << kvNs << "'";
 
     // Drop any existing key vaults
     coll.drop();

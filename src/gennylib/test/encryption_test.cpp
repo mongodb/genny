@@ -238,6 +238,23 @@ TEST_CASE("EncryptionOptions with invalid fields") {
                            "exist. On node with path "
                            "'/EncryptedCollections/0/FLEEncryptedFields/field1/type': "));
     }
+    SECTION("FLEEncryptedFields entry with empty keyId") {
+        std::string encryptionOpts = R"({
+            KeyVaultDatabase: 'testdb',
+            KeyVaultCollection: 'datakeys',
+            EncryptedCollections: [
+                { Database: "foo",
+                  Collection: "bar",
+                  EncryptionType: 'fle',
+                  FLEEncryptedFields: { field1 : { type: "string", algorithm: "random", keyId: "" }} },
+            ]
+        })";
+
+        genny::NodeSource ns{encryptionOpts, ""};
+        REQUIRE_THROWS_WITH([&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+                            Catch::Matches("'EncryptedField' has an invalid 'keyId' value of ''. "
+                                           "Value must be a UUID string."));
+    }
     SECTION("FLEEncryptedFields entry with missing algorithm") {
         std::string encryptionOpts = R"({
             KeyVaultDatabase: 'testdb',
