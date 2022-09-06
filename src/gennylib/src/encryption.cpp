@@ -15,6 +15,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/format.hpp>
+#include <boost/functional/hash.hpp>
 
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
@@ -138,6 +139,10 @@ public:
         return _collection;
     }
 
+    std::string namespaceString() const {
+        return _database + "." + _collection;
+    }
+
     EncryptionType encryptionType() const {
         return _type;
     }
@@ -173,31 +178,6 @@ public:
     void appendSchema(bsoncxx::builder::basic::sub_document builder) const;
     void createCollection(const mongocxx::client& client) const override;
     void dropCollection(const mongocxx::client& client) const override;
-};
-
-class EncryptionOptions {
-public:
-    // maps a namespace string to an EncryptedCollectionT unique pointer type
-    template <class EncryptedCollectionT>
-    using EncryptedCollectionMap =
-        std::unordered_map<std::string, std::unique_ptr<EncryptedCollectionT>>;
-
-    EncryptionOptions(const Node& encryptionOptsNode);
-
-    const std::string& keyVaultDb() const {
-        return _keyVaultDb;
-    }
-    const std::string& keyVaultColl() const {
-        return _keyVaultColl;
-    }
-    const EncryptedCollectionMap<FLEEncryptedCollection>& fleCollections() const {
-        return _fleCollections;
-    }
-
-private:
-    EncryptedCollectionMap<FLEEncryptedCollection> _fleCollections;
-    std::string _keyVaultDb;
-    std::string _keyVaultColl;
 };
 
 }  // namespace genny::v1
@@ -395,26 +375,104 @@ EncryptionOptions::EncryptionOptions(const Node& encryptionOptsNode) {
         return;
     }
     if (!collsSequence.isSequence()) {
-        throw InvalidConfigurationException("'EncryptedCollections' node must be a sequence type.");
+        throw InvalidConfigurationException(
+            "'EncryptionOptions' requires an 'EncryptedCollections' node of sequence type");
+    }
+    auto collsVector = collsSequence.to<std::vector<std::string>>();
+    _encryptedColls = std::unordered_set<std::string>(collsVector.begin(), collsVector.end());
+}
+
+class EncryptionManager::EncryptionManagerImpl {
+public:
+    // variant that holds either a FLE or Queryable encrypted collection
+    using EncryptedCollectionVariant = std::variant<std::monostate, FLEEncryptedCollection>;
+
+    // maps a namespace string to an EncryptedCollectionVariant
+    using EncryptedCollectionMap = std::unordered_map<std::string, EncryptedCollectionVariant>;
+
+    // pair consisting of the key vault URI and the key vault namespace
+    using KeyVaultID = std::pair<std::string, std::string>;
+
+    EncryptionManagerImpl(const Node& yaml, bool dryRun = false);
+    ~EncryptionManagerImpl();
+
+    void createKeyVault(EncryptionContext& context, const std::string& uri);
+    void createCollection(EncryptionContext& context,
+                          const std::string& uri,
+                          EncryptedCollectionVariant& collVariant);
+    void createDataKeys(EncryptionContext& context,
+                        const std::string& uri,
+                        EncryptedCollectionVariant& collVariant);
+
+    template <class CollectionType>
+    void createDataKeysPerField(EncryptionContext& context,
+                                mongocxx::client_encryption& clientEncryption,
+                                CollectionType& encryptedColl,
+                                const std::string& uri) {
+        auto fieldsCopy = encryptedColl.fields();
+        auto kvNs = context.getKeyVaultNamespaceString();
+        for (auto& [fieldName, field] : fieldsCopy) {
+            try {
+                field.keyId(clientEncryption.create_data_key("local"));
+                BOOST_LOG_TRIVIAL(debug)
+                    << "Data key created on {" << kvNs << "@" << uri << "} for field '" << fieldName
+                    << "' of " << encryptedColl.namespaceString() << ": "
+                    << bsoncxx::to_json(make_document(kvp("keyId", field.keyId().value())));
+            } catch (const mongocxx::exception& e) {
+                BOOST_LOG_TRIVIAL(error)
+                    << "Failed to create data key on {" << kvNs << "@" << uri << "}: " << e.what();
+                throw e;
+            }
+        }
+        encryptedColl.fields(std::move(fieldsCopy));
     }
 
-    auto checkUniqueNamespace = [&](const std::string& nss) {
-        if (_fleCollections.find(nss) != _fleCollections.end()) {
-            std::ostringstream ss;
-            ss << "Collection with namespace '" << nss
-               << "' already exists in 'EncryptedCollections'";
-            throw InvalidConfigurationException(ss.str());
-        }
-    };
+    template <class CollectionType>
+    void createCollection(EncryptionContext& context,
+                          mongocxx::client& client,
+                          CollectionType& encryptedColl,
+                          const std::string& uri) {
+        BOOST_LOG_TRIVIAL(debug) << "Dropping & creating encrypted collection '"
+                                 << encryptedColl.namespaceString() << "' at " << uri;
+        encryptedColl.dropCollection(client);
+        encryptedColl.createCollection(client);
+    }
+
+private:
+    friend class EncryptionContext;
+    friend class EncryptionManager;
+
+    // lock on modifying the key vaults map
+    std::mutex _keyVaultsLock;
+
+    // maps a KeyVaultID to a set of encrypted collections that have data keys in this key vault
+    std::unordered_map<KeyVaultID, EncryptedCollectionMap, boost::hash<KeyVaultID>> _keyVaults;
+
+    // stores the global set of encrypted collection schemas
+    EncryptedCollectionMap _collectionSchemas;
+
+    // whether setup that needs a server connection should be skipped
+    bool _dryRun;
+};
+
+EncryptionManager::EncryptionManagerImpl::EncryptionManagerImpl(const Node& yaml, bool dryRun)
+    : _dryRun(dryRun) {
+    const auto& collsSequence = yaml["EncryptedCollections"];
+    if (!collsSequence) {
+        return;
+    }
+    if (!collsSequence.isSequence()) {
+        throw InvalidConfigurationException("'EncryptedCollections' node must be of sequence type");
+    }
 
     for (const auto& [k, v] : collsSequence) {
+        std::string nss;
+        EncryptedCollectionVariant coll;
         auto typeStr = v["EncryptionType"].to<std::string>();
 
         if (typeStr == "fle") {
-            auto coll = std::make_unique<FLEEncryptedCollection>(v);
-            auto nss = coll->database() + "." + coll->collection();
-            checkUniqueNamespace(nss);
-            _fleCollections.emplace(std::move(nss), std::move(coll));
+            auto& fleColl = coll.emplace<FLEEncryptedCollection>(v);
+            nss = fleColl.namespaceString();
         } else if (typeStr == "queryable") {
             // TODO: PERF-3187 add queryable encryption support
         } else {
@@ -424,22 +482,30 @@ EncryptionOptions::EncryptionOptions(const Node& encryptionOptsNode) {
                << "'. Valid values are 'fle' and 'queryable'.";
             throw InvalidConfigurationException(ss.str());
         }
+
+        auto insertOk = _collectionSchemas.insert({nss, std::move(coll)}).second;
+        if (!insertOk) {
+            std::ostringstream ss;
+            ss << "Collection with namespace '" << nss
+               << "' already exists in 'EncryptedCollections'";
+            throw InvalidConfigurationException(ss.str());
+        }
     }
 }
 
-EncryptionContext::EncryptionContext(const Node& encryptionOptsNode, std::string uri)
-    : _uri(std::move(uri)),
-      _encryptionOpts(std::make_unique<EncryptionOptions>(encryptionOptsNode)) {}
+EncryptionManager::EncryptionManagerImpl::~EncryptionManagerImpl() {}
 
-EncryptionContext::~EncryptionContext() {}
+void EncryptionManager::EncryptionManagerImpl::createKeyVault(EncryptionContext& context,
+                                                              const std::string& uri) {
+    if (_dryRun) {
+        return;
+    }
+    mongocxx::client client{mongocxx::uri(uri)};
+    auto [keyVaultDb, keyVaultColl] = context.getKeyVaultNamespace();
+    auto coll = client[keyVaultDb][keyVaultColl];
 
-void EncryptionContext::setupKeyVault() {
-    mongocxx::client client{mongocxx::uri(_uri)};
-    auto kvNsPair = getKeyVaultNamespace();
-    auto coll = client[kvNsPair.first][kvNsPair.second];
-    auto kvNs = kvNsPair.first + "." + kvNsPair.second;
-
-    BOOST_LOG_TRIVIAL(debug) << "Setting up key vault at namespace '" << kvNs << "'";
+    BOOST_LOG_TRIVIAL(debug) << "Creating key vault at namespace "
+                             << context.getKeyVaultNamespaceString();
 
     // Drop any existing key vaults
     coll.drop();
@@ -452,33 +518,159 @@ void EncryptionContext::setupKeyVault() {
         kvp("keyAltNames", [&](sub_document subdoc) { subdoc.append(kvp("$exists", true)); }));
     indexOptions.partial_filter_expression(expression.view());
     coll.create_index(make_document(kvp("keyAltNames", 1)), indexOptions);
+}
+
+void EncryptionManager::EncryptionManagerImpl::createCollection(
+    EncryptionContext& context, const std::string& uri, EncryptedCollectionVariant& encryptedColl) {
+    if (_dryRun) {
+        return;
+    }
+
+    mongocxx::options::auto_encryption autoEncryptOpts;
+    autoEncryptOpts.kms_providers(context.generateKMSProvidersDoc());
+    autoEncryptOpts.key_vault_namespace(context.getKeyVaultNamespace());
+    autoEncryptOpts.extra_options(context.generateExtraOptionsDoc());
+
+    mongocxx::options::client clientOpts;
+    clientOpts.auto_encryption_opts(std::move(autoEncryptOpts));
+
+    mongocxx::client client{mongocxx::uri{uri}, std::move(clientOpts)};
+
+    if (std::holds_alternative<FLEEncryptedCollection>(encryptedColl)) {
+        createCollection(context, client, std::get<FLEEncryptedCollection>(encryptedColl), uri);
+    }
+}
+
+void EncryptionManager::EncryptionManagerImpl::createDataKeys(
+    EncryptionContext& context, const std::string& uri, EncryptedCollectionVariant& encryptedColl) {
+    if (_dryRun) {
+        return;
+    }
+
+    mongocxx::client client{mongocxx::uri(uri)};
 
     mongocxx::options::client_encryption clientEncryptionOpts;
-    clientEncryptionOpts.key_vault_namespace(kvNsPair);
-    clientEncryptionOpts.kms_providers(generateKMSProvidersDoc());
+    clientEncryptionOpts.key_vault_namespace(context.getKeyVaultNamespace());
+    clientEncryptionOpts.kms_providers(context.generateKMSProvidersDoc());
     clientEncryptionOpts.key_vault_client(&client);
     mongocxx::client_encryption clientEncryption{std::move(clientEncryptionOpts)};
 
-    // For each encrypted collection, create the data keys to be used for encrypting
-    // the values for each encrypted field in that collection. Update the keyIds of
-    // each encrypted field with the UUID of the newly-created data key.
-    for (auto& [_, encryptedColl] : _encryptionOpts->fleCollections()) {
-        auto fieldsCopy = encryptedColl->fields();
-        for (auto& [_, field] : fieldsCopy) {
-            try {
-                field.keyId(clientEncryption.create_data_key("local"));
-                BOOST_LOG_TRIVIAL(debug)
-                    << "Data key created on key vault '" << kvNs << "': "
-                    << bsoncxx::to_json(make_document(kvp("keyId", field.keyId().value())));
-            } catch (const mongocxx::exception& e) {
-                BOOST_LOG_TRIVIAL(error) << "Failed to create data key on key vault '" << kvNs
-                                         << "' at '" << _uri << ": " << e.what();
-                throw e;
-            }
-        }
-        encryptedColl->fields(std::move(fieldsCopy));
+    // Create the data keys to be used for encrypting the values for each encrypted field in
+    // the collection. Update the keyIds of each encrypted field with the UUID of the
+    // newly-created data key.
+    if (std::holds_alternative<FLEEncryptedCollection>(encryptedColl)) {
+        createDataKeysPerField(
+            context, clientEncryption, std::get<FLEEncryptedCollection>(encryptedColl), uri);
     }
-};
+}
+
+EncryptionManager::EncryptionManager(const Node& yaml, bool dryRun)
+    : _impl(std::make_unique<EncryptionManagerImpl>(yaml, dryRun)) {}
+
+EncryptionManager::~EncryptionManager() {}
+
+EncryptionContext EncryptionManager::createEncryptionContext(const std::string& uri,
+                                                             const EncryptionOptions& opts) {
+    std::lock_guard<std::mutex> kvLock{_impl->_keyVaultsLock};
+
+    // Validate the collection names have a corresponding schema
+    for (const auto& nss : opts.encryptedColls()) {
+        if (_impl->_collectionSchemas.find(nss) == _impl->_collectionSchemas.end()) {
+            std::ostringstream ss;
+            ss << "No encrypted collection schema found with namespace '" << nss << "'";
+            throw InvalidConfigurationException(ss.str());
+        }
+    }
+
+    EncryptionContext context(opts, uri, *this);
+
+    // Did we already create this key vault?
+    auto kvId = std::make_pair(uri, context.getKeyVaultNamespaceString());
+    auto kvItr = _impl->_keyVaults.find(kvId);
+    if (kvItr == _impl->_keyVaults.end()) {
+        // no, then create the key vault
+        _impl->createKeyVault(context, uri);
+        kvItr =
+            _impl->_keyVaults.emplace(kvId, EncryptionManagerImpl::EncryptedCollectionMap()).first;
+    }
+
+    // then, for each namespace that does not yet have data keys in
+    // this key vault, create the collection & its data keys.
+    auto& collsInKeyVault = kvItr->second;
+    for (const auto& nss : opts.encryptedColls()) {
+        if (collsInKeyVault.find(nss) == collsInKeyVault.end()) {
+            // get a copy of the schema
+            auto collCopy = _impl->_collectionSchemas[nss];
+
+            // create data keys and update the keyId fields with the generated data key IDs
+            _impl->createDataKeys(context, uri, collCopy);
+            collsInKeyVault[nss] = collCopy;
+
+            // create the collection
+            _impl->createCollection(context, uri, collCopy);
+        }
+    }
+
+    return context;
+}
+
+EncryptionContext::EncryptionContext() {}
+
+EncryptionContext::EncryptionContext(EncryptionOptions opts,
+                                     std::string uri,
+                                     const EncryptionManager& manager)
+    : _encryptionOpts(std::move(opts)), _uri(std::move(uri)), _encryptionManager(&manager) {}
+
+EncryptionContext::~EncryptionContext() {}
+
+std::pair<std::string, std::string> EncryptionContext::getKeyVaultNamespace() const {
+    return {_encryptionOpts.keyVaultDb(), _encryptionOpts.keyVaultColl()};
+}
+
+std::string EncryptionContext::getKeyVaultNamespaceString() const {
+    return _encryptionOpts.keyVaultDb() + "." + _encryptionOpts.keyVaultColl();
+}
+
+mongocxx::options::auto_encryption EncryptionContext::getAutoEncryptionOptions() const {
+    mongocxx::options::auto_encryption opts{};
+    opts.key_vault_namespace(getKeyVaultNamespace());
+    opts.kms_providers(generateKMSProvidersDoc());
+    opts.schema_map(generateSchemaMapDoc());
+    opts.extra_options(generateExtraOptionsDoc());
+    return opts;
+}
+
+bsoncxx::document::value EncryptionContext::generateSchemaMapDoc() const {
+    bsoncxx::builder::basic::document mapDoc{};
+
+    auto kvId = std::make_pair(_uri, getKeyVaultNamespaceString());
+    auto kvItr = _encryptionManager->_impl->_keyVaults.find(kvId);
+    if (kvItr == _encryptionManager->_impl->_keyVaults.end()) {
+        BOOST_LOG_TRIVIAL(debug) << "No key vault found with ID: " << kvId.first << ", "
+                                 << kvId.second;
+        return mapDoc.extract();
+    }
+
+    auto& collsInKeyVault = kvItr->second;
+    for (auto& nss : _encryptionOpts.encryptedColls()) {
+        auto collItr = collsInKeyVault.find(nss);
+        if (collItr == collsInKeyVault.end()) {
+            continue;
+        }
+        auto& collVariant = collItr->second;
+        if (std::holds_alternative<FLEEncryptedCollection>(collVariant)) {
+            auto& fleColl = std::get<FLEEncryptedCollection>(collVariant);
+            mapDoc.append(kvp(nss, [&](sub_document subdoc) { fleColl.appendSchema(subdoc); }));
+        }
+    }
+    auto v = mapDoc.extract();
+    BOOST_LOG_TRIVIAL(debug) << "Generated schema map: " << bsoncxx::to_json(v);
+    return std::move(v);
+}
+
+bsoncxx::document::value EncryptionContext::generateExtraOptionsDoc() const {
+    return make_document(kvp("mongocryptdBypassSpawn", true), kvp("cryptSharedLibRequired", false));
+}
 
 bsoncxx::document::value EncryptionContext::generateKMSProvidersDoc() const {
     return make_document(kvp("local", [&](sub_document localDoc) {
@@ -497,31 +689,8 @@ bsoncxx::document::value EncryptionContext::generateKMSProvidersDoc() const {
     }));
 }
 
-std::pair<std::string, std::string> EncryptionContext::getKeyVaultNamespace() const {
-    return {_encryptionOpts->keyVaultDb(), _encryptionOpts->keyVaultColl()};
-}
-
-mongocxx::options::auto_encryption EncryptionContext::getAutoEncryptionOptions() const {
-    mongocxx::options::auto_encryption opts{};
-    opts.key_vault_namespace(getKeyVaultNamespace());
-    opts.kms_providers(generateKMSProvidersDoc());
-    opts.schema_map(generateSchemaMapDoc());
-    opts.extra_options(generateExtraOptionsDoc());
-    return opts;
-}
-
-bsoncxx::document::value EncryptionContext::generateSchemaMapDoc() const {
-    bsoncxx::builder::basic::document mapDoc{};
-    for (auto& [nss, coll] : _encryptionOpts->fleCollections()) {
-        mapDoc.append(kvp(nss, [&](sub_document subdoc) { coll->appendSchema(subdoc); }));
-    }
-    auto v = mapDoc.extract();
-    BOOST_LOG_TRIVIAL(debug) << "Generated schema map: " << bsoncxx::to_json(v);
-    return std::move(v);
-}
-
-bsoncxx::document::value EncryptionContext::generateExtraOptionsDoc() const {
-    return make_document(kvp("mongocryptdBypassSpawn", true), kvp("cryptSharedLibRequired", false));
+bool EncryptionContext::hasEncryptedCollections() const {
+    return !_encryptionOpts.encryptedColls().empty();
 }
 
 }  // namespace genny::v1

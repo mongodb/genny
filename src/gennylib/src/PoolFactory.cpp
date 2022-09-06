@@ -181,7 +181,7 @@ struct PoolFactory::Config {
         {"CAFile", ""},
         {"PEMKeyFile", ""},
     };
-    std::shared_ptr<EncryptionContext> encryptionCtxt;
+    EncryptionContext encryptionCtxt;
 };
 
 PoolFactory::PoolFactory(std::string_view rawUri, PoolManager::OnCommandStartCallback apmCallback)
@@ -195,6 +195,7 @@ std::string PoolFactory::makeUri() const {
 mongocxx::options::pool PoolFactory::makeOptions() const {
     mongocxx::options::client clientOptions;
     auto useTls = _config->getFlag(OptionType::kQueryOption, "tls");
+    auto useEncryption = _config->encryptionCtxt.hasEncryptedCollections();
 
     if (useTls) {
         mongocxx::options::tls tlsOptions;
@@ -222,9 +223,9 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
         clientOptions.tls_opts(tlsOptions);
     }
 
-    if (_config->encryptionCtxt) {
+    if (useEncryption) {
         BOOST_LOG_TRIVIAL(debug) << "Adding encryption options to pool...";
-        clientOptions.auto_encryption_opts(_config->encryptionCtxt->getAutoEncryptionOptions());
+        clientOptions.auto_encryption_opts(_config->encryptionCtxt.getAutoEncryptionOptions());
     }
 
     if (_apmCallback) {
@@ -251,8 +252,8 @@ void PoolFactory::setOption(OptionType type, const std::string& option, std::str
     _config->set(type, option, value);
 }
 
-void PoolFactory::setEncryptionContext(std::shared_ptr<EncryptionContext> encryption) {
-    _config->encryptionCtxt = encryption;
+void PoolFactory::setEncryptionContext(EncryptionContext encryption) {
+    _config->encryptionCtxt = std::move(encryption);
 }
 
 void PoolFactory::overrideHosts(const std::set<std::string>& hosts) {

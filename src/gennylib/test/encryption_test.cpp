@@ -36,7 +36,7 @@ TEST_CASE("EncryptionOptions with invalid fields") {
         })";
         genny::NodeSource ns{encryptionOpts, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionOptions(ns.root()); }(),
             Catch::Matches("Invalid key 'KeyVaultDatabase': Tried to access node that doesn't "
                            "exist. On node with path '/KeyVaultDatabase': "));
     }
@@ -47,7 +47,7 @@ TEST_CASE("EncryptionOptions with invalid fields") {
         })";
         genny::NodeSource ns{encryptionOpts, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionOptions(ns.root()); }(),
             Catch::Matches("Invalid key 'KeyVaultCollection': Tried to access node that doesn't "
                            "exist. On node with path '/KeyVaultCollection': "));
     }
@@ -59,7 +59,7 @@ TEST_CASE("EncryptionOptions with invalid fields") {
         })";
         genny::NodeSource ns{encryptionOpts, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionOptions(ns.root()); }(),
             Catch::Matches("'EncryptionOptions' requires a non-empty 'KeyVaultCollection' name"));
     }
     SECTION("EncryptionOptions with empty KeyVaultDatabase") {
@@ -70,7 +70,7 @@ TEST_CASE("EncryptionOptions with invalid fields") {
         })";
         genny::NodeSource ns{encryptionOpts, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionOptions(ns.root()); }(),
             Catch::Matches("'EncryptionOptions' requires a non-empty 'KeyVaultDatabase' name"));
     }
     SECTION("EncryptionOptions with non-sequence EncryptedCollections") {
@@ -80,13 +80,23 @@ TEST_CASE("EncryptionOptions with invalid fields") {
             EncryptedCollections: 'foo'
         })";
         genny::NodeSource ns{encryptionOpts, ""};
-        REQUIRE_THROWS_WITH([&]() { EncryptionContext(ns.root(), kSourceUri); }(),
-                            Catch::Matches("'EncryptedCollections' node must be a sequence type."));
+        REQUIRE_THROWS_WITH(
+            [&]() { EncryptionOptions(ns.root()); }(),
+            Catch::Matches(
+                "'EncryptionOptions' requires an 'EncryptedCollections' node of sequence type"));
+    }
+}
+TEST_CASE("EncryptedCollections with invalid fields") {
+    SECTION("Non-sequence EncryptedCollections") {
+        std::string encryptedColls = R"({
+            EncryptedCollections: 'foo'
+        })";
+        genny::NodeSource ns{encryptedColls, ""};
+        REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
+                            Catch::Matches("'EncryptedCollections' node must be of sequence type"));
     }
     SECTION("EncryptedCollections with duplicate namespaces") {
-        std::string encryptionOpts = R"({
-            KeyVaultDatabase: 'testdb',
-            KeyVaultCollection: 'datakeys',
+        std::string encryptedColls = R"({
             EncryptedCollections: [
                 { Database: "foo",
                   Collection: "bar",
@@ -96,92 +106,80 @@ TEST_CASE("EncryptionOptions with invalid fields") {
                   EncryptionType: 'fle' }
             ]
         })";
-        genny::NodeSource ns{encryptionOpts, ""};
+        genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionManager(ns.root(), true); }(),
             Catch::Matches(
                 "Collection with namespace 'foo.bar' already exists in 'EncryptedCollections'"));
     }
     SECTION("EncryptedCollections with invalid EncryptionType") {
-        std::string encryptionOpts = R"({
-            KeyVaultDatabase: 'testdb',
-            KeyVaultCollection: 'datakeys',
+        std::string encryptedColls = R"({
             EncryptedCollections: [
                 { Database: "foo",
                   Collection: "bar",
                   EncryptionType: 'unencrypted' },
             ]
         })";
-        genny::NodeSource ns{encryptionOpts, ""};
+        genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionManager(ns.root(), true); }(),
             Catch::Matches("'EncryptedCollections.0' has an invalid 'EncryptionType' value of "
                            "'unencrypted'. Valid values are 'fle' and 'queryable'."));
     }
     SECTION("EncryptedCollections entry with missing Database key") {
-        std::string encryptionOpts = R"({
-            KeyVaultDatabase: 'testdb',
-            KeyVaultCollection: 'datakeys',
+        std::string encryptedColls = R"({
             EncryptedCollections: [
                 { Collection: "bar",
                   EncryptionType: 'fle' },
             ]
         })";
-        genny::NodeSource ns{encryptionOpts, ""};
+        genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionManager(ns.root(), true); }(),
             Catch::Matches("Invalid key 'Database': Tried to access node that doesn't "
                            "exist. On node with path '/EncryptedCollections/0/Database': "));
     }
     SECTION("EncryptedCollections entry with missing Collection key") {
-        std::string encryptionOpts = R"({
-            KeyVaultDatabase: 'testdb',
-            KeyVaultCollection: 'datakeys',
+        std::string encryptedColls = R"({
             EncryptedCollections: [
                 { Database: "foo",
                   EncryptionType: 'fle' },
             ]
         })";
-        genny::NodeSource ns{encryptionOpts, ""};
+        genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionManager(ns.root(), true); }(),
             Catch::Matches("Invalid key 'Collection': Tried to access node that doesn't "
                            "exist. On node with path '/EncryptedCollections/0/Collection': "));
     }
     SECTION("EncryptedCollections entry with empty Database key") {
-        std::string encryptionOpts = R"({
-            KeyVaultDatabase: 'testdb',
-            KeyVaultCollection: 'datakeys',
+        std::string encryptedColls = R"({
             EncryptedCollections: [
                 { Database: "",
                   Collection: "bar",
                   EncryptionType: 'fle' },
             ]
         })";
-        genny::NodeSource ns{encryptionOpts, ""};
+        genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionManager(ns.root(), true); }(),
             Catch::Matches("'EncryptedCollection' requires a non-empty 'Database' name."));
     }
     SECTION("EncryptedCollections entry with empty Collection key") {
-        std::string encryptionOpts = R"({
-            KeyVaultDatabase: 'testdb',
-            KeyVaultCollection: 'datakeys',
+        std::string encryptedColls = R"({
             EncryptedCollections: [
                 { Database: "foo",
                   Collection: "",
                   EncryptionType: 'fle' },
             ]
         })";
-        genny::NodeSource ns{encryptionOpts, ""};
+        genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionManager(ns.root(), true); }(),
             Catch::Matches("'EncryptedCollection' requires a non-empty 'Collection' name."));
     }
     SECTION("EncryptedCollections entry with non-map type FLEEncryptedFields") {
-        std::string encryptionOpts = R"({
-            KeyVaultDatabase: 'testdb',
-            KeyVaultCollection: 'datakeys',
+        std::string encryptedColls = R"({
             EncryptedCollections: [
                 { Database: "foo",
                   Collection: "bar",
@@ -189,8 +187,8 @@ TEST_CASE("EncryptionOptions with invalid fields") {
                   FLEEncryptedFields: [] },
             ]
         })";
-        genny::NodeSource ns{encryptionOpts, ""};
-        REQUIRE_THROWS_WITH([&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+        genny::NodeSource ns{encryptedColls, ""};
+        REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
                             Catch::Matches("'FLEEncryptedFields' node must be of map type"));
     }
     SECTION("FLEEncryptedFields entry with invalid path as key") {
@@ -202,28 +200,24 @@ TEST_CASE("EncryptionOptions with invalid fields") {
             "..",
             ".",
         };
-        const std::string encryptionOptsPrefix = R"({
-            KeyVaultDatabase: 'testdb',
-            KeyVaultCollection: 'datakeys',
+        const std::string encryptedCollsPrefix = R"({
             EncryptedCollections: [
                 { Database: "foo",
                   Collection: "bar",
                   EncryptionType: 'fle',
                   FLEEncryptedFields: {)";
-        const std::string encryptionOptsSuffix =
+        const std::string encryptedCollsSuffix =
             R"(: { type: "string", algorithm: "random" }} }]})";
 
         for (auto& path : badPaths) {
-            auto encryptionOpts = encryptionOptsPrefix + path + encryptionOptsSuffix;
-            genny::NodeSource ns{encryptionOpts, ""};
-            REQUIRE_THROWS_WITH([&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            auto encryptedColls = encryptedCollsPrefix + path + encryptedCollsSuffix;
+            genny::NodeSource ns{encryptedColls, ""};
+            REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
                                 Catch::Matches("Field path \"" + path + "\" is not a valid path"));
         }
     }
     SECTION("FLEEncryptedFields entry with missing type") {
-        std::string encryptionOpts = R"({
-            KeyVaultDatabase: 'testdb',
-            KeyVaultCollection: 'datakeys',
+        std::string encryptedColls = R"({
             EncryptedCollections: [
                 { Database: "foo",
                   Collection: "bar",
@@ -231,17 +225,15 @@ TEST_CASE("EncryptionOptions with invalid fields") {
                   FLEEncryptedFields: { field1 : { algorithm: "random" }} },
             ]
         })";
-        genny::NodeSource ns{encryptionOpts, ""};
+        genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionManager(ns.root(), true); }(),
             Catch::Matches("Invalid key 'type': Tried to access node that doesn't "
                            "exist. On node with path "
                            "'/EncryptedCollections/0/FLEEncryptedFields/field1/type': "));
     }
     SECTION("FLEEncryptedFields entry with empty keyId") {
-        std::string encryptionOpts = R"({
-            KeyVaultDatabase: 'testdb',
-            KeyVaultCollection: 'datakeys',
+        std::string encryptedColls = R"({
             EncryptedCollections: [
                 { Database: "foo",
                   Collection: "bar",
@@ -250,15 +242,13 @@ TEST_CASE("EncryptionOptions with invalid fields") {
             ]
         })";
 
-        genny::NodeSource ns{encryptionOpts, ""};
-        REQUIRE_THROWS_WITH([&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+        genny::NodeSource ns{encryptedColls, ""};
+        REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
                             Catch::Matches("'EncryptedField' has an invalid 'keyId' value of ''. "
                                            "Value must be a UUID string."));
     }
     SECTION("FLEEncryptedFields entry with missing algorithm") {
-        std::string encryptionOpts = R"({
-            KeyVaultDatabase: 'testdb',
-            KeyVaultCollection: 'datakeys',
+        std::string encryptedColls = R"({
             EncryptedCollections: [
                 { Database: "foo",
                   Collection: "bar",
@@ -266,17 +256,15 @@ TEST_CASE("EncryptionOptions with invalid fields") {
                   FLEEncryptedFields: { field1 : { type: "string" }} },
             ]
         })";
-        genny::NodeSource ns{encryptionOpts, ""};
+        genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionManager(ns.root(), true); }(),
             Catch::Matches("Invalid key 'algorithm': Tried to access node that doesn't "
                            "exist. On node with path "
                            "'/EncryptedCollections/0/FLEEncryptedFields/field1/algorithm': "));
     }
     SECTION("FLEEncryptedFields entry with invalid algorithm") {
-        std::string encryptionOpts = R"({
-            KeyVaultDatabase: 'testdb',
-            KeyVaultCollection: 'datakeys',
+        std::string encryptedColls = R"({
             EncryptedCollections: [
                 { Database: "foo",
                   Collection: "bar",
@@ -284,47 +272,86 @@ TEST_CASE("EncryptionOptions with invalid fields") {
                   FLEEncryptedFields: { field1 : { type: "string", algorithm: "equality" }} },
             ]
         })";
-        genny::NodeSource ns{encryptionOpts, ""};
+        genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
-            [&]() { EncryptionContext(ns.root(), kSourceUri); }(),
+            [&]() { EncryptionManager(ns.root(), true); }(),
             Catch::Matches("'field1' has an invalid 'algorithm' value of 'equality'. "
                            "Valid values are 'random' and 'deterministic'."));
     }
 }
+TEST_CASE("EncryptionOptions with non-existing namespace") {
+    std::string encryptedColls = R"({ EncryptedCollections: [] })";
+    std::string encryptionOpts = R"({
+        KeyVaultDatabase: 'testdb',
+        KeyVaultCollection: 'testcoll',
+        EncryptedCollections: [ 'foo.collection' ]
+    })";
+    genny::NodeSource optsNs{encryptionOpts, ""};
+    genny::NodeSource collsNs{encryptedColls, ""};
 
+    EncryptionManager mgr(collsNs.root(), true);
+
+    REQUIRE_THROWS_WITH(
+        [&]() { mgr.createEncryptionContext(kSourceUri, EncryptionOptions(optsNs.root())); }(),
+        Catch::Matches("No encrypted collection schema found with namespace 'foo.collection'"));
+}
+TEST_CASE("createEncryptionContext with empty EncryptionOptions creates empty EncryptionContext") {
+    std::string encryptedColls = R"({ EncryptedCollections: [] })";
+    genny::NodeSource collsNs{encryptedColls, ""};
+    EncryptionManager mgr(collsNs.root(), true);
+    auto encContext = mgr.createEncryptionContext(kSourceUri, EncryptionOptions{});
+    REQUIRE(!encContext.hasEncryptedCollections());
+    REQUIRE(encContext.getKeyVaultNamespace().first.empty());
+    REQUIRE(encContext.getKeyVaultNamespace().second.empty());
+
+    auto schemaDoc = encContext.generateSchemaMapDoc();
+    REQUIRE(schemaDoc == bsoncxx::from_json("{}"));
+}
 TEST_CASE("EncryptionContext outputs correct key vault namespace") {
+    std::string encryptedColls = R"({ EncryptedCollections: [] })";
     std::string encryptionOpts = R"({
         KeyVaultDatabase: 'testdb',
         KeyVaultCollection: 'datakeys',
         EncryptedCollections: []
     })";
-    genny::NodeSource ns{encryptionOpts, ""};
-    EncryptionContext encryption(ns.root(), kSourceUri);
+    genny::NodeSource collsNs{encryptedColls, ""};
+    genny::NodeSource optsNs{encryptionOpts, ""};
+    EncryptionManager mgr(collsNs.root(), true);
+
+    auto encryption = mgr.createEncryptionContext(kSourceUri, optsNs.root());
     auto nspair = encryption.getKeyVaultNamespace();
     REQUIRE(nspair.first == "testdb");
     REQUIRE(nspair.second == "datakeys");
 }
 TEST_CASE("EncryptionContext outputs correct local KMS providers document") {
+    std::string encryptedColls = R"({ EncryptedCollections: [] })";
     std::string encryptionOpts = R"({
         KeyVaultDatabase: 'testdb',
         KeyVaultCollection: 'datakeys',
         EncryptedCollections: []
     })";
-    genny::NodeSource ns{encryptionOpts, ""};
-    EncryptionContext encryption(ns.root(), kSourceUri);
+    genny::NodeSource collsNs{encryptedColls, ""};
+    genny::NodeSource optsNs{encryptionOpts, ""};
+    EncryptionManager mgr(collsNs.root(), true);
+
+    auto encryption = mgr.createEncryptionContext(kSourceUri, optsNs.root());
     auto doc = encryption.generateKMSProvidersDoc();
     REQUIRE(doc.view()["local"]);
     REQUIRE(doc.view()["local"]["key"]);
     REQUIRE_NOTHROW(doc.view()["local"]["key"].get_binary());
 }
 TEST_CASE("EncryptionContext outputs correct extra options document") {
+    std::string encryptedColls = R"({ EncryptedCollections: [] })";
     std::string encryptionOpts = R"({
         KeyVaultDatabase: 'testdb',
         KeyVaultCollection: 'datakeys',
         EncryptedCollections: []
     })";
-    genny::NodeSource ns{encryptionOpts, ""};
-    EncryptionContext encryption(ns.root(), kSourceUri);
+    genny::NodeSource collsNs{encryptedColls, ""};
+    genny::NodeSource optsNs{encryptionOpts, ""};
+    EncryptionManager mgr(collsNs.root(), true);
+
+    auto encryption = mgr.createEncryptionContext(kSourceUri, optsNs.root());
     auto doc = encryption.generateExtraOptionsDoc();
     REQUIRE(doc.view()["mongocryptdBypassSpawn"]);
     REQUIRE_NOTHROW(doc.view()["mongocryptdBypassSpawn"].get_bool());
@@ -334,9 +361,7 @@ TEST_CASE("EncryptionContext outputs correct extra options document") {
     REQUIRE(doc.view()["cryptSharedLibRequired"].get_bool() == false);
 }
 TEST_CASE("EncryptionContext outputs correct schema map document") {
-    std::string encryptionOpts = R"({
-        KeyVaultDatabase: 'keyvault_db',
-        KeyVaultCollection: 'datakeys',
+    std::string encryptedColls = R"({
         EncryptedCollections: [
             { Database: 'accounts',
                 Collection: 'balances',
@@ -348,6 +373,11 @@ TEST_CASE("EncryptionContext outputs correct schema map document") {
                 }
             }
         ]
+    })";
+    std::string encryptionOpts = R"({
+        KeyVaultDatabase: 'keyvault_db',
+        KeyVaultCollection: 'datakeys',
+        EncryptedCollections: [ 'accounts.balances' ]
     })";
     std::string expectedJson = R"({
         "accounts.balances" : {
@@ -382,17 +412,18 @@ TEST_CASE("EncryptionContext outputs correct schema map document") {
             "bsonType" : "object"
         }
     })";
-    genny::NodeSource ns{encryptionOpts, ""};
-    EncryptionContext encryption(ns.root(), kSourceUri);
+    genny::NodeSource collsNs{encryptedColls, ""};
+    genny::NodeSource optsNs{encryptionOpts, ""};
+    EncryptionManager mgr(collsNs.root(), true);
+
+    auto encryption = mgr.createEncryptionContext(kSourceUri, optsNs.root());
 
     auto doc = encryption.generateSchemaMapDoc();
     auto expectedDoc = bsoncxx::from_json(expectedJson);
     REQUIRE(doc == expectedDoc);
 }
 TEST_CASE("EncryptionContext outputs correct auto_encryption options") {
-    std::string encryptionOpts = R"({
-        KeyVaultDatabase: 'keyvault_db',
-        KeyVaultCollection: 'datakeys',
+    std::string encryptedColls = R"({
         EncryptedCollections: [
             { Database: 'accounts',
                 Collection: 'balances',
@@ -412,8 +443,17 @@ TEST_CASE("EncryptionContext outputs correct auto_encryption options") {
             }
         ]
     })";
-    genny::NodeSource ns{encryptionOpts, ""};
-    EncryptionContext encryption(ns.root(), kSourceUri);
+    std::string encryptionOpts = R"({
+        KeyVaultDatabase: 'keyvault_db',
+        KeyVaultCollection: 'datakeys',
+        EncryptedCollections: [ 'accounts.balances', 'accounts.ratings' ]
+    })";
+    genny::NodeSource collsNs{encryptedColls, ""};
+    genny::NodeSource optsNs{encryptionOpts, ""};
+    EncryptionManager mgr(collsNs.root(), true);
+
+    auto encryption = mgr.createEncryptionContext(kSourceUri, optsNs.root());
+
     auto opts = encryption.getAutoEncryptionOptions();
 
     REQUIRE(opts.key_vault_namespace().has_value());
@@ -427,6 +467,9 @@ TEST_CASE("EncryptionContext outputs correct auto_encryption options") {
     REQUIRE_NOTHROW(kmsdoc.view()["local"]["key"].get_binary());
 
     REQUIRE(opts.schema_map().has_value());
+    auto& schemaDoc = opts.schema_map().value();
+    REQUIRE(schemaDoc.view()["accounts.balances"]);
+    REQUIRE(schemaDoc.view()["accounts.ratings"]);
 
     REQUIRE(opts.extra_options().has_value());
     const auto& extradoc = opts.extra_options().value();

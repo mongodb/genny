@@ -5,19 +5,17 @@ Description: |
   The CrudActor in this workload performs encrypted operations using a Client
   that is configured with the FLE and Queryable auto encryption options.
 
-  Encryption is configured per Client. Under the EncryptionOptions
-  element of a Client instance, the following fields must be provided:
-
-    KeyVaultDatabase     - the name of the keyvault database
-    KeyVaultCollection   - the name of the keyvault collection
-    EncryptedCollections - sequence of encrypted collection descriptors
-
-  Each encrypted collection descriptor under the EncryptedCollections sequence
-  must define the following fields:
+  Encryption is configured by first defining the schemas of each encrypted collection
+  under the EncryptedCollections node. This node is a sequence of collection descriptors
+  that each must define the following fields:
 
     Database           - the name of the encrypted database
     Collection         - the name of the encrypted collection
     EncryptionType     - the type of client-side encryption used (either 'fle' or 'queryable')
+
+  Each entry in this sequence must have a unique combination of Database and Collection names.
+  In other words, each collection must have a unique namespace. This is to prevent clients from
+  defining two different schemas for an encrypted namespace on the same URI.
 
   Depending on the EncryptionType, the encryption schema may be specified using either:
     FLEEncryptedFields        - if EncryptionType is "fle"
@@ -44,20 +42,48 @@ Description: |
     type      - the BSON type of values for this field
     queries   - an array of objects that specify "queryType" and other parameters for QE.
 
+  To enable encryption in each Client, provide an EncryptionOptions node with the following
+  fields:
+
+    KeyVaultDatabase     - the name of the keyvault database
+    KeyVaultCollection   - the name of the keyvault collection
+    EncryptedCollections - sequence of encrypted collection namespace strings
+
+  The EncryptedCollections subnode is a set of namespaces that must have a corresponding
+  descriptor under the top-level EncryptedCollections node.
+
   An Actor that wishes to perform encrypted operations on an encrypted collection must
-  be using the Client pool under which the schema for that encrypted collection is defined.
+  be using a Client pool with an EncryptedCollections subnode that includes the collection's
+  namespace.
 
-  Each Client that has an EncryptedOptions creates its own key vault collection at the database
-  specified in 'KeyVaultDatabase' during startup, after dropping any existing collections with
-  the same namespace. The URI of the key vault is the same as the URI specified in the Client's
-  'URI' field. After creating the key vault, data keys are generated for each encrypted field
-  path under all collections defined in 'EncryptedCollections'.
-
-  It is important that each Client that defines EncryptionOptions has a unique key vault namespace
-  to avoid conflicts during setup.
+  During client pool setup, key vaults in each unique URI are dropped & created once, when the
+  first client pool for that URI is created.  Data keys for encrypted namespaces are generated
+  only once, if the associated key vault & URI does not yet contain keys for that namespace.
+  This means that if two client pools have a similar URI and key vault namespace, then the
+  encrypted collections they have in common will be using the same data keys.
 
 GlobalDefaults:
   EncryptedDB: &encrypted_db genny_fle
+
+EncryptedCollections:
+- Database: *encrypted_db
+  Collection: "accounts"
+  EncryptionType: "fle"
+  FLEEncryptedFields:
+    name: { type: "string", algorithm: "random" }
+    credit: { type: "long", algorithm: "random" }
+    pii.ssn: { type: "string", algorithm: "deterministic" }
+    pii.ppn: {type: "string", algorithm: "random"}
+    bio.dob: { type: "date", algorithm: "random" }
+    bio.birthplace.street: { type: "string", algorithm: "random" }
+    bio.birthplace.country: { type: "string", algorithm: "deterministic" }
+- Database: *encrypted_db
+  Collection: "medical"
+  EncryptionType: "fle"
+  FLEEncryptedFields:
+    patient_id: { type: "string", algorithm: "deterministic" }
+    insurance: { type: "string", algorithm: "random" }
+    conditions: { type: "array", algorithm: "random" }
 
 Clients:
   Default:
@@ -65,29 +91,29 @@ Clients:
       maxPoolSize: 10
   EncryptedPool:
     QueryOptions:
-      maxPoolSize: 400
+      maxPoolSize: 100
     EncryptionOptions:
       KeyVaultDatabase: "keyvault"
       KeyVaultCollection: "datakeys"
       EncryptedCollections:
-      - Database: *encrypted_db
-        Collection: "accounts"
-        EncryptionType: "fle"
-        FLEEncryptedFields:
-          name: { type: "string", algorithm: "random" }
-          credit: { type: "long", algorithm: "random" }
-          pii.ssn: { type: "string", algorithm: "deterministic" }
-          pii.ppn: {type: "string", algorithm: "random"}
-          bio.dob: { type: "date", algorithm: "random" }
-          bio.birthplace.street: { type: "string", algorithm: "random" }
-          bio.birthplace.country: { type: "string", algorithm: "deterministic" }
-      - Database: *encrypted_db
-        Collection: "medical"
-        EncryptionType: "fle"
-        FLEEncryptedFields:
-          patient_id: { type: "string", algorithm: "deterministic" }
-          insurance: { type: "string", algorithm: "random" }
-          conditions: { type: "array", algorithm: "random" }
+      - genny_fle.accounts
+      - genny_fle.medical
+  SecondEncryptedPool:
+    QueryOptions:
+      maxPoolSize: 100
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_fle.accounts
+  ThirdEncryptedPool:
+    QueryOptions:
+      maxPoolSize: 100
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_fle.medical
 
 Actors:
 - Name: Accounts
@@ -136,11 +162,28 @@ Actors:
       OperationCommand:
         Filter: {pii.ssn: "111-11-1111"}
         Update: {$set: {surname: "Bacon", pii.ssn: "222-22-2222"}}
+
+- Name: Accounts_SecondPool
+  Type: CrudActor
+  Threads: 10
+  Database: *encrypted_db
+  ClientName: SecondEncryptedPool  # Use encryption-enabled pool
+  Phases:
+  - &Nop {Nop: true}
+  - Repeat: 1
+    Collection: accounts
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        # Query on deterministically-encrypted field
+        Filter: {bio.birthplace.country: "USA"}
+        Update: {$set: {bio.birthplace.country: "New Zealand", updated_by: "SecondEncryptedPool"}}
+
 - Name: Medical
   Type: CrudActor
   Threads: 10
   Database: *encrypted_db
-  ClientName: EncryptedPool
+  ClientName: ThirdEncryptedPool
   Phases:
   - Repeat: 10
     Collection: medical

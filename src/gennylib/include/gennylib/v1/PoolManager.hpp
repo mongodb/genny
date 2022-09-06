@@ -20,6 +20,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <bsoncxx/types/bson_value/value.hpp>
 #include <mongocxx/options/auto_encryption.hpp>
@@ -29,24 +30,73 @@
 
 namespace genny::v1 {
 
-class EncryptionOptions;
+class EncryptionManager;
+class EncryptionOptions {
+public:
+    EncryptionOptions(){};
+    EncryptionOptions(const Node& encryptionOptsNode);
+
+    const std::string& keyVaultDb() const {
+        return _keyVaultDb;
+    }
+    const std::string& keyVaultColl() const {
+        return _keyVaultColl;
+    }
+    const std::unordered_set<std::string>& encryptedColls() const {
+        return _encryptedColls;
+    }
+
+private:
+    std::string _keyVaultDb;
+    std::string _keyVaultColl;
+    std::unordered_set<std::string> _encryptedColls;
+};
+
+/**
+ * EncryptionContext holds a list of encrypted collection namespaces and a pointer
+ * to the EncryptionManager that holds the schema & key information on those namespaces.
+ * Each pool that sets up encryption will need to acquire an EncryptionContext
+ * from the EncryptionManager through createEnryptionContext().
+ */
 class EncryptionContext {
 public:
-    EncryptionContext(const Node& encryptionOptsNode, std::string uri);
+    EncryptionContext();
+    EncryptionContext(EncryptionOptions opts, std::string uri, const EncryptionManager& manager);
     ~EncryptionContext();
 
     std::pair<std::string, std::string> getKeyVaultNamespace() const;
-    mongocxx::options::auto_encryption getAutoEncryptionOptions() const;
+    std::string getKeyVaultNamespaceString() const;
 
-    void setupKeyVault();
+    mongocxx::options::auto_encryption getAutoEncryptionOptions() const;
 
     bsoncxx::document::value generateKMSProvidersDoc() const;
     bsoncxx::document::value generateSchemaMapDoc() const;
     bsoncxx::document::value generateExtraOptionsDoc() const;
 
+    bool hasEncryptedCollections() const;
+
 private:
-    std::unique_ptr<EncryptionOptions> _encryptionOpts;
+    EncryptionOptions _encryptionOpts;
     std::string _uri;
+    const EncryptionManager* _encryptionManager = nullptr;
+};
+
+/**
+ * Manages the state of the key vaults on all URIs, and keeps track of
+ * which encrypted collections have data keys stored in those key vaults.
+ */
+class EncryptionManager {
+public:
+    EncryptionManager(const Node& yaml, bool dryRun = false);
+    ~EncryptionManager();
+
+    EncryptionContext createEncryptionContext(const std::string& uri,
+                                              const EncryptionOptions& opts);
+
+private:
+    friend class EncryptionContext;
+    class EncryptionManagerImpl;
+    std::unique_ptr<EncryptionManagerImpl> _impl;
 };
 
 /**
@@ -102,10 +152,7 @@ private:
     /** callback passed into ctor */
     OnCommandStartCallback _apmCallback;
 
-    struct Pools {
-        std::shared_ptr<EncryptionContext> encryption;
-        std::unordered_map<size_t, std::unique_ptr<mongocxx::pool>> instances;
-    };
+    using Pools = std::unordered_map<size_t, std::unique_ptr<mongocxx::pool>>;
     // pair each map ↑ with a mutex for adding new pools
     using LockAndPools = std::pair<std::mutex, Pools>;
 
@@ -116,6 +163,9 @@ private:
 
     /** whether setup that needs a server connection should be skipped on client pool creation */
     bool _dryRun;
+
+    /** manages global key vaults & creates encryption contexts per pool */
+    std::unique_ptr<EncryptionManager> _encryptionManager;
 };
 
 }  // namespace genny::v1

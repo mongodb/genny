@@ -21,7 +21,7 @@ namespace {
 
 auto createPool(const std::string& name,
                 PoolManager::OnCommandStartCallback& apmCallback,
-                std::shared_ptr<EncryptionContext> encryption,
+                EncryptionManager& encryptionManager,
                 const Node& context) {
 
     auto mongoUri = context["Clients"][name]["URI"].to<std::string>();
@@ -39,21 +39,13 @@ auto createPool(const std::string& name,
         poolFactory.setOptions(genny::v1::PoolFactory::kAccessOption, *accessOpts);
     }
 
-    poolFactory.setEncryptionContext(encryption);
-    return poolFactory.makePool();
-}
+    auto encryptOpts = context["Clients"][name]["EncryptionOptions"].maybe<EncryptionOptions>();
+    if (encryptOpts) {
+        poolFactory.setEncryptionContext(
+            encryptionManager.createEncryptionContext(mongoUri, *encryptOpts));
+    }
 
-auto setupEncryption(const std::string& name, const Node& context, bool dryRun) {
-    if (!context["Clients"][name]["EncryptionOptions"]) {
-        return std::shared_ptr<EncryptionContext>(nullptr);
-    }
-    auto mongoUri = context["Clients"][name]["URI"].to<std::string>();
-    auto encryption = std::make_shared<EncryptionContext>(
-        context["Clients"][name]["EncryptionOptions"], std::move(mongoUri));
-    if (!dryRun) {
-        encryption->setupKeyVault();
-    }
-    return encryption;
+    return poolFactory.makePool();
 }
 
 }  // namespace
@@ -70,6 +62,10 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
     // ...but no need to keep the lock open past this.
     // Two threads trying access client("foo",0) at the same
     // time will subsequently block on the unique_lock.
+
+    if (!_encryptionManager) {
+        _encryptionManager = std::make_unique<EncryptionManager>(context, _dryRun);
+    }
     getLock.unlock();
 
     // only one thread can access the map of pools at once
@@ -77,15 +73,9 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
 
     Pools& pools = lap.second;
 
-    if (pools.instances.empty() && !pools.encryption) {
-        // set up encryption context when the first instance of this
-        // pool is about to be created.
-        pools.encryption = setupEncryption(name, context, _dryRun);
-    }
-
-    auto& pool = pools.instances[instance];
+    auto& pool = pools[instance];
     if (pool == nullptr) {
-        pool = createPool(name, this->_apmCallback, pools.encryption, context);
+        pool = createPool(name, this->_apmCallback, *_encryptionManager, context);
     }
 
     // no need to keep it past this point; pool is thread-safe
@@ -108,7 +98,7 @@ std::unordered_map<std::string, size_t> genny::v1::PoolManager::instanceCount() 
 
     auto out = std::unordered_map<std::string, size_t>();
     for (auto&& [k, v] : this->_pools) {
-        out[k] = v.second.instances.size();
+        out[k] = v.second.size();
     }
     return out;
 }

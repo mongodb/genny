@@ -66,7 +66,7 @@ public:
      */
     void setOption(OptionType type, const std::string& option, std::string value);
 
-    void setEncryptionContext(std::shared_ptr<EncryptionContext> encryption);
+    void setEncryptionContext(EncryptionContext encryption);
 
     /**
      * Replace the host(s) with a given vector of host(s).

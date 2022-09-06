@@ -241,9 +241,7 @@ TEST_CASE("PoolFactory behavior") {
 
     SECTION("Make a pool with client-side encryption enabled") {
         constexpr auto kSourceUri = "mongodb://127.0.0.1:27017";
-        constexpr auto kEncryptionConfig = R"({
-            KeyVaultDatabase: 'keyvault_db',
-            KeyVaultCollection: 'datakeys',
+        constexpr auto kEncryptedColls = R"({
             EncryptedCollections: [
                 { Database: 'accounts',
                   Collection: 'balances',
@@ -263,11 +261,19 @@ TEST_CASE("PoolFactory behavior") {
                 }
             ]
         })";
+        constexpr auto kEncryptionOpts = R"({
+            KeyVaultDatabase: 'keyvault_db',
+            KeyVaultCollection: 'datakeys',
+            EncryptedCollections: [ 'accounts.balances', 'accounts.ratings' ]
+        })";
 
-        genny::NodeSource ns{kEncryptionConfig, ""};
+        genny::NodeSource collsNs{kEncryptedColls, ""};
+        genny::NodeSource optsNs{kEncryptionOpts, ""};
 
         auto factory = genny::v1::PoolFactory(kSourceUri);
-        auto encryption = std::make_shared<genny::v1::EncryptionContext>(ns.root(), kSourceUri);
+        auto manager = genny::v1::EncryptionManager(collsNs.root(), true);
+
+        auto encryption = manager.createEncryptionContext(kSourceUri, optsNs.root());
 
         factory.setEncryptionContext(encryption);
 
@@ -276,13 +282,13 @@ TEST_CASE("PoolFactory behavior") {
 
         auto autoEncOpts = *factoryOpts.client_opts().auto_encryption_opts();
         REQUIRE(autoEncOpts.key_vault_namespace().has_value());
-        REQUIRE(autoEncOpts.key_vault_namespace().value() == encryption->getKeyVaultNamespace());
+        REQUIRE(autoEncOpts.key_vault_namespace().value() == encryption.getKeyVaultNamespace());
         REQUIRE(autoEncOpts.kms_providers().has_value());
-        REQUIRE(autoEncOpts.kms_providers().value() == encryption->generateKMSProvidersDoc());
+        REQUIRE(autoEncOpts.kms_providers().value() == encryption.generateKMSProvidersDoc());
         REQUIRE(autoEncOpts.schema_map().has_value());
-        REQUIRE(autoEncOpts.schema_map().value() == encryption->generateSchemaMapDoc());
+        REQUIRE(autoEncOpts.schema_map().value() == encryption.generateSchemaMapDoc());
         REQUIRE(autoEncOpts.extra_options().has_value());
-        REQUIRE(autoEncOpts.extra_options().value() == encryption->generateExtraOptionsDoc());
+        REQUIRE(autoEncOpts.extra_options().value() == encryption.generateExtraOptionsDoc());
 
         auto pool = factory.makePool();
         REQUIRE(pool);
