@@ -92,6 +92,23 @@ private:
     std::string _algorithm;
 };
 
+class QueryableEncryptedField : public EncryptedField {
+public:
+    inline static const std::string kParentNodeName = "QueryableEncryptedFields";
+
+    QueryableEncryptedField(const Node& yaml);
+
+    void appendEncryptInfo(bsoncxx::builder::basic::sub_document subdoc) const override;
+
+private:
+    struct Query {
+        Query(const Node& yaml);
+        std::string queryType;
+        std::optional<int> contention;
+    };
+    std::vector<Query> _queries;
+};
+
 template <EncryptionType enctype, class FieldType>
 class EncryptedCollection {
 public:
@@ -176,6 +193,16 @@ public:
     FLEEncryptedCollection(const Node& yaml)
         : EncryptedCollection<EncryptionType::FLE, FLEEncryptedField>(yaml) {}
     void appendSchema(bsoncxx::builder::basic::sub_document builder) const;
+    void createCollection(const mongocxx::client& client) const override;
+    void dropCollection(const mongocxx::client& client) const override;
+};
+
+class QueryableEncryptedCollection
+    : public EncryptedCollection<EncryptionType::QUERYABLE, QueryableEncryptedField> {
+public:
+    QueryableEncryptedCollection(const Node& yaml)
+        : EncryptedCollection<EncryptionType::QUERYABLE, QueryableEncryptedField>(yaml) {}
+    void appendEncryptedFieldConfig(bsoncxx::builder::basic::sub_document builder) const;
     void createCollection(const mongocxx::client& client) const override;
     void dropCollection(const mongocxx::client& client) const override;
 };
@@ -305,6 +332,55 @@ void FLEEncryptedField::appendEncryptInfo(sub_document subdoc) const {
     }
 }
 
+QueryableEncryptedField::Query::Query(const Node& yaml) {
+    queryType = yaml["queryType"].to<std::string>();
+    contention = yaml["contention"].maybe<int>();
+}
+
+QueryableEncryptedField::QueryableEncryptedField(const Node& yaml) : EncryptedField(yaml) {
+    const auto& queriesNode = yaml["queries"];
+    if (!queriesNode) {
+        return;
+    }
+
+    if (queriesNode.isSequence()) {
+        for (auto& [_, queryNode] : queriesNode) {
+            if (!queryNode.isMap()) {
+                throw InvalidConfigurationException(
+                    "Each value in the 'queries' array must be of map type");
+            }
+            _queries.emplace_back(queryNode);
+        }
+    } else if (queriesNode.isMap()) {
+        _queries.emplace_back(queriesNode);
+    } else {
+        throw InvalidConfigurationException("'queries' node must be of sequence or map type");
+    }
+}
+
+void QueryableEncryptedField::appendEncryptInfo(sub_document subdoc) const {
+    subdoc.append(kvp("path", _path));
+    if (_keyId.has_value()) {
+        subdoc.append(kvp("keyId", _keyId.value()));
+    }
+    subdoc.append(kvp("bsonType", _type));
+
+    if (_queries.empty()) {
+        return;
+    }
+
+    subdoc.append(kvp("queries", [&](sub_array queriesArray) {
+        for (auto& query : _queries) {
+            queriesArray.append([&](sub_document queryDoc) {
+                queryDoc.append(kvp("queryType", query.queryType));
+                if (query.contention) {
+                    queryDoc.append(kvp("contention", query.contention.value()));
+                }
+            });
+        }
+    }));
+}
+
 void FLEEncryptedCollection::appendSchema(sub_document subdoc) const {
     if (_fields.empty()) {
         return;
@@ -357,6 +433,33 @@ void FLEEncryptedCollection::dropCollection(const mongocxx::client& client) cons
     client[_database][_collection].drop();
 }
 
+void QueryableEncryptedCollection::appendEncryptedFieldConfig(sub_document subdoc) const {
+    if (_fields.empty()) {
+        return;
+    }
+    subdoc.append(kvp("fields", [&](sub_array fieldsArray) {
+        for (const auto& [_, field] : _fields) {
+            fieldsArray.append([&](sub_document fieldDoc) { field.appendEncryptInfo(fieldDoc); });
+        }
+    }));
+}
+
+void QueryableEncryptedCollection::createCollection(const mongocxx::client& client) const {
+    auto createOpts = make_document(
+        kvp("encryptedFields", [&](sub_document subdoc) { appendEncryptedFieldConfig(subdoc); }));
+    BOOST_LOG_TRIVIAL(debug) << "Generated encryptedFieldConfig: "
+                             << bsoncxx::to_json(createOpts.view());
+    client[_database].create_collection(_collection, createOpts.view());
+}
+
+void QueryableEncryptedCollection::dropCollection(const mongocxx::client& client) const {
+    for (auto& suffix : {".esc", ".ecc", ".ecoc"}) {
+        std::string stateCollName = "enxcol_." + _collection + suffix;
+        client[_database][stateCollName].drop();
+    }
+    client[_database][_collection].drop();
+}
+
 EncryptionOptions::EncryptionOptions(const Node& encryptionOptsNode) {
     _keyVaultDb = encryptionOptsNode["KeyVaultDatabase"].to<std::string>();
     _keyVaultColl = encryptionOptsNode["KeyVaultCollection"].to<std::string>();
@@ -385,7 +488,8 @@ EncryptionOptions::EncryptionOptions(const Node& encryptionOptsNode) {
 class EncryptionManager::EncryptionManagerImpl {
 public:
     // variant that holds either a FLE or Queryable encrypted collection
-    using EncryptedCollectionVariant = std::variant<std::monostate, FLEEncryptedCollection>;
+    using EncryptedCollectionVariant =
+        std::variant<std::monostate, FLEEncryptedCollection, QueryableEncryptedCollection>;
 
     // maps a namespace string to an EncryptedCollectionVariant
     using EncryptedCollectionMap = std::unordered_map<std::string, EncryptedCollectionVariant>;
@@ -498,7 +602,8 @@ EncryptionManager::EncryptionManagerImpl::EncryptionManagerImpl(const Node& yaml
             auto& fleColl = coll.emplace<FLEEncryptedCollection>(v);
             nss = fleColl.namespaceString();
         } else if (typeStr == "queryable") {
-            // TODO: PERF-3187 add queryable encryption support
+            auto& qeColl = coll.emplace<QueryableEncryptedCollection>(v);
+            nss = qeColl.namespaceString();
         } else {
             std::ostringstream ss;
             ss << "'EncryptedCollections." << k.toString()
@@ -563,6 +668,10 @@ void EncryptionManager::EncryptionManagerImpl::createCollection(
     if (std::holds_alternative<FLEEncryptedCollection>(encryptedColl)) {
         createCollection(context, client, std::get<FLEEncryptedCollection>(encryptedColl), uri);
     }
+    if (std::holds_alternative<QueryableEncryptedCollection>(encryptedColl)) {
+        createCollection(
+            context, client, std::get<QueryableEncryptedCollection>(encryptedColl), uri);
+    }
 }
 
 void EncryptionManager::EncryptionManagerImpl::createDataKeys(
@@ -585,6 +694,10 @@ void EncryptionManager::EncryptionManagerImpl::createDataKeys(
     if (std::holds_alternative<FLEEncryptedCollection>(encryptedColl)) {
         createDataKeysPerField(
             context, clientEncryption, std::get<FLEEncryptedCollection>(encryptedColl), uri);
+    }
+    if (std::holds_alternative<QueryableEncryptedCollection>(encryptedColl)) {
+        createDataKeysPerField(
+            context, clientEncryption, std::get<QueryableEncryptedCollection>(encryptedColl), uri);
     }
 }
 
@@ -693,6 +806,35 @@ bsoncxx::document::value EncryptionContext::generateSchemaMapDoc() const {
     }
     auto v = mapDoc.extract();
     BOOST_LOG_TRIVIAL(debug) << "Generated schema map: " << bsoncxx::to_json(v);
+    return std::move(v);
+}
+
+bsoncxx::document::value EncryptionContext::generateEncryptedFieldsMapDoc() const {
+    bsoncxx::builder::basic::document mapDoc{};
+
+    auto kvId = std::make_pair(_uri, getKeyVaultNamespaceString());
+    auto kvItr = _encryptionManager->_impl->_keyVaults.find(kvId);
+    if (kvItr == _encryptionManager->_impl->_keyVaults.end()) {
+        BOOST_LOG_TRIVIAL(debug) << "No key vault found with ID: " << kvId.first << ", "
+                                 << kvId.second;
+        return mapDoc.extract();
+    }
+
+    auto& collsInKeyVault = kvItr->second;
+    for (auto& nss : _encryptionOpts.encryptedColls()) {
+        auto collItr = collsInKeyVault.find(nss);
+        if (collItr == collsInKeyVault.end()) {
+            continue;
+        }
+        auto& collVariant = collItr->second;
+        if (std::holds_alternative<QueryableEncryptedCollection>(collVariant)) {
+            auto& qeColl = std::get<QueryableEncryptedCollection>(collVariant);
+            mapDoc.append(
+                kvp(nss, [&](sub_document subdoc) { qeColl.appendEncryptedFieldConfig(subdoc); }));
+        }
+    }
+    auto v = mapDoc.extract();
+    BOOST_LOG_TRIVIAL(debug) << "Generated encrypted fields map: " << bsoncxx::to_json(v);
     return std::move(v);
 }
 

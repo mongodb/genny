@@ -105,7 +105,7 @@ TEST_CASE("EncryptedCollections with invalid fields") {
                   EncryptionType: 'fle' },
                 { Database: "foo",
                   Collection: "bar",
-                  EncryptionType: 'fle' }
+                  EncryptionType: 'queryable' }
             ]
             }
         })";
@@ -208,6 +208,21 @@ TEST_CASE("EncryptedCollections with invalid fields") {
         REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
                             Catch::Matches("'FLEEncryptedFields' node must be of map type"));
     }
+    SECTION("EncryptedCollections entry with non-map type QueryableEncryptedFields") {
+        std::string encryptedColls = R"({
+            Encryption: {
+            EncryptedCollections: [
+                { Database: "foo",
+                  Collection: "bar",
+                  EncryptionType: 'queryable',
+                  QueryableEncryptedFields: [] },
+            ]
+            }
+        })";
+        genny::NodeSource ns{encryptedColls, ""};
+        REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
+                            Catch::Matches("'QueryableEncryptedFields' node must be of map type"));
+    }
     SECTION("FLEEncryptedFields entry with invalid path as key") {
         std::vector<std::string> badPaths = {
             "middle..empty",
@@ -217,24 +232,32 @@ TEST_CASE("EncryptedCollections with invalid fields") {
             "..",
             ".",
         };
-        const std::string encryptedCollsPrefix = R"({
+        std::string encryptedCollsPrefix = R"({
             Encryption: {
             EncryptedCollections: [
                 { Database: "foo",
                   Collection: "bar",
                   EncryptionType: 'fle',
                   FLEEncryptedFields: {)";
-        const std::string encryptedCollsSuffix =
-            R"(: { type: "string", algorithm: "random" }} }]}})";
+        std::string encryptedCollsSuffix = R"(: { type: "string", algorithm: "random" }} }]}})";
 
-        for (auto& path : badPaths) {
-            auto encryptedColls = encryptedCollsPrefix + path + encryptedCollsSuffix;
-            genny::NodeSource ns{encryptedColls, ""};
-            REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
-                                Catch::Matches("Field path \"" + path + "\" is not a valid path"));
-        }
+        auto runTest = [&](const std::string& prefix, const std::string& suffix) {
+            for (auto& path : badPaths) {
+                auto encryptedColls = prefix + path + suffix;
+                genny::NodeSource ns{encryptedColls, ""};
+                REQUIRE_THROWS_WITH(
+                    [&]() { EncryptionManager(ns.root(), true); }(),
+                    Catch::Matches("Field path \"" + path + "\" is not a valid path"));
+            }
+        };
+        runTest(encryptedCollsPrefix, encryptedCollsSuffix);
+
+        encryptedCollsPrefix.replace(encryptedCollsPrefix.find("fle"), 3, "queryable");
+        encryptedCollsPrefix.replace(encryptedCollsPrefix.find("FLE"), 3, "Queryable");
+        encryptedCollsSuffix = R"(: {type: "string", queries: []}} }]}})";
+        runTest(encryptedCollsPrefix, encryptedCollsSuffix);
     }
-    SECTION("FLEEncryptedFields entry with missing type") {
+    SECTION("*EncryptedFields entry with missing type") {
         std::string encryptedColls = R"({
             Encryption: {
             EncryptedCollections: [
@@ -245,13 +268,21 @@ TEST_CASE("EncryptedCollections with invalid fields") {
             ]
             }
         })";
-        genny::NodeSource ns{encryptedColls, ""};
-        REQUIRE_THROWS_WITH(
-            [&]() { EncryptionManager(ns.root(), true); }(),
-            Catch::Matches(
-                "Invalid key 'type': Tried to access node that doesn't "
-                "exist. On node with path "
-                "'/Encryption/EncryptedCollections/0/FLEEncryptedFields/field1/type': "));
+        std::string errmsg =
+            "Invalid key 'type': Tried to access node that doesn't exist. On node with path "
+            "'/Encryption/EncryptedCollections/0/FLEEncryptedFields/field1/type': ";
+
+        auto runTest = [&](const std::string& yaml, const std::string& error) {
+            genny::NodeSource ns{yaml, ""};
+            REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
+                                Catch::Matches(error));
+        };
+        runTest(encryptedColls, errmsg);
+
+        encryptedColls.replace(encryptedColls.find("fle"), 3, "queryable");
+        encryptedColls.replace(encryptedColls.find("FLE"), 3, "Queryable");
+        errmsg.replace(errmsg.find("FLE"), 3, "Queryable");
+        runTest(encryptedColls, errmsg);
     }
     SECTION("FLEEncryptedFields entry with empty keyId") {
         std::string encryptedColls = R"({
@@ -305,6 +336,44 @@ TEST_CASE("EncryptedCollections with invalid fields") {
             [&]() { EncryptionManager(ns.root(), true); }(),
             Catch::Matches("'field1' has an invalid 'algorithm' value of 'equality'. "
                            "Valid values are 'random' and 'deterministic'."));
+    }
+    SECTION("QueryableEncryptedFields entry with invalid queries type") {
+        std::string encryptedColls = R"({
+            Encryption: {
+            EncryptedCollections: [
+                { Database: "foo",
+                  Collection: "bar",
+                  EncryptionType: 'queryable',
+                  QueryableEncryptedFields: {field1: {type: "string", queries: "equality"}}
+                }
+            ]
+            }
+        })";
+        genny::NodeSource ns{encryptedColls, ""};
+        REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
+                            Catch::Matches("'queries' node must be of sequence or map type"));
+    }
+    SECTION("QueryableEncryptedFields queries with missing queryType") {
+        std::string encryptedColls = R"({
+            Encryption: {
+            EncryptedCollections: [
+                { Database: "foo",
+                  Collection: "bar",
+                  EncryptionType: 'queryable',
+                  QueryableEncryptedFields: {
+                    field1: {type: "string", queries: [{}]}
+                  }
+                }
+            ]
+            }
+        })";
+        genny::NodeSource ns{encryptedColls, ""};
+        REQUIRE_THROWS_WITH(
+            [&]() { EncryptionManager(ns.root(), true); }(),
+            Catch::Matches("Invalid key 'queryType': Tried to access node that doesn't "
+                           "exist. On node with path "
+                           "'/Encryption/EncryptedCollections/0/QueryableEncryptedFields/field1/"
+                           "queries/0/queryType': "));
     }
 }
 TEST_CASE("No CryptSharedLibPath when UseCryptSharedLib is true") {
