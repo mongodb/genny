@@ -242,6 +242,7 @@ TEST_CASE("PoolFactory behavior") {
     SECTION("Make a pool with client-side encryption enabled") {
         constexpr auto kSourceUri = "mongodb://127.0.0.1:27017";
         constexpr auto kEncryptedColls = R"({
+          Encryption: {
             EncryptedCollections: [
                 { Database: 'accounts',
                   Collection: 'balances',
@@ -260,6 +261,7 @@ TEST_CASE("PoolFactory behavior") {
                   }
                 }
             ]
+          }
         })";
         constexpr auto kEncryptionOpts = R"({
             KeyVaultDatabase: 'keyvault_db',

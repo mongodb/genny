@@ -453,16 +453,42 @@ private:
 
     // whether setup that needs a server connection should be skipped
     bool _dryRun;
+
+    // whether to use shared library instead of mongocryptd
+    bool _useCryptSharedLib = false;
+
+    // path to the mongo crypt shared library
+    std::string _cryptSharedLibPath;
 };
 
 EncryptionManager::EncryptionManagerImpl::EncryptionManagerImpl(const Node& yaml, bool dryRun)
     : _dryRun(dryRun) {
-    const auto& collsSequence = yaml["EncryptedCollections"];
+    const auto& encryptionNode = yaml["Encryption"];
+    if (!encryptionNode) {
+        return;
+    }
+
+    auto useShlibOpt = encryptionNode["UseCryptSharedLib"].maybe<bool>();
+    if (useShlibOpt) {
+        _useCryptSharedLib = *useShlibOpt;
+    }
+    if (_useCryptSharedLib) {
+        auto shlibPathOpt = encryptionNode["CryptSharedLibPath"].maybe<std::string>();
+        if (!shlibPathOpt || shlibPathOpt->empty()) {
+            throw InvalidConfigurationException(
+                "A non-empty Encryption.CryptSharedLibPath is required if "
+                "Encryption.UseCryptSharedLib is true");
+        }
+        _cryptSharedLibPath = *shlibPathOpt;
+    }
+
+    const auto& collsSequence = encryptionNode["EncryptedCollections"];
     if (!collsSequence) {
         return;
     }
     if (!collsSequence.isSequence()) {
-        throw InvalidConfigurationException("'EncryptedCollections' node must be of sequence type");
+        throw InvalidConfigurationException(
+            "'Encryption.EncryptedCollections' node must be of sequence type");
     }
 
     for (const auto& [k, v] : collsSequence) {
@@ -643,6 +669,10 @@ mongocxx::options::auto_encryption EncryptionContext::getAutoEncryptionOptions()
 bsoncxx::document::value EncryptionContext::generateSchemaMapDoc() const {
     bsoncxx::builder::basic::document mapDoc{};
 
+    if (!_encryptionManager) {
+        return mapDoc.extract();
+    }
+
     auto kvId = std::make_pair(_uri, getKeyVaultNamespaceString());
     auto kvItr = _encryptionManager->_impl->_keyVaults.find(kvId);
     if (kvItr == _encryptionManager->_impl->_keyVaults.end()) {
@@ -669,7 +699,16 @@ bsoncxx::document::value EncryptionContext::generateSchemaMapDoc() const {
 }
 
 bsoncxx::document::value EncryptionContext::generateExtraOptionsDoc() const {
-    return make_document(kvp("mongocryptdBypassSpawn", true), kvp("cryptSharedLibRequired", false));
+    bsoncxx::builder::basic::document extraOpts;
+    bool shlibRequired = _encryptionManager && _encryptionManager->_impl->_useCryptSharedLib;
+
+    extraOpts.append(kvp("mongocryptdBypassSpawn", true));
+    extraOpts.append(kvp("cryptSharedLibRequired", shlibRequired));
+
+    if (shlibRequired) {
+        extraOpts.append(kvp("cryptSharedLibPath", _encryptionManager->_impl->_cryptSharedLibPath));
+    }
+    return extraOpts.extract();
 }
 
 bsoncxx::document::value EncryptionContext::generateKMSProvidersDoc() const {

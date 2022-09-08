@@ -65,25 +65,28 @@ Description: |
 GlobalDefaults:
   EncryptedDB: &encrypted_db genny_fle
 
-EncryptedCollections:
-- Database: *encrypted_db
-  Collection: "accounts"
-  EncryptionType: "fle"
-  FLEEncryptedFields:
-    name: { type: "string", algorithm: "random" }
-    credit: { type: "long", algorithm: "random" }
-    pii.ssn: { type: "string", algorithm: "deterministic" }
-    pii.ppn: {type: "string", algorithm: "random"}
-    bio.dob: { type: "date", algorithm: "random" }
-    bio.birthplace.street: { type: "string", algorithm: "random" }
-    bio.birthplace.country: { type: "string", algorithm: "deterministic" }
-- Database: *encrypted_db
-  Collection: "medical"
-  EncryptionType: "fle"
-  FLEEncryptedFields:
-    patient_id: { type: "string", algorithm: "deterministic" }
-    insurance: { type: "string", algorithm: "random" }
-    conditions: { type: "array", algorithm: "random" }
+Encryption:
+  UseCryptSharedLib: true
+  CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so
+  EncryptedCollections:
+  - Database: *encrypted_db
+    Collection: "accounts"
+    EncryptionType: "fle"
+    FLEEncryptedFields:
+      name: { type: "string", algorithm: "random" }
+      credit: { type: "long", algorithm: "random" }
+      pii.ssn: { type: "string", algorithm: "deterministic" }
+      pii.ppn: {type: "string", algorithm: "random"}
+      bio.dob: { type: "date", algorithm: "random" }
+      bio.birthplace.street: { type: "string", algorithm: "random" }
+      bio.birthplace.country: { type: "string", algorithm: "deterministic" }
+  - Database: *encrypted_db
+    Collection: "medical"
+    EncryptionType: "fle"
+    FLEEncryptedFields:
+      patient_id: { type: "string", algorithm: "deterministic" }
+      insurance: { type: "string", algorithm: "random" }
+      conditions: { type: "array", algorithm: "random" }
 
 Clients:
   Default:
