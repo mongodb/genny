@@ -312,13 +312,19 @@ TEST_CASE("No CryptSharedLibPath when UseCryptSharedLib is true") {
         "A non-empty Encryption.CryptSharedLibPath is required if "
         "Encryption.UseCryptSharedLib is true";
 
-    std::string encryption = R"({Encryption: { UseCryptSharedLib: true, CryptSharedLibPath: "" })";
-    genny::NodeSource ns{encryption, ""};
-    REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(), Catch::Matches(errmsg));
-
-    encryption = R"({Encryption: { UseCryptSharedLib: true }})";
-    genny::NodeSource ns2{encryption, ""};
-    REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns2.root(), true); }(), Catch::Matches(errmsg));
+    SECTION("CryptSharedLibPath is empty") {
+        std::string encryption =
+            R"({Encryption: { UseCryptSharedLib: true, CryptSharedLibPath: "" }})";
+        genny::NodeSource ns{encryption, ""};
+        REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
+                            Catch::Matches(errmsg));
+    }
+    SECTION("CryptSharedLibPath is absent") {
+        std::string encryption = R"({Encryption: { UseCryptSharedLib: true }})";
+        genny::NodeSource ns{encryption, ""};
+        REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
+                            Catch::Matches(errmsg));
+    }
 }
 TEST_CASE("EncryptionOptions with non-existing namespace") {
     std::string encryptedColls = R"({ Encryption: { EncryptedCollections: [] }})";
@@ -408,9 +414,12 @@ TEST_CASE("EncryptionContext outputs correct extra options document") {
             Encryption: { UseCryptSharedLib: true, CryptSharedLibPath: "/usr/lib/mongo_crypt_v1.so"}
         })";
         genny::NodeSource collsNs{encryptedColls, ""};
-        EncryptionManager mgr(collsNs.root(), true);
+        EncryptionManager mgr(collsNs.root(), false);
 
-        auto encryption = mgr.createEncryptionContext(kSourceUri, optsNs.root());
+        // Since dryRun is false, create an EncryptionContext directly instead of calling
+        // createEncryptionContext().
+        EncryptionContext encryption(EncryptionOptions(optsNs.root()), kSourceUri, mgr);
+
         auto doc = encryption.generateExtraOptionsDoc();
         REQUIRE(doc.view()["mongocryptdBypassSpawn"]);
         REQUIRE_NOTHROW(doc.view()["mongocryptdBypassSpawn"].get_bool());

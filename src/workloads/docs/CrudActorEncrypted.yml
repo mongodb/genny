@@ -209,4 +209,4 @@ Actors:
             insurance: "none"
             patient_id: {^Join: {array: ["UpdatedPatient-", {^ActorIdString: {}}]}}
             physician: {^Join: {array: ["Dr.", {^RandomString: {length: 10}}]}}
-            conditions: [ "dysphagia", "arrythmia", "hemiparesis" ]
+            conditions: ["dysphagia", "arrythmia", "hemiparesis"]
