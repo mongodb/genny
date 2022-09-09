@@ -468,18 +468,16 @@ EncryptionManager::EncryptionManagerImpl::EncryptionManagerImpl(const Node& yaml
         return;
     }
 
-    auto useShlibOpt = encryptionNode["UseCryptSharedLib"].maybe<bool>();
-    if (useShlibOpt) {
-        _useCryptSharedLib = *useShlibOpt;
-    }
+    _useCryptSharedLib = encryptionNode["UseCryptSharedLib"].maybe<bool>().value_or(false);
+
     if (_useCryptSharedLib) {
-        auto shlibPathOpt = encryptionNode["CryptSharedLibPath"].maybe<std::string>();
-        if (!shlibPathOpt || shlibPathOpt->empty()) {
+        _cryptSharedLibPath =
+            encryptionNode["CryptSharedLibPath"].maybe<std::string>().value_or("");
+        if (_cryptSharedLibPath.empty()) {
             throw InvalidConfigurationException(
                 "A non-empty Encryption.CryptSharedLibPath is required if "
                 "Encryption.UseCryptSharedLib is true");
         }
-        _cryptSharedLibPath = *shlibPathOpt;
     }
 
     const auto& collsSequence = encryptionNode["EncryptedCollections"];
