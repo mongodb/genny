@@ -700,7 +700,10 @@ bsoncxx::document::value EncryptionContext::generateSchemaMapDoc() const {
 
 bsoncxx::document::value EncryptionContext::generateExtraOptionsDoc() const {
     bsoncxx::builder::basic::document extraOpts;
-    bool shlibRequired = _encryptionManager && _encryptionManager->_impl->_useCryptSharedLib;
+
+    // do not load shared library if this is a dry run
+    bool shlibRequired = _encryptionManager && _encryptionManager->_impl->_useCryptSharedLib &&
+        !_encryptionManager->_impl->_dryRun;
 
     extraOpts.append(kvp("mongocryptdBypassSpawn", true));
     extraOpts.append(kvp("cryptSharedLibRequired", shlibRequired));
