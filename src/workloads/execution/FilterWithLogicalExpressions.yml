@@ -1,0 +1,162 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: >
+  This workload stresses the query execution engine by running queries with complex logical
+  expressions that never match a document in the collection.
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  DocumentCount: &DocumentCount 1e6
+  MaxPhases: &MaxPhases 5
+
+Actors:
+# Phase 0: Insert documents into the collection.
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: *DocumentCount
+        BatchSize: 1000
+        Document:
+          # NOTE: These documents will not produce a match for the filter below, forcing the query
+          # to scan the entire collection.
+          a: 1
+          b: 1
+          c: 1
+          d: 1
+
+# Phase 1: Ensure all data is synced to disk.
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+
+# Phase 2: Run query with wide expression.
+- Name: RunWideQuery
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 10
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {
+                $expr: {
+                  $or: [
+                    {$eq: ["$a", 10]},
+                    {$eq: ["$b", 11]},
+                    {$eq: ["$c", 12]},
+                    {$eq: ["$d", 13]},
+                    {$eq: ["$a", 14]},
+                    {$eq: ["$b", 15]},
+                    {$eq: ["$c", 16]},
+                    {$eq: ["$d", 17]},
+                    {$eq: ["$a", 18]},
+                    {$eq: ["$b", 19]},
+                  ]
+                }
+            }
+
+# Phase 3: Run query with deep expression.
+- Name: RunDeepQuery
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 10
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {
+                $expr: {
+                  $or: [
+                    {
+                      $and: [
+                        {
+                          $or: [
+                            {$eq: ["$a", 10]},
+                            {$eq: ["$b", 11]}
+                          ]
+                        },
+                        {
+                          $or: [
+                            {$eq: ["$c", 12]},
+                            {$eq: ["$d", 13]}
+                          ]
+                        },
+                      ]
+                    },
+                    {
+                      $and: [
+                        {
+                          $or: [
+                            {$eq: ["$a", 14]},
+                            {$eq: ["$b", 15]}
+                          ]
+                        },
+                        {
+                          $or: [
+                            {$eq: ["$c", 16]},
+                            {$eq: ["$d", 17]}
+                          ]
+                        },
+                      ]
+                    }
+                  ]
+                }
+            }
+
+# Phase 4: Run query with expression which goes both wide and deep.
+- Name: RunMixedQuery
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 10
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {
+                $expr: {
+                  $or: [
+                    {$and: [{$eq: ["$a", 10]}, {$eq: ["$b", 11]}]},
+                    {$and: [{$eq: ["$c", 12]}, {$eq: ["$d", 13]}]},
+                    {$eq: ["$a", 14]},
+                    {$eq: ["$b", 15]},
+                    {$eq: ["$c", 16]},
+                    {$eq: ["$d", 17]},
+                  ]
+                }
+            }
