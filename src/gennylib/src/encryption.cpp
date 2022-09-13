@@ -453,6 +453,7 @@ void QueryableEncryptedCollection::createCollection(const mongocxx::client& clie
 }
 
 void QueryableEncryptedCollection::dropCollection(const mongocxx::client& client) const {
+    // TODO: PERF-3306 remove this loop once CXX driver supports queryable-encryption
     for (auto& suffix : {".esc", ".ecc", ".ecoc"}) {
         std::string stateCollName = "enxcol_." + _collection + suffix;
         client[_database][stateCollName].drop();

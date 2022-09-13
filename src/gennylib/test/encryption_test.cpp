@@ -25,6 +25,14 @@ using Catch::Matchers::Contains;
 
 namespace {
 constexpr auto kSourceUri = "mongodb://127.0.0.1:27017";
+
+void replace_str(std::string& str, const std::string& search, const std::string& replace) {
+    auto pos = str.find(search.data(), 0, search.size());
+    if (pos == std::string::npos)
+        return;
+    str.replace(pos, search.size(), replace.data(), replace.size());
+}
+
 }  // namespace
 
 TEST_CASE("EncryptionOptions with invalid fields") {
@@ -223,7 +231,32 @@ TEST_CASE("EncryptedCollections with invalid fields") {
         REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
                             Catch::Matches("'QueryableEncryptedFields' node must be of map type"));
     }
-    SECTION("FLEEncryptedFields entry with invalid path as key") {
+}
+TEST_CASE("(FLE|Queryable)EncryptedFields with invalid fields") {
+    const std::string encryptionTemplate = R"({
+        Encryption: {
+            EncryptedCollections: [
+                { Database: "foo",
+                  Collection: "bar",
+                  EncryptionType: "<TYPE>",
+                  <FIELDS>
+                }
+            ]
+        }
+    })";
+
+    auto generateYaml = [&](const std::string& type, const std::string& fields) -> std::string {
+        std::string yaml = encryptionTemplate;
+        replace_str(yaml, "<TYPE>", type);
+        replace_str(yaml, "<FIELDS>", fields);
+        return yaml;
+    };
+
+    SECTION("(FLE|Queryable)EncryptedFields entry with invalid path as key") {
+        std::string fleInputTemplate = generateYaml(
+            "fle", R"(FLEEncryptedFields: {<PATH>: {type: "string", algorithm: "random"}})");
+        std::string qeInputTemplate = generateYaml(
+            "queryable", R"(QueryableEncryptedFields: {<PATH>: {type: "string", queries: []}})");
         std::vector<std::string> badPaths = {
             "middle..empty",
             "ends.with.dot.",
@@ -232,86 +265,57 @@ TEST_CASE("EncryptedCollections with invalid fields") {
             "..",
             ".",
         };
-        std::string encryptedCollsPrefix = R"({
-            Encryption: {
-            EncryptedCollections: [
-                { Database: "foo",
-                  Collection: "bar",
-                  EncryptionType: 'fle',
-                  FLEEncryptedFields: {)";
-        std::string encryptedCollsSuffix = R"(: { type: "string", algorithm: "random" }} }]}})";
 
-        auto runTest = [&](const std::string& prefix, const std::string& suffix) {
+        for (auto& inputTemplate : {fleInputTemplate, qeInputTemplate}) {
             for (auto& path : badPaths) {
-                auto encryptedColls = prefix + path + suffix;
+                auto encryptedColls = inputTemplate;
+                replace_str(encryptedColls, "<PATH>", path);
+
                 genny::NodeSource ns{encryptedColls, ""};
                 REQUIRE_THROWS_WITH(
                     [&]() { EncryptionManager(ns.root(), true); }(),
                     Catch::Matches("Field path \"" + path + "\" is not a valid path"));
             }
-        };
-        runTest(encryptedCollsPrefix, encryptedCollsSuffix);
-
-        encryptedCollsPrefix.replace(encryptedCollsPrefix.find("fle"), 3, "queryable");
-        encryptedCollsPrefix.replace(encryptedCollsPrefix.find("FLE"), 3, "Queryable");
-        encryptedCollsSuffix = R"(: {type: "string", queries: []}} }]}})";
-        runTest(encryptedCollsPrefix, encryptedCollsSuffix);
+        }
     }
-    SECTION("*EncryptedFields entry with missing type") {
-        std::string encryptedColls = R"({
-            Encryption: {
-            EncryptedCollections: [
-                { Database: "foo",
-                  Collection: "bar",
-                  EncryptionType: 'fle',
-                  FLEEncryptedFields: { field1 : { algorithm: "random" }} },
-            ]
-            }
-        })";
+    SECTION("(FLE|Queryable)EncryptedFields entry with missing type") {
+        std::string fleInput =
+            generateYaml("fle", R"(FLEEncryptedFields: { field1: { algorithm: "random" }})");
+        std::string qeInput =
+            generateYaml("queryable", R"(QueryableEncryptedFields: {field1: {queries: []}})");
+
+        genny::NodeSource fleNs{fleInput, ""};
+        genny::NodeSource qeNs{qeInput, ""};
         std::string errmsg =
             "Invalid key 'type': Tried to access node that doesn't exist. On node with path "
             "'/Encryption/EncryptedCollections/0/FLEEncryptedFields/field1/type': ";
+        REQUIRE_THROWS_WITH([&]() { EncryptionManager(fleNs.root(), true); }(),
+                            Catch::Matches(errmsg));
 
-        auto runTest = [&](const std::string& yaml, const std::string& error) {
-            genny::NodeSource ns{yaml, ""};
-            REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
-                                Catch::Matches(error));
-        };
-        runTest(encryptedColls, errmsg);
-
-        encryptedColls.replace(encryptedColls.find("fle"), 3, "queryable");
-        encryptedColls.replace(encryptedColls.find("FLE"), 3, "Queryable");
-        errmsg.replace(errmsg.find("FLE"), 3, "Queryable");
-        runTest(encryptedColls, errmsg);
+        replace_str(errmsg, "FLE", "Queryable");
+        REQUIRE_THROWS_WITH([&]() { EncryptionManager(qeNs.root(), true); }(),
+                            Catch::Matches(errmsg));
     }
-    SECTION("FLEEncryptedFields entry with empty keyId") {
-        std::string encryptedColls = R"({
-            Encryption: {
-            EncryptedCollections: [
-                { Database: "foo",
-                  Collection: "bar",
-                  EncryptionType: 'fle',
-                  FLEEncryptedFields: { field1 : { type: "string", algorithm: "random", keyId: "" }} },
-            ]
-            }
-        })";
+    SECTION("(FLE|Queryable)EncryptedFields entry with empty keyId") {
 
-        genny::NodeSource ns{encryptedColls, ""};
-        REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
-                            Catch::Matches("'EncryptedField' has an invalid 'keyId' value of ''. "
-                                           "Value must be a UUID string."));
+        std::string fleInput = generateYaml(
+            "fle",
+            R"(FLEEncryptedFields: { field1: {type: "string", algorithm: "random", keyId: ""}})");
+        std::string qeInput = generateYaml(
+            "queryable",
+            R"(QueryableEncryptedFields: { field1: {type: "string", queries: [], keyId: ""}})");
+
+        for (auto& yaml : {fleInput, qeInput}) {
+            genny::NodeSource ns{yaml, ""};
+            REQUIRE_THROWS_WITH(
+                [&]() { EncryptionManager(ns.root(), true); }(),
+                Catch::Matches("'EncryptedField' has an invalid 'keyId' value of ''. "
+                               "Value must be a UUID string."));
+        }
     }
     SECTION("FLEEncryptedFields entry with missing algorithm") {
-        std::string encryptedColls = R"({
-            Encryption: {
-            EncryptedCollections: [
-                { Database: "foo",
-                  Collection: "bar",
-                  EncryptionType: 'fle',
-                  FLEEncryptedFields: { field1 : { type: "string" }} },
-            ]
-            }
-        })";
+        std::string encryptedColls =
+            generateYaml("fle", R"(FLEEncryptedFields: { field1: {type: "string"}})");
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
@@ -321,16 +325,8 @@ TEST_CASE("EncryptedCollections with invalid fields") {
                 "'/Encryption/EncryptedCollections/0/FLEEncryptedFields/field1/algorithm': "));
     }
     SECTION("FLEEncryptedFields entry with invalid algorithm") {
-        std::string encryptedColls = R"({
-            Encryption: {
-            EncryptedCollections: [
-                { Database: "foo",
-                  Collection: "bar",
-                  EncryptionType: 'fle',
-                  FLEEncryptedFields: { field1 : { type: "string", algorithm: "equality" }} },
-            ]
-            }
-        })";
+        std::string encryptedColls = generateYaml(
+            "fle", R"(FLEEncryptedFields: { field1: { type: "string", algorithm: "equality" }})");
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
@@ -338,42 +334,46 @@ TEST_CASE("EncryptedCollections with invalid fields") {
                            "Valid values are 'random' and 'deterministic'."));
     }
     SECTION("QueryableEncryptedFields entry with invalid queries type") {
-        std::string encryptedColls = R"({
-            Encryption: {
-            EncryptedCollections: [
-                { Database: "foo",
-                  Collection: "bar",
-                  EncryptionType: 'queryable',
-                  QueryableEncryptedFields: {field1: {type: "string", queries: "equality"}}
-                }
-            ]
-            }
-        })";
+        std::string encryptedColls = generateYaml(
+            "queryable",
+            R"(QueryableEncryptedFields: { field1: { type: "string", queries: "equality" }})");
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
                             Catch::Matches("'queries' node must be of sequence or map type"));
     }
     SECTION("QueryableEncryptedFields queries with missing queryType") {
-        std::string encryptedColls = R"({
-            Encryption: {
-            EncryptedCollections: [
-                { Database: "foo",
-                  Collection: "bar",
-                  EncryptionType: 'queryable',
-                  QueryableEncryptedFields: {
-                    field1: {type: "string", queries: [{}]}
-                  }
-                }
-            ]
-            }
-        })";
+        const std::string inputTemplate = generateYaml(
+            "queryable",
+            R"(QueryableEncryptedFields: {field1 : {type: "string", queries: <QUERIES>}})");
+        const std::string errTemplate =
+            "Invalid key 'queryType': Tried to access node that "
+            "doesn't exist. On node with path "
+            "'/Encryption/EncryptedCollections/0/QueryableEncryptedFields/field1/queries/<PATH>': ";
+
+        std::vector<std::pair<std::string, std::string>> testStrings{
+            {"[{}]", "0/queryType"},
+            {R"([{queryType: "equality"}, {}])", "1/queryType"},
+            {"{}", "queryType"},
+        };
+        for (auto& [value, path] : testStrings) {
+            auto encryptedColls = inputTemplate;
+            auto errmsg = errTemplate;
+
+            replace_str(encryptedColls, "<QUERIES>", value);
+            replace_str(errmsg, "<PATH>", path);
+            genny::NodeSource ns{encryptedColls, ""};
+            REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
+                                Catch::Matches(errmsg));
+        }
+    }
+    SECTION("QueryableEncryptedFields queries sequence with non-map element") {
+        const std::string encryptedColls = generateYaml(
+            "queryable",
+            R"(QueryableEncryptedFields: {field1 : {type: "string", queries: [ "foo" ]}})");
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
-            Catch::Matches("Invalid key 'queryType': Tried to access node that doesn't "
-                           "exist. On node with path "
-                           "'/Encryption/EncryptedCollections/0/QueryableEncryptedFields/field1/"
-                           "queries/0/queryType': "));
+            Catch::Matches("Each value in the 'queries' array must be of map type"));
     }
 }
 TEST_CASE("No CryptSharedLibPath when UseCryptSharedLib is true") {
@@ -565,6 +565,84 @@ TEST_CASE("EncryptionContext outputs correct schema map document") {
     auto expectedDoc = bsoncxx::from_json(expectedJson);
     REQUIRE(doc == expectedDoc);
 }
+TEST_CASE("EncryptionContext outputs correct encrypted fields map document") {
+    std::string encryptedColls = R"({
+      Encryption: {
+        EncryptedCollections: [
+          { Database: 'accounts',
+            Collection: 'balances',
+            EncryptionType: 'queryable',
+            QueryableEncryptedFields: {
+              name: {
+                type: "string",
+                queries: [],
+                keyId: "7aa359e0-1cdd-11ed-a2cd-bf985b6c5087"
+              },
+              amount: {
+                type: "int",
+                queries: [{queryType: "equality"}],
+                keyId: "8936e9ea-1cdd-11ed-be0d-b3f21cd2701f"
+              },
+              "pii.ssn": {
+                type: "string",
+                queries: {queryType: "equality", contention: 0},
+                keyId: "8936e9ea-1cdd-11ed-be0d-b3f21cd2701f"
+              },
+              "pii.dob": {
+                type: "int",
+                queries: [{queryType: "equality", contention: 16}, {queryType: "range"}],
+                keyId: "ffeeddba-1cdd-11ed-be0d-b3f21cd2701f"
+              }
+            }
+          }
+        ]
+      }
+    })";
+    std::string encryptionOpts = R"({
+        KeyVaultDatabase: 'keyvault_db',
+        KeyVaultCollection: 'datakeys',
+        EncryptedCollections: [ 'accounts.balances' ]
+    })";
+    std::string expectedJson = R"({
+      "accounts.balances" : {
+        "fields" : [
+          {
+            "path": "pii.ssn",
+            "keyId": { "$binary" : "iTbp6hzdEe2+DbPyHNJwHw==", "$type" : "04" },
+            "bsonType": "string",
+            "queries": [{"queryType": "equality", "contention": 0}]
+          },
+          {
+            "path": "name",
+            "keyId": { "$binary" : "eqNZ4BzdEe2izb+YW2xQhw==", "$type" : "04" },
+            "bsonType": "string"
+          },
+          {
+            "path": "pii.dob",
+            "keyId": { "$binary" : "/+7duhzdEe2+DbPyHNJwHw==", "$type" : "04" },
+            "bsonType": "int",
+            "queries": [{"queryType": "equality", "contention": 16}, {"queryType": "range"}]
+          },
+          {
+            "path": "amount",
+            "keyId": { "$binary" : "iTbp6hzdEe2+DbPyHNJwHw==", "$type" : "04" },
+            "bsonType": "int",
+            "queries": [{"queryType": "equality"}]
+          }
+        ]
+      }
+    })";
+    genny::NodeSource collsNs{encryptedColls, ""};
+    genny::NodeSource optsNs{encryptionOpts, ""};
+    EncryptionManager mgr(collsNs.root(), true);
+
+    auto encryption = mgr.createEncryptionContext(kSourceUri, optsNs.root());
+
+    auto doc = encryption.generateEncryptedFieldsMapDoc();
+    auto expectedDoc = bsoncxx::from_json(expectedJson);
+    REQUIRE(doc == expectedDoc);
+}
+
 TEST_CASE("EncryptionContext outputs correct auto_encryption options") {
     std::string encryptedColls = R"({
         Encryption: {
