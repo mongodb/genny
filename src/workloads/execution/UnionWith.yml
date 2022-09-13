@@ -267,6 +267,7 @@ AutoRun:
       - shard-lite
       - standalone
       - standalone-classic-query-engine
+      - standalone-sbe
     branch_name:
       $neq:
       - v4.0
