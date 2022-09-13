@@ -21,6 +21,7 @@ namespace {
 
 auto createPool(const std::string& name,
                 PoolManager::OnCommandStartCallback& apmCallback,
+                EncryptionManager& encryptionManager,
                 const Node& context) {
 
     auto mongoUri = context["Clients"][name]["URI"].to<std::string>();
@@ -38,6 +39,12 @@ auto createPool(const std::string& name,
         poolFactory.setOptions(genny::v1::PoolFactory::kAccessOption, *accessOpts);
     }
 
+    auto encryptOpts = context["Clients"][name]["EncryptionOptions"].maybe<EncryptionOptions>();
+    if (encryptOpts) {
+        poolFactory.setEncryptionContext(
+            encryptionManager.createEncryptionContext(poolFactory.makeUri(), *encryptOpts));
+    }
+
     return poolFactory.makePool();
 }
 
@@ -52,6 +59,11 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
     // Only one thread can access pools.operator[] at a time...
     std::unique_lock<std::mutex> getLock{this->_poolsLock};
     LockAndPools& lap = this->_pools[name];
+
+    if (!_encryptionManager) {
+        _encryptionManager = std::make_unique<EncryptionManager>(context, _dryRun);
+    }
+
     // ...but no need to keep the lock open past this.
     // Two threads trying access client("foo",0) at the same
     // time will subsequently block on the unique_lock.
@@ -64,7 +76,7 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
 
     auto& pool = pools[instance];
     if (pool == nullptr) {
-        pool = createPool(name, this->_apmCallback, context);
+        pool = createPool(name, this->_apmCallback, *_encryptionManager, context);
     }
 
     // no need to keep it past this point; pool is thread-safe

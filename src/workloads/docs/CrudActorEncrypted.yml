@@ -1,0 +1,217 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+  Example workload demonstrating encryption support in Genny's client pools.
+  The CrudActor in this workload performs encrypted operations using a Client
+  that is configured with the FLE and Queryable auto encryption options.
+
+  Encryption is configured by first defining the schemas of each encrypted collection
+  under the Encryption.EncryptedCollections node. This node is a sequence of collection
+  descriptors that each must define the following fields:
+
+    Database           - the name of the encrypted database
+    Collection         - the name of the encrypted collection
+    EncryptionType     - the type of client-side encryption used (either 'fle' or 'queryable')
+
+  Each entry in this sequence must have a unique combination of Database and Collection names.
+  In other words, each collection must have a unique namespace. This is to prevent clients from
+  defining two different schemas for an encrypted namespace on the same URI.
+
+  Depending on the EncryptionType, the encryption schema may be specified using either:
+    FLEEncryptedFields        - if EncryptionType is "fle"
+    QueryableEncryptedFields  - if EncryptionType is "queryable"
+
+  These map the path of an encrypted field in the collection to its encryption parameters.
+  Both can appear under a collection descriptor node, but only the node that matches the specified
+  EncryptionType will apply throughout the workload.
+
+  Each subnode of FLEEncryptedFields or QueryableEncryptedFields is a key-value pair where
+  the key is the field path, and the value is an object whose required fields depend on the type.
+
+  Field paths cannot be a prefix of another path under the same FLEEncryptedFields or
+  QueryableEncryptedFields map. For instance, "pii" and "pii.ssn" are not allowed, since "pii" is
+  a path prefix of the other.
+
+  Under FLEEncryptedFields, each object mapped to a path must have the following fields:
+    type      - the BSON type of values for this field
+    algorithm - the encryption algorithm: either "random" or "deterministic"
+                "deterministic" means that the ciphertext is always the same for the same
+                plaintext value, which means that this field can be used on queries.
+
+  Under QueryableEncryptedFields, each object mapped to a path must have the following fields:
+    type      - the BSON type of values for this field
+    queries   - an array of objects that specify "queryType" and other parameters for QE.
+
+  To enable encryption in each Client, provide an EncryptionOptions node with the following
+  fields:
+
+    KeyVaultDatabase     - the name of the keyvault database
+    KeyVaultCollection   - the name of the keyvault collection
+    EncryptedCollections - sequence of encrypted collection namespace strings
+
+  The EncryptedCollections subnode is a set of namespaces that must have a corresponding
+  descriptor under the top-level EncryptedCollections node.
+
+  An Actor that wishes to perform encrypted operations on an encrypted collection must
+  be using a Client pool with an EncryptedCollections subnode that includes the collection's
+  namespace.
+
+  During client pool setup, key vaults in each unique URI are dropped & created once, when the
+  first client pool for that URI is created.  Data keys for encrypted namespaces are generated
+  only once, if the associated key vault & URI does not yet contain keys for that namespace.
+  This means that if two client pools have a similar URI and key vault namespace, then the
+  encrypted collections they have in common will be using the same data keys.
+
+  By default, encrypted CRUD operations require a mongocryptd daemon to be running and listening
+  on localhost:27020. An alternative option is to set Encryption.UseCryptSharedLib to true, and to
+  provide the path to the mongo_crypt_v1.so shared library file using Encryption.CryptSharedLibPath.
+
+GlobalDefaults:
+  EncryptedDB: &encrypted_db genny_fle
+
+Encryption:
+  # The following options control whether to use mongocryptd or mongo_crypt_v1.so
+  # UseCryptSharedLib: true
+  # CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so
+  EncryptedCollections:
+  - Database: *encrypted_db
+    Collection: "accounts"
+    EncryptionType: "fle"
+    FLEEncryptedFields:
+      name: { type: "string", algorithm: "random" }
+      credit: { type: "long", algorithm: "random" }
+      pii.ssn: { type: "string", algorithm: "deterministic" }
+      pii.ppn: {type: "string", algorithm: "random"}
+      bio.dob: { type: "date", algorithm: "random" }
+      bio.birthplace.street: { type: "string", algorithm: "random" }
+      bio.birthplace.country: { type: "string", algorithm: "deterministic" }
+  - Database: *encrypted_db
+    Collection: "medical"
+    EncryptionType: "fle"
+    FLEEncryptedFields:
+      patient_id: { type: "string", algorithm: "deterministic" }
+      insurance: { type: "string", algorithm: "random" }
+      conditions: { type: "array", algorithm: "random" }
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 10
+  EncryptedPool:
+    QueryOptions:
+      maxPoolSize: 100
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_fle.accounts
+      - genny_fle.medical
+  SecondEncryptedPool:
+    QueryOptions:
+      maxPoolSize: 100
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_fle.accounts
+  ThirdEncryptedPool:
+    QueryOptions:
+      maxPoolSize: 100
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_fle.medical
+
+Actors:
+- Name: Accounts
+  Type: CrudActor
+  Threads: 10
+  Database: *encrypted_db
+  ClientName: EncryptedPool  # Use encryption-enabled pool
+  Phases:
+  - Repeat: 10
+    Collection: accounts
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document:
+          name: "Bob"
+          surname: "Belcher"
+          credit: {^RandomInt: {min: 300, max: 850}}
+          pii:
+            ssn: {^RandomString: {length: 9, alphabet: "0123456789"}}
+            ppn: {^RandomString: {length: 9, alphabet: "0123456789"}}
+          bio:
+            dob: {^RandomDate: {}}
+            birthplace:
+              street: {^Join: {array: [{^RandomString: {length: 4, alphabet: "123456789"}}, " Ocean Ave"]}}
+              country: "USA"
+          # T1 inserts 0-9, T2 inserts 10-19, etc..
+          _id: {^Inc: {start: -10, multiplier: 10}}
+  - Repeat: 1
+    Collection: accounts
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        # Query on unencrypted field
+        Filter: {surname: "Belcher"}
+        Update: {$set: {name: "Betty", surname: "Burger", pii.ssn: '111-11-1111', bio.birthplace.country: "UK"}}
+    - OperationName: updateOne
+      OperationCommand:
+        # Query on deterministically-encrypted field
+        Filter: {bio.birthplace.country: "USA"}
+        Update: {$set: {name: "Barry", surname: "Barbie", bio.birthplace.country: "Australia"}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {surname: "Belcher"}
+        Update: {$set: {name: "Billy", surname: "Brown", pii.ssn: '111-11-1111', bio.birthplace.country: "Canada"}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {pii.ssn: "111-11-1111"}
+        Update: {$set: {surname: "Bacon", pii.ssn: "222-22-2222"}}
+
+- Name: Accounts_SecondPool
+  Type: CrudActor
+  Threads: 10
+  Database: *encrypted_db
+  ClientName: SecondEncryptedPool  # Use encryption-enabled pool
+  Phases:
+  - &Nop {Nop: true}
+  - Repeat: 1
+    Collection: accounts
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        # Query on deterministically-encrypted field
+        Filter: {bio.birthplace.country: "USA"}
+        Update: {$set: {bio.birthplace.country: "New Zealand", updated_by: "SecondEncryptedPool"}}
+
+- Name: Medical
+  Type: CrudActor
+  Threads: 10
+  Database: *encrypted_db
+  ClientName: ThirdEncryptedPool
+  Phases:
+  - Repeat: 10
+    Collection: medical
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document:
+          patient_id: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}
+          patient_id_plain: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}
+          conditions: {^Array: {of: 1, number: 10}}
+          _id: {^Inc: {start: -10, multiplier: 10}}
+  - Repeat: 10
+    Collection: medical
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {patient_id: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}}
+        Update:
+          $set:
+            insurance: "none"
+            patient_id: {^Join: {array: ["UpdatedPatient-", {^ActorIdString: {}}]}}
+            physician: {^Join: {array: ["Dr.", {^RandomString: {length: 10}}]}}
+            conditions: ["dysphagia", "arrythmia", "hemiparesis"]

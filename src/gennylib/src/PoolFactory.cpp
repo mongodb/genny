@@ -181,6 +181,7 @@ struct PoolFactory::Config {
         {"CAFile", ""},
         {"PEMKeyFile", ""},
     };
+    EncryptionContext encryptionCtxt;
 };
 
 PoolFactory::PoolFactory(std::string_view rawUri, PoolManager::OnCommandStartCallback apmCallback)
@@ -192,28 +193,48 @@ std::string PoolFactory::makeUri() const {
 }
 
 mongocxx::options::pool PoolFactory::makeOptions() const {
-    mongocxx::options::tls tlsOptions;
+    mongocxx::options::client clientOptions;
+    auto useTls = _config->getFlag(OptionType::kQueryOption, "tls");
+    auto useEncryption = _config->encryptionCtxt.hasEncryptedCollections();
 
-    auto allowInv = _config->getFlag(OptionType::kAccessOption, "AllowInvalidCertificates");
-    if (allowInv) {
-        BOOST_LOG_TRIVIAL(debug) << "Allowing invalid certificates for TLS";
-        tlsOptions = tlsOptions.allow_invalid_certificates(true);
+    if (useTls) {
+        mongocxx::options::tls tlsOptions;
+
+        auto allowInv = _config->getFlag(OptionType::kAccessOption, "AllowInvalidCertificates");
+        if (allowInv) {
+            BOOST_LOG_TRIVIAL(debug) << "Allowing invalid certificates for TLS";
+            tlsOptions = tlsOptions.allow_invalid_certificates(true);
+        }
+
+        // Just doing CAFile and PEMKeyFile for now, it's reasonably trivial to add other options
+        // Note that this is entering as a BSON string view, so you cannot delete the config object
+        auto caFile = *_config->get(OptionType::kAccessOption, "CAFile");
+        if (!caFile.empty()) {
+            BOOST_LOG_TRIVIAL(debug) << "Using CA file '" << caFile << "' for TLS";
+            tlsOptions = tlsOptions.ca_file(caFile.data());
+        }
+
+        auto pemKeyFile = *_config->get(OptionType::kAccessOption, "PEMKeyFile");
+        if (!pemKeyFile.empty()) {
+            BOOST_LOG_TRIVIAL(debug) << "Using PEM Key file '" << pemKeyFile << "' for TLS";
+            tlsOptions = tlsOptions.pem_file(pemKeyFile.data());
+        }
+        BOOST_LOG_TRIVIAL(debug) << "Adding tls options to pool...";
+        clientOptions.tls_opts(tlsOptions);
     }
 
-    // Just doing CAFile and PEMKeyFile for now, it's reasonably trivial to add other options
-    // Note that this is entering as a BSON string view, so you cannot delete the config object
-    auto caFile = *_config->get(OptionType::kAccessOption, "CAFile");
-    if (!caFile.empty()) {
-        BOOST_LOG_TRIVIAL(debug) << "Using CA file '" << caFile << "' for TLS";
-        tlsOptions = tlsOptions.ca_file(caFile.data());
+    if (useEncryption) {
+        BOOST_LOG_TRIVIAL(debug) << "Adding encryption options to pool...";
+        clientOptions.auto_encryption_opts(_config->encryptionCtxt.getAutoEncryptionOptions());
     }
 
-    auto pemKeyFile = *_config->get(OptionType::kAccessOption, "PEMKeyFile");
-    if (!pemKeyFile.empty()) {
-        BOOST_LOG_TRIVIAL(debug) << "Using PEM Key file '" << pemKeyFile << "' for TLS";
-        tlsOptions = tlsOptions.pem_file(pemKeyFile.data());
+    if (_apmCallback) {
+        mongocxx::options::apm apmOptions;
+        apmOptions.on_command_started(_apmCallback);
+        clientOptions.apm_opts(apmOptions);
     }
-    return mongocxx::options::client{}.tls_opts(tlsOptions);
+
+    return mongocxx::options::pool(clientOptions);
 }
 
 std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
@@ -222,28 +243,17 @@ std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
 
     auto uri = mongocxx::uri{uriStr};
 
-    auto poolOptions = mongocxx::options::pool{};
+    auto poolOptions = makeOptions();
 
-    auto useTls = _config->getFlag(OptionType::kQueryOption, "tls");
-    if (useTls) {
-        poolOptions = makeOptions();
-        BOOST_LOG_TRIVIAL(debug) << "Adding tls options to pool...";
-    }
-
-    // option::client can be implicitly coverted into option::pool. This is to be able to set the
-    // apm options for testing.
-    auto clientOpts = mongocxx::options::client{poolOptions.client_opts()};
-    if (_apmCallback) {
-        mongocxx::options::apm apmOptions;
-        apmOptions.on_command_started(_apmCallback);
-        clientOpts.apm_opts(apmOptions);
-    }
-
-    return std::make_unique<mongocxx::pool>(uri, clientOpts);
+    return std::make_unique<mongocxx::pool>(uri, poolOptions);
 }
 
 void PoolFactory::setOption(OptionType type, const std::string& option, std::string value) {
     _config->set(type, option, value);
+}
+
+void PoolFactory::setEncryptionContext(EncryptionContext encryption) {
+    _config->encryptionCtxt = std::move(encryption);
 }
 
 void PoolFactory::overrideHosts(const std::set<std::string>& hosts) {

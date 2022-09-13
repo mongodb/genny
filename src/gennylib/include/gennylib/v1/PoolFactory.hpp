@@ -66,6 +66,8 @@ public:
      */
     void setOption(OptionType type, const std::string& option, std::string value);
 
+    void setEncryptionContext(EncryptionContext encryption);
+
     /**
      * Replace the host(s) with a given vector of host(s).
      */
