@@ -438,8 +438,9 @@ void QueryableEncryptedCollection::appendEncryptedFieldConfig(sub_document subdo
         return;
     }
     subdoc.append(kvp("fields", [&](sub_array fieldsArray) {
-        for (const auto& [_, field] : _fields) {
-            fieldsArray.append([&](sub_document fieldDoc) { field.appendEncryptInfo(fieldDoc); });
+        for (const auto& fieldPair : _fields) {
+            fieldsArray.append(
+                [&](sub_document fieldDoc) { fieldPair.second.appendEncryptInfo(fieldDoc); });
         }
     }));
 }
