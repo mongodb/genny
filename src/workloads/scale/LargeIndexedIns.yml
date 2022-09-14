@@ -65,3 +65,4 @@ AutoRun:
       $eq:
       - replica
       - single-replica-classic-query-engine
+      - single-replica-sbe
