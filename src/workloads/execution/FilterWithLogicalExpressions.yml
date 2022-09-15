@@ -3,6 +3,14 @@ Owner: "@mongodb/query"
 Description: >
   This workload stresses the query execution engine by running queries with complex logical
   expressions that never match a document in the collection.
+  Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
+  'SyntaxType' can be:
+    - 'AggregationExpressions' means expressions which can be used inside $expr
+    - 'MatchExpressions' means operators of the find command language
+  'PredicateType' can be:
+    - 'DeepPredicate' means query with deeply nested expressions
+    - 'WidePredicate' means query where operators have a large number of arguments
+    - 'MixedPredicate' means query which combines wide and deep types
 Keywords:
 - Loader
 - CrudActor
@@ -14,7 +22,9 @@ GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
   DocumentCount: &DocumentCount 1e6
-  MaxPhases: &MaxPhases 5
+  Repeat: &Repeat 10
+  Threads: &Threads 1
+  MaxPhases: &MaxPhases 8
 
 Actors:
 # Phase 0: Insert documents into the collection.
@@ -53,17 +63,17 @@ Actors:
         Repeat: 1
         Threads: 1
 
-# Phase 2: Run query with wide expression.
-- Name: RunWideQuery
+# Phase 2-N: Run various queries with complex filters.
+- Name: AggregationExpressionsWidePredicate
   Type: CrudActor
   Database: *Database
-  Threads: 1
+  Threads: *Threads
   Phases:
     OnlyActiveInPhases:
       Active: [2]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Repeat: 10
+        Repeat: *Repeat
         Collection: *Collection
         Operations:
         - OperationName: find
@@ -85,17 +95,45 @@ Actors:
               }
             }
 
-# Phase 3: Run query with deep expression.
-- Name: RunDeepQuery
+- Name: MatchExpressionsWidePredicate
   Type: CrudActor
   Database: *Database
-  Threads: 1
+  Threads: *Threads
   Phases:
     OnlyActiveInPhases:
       Active: [3]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Repeat: 10
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {
+              $or: [
+                {a: 10},
+                {b: 11},
+                {c: 12},
+                {d: 13},
+                {a: 14},
+                {b: 15},
+                {c: 16},
+                {d: 17},
+                {a: 18},
+                {b: 19},
+              ]
+            }
+
+- Name: AggregationExpressionsDeepPredicate
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
         Collection: *Collection
         Operations:
         - OperationName: find
@@ -139,17 +177,67 @@ Actors:
               }
             }
 
-# Phase 4: Run query with expression which goes both wide and deep.
-- Name: RunMixedQuery
+- Name: MatchExpressionsDeepPredicate
   Type: CrudActor
   Database: *Database
-  Threads: 1
+  Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [4]
+      Active: [5]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Repeat: 10
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {
+              $or: [
+                {
+                  $and: [
+                    {
+                      $or: [
+                        {a: 10},
+                        {b: 11}
+                      ]
+                    },
+                    {
+                      $or: [
+                        {c: 12},
+                        {d: 13}
+                      ]
+                    },
+                  ]
+                },
+                {
+                  $and: [
+                    {
+                      $or: [
+                        {a: 14},
+                        {b: 15}
+                      ]
+                    },
+                    {
+                      $or: [
+                        {c: 16},
+                        {d: 17}
+                      ]
+                    },
+                  ]
+                }
+              ]
+            }
+
+- Name: AggregationExpressionsMixedPredicate
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
         Collection: *Collection
         Operations:
         - OperationName: find
@@ -165,6 +253,31 @@ Actors:
                   {$eq: ["$d", 17]},
                 ]
               }
+            }
+
+- Name: MatchExpressionsMixedPredicate
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {
+              $or: [
+                {$and: [{a: 10}, {b: 11}]},
+                {$and: [{c: 12}, {d: 13}]},
+                {a: 14},
+                {b: 15},
+                {c: 16},
+                {d: 17},
+              ]
             }
 
 AutoRun:
