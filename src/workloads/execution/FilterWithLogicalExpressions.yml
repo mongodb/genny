@@ -3,6 +3,12 @@ Owner: "@mongodb/query"
 Description: >
   This workload stresses the query execution engine by running queries with complex logical
   expressions that never match a document in the collection.
+Keywords:
+- Loader
+- CrudActor
+- QuiesceActor
+- insert
+- find
 
 GlobalDefaults:
   Database: &Database test
