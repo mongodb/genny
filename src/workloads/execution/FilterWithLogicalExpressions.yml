@@ -10,6 +10,8 @@ Description: >
   'PredicateType' can be:
     - 'DeepPredicate' means query with deeply nested expressions
     - 'WidePredicate' means query where operators have a large number of arguments
+    - 'WidePredicateWithDeepFieldpaths' means a wide query where nested fieldpaths like '$a.b.c'
+      are used
     - 'MixedPredicate' means query which combines wide and deep types
 Keywords:
 - Loader
@@ -24,7 +26,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 10
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 8
+  MaxPhases: &MaxPhases 10
 
 Actors:
 # Phase 0: Insert documents into the collection.
@@ -49,6 +51,26 @@ Actors:
           b: 1
           c: 1
           d: 1
+          n1: {
+            a: {
+              b: 1
+            }
+          }
+          n2: {
+            a: {
+              b: 1
+            }
+          }
+          n3: {
+            a: {
+              b: 1
+            }
+          }
+          n4: {
+            a: {
+              b: 1
+            }
+          }
 
 # Phase 1: Ensure all data is synced to disk.
 - Name: Quiesce
@@ -124,13 +146,73 @@ Actors:
               ]
             }
 
-- Name: AggregationExpressionsDeepPredicate
+- Name: AggregationExpressionsWidePredicateWithDeepFieldpaths
   Type: CrudActor
   Database: *Database
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
       Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {
+              $expr: {
+                $or: [
+                  {$eq: ["$n1.a.b", 10]},
+                  {$eq: ["$n2.a.b", 11]},
+                  {$eq: ["$n3.a.b", 12]},
+                  {$eq: ["$n4.a.b", 13]},
+                  {$eq: ["$n1.a.b", 14]},
+                  {$eq: ["$n2.a.b", 15]},
+                  {$eq: ["$n3.a.b", 16]},
+                  {$eq: ["$n4.a.b", 17]},
+                  {$eq: ["$n1.a.b", 18]},
+                  {$eq: ["$n2.a.b", 19]},
+                ]
+              }
+            }
+
+- Name: MatchExpressionsWidePredicateWithDeepFieldpaths
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {
+              $or: [
+                {"n1.a.b", 10},
+                {"n2.a.b", 11},
+                {"n3.a.b", 12},
+                {"n4.a.b", 13},
+                {"n1.a.b", 14},
+                {"n2.a.b", 15},
+                {"n3.a.b", 16},
+                {"n4.a.b", 17},
+                {"n1.a.b", 18},
+                {"n2.a.b", 19},
+              ]
+            }
+
+- Name: AggregationExpressionsDeepPredicate
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -183,7 +265,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [5]
+      Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -234,7 +316,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [6]
+      Active: [8]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -261,7 +343,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [7]
+      Active: [9]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
