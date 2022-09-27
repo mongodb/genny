@@ -8,7 +8,6 @@ Description: |
   interesting behavior, such as reads getting faster because of a write regression, or reads being
   starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
   starved out by writes.
-
 # This workload does not support sharding yet.
 Keywords:
 - scale
@@ -54,7 +53,7 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}} 
         NopInPhasesUpTo: 15
         PhaseConfig:
           LoadConfig:
@@ -70,7 +69,7 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
         NopInPhasesUpTo: 15
         PhaseConfig:
           LoadConfig:
@@ -86,7 +85,7 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
         NopInPhasesUpTo: 15
         PhaseConfig:
           LoadConfig:
@@ -102,7 +101,7 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
         NopInPhasesUpTo: 15
         PhaseConfig:
           LoadConfig:
@@ -132,35 +131,6 @@ Actors:
   - Phase: 1..15
     Nop: true
 
-# This actor will speed up the FTDC sampling rate rate from the default of 1000 ms to 100 ms for the second phase that each CRUD actor is active. 
-- Name: IncreaseFtdcRate
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - &fasterRate
-    Repeat: 1
-    Database: admin
-    Operation:
-      OperationName: ftdcCommand
-      OperationCommand:
-        setParameter: 1
-        diagnosticDataCollectionPeriodMillis: 100
-  - Nop: true
-  - Nop: true
-  - *fasterRate
-  - Nop: true
-  - Nop: true
-  - *fasterRate
-  - Nop: true
-  - Nop: true
-  - *fasterRate
-  - Nop: true
-  - Nop: true
-  - *fasterRate
-
 - Name: QuiesceBetweenLevels
   Type: RunCommand
   Threads: 1
@@ -174,8 +144,6 @@ Actors:
     - OperationMetricsName: FsyncCommand
       OperationName: AdminCommand
       OperationCommand:
-        setParameter: 1
-        diagnosticDataCollectionPeriodMillis: 1000
         fsync: 1
   - *nop
   - *nop
@@ -192,13 +160,49 @@ Actors:
   - *nop
   - *nop
 
+# This actor will speed up the FTDC sampling rate rate from the default of 1000 ms to 100 ms for the second phase that each CRUD actor is active. 
+- Name: ToggleFtdcRate
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true 
+  - &fasterRate
+    Repeat: 1
+    Database: admin
+    Operation:
+      OperationName: RunCommand
+      OperationCommand:
+        setParameter: 1
+        diagnosticDataCollectionPeriodMillis: 100
+  - Nop: true
+  - &defaultRate
+    Repeat: 1
+    Database: admin
+    Operation:
+      OperationName: RunCommand
+      OperationCommand:
+        setParameter: 1
+        diagnosticDataCollectionPeriodMillis: 1000
+  - *fasterRate
+  - Nop: true
+  - *defaultRate
+  - *fasterRate
+  - Nop: true
+  - *defaultRate
+  - *fasterRate
+  - Nop: true
+  - *defaultRate
+  - *fasterRate
+
 # Update Actors
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_1
       Threads: 1
-      OnlyActiveInPhase: [2,3] 
+      OnlyActiveInPhase: [2,3]
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
@@ -236,7 +240,7 @@ Actors:
     TemplateParameters:
       Name: Remove_1
       Threads: 1
-      OnlyActiveInPhase: [2,3] 
+      OnlyActiveInPhase: [2,3]
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
@@ -273,7 +277,7 @@ Actors:
     TemplateParameters:
       Name: Insert_1
       Threads: 1
-      OnlyActiveInPhase: [2,3] 
+      OnlyActiveInPhase: [2,3]
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
@@ -310,7 +314,7 @@ Actors:
     TemplateParameters:
       Name: Find_1
       Threads: 1
-      OnlyActiveInPhase: [2,3] 
+      OnlyActiveInPhase: [2,3]
 
 - ActorFromTemplate:
     TemplateName: FindTemplate
