@@ -1,0 +1,124 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: |
+  This workload tests the impact of background TTL deletions in a heavily modified collection
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 128
+
+Actors:
+- Name: Setup
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    - Repeat: 1
+      Thread: 1
+      Database: admin
+      Operations:
+      - OperationName: AdminCommand
+        OperationCommand:
+          setParameter: 1
+          ttlMonitorSleepSecs: 5
+      - OperationName: AdminCommand
+        OperationCommand:
+          setParameter: 1
+          storageEngineConcurrentWriteTransactions: 32
+    - &Nop {Nop: true}
+    - *Nop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 50000
+    BatchSize: 10000
+    Document: &generatedDoc
+      expireDate: {^Now: {}} # Instantly expire the document
+      y: &y {^RandomInt: {min: -1000, max: 1000}}
+      b: {^RandomString: {length: 15}}
+    Indexes:
+    - keys: {expireDate: 1}
+      options: {expireAfterSeconds: 0}
+  - *Nop
+
+- Name: Writes
+  Type: CrudActor
+  Database: *db
+  Threads: 96
+  Phases:
+  - *Nop
+  - *Nop
+  - Duration: 5 minutes
+    Collection: Collection0
+    Operations:
+    - OperationName: insertMany
+      OperationCommand:
+        Documents: # Insert 50 documents at a time
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+        - *generatedDoc
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - replica
+      - replica-all-feature-flags
+      - shard-lite
+      - shard-lite-all-feature-flags
