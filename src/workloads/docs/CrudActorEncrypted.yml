@@ -87,11 +87,11 @@ Encryption:
       bio.birthplace.country: { type: "string", algorithm: "deterministic" }
   - Database: *encrypted_db
     Collection: "medical"
-    EncryptionType: "fle"
-    FLEEncryptedFields:
-      patient_id: { type: "string", algorithm: "deterministic" }
-      insurance: { type: "string", algorithm: "random" }
-      conditions: { type: "array", algorithm: "random" }
+    EncryptionType: "queryable"
+    QueryableEncryptedFields:
+      patient_id: { type: "string", queries: [{queryType: "equality"}] }
+      insurance: { type: "string", queries: [{queryType: "equality", contention: 16}] }
+      a1c: { type: "long", queries: [{queryType: "equality", contention: 10}] }
 
 Clients:
   Default:
@@ -170,6 +170,7 @@ Actors:
       OperationCommand:
         Filter: {pii.ssn: "111-11-1111"}
         Update: {$set: {surname: "Bacon", pii.ssn: "222-22-2222"}}
+  - &nop {Nop: true}
 
 - Name: Accounts_SecondPool
   Type: CrudActor
@@ -177,7 +178,7 @@ Actors:
   Database: *encrypted_db
   ClientName: SecondEncryptedPool  # Use encryption-enabled pool
   Phases:
-  - &Nop {Nop: true}
+  - *nop
   - Repeat: 1
     Collection: accounts
     Operations:
@@ -186,6 +187,7 @@ Actors:
         # Query on deterministically-encrypted field
         Filter: {bio.birthplace.country: "USA"}
         Update: {$set: {bio.birthplace.country: "New Zealand", updated_by: "SecondEncryptedPool"}}
+  - *nop
 
 - Name: Medical
   Type: CrudActor
@@ -201,7 +203,7 @@ Actors:
         Document:
           patient_id: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}
           patient_id_plain: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}
-          conditions: {^Array: {of: 1, number: 10}}
+          a1c: {^RandomInt: {min: 2, max: 12}}
           _id: {^Inc: {start: -10, multiplier: 10}}
   - Repeat: 10
     Collection: medical
@@ -212,6 +214,19 @@ Actors:
         Update:
           $set:
             insurance: "none"
-            patient_id: {^Join: {array: ["UpdatedPatient-", {^ActorIdString: {}}]}}
-            physician: {^Join: {array: ["Dr.", {^RandomString: {length: 10}}]}}
-            conditions: ["dysphagia", "arrythmia", "hemiparesis"]
+            a1c: {^RandomInt: {min: 2, max: 12}}
+  - *nop
+
+- Name: Compactor
+  Type: RunCommand
+  Threads: 1
+  ClientName: EncryptedPool
+  Phases:
+  - *nop
+  - *nop
+  - Repeat: 1
+    Database: *encrypted_db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        compactStructuredEncryptionData: medical

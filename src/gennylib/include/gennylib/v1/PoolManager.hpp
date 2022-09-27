@@ -71,6 +71,7 @@ public:
 
     bsoncxx::document::value generateKMSProvidersDoc() const;
     bsoncxx::document::value generateSchemaMapDoc() const;
+    bsoncxx::document::value generateEncryptedFieldsMapDoc() const;
     bsoncxx::document::value generateExtraOptionsDoc() const;
 
     bool hasEncryptedCollections() const;
