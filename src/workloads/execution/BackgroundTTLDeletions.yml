@@ -6,113 +6,175 @@ Description: |
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 128
+      maxPoolSize: 260
+
+NumPhases: &NumPhases 20
+CollectionCount: &NumColls 1
+
+Document: &generatedDoc
+  expireDate: {^Now: {}} # Instantly expire the document
+  y: &y {^RandomInt: {min: -1000, max: 1000}}
+  b: {^RandomString: {length: 15}}
+
+ActorTemplates:
+- TemplateName: WritesActorTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: WritesActor}}
+    Type: CrudActor
+    Database: &db test
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Duration: 3 minutes
+          CollectionCount: *NumColls
+          Operations:
+          - OperationName: insertMany
+            OperationCommand:
+              Documents: # Insert 50 documents at a time
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+              - *generatedDoc
+
 
 Actors:
 - Name: Setup
   Type: AdminCommand
   Threads: 1
   Phases:
-    - Repeat: 1
-      Thread: 1
-      Database: admin
-      Operations:
-      - OperationName: AdminCommand
-        OperationCommand:
-          setParameter: 1
-          ttlMonitorSleepSecs: 1
-      - OperationName: AdminCommand
-        OperationCommand:
-          setParameter: 1
-          storageEngineConcurrentWriteTransactions: 32
-      SleepAfter: 60 seconds  # Wait 60 seconds so that the new ttl sleep config is active.
-    - &Nop {Nop: true}
-    - *Nop
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            ttlMonitorSleepSecs: 1
+        - OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            storageEngineConcurrentWriteTransactions: 32
+        SleepAfter: 60 seconds  # Wait 60 seconds so that the new ttl sleep config is active.
 
 - Name: InsertData
   Type: Loader
   Threads: 1
   Phases:
-  - *Nop
-  - Repeat: 1
-    Database: &db test
-    Threads: 1
-    CollectionCount: 1
-    DocumentCount: 50000
-    BatchSize: 10000
-    Document: &generatedDoc
-      expireDate: {^Now: {}} # Instantly expire the document
-      y: &y {^RandomInt: {min: -1000, max: 1000}}
-      b: {^RandomString: {length: 15}}
-    Indexes:
-    - keys: {expireDate: 1}
-      options: {expireAfterSeconds: 0}
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Threads: 1
+        CollectionCount: *NumColls
+        DocumentCount: 50000
+        BatchSize: 10000
+        Document: *generatedDoc
+        Indexes:
+        - keys: {expireDate: 1}
+          options: {expireAfterSeconds: 0}
 
-- Name: Writes
-  Type: CrudActor
-  Database: *db
-  Threads: 96
-  Phases:
-  - *Nop
-  - *Nop
-  - Duration: 5 minutes
-    Collection: Collection0
-    Operations:
-    - OperationName: insertMany
-      OperationCommand:
-        Documents: # Insert 50 documents at a time
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-        - *generatedDoc
-
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: Writes_1_Thread
+      Threads: 1
+      ActivePhases: [3]
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: Writes_2_Thread
+      Threads: 2
+      ActivePhases: [4]
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: Writes_4_Thread
+      Threads: 4
+      ActivePhases: [5]
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: Writes_8_Thread
+      Threads: 8
+      ActivePhases: [6]
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: Writes_16_Thread
+      Threads: 16
+      ActivePhases: [7]
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: Writes_32_Thread
+      Threads: 32
+      ActivePhases: [8]
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: Writes_64_Thread
+      Threads: 64
+      ActivePhases: [9]
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: Writes_128_Thread
+      Threads: 128
+      ActivePhases: [10]
 AutoRun:
 - When:
     mongodb_setup:
