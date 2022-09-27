@@ -38,7 +38,14 @@ Actors:
       OperationCommand:
         {create: &coll Collection0, timeseries: {timeField: "t", metaField: "m"}}
   - *Nop
-  - *Nop
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationMetricsName: DropAllIndexesUponCreation
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: *coll
+        index: "*"
   - *Nop
   - *Nop
   - *Nop
