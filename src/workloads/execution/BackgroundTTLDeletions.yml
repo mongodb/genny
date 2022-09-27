@@ -20,7 +20,7 @@ Actors:
       - OperationName: AdminCommand
         OperationCommand:
           setParameter: 1
-          ttlMonitorSleepSecs: 5
+          ttlMonitorSleepSecs: 1
       - OperationName: AdminCommand
         OperationCommand:
           setParameter: 1
