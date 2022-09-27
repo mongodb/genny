@@ -5,11 +5,13 @@ Description: >
   expressions that never match a document in the collection.
   Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
   'SyntaxType' can be:
-    - 'AggregationExpressions' means expressions which can be used inside $expr
-    - 'MatchExpressions' means operators of the find command language
+    - 'AggregationExpression' means expressions which can be used inside $expr
+    - 'MatchExpression' means operators of the find command match predicate language
   'PredicateType' can be:
     - 'DeepPredicate' means query with deeply nested expressions
     - 'WidePredicate' means query where operators have a large number of arguments
+    - 'SingletonPredicateWithDeepFieldpaths' means query with a single equality predicate where
+      nested fieldpaths like '$a.b.c' are used
     - 'WidePredicateWithDeepFieldpaths' means a wide query where nested fieldpaths like '$a.b.c'
       are used
     - 'MixedPredicate' means query which combines wide and deep types
@@ -26,7 +28,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 10
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 10
+  MaxPhases: &MaxPhases 12
 
 Actors:
 # Phase 0: Insert documents into the collection.
@@ -53,22 +55,46 @@ Actors:
           d: 1
           n1: {
             a: {
-              b: 1
+              b: {
+                c: {
+                  d: {
+                    e: 1
+                  }
+                }
+              }
             }
           }
           n2: {
             a: {
-              b: 1
+              b: {
+                c: {
+                  d: {
+                    e: 1
+                  }
+                }
+              }
             }
           }
           n3: {
             a: {
-              b: 1
+              b: {
+                c: {
+                  d: {
+                    e: 1
+                  }
+                }
+              }
             }
           }
           n4: {
             a: {
-              b: 1
+              b: {
+                c: {
+                  d: {
+                    e: 1
+                  }
+                }
+              }
             }
           }
 
@@ -86,7 +112,7 @@ Actors:
         Threads: 1
 
 # Phase 2-N: Run various queries with complex filters.
-- Name: AggregationExpressionsWidePredicate
+- Name: AggregationExpressionWidePredicate
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -117,7 +143,7 @@ Actors:
               }
             }
 
-- Name: MatchExpressionsWidePredicate
+- Name: MatchExpressionWidePredicate
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -146,7 +172,7 @@ Actors:
               ]
             }
 
-- Name: AggregationExpressionsWidePredicateWithDeepFieldpaths
+- Name: AggregationExpressionSingletonPredicateWithDeepFieldpaths
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -162,22 +188,11 @@ Actors:
           OperationCommand:
             Filter: {
               $expr: {
-                $or: [
-                  {$eq: ["$n1.a.b", 10]},
-                  {$eq: ["$n2.a.b", 11]},
-                  {$eq: ["$n3.a.b", 12]},
-                  {$eq: ["$n4.a.b", 13]},
-                  {$eq: ["$n1.a.b", 14]},
-                  {$eq: ["$n2.a.b", 15]},
-                  {$eq: ["$n3.a.b", 16]},
-                  {$eq: ["$n4.a.b", 17]},
-                  {$eq: ["$n1.a.b", 18]},
-                  {$eq: ["$n2.a.b", 19]},
-                ]
+                $eq: ["$n1.a.b.c.d.e", 10]
               }
             }
 
-- Name: MatchExpressionsWidePredicateWithDeepFieldpaths
+- Name: MatchExpressionSingletonPredicateWithDeepFieldpaths
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -192,27 +207,76 @@ Actors:
         - OperationName: find
           OperationCommand:
             Filter: {
-              $or: [
-                {"n1.a.b", 10},
-                {"n2.a.b", 11},
-                {"n3.a.b", 12},
-                {"n4.a.b", 13},
-                {"n1.a.b", 14},
-                {"n2.a.b", 15},
-                {"n3.a.b", 16},
-                {"n4.a.b", 17},
-                {"n1.a.b", 18},
-                {"n2.a.b", 19},
-              ]
+              "n1.a.b.c.d.e": 10
             }
 
-- Name: AggregationExpressionsDeepPredicate
+- Name: AggregationExpressionWidePredicateWithDeepFieldpaths
   Type: CrudActor
   Database: *Database
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
       Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {
+              $expr: {
+                $or: [
+                  {$eq: ["$n1.a.b.c.d.e", 10]},
+                  {$eq: ["$n2.a.b.c.d.e", 11]},
+                  {$eq: ["$n3.a.b.c.d.e", 12]},
+                  {$eq: ["$n4.a.b.c.d.e", 13]},
+                  {$eq: ["$n1.a.b.c.d.e", 14]},
+                  {$eq: ["$n2.a.b.c.d.e", 15]},
+                  {$eq: ["$n3.a.b.c.d.e", 16]},
+                  {$eq: ["$n4.a.b.c.d.e", 17]},
+                  {$eq: ["$n1.a.b.c.d.e", 18]},
+                  {$eq: ["$n2.a.b.c.d.e", 19]},
+                ]
+              }
+            }
+
+- Name: MatchExpressionWidePredicateWithDeepFieldpaths
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {
+              $or: [
+                {"n1.a.b.c.d.e": 10},
+                {"n2.a.b.c.d.e": 11},
+                {"n3.a.b.c.d.e": 12},
+                {"n4.a.b.c.d.e": 13},
+                {"n1.a.b.c.d.e": 14},
+                {"n2.a.b.c.d.e": 15},
+                {"n3.a.b.c.d.e": 16},
+                {"n4.a.b.c.d.e": 17},
+                {"n1.a.b.c.d.e": 18},
+                {"n2.a.b.c.d.e": 19},
+              ]
+            }
+
+- Name: AggregationExpressionDeepPredicate
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [8]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -259,13 +323,13 @@ Actors:
               }
             }
 
-- Name: MatchExpressionsDeepPredicate
+- Name: MatchExpressionDeepPredicate
   Type: CrudActor
   Database: *Database
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [7]
+      Active: [9]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -310,13 +374,13 @@ Actors:
               ]
             }
 
-- Name: AggregationExpressionsMixedPredicate
+- Name: AggregationExpressionMixedPredicate
   Type: CrudActor
   Database: *Database
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [8]
+      Active: [10]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -337,13 +401,13 @@ Actors:
               }
             }
 
-- Name: MatchExpressionsMixedPredicate
+- Name: MatchExpressionMixedPredicate
   Type: CrudActor
   Database: *Database
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [9]
+      Active: [11]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -366,7 +430,10 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - replica-all-feature-flags
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - stadalone-sbe
     branch_name:
       $neq:
       - v4.0
