@@ -12,7 +12,7 @@ NumPhases: &NumPhases 20
 CollectionCount: &NumColls 1
 
 Document: &generatedDoc
-  expireDate: {^Now: {}} # Instantly expire the document
+  expireDate: {^Now: {}}  # Instantly expire the document
   y: &y {^RandomInt: {min: -1000, max: 1000}}
   b: {^RandomString: {length: 15}}
 
@@ -33,7 +33,7 @@ ActorTemplates:
           Operations:
           - OperationName: insertMany
             OperationCommand:
-              Documents: # Insert 50 documents at a time
+              Documents:  # Insert 50 documents at a time
               - *generatedDoc
               - *generatedDoc
               - *generatedDoc
