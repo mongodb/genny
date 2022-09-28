@@ -264,7 +264,9 @@ struct UpdateManyOperation : public WriteOperation {
           _collection{std::move(collection)},
           _operation{operation},
           _filter{opNode["Filter"].to<DocumentGenerator>(context, id)},
-          _update{opNode["Update"].to<DocumentGenerator>(context, id)} {}
+          _update{opNode["Update"].to<DocumentGenerator>(context, id)},
+          _options{opNode["OperationOptions"].maybe<mongocxx::options::update>().value_or(
+              mongocxx::options::update{})} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filter();

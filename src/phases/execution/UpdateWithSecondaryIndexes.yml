@@ -16,7 +16,7 @@ Keywords:
 
 GlobalDefaults:
   # Configurable parameters.
-  DocumentCount: &DocumentCount {^Parameter: {Name: "DocumentCount", Default: 50_000}}
+  DocumentCount: &DocumentCount {^Parameter: {Name: "DocumentCount", Default: 500_000}}
   # Insert same document for both default and with secondary indexes to remove one variable.
   InsertDocument: &DocumentToInsert
     a: "foo"
@@ -24,7 +24,6 @@ GlobalDefaults:
     c: *rs
 
 # Constants.
-WriteRate: &WriteRate 1 per 500 microseconds  # 2000/second
 ConcurrentWritesColl: &ConcurrentWritesColl concurrentWritesColl
 
 Database: &Database test
