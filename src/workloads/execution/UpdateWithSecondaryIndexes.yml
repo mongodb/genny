@@ -1,0 +1,34 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Updates a range of documents in the collection.
+  Secondary indexes are created to see how they might affect performance.
+  Documents are approximately of size ~1KB.
+
+Keywords:
+- RunCommand
+- Loader
+- LoggingActor
+- CrudActor
+- insert
+- update
+- latency
+- secondary indexes
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: 3_600_000  # = 1 hour
+
+LoadConfig:
+  Path: "../../phases/execution/UpdateWithSecondaryIndexes.yml"
+
+# Uncomment AutoRun to enable this test in evergreen patches
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-all-feature-flags
+      - standalone
+      - standalone-all-feature-flags
