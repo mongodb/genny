@@ -1,0 +1,33 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Updates a large range of documents in the collection.
+  Multiple secondary indexes are present.
+  Update performed with and without a hint.
+
+Keywords:
+- RunCommand
+- Loader
+- LoggingActor
+- CrudActor
+- insert
+- update
+- latency
+- secondary indexes
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: 3_600_000  # = 1 hour
+
+LoadConfig:
+  Path: "../../phases/execution/UpdateWithSecondaryIndexes.yml"
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-all-feature-flags
+      - standalone
+      - standalone-all-feature-flags

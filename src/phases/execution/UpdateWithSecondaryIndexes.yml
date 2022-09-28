@@ -1,0 +1,116 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+  Runs a workload that updates a large range of documents.
+  Multiple secondary indexes are present.
+  Update performed with and without a hint.
+
+Keywords:
+- RunCommand
+- Loader
+- LoggingActor
+- CrudActor
+- insert
+- update
+- latency
+
+GlobalDefaults:
+  # Configurable parameters.
+  DocumentCount: &DocumentCount {^Parameter: {Name: "DocumentCount", Default: 500_000}}
+  # Insert same document for both default and with secondary indexes to remove one variable.
+  InsertDocument: &DocumentToInsert
+    a: "foo"
+    b: &rs {^FastRandomString: {length: 6, alphabet: "0123456789"}}
+    c: *rs
+
+# Constants.
+ConcurrentWritesColl: &ConcurrentWritesColl concurrentWritesColl
+
+Database: &Database test
+UpdateColl: &UpdateColl Collection0
+
+Actors:
+# Phase 1: Initialize the database.
+- Name: InitializeDatabase
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *Database
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *UpdateColl
+        indexes:
+        - key: {a: 1, b: 1}
+          name: a_1_b_1
+        - key: {a: 1, c: 1}
+          name: a_1_c_1
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Phase 2: Populate the collection for mass update.
+- Name: PopulateInitialData
+  Type: Loader
+  Threads: 4
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: *Database
+    MultipleThreadsPerCollection: true
+    CollectionCount: 1
+    DocumentCount: *DocumentCount
+    BatchSize: 1_000
+    Document:
+      *DocumentToInsert
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Phase 3: Issue a large update without a hint.
+- Name: LargeMultiUpdate
+  Type: CrudActor
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: *Database
+    Collection: *UpdateColl
+    Operation:
+      OperationName: updateMany
+      OperationMetricsName: UpdateManyWithoutHint
+      OperationCommand:
+        Filter: { a: "foo" }
+        Update: { $set: { a: "bar" } }
+  - *Nop
+  - *Nop
+
+# Phase 4: Issue a large update with a hint.
+- Name: LargeMultiUpdate
+  Type: CrudActor
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: *Database
+    Collection: *UpdateColl
+    Operation:
+      OperationName: updateMany
+      OperationMetricsName: UpdateManyWithHint
+      OperationCommand:
+        Filter: { a: "bar" }
+        Update: { $set: { a: "foo" } }
+        OperationOptions:
+          Hint: a_1_b_1
+  - *Nop
