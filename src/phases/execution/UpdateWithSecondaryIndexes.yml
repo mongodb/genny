@@ -93,7 +93,7 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 4: Issue a large update without a hint.
+# Phase 4: Issue a large update with a hint.
 - Name: LargeMultiUpdate
   Type: CrudActor
   Database: *Database

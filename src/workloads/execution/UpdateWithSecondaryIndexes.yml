@@ -23,7 +23,6 @@ Clients:
 LoadConfig:
   Path: "../../phases/execution/UpdateWithSecondaryIndexes.yml"
 
-# Uncomment AutoRun to enable this test in evergreen patches
 AutoRun:
 - When:
     mongodb_setup:
