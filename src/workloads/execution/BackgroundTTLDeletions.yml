@@ -1,7 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: |
-  This workload tests the impact of background TTL deletions in a heavily modified collection
+  This workload tests the impact of background TTL deletions in a heavily modified collection. This
+  test does not quiesce between phases as we want the TTL deleter to be constantly running.
+
+  Previously this test was part of a legacy suite of workloads used to test called `insert_ttl.js`.
+  This is a port of the test in order to have better analytics with some minor changes to be
+  more correct.
 Keywords:
 - ttl
 - stress
@@ -13,7 +18,7 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 260
+      maxPoolSize: 256
 
 NumPhases: &NumPhases 20
 CollectionCount: &NumColls 1
@@ -134,6 +139,8 @@ Actors:
         - keys: {expireDate: 1}
           options: {expireAfterSeconds: 0}
 
+# We do not perform a quiesce between phases as it would allow the TTL deleter to catch up. We want
+# it to constantly be running for this workload.
 - ActorFromTemplate:
     TemplateName: WritesActorTemplate
     TemplateParameters:
