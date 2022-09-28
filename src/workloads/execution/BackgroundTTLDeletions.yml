@@ -2,6 +2,13 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: |
   This workload tests the impact of background TTL deletions in a heavily modified collection
+Keywords:
+- ttl
+- stress
+- indexes
+- insertMany
+- CrudActor
+- tickets
 
 Clients:
   Default:
@@ -136,39 +143,15 @@ Actors:
 - ActorFromTemplate:
     TemplateName: WritesActorTemplate
     TemplateParameters:
-      Name: Writes_2_Thread
-      Threads: 2
-      ActivePhases: [4]
-- ActorFromTemplate:
-    TemplateName: WritesActorTemplate
-    TemplateParameters:
-      Name: Writes_4_Thread
-      Threads: 4
-      ActivePhases: [5]
-- ActorFromTemplate:
-    TemplateName: WritesActorTemplate
-    TemplateParameters:
       Name: Writes_8_Thread
       Threads: 8
       ActivePhases: [6]
 - ActorFromTemplate:
     TemplateName: WritesActorTemplate
     TemplateParameters:
-      Name: Writes_16_Thread
-      Threads: 16
-      ActivePhases: [7]
-- ActorFromTemplate:
-    TemplateName: WritesActorTemplate
-    TemplateParameters:
       Name: Writes_32_Thread
       Threads: 32
       ActivePhases: [8]
-- ActorFromTemplate:
-    TemplateName: WritesActorTemplate
-    TemplateParameters:
-      Name: Writes_64_Thread
-      Threads: 64
-      ActivePhases: [9]
 - ActorFromTemplate:
     TemplateName: WritesActorTemplate
     TemplateParameters:
