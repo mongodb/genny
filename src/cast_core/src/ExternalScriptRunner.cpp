@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <cast_core/actors/ExternalScriptRunner.hpp>
+#include <boost/filesystem.hpp>
 
 namespace genny::actor {
 
@@ -24,6 +25,8 @@ struct ExternalScriptRunner::PhaseConfig {
     std::string command;
 
     std::string programCommand;
+
+    std::string invocation;
 
     // Record data retruned by the script
     metrics::Operation operation;
@@ -45,12 +48,10 @@ struct ExternalScriptRunner::PhaseConfig {
           // ignored.
           scriptOperation{phaseContext.namedOperation("ExternalScript", id)} {
 
-            // The script should not have double quotes
-            assert(script.find("\"") == std::string::npos);
             if (command == "mongosh") {
-                programCommand = "mongosh " + mongoServerURI + " --quiet --eval \"" + script + "\"";
+                invocation = "mongosh " + mongoServerURI + " --quiet --file";
             } else if (command == "sh") {
-                programCommand = "sh -c \"" + script + "\"";
+                invocation = "sh";
             } else {
                 throw std::runtime_error("Script type " + command + " is not supported.");
             }
@@ -66,29 +67,60 @@ struct ExternalScriptRunner::PhaseConfig {
 std::string ExternalScriptRunner::exec(const char* cmd) {
     std::array<char, 128> buffer;
     std::string result;
+
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
     if (!pipe) {
         throw std::runtime_error("Execution of command " + std::string(cmd) + " failed!");
     }
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
+        BOOST_LOG_TRIVIAL(info) << "Script output: " << buffer.data();
     }
+
     return result;
 }
+
+class TempScriptFile {
+public:
+    TempScriptFile(const std::string& script) {
+        boost::filesystem::path temp = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        _name = temp.native();
+        _file = std::ofstream(_name);
+        _file << script;
+
+        // File must be flushed to ensure the contents are available when
+        // the command is invoked
+        _file.flush();
+    }
+
+    TempScriptFile(const TempScriptFile&) = delete;
+
+    ~TempScriptFile() {
+        std::remove(_name.c_str());
+    }
+
+    const std::string& name() {
+        return _name;
+    }
+private:
+    std::ofstream _file;
+    std::string _name;
+};
 
 void ExternalScriptRunner::run() {
     // This section gets executed before the phases. Setup is executed here, so maybe
     // we could add some sanity checks before actually running the shell.
 
     for (auto&& config : _loop) {
-
-        BOOST_LOG_TRIVIAL(debug) << "ExternalScriptRunner running " << config->programCommand;
-
         for (const auto&& _ : config) {
+            TempScriptFile file{config->script};
+            std::stringstream fullInvocation;
+            fullInvocation << config->invocation << " "<< file.name();
+            std::string invocation = fullInvocation.str();
 
             // Execute the script and read result from stdout
             auto ctx = config->scriptOperation.start();
-            const char* programCmdPtr = const_cast<char*>(config->programCommand.c_str());
+            const char* programCmdPtr = const_cast<char*>(invocation.c_str());
             std::string result = exec(programCmdPtr);
             ctx.success();
 
@@ -99,7 +131,7 @@ void ExternalScriptRunner::run() {
                 config->operation.report(metrics::clock::now(), std::chrono::milliseconds{num});
             } catch (std::exception& err) {
                 BOOST_LOG_TRIVIAL(debug) << "Command " << config->programCommand
-                                         << " wrote non-integer output: " << result;
+                                         << " wrote non-integer output: " << result << " " <<err.what();
             }
         }
     }

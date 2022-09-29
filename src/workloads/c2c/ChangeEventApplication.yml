@@ -1,0 +1,63 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  This workload is a mixed workload to test the maximum throughput that
+  can be achieved by change event application (CEA). The workload starts Mongosync
+  on a cluster with an empty initial dataset, waits for it to transition to
+  CEA and then starts inserting documents on the source cluster.
+
+Keywords:
+- c2c
+- replication
+- cluster to cluster sync
+- change event application
+- CEA
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 500
+
+ScriptsPath: &scriptsPath ./MongosyncScripts.yml
+
+Actors:
+- Name: Mongosync
+  Type: ExternalScriptRunner
+  Threads: 1
+  Phases:
+    - LoadConfig:
+        Path: *scriptsPath
+        Key: StartMongosync
+    - LoadConfig:
+        Path: *scriptsPath
+        Key: PollForCEA
+    - &nop {Nop: true}
+    - LoadConfig:
+        Path: *scriptsPath
+        Key: DrainWrites
+    - LoadConfig:
+        Path: *scriptsPath
+        Key: Commit
+    - LoadConfig:
+        Path: *scriptsPath
+        Key: WaitForCommit
+
+- Name: InsertDocs
+  Type: Loader
+  Threads: 1
+  Phases:
+    - *nop
+    - *nop
+    - Repeat: 1
+      BatchSize: 100
+      Threads: 1
+      DocumentCount: 1000000
+      Database: db
+      CollectionCount: 1
+      Document:
+        a: {^RandomInt: {min: 0, max: 1000000}}
+        b: {^RandomString: {length: 8}}
+        c: {^RandomString: {length: 20}}
+    - *nop
+    - *nop
+    - *nop

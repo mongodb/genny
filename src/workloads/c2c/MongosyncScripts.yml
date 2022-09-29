@@ -1,0 +1,81 @@
+SchemaVersion: 2018-07-01
+
+# This is a collection of helper scripts used to communicate with mongosync. To use them,
+# use LoadConfig and load the script you would like to use in your actor's phase.
+# For example:
+# - Name: Mongosync
+#   Type: ExternalScriptRunner
+#   Threads: 1
+#   Phases:
+#     - LoadConfig:
+#       Path: ./MongosyncScripts.yml
+#       Key: StartMongosync
+#
+StartMongosync:
+  Repeat: 1
+  Command: sh
+  MetricsName: StartMongosync
+  Script: |
+    curl -X POST http://10.2.0.160:27182/api/v1/start \
+      -H 'Content-Type: application/json' \
+      -d '{"Source": "cluster0", "Destination": "cluster1"}'
+
+PollForCEA:
+  Repeat: 1
+  Command: sh
+  MetricsName: PollForCEA
+  Script: |
+    getState() {
+      curl -s http://10.2.0.160:27182/api/v1/progress | jq '.progress.info' --raw-output
+    }
+
+    state=$(getState)
+    while [ "$state" != "change event application" ];
+    do
+      echo "Polling for change event application, current state=$state"
+      sleep 1;
+      state=$(getState)
+    done
+
+DrainWrites:
+  Repeat: 1
+  Command: sh
+  MetricsName: DrainWrites
+  Script: |
+    getLag () {
+      curl -s http://10.2.0.160:27182/api/v1/progress | jq '.progress.lagTimeSeconds'
+    }
+
+    lagTime=$(getLag)
+    while [ $lagTime -gt 0 ];
+    do
+      echo "Waiting for writes to drain, currentLag=$lagTime"
+      sleep 1;
+      lagTime=$(getLag)
+    done
+
+Commit:
+  Repeat: 1
+  Command: sh
+  MetricsName: Commit
+  Script: |
+    curl -X POST http://10.2.0.160:27182/api/v1/commit \
+      -H 'Content-Type: application/json' \
+      -d '{}'
+
+WaitForCommit:
+  Repeat: 1
+  Command: sh
+  MetricsName: WaitForCommit
+  Script: |
+    getState() {
+      curl -s http://10.2.0.160:27182/api/v1/progress | jq '.progress.state' --raw-output
+    }
+
+    state=$(getState)
+    while [ $state != "COMMITTED" ];
+    do
+      echo "Waiting for commit to finish, state=$state"
+      sleep 1;
+      state=$(getState)
+    done
