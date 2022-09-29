@@ -433,7 +433,7 @@ AutoRun:
       - standalone
       - standalone-all-feature-flags
       - standalone-classic-query-engine
-      - stadalone-sbe
+      - standalone-sbe
     branch_name:
       $neq:
       - v4.0
