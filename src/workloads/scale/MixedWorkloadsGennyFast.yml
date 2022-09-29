@@ -1,0 +1,218 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  This workload is a port of the mixed_workloads in the workloads
+  repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
+  operations, each with dedicated actors/threads. The 4 operations are insertOne, findOne,
+  updateOne, and deleteOne. Since each type of operation runs in a dedicated thread it enables
+  interesting behavior, such as reads getting faster because of a write regression, or reads being
+  starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
+  starved out by writes.
+# This workload does not support sharding yet.
+Keywords:
+- scale
+- insertOne
+- insert
+- findOne
+- find
+- updateOne
+- update
+- deleteOne
+- delete
+
+# These two values should match those are the top of MixPhases.yml
+dbname: &dbname mix
+DocumentCount: &NumDocs 100000
+CollectionCount: &NumColls 1
+
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 500
+  Insert:
+    QueryOptions:
+      maxPoolSize: 500
+  Query:
+    QueryOptions:
+      maxPoolSize: 500
+  Remove:
+    QueryOptions:
+      maxPoolSize: 500
+  Update:
+    QueryOptions:
+      maxPoolSize: 500
+
+ActorTemplates:
+- TemplateName: UpdateTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Update"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Update
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}} 
+        NopInPhasesUpTo: 3
+        PhaseConfig:
+          LoadConfig:
+            Path: ../../phases/scale/MixPhases.yml
+            Key: UpdatePhase
+
+- TemplateName: RemoveTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Remove"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Remove
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
+        NopInPhasesUpTo: 3
+        PhaseConfig:
+          LoadConfig:
+            Path: ../../phases/scale/MixPhases.yml
+            Key: RemovePhase
+
+- TemplateName: InsertTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Insert"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Insert
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
+        NopInPhasesUpTo: 3
+        PhaseConfig:
+          LoadConfig:
+            Path: ../../phases/scale/MixPhases.yml
+            Key: InsertPhase
+
+- TemplateName: FindTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Find"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Query
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
+        NopInPhasesUpTo: 3
+        PhaseConfig:
+          LoadConfig:
+            Path: ../../phases/scale/MixPhases.yml
+            Key: FindPhase
+
+Actors:
+- Name: Setup
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    BatchSize: 100
+    Threads: 1
+    DocumentCount: *NumDocs
+    Database: *dbname
+    CollectionCount: *NumColls
+    Document: &doc
+      id: {^RandomInt: {min: 0, max: *NumDocs}}
+      a: {^RandomInt: {min: 0, max: *NumDocs}}
+      # Note that in the original workload the string c was perfectly compressable. We can put a
+      # constant there if needed.
+      c: &string {^RandomString: {length: 50}}  # Adjust this so the doc comes out as 100 B.
+    Indexes:
+    - keys: {id: 1}
+    - keys: {a: 1}
+  - Phase: 1..3
+    Nop: true
+
+- Name: QuiesceBetweenLevels
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - &nop {Nop: true}
+  - &quiesce
+    Repeat: 1
+    Database: admin
+    Operations:
+    # Fsync to force a checkpoint and quiesce the system.
+    - OperationMetricsName: FsyncCommand
+      OperationName: AdminCommand
+      OperationCommand:
+        fsync: 1
+  - *nop
+  - *quiesce
+
+
+# This actor will speed up the FTDC sampling rate rate from the default of 1000 ms to 100 ms for the second phase that each CRUD actor is active. 
+- Name: ToggleFtdcRate
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - &fasterRate
+    Repeat: 1
+    Database: admin
+    Operation:
+      OperationName: RunCommand
+      OperationCommand:
+        setParameter: 1
+        diagnosticDataCollectionPeriodMillis: 100
+  - Nop: true
+  - Nop: true
+  - Nop: true
+
+# Update Actors
+- ActorFromTemplate:
+    TemplateName: UpdateTemplate
+    TemplateParameters:
+      Name: Update_1
+      Threads: 32
+      OnlyActiveInPhase: [2]
+
+#
+## Remove Actors
+#
+- ActorFromTemplate:
+    TemplateName: RemoveTemplate
+    TemplateParameters:
+      Name: Remove_1
+      Threads: 32
+      OnlyActiveInPhase: [2]
+
+## Insert Actors
+#
+- ActorFromTemplate:
+    TemplateName: InsertTemplate
+    TemplateParameters:
+      Name: Insert_1
+      Threads: 32
+      OnlyActiveInPhase: [2]
+
+## Find Actors
+
+- ActorFromTemplate:
+    TemplateName: FindTemplate
+    TemplateParameters:
+      Name: Find_1
+      Threads: 32
+      OnlyActiveInPhase: [2]
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas
+      - replica
+      - replica-1dayhistory-15gbwtcache
+      - replica-all-feature-flags
+      - replica-maintenance-events
+      - replica-noflowcontrol
+      - single-replica
+      - single-replica-classic-query-engine
+      - single-replica-sbe
+      - standalone
