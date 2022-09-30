@@ -14,7 +14,7 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 256
+      maxPoolSize: 260
 
 NumPhases: &NumPhases 6
 
@@ -40,56 +40,7 @@ ActorTemplates:
           Operations:
           - OperationName: insertMany
             OperationCommand:
-              Documents:  # Insert 50 documents at a time
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
+              Documents:  # Insert 1 document at a time
               - *generatedDoc
 
 
@@ -140,8 +91,8 @@ Actors:
 - ActorFromTemplate:
     TemplateName: WritesActorTemplate
     TemplateParameters:
-      Name: Writes_128_Thread
-      Threads: 128
+      Name: Writes_256_Thread
+      Threads: 256
       ActivePhases: [3]
       Duration: 10 minutes
 AutoRun:
