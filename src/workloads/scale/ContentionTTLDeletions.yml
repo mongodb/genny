@@ -36,7 +36,7 @@ ActorTemplates:
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
           Duration: {^Parameter: {Name: "Duration", Default: 3 minutes}}
-          CollectionCount:  &NumColls 1
+          CollectionCount: &NumColls 1
           Operations:
           - OperationName: insertMany
             OperationCommand:
