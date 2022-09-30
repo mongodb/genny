@@ -577,6 +577,8 @@ AutoRun:
       - replica
       - replica-all-feature-flags
       - single-replica
+      - single-replica-classic-query-engine
+      - single-replica-sbe
     branch_name:
       $neq:
       - v4.0

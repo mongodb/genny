@@ -129,8 +129,10 @@ AutoRun:
       $eq:
       - atlas
       - replica
-      - replica-noflowcontrol
       - replica-1dayhistory-15gbwtcache
       - replica-all-feature-flags
+      - replica-noflowcontrol
       - single-replica
       - standalone
+      - standalone-classic-query-engine
+      - standalone-sbe
