@@ -25,12 +25,14 @@ PollForCEA:
   Command: sh
   MetricsName: PollForCEA
   Script: |
+    set -eou pipefail
+
     getState() {
       curl -s http://10.2.0.160:27182/api/v1/progress | jq '.progress.info' --raw-output
     }
 
     state=$(getState)
-    while [ "$state" != "change event application" ];
+    while [ "$state" != "change event application" ]
     do
       echo "Polling for change event application, current state=$state"
       sleep 1;
@@ -42,6 +44,8 @@ DrainWrites:
   Command: sh
   MetricsName: DrainWrites
   Script: |
+    set -eou pipefail
+
     getLag () {
       curl -s http://10.2.0.160:27182/api/v1/progress | jq '.progress.lagTimeSeconds'
     }
@@ -68,12 +72,14 @@ WaitForCommit:
   Command: sh
   MetricsName: WaitForCommit
   Script: |
+    set -eou pipefail
+
     getState() {
       curl -s http://10.2.0.160:27182/api/v1/progress | jq '.progress.state' --raw-output
     }
 
     state=$(getState)
-    while [ $state != "COMMITTED" ];
+    while [ $state != "COMMITTED" ]
     do
       echo "Waiting for commit to finish, state=$state"
       sleep 1;

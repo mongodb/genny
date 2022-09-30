@@ -115,7 +115,7 @@ void ExternalScriptRunner::run() {
         for (const auto&& _ : config) {
             TempScriptFile file{config->script};
             std::stringstream fullInvocation;
-            fullInvocation << config->invocation << " "<< file.name();
+            fullInvocation << config->invocation << " "<< file.name() << " 2>&1";
             std::string invocation = fullInvocation.str();
 
             // Execute the script and read result from stdout
