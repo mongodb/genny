@@ -22,3 +22,5 @@ AutoRun:
       $eq:
       - replica
       - replica-all-feature-flags
+      - single-replica-classic-query-engine
+      - single-replica-sbe

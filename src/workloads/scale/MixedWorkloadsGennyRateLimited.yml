@@ -193,9 +193,11 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
+      - replica-1dayhistory-15gbwtcache
+      - replica-all-feature-flags
+      - replica-maintenance-events
+      - replica-noflowcontrol
       - single-replica
       - standalone
-      - replica-noflowcontrol
-      - replica-1dayhistory-15gbwtcache
-      - replica-maintenance-events
-      - replica-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-sbe
