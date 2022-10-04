@@ -54,7 +54,7 @@ ActorTemplates:
     Phases:
       OnlyActiveInPhases:
         Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}} 
-        NopInPhasesUpTo: 15
+        NopInPhasesUpTo: 20
         PhaseConfig:
           LoadConfig:
             Path: ../../phases/scale/MixPhases.yml
@@ -70,7 +70,7 @@ ActorTemplates:
     Phases:
       OnlyActiveInPhases:
         Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
-        NopInPhasesUpTo: 15
+        NopInPhasesUpTo: 20
         PhaseConfig:
           LoadConfig:
             Path: ../../phases/scale/MixPhases.yml
@@ -86,7 +86,7 @@ ActorTemplates:
     Phases:
       OnlyActiveInPhases:
         Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
-        NopInPhasesUpTo: 15
+        NopInPhasesUpTo: 20
         PhaseConfig:
           LoadConfig:
             Path: ../../phases/scale/MixPhases.yml
@@ -102,7 +102,7 @@ ActorTemplates:
     Phases:
       OnlyActiveInPhases:
         Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
-        NopInPhasesUpTo: 15
+        NopInPhasesUpTo: 20
         PhaseConfig:
           LoadConfig:
             Path: ../../phases/scale/MixPhases.yml
@@ -128,7 +128,7 @@ Actors:
     Indexes:
     - keys: {id: 1}
     - keys: {a: 1}
-  - Phase: 1..15
+  - Phase: 1..20
     Nop: true
 
 - Name: QuiesceBetweenLevels
@@ -146,20 +146,25 @@ Actors:
       OperationCommand:
         fsync: 1
   - *nop
+  - *quiesce
   - *nop
   - *quiesce
   - *nop
+  - *quiesce
   - *nop
   - *quiesce
   - *nop
+  - *quiesce
   - *nop
   - *quiesce
   - *nop
+  - *quiesce
   - *nop
   - *quiesce
   - *nop
+  - *quiesce
   - *nop
-
+  
 # This actor will speed up the FTDC sampling rate rate from the default of 1000 ms to 100 ms for the second phase that each CRUD actor is active. 
 - Name: ToggleFtdcRate
   Type: AdminCommand
@@ -168,6 +173,7 @@ Actors:
   - Nop: true
   - Nop: true
   - Nop: true 
+  - Nop: true  
   - &fasterRate
     Repeat: 1
     Database: admin
@@ -185,15 +191,19 @@ Actors:
       OperationCommand:
         setParameter: 1
         diagnosticDataCollectionPeriodMillis: 1000
+  - Nop: true        
   - *fasterRate
   - Nop: true
   - *defaultRate
+  - Nop: true  
   - *fasterRate
   - Nop: true
   - *defaultRate
+  - Nop: true  
   - *fasterRate
   - Nop: true
   - *defaultRate
+  - Nop: true  
   - *fasterRate
 
 # Update Actors
@@ -202,35 +212,35 @@ Actors:
     TemplateParameters:
       Name: Update_1
       Threads: 1
-      OnlyActiveInPhase: [2,3]
+      OnlyActiveInPhase: [2,4]
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_16
       Threads: 16
-      OnlyActiveInPhase: [5,6]
+      OnlyActiveInPhase: [6,8]
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_32
       Threads: 32
-      OnlyActiveInPhase: [8,9]
+      OnlyActiveInPhase: [10,12]
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_64
       Threads: 64
-      OnlyActiveInPhase: [11,12]
+      OnlyActiveInPhase: [14,16]
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_128
       Threads: 128
-      OnlyActiveInPhase: [14,15]
+      OnlyActiveInPhase: [18,20]
 
 #
 ## Remove Actors
@@ -240,35 +250,35 @@ Actors:
     TemplateParameters:
       Name: Remove_1
       Threads: 1
-      OnlyActiveInPhase: [2,3]
+      OnlyActiveInPhase: [2,4]
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Remove_16
       Threads: 16
-      OnlyActiveInPhase: [5,6]
+      OnlyActiveInPhase: [6,8]
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Remove_32
       Threads: 32
-      OnlyActiveInPhase: [8,9]
+      OnlyActiveInPhase: [10,12]
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Remove_64
       Threads: 64
-      OnlyActiveInPhase: [11,12]
+      OnlyActiveInPhase: [14,16]
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Remove_128
       Threads: 128
-      OnlyActiveInPhase: [14,15]
+      OnlyActiveInPhase: [18,20]
 
 ## Insert Actors
 #
@@ -277,35 +287,35 @@ Actors:
     TemplateParameters:
       Name: Insert_1
       Threads: 1
-      OnlyActiveInPhase: [2,3]
+      OnlyActiveInPhase: [2,4]
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Insert_16
       Threads: 16
-      OnlyActiveInPhase: [5,6]
+      OnlyActiveInPhase: [6,8]
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Insert_32
       Threads: 32
-      OnlyActiveInPhase: [8,9]
+      OnlyActiveInPhase: [10,12]
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Insert_64
       Threads: 64
-      OnlyActiveInPhase: [11,12]
+      OnlyActiveInPhase: [14,16]
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Insert_128
       Threads: 128
-      OnlyActiveInPhase: [14,15]
+      OnlyActiveInPhase: [18,20]
 
 ## Find Actors
 
@@ -314,35 +324,35 @@ Actors:
     TemplateParameters:
       Name: Find_1
       Threads: 1
-      OnlyActiveInPhase: [2,3]
+      OnlyActiveInPhase: [2,4]
 
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
       Name: Find_16
       Threads: 16
-      OnlyActiveInPhase: [5,6]
+      OnlyActiveInPhase: [6,8]
 
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
       Name: Find_32
       Threads: 32
-      OnlyActiveInPhase: [8,9]
+      OnlyActiveInPhase: [10,12]
 
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
       Name: Find_64
       Threads: 64
-      OnlyActiveInPhase: [11,12]
+      OnlyActiveInPhase: [14,16]
 
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
       Name: Find_128
       Threads: 128
-      OnlyActiveInPhase: [14,15]
+      OnlyActiveInPhase: [18,20]
 
 AutoRun:
 - When:
