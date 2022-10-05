@@ -198,6 +198,6 @@ AutoRun:
       - replica-maintenance-events
       - replica-noflowcontrol
       - single-replica
+      - single-replica-classic-query-engine
+      - single-replica-sbe
       - standalone
-      - standalone-classic-query-engine
-      - standalone-sbe
