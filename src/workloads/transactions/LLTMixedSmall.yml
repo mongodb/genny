@@ -4,7 +4,7 @@ Description: |
   Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload. This workload has smaller collection sizes comapred to LLTMixed
 
 LoadConfig:
-  Path: ./src/workloads/transactions/LLTMixed.yml
+  Path: ./LLTMixed.yml
   GlobalDefaults:
     InitialDocumentCount: &InitialNumDocs 10000000
     SecondaryDocumentCount: &SecondaryNumDocs 10000000
