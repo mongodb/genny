@@ -48,9 +48,13 @@ struct ExternalScriptRunner::PhaseConfig {
           // ignored.
           scriptOperation{phaseContext.namedOperation("ExternalScript", id)} {
 
+            // Note the actor will build the full command to run and append
+            // the path of the script file to run
             if (command == "mongosh") {
                 invocation = "mongosh " + mongoServerURI + " --quiet --file";
             } else if (command == "sh") {
+                // No --file argument is required here, the script is run like
+                // sh /path/to/file
                 invocation = "sh";
             } else {
                 throw std::runtime_error("Script type " + command + " is not supported.");
@@ -96,27 +100,22 @@ class TempScriptFile {
 public:
     TempScriptFile(const std::string& script) {
         boost::filesystem::path temp = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
-        _name = temp.native();
-        _file = std::ofstream(_name);
-        _file << script;
-
-        // File must be flushed to ensure the contents are available when
-        // the command is invoked
-        _file.flush();
+        _path = temp.native();
+        std::ofstream file{_path};
+        file << script;
     }
 
     TempScriptFile(const TempScriptFile&) = delete;
 
     ~TempScriptFile() {
-        std::remove(_name.c_str());
+        std::remove(_path.c_str());
     }
 
-    const std::string& name() {
-        return _name;
+    const std::string& path() {
+        return _path;
     }
 private:
-    std::ofstream _file;
-    std::string _name;
+    std::string _path;
 };
 
 void ExternalScriptRunner::run() {
@@ -127,12 +126,14 @@ void ExternalScriptRunner::run() {
         for (const auto&& _ : config) {
             TempScriptFile file{config->script};
             std::stringstream fullInvocation;
-            fullInvocation << config->invocation << " "<< file.name() << " 2>&1";
+            fullInvocation << config->invocation << " "<< file.path() << " 2>&1";
             std::string invocation = fullInvocation.str();
 
-            // Execute the script and read result from stdout
+            // Start the timer for the operations
             auto ctx = config->scriptOperation.start();
             const char* programCmdPtr = const_cast<char*>(invocation.c_str());
+
+            // Execute the script and read result from stdout
             std::string result = exec(programCmdPtr);
             ctx.success();
 

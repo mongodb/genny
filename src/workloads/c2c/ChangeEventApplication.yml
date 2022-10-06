@@ -53,6 +53,11 @@ Actors:
     Threads: 1
     DocumentCount: 1000000
     Database: db
+
+    # Note the document shape and number of collections doesn't
+    # really matter here and we are generally just testing the
+    # max throughput mongosync can achieve with an unbounded
+    # insert workload
     CollectionCount: 1
     Document:
       a: {^RandomInt: {min: 0, max: 1000000}}
