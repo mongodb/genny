@@ -13,6 +13,9 @@ Keywords:
 - change event application
 - CEA
 
+EnvironmentVariables:
+  MongosyncConnectionUrls: http://localhost:27182
+
 Clients:
   Default:
     QueryOptions:
@@ -21,17 +24,52 @@ Clients:
 ScriptsPath: &scriptsPath ./MongosyncScripts.yml
 
 Actors:
+
+- Name: SetupSharding
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    # We also run this on replica sets and so we
+    # ignore if this command fails
+    ThrowOnFailure: false
+    Operations:
+    - OperationMetricsName: EnableShardingMetrics
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: db
+
+  - Repeat: 1
+    Database: admin
+    ThrowOnFailure: false
+    Operations:
+    - OperationMetricsName: ShardCollectionMetrics
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: db.Collection0
+        key:
+          _id: hashed
+  - &nop {Nop: true}
+  - *nop
+  - *nop
+  - *nop
+  - *nop
+  - *nop
+
 - Name: Mongosync
   Type: ExternalScriptRunner
   Threads: 1
   Phases:
+  - *nop
+  - *nop
   - LoadConfig:
       Path: *scriptsPath
       Key: StartMongosync
   - LoadConfig:
       Path: *scriptsPath
       Key: PollForCEA
-  - &nop {Nop: true}
+  - *nop
   - LoadConfig:
       Path: *scriptsPath
       Key: DrainWrites
@@ -48,10 +86,12 @@ Actors:
   Phases:
   - *nop
   - *nop
+  - *nop
+  - *nop
   - Repeat: 1
     BatchSize: 100
     Threads: 1
-    DocumentCount: 1000000
+    DocumentCount: 500000
     Database: db
 
     # Note the document shape and number of collections doesn't
@@ -60,7 +100,7 @@ Actors:
     # insert workload
     CollectionCount: 1
     Document:
-      a: {^RandomInt: {min: 0, max: 1000000}}
+      a: {^RandomInt: {min: 0, max: 500000}}
       b: {^RandomString: {length: 8}}
       c: {^RandomString: {length: 20}}
   - *nop

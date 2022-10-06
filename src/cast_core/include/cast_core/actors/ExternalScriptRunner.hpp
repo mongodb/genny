@@ -42,8 +42,6 @@ public:
 
     void run() override;
 
-    std::string exec(const char* cmd);
-
     static std::string_view defaultName() {
         return "ExternalScriptRunner";
     }
@@ -54,6 +52,7 @@ private:
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
     std::string _command;
+    std::unordered_map<std::string, std::string> _environmentVariables;
 };
 
 }  // namespace genny::actor

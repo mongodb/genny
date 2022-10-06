@@ -14,28 +14,42 @@
 
 #include <cast_core/actors/ExternalScriptRunner.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/assert.hpp>
 
 namespace genny::actor {
 
+class TempScriptFile {
+public:
+    TempScriptFile(const std::string& script) {
+        boost::filesystem::path temp = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        _name = temp.native();
+        std::ofstream file = std::ofstream(_name);
+        file << script;
+    }
+
+    TempScriptFile(const TempScriptFile&) = delete;
+
+    ~TempScriptFile() {
+        std::remove(_name.c_str());
+    }
+
+    const std::string& name() {
+        return _name;
+    }
+private:
+    std::string _name;
+};
+
 struct ExternalScriptRunner::PhaseConfig {
-    std::string script;
-
-    std::string mongoServerURI;
-
-    std::string command;
 
     std::string programCommand;
-
-    std::string invocation;
 
     // Record data retruned by the script
     metrics::Operation operation;
 
-    // Record data of the script operation itself
-    metrics::Operation scriptOperation;
-
     PhaseConfig(PhaseContext& phaseContext, ActorId id)
-        : script{phaseContext["Script"].to<std::string>()},
+        : script{phaseContext["Script"].maybe<std::string>()},
+          scriptPath{phaseContext["ScriptPath"].maybe<std::string>()},
           // TODO: try to get the default server URI from DSI
           mongoServerURI{phaseContext["MongoServerURI"].maybe<std::string>().value_or("--nodb")},
           command{phaseContext["Command"].to<std::string>()},
@@ -47,76 +61,109 @@ struct ExternalScriptRunner::PhaseConfig {
           // If nothing is written or the output can't be parsed as integer, this metric will be
           // ignored.
           scriptOperation{phaseContext.namedOperation("ExternalScript", id)} {
+            BOOST_ASSERT_MSG(script.has_value() ^ scriptPath.has_value(),
+                "Only one of ScriptPath or Script is allowed for this actor.");
 
-            // Note the actor will build the full command to run and append
-            // the path of the script file to run
             if (command == "mongosh") {
                 invocation = "mongosh " + mongoServerURI + " --quiet --file";
             } else if (command == "sh") {
                 // No --file argument is required here, the script is run like
                 // sh /path/to/file
                 invocation = "sh";
-            } else {
+            } else if (command == "python3") {
+                // Note this will use the mongodb toolchain version of
+                // python3 due to environment vars set in run-genny
+                invocation = "python3";
+            }
+            else {
                 throw std::runtime_error("Script type " + command + " is not supported.");
             }
         }
-};
 
-/**
- * @brief Execute external script
- *
- * @param cmd
- * @return std::string
- */
-std::string ExternalScriptRunner::exec(const char* cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-
-    FILE* pipe = popen(cmd, "r");
-    if (!pipe) {
-        throw std::runtime_error("Execution of command " + std::string(cmd) + " failed!");
-    }
-    try {
-        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-            result += buffer.data();
-            BOOST_LOG_TRIVIAL(info) << "Script output: " << buffer.data();
+    std::string runScript(const std::unordered_map<std::string, std::string>& environmentVariables) {
+        if(scriptPath.has_value()) {
+            boost::filesystem::path path = boost::filesystem::current_path() / scriptPath.value();
+            return runScript(environmentVariables, path.native());
+        }
+        else {
+            TempScriptFile file{script.value()};
+            return runScript(environmentVariables, file.name());
         }
     }
-    catch (...) {
-        pclose(pipe);
-        throw;
-    }
 
-    int pcloseResult = pclose(pipe);
-    int exitStatus = WEXITSTATUS(pcloseResult);
-    if(exitStatus != 0) {
-        throw std::runtime_error("Script exited with non-zero exit code " + std::to_string(exitStatus));
-    }
-
-    return result;
-}
-
-class TempScriptFile {
-public:
-    TempScriptFile(const std::string& script) {
-        boost::filesystem::path temp = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
-        _path = temp.native();
-        std::ofstream file{_path};
-        file << script;
-    }
-
-    TempScriptFile(const TempScriptFile&) = delete;
-
-    ~TempScriptFile() {
-        std::remove(_path.c_str());
-    }
-
-    const std::string& path() {
-        return _path;
-    }
 private:
-    std::string _path;
+    std::string runScript(
+        const std::unordered_map<std::string, std::string>& environmentVariables,
+        const std::string& scriptPath) {
+        std::stringstream fullInvocation;
+        for (auto [key, value] : environmentVariables) {
+            fullInvocation << key << "=" << "\"" << value << "\" ";
+        }
+
+        // Note we append 2>&1 to the script so that stderr shows up in the output
+        // as the way we're invoking the script results in us only reading stdout
+        fullInvocation << invocation << " "<< scriptPath << " 2>&1";
+        std::string fullInvocationString = fullInvocation.str();
+
+        // Execute the script and read result from stdout
+        auto ctx = scriptOperation.start();
+        const char* programCmdPtr = const_cast<char*>(fullInvocationString.c_str());
+        std::string result = exec(programCmdPtr);
+        ctx.success();
+        return result;
+    }
+
+    /**
+     * @brief Execute external script
+     *
+     * @param cmd
+     * @return std::string
+     */
+    std::string exec(const char* cmd) {
+        std::array<char, 128> buffer;
+        std::string result;
+        BOOST_LOG_TRIVIAL(info) << "Running command: " << cmd;
+
+        FILE* pipe = popen(cmd, "r");
+        if (!pipe) {
+            throw std::runtime_error("Execution of command " + std::string(cmd) + " failed!");
+        }
+        try {
+            while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+                result += buffer.data();
+                BOOST_LOG_TRIVIAL(info) << "Script output: " << buffer.data();
+            }
+        }
+        catch (...) {
+            // We want to ensure the pipe is closed if any exception occurs,
+            // but don't want to handle the exception here. As such, we re-throw
+            pclose(pipe);
+            throw;
+        }
+
+        int pcloseResult = pclose(pipe);
+        int exitStatus = WEXITSTATUS(pcloseResult);
+        if(exitStatus != 0) {
+            throw std::runtime_error("Script exited with non-zero exit code " + std::to_string(exitStatus));
+        }
+
+        return result;
+    }
+
+    std::optional<std::string> script;
+
+    std::optional<std::string> scriptPath;
+
+    std::string mongoServerURI;
+
+    std::string command;
+
+    std::string invocation;
+
+    // Record data of the script operation itself
+    metrics::Operation scriptOperation;
 };
+
 
 void ExternalScriptRunner::run() {
     // This section gets executed before the phases. Setup is executed here, so maybe
@@ -124,19 +171,7 @@ void ExternalScriptRunner::run() {
 
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
-            TempScriptFile file{config->script};
-            std::stringstream fullInvocation;
-            fullInvocation << config->invocation << " "<< file.path() << " 2>&1";
-            std::string invocation = fullInvocation.str();
-
-            // Start the timer for the operations
-            auto ctx = config->scriptOperation.start();
-            const char* programCmdPtr = const_cast<char*>(invocation.c_str());
-
-            // Execute the script and read result from stdout
-            std::string result = exec(programCmdPtr);
-            ctx.success();
-
+            std::string result = config->runScript(_environmentVariables);
             try {
                 // If the result from stdout can be parsed as integer, report the operation metrics
                 // Otherwise, ignore the result
@@ -152,7 +187,11 @@ void ExternalScriptRunner::run() {
 
 ExternalScriptRunner::ExternalScriptRunner(genny::ActorContext& context)
     // These are the attributes for the actor.
-    : Actor{context}, _loop{context, ExternalScriptRunner::id()} {}
+    : Actor{context}, _loop{context, ExternalScriptRunner::id()}, _environmentVariables{} {
+        for (auto [key, value] : context.workload()["EnvironmentVariables"]) {
+            _environmentVariables.insert(std::make_pair(key.toString(), value.to<std::string>()));
+        }
+    }
 
 namespace {
 auto registerExternalScriptRunner = Cast::registerDefault<ExternalScriptRunner>();

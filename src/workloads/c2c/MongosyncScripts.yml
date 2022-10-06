@@ -12,85 +12,32 @@ Description: |
         Path: ./MongosyncScripts.yml
         Key: StartMongosync
 
-  Note that the polling scripts start with set -eou pipefail so that any
-  subcommand run during the script failing will cause the entire script to fail.
-  This way if mongosync crashes during the test, it will stop the test execution
-  immediately and genny will bubble up the error and fail the test
-
-  For curl commands we pass -s and -S so that an errors are still reported (-S)
-  but download progress stats are not logged to stderr
-
 StartMongosync:
   Repeat: 1
-  Command: sh
+  Command: python3
   MetricsName: StartMongosync
-  Script: |
-    curl -s -S -X POST http://10.2.0.160:27182/api/v1/start \
-      -H 'Content-Type: application/json' \
-      -d '{"Source": "cluster0", "Destination": "cluster1"}'
+  ScriptPath: ./src/genny/src/workloads/c2c/mongosync_helpers.py -m start
 
 PollForCEA:
   Repeat: 1
-  Command: sh
+  Command: python3
   MetricsName: PollForCEA
-  Script: |
-    set -eou pipefail
-
-    getState() {
-      curl -s -S http://10.2.0.160:27182/api/v1/progress | jq '.progress.info' --raw-output
-    }
-
-    state=$(getState)
-    while [ "$state" != "change event application" ]
-    do
-      echo "Polling for change event application, current state=$state"
-      sleep 1;
-      state=$(getState)
-    done
+  ScriptPath: ./src/genny/src/workloads/c2c/mongosync_helpers.py -m poll_for_cea
 
 DrainWrites:
   Repeat: 1
-  Command: sh
+  Command: python3
   MetricsName: DrainWrites
-  Script: |
-    set -eou pipefail
-
-    getLag () {
-      curl -s -S http://10.2.0.160:27182/api/v1/progress | jq '.progress.lagTimeSeconds'
-    }
-
-    lagTime=$(getLag)
-    while [ $lagTime -gt 0 ];
-    do
-      echo "Waiting for writes to drain, currentLag=$lagTime"
-      sleep 1;
-      lagTime=$(getLag)
-    done
+  ScriptPath: ./src/genny/src/workloads/c2c/mongosync_helpers.py -m drain_writes
 
 Commit:
   Repeat: 1
-  Command: sh
+  Command: python3
   MetricsName: Commit
-  Script: |
-    curl -s -S -X POST http://10.2.0.160:27182/api/v1/commit \
-      -H 'Content-Type: application/json' \
-      -d '{}'
+  ScriptPath: ./src/genny/src/workloads/c2c/mongosync_helpers.py -m commit
 
 WaitForCommit:
   Repeat: 1
-  Command: sh
+  Command: python3
   MetricsName: WaitForCommit
-  Script: |
-    set -eou pipefail
-
-    getState() {
-      curl -s -S http://10.2.0.160:27182/api/v1/progress | jq '.progress.state' --raw-output
-    }
-
-    state=$(getState)
-    while [ $state != "COMMITTED" ]
-    do
-      echo "Waiting for commit to finish, state=$state"
-      sleep 1;
-      state=$(getState)
-    done
+  ScriptPath: ./src/genny/src/workloads/c2c/mongosync_helpers.py -m wait_for_commit
