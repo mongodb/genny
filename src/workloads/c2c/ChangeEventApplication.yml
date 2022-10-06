@@ -67,5 +67,5 @@ Actors:
   - *nop
   - *nop
 
-# Note that currently there is no autorun section in this workload as it is
-# being invoked manually
+  # Note that currently there is no autorun section in this workload as it is
+  # being invoked manually
