@@ -8,6 +8,7 @@ Clients:
   Default:
     QueryOptions:
       maxPoolSize: 260
+      socketTimeoutMS: 3600000  # = 1 hour
 
 Actors:
 # Phase 1: Insert enough data to ensure than an index build on each field spills to disk with a
@@ -63,7 +64,7 @@ Actors:
   - *Nop
   - *Nop
   # Build an index on an integer field.
-  - Repeat: 20
+  - Repeat: 10
     Database: *db
     Operations:
     - OperationMetricsName: CreateIndexInt
@@ -80,7 +81,7 @@ Actors:
         dropIndexes: *coll
         index: random_int
   # Build an index on a string field.
-  - Repeat: 20
+  - Repeat: 10
     Database: *db
     Operations:
     - OperationMetricsName: CreateIndexString
