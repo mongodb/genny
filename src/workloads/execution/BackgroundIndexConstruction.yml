@@ -1,8 +1,14 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: |
-   This workload tests the performance of creating indexes on a collection large enough that the external
-   sorter must spill to disk. This can happen when the keys are larger than maxIndexBuildMemoryUsageMegabytes.
+  This workload tests the write performance impact of creating indexes on a very large collection.
+  It synthetically lowers the number of concurrent operations allowed to represent a saturated
+  server.
+
+Keywords:
+- stress
+- indexes
+- InsertRemove
 
 Clients:
   Default:
@@ -64,7 +70,7 @@ Actors:
   - *Nop
   - *Nop
   # Build an index on an integer field.
-  - Repeat: 10
+  - Repeat: 5
     Database: *db
     Operations:
     - OperationMetricsName: CreateIndexInt
@@ -81,7 +87,7 @@ Actors:
         dropIndexes: *coll
         index: random_int
   # Build an index on a string field.
-  - Repeat: 10
+  - Repeat: 5
     Database: *db
     Operations:
     - OperationMetricsName: CreateIndexString
@@ -104,11 +110,11 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  # Build an index on an integer field.
+  # Execute while building an index on an integer field.
   - Blocking: None
     Database: *db
     Collection: &otherColl Collection1  # Work on a different collection to avoid overloading the index target
-  # Build an index on a string field.
+  # Execute while building an index on a string field.
   - Blocking: None
     Database: *db
     Collection: *otherColl
