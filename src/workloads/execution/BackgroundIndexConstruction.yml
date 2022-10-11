@@ -70,7 +70,7 @@ Actors:
   - *Nop
   - *Nop
   # Build an index on an integer field.
-  - Repeat: 5
+  - Repeat: 2
     Database: *db
     Operations:
     - OperationMetricsName: CreateIndexInt
@@ -87,7 +87,7 @@ Actors:
         dropIndexes: *coll
         index: random_int
   # Build an index on a string field.
-  - Repeat: 5
+  - Repeat: 2
     Database: *db
     Operations:
     - OperationMetricsName: CreateIndexString
