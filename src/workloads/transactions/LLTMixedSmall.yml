@@ -7,8 +7,8 @@ LoadConfig:
   Path: ./LLTMixed.yml
   Parameters:
     GlobalDefaults:
-      InitialDocumentCount: &InitialNumDocs 100000000
-      SecondaryDocumentCount: &SecondaryNumDocs 100000000
+      InitialDocumentCount: &InitialNumDocs 1000000
+      SecondaryDocumentCount: &SecondaryNumDocs 1000000
 
 AutoRun:
 - When:
