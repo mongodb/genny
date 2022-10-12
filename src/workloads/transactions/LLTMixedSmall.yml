@@ -3,6 +3,12 @@ Owner: "@mongodb/product-perf"
 Description: |
   Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload. This workload has smaller collection sizes comapred to LLTMixed
 
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+      maxPoolSize: 2000
+
 LoadConfig:
   Path: ./LLTMixed.yml
   Parameters:
