@@ -79,8 +79,8 @@ Actors:
         Database: *db
         Threads: 1
         CollectionCount: *NumColls
-        DocumentCount: 200000  # Add an initial set of documents. This will reduce noise in the next phases
-        BatchSize: 10000
+        DocumentCount: 200_000  # Add an initial set of documents. This will reduce noise in the next phases
+        BatchSize: 10_000
         Document: *generatedDoc
         Indexes:
         - keys: {expireDate: 1}
