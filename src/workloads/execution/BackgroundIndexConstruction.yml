@@ -106,17 +106,17 @@ Actors:
         dropIndexes: *coll
         index: random_string
     # Build an index on an integer field while side-writes are occurring.
-    - Repeat: 1
-      Database: *db
-      Operations:
-      - OperationMetricsName: CreateIndexIntegerSideWrites
-        OperationName: RunCommand
-        OperationCommand:
-          createIndexes: *coll
-          indexes:
-          - key:
-              randomInt: 1
-            name: random_int_side_writes
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationMetricsName: CreateIndexIntegerSideWrites
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key:
+            randomInt: 1
+          name: random_int_side_writes
 
 - Name: BackgroundWrites
   Type: InsertRemove
