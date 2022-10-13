@@ -12,9 +12,8 @@ Clients:
 LoadConfig:
   Path: ./LLTMixed.yml
   Parameters:
-    GlobalDefaults:
-      InitialDocumentCount: &InitialNumDocs 6666666
-      SecondaryDocumentCount: &SecondaryNumDocs 6666666
+    InitialNumDocs: 1000000
+    SecondaryNumDocs: 1000000
 
 AutoRun:
 - When:
