@@ -13,7 +13,7 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 260
+      maxPoolSize: 512
       socketTimeoutMS: 3600000  # = 1 hour
 
 Actors:
@@ -132,6 +132,16 @@ Actors:
   - Blocking: None
     Database: *db
     Collection: *otherColl
+  - *Nop
+
+- Name: BackgroundSideWrites
+  Type: InsertRemove
+  Threads: 128
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - Blocking: None
     Database: *db
     Collection: *coll  # Work on the same collection to excercise the side-writes.
