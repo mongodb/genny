@@ -4,7 +4,7 @@ Description: |
   Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload.
   
   The intent here is to test multiple transactions contained within a singular transaction (long lived).
-  The transactions are asetup such that they cover a mixed set of operations (insert, query, update, remove).
+  The transactions are setup such that they cover a mixed set of operations (insert, query, update, remove).
   The operations are also divided in the length of their run (short, medium, long) and whether they contain scans or not. 
 
   The workload has the following configuration:
