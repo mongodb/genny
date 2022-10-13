@@ -12,8 +12,8 @@ Clients:
 LoadConfig:
   Path: ./LLTMixed.yml
   Parameters:
-    InitialNumDocs: 1000000
-    SecondaryNumDocs: 1000000
+    InitialNumDocs: 6666666
+    SecondaryNumDocs: 6666666
 
 AutoRun:
 - When:
