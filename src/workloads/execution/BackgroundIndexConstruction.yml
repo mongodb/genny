@@ -13,7 +13,7 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 512
+      maxPoolSize: 1024
       socketTimeoutMS: 3600000  # = 1 hour
 
 Actors:
@@ -136,7 +136,7 @@ Actors:
 
 - Name: BackgroundSideWrites
   Type: InsertRemove
-  Threads: 128
+  Threads: 256
   Phases:
   - *Nop
   - *Nop
