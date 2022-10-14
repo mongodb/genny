@@ -1,14 +1,14 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  This workload is a short version load used to test Mongosync Collection Copy stage performance. 
+  This workload is a short version load used to test Mongosync Collection Copy stage performance.
   The workload starts Mongosync on a cluster with an preloaded initial dataset.
 
 Keywords:
-  - c2c
-  - replication
-  - collection copy
-  - cluster to cluster sync
+- c2c
+- replication
+- collection copy
+- cluster to cluster sync
 
 # These two values should match those are the top of MixPhases.yml
 dbname: &dbname mongosync_test
@@ -17,7 +17,7 @@ CollectionCount: &NumColls 1
 ScriptsPath: &scriptsPath ./MongosyncScripts.yml
 
 Parameters:
-  - &Nop {Nop: true}
+- &Nop {Nop: true}
 
 Clients:
   Default:
@@ -29,47 +29,47 @@ Actors:
   Type: Loader
   Threads: 1
   Phases:
-    - Repeat: 1
-      BatchSize: 100
-      Threads: 1
-      DocumentCount: *NumDocs
-      Database: *dbname
-      CollectionCount: *NumColls
-      Document: &doc
-        id: {^RandomInt: {min: 0, max: *NumDocs}}
-        a: {^RandomInt: {min: 0, max: *NumDocs}}
-        # Note that in the original workload the string c was perfectly compressable. We can put a
-        # constant there if needed.
-        c: &string {^RandomString: {length: 50}}  # Adjust this so the doc comes out as 100 B.
-      Indexes:
-        - keys: {id: 1}
-        - keys: {a: 1}
-    - *Nop
-    - *Nop
-    - *Nop
-    - *Nop
-    - *Nop
-    - *Nop
+  - Repeat: 1
+    BatchSize: 100
+    Threads: 1
+    DocumentCount: *NumDocs
+    Database: *dbname
+    CollectionCount: *NumColls
+    Document: &doc
+      id: {^RandomInt: {min: 0, max: *NumDocs}}
+      a: {^RandomInt: {min: 0, max: *NumDocs}}
+      # Note that in the original workload the string c was perfectly compressable. We can put a
+      # constant there if needed.
+      c: &string {^RandomString: {length: 50}}  # Adjust this so the doc comes out as 100 B.
+    Indexes:
+    - keys: {id: 1}
+    - keys: {a: 1}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: Mongosync
   Type: ExternalScriptRunner
   Threads: 1
   Phases:
-    - *Nop
-    - LoadConfig:
-        Path: *scriptsPath
-        Key: StartMongosync
-    - LoadConfig:
-        Path: *scriptsPath
-        Key: PollForCEA
-    - *Nop
-    - LoadConfig:
-        Path: *scriptsPath
-        Key: DrainWrites
-    - LoadConfig:
-        Path: *scriptsPath
-        Key: Commit
-    - LoadConfig:
-        Path: *scriptsPath
-        Key: WaitForCommit
+  - *Nop
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: StartMongosync
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: PollForCEA
+  - *Nop
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: DrainWrites
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: Commit
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: WaitForCommit
 
