@@ -1,16 +1,13 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 Description: |
-  On a single shard cluster, compare the latency of single write commands without shard key on a sharded collection vs unsharded collection.
+  On an unsharded collection on a single shard cluster, run workloads that updateOne, deleteOne, and findAndModifyOne.
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
 
   Database: &Database test
-  # Collection0 is the default collection populated by the MonotonicSingleLoader.
-  ShardedCollection: &ShardedCollection Collection0
   UnshardedCollection: &UnshardedCollection Collection1
-  Namespace: &Namespace test.Collection0
 
   DocumentCount: &DocumentCount 10000  # Number of documents to insert and modify.
   BalancerWait: &BalancerWait "20 seconds"  # Wait out the 20 second delay between balancing rounds
@@ -28,11 +25,6 @@ Actors:
       OperationName: AdminCommand
       OperationCommand:
         enableSharding: *Database
-    - OperationMetricsName: ShardCollection
-      OperationName: AdminCommand
-      OperationCommand:
-        shardCollection: *Namespace
-        key: {x: 1}
     - OperationMetricsName: BalancerStart
       OperationName: AdminCommand
       OperationCommand:
@@ -40,21 +32,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-
-# TODO PERF-3208: Enable Test.
-# - Name: LoadInitialDataOnShardedCollection
-#   Type: MonotonicSingleLoader
-#   Threads: 1
-#   Phases:
-#   - *Nop
-#   - Repeat: 1
-#     SleepBefore: *BalancerWait
-#     BatchSize: 1000
-#     DocumentCount: *DocumentCount
-#     Database: *Database
-#     Document: {x: 0, y: 0, z: 0}
-#   - *Nop
-#   - *Nop
+  - *Nop
 
 - Name: LoadInitialDataOnUnshardedCollection
   Type: MonotonicSingleLoader
@@ -70,39 +48,7 @@ Actors:
     Document: {x: 1, y: 1, z: 1}
   - *Nop
   - *Nop
-
-# TODO PERF-3208: Enable Test.
-# - Name: CRUDOpsOnShardedCollection
-#   Type: CrudActor
-#   Threads: 1  # We want to use 1 thread to avoid updates throwing WriteConflict errors.
-#   Phases:
-#   - *Nop
-#   - *Nop
-#   - Repeat: *DocumentCount
-#     Database: *Database
-#     Collection: *ShardedCollection
-#     Operations:
-#     - OperationMetricsName: UpdateOneWithoutShardKeyShardedCollection
-#       OperationName: updateOne
-#       OperationCommand:
-#         Filter: {y: 0}
-#         Update: {$inc: {y: 1}}
-#         Options:
-#           WriteConcern:
-#             Level: majority
-#             TimeoutMillis: 5000
-#   - Repeat: *DocumentCount
-#     Database: *Database
-#     Collection: *ShardedCollection
-#     Operations:
-#     - OperationMetricsName: DeleteWithoutShardKeyShardedCollection
-#       OperationName: deleteOne
-#       OperationCommand:
-#         Filter: {z: 0}
-#         Options:
-#           WriteConcern:
-#             Level: majority
-#             TimeoutMillis: 5000
+  - *Nop
 
 - Name: CRUDOpsOnUnshardedCollection
   Type: CrudActor
@@ -123,6 +69,25 @@ Actors:
           WriteConcern:
             Level: majority
             TimeoutMillis: 5000
+      OutcomeCounts:
+      - Filter: {y: 2}
+        Count: 1000
+  - Repeat: *DocumentCount
+    Database: *Database
+    Collection: *UnshardedCollection
+    Operations:
+    - OperationMetricsName: FindAndModifyOneWithoutShardKeyUnshardedCollection
+      OperationName: findOneAndUpdate
+      OperationCommand:
+        Filter: {y: 2}
+        Update: {$inc: {y: 1}}
+        Options:
+          WriteConcern:
+            Level: majority
+            TimeoutMillis: 5000
+        OutcomeCounts:
+        - Filter: {y: 3}
+          Count: 1000
   - Repeat: *DocumentCount
     Database: *Database
     Collection: *UnshardedCollection
@@ -135,6 +100,9 @@ Actors:
           WriteConcern:
             Level: majority
             TimeoutMillis: 5000
+      OutcomeCounts:
+      - Filter: {z: 1}
+        Count: 0
 
 AutoRun:
 - When:
