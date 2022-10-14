@@ -11,9 +11,6 @@ Keywords:
 - cluster to cluster sync
 
 # These two values should match those are the top of MixPhases.yml
-dbname: &dbname mongosync_test
-DocumentCount: &NumDocs 100000
-CollectionCount: &NumColls 1
 ScriptsPath: &scriptsPath ./MongosyncScripts.yml
 
 Parameters:
@@ -29,21 +26,9 @@ Actors:
   Type: Loader
   Threads: 1
   Phases:
-  - Repeat: 1
-    BatchSize: 100
-    Threads: 1
-    DocumentCount: *NumDocs
-    Database: *dbname
-    CollectionCount: *NumColls
-    Document: &doc
-      id: {^RandomInt: {min: 0, max: *NumDocs}}
-      a: {^RandomInt: {min: 0, max: *NumDocs}}
-      # Note that in the original workload the string c was perfectly compressable. We can put a
-      # constant there if needed.
-      c: &string {^RandomString: {length: 50}}  # Adjust this so the doc comes out as 100 B.
-    Indexes:
-    - keys: {id: 1}
-    - keys: {a: 1}
+  - LoadConfig:
+    - Path: *scriptsPath
+      Key: InsertShortTestData
   - *Nop
   - *Nop
   - *Nop
