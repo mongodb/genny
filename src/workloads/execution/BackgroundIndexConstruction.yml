@@ -105,7 +105,7 @@ Actors:
       OperationCommand:
         dropIndexes: *coll
         index: random_string
-    # Build an index on an integer field while side-writes are occurring.
+  # Build an index on an integer field while side-writes are occurring.
   - Repeat: 1
     Database: *db
     Operations:
