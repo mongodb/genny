@@ -27,8 +27,8 @@ Actors:
   Threads: 1
   Phases:
   - LoadConfig:
-    Path: *scriptsPath
-    Key: InsertShortTestData
+      Path: *scriptsPath
+      Key: InsertShortTestData
   - *Nop
   - *Nop
   - *Nop
