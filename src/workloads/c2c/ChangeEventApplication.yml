@@ -49,8 +49,8 @@ Actors:
   - *nop
   - *nop
   - LoadConfig:
-      - Path: *scriptsPath
-        Key: InsertShortTestData
+      Path: *scriptsPath
+      Key: InsertShortTestData
   - *nop
   - *nop
   - *nop
