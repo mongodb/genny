@@ -14,7 +14,7 @@ Clients:
   Default:
     QueryOptions:
       maxPoolSize: 1024
-      socketTimeoutMS: 3600000  # = 1 hour
+      socketTimeoutMS: 21600000  # = 6 hours
 
 Actors:
 # Phase 1: Insert enough data to ensure than an index build on each field spills to disk with a
@@ -145,6 +145,17 @@ Actors:
   - Blocking: None
     Database: *db
     Collection: *coll  # Work on the same collection to excercise the side-writes.
+
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3, 4, 5]
+      NopInPhasesUpTo: 5
+      PhaseConfig:
+        LogEvery: 10 minutes
+        Blocking: None
 
 AutoRun:
 - When:
