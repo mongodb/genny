@@ -112,5 +112,5 @@ InsertShortTestData:
     b: { ^RandomString: { length: 8 } }
     c: { ^RandomString: { length: 20 } }
   Indexes:
-    - keys: { id: 1 }
-    - keys: { a: 1 }
+  - keys: { id: 1 }
+  - keys: { a: 1 }
