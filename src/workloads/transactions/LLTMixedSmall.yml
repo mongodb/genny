@@ -1,7 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload. This workload has smaller collection sizes comapred to LLTMixed
+  Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload. 
+  This workload has the same configuration as LLTMixed, but uses 6 million documents instead of 10 million.
 
 Clients:
   Default:
