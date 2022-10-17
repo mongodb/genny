@@ -101,5 +101,7 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - single-replica
       - replica-noflowcontrol
+      - single-replica
+      - single-replica-classic-query-engine
+      - single-replica-sbe
