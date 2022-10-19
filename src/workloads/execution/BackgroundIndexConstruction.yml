@@ -20,7 +20,7 @@ Clients:
   Default:
     QueryOptions:
       maxPoolSize: 1024
-      socketTimeoutMS: 21600000  # = 6 hours
+      socketTimeoutMS: 7200000  # = 2 hours
 
 Actors:
 # Phase 1: Insert enough data to ensure than an index build on each field spills to disk with a
@@ -33,13 +33,12 @@ Actors:
     Database: &db test
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 10000000
+    DocumentCount: 10_000_000
     BatchSize: 1000
     Document:
       randomInt: {^RandomInt: {min: -10000000, max: 10000000}}
       randomString: {^RandomString: {length: 16}}
   - &Nop {Nop: true}
-  - *Nop
   - *Nop
   - *Nop
 
@@ -66,7 +65,6 @@ Actors:
       OperationCommand:
         setParameter: 1
         maxIndexBuildMemoryUsageMegabytes: 100
-  - *Nop
   - *Nop
   - *Nop
 
@@ -111,18 +109,6 @@ Actors:
       OperationCommand:
         dropIndexes: *coll
         index: random_string
-  # Build an index on an integer field while side-writes are occurring.
-  - Repeat: 1
-    Database: *db
-    Operations:
-    - OperationMetricsName: CreateIndexIntegerSideWrites
-      OperationName: RunCommand
-      OperationCommand:
-        createIndexes: *coll
-        indexes:
-        - key:
-            randomInt: 1
-          name: random_int_side_writes
 
 - Name: BackgroundWrites
   Type: InsertRemove
@@ -138,27 +124,14 @@ Actors:
   - Blocking: None
     Database: *db
     Collection: *otherColl
-  - *Nop
-
-- Name: BackgroundSideWrites
-  Type: InsertRemove
-  Threads: 256
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Blocking: None
-    Database: *db
-    Collection: *coll  # Work on the same collection to excercise the side-writes.
 
 - Name: LoggingActor
   Type: LoggingActor
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [3, 4, 5]
-      NopInPhasesUpTo: 5
+      Active: [2, 3]
+      NopInPhasesUpTo: 4
       PhaseConfig:
         LogEvery: 10 minutes
         Blocking: None
