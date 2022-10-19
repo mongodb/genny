@@ -2,8 +2,14 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: |
   This workload tests the write performance impact of creating indexes on a very large collection.
-  It synthetically lowers the number of concurrent operations allowed to represent a saturated
-  server.
+  For this workload we perform an index build in parallel with a write workload.
+  
+  We measure and care about the index creation time and throughput/latency of write operation
+  (inserts, deletes). Usually we'll see trade-offs in favour of either background index build time
+  or write operations.
+  
+  This test synthetically lowers the number of concurrent operations allowed to represent a
+  saturated server.
 
 Keywords:
 - stress
