@@ -26,8 +26,8 @@ Keywords:
 - delete
 
 Parameters:
-  - &InitialNumDocs {^Parameter: {Name: InitialNumDocs, Default: 10000000}}
-  - &SecondaryNumDocs {^Parameter: {Name: SecondaryNumDocs, Default: 10000000}}
+- &InitialNumDocs {^Parameter: {Name: InitialNumDocs, Default: 10000000}}
+- &SecondaryNumDocs {^Parameter: {Name: SecondaryNumDocs, Default: 10000000}}
 
 GlobalDefaults:
   # Start: The following block gets updated for the other configurations.
