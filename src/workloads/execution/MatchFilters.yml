@@ -1,8 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  This workload tests a set of match filters.
-
+  This workload tests a set of filters in the match language. The actors below offer basic
+  performance coverage for said filters.
 Keywords:
 - Loader
 - CrudActor
@@ -66,12 +66,12 @@ Actors:
       Active: [2]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-      Repeat: *Repeat
-      Collection: *Collection
-      Operations:
-      - OperationName: find
-        OperationCommand:
-          Filter: {"str": {$in: ["a", "b", /^c/, /^d/, /e$/, /f$/]}}
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {"str": {$in: ["a", "b", /^c/, /^d/, /e$/, /f$/]}}
 
 - Name: MatchElemMatchObject
   Type: CrudActor
@@ -142,12 +142,12 @@ Actors:
       Active: [5]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-      Repeat: *Repeat
-      Collection: *Collection
-      Operations:
-      - OperationName: find
-        OperationCommand:
-          Filter: {"simple_arr": {$elemMatch: {$gt: 50, $lt: 100}}}
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {"simple_arr": {$elemMatch: {$gt: 50, $lt: 100}}}
 
 - Name: MatchRegex
   Type: CrudActor
@@ -158,12 +158,12 @@ Actors:
       Active: [6]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-      Repeat: *Repeat
-      Collection: *Collection
-      Operations:
-      - OperationName: find
-        OperationCommand:
-          Filter: {"a": {$regex: /^a/}}
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {"a": {$regex: /^a/}}
 
 - Name: MatchExistsTrue
   Type: CrudActor
