@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <cast_core/actors/ExternalScriptRunner.hpp>
+#include <boost/filesystem.hpp>
 
 namespace genny::actor {
 
@@ -24,6 +25,8 @@ struct ExternalScriptRunner::PhaseConfig {
     std::string command;
 
     std::string programCommand;
+
+    std::string invocation;
 
     // Record data retruned by the script
     metrics::Operation operation;
@@ -45,12 +48,14 @@ struct ExternalScriptRunner::PhaseConfig {
           // ignored.
           scriptOperation{phaseContext.namedOperation("ExternalScript", id)} {
 
-            // The script should not have double quotes
-            assert(script.find("\"") == std::string::npos);
+            // Note the actor will build the full command to run and append
+            // the path of the script file to run
             if (command == "mongosh") {
-                programCommand = "mongosh " + mongoServerURI + " --quiet --eval \"" + script + "\"";
+                invocation = "mongosh " + mongoServerURI + " --quiet --file";
             } else if (command == "sh") {
-                programCommand = "sh -c \"" + script + "\"";
+                // No --file argument is required here, the script is run like
+                // sh /path/to/file
+                invocation = "sh";
             } else {
                 throw std::runtime_error("Script type " + command + " is not supported.");
             }
@@ -66,29 +71,69 @@ struct ExternalScriptRunner::PhaseConfig {
 std::string ExternalScriptRunner::exec(const char* cmd) {
     std::array<char, 128> buffer;
     std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+
+    FILE* pipe = popen(cmd, "r");
     if (!pipe) {
         throw std::runtime_error("Execution of command " + std::string(cmd) + " failed!");
     }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
+    try {
+        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+            result += buffer.data();
+            BOOST_LOG_TRIVIAL(info) << "Script output: " << buffer.data();
+        }
     }
+    catch (...) {
+        pclose(pipe);
+        throw;
+    }
+
+    int pcloseResult = pclose(pipe);
+    int exitStatus = WEXITSTATUS(pcloseResult);
+    if(exitStatus != 0) {
+        throw std::runtime_error("Script exited with non-zero exit code " + std::to_string(exitStatus));
+    }
+
     return result;
 }
+
+class TempScriptFile {
+public:
+    TempScriptFile(const std::string& script) {
+        boost::filesystem::path temp = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        _path = temp.native();
+        std::ofstream file{_path};
+        file << script;
+    }
+
+    TempScriptFile(const TempScriptFile&) = delete;
+
+    ~TempScriptFile() {
+        std::remove(_path.c_str());
+    }
+
+    const std::string& path() {
+        return _path;
+    }
+private:
+    std::string _path;
+};
 
 void ExternalScriptRunner::run() {
     // This section gets executed before the phases. Setup is executed here, so maybe
     // we could add some sanity checks before actually running the shell.
 
     for (auto&& config : _loop) {
-
-        BOOST_LOG_TRIVIAL(debug) << "ExternalScriptRunner running " << config->programCommand;
-
         for (const auto&& _ : config) {
+            TempScriptFile file{config->script};
+            std::stringstream fullInvocation;
+            fullInvocation << config->invocation << " "<< file.path() << " 2>&1";
+            std::string invocation = fullInvocation.str();
+
+            // Start the timer for the operations
+            auto ctx = config->scriptOperation.start();
+            const char* programCmdPtr = const_cast<char*>(invocation.c_str());
 
             // Execute the script and read result from stdout
-            auto ctx = config->scriptOperation.start();
-            const char* programCmdPtr = const_cast<char*>(config->programCommand.c_str());
             std::string result = exec(programCmdPtr);
             ctx.success();
 
@@ -99,7 +144,7 @@ void ExternalScriptRunner::run() {
                 config->operation.report(metrics::clock::now(), std::chrono::milliseconds{num});
             } catch (std::exception& err) {
                 BOOST_LOG_TRIVIAL(debug) << "Command " << config->programCommand
-                                         << " wrote non-integer output: " << result;
+                                         << " wrote non-integer output: " << result << " " <<err.what();
             }
         }
     }
