@@ -49,7 +49,6 @@ Actors:
   Threads: 1
   Phases:
   - *Nop
-  - *Nop
   - Repeat: 1
     Database: admin
     Operations:
@@ -64,7 +63,9 @@ Actors:
         maxIndexBuildMemoryUsageMegabytes: 100
   - *Nop
   - *Nop
+  - *Nop
 
+# Phase 3: Quiesce the system
 - Name: QuiesceActor
   Type: QuiesceActor
   # Using multiple threads will result in an error.
@@ -76,7 +77,8 @@ Actors:
   - Repeat: 1
   - *Nop
   - *Nop
-# Phases 3+: Build indexes on each field.
+
+# Phases 4, 5: Build indexes on each field.
 - Name: IndexCollection
   Type: RunCommand
   Threads: 1
