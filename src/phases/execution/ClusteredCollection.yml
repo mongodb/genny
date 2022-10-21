@@ -77,7 +77,7 @@ Actors:
           # Start from {_id: "0000001"} in order to be able to set the ^RandomInt max bound to *docCount
           # in the LookupByClusterKey phase. This works around TIG-3759.
           _id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: 1}}]}}, *PaddingGenerator]}}
-          a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}
+          a: &RandomSecondaryKey {^FastRandomString: {length: 6, alphabet: "0123456789"}}
           b: {^FastRandomString: {length: 1024}}
 
 # Phase 3: Point _id lookups. TODO convert to range queries once TIG-3707 is implemented.
@@ -133,7 +133,7 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: {a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}}
+            Filter: {a: *RandomSecondaryKey}
 
 # Phase 6: Range lookup with both primary and secondary key
 - Name: RangeLookupByPrimaryAndSecondaryIndexes
@@ -151,15 +151,24 @@ Actors:
         - OperationName: find
           OperationCommand:
             Filter: {
-              _id: {
-                $gte: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^RandomInt: {min: 1, max: *docCount}}]}}, *PaddingGenerator]}}
-              },
-              a: {
-                $gte: {^Join: {array: [
-                  {^Choose: {from: ["49", "51"]}},
-                  {^FastRandomString: {length: 4, alphabet: "0123456789"}}
-                ]}}
-              }
+              _id: {^Choose: {
+                from: [
+                  {$gte: &RandomId {^Join: {array: [
+                    { ^FormatString: {
+                      "format": "%07d",
+                      "withArgs": [{^RandomInt: {min: 1, max: *docCount}}]
+                    }},
+                    *PaddingGenerator
+                  ]}}},
+                  {$lte: *RandomId}
+                ]
+              }},
+              a: {^Choose: {
+                from: [
+                  {$gte: *RandomSecondaryKey},
+                  {$lte: *RandomSecondaryKey}
+                ]
+              }}
             }
 
 # Phase 7: Point deletion.
