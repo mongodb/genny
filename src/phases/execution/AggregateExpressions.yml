@@ -1,0 +1,24 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This file defines a template to use in aggregation expression performance tests.
+
+ExpressionTemplate:
+  Name: {^Parameter: {Name: "name", Default: ""}}
+  Type: RunCommand
+  Database: &db {^Parameter: {Name: "database", Default: test}}
+  Threads: {^Parameter: {Name: "threads", Default: 1}}
+  Phases:
+    OnlyActiveInPhases:
+      Active: {^Parameter: {Name: "active", Default: [0]}}
+      NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: 63}}
+      PhaseConfig:
+        Repeat: {^Parameter: {Name: "repeat", Default: 10}}
+        Database: *db
+        Collection: &coll {^Parameter: {Name: "collection", Default: Collection0}}
+        Operations:
+        - OperationMetricsName: {^Parameter: {Name: "operationMetricsName", Default: OperationMetric}}
+          OperationName: RunCommand
+          OperationCommand:
+            find: *coll
+            projection: {^Parameter: {Name: "projection", Default: []}}
