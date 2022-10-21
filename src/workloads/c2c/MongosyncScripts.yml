@@ -41,3 +41,48 @@ WaitForCommit:
   Command: python3
   MetricsName: WaitForCommit
   ScriptPath: ./src/genny/src/workloads/c2c/mongosync_helpers.py -m wait_for_commit
+
+InsertShortTestData:
+  Repeat: 1
+  BatchSize: 100
+  Threads: 1
+  DocumentCount: 1000000
+  Database: db
+
+  # Note the document shape and number of collections doesn't
+  # really matter here and we are generally just testing the
+  # max throughput mongosync can achieve with an unbounded
+  # insert workload
+  CollectionCount: 1
+  Document:
+    a: { ^RandomInt: { min: 0, max: 1000000 } }
+    b: { ^RandomString: { length: 8 } }
+    c: { ^RandomString: { length: 20 } }
+  Indexes:
+  - keys: { id: 1 }
+  - keys: { a: 1 }
+
+
+SetupShardKey:
+  Repeat: 1
+  Database: admin
+  # We also run this on replica sets and so we
+  # ignore if this command fails
+  ThrowOnFailure: false
+  Operations:
+  - OperationMetricsName: EnableShardingMetrics
+    OperationName: AdminCommand
+    OperationCommand:
+      enableSharding: db
+
+ShardCollection:
+  Repeat: 1
+  Database: admin
+  ThrowOnFailure: false
+  Operations:
+  - OperationMetricsName: ShardCollectionMetrics
+    OperationName: AdminCommand
+    OperationCommand:
+      shardCollection: db.Collection0
+      key:
+        _id: hashed

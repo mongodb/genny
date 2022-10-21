@@ -1,0 +1,41 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload.
+  The intent here is to test multiple transactions contained within a singular transaction (long lived).
+  The transactions are setup such that they cover a mixed set of operations (insert, query, update, remove).
+  The operations are also divided in the length of their run (short, medium, long) and whether they contain scans or not.
+  The workload has the following configuration:
+  ~7GB dataset
+  6,000,000 documnets in total
+  Warm up phase, then operation phase followed by a quiesce phase
+  Naming Conventions:
+  Duration.Load_level.Operation.Type_of_test
+  Operation:     Insert|Query|Update|Remove|Mixed
+  Duration:      Short|Medium|Long
+  Type of test:  Baseline|Benchmark
+  Baseline without scans, benchmark with scans
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+      maxPoolSize: 2000
+
+LoadConfig:
+  Path: ./LLTMixed.yml
+  Parameters:
+    InitialNumDocs: 6000000
+    SecondaryNumDocs: 6000000
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas-like-replica
+      - replica
+      - replica-all-feature-flags
+      - single-replica
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2

@@ -29,27 +29,12 @@ Actors:
   Type: AdminCommand
   Threads: 1
   Phases:
-  - Repeat: 1
-    Database: admin
-    # We also run this on replica sets and so we
-    # ignore if this command fails
-    ThrowOnFailure: false
-    Operations:
-    - OperationMetricsName: EnableShardingMetrics
-      OperationName: AdminCommand
-      OperationCommand:
-        enableSharding: db
-
-  - Repeat: 1
-    Database: admin
-    ThrowOnFailure: false
-    Operations:
-    - OperationMetricsName: ShardCollectionMetrics
-      OperationName: AdminCommand
-      OperationCommand:
-        shardCollection: db.Collection0
-        key:
-          _id: hashed
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: SetupShardKey
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: ShardCollection
   - &nop {Nop: true}
   - *nop
   - *nop
@@ -88,21 +73,9 @@ Actors:
   - *nop
   - *nop
   - *nop
-  - Repeat: 1
-    BatchSize: 100
-    Threads: 1
-    DocumentCount: 500000
-    Database: db
-
-    # Note the document shape and number of collections doesn't
-    # really matter here and we are generally just testing the
-    # max throughput mongosync can achieve with an unbounded
-    # insert workload
-    CollectionCount: 1
-    Document:
-      a: {^RandomInt: {min: 0, max: 500000}}
-      b: {^RandomString: {length: 8}}
-      c: {^RandomString: {length: 20}}
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: InsertShortTestData
   - *nop
   - *nop
   - *nop
