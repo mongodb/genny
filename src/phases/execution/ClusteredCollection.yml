@@ -95,7 +95,7 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: {_id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^RandomInt: {min: 1, max: *docCount}}]}}, *PaddingGenerator]}}}
+            Filter: &RandomId {_id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^RandomInt: {min: 1, max: *docCount}}]}}, *PaddingGenerator]}}}
 
 
 # Phase 4: Create a secondary index.
@@ -153,13 +153,7 @@ Actors:
             Filter: {
               _id: {^Choose: {
                 from: [
-                  {$gte: &RandomId {^Join: {array: [
-                    { ^FormatString: {
-                      "format": "%07d",
-                      "withArgs": [{^RandomInt: {min: 1, max: *docCount}}]
-                    }},
-                    *PaddingGenerator
-                  ]}}},
+                  {$gte: *RandomId},
                   {$lte: *RandomId}
                 ]
               }},
