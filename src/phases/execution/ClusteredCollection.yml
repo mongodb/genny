@@ -12,7 +12,7 @@ GlobalDefaults:
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
   DocumentCount: &docCount 1000000
-  MaxPhases: &MaxPhases 7
+  MaxPhases: &MaxPhases 8
 
 
 Actors:
@@ -109,7 +109,6 @@ Actors:
       PhaseConfig:
         Repeat: 1
         Database: *Database
-        Collection: *Collection
         Operations:
         - OperationName: RunCommand
           OperationCommand:
@@ -136,15 +135,41 @@ Actors:
           OperationCommand:
             Filter: {a: {^FastRandomString: {length: 6, alphabet: "0123456789"}}}
 
+# Phase 6: Range lookup with both primary and secondary key
+- Name: RangeLookupByPrimaryAndSecondaryIndexes
+  Type: CrudActor
+  Database: *Database
+  Threads: 16
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {
+              _id: {
+                $gte: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^RandomInt: {min: 1, max: *docCount}}]}}, *PaddingGenerator]}}
+              },
+              a: {
+                $gte: {^Join: {array: [
+                  {^Choose: {from: ["49", "51"]}},
+                  {^FastRandomString: {length: 4, alphabet: "0123456789"}}
+                ]}}
+              }
+            }
 
-# Phase 6: Point deletion.
+# Phase 7: Point deletion.
 - Name: PointDeleter
   Type: CrudActor
   Database: *Database
   Threads: &ThreadCount 16
   Phases:
     OnlyActiveInPhases:
-      Active: [6]
+      Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: 3 minutes
