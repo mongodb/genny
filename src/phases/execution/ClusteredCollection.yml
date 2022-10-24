@@ -154,13 +154,13 @@ Actors:
               _id: {^Choose: {
                 from: [
                   {$gte: &BigId {^Join: {array: [
-                    { ^FormatString: {"format": "%07d", "withArgs": [
+                    { ^FormatString: {"format": "%07.0f", "withArgs": [
                       {^RandomDouble: {
                         min: {^NumExpr: {withExpression: "(8 * docCount) / 10", andValues: {docCount: *docCount}}},
                         max: *docCount}}]}},
                     *PaddingGenerator]}}},
                   {$lte: &SmallId {^Join: {array: [
-                    { ^FormatString: {"format": "%07d", "withArgs": [
+                    { ^FormatString: {"format": "%07.0f", "withArgs": [
                       {^RandomDouble: {
                         min: 1,
                         max: {^NumExpr: {withExpression: "(2 * docCount) / 10", andValues: {docCount: *docCount}}}}}]}},
