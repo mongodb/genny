@@ -546,6 +546,39 @@ Actors:
           OperationCommand:
             Filter: {"a.c.d": 0}
 
+# Both queries below will only target "a.c.e", skipping the documents which have "b.c.d".
+- Name: AggregationExpressionTargetPath
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [16]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {$expr: {$eq: ["a.c.d", 0]}}
+
+- Name: MatchExpressionTargetPath
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [17]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {"a.c.d": 0}
+
 # Clean up the data from the previous phase.
 - Name: ClearCollectionWithTargetAndMissingPaths
   Type: CrudActor
@@ -574,6 +607,9 @@ Actors:
         Threads: 1
 
 # Insert and query documents which have 3 levels of nested arrays across 3 path components.
+# The documents are of the following schema ('...' denotes repeating 3 times).
+#  { a: [ { b: [ { c: [ 1,2,3 ] }, ... ] }, ... ] }.
+
 - Name: InsertNestedArrayData
   Type: Loader
   Threads: 1
@@ -664,6 +700,9 @@ Actors:
         Threads: 1
 
 # Insert and query documents which have 3 levels of nested arrays across 6 path components.
+# The documents are of the following schema ('...' denotes repeating 3 times).
+# { a: { b: [ { c: { d: [ { e: { f: [ 1,2,3 ] } }, ... ] } }, ... ] } }
+
 - Name: InsertDeeplyNestedArrayData
   Type: Loader
   Threads: 1
@@ -909,6 +948,46 @@ Actors:
                            { "a.b.e": 1 },
                            { "a.b.f": 1 },
                            { "a.b.g": 1 }]}
+
+- Name: AggregationExpressionRepeatedPathTraversalInequality
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [39]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {$expr: {$or: [{$eq: ["$a.b.c", 1]},
+                                     {$eq: ["$a.b.d", 1]},
+                                     {$eq: ["$a.b.e", 1]},
+                                     {$eq: ["$a.b.f", 1]},
+                                     {$eq: ["$a.b.g", 1]}]}}
+
+- Name: MatchExpressionRepeatedPathTraversalInequality
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [40]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {$or: [{ "a.b.c": 1 },
+                             { "a.b.d": 1 },
+                             { "a.b.e": 1 },
+                             { "a.b.f": 1 },
+                             { "a.b.g": 1 }]}
 
 # Double the number of clauses.
 - Name: AggregationExpressionRepeatedPathTraversalWidePredicate
