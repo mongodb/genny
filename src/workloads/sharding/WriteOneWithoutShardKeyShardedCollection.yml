@@ -6,12 +6,8 @@ Description: |
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
-
   Database: &Database test
-  # Collection0 is the default collection populated by the MonotonicSingleLoader.
-  ShardedCollection: &ShardedCollection Collection0
-  Namespace: &Namespace test.Collection0
-
+  Namespace: &Namespace test.Collection0  # Collection0 is the default collection populated by the MonotonicSingleLoader.
   DocumentCount: &DocumentCount 10000  # Number of documents to insert and modify.
 
 Actors:
@@ -36,7 +32,7 @@ Actors:
 #  - *Nop
 #  - *Nop
 
-- Name: LoadInitialDataOnShardedCollection
+- Name: LoadInitialData
   Type: MonotonicSingleLoader
   Threads: 1
   Phases:
@@ -50,7 +46,7 @@ Actors:
 #  - *Nop
 #  - *Nop
 
-# - Name: CRUDOpsOnShardedCollection
+# - Name: CRUDOpsWithoutShardKey
 #   Type: CrudActor
 #   Threads: 1  # We want to use 1 thread to avoid updates throwing WriteConflict errors.
 #   Phases:
@@ -58,9 +54,9 @@ Actors:
 #   - *Nop
 #   - Repeat: *DocumentCount
 #     Database: *Database
-#     Collection: *ShardedCollection
+#     Collection: Collection0
 #     Operations:
-#     - OperationMetricsName: UpdateOneWithoutShardKeyShardedCollection
+#     - OperationMetricsName: UpdateOneWithoutShardKey
 #       OperationName: updateOne
 #       OperationCommand:
 #         Filter: {y: 0}
@@ -69,14 +65,11 @@ Actors:
 #           WriteConcern:
 #             Level: majority
 #             TimeoutMillis: 5000
-#       OutcomeCounts:
-#       - Filter: {y: 1}
-#         Count: 1000
 #   - Repeat: *DocumentCount
 #     Database: *Database
-#     Collection: *ShardedCollection
+#     Collection: Collection0
 #     Operations:
-#     - OperationMetricsName: FindAndModifyOneWithoutShardKeyShardedCollection
+#     - OperationMetricsName: FindAndModifyOneWithoutShardKey
 #       OperationName: findOneAndUpdate
 #       OperationCommand:
 #         Filter: {y: 1}
@@ -85,14 +78,11 @@ Actors:
 #           WriteConcern:
 #             Level: majority
 #             TimeoutMillis: 5000
-#         OutcomeCounts:
-#         - Filter: {y: 2}
-#           Count: 1000
 #   - Repeat: *DocumentCount
 #     Database: *Database
-#     Collection: *ShardedCollection
+#     Collection: Collection0
 #     Operations:
-#     - OperationMetricsName: DeleteWithoutShardKeyShardedCollection
+#     - OperationMetricsName: DeleteOneWithoutShardKey
 #       OperationName: deleteOne
 #       OperationCommand:
 #         Filter: {z: 0}
@@ -100,9 +90,6 @@ Actors:
 #           WriteConcern:
 #             Level: majority
 #             TimeoutMillis: 5000
-#       OutcomeCounts:
-#       - Filter: {z: 0}
-#         Count: 0
 
 AutoRun:
 - When:
