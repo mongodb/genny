@@ -12,7 +12,7 @@ GlobalDefaults:
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
   DocumentCount: &docCount 1000000
-  MaxPhases: &MaxPhases 8
+  MaxPhases: &MaxPhases 9
 
 
 Actors:
@@ -135,8 +135,8 @@ Actors:
           OperationCommand:
             Filter: {a: *RandomSecondaryKey}
 
-# Phase 6: Range lookup with both primary and secondary key
-- Name: RangeLookupByPrimaryAndSecondaryIndexes
+# Phase 6: Range lookup with both primary and secondary key. Primary key predicate is more selective.
+- Name: RangeLookupBySelectivePrimaryAndWideSecondaryIndexes
   Type: CrudActor
   Database: *Database
   Threads: 16
@@ -153,26 +153,66 @@ Actors:
             Filter: {
               _id: {^Choose: {
                 from: [
-                  {$gte: *RandomId},
-                  {$lte: *RandomId}
+                  {$gte: &BigId {^Join: {array: [
+                    { ^FormatString: {"format": "%07d", "withArgs": [
+                      {^RandomDouble: {
+                        min: {^NumExpr: {withExpression: "(8 * docCount) / 10", andValues: {docCount: *docCount}}},
+                        max: *docCount}}]}},
+                    *PaddingGenerator]}}},
+                  {$lte: &SmallId {^Join: {array: [
+                    { ^FormatString: {"format": "%07d", "withArgs": [
+                      {^RandomDouble: {
+                        min: 1,
+                        max: {^NumExpr: {withExpression: "(2 * docCount) / 10", andValues: {docCount: *docCount}}}}}]}},
+                    *PaddingGenerator]}}}
                 ]
               }},
               a: {^Choose: {
                 from: [
-                  {$gte: *RandomSecondaryKey},
-                  {$lte: *RandomSecondaryKey}
+                  {$gte: &SmallSecondaryKey {^Join: {array: ["1", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}},
+                  {$lte: &BigSecondaryKey {^Join: {array: ["8", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}}
                 ]
               }}
             }
 
-# Phase 7: Point deletion.
+# Phase 7: Range lookup with both primary and secondary key. Secondary key predicate is more selective.
+- Name: RangeLookupByWidePrimaryAndSelectiveSecondaryIndexes
+  Type: CrudActor
+  Database: *Database
+  Threads: 16
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {
+              _id: {^Choose: {
+                from: [
+                  {$gte: *SmallId},
+                  {$lte: *BigId}
+                ]
+              }},
+              a: {^Choose: {
+                from: [
+                  {$gte: *BigSecondaryKey},
+                  {$lte: *SmallSecondaryKey}
+                ]
+              }}
+            }
+
+# Phase 8: Point deletion.
 - Name: PointDeleter
   Type: CrudActor
   Database: *Database
   Threads: &ThreadCount 16
   Phases:
     OnlyActiveInPhases:
-      Active: [7]
+      Active: [8]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: 3 minutes
