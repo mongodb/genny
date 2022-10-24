@@ -15,20 +15,20 @@ GlobalDefaults:
   MaxPhases: &MaxPhases 9
 
 ValueGenerators:
-  SmallId: &SmallId {^Join: {array: [
-    { ^FormatString: {"format": "%07.0f", "withArgs": [
-      {^RandomDouble: {
-        min: 1,
-        max: {^NumExpr: {withExpression: "(2 * docCount) / 10", andValues: {docCount: *docCount}}}}}]}},
-    *PaddingGenerator]}}
-  BigId: &BigId {^Join: {array: [
-    { ^FormatString: {"format": "%07.0f", "withArgs": [
-      {^RandomDouble: {
-        min: {^NumExpr: {withExpression: "(8 * docCount) / 10", andValues: {docCount: *docCount}}},
-        max: *docCount}}]}},
-    *PaddingGenerator]}}
-  SmallSecondaryKey: &SmallSecondaryKey {^Join: {array: ["1", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}
-  BigSecondaryKey: &BigSecondaryKey {^Join: {array: ["8", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}
+- &SmallId {^Join: {array: [
+  { ^FormatString: {"format": "%07.0f", "withArgs": [
+    {^RandomDouble: {
+      min: 1,
+      max: {^NumExpr: {withExpression: "(2 * docCount) / 10", andValues: {docCount: *docCount}}}}}]}},
+  *PaddingGenerator]}}
+- &BigId {^Join: {array: [
+  { ^FormatString: {"format": "%07.0f", "withArgs": [
+    {^RandomDouble: {
+      min: {^NumExpr: {withExpression: "(8 * docCount) / 10", andValues: {docCount: *docCount}}},
+      max: *docCount}}]}},
+  *PaddingGenerator]}}
+- &SmallSecondaryKey {^Join: {array: ["1", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}
+- &BigSecondaryKey {^Join: {array: ["8", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}
 
 Actors:
 # Phase 0: create collection
