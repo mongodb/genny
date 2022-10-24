@@ -148,8 +148,9 @@ Actors:
           OperationCommand:
             Filter: {a: *RandomSecondaryKey}
 
-# Phase 6: Range lookup with both primary and secondary key. Primary key predicate is more selective.
-- Name: RangeLookupBySelectivePrimaryAndWideSecondaryIndexes
+# Phase 6: Range query with both primary and secondary key. Primary key matches much less
+# documents, so primary index should be selected by the query planner.
+- Name: PrimaryIndexScanWithSecondaryKeyFilter
   Type: CrudActor
   Database: *Database
   Threads: 16
@@ -178,8 +179,9 @@ Actors:
               }}
             }
 
-# Phase 7: Range lookup with both primary and secondary key. Secondary key predicate is more selective.
-- Name: RangeLookupByWidePrimaryAndSelectiveSecondaryIndexes
+# Phase 7: Range query with both primary and secondary key. Secondary key matches much less
+# documents, so secondary index should be selected by the query planner.
+- Name: SecondaryIndexScanWithPrimaryKeyFilter
   Type: CrudActor
   Database: *Database
   Threads: 16
