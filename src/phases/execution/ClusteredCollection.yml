@@ -13,6 +13,8 @@ GlobalDefaults:
   Namespace: &Namespace test.Collection0
   DocumentCount: &docCount 1000000
   MaxPhases: &MaxPhases 9
+
+ValueGenerators:
   SmallId: &SmallId {^Join: {array: [
     { ^FormatString: {"format": "%07.0f", "withArgs": [
       {^RandomDouble: {
