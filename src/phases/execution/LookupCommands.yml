@@ -59,6 +59,8 @@ ForeignSmallDocTemplate:
   arr_key: {^Array: {of: *RandIntUpTo, number: 5}}
   data1: *Rand32BitInt
 
+# The document template for both local and foreign collections in NLJ Lookups. The doc contains
+# scalar, single element array, 8 elements array, simple object and nested object.
 LargeComplexDocTemplate:
   int_key1: &RandInt0To1k {^RandomInt: {min: 0, max: 1000}}
   int_key2: {^RandomInt: {min: 2000, max: 3000}}
