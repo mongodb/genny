@@ -318,18 +318,18 @@ NLJTestOperations: &NLJTestOperations
 - OperationMetricsName: Foreign10k_Array8_Scalar
   OperationName: RunCommand
   OperationCommand: *NLJLookupForeign10kArr8ScalarCmd
-- OperationMetricsName: Foreign100k_Scalar_Scalar
-  OperationName: RunCommand
-  OperationCommand: *NLJLookupForeign100kScalarScalarCmd
-- OperationMetricsName: Foreign100k_Scalar_Object2
-  OperationName: RunCommand
-  OperationCommand: *NLJLookupForeign100kScalarObj2Cmd
-- OperationMetricsName: Foreign100k_Scalar_Object5
-  OperationName: RunCommand
-  OperationCommand: *NLJLookupForeign100kScalarObj5Cmd
-- OperationMetricsName: Foreign100k_Scalar_Array8
-  OperationName: RunCommand
-  OperationCommand: *NLJLookupForeign100kScalarArr8Cmd
+    #- OperationMetricsName: Foreign100k_Scalar_Scalar
+    #  OperationName: RunCommand
+    #  OperationCommand: *NLJLookupForeign100kScalarScalarCmd
+    #- OperationMetricsName: Foreign100k_Scalar_Object2
+    #  OperationName: RunCommand
+    #  OperationCommand: *NLJLookupForeign100kScalarObj2Cmd
+    #- OperationMetricsName: Foreign100k_Scalar_Object5
+    #  OperationName: RunCommand
+    #  OperationCommand: *NLJLookupForeign100kScalarObj5Cmd
+    #- OperationMetricsName: Foreign100k_Scalar_Array8
+    #  OperationName: RunCommand
+    #  OperationCommand: *NLJLookupForeign100kScalarArr8Cmd
 
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 10
