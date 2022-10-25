@@ -2,14 +2,14 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-execution"
 Description: |
   This workload measures $lookup performance for scenarios that look up local scalar/array/dotted
-  key against foreign collection's scalar/array/dotted key, when the foreign collections have 
+  key against foreign collection's scalar/array/dotted key, when the foreign collections have
   multiple collection cardinalities such as 1000 / 10000 / 100000.
 
   While measuring performances, this workload collects numbers for either the SBE or the classic
-  engine $lookup implementations, depending on environments that it runs on. Both SBE and classic 
+  engine $lookup implementations, depending on environments that it runs on. Both SBE and classic
   $lookup implements will be nested loop join for this workload.
 
-  Numbers on the 'standalone-sbe' environment are for the SBE $lookup and numbers on the 
+  Numbers on the 'standalone-sbe' environment are for the SBE $lookup and numbers on the
   'standalone' environment for the classic $lookup until the SBE $lookup pushdown feature will
   be turned on by default.
 
@@ -54,7 +54,7 @@ Foreign100K: &Foreign100K foreign_100k
 # Defines the local collection name.
 LocalDoc100k: &LocalDoc100k local_doc_100k
 
-# Defines the collection document type which is used for loading both local and foreign 
+# Defines the collection document type which is used for loading both local and foreign
 # collections. See 'LargeComplexDocTemplate' to understand how each doc is filled.
 LoadDoc: &LoadDoc
   LoadConfig:
@@ -327,18 +327,9 @@ NLJTestOperations: &NLJTestOperations
 - OperationMetricsName: Foreign100k_Scalar_Object5
   OperationName: RunCommand
   OperationCommand: *NLJLookupForeign100kScalarObj5Cmd
-- OperationMetricsName: Foreign100k_Object5_Scalar
-  OperationName: RunCommand
-  OperationCommand: *NLJLookupForeign100kObj5ScalarCmd
-- OperationMetricsName: Foreign100k_Scalar_Array1
-  OperationName: RunCommand
-  OperationCommand: *NLJLookupForeign100kScalarArr1Cmd
 - OperationMetricsName: Foreign100k_Scalar_Array8
   OperationName: RunCommand
   OperationCommand: *NLJLookupForeign100kScalarArr8Cmd
-- OperationMetricsName: Foreign100k_Array8_Scalar
-  OperationName: RunCommand
-  OperationCommand: *NLJLookupForeign100kArr8ScalarCmd
 
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 10
@@ -359,7 +350,7 @@ Actors:
   - Phase: 1..3
     Nop: true
 
-# The 'LoadForeign1K' / 'LoadForeign10K' / 'LoadForeign100K' / 'LoadLocalDoc100k' actors run in 
+# The 'LoadForeign1K' / 'LoadForeign10K' / 'LoadForeign100K' / 'LoadLocalDoc100k' actors run in
 # the 1st phase.
 - Name: LoadForeign1K
   Type: CrudActor
