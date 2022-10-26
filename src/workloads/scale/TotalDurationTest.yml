@@ -34,3 +34,10 @@ Actors:
           {_id: "featureCompatibilityVersion", 
           $where: "function(){sleep(5000)}"}
 
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+
+
