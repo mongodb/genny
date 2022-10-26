@@ -8,7 +8,7 @@ Description: |
 
   While measuring performances, this workload collects numbers for either the SBE or the classic
   engine $lookup implementations, depending on environments that it runs on. Both SBE and classic
-  $lookup implements will be nested loop join for this workload.
+  $lookup implementations will be nested loop join for this workload.
 
   Numbers on the 'standalone-sbe' environment are for the SBE $lookup and numbers on the
   'standalone' environment for the classic $lookup until the SBE $lookup pushdown feature will
@@ -72,7 +72,7 @@ NLJLookupForeign1kScalarObj2Cmd: &NLJLookupForeign1kScalarObj2Cmd
       l: *LocalDoc100k
       f: *Foreign1K
       lk: "int_key2"
-      k: "obj1.obj"
+      k: "obj1.int_key"
 
 NLJLookupForeign1kScalarObj5Cmd: &NLJLookupForeign1kScalarObj5Cmd
   LoadConfig:
@@ -82,7 +82,7 @@ NLJLookupForeign1kScalarObj5Cmd: &NLJLookupForeign1kScalarObj5Cmd
       l: *LocalDoc100k
       f: *Foreign1K
       lk: "int_key2"
-      k: "obj4.obj3.obj2.obj1.obj"
+      k: "obj4.obj3.obj2.obj1.int_key"
 
 NLJLookupForeign1kObj5ScalarCmd: &NLJLookupForeign1kObj5ScalarCmd
   LoadConfig:
@@ -91,7 +91,7 @@ NLJLookupForeign1kObj5ScalarCmd: &NLJLookupForeign1kObj5ScalarCmd
     Parameters:
       l: *LocalDoc100k
       f: *Foreign1K
-      lk: "obj4.obj3.obj2.obj1.obj"
+      lk: "obj4.obj3.obj2.obj1.int_key"
       k: "int_key2"
 
 NLJLookupForeign1kScalarArr1Cmd: &NLJLookupForeign1kScalarArr1Cmd
@@ -142,7 +142,7 @@ NLJLookupForeign10kScalarObj2Cmd: &NLJLookupForeign10kScalarObj2Cmd
       l: *LocalDoc100k
       f: *Foreign10K
       lk: "int_key2"
-      k: "obj1.obj"
+      k: "obj1.int_key"
 
 NLJLookupForeign10kScalarObj5Cmd: &NLJLookupForeign10kScalarObj5Cmd
   LoadConfig:
@@ -152,7 +152,7 @@ NLJLookupForeign10kScalarObj5Cmd: &NLJLookupForeign10kScalarObj5Cmd
       l: *LocalDoc100k
       f: *Foreign10K
       lk: "int_key2"
-      k: "obj4.obj3.obj2.obj1.obj"
+      k: "obj4.obj3.obj2.obj1.int_key"
 
 NLJLookupForeign10kObj5ScalarCmd: &NLJLookupForeign10kObj5ScalarCmd
   LoadConfig:
@@ -161,7 +161,7 @@ NLJLookupForeign10kObj5ScalarCmd: &NLJLookupForeign10kObj5ScalarCmd
     Parameters:
       l: *LocalDoc100k
       f: *Foreign10K
-      lk: "obj4.obj3.obj2.obj1.obj"
+      lk: "obj4.obj3.obj2.obj1.int_key"
       k: "int_key2"
 
 NLJLookupForeign10kScalarArr1Cmd: &NLJLookupForeign10kScalarArr1Cmd
