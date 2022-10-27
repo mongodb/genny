@@ -1,25 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  Running 2 actors that sleep during phase 1 to ensure Total Duration is accurate 
+  Running an actor that sleeps twice sequentially
 
 Actors:
-- Name: Sleep1
-  Type: CrudActor
-  Database: admin
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Repeat: 1
-    Collection: system.version
-    Operations:
-    - OperationName: find
-      OperationCommand:
-        Filter: 
-          {_id: "featureCompatibilityVersion", 
-          $where: "function(){sleep(1000)}"}
-
-- Name: Sleep2
+- Name: Sleep
   Type: CrudActor
   Database: admin
   Threads: 1
@@ -39,5 +24,3 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
-
-

@@ -1,0 +1,26 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  Running an actor that sleeps twice sequentially
+
+Actors:
+- Name: Sleep
+  Type: CrudActor
+  Database: admin
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Repeat: 2
+    Collection: system.version
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter: 
+          {_id: "featureCompatibilityVersion", 
+          $where: "function(){sleep(5000)}"}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
