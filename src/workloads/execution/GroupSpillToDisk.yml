@@ -3,13 +3,13 @@ Owner: "@mongodb/query"
 Description: >
   Runs $group queries which are designed to require spilling to disk.
 Keywords:
- - Loader
- - CrudActor
- - QuiesceActor
- - insert
- - aggregate
- - group
- - spill
+- Loader
+- CrudActor
+- QuiesceActor
+- insert
+- aggregate
+- group
+- spill
 
 GlobalDefaults:
   Database: &Database test
@@ -66,9 +66,9 @@ Actors:
         Operations:
         - OperationName: aggregate
           OperationCommand:
-             Pipeline: [{$group: {_id: "$firstField", list: {$addToSet: "$secondField"}}}]
-             Options:
-               AllowDiskUse: true
+            Pipeline: [{$group: {_id: "$firstField", list: {$addToSet: "$secondField"}}}]
+            Options:
+              AllowDiskUse: true
 
 # Similar to the previous query, but using $push rather than $addToSet.
 - Name: PushAccumulatorConstructingLargeArrays
@@ -85,9 +85,9 @@ Actors:
         Operations:
         - OperationName: aggregate
           OperationCommand:
-             Pipeline: [{$group: {_id: "$firstField", list: {$push: "$secondField"}}}]
-             Options:
-               AllowDiskUse: true
+            Pipeline: [{$group: {_id: "$firstField", list: {$push: "$secondField"}}}]
+            Options:
+              AllowDiskUse: true
 
 # This query groups by "secondField", which has many distinct values. Spilling is required since
 # there are many groups, but the state for each individual group is small.
@@ -105,9 +105,9 @@ Actors:
         Operations:
         - OperationName: aggregate
           OperationCommand:
-             Pipeline: [{$group: {_id: "$secondField", count: {$sum: 1}}}]
-             Options:
-               AllowDiskUse: true
+            Pipeline: [{$group: {_id: "$secondField", count: {$sum: 1}}}]
+            Options:
+              AllowDiskUse: true
 
 AutoRun:
 - When:
