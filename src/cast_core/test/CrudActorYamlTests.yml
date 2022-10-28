@@ -673,3 +673,33 @@ Tests:
     OutcomeData:
       - {a: 2}
     AssertNumTransactionsCommitted: 1
+
+  - Description: Test that an aggregate command with $out produces the expected data.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: "foo", b: 3 }
+            - WriteCommand: insertOne
+              Document: { a: "foo", b: 4 }
+      - OperationName: aggregate
+        OperationCommand:
+            Pipeline: [{$group: {_id: "$a", sum: {$sum: "$b"}}}, {$out: "test"}]
+            Options:
+              AllowDiskUse: false
+              BypassDocumentValidation: true
+    OutcomeData:
+        - {_id: "foo", sum: 7}
+
+  - Description: Test that an aggregate command passes through its command options.
+    Operations:
+      - OperationName: aggregate
+        OperationCommand:
+            Pipeline: [{$group: {_id: "$a", sum: {$sum: "$b"}}}, {$out: "test"}]
+            Options:
+              AllowDiskUse: false
+              BypassDocumentValidation: true
+    ExpectAllEvents:
+      allowDiskUse: false
+      bypassDocumentValidation: true
