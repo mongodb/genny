@@ -17,6 +17,8 @@ Description: >
     - 'MixedPredicate' means query which combines wide and deep types
     - 'TargetPath' and 'MissingPath' in conjunction mean query which targets a path present only
   in some documents
+    - 'MissingPathSuffix' means query is searching a path whose suffix cannot be found in the
+    document
 
 Keywords:
 - Loader
@@ -484,7 +486,7 @@ Actors:
             Filter: {"n5.b.d": 0}
 
 # Set of queries whose paths' prefixes exist, but their suffixes do not.
-- Name: AggregationExpressionTargetPath
+- Name: AggregationExpressionMissingPathSuffix
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -500,7 +502,7 @@ Actors:
           OperationCommand:
             Filter: {$expr: {$eq: ["$n1.a.b.c.d.z", 0]}}
 
-- Name: MatchExpressionTargetPath
+- Name: MatchExpressionMissingPathSuffix
   Type: CrudActor
   Database: *Database
   Threads: *Threads

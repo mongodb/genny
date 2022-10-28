@@ -12,6 +12,8 @@ Description: >
     - 'DeeplyNestedArray' is the same as 'NestedArray', except twice as deep
     - 'ArrayStressTest' means query is exercising array traversal over 2 path components with a
   branching factor of 10 elements
+    - 'MissingPathSuffix' means query is searching a path whose suffix cannot be found in the
+  document
 
 Keywords:
 - Loader
@@ -163,7 +165,7 @@ Actors:
             Filter: {"n2.b.c.d.e.f": 0}
 
 # Set of queries which query a nested field which does not exist in any array element sub-object.
-- Name: AggregationExpressionNestedArrayMissingField
+- Name: AggregationExpressionNestedArrayMissingPathSuffix
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -179,7 +181,7 @@ Actors:
           OperationCommand:
             Filter: {$expr: {$eq: ["$n1.b.z", 0]}}
 
-- Name: MatchExpressionNestedArrayMissingField
+- Name: MatchExpressionNestedArrayMissingPathSuffix
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -195,7 +197,7 @@ Actors:
           OperationCommand:
             Filter: {"n1.b.z": 0}
 
-- Name: AggregationExpressionDeeplyNestedArrayMissingField
+- Name: AggregationExpressionDeeplyNestedArrayMissingPathSuffix
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -211,7 +213,7 @@ Actors:
           OperationCommand:
             Filter: {$expr: {$eq: ["$n2.b.c.d.e.z", 0]}}
 
-- Name: MatchExpressionDeeplyNestedArrayMissingField
+- Name: MatchExpressionDeeplyNestedArrayMissingPathSuffix
   Type: CrudActor
   Database: *Database
   Threads: *Threads
