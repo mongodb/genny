@@ -26,7 +26,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 50
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 9
+  MaxPhases: &MaxPhases 13
 
 Actors:
 # Clear any pre-existing collection state.
@@ -162,13 +162,78 @@ Actors:
           OperationCommand:
             Filter: {"n2.b.c.d.e.f": 0}
 
-- Name: AggregationExpressionArrayStressTest
+# Set of queries which query a nested field which does not exist in any array element sub-object.
+- Name: AggregationExpressionNestedArrayMissingField
   Type: CrudActor
   Database: *Database
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
       Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {$expr: {$eq: ["$n1.b.z", 0]}}
+
+- Name: MatchExpressionNestedArrayMissingField
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [8]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {"n1.b.z": 0}
+
+- Name: AggregationExpressionDeeplyNestedArrayMissingField
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {$expr: {$eq: ["$n2.b.c.d.e.z", 0]}}
+
+- Name: MatchExpressionDeeplyNestedArrayMissingField
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [10]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {"n2.b.c.d.e.z": 0}
+
+- Name: AggregationExpressionArrayStressTest
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [11]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -184,7 +249,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [8]
+      Active: [12]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat

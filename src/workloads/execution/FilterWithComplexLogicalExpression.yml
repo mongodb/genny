@@ -29,7 +29,6 @@ GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
   DocumentCount: &DocumentCount 1e6
-  HalfDocumentCount: &HalfDocumentCount 5e5
   Repeat: &Repeat 50
   Threads: &Threads 1
   MaxPhases: &MaxPhases 17
@@ -50,7 +49,8 @@ Actors:
         Operations:
         - OperationName: drop
 
-# Phase 0: Insert documents into the collection.
+# Phase 0: Insert documents into the collection. Note that half of the documents will have the
+# path "a.b.d", while the second will have the path "a.c.d".
 - Name: InsertData
   Type: Loader
   Threads: 1
@@ -116,46 +116,11 @@ Actors:
               }
             }
           }
-
-# Pair of loaders, the first of which inserts documents with the path "a.c.d", the second inserts
-# documents with the path "b.c.d".
-- Name: InsertDocumentsWithTargetPath
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Threads: 1
-        CollectionCount: 1
-        DocumentCount: *HalfDocumentCount
-        BatchSize: 1000
-        Document:
-          c: 1
-          d: 1
-          a: { c: { d: 1 } }
-
-- Name: InsertDocumentsWithIgnoredPath
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Threads: 1
-        CollectionCount: 1
-        DocumentCount: *HalfDocumentCount
-        BatchSize: 1000
-        Document:
-          c: 1
-          d: 1
-          b: { c: { d: 1 } }
+          n5: { ^Object: { withNEntries: 1,
+                           havingKeys: { ^RandomString: { length: 1, alphabet: "bc" } },
+                           andValues: { ^Object: { withNEntries: 1,
+                                                   havingKeys: "d",
+                                                   andValues: 1 } } } }
 
 # Phase 1: Ensure all data is synced to disk.
 - Name: Quiesce
@@ -164,7 +129,7 @@ Actors:
   Database: *Database
   Phases:
     OnlyActiveInPhases:
-      Active: [4]
+      Active: [2]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -177,7 +142,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [5]
+      Active: [3]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -208,7 +173,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [6]
+      Active: [4]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -237,7 +202,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [7]
+      Active: [5]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -257,7 +222,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [8]
+      Active: [6]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -275,7 +240,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [9]
+      Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -306,7 +271,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [10]
+      Active: [8]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -335,7 +300,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [11]
+      Active: [9]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -388,7 +353,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [12]
+      Active: [10]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -439,7 +404,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [13]
+      Active: [11]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -466,7 +431,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [14]
+      Active: [12]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -485,7 +450,40 @@ Actors:
               ]
             }
 
-# Both queries below will only target "a.c.d", skipping the documents which have "b.c.d".
+# Both queries below will only target "n5.b.d", skipping the documents which have "n5.c.d".
+- Name: AggregationExpressionTargetPath
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [13]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {$expr: {$eq: ["$n5.b.d", 0]}}
+
+- Name: MatchExpressionTargetPath
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [14]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {"n5.b.d": 0}
+
+# Set of queries whose paths' prefixes exist, but their suffixes do not.
 - Name: AggregationExpressionTargetPath
   Type: CrudActor
   Database: *Database
@@ -500,7 +498,7 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: {$expr: {$eq: ["a.c.d", 0]}}
+            Filter: {$expr: {$eq: ["$n1.a.b.c.d.z", 0]}}
 
 - Name: MatchExpressionTargetPath
   Type: CrudActor
@@ -516,7 +514,7 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: {"a.c.d": 0}
+            Filter: {"n1.a.b.c.d.z": 0}
 
 AutoRun:
 - When:

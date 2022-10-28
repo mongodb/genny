@@ -123,11 +123,11 @@ Actors:
           OperationCommand:
             Filter: {$expr:
                        {$or: [
-                         {$ne: ["$a.b.c", 0]},
-                         {$ne: ["$a.b.d", 0]},
-                         {$ne: ["$a.b.e", 0]},
-                         {$ne: ["$a.b.f", 0]},
-                         {$ne: ["$a.b.g", 0]}]}}
+                         {$ne: ["$a.b.c", "$a.b.d"]},
+                         {$ne: ["$a.b.d", "$a.b.e"]},
+                         {$ne: ["$a.b.e", "$a.b.f"]},
+                         {$ne: ["$a.b.f", "$a.b.g"]},
+                         {$ne: ["$a.b.g", "$a.b.c"]}]}}
 
 - Name: MatchExpressionRepeatedPathTraversalInequality
   Type: CrudActor
