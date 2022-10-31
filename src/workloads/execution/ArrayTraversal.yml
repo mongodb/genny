@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  This workload stresses path traversal over nested array. Crucially, these queries never match
+  This workload stresses path traversal over nested arrays. Crucially, these queries never match
   a document in the collection.
   Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
   'SyntaxType' can be:
@@ -9,7 +9,7 @@ Description: >
     - 'MatchExpression' means operators of the find command match predicate language
   'PredicateType' can be:
     - 'NestedArray' means query which targets data that recursively nests arrays
-    - 'DeeplyNestedArray' is the same as 'NestedArray', except twice as deep
+    - 'DeeplyNestedArray' is the same as 'NestedArray', except the arrays are nested twice as deep
     - 'ArrayStressTest' means query is exercising array traversal over 2 path components with a
   branching factor of 10 elements
     - 'MissingPathSuffix' means query is searching a path whose suffix cannot be found in the

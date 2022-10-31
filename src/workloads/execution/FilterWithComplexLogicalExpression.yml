@@ -15,8 +15,7 @@ Description: >
     - 'WidePredicateWithDeepFieldpaths' means a wide query where nested fieldpaths like '$a.b.c'
       are used
     - 'MixedPredicate' means query which combines wide and deep types
-    - 'TargetPath' and 'MissingPath' in conjunction mean query which targets a path present only
-  in some documents
+    - 'TargetPath' and 'MissingPath' mean query which targets a path present only in some documents
     - 'MissingPathSuffix' means query is searching a path whose suffix cannot be found in the
     document
 
@@ -52,7 +51,7 @@ Actors:
         - OperationName: drop
 
 # Phase 0: Insert documents into the collection. Note that half of the documents will have the
-# path "a.b.d", while the second will have the path "a.c.d".
+# path "n5.b.d", while the second will have the path "n5.c.d".
 - Name: InsertData
   Type: Loader
   Threads: 1

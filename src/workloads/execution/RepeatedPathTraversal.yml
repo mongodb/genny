@@ -177,7 +177,7 @@ Actors:
                 {$eq: ["$a.b.k", 1]},
                 {$eq: ["$a.b.l", 1]}]}}
 
-- Name: MatchExpressionManyClausesRepeatedPathTraversalWidePredicate
+- Name: MatchExpressionRepeatedPathTraversalWidePredicate
   Type: CrudActor
   Database: *Database
   Threads: *Threads
