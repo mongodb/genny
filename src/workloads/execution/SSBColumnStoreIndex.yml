@@ -1,0 +1,622 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  This workload compares the query performance of SSB (star schema benchmark) queries with columnar indexes to performances without them.
+
+  The workload consists of the following phases and actors:
+    0. Warm up cache.
+    1. Run SSB queries with columnstore indexes.
+    2. Drop columnstore indexes.
+    3. Warm up cache again for regular scans.
+    4. Run SSB queries without columnstore indexes.
+
+Keywords:
+- columnstore
+- analytics
+- SSB
+
+Clients:
+  Default:
+    QueryOptions:
+      # Allow for longer duration since column store index build may take a while.
+      socketTimeoutMS: 7_200_000  # = 2 hours
+      connectTimeoutMS: 7_200_000
+
+# Defines the database name.
+Database: &db ssb
+
+# Defines the collection name.
+Collection: &Collection order_lineitem
+
+Q1_1Query: &Q1_1Query
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        "$match": {
+          "order.o_orderdate": {
+            "$gte": ISODate("1992-01-01T00:00:00Z"),
+            "$lte": ISODate("1996-01-01T00:00:00Z")
+          },
+          "l_discount": {"$gte": 0.1, "$lte": 0.3},
+          "l_quantity": {"$lte": 25}
+        }
+      },
+      {
+        "$group": {
+          "_id": 1,
+          "revenue": {"$sum": {"$multiply": ["$l_extendedprice", "$l_discount"]}}
+        }
+      }
+    ]
+  cursor: {}
+
+Q1_2Query: &Q1_2Query
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        "$match": {
+          "order.o_orderdate": {
+            "$gte": ISODate("1994-01-01T00:00:00.000Z"),
+            "$lte": ISODate("1994-02-01T00:00:00.000Z")
+          },
+          "l_discount": {"$gte": 0.04, "$lte": 0.06},
+          "l_quantity": {"$gte": 26, "$lt": 33}
+        }
+      },
+      {
+        "$group": {
+          "_id": 1,
+          "revenue": {"$sum": {"$multiply": ["$l_extendedprice", "$l_discount"]}}
+        }
+      }
+    ]
+  cursor: {}
+
+Q1_3Query: &Q1_3Query
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        $match: {
+          $and: [
+            { $expr: { $eq: [{$year: '$order.o_orderdate'}, 1994] } },
+            { $expr: { $eq: [{$week: '$order.o_orderdate'}, 6] } },
+            { l_discount: { $gte: 0.04 } },
+            { l_discount: { $lte: 0.06 } },
+            { l_quantity: { $gte: 26 } },
+            { l_quantity: { $lt: 33 } }
+          ]
+        }
+      },
+      {
+        $group: {
+          _id: 1,
+          revenue: { $sum: { $multiply: ['$l_extendedprice', '$l_discount'] } }
+        }
+      }
+    ]
+  cursor: {}
+
+Q2_1Query: &Q2_1Query
+  aggregate: *Collection
+  pipeline:
+    [
+      { $match: { 'part.p_brand': 'Brand#21' } },
+      {
+        $lookup: {
+          from: 'supplier',
+          localField: 'l_suppkey',
+          foreignField: 's_suppkey',
+          as: 'supplier'
+        }
+      },
+      { $match: { 'supplier.nation.region.r_name': 'AMERICA' } },
+      { $addFields: { supplier: { $first: '$supplier' } } },
+      {
+        $group: {
+          _id: { order_year: { $year: '$order.o_orderdate' }, brand: '$part.p_brand' },
+          revenue: { $sum: { $multiply: ['$l_extendedprice', '$l_discount'] } }
+        }
+      }
+    ]
+  cursor: {}
+
+Q2_2Query: &Q2_2Query
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        $match: {
+          'part.p_brand': {
+            $in: [
+              'Brand#21',
+              'Brand#22',
+              'Brand#15',
+              'Brand#41',
+              'Brand#41'
+            ]
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: 'supplier',
+          localField: 'l_suppkey',
+          foreignField: 's_suppkey',
+          as: 'supplier'
+        }
+      },
+      { $match: { 'supplier.nation.region.r_name': 'ASIA' } },
+      {
+        $addFields: {
+          supplier: {
+            $first: '$supplier'
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { order_year: { $year: '$order.o_orderdate' }, brand: '$part.p_brand' },
+          revenue: { $sum: { $multiply: ['$l_extendedprice', '$l_discount'] } }
+        }
+      }
+    ]
+  cursor: {}
+
+Q2_3Query: &Q2_3Query
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        $match: {
+          'part.p_brand': 'Brand#21',
+          'part.p_type': 'ECONOMY BRUSHED STEEL'
+        }
+      },
+      {
+        $lookup: {
+          from: 'supplier',
+          localField: 'l_suppkey',
+          foreignField: 's_suppkey',
+          as: 'supplier'
+        }
+      },
+      { $match: { 'supplier.nation.region.r_name': 'AMERICA' } },
+      {
+        $addFields: {
+          supplier: {
+            $first: '$supplier'
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            order_year: {
+              $year: '$order.o_orderdate'
+            },
+            brand: '$part.p_brand'
+          },
+          revenue: { $sum: { $multiply: ['$l_extendedprice', '$l_discount'] } }
+        }
+      }
+    ]
+  cursor: {}
+
+Q3Query: &Q3Query
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        "$match": {
+          "order.o_orderdate": {
+            "$gte": ISODate("1992-01-01T00:00:00.000Z"),
+            "$lte": ISODate("1997-01-01T00:00:00.000Z")
+          }
+        }
+      },
+      {
+        "$lookup": {
+          "from": "supplier",
+          "localField": "l_suppkey",
+          "foreignField": "s_suppkey",
+          "as": "supplier"
+        }
+      },
+      {"$addFields": {"supplier": {"$first": "$supplier"}}},
+      {"$match": {"supplier.nation.region.r_name": "ASIA"}},
+      {
+        "$lookup": {
+          "from": "customer",
+          "localField": "order.o_custkey",
+          "foreignField": "c_custkey",
+          "as": "customer"
+        }
+      },
+      {"$addFields": {"customer": {"$first": "$customer"}}},
+      {
+        "$group": {
+          "_id": {
+            "order_year": {"$year": "$order.o_orderdate"},
+            "c_nation": "$customer.nation.n_name",
+            "s_nation": "$supplier.nation.n_name"
+          },
+          "revenue": {"$sum": {"$multiply": ["$l_extendedprice", "$l_discount"]}}
+        }
+      },
+      {
+        "$addFields": {
+          "order_year": "$_id.order_year",
+          "customer_nation": "$_id.c_nation",
+          "supplier_nation": "$_id.s_nation"
+        }
+      },
+      {"$sort": {"order_year": 1, "revenue": -1}}
+    ]
+  cursor: {}
+
+Q4_1Query: &Q4_1Query
+  aggregate: *Collection
+  pipeline:
+    [
+      { $match: { 'part.p_mfgr': { $in: ['Manufacturer#1', 'Manufacturer#2'] } } },
+      {
+        $lookup: {
+          from: 'supplier',
+          localField: 'l_suppkey',
+          foreignField: 's_suppkey',
+          as: 'supplier'
+        }
+      },
+      {
+        $addFields: {
+          supplier: {
+            $first: '$supplier'
+          }
+        }
+      },
+      { $match: { 'supplier.nation.region.r_name': 'AMERICA' } },
+      {
+        $lookup: {
+          from: 'customer',
+          localField: 'order.o_custkey',
+          foreignField: 'c_custkey',
+          as: 'customer'
+        }
+      },
+      {
+        $addFields: {
+          customer: {
+            $first: '$customer'
+          }
+        }
+      },
+      { $match: { 'customer.nation.region.r_name': 'AMERICA' } },
+      {
+        $group: {
+          _id: {
+            order_year: { $year: '$order.o_orderdate' },
+            c_nation: '$customer.nation.n_name'
+          },
+          revenue: {
+            $sum: {
+              $subtract: ['$l_extendedprice', { $multiply: ['$l_extendedprice', '$l_discount'] }]
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          order_year: '$_id.order_year',
+          customer_nation: '$_id.c_nation'
+        }
+      }
+    ]
+  cursor: {}
+
+Q4_2Query: &Q4_2Query
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        "$match": {
+          "part.p_mfgr": {"$in": ["Manufacturer#1", "Manufacturer#2"]},
+          "order.o_orderdate": {
+            "$gte": ISODate("1997-01-01T00:00:00.000Z"),
+            "$lt": ISODate("1999-01-01T00:00:00.000Z")
+          }
+        }
+      },
+      {
+        "$lookup": {
+          "from": "supplier",
+          "localField": "l_suppkey",
+          "foreignField": "s_suppkey",
+          "as": "supplier"
+        }
+      },
+      {"$addFields": {"supplier": {"$first": "$supplier"}}},
+      {"$match": {"supplier.nation.region.r_name": "AMERICA"}},
+      {
+        "$lookup": {
+          "from": "customer",
+          "localField": "order.o_custkey",
+          "foreignField": "c_custkey",
+          "as": "customer"
+        }
+      },
+      {"$addFields": {"customer": {"$first": "$customer"}}},
+      {"$match": {"customer.nation.region.r_name": "AMERICA"}},
+      {
+        "$group": {
+          "_id": {
+            "order_year": {"$year": "$order.o_orderdate"},
+            "c_nation": "$customer.nation.n_name"
+          },
+          "revenue": {
+            "$sum": {
+              "$subtract": [
+                "$l_extendedprice",
+                {"$multiply": ["$l_extendedprice", "$l_discount"]}
+              ]
+            }
+          }
+        }
+      },
+      {"$addFields": {"order_year": "$_id.order_year", "customer_nation": "$_id.c_nation"} }
+    ]
+  cursor: {}
+
+Q4_3Query: &Q4_3Query
+  aggregate: *Collection
+  pipeline:
+    [
+      {
+        "$match": {
+          "part.p_mfgr": "Manufacturer#1",
+          "order.o_orderdate": {
+            "$gte": ISODate("1997-01-01T00:00:00.000Z"),
+            "$lt": ISODate("1999-01-01T00:00:00.000Z")
+          }
+        }
+      },
+      {
+        "$lookup": {
+          "from": "supplier",
+          "localField": "l_suppkey",
+          "foreignField": "s_suppkey",
+          "as": "supplier"
+        }
+      },
+      {"$addFields": {"supplier": {"$first": "$supplier"}}},
+      {"$match": {"supplier.nation.n_name": "UNITED STATES"}},
+      {
+        "$lookup": {
+          "from": "customer",
+          "localField": "order.o_custkey",
+          "foreignField": "c_custkey",
+          "as": "customer"
+        }
+      },
+      {"$addFields": {"customer": {"$first": "$customer"}}},
+      {"$match": {"customer.nation.region.r_name": "AMERICA"}},
+      {
+        "$group": {
+          "_id": {
+            "order_year": {"$year": "$order.o_orderdate"},
+            "c_nation": "$customer.nation.n_name",
+            "p_brand": "$part.p_brand"
+          },
+          "revenue": {
+            "$sum": {
+              "$subtract": [
+                "$l_extendedprice",
+                {"$multiply": ["$l_extendedprice", "$l_discount"]}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "$addFields": {
+          "order_year": "$_id.order_year",
+          "customer_nation": "$_id.c_nation",
+          "part_brand": "$_id.p_brand"
+        }
+      },
+      {"$sort": {"order_year": 1, "customer_nation": 1, "part_brand": 1}}
+    ]
+  cursor: {}
+
+# Defines test operations.
+# Here we use explain with verbosity = execustionStats instead of using plain aggregate command
+# so that aggregate pipeline runs to completion but yet we don't need to exhaust cursor. As of now
+# we don't have an easy way to exhaust cursor.
+TestOperations: &TestOperations
+- OperationMetricsName: Q1_1Query
+  OperationName: RunCommand
+  OperationCommand:
+    explain: *Q1_1Query
+    verbosity:
+      executionStats
+- OperationMetricsName: Q1_2Query
+  OperationName: RunCommand
+  OperationCommand:
+    explain: *Q1_2Query
+    verbosity:
+      executionStats
+- OperationMetricsName: Q1_3Query
+  OperationName: RunCommand
+  OperationCommand:
+    explain: *Q1_3Query
+    verbosity:
+      executionStats
+- OperationMetricsName: Q2_1Query
+  OperationName: RunCommand
+  OperationCommand:
+    explain: *Q2_1Query
+    verbosity:
+      executionStats
+- OperationMetricsName: Q2_2Query
+  OperationName: RunCommand
+  OperationCommand:
+    explain: *Q2_2Query
+    verbosity:
+      executionStats
+- OperationMetricsName: Q2_3Query
+  OperationName: RunCommand
+  OperationCommand:
+    explain: *Q2_3Query
+    verbosity:
+      executionStats
+- OperationMetricsName: Q3Query
+  OperationName: RunCommand
+  OperationCommand:
+    explain: *Q3Query
+    verbosity:
+      executionStats
+- OperationMetricsName: Q4_1Query
+  OperationName: RunCommand
+  OperationCommand:
+    explain: *Q4_1Query
+    verbosity:
+      executionStats
+- OperationMetricsName: Q4_2Query
+  OperationName: RunCommand
+  OperationCommand:
+    explain: *Q4_2Query
+    verbosity:
+      executionStats
+- OperationMetricsName: Q4_3Query
+  OperationName: RunCommand
+  OperationCommand:
+    explain: *Q4_3Query
+    verbosity:
+      executionStats
+
+# Defines how many times each test operation is executed.
+TestRepeatCount: &TestRepeatCount 1
+
+SetupPhase: &SetupPhase 0
+BuildColumnStoreIndexPhase: &BuildColumnStoreIndexPhase 1
+WarmupCache1Phase: &WarmupCache1Phase 2
+ColumnstoreScanPhase: &ColumnstoreScanPhase 3
+DropColumnstoreIndexPhase: &DropColumnstoreIndexPhase 4
+WarmupCache2Phase: &WarmupCache2Phase 5
+CollScanPhase: &CollScanPhase 6
+MaxPhases: &MaxPhases 6
+
+ColumnStoreIndexName: &ColumnStoreIndexName $**_columnstore
+
+Actors:
+- Name: Setup
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*SetupPhase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Thread: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            internalQueryFrameworkControl: "trySbeEngine"
+
+- Name: BuildColumnStoreIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*BuildColumnStoreIndexPhase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Thread: 1
+        Database: *db
+        Operations:
+        - OperationMetricsName: BulkBuildColumnStoreIndex
+          OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *Collection
+            indexes:
+            - key: {"$**": "columnstore"}
+              name: *ColumnStoreIndexName
+
+# The 'WarmupCache1' actor warms up the buffer cache.
+- Name: WarmupCache1
+  Type: RunCommand
+  Database: *db
+  Thread: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*WarmupCache1Phase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Database: *db
+        Operations: *TestOperations
+
+# The 'ColumnstoreScan' actor measures the perf with columnar indexes.
+- Name: ColumnstoreScan
+  Type: RunCommand
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*ColumnstoreScanPhase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Operations: *TestOperations
+
+# The 'DropColumnstoreIndexes' actor drops columnstore indexes.
+- Name: DropColumnstoreIndex
+  Type: RunCommand
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*DropColumnstoreIndexPhase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Database: *db
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            dropIndexes: *Collection
+            index: *ColumnStoreIndexName
+
+# The 'WarmupCache2' actor warms up the buffer cache for a regular scan.
+- Name: WarmupCache2
+  Type: RunCommand
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*WarmupCache2Phase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Database: *db
+        Operations: *TestOperations
+
+# The 'CollScan' actor measures the perf without columnar indexes.
+- Name: CollScan
+  Type: RunCommand
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*CollScanPhase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Operations: *TestOperations
