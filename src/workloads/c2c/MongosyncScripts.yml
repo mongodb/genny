@@ -16,31 +16,42 @@ StartMongosync:
   Repeat: 1
   Command: python3
   MetricsName: StartMongosync
-  ScriptPath: ./src/genny/src/workloads/c2c/mongosync_helpers.py -m start
+  Script: |
+    import mongosync_actor as actor
+    actor.change_state("/api/v1/start",
+        {"Source": "cluster0", "Destination": "cluster1"})
 
 PollForCEA:
   Repeat: 1
   Command: python3
   MetricsName: PollForCEA
-  ScriptPath: ./src/genny/src/workloads/c2c/mongosync_helpers.py -m poll_for_cea
+  Script: |
+    import mongosync_actor as actor
+    actor.poll(lambda x: x != "change event application", "info")
 
 DrainWrites:
   Repeat: 1
   Command: python3
   MetricsName: DrainWrites
-  ScriptPath: ./src/genny/src/workloads/c2c/mongosync_helpers.py -m drain_writes
+  Script: |
+    import mongosync_actor as actor
+    actor.poll(lambda x: int(x) > 5, "lagTimeSeconds")
 
 Commit:
   Repeat: 1
   Command: python3
   MetricsName: Commit
-  ScriptPath: ./src/genny/src/workloads/c2c/mongosync_helpers.py -m commit
+  Script: |
+    import mongosync_actor as actor
+    actor.change_state("/api/v1/commit", {})
 
 WaitForCommit:
   Repeat: 1
   Command: python3
   MetricsName: WaitForCommit
-  ScriptPath: ./src/genny/src/workloads/c2c/mongosync_helpers.py -m wait_for_commit
+  Script: |
+    import mongosync_actor as actor
+    actor.poll(lambda x: x != "COMMITTED", "state")
 
 InsertShortTestData:
   Repeat: 1
@@ -61,7 +72,6 @@ InsertShortTestData:
   Indexes:
   - keys: { id: 1 }
   - keys: { a: 1 }
-
 
 SetupShardKey:
   Repeat: 1
