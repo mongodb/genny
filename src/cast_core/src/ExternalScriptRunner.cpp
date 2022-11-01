@@ -79,7 +79,7 @@ struct ExternalScriptRunner::PhaseConfig {
 
     std::string runScript(
         const std::unordered_map<std::string, std::string>& environmentVariables) {
-        TempScriptFile file{script.value()};
+        TempScriptFile file{script};
         return runScript(environmentVariables, file.name());
     }
 
@@ -142,7 +142,7 @@ private:
         return result;
     }
 
-    std::optional<std::string> script;
+    std::string script;
 
     std::string mongoServerURI;
 
