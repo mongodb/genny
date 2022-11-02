@@ -130,6 +130,9 @@ void requireEvent(ApmEvent& event, YAML::Node requirements) {
         REQUIRE(event.command["$readPreference"]["maxStalenessSeconds"].get_int64() ==
                 staleness.as<int64_t>());
     }
+    if (auto allowDiskUse = requirements["allowDiskUse"]) {
+        REQUIRE(event.command["allowDiskUse"].get_bool() == allowDiskUse.as<bool>());
+    }
 }
 
 void requireAllEvents(mongocxx::pool::entry& client, ApmEvents events, YAML::Node requirements) {

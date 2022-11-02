@@ -15,6 +15,10 @@ Description: >
     - 'WidePredicateWithDeepFieldpaths' means a wide query where nested fieldpaths like '$a.b.c'
       are used
     - 'MixedPredicate' means query which combines wide and deep types
+    - 'TargetPath' and 'MissingPath' mean query which targets a path present only in some documents
+    - 'MissingPathSuffix' means query is searching a path whose suffix cannot be found in the
+    document
+
 Keywords:
 - Loader
 - CrudActor
@@ -28,21 +32,37 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 50
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 12
+  MaxPhases: &MaxPhases 17
 
 Actors:
-# Phase 0: Insert documents into the collection.
-- Name: InsertData
-  Type: Loader
-  Threads: 1
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
   Phases:
     OnlyActiveInPhases:
       Active: [0]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
-        Database: *Database
         Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+# Phase 0: Insert documents into the collection. Note that half of the documents will have the
+# path "n5.b.d", while the second will have the path "n5.c.d".
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Threads: *Threads
         CollectionCount: 1
         DocumentCount: *DocumentCount
         BatchSize: 1000
@@ -97,6 +117,11 @@ Actors:
               }
             }
           }
+          n5: { ^Object: { withNEntries: 1,
+                           havingKeys: { ^RandomString: { length: 1, alphabet: "bc" } },
+                           andValues: { ^Object: { withNEntries: 1,
+                                                   havingKeys: "d",
+                                                   andValues: 1 } } } }
 
 # Phase 1: Ensure all data is synced to disk.
 - Name: Quiesce
@@ -105,7 +130,7 @@ Actors:
   Database: *Database
   Phases:
     OnlyActiveInPhases:
-      Active: [1]
+      Active: [2]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -118,7 +143,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [2]
+      Active: [3]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -149,7 +174,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [3]
+      Active: [4]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -178,7 +203,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [4]
+      Active: [5]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -198,7 +223,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [5]
+      Active: [6]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -216,7 +241,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [6]
+      Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -247,7 +272,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [7]
+      Active: [8]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -276,7 +301,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [8]
+      Active: [9]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -329,7 +354,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [9]
+      Active: [10]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -380,7 +405,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [10]
+      Active: [11]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -407,7 +432,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [11]
+      Active: [12]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
@@ -425,6 +450,72 @@ Actors:
                 {d: 17},
               ]
             }
+
+# Both queries below will only target "n5.b.d", skipping the documents which have "n5.c.d".
+- Name: AggregationExpressionTargetPath
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [13]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {$expr: {$eq: ["$n5.b.d", 0]}}
+
+- Name: MatchExpressionTargetPath
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [14]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {"n5.b.d": 0}
+
+# Set of queries whose paths' prefixes exist, but their suffixes do not.
+- Name: AggregationExpressionMissingPathSuffix
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [15]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {$expr: {$eq: ["$n1.a.b.c.d.z", 0]}}
+
+- Name: MatchExpressionMissingPathSuffix
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [16]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {"n1.a.b.c.d.z": 0}
 
 AutoRun:
 - When:

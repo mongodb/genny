@@ -699,6 +699,65 @@ private:
     metrics::Operation _operation;
 };
 
+struct AggregateOperation : public BaseOperation {
+    struct Pipeline {
+        Pipeline(const Node& node, PhaseContext& context, ActorId id) {
+            if (!node.isSequence()) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException("'Pipeline' must be an array"));
+            }
+            for (auto&& [_, stageNode] : node) {
+                DocumentGenerator stage = stageNode.to<DocumentGenerator>(context, id);
+                pipeline.append_stage(stage());
+            }
+        }
+
+        bsoncxx::document::value copyPipelineToDocument() const {
+            auto arrayView = pipeline.view_array();
+            bsoncxx::document::view docView{arrayView.data(), arrayView.length()};
+            return bsoncxx::document::value{docView};
+        }
+
+        mongocxx::pipeline pipeline;
+    };
+
+    AggregateOperation(const Node& opNode,
+                       bool onSession,
+                       mongocxx::collection collection,
+                       metrics::Operation operation,
+                       PhaseContext& context,
+                       ActorId id)
+        : BaseOperation(context, opNode),
+          _onSession{onSession},
+          _collection{std::move(collection)},
+          _operation{operation},
+          _pipeline{opNode["Pipeline"].to<Pipeline>(context, id)} {
+        if (opNode["Options"]) {
+            _options = opNode["Options"].to<mongocxx::options::aggregate>();
+        }
+    }
+
+    void run(mongocxx::client_session& session) override {
+        auto& pipeline = _pipeline.pipeline;
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto cursor = _onSession ? _collection.aggregate(session, pipeline, _options)
+                                     : _collection.aggregate(pipeline, _options);
+            for (auto&& doc : cursor) {
+                ctx.addDocuments(1);
+                ctx.addBytes(doc.length());
+            }
+            return _pipeline.copyPipelineToDocument();
+        });
+    }
+
+
+private:
+    bool _onSession;
+    mongocxx::collection _collection;
+    mongocxx::options::aggregate _options;
+    Pipeline _pipeline;
+    metrics::Operation _operation;
+};
+
 struct FindOneAndUpdateOperation : public BaseOperation {
     FindOneAndUpdateOperation(const Node& opNode,
                               bool onSession,
@@ -1109,6 +1168,7 @@ private:
 std::unordered_map<std::string, OpCallback&> getOpConstructors() {
     // Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
     std::unordered_map<std::string, OpCallback&> opConstructors = {
+        {"aggregate", baseCallback<BaseOperation, OpCallback, AggregateOperation>},
         {"bulkWrite", baseCallback<BaseOperation, OpCallback, BulkWriteOperation>},
         {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
         {"estimatedDocumentCount",
