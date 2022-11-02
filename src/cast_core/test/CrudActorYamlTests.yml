@@ -686,9 +686,6 @@ Tests:
       - OperationName: aggregate
         OperationCommand:
             Pipeline: [{$group: {_id: "$a", sum: {$sum: "$b"}}}, {$out: "test"}]
-            Options:
-              AllowDiskUse: false
-              BypassDocumentValidation: true
     OutcomeData:
         - {_id: "foo", sum: 7}
 
