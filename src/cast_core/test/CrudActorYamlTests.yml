@@ -685,6 +685,14 @@ Tests:
               Document: { a: "foo", b: 4 }
       - OperationName: aggregate
         OperationCommand:
+            # In order to test that the pipeline produces the correct results, we use $out to
+            # persist the result of the query to the "test" collection. The contents of the
+            # collection are subsequently validated using 'OutcomeData'.
+            #
+            # The test is written this way because the 'CrudActor' iterates the agg cursor and
+            # throws out the query results, without providing an easy way to validate that the
+            # contents of the cursor are as expected. (Although this is something that we could
+            # potentially add support for in the future.)
             Pipeline: [{$group: {_id: "$a", sum: {$sum: "$b"}}}, {$out: "test"}]
     OutcomeData:
         - {_id: "foo", sum: 7}
@@ -700,3 +708,11 @@ Tests:
     ExpectAllEvents:
       allowDiskUse: false
       bypassDocumentValidation: true
+
+  - Description: Test that an error is thrown when the pipeline is not an array.
+    Operations:
+      - OperationName: aggregate
+        OperationCommand:
+            Pipeline: {$group: {_id: "$a", sum: {$sum: "$b"}}}
+    Error: |
+      .*'Pipeline' must be an array.*

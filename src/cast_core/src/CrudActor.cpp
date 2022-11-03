@@ -701,23 +701,38 @@ private:
 
 struct AggregateOperation : public BaseOperation {
     struct Pipeline {
-        Pipeline(const Node& node, PhaseContext& context, ActorId id) {
-            if (!node.isSequence()) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException("'Pipeline' must be an array"));
-            }
-            for (auto&& [_, stageNode] : node) {
-                DocumentGenerator stage = stageNode.to<DocumentGenerator>(context, id);
-                pipeline.append_stage(stage());
-            }
-        }
-
-        bsoncxx::document::value copyPipelineToDocument() const {
+        /**
+         * Converts the given 'pipeline' to an object with numerical property names.
+         */
+        static bsoncxx::document::value copyPipelineToDocument(const mongocxx::pipeline& pipeline) {
             auto arrayView = pipeline.view_array();
             bsoncxx::document::view docView{arrayView.data(), arrayView.length()};
             return bsoncxx::document::value{docView};
         }
 
-        mongocxx::pipeline pipeline;
+        Pipeline(const Node& node, PhaseContext& context, ActorId id) {
+            if (!node.isSequence()) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException("'Pipeline' must be an array"));
+            }
+            for (auto&& [_, stageNode] : node) {
+                stageGenerators.push_back(stageNode.to<DocumentGenerator>(context, id));
+            }
+        }
+
+        /**
+         * Evaluates each 'DocumentGenerator' in 'stageGenerators' and returns the resulting
+         * aggregation pipeline.
+         */
+        mongocxx::pipeline generatePipeline() {
+            mongocxx::pipeline pipeline;
+            for (auto&& stage : stageGenerators) {
+                pipeline.append_stage(stage());
+            }
+
+            return pipeline;
+        }
+
+        std::vector<DocumentGenerator> stageGenerators;
     };
 
     AggregateOperation(const Node& opNode,
@@ -737,7 +752,7 @@ struct AggregateOperation : public BaseOperation {
     }
 
     void run(mongocxx::client_session& session) override {
-        auto& pipeline = _pipeline.pipeline;
+        auto pipeline = _pipeline.generatePipeline();
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto cursor = _onSession ? _collection.aggregate(session, pipeline, _options)
                                      : _collection.aggregate(pipeline, _options);
@@ -745,10 +760,9 @@ struct AggregateOperation : public BaseOperation {
                 ctx.addDocuments(1);
                 ctx.addBytes(doc.length());
             }
-            return _pipeline.copyPipelineToDocument();
+            return Pipeline::copyPipelineToDocument(pipeline);
         });
     }
-
 
 private:
     bool _onSession;
