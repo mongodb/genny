@@ -12,8 +12,8 @@ TPCHDenormalizedBiggestOrdersAggregation: &TPCHDenormalizedBiggestOrdersAggregat
   pipeline:
     [
       {$match: {"nation.region.r_name": "EUROPE"}},
-      {$group: {_id: "$nation.n_name", biggestOrder: 
-        {$max: "$orders.o_totalprice"}}}
+      {$group: {_id: "$nation.n_name", biggestOrder:
+                  {$max: "$orders.o_totalprice"}}}
     ]
   cursor: {batchSize: *batchSize}
   allowDiskUse: true

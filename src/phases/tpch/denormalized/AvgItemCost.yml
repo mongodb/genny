@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run an artifical TPC-H query to get the average cost of item sold against the denormalized schema 
+  Run an artifical TPC-H query to get the average cost of item sold against the denormalized schema
   for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
@@ -25,10 +25,10 @@ TPCHDenormalizedAvgItemCostAggregation: &TPCHDenormalizedAvgItemCostAggregation
         }
       }, {
         '$group': {
-          '_id': null, 
+          '_id': null,
           'totalRevenue': {
             '$sum': '$lineitemPrice'
-          }, 
+          },
           'count': {
             '$sum': 1
           }
