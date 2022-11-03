@@ -6,7 +6,6 @@ Description: >
   key such as monotonically increasing inserts, range queries and range deletions.
 
 GlobalDefaults:
-  ClusteredIndexSpec: &ClusteredIndexSpec {^Parameter: {Name: "ClusteredIndexSpec", Default: {key: {_id: 1}, unique: true}}}
   RecordIdExtraPaddingParam: &RecordIdExtraPaddingParam {^Parameter: {Name: "RecordIdExtraPadding", Default: 0}}
   PaddingGenerator: &PaddingGenerator {^FastRandomString: {length: *RecordIdExtraPaddingParam, alphabet: "a"}}
   Database: &Database test
@@ -47,7 +46,8 @@ Actors:
         - OperationName: RunCommand
           OperationCommand:
             create: *Collection
-            clusteredIndex: *ClusteredIndexSpec
+            clusteredIndex: {key: {_id: 1}, unique: true}
+
 
 # Phase 1: Shard the collection
 - Name: ShardCollection
