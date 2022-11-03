@@ -637,6 +637,9 @@ struct FindOperation : public BaseOperation {
         if (opNode["Options"]) {
             _options = opNode["Options"].to<mongocxx::options::find>();
         }
+        if(opNode["Projection"]){
+            _options.projection(opNode["Projection"].to<DocumentGenerator>(context,id)());
+        }
     }
 
     void run(mongocxx::client_session& session) override {
@@ -675,6 +678,9 @@ struct FindOneOperation : public BaseOperation {
           _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {
         if (opNode["Options"]) {
             _options = opNode["Options"].to<mongocxx::options::find>();
+        }
+        if(opNode["Projection"]){
+            _options.projection(opNode["Projection"].to<DocumentGenerator>(context,id)());
         }
     }
 

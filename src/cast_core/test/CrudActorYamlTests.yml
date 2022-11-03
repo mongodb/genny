@@ -716,3 +716,39 @@ Tests:
             Pipeline: {$group: {_id: "$a", sum: {$sum: "$b"}}}
     Error: |
       .*'Pipeline' must be an array.*
+
+  - Description: Test that a 'find' command applies the specified projection.
+    Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: {a: 100}
+          Projection: {_id: 0, b: 1}
+    ExpectAllEvents:
+      projection: {_id: 0, b: 1}
+
+  - Description: Test that a 'findOne' command applies the specified projection.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: {a: 100}
+          Projection: {_id: 0, b: 1}
+    ExpectAllEvents:
+      projection: {_id: 0, b: 1}
+
+  - Description: Test that an error is thrown when an invalid projection is specified in 'find'.
+    Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: {a: 100}
+          Projection: {_id: 0, b: 1, a: 0}
+    Error: |
+      .*Cannot do exclusion on field a in inclusion projection.*
+
+  - Description: Test that an error is thrown when an invalid projection is specified in 'findOne'.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: {a: 100}
+          Projection: {_id: 0, a: 0, b: 1}
+    Error: |
+      .*Cannot do inclusion on field b in exclusion projection.*

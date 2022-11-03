@@ -133,6 +133,11 @@ void requireEvent(ApmEvent& event, YAML::Node requirements) {
     if (auto allowDiskUse = requirements["allowDiskUse"]) {
         REQUIRE(event.command["allowDiskUse"].get_bool() == allowDiskUse.as<bool>());
     }
+    if (auto projection = requirements["projection"]) {
+        auto expectedProjection = genny::testing::toDocumentBson(projection);
+        auto actualProjection = event.command["projection"].get_document();
+        REQUIRE(actualProjection.view() == expectedProjection.view());
+    }
 }
 
 void requireAllEvents(mongocxx::pool::entry& client, ApmEvents events, YAML::Node requirements) {
