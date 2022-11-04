@@ -261,6 +261,7 @@ Q4_1Query: &Q4_1Query
   aggregate: *Collection
   pipeline:
     [
+      { $limit: 10000 },
       { $match: { 'part.p_mfgr': { $in: ['Manufacturer#1', 'Manufacturer#2'] } } },
       {
         $lookup: {
@@ -320,6 +321,7 @@ Q4_2Query: &Q4_2Query
   aggregate: *Collection
   pipeline:
     [
+      { $limit: 10000 },
       {
         "$match": {
           "part.p_mfgr": {"$in": ["Manufacturer#1", "Manufacturer#2"]},
@@ -373,6 +375,7 @@ Q4_3Query: &Q4_3Query
   aggregate: *Collection
   pipeline:
     [
+      { $limit: 10000 },
       {
         "$match": {
           "part.p_mfgr": "Manufacturer#1",
