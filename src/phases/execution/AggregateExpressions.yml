@@ -5,7 +5,7 @@ Description: |
 
 ExpressionTemplate:
   Name: {^Parameter: {Name: "name", Default: ""}}
-  Type: RunCommand
+  Type: CrudActor
   Database: &db {^Parameter: {Name: "database", Default: test}}
   Threads: {^Parameter: {Name: "threads", Default: 1}}
   Phases:
@@ -18,7 +18,6 @@ ExpressionTemplate:
         Collection: &coll {^Parameter: {Name: "collection", Default: Collection0}}
         Operations:
         - OperationMetricsName: {^Parameter: {Name: "operationMetricsName", Default: OperationMetric}}
-          OperationName: RunCommand
+          OperationName: aggregate
           OperationCommand:
-            find: *coll
-            projection: {^Parameter: {Name: "projection", Default: []}}
+            Pipeline: {^Parameter: {Name: "Pipeline", Default: []}}

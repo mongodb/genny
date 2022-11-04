@@ -18,7 +18,7 @@ Keywords:
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
-  DocumentCount: &DocumentCount 1e6
+  DocumentCount: &DocumentCount 1e2
   Repeat: &Repeat 10
   Threads: &Threads 1
   MaxPhases: &MaxPhases 63
@@ -103,7 +103,7 @@ Actors:
       name: ExpressionAbs
       active: [3]
       operationMetricsName: AggExpressionAbs
-      projection: {abs: { $abs: "$negativeInt"}}
+      Pipeline: [{$project: {abs: { $abs: "$negativeInt"}}}]
 
 - ExpressionAdd:
   LoadConfig:
@@ -112,7 +112,7 @@ Actors:
       name: ExpressionAdd
       active: [4]
       operationMetricsName: AggExpressionAdd
-      projection: {add: { $add: ["$int", "$int2"]}}
+      Pipeline: [{$project: {add: { $add: ["$int", "$int2"]}}}]
 
 - ExpressionArrayElemAt:
   LoadConfig:
@@ -121,7 +121,7 @@ Actors:
       name: ExpressionArrayElemAt
       active: [5]
       operationMetricsName: AggExpressionArrayElemAt
-      projection: {arrayElemAt: { $arrayElemAt: ["$array", 5]}}
+      Pipeline: [{$project: {arrayElemAt: { $arrayElemAt: ["$array", 5]}}}]
 
 - ExpressionFirst:
   LoadConfig:
@@ -130,7 +130,7 @@ Actors:
       name: ExpressionFirst
       active: [6]
       operationMetricsName: AggExpressionFirst
-      projection: {first: { $first: "$array"}}
+      Pipeline: [{$project: {first: { $first: "$array"}}}]
 
 - ExpressionBSONSize:
   LoadConfig:
@@ -139,7 +139,7 @@ Actors:
       name: ExpressionBSONSize
       active: [7]
       operationMetricsName: AggExpressionBSONSize
-      projection: {bsonSize: { $bsonSize: "$nestedObj"}}
+      Pipeline: [{$project: {bsonSize: { $bsonSize: "$nestedObj"}}}]
 
 - ExpressionCeil:
   LoadConfig:
@@ -148,7 +148,7 @@ Actors:
       name: ExpressionCeil
       active: [8]
       operationMetricsName: AggExpressionCeil
-      projection: {ceil: { $ceil: "$double"}}
+      Pipeline: [{$project: {ceil: { $ceil: "$double"}}}]
 
 - ExpressionCompare:
   LoadConfig:
@@ -157,7 +157,7 @@ Actors:
       name: ExpressionCompare
       active: [9]
       operationMetricsName: AggExpressionCompare
-      projection: {cmp: { $cmp: ["$int", 0]}}
+      Pipeline: [{$project: {cmp: { $cmp: ["$int", 0]}}}]
 
 - ExpressionConcat:
   LoadConfig:
@@ -166,7 +166,7 @@ Actors:
       name: ExpressionConcat
       active: [10]
       operationMetricsName: AggExpressionConcat
-      projection: {concat: { $concat: ["$string", "_", "$string2"]}}
+      Pipeline: [{$project: {concat: { $concat: ["$string", "_", "$string2"]}}}]
 
 - ExpressionConcatArrays:
   LoadConfig:
@@ -175,7 +175,7 @@ Actors:
       name: ExpressionConcatArrays
       active: [11]
       operationMetricsName: AggExpressionConcatArrays
-      projection: {concatArrays: { $concatArrays: ["$array1", "$array2"]}}
+      Pipeline: [{$project: {concatArrays: { $concatArrays: ["$array1", "$array2"]}}}]
 
 - ExpressionCond:
   LoadConfig:
@@ -184,7 +184,7 @@ Actors:
       name: ExpressionCond
       active: [12]
       operationMetricsName: AggExpressionCond
-      projection: {cond: { $cond: { if: { $gte: ["$int", 0] }, then: 100, else: -100 } }}
+      Pipeline: [{$project: {cond: { $cond: { if: { $gte: ["$int", 0] }, then: 100, else: -100 } }}}]
 
 - ExpressionDateDiff:
   LoadConfig:
@@ -193,7 +193,7 @@ Actors:
       name: ExpressionDateDiff
       active: [13]
       operationMetricsName: AggExpressionDateDiff
-      projection: {dateDiff: {$dateDiff: {startDate: "$date1", endDate: "$date2", unit: "millisecond"}}}
+      Pipeline: [{$project: {dateDiff: {$dateDiff: {startDate: "$date1", endDate: "$date2", unit: "millisecond"}}}}]
 
 - ExpressionDateTrunc:
   LoadConfig:
@@ -202,7 +202,7 @@ Actors:
       name: ExpressionDateTrunc
       active: [14]
       operationMetricsName: AggExpressionDateTrunc
-      projection: {dateTrunc: {$dateTrunc: {date: "$date1", unit: "millisecond"}}}
+      Pipeline: [{$project: {dateTrunc: {$dateTrunc: {date: "$date1", unit: "millisecond"}}}}]
 
 - ExpressionDivide:
   LoadConfig:
@@ -211,7 +211,7 @@ Actors:
       name: ExpressionDivide
       active: [15]
       operationMetricsName: AggExpressionDivide
-      projection: {divide: {$divide: ["$int", "$posInt"]}}
+      Pipeline: [{$project: {divide: {$divide: ["$int", "$posInt"]}}}]
 
 - ExpressionExp:
   LoadConfig:
@@ -220,7 +220,7 @@ Actors:
       name: ExpressionExp
       active: [16]
       operationMetricsName: AggExpressionExp
-      projection: {exp: {$exp: "$int"}}
+      Pipeline: [{$project: {exp: {$exp: "$int"}}}]
 
 - ExpressionFilter:
   LoadConfig:
@@ -229,7 +229,7 @@ Actors:
       name: ExpressionFilter
       active: [17]
       operationMetricsName: AggExpressionFilter
-      projection: {filter: { $filter: {input: "$array", as: "a", cond: { $eq: ["$$a.b", 0] }}}}
+      Pipeline: [{$project: {filter: { $filter: {input: "$array", as: "a", cond: { $eq: ["$$a.b", 0] }}}}}]
 
 - ExpressionFloor:
   LoadConfig:
@@ -238,7 +238,7 @@ Actors:
       name: ExpressionFloor
       active: [18]
       operationMetricsName: AggExpressionFloor
-      projection: {floor: { $floor: "$double"}}
+      Pipeline: [{$project: {floor: { $floor: "$double"}}}]
 
 - ExpressionIfNull:
   LoadConfig:
@@ -247,7 +247,7 @@ Actors:
       name: ExpressionIfNull
       active: [19]
       operationMetricsName: AggExpressionIfNull
-      projection: {ifNull: { $ifNull: ["$nullVal", 0]}}
+      Pipeline: [{$project: {ifNull: { $ifNull: ["$nullVal", 0]}}}]
 
 - ExpressionIndexOfBytes:
   LoadConfig:
@@ -256,7 +256,7 @@ Actors:
       name: ExpressionIndexOfBytes
       active: [20]
       operationMetricsName: AggExpressionIndexOfBytes
-      projection: {indexOfBytes: { $indexOfBytes: ["$hello", "o"]}}
+      Pipeline: [{$project: {indexOfBytes: { $indexOfBytes: ["$hello", "o"]}}}]
 
 - ExpressionIndexOfCP:
   LoadConfig:
@@ -265,7 +265,7 @@ Actors:
       name: ExpressionIndexOfCP
       active: [21]
       operationMetricsName: AggExpressionIndexOfCP
-      projection: {indexOfCP: { $indexOfCP: ["$hello", "l"]}}
+      Pipeline: [{$project: {indexOfCP: { $indexOfCP: ["$hello", "l"]}}}]
 
 - ExpressionIsNumber:
   LoadConfig:
@@ -274,7 +274,7 @@ Actors:
       name: ExpressionIsNumber
       active: [22]
       operationMetricsName: AggExpressionIsNumber
-      projection: {isNumber: { $isNumber: "$randomType"}}
+      Pipeline: [{$project: {isNumber: { $isNumber: "$randomType"}}}]
 
 - ExpressionLet:
   LoadConfig:
@@ -283,7 +283,7 @@ Actors:
       name: ExpressionLet
       active: [23]
       operationMetricsName: AggExpressionLet
-      projection: {let: { $let: {vars: { a: "$int", b: "$int2"}, in: {$gte: ["$$a", "$$b"]}}}}
+      Pipeline: [{$project: {let: { $let: {vars: { a: "$int", b: "$int2"}, in: {$gte: ["$$a", "$$b"]}}}}}]
 
 - ExpressionLn:
   LoadConfig:
@@ -292,7 +292,7 @@ Actors:
       name: ExpressionLn
       active: [24]
       operationMetricsName: AggExpressionLn
-      projection: {ln: { $ln: "$posInt"}}
+      Pipeline: [{$project: {ln: { $ln: "$posInt"}}}]
 
 - ExpressionLog10:
   LoadConfig:
@@ -301,7 +301,7 @@ Actors:
       name: ExpressionLog10
       active: [25]
       operationMetricsName: AggExpressionLog10
-      projection: {log10: { $log10: "$posInt"}}
+      Pipeline: [{$project: {log10: { $log10: "$posInt"}}}]
 
 - ExpressionMod:
   LoadConfig:
@@ -310,7 +310,7 @@ Actors:
       name: ExpressionMod
       active: [26]
       operationMetricsName: AggExpressionMod
-      projection: {mod: { $mod: ["$int", "$posInt"]}}
+      Pipeline: [{$project: {mod: { $mod: ["$int", "$posInt"]}}}]
 
 - ExpressionMultiply:
   LoadConfig:
@@ -319,7 +319,7 @@ Actors:
       name: ExpressionMultiply
       active: [27]
       operationMetricsName: AggExpressionMultiply
-      projection: {multiply: { $multiply: ["$int", "$int2"]}}
+      Pipeline: [{$project: {multiply: { $multiply: ["$int", "$int2"]}}}]
 
 - ExpressionNot:
   LoadConfig:
@@ -328,7 +328,7 @@ Actors:
       name: ExpressionNot
       active: [28]
       operationMetricsName: AggExpressionNot
-      projection: {not: { $not: "$bool"}}
+      Pipeline: [{$project: {not: { $not: "$bool"}}}]
 
 - ExpressionReplaceOne:
   LoadConfig:
@@ -337,7 +337,7 @@ Actors:
       name: ExpressionReplaceOne
       active: [29]
       operationMetricsName: AggExpressionReplaceOne
-      projection: {replaceOne: { $replaceOne: {input: "$hello", find: "bye", replacement: "hello"}}}
+      Pipeline: [{$project: {replaceOne: { $replaceOne: {input: "$hello", find: "bye", replacement: "hello"}}}}]
 
 - ExpressionReverseArray:
   LoadConfig:
@@ -346,7 +346,7 @@ Actors:
       name: ExpressionReverseArray
       active: [30]
       operationMetricsName: AggExpressionReverseArray
-      projection: {reverseArray: { $reverseArray: "$array"}}
+      Pipeline: [{$project: {reverseArray: { $reverseArray: "$array"}}}]
 
 - ExpressionIsArray:
   LoadConfig:
@@ -355,7 +355,7 @@ Actors:
       name: ExpressionIsArray
       active: [31]
       operationMetricsName: AggExpressionIsArray
-      projection: {isArray: { $isArray: "$randomType"}}
+      Pipeline: [{$project: {isArray: { $isArray: "$randomType"}}}]
 
 - ExpressionSqrt:
   LoadConfig:
@@ -364,7 +364,7 @@ Actors:
       name: ExpressionSqrt
       active: [32]
       operationMetricsName: AggExpressionSqrt
-      projection: {sqrt: { $sqrt: "$posInt"}}
+      Pipeline: [{$project: {sqrt: { $sqrt: "$posInt"}}}]
 
 - ExpressionSwitch:
   LoadConfig:
@@ -373,7 +373,7 @@ Actors:
       name: ExpressionSwitch
       active: [33]
       operationMetricsName: AggExpressionSwitch
-      projection: {switch: { $switch: {branches: [{case: {$gte: ["$int", 0]}, then: "GTE 0"}, {case: {$lt: ["$int", 0]}, then: "LT 0"}], default: "Out of bounds"}}}
+      Pipeline: [{$project: {switch: { $switch: {branches: [{case: {$gte: ["$int", 0]}, then: "GTE 0"}, {case: {$lt: ["$int", 0]}, then: "LT 0"}], default: "Out of bounds"}}}}]
 
 - ExpressionToLower:
   LoadConfig:
@@ -382,7 +382,7 @@ Actors:
       name: ExpressionToLower
       active: [34]
       operationMetricsName: AggExpressionToLower
-      projection: {toLower: { $toLower: "$upper"}}
+      Pipeline: [{$project: {toLower: { $toLower: "$upper"}}}]
 
 - ExpressionToUpper:
   LoadConfig:
@@ -391,7 +391,7 @@ Actors:
       name: ExpressionTestToUpper
       active: [35]
       operationMetricsName: AggExpressionTestToUpper
-      projection: {toUpper: { $toUpper: "$hello"}}
+      Pipeline: [{$project: {toUpper: { $toUpper: "$hello"}}}]
 
 - ExpressionRegexFind:
   LoadConfig:
@@ -400,7 +400,7 @@ Actors:
       name: ExpressionRegexFind
       active: [36]
       operationMetricsName: AggExpressionRegexFind
-      projection: {regexFind: { $regexFind: {input: "$hello", regex: /(h)*/}}}
+      Pipeline: [{$project: {regexFind: { $regexFind: {input: "$hello", regex: /(h)*/}}}}]
 
 - ExpressionRegexFindAll:
   LoadConfig:
@@ -409,7 +409,7 @@ Actors:
       name: ExpressionRegexFindAll
       active: [37]
       operationMetricsName: AggExpressionRegexFindAll
-      projection: {regexFindAll: { $regexFindAll: {input: "$hello", regex: /(h)*/}}}
+      Pipeline: [{$project: {regexFindAll: { $regexFindAll: {input: "$hello", regex: /(h)*/}}}}]
 
 - ExpressionRegexMatch:
   LoadConfig:
@@ -418,7 +418,7 @@ Actors:
       name: ExpressionRegexMatch
       active: [38]
       operationMetricsName: AggExpressionRegexMatch
-      projection: {regexMatch: { $regexMatch: {input: "$string", regex: /(s(be)*)/}}}
+      Pipeline: [{$project: {regexMatch: { $regexMatch: {input: "$string", regex: /(s(be)*)/}}}}]
 
 - ExpressionCosine:
   LoadConfig:
@@ -427,7 +427,7 @@ Actors:
       name: ExpressionCosine
       active: [39]
       operationMetricsName: AggExpressionCosine
-      projection: {cos: { $cos: "$double"}}
+      Pipeline: [{$project: {cos: { $cos: "$double"}}}]
 
 - ExpressionSine:
   LoadConfig:
@@ -436,7 +436,7 @@ Actors:
       name: ExpressionSine
       active: [40]
       operationMetricsName: AggExpressionSine
-      projection: {sin: { $sin: "$double"}}
+      Pipeline: [{$project: {sin: { $sin: "$double"}}}]
 
 - ExpressionTangent:
   LoadConfig:
@@ -445,7 +445,7 @@ Actors:
       name: ExpressionTangent
       active: [41]
       operationMetricsName: AggExpressionTangent
-      projection: {tan: { $tan: "$double"}}
+      Pipeline: [{$project: {tan: { $tan: "$double"}}}]
 
 - ExpressionArcCosine:
   LoadConfig:
@@ -454,7 +454,7 @@ Actors:
       name: ExpressionArcCosine
       active: [42]
       operationMetricsName: AggExpressionArcCosine
-      projection: {acos: { $acos: "$doubleBounded"}}
+      Pipeline: [{$project: {acos: { $acos: "$doubleBounded"}}}]
 
 - ExpressionArcSine:
   LoadConfig:
@@ -463,7 +463,7 @@ Actors:
       name: ExpressionArcSine
       active: [43]
       operationMetricsName: AggExpressionArcSine
-      projection: {asin: { $asin: "$doubleBounded"}}
+      Pipeline: [{$project: {asin: { $asin: "$doubleBounded"}}}]
 
 - ExpressionArcTangent:
   LoadConfig:
@@ -472,7 +472,7 @@ Actors:
       name: ExpressionArcTangent
       active: [44]
       operationMetricsName: AggExpressionArcTangent
-      projection: {atan: { $atan: "$double"}}
+      Pipeline: [{$project: {atan: { $atan: "$double"}}}]
 
 - ExpressionArcTangent2:
   LoadConfig:
@@ -481,7 +481,7 @@ Actors:
       name: ExpressionArcTangent2
       active: [45]
       operationMetricsName: AggExpressionArcTangent2
-      projection: {atan2: { $atan2: ["$double", "$doubleBoundedNonZero"]}}
+      Pipeline: [{$project: {atan2: { $atan2: ["$double", "$doubleBoundedNonZero"]}}}]
 
 - ExpressionHyperbolicArcTangent:
   LoadConfig:
@@ -490,7 +490,7 @@ Actors:
       name: ExpressionHyperbolicArcTangent
       active: [46]
       operationMetricsName: AggExpressionHyperbolicArcTangent
-      projection: {atanh: { $atanh: "$doubleBounded"}}
+      Pipeline: [{$project: {atanh: { $atanh: "$doubleBounded"}}}]
 
 - ExpressionHyperbolicArcCosine:
   LoadConfig:
@@ -499,7 +499,7 @@ Actors:
       name: ExpressionHyperbolicArcCosine
       active: [47]
       operationMetricsName: AggExpressionHyperbolicArcCosine
-      projection: {acosh: { $acosh: "$posInt"}}
+      Pipeline: [{$project: {acosh: { $acosh: "$posInt"}}}]
 
 - ExpressionHyperbolicArcSine:
   LoadConfig:
@@ -508,7 +508,7 @@ Actors:
       name: ExpressionHyperbolicArcSine
       active: [48]
       operationMetricsName: AggExpressionHyperbolicArcSine
-      projection: {asinh: { $asinh: "$double"}}
+      Pipeline: [{$project: {asinh: { $asinh: "$double"}}}]
 
 - ExpressionHyperbolicCosine:
   LoadConfig:
@@ -517,7 +517,7 @@ Actors:
       name: ExpressionHyperbolicCosine
       active: [49]
       operationMetricsName: AggExpressionHyperbolicCosine
-      projection: {cosh: { $cosh: "$double"}}
+      Pipeline: [{$project: {cosh: { $cosh: "$double"}}}]
 
 - ExpressionHyperbolicSine:
   LoadConfig:
@@ -526,7 +526,7 @@ Actors:
       name: ExpressionHyperbolicSine
       active: [50]
       operationMetricsName: AggExpressionHyperbolicSine
-      projection: {sinh: { $sinh: "$double"}}
+      Pipeline: [{$project: {sinh: { $sinh: "$double"}}}]
 
 - ExpressionHyperbolicTangent:
   LoadConfig:
@@ -535,7 +535,7 @@ Actors:
       name: ExpressionHyperbolicTangent
       active: [51]
       operationMetricsName: AggExpressionHyperbolicTangent
-      projection: {tanh: { $tanh: "$double"}}
+      Pipeline: [{$project: {tanh: { $tanh: "$double"}}}]
 
 - ExpressionDegreesToRadians:
   LoadConfig:
@@ -544,7 +544,7 @@ Actors:
       name: ExpressionDegreesToRadians
       active: [52]
       operationMetricsName: AggExpressionDegreesToRadians
-      projection: {degreesToRadians: { $degreesToRadians: "$double"}}
+      Pipeline: [{$project: {degreesToRadians: { $degreesToRadians: "$double"}}}]
 
 - ExpressionRadiansToDegrees:
   LoadConfig:
@@ -553,7 +553,7 @@ Actors:
       name: ExpressionRadiansToDegrees
       active: [53]
       operationMetricsName: AggExpressionRadiansToDegrees
-      projection: {radiansToDegrees: { $radiansToDegrees: "$double"}}
+      Pipeline: [{$project: {radiansToDegrees: { $radiansToDegrees: "$double"}}}]
 
 - ExpressionDayOfMonth:
   LoadConfig:
@@ -562,7 +562,7 @@ Actors:
       name: ExpressionDayOfMonth
       active: [54]
       operationMetricsName: AggExpressionDayOfMonth
-      projection: {dayOfMonth: { $dayOfMonth: "$date1"}}
+      Pipeline: [{$project: {dayOfMonth: { $dayOfMonth: "$date1"}}}]
 
 - ExpressionDayOfWeek:
   LoadConfig:
@@ -571,7 +571,7 @@ Actors:
       name: ExpressionDayOfWeek
       active: [55]
       operationMetricsName: AggExpressionDayOfWeek
-      projection: {dayOfWeek: { $dayOfWeek: "$date1"}}
+      Pipeline: [{$project: {dayOfWeek: { $dayOfWeek: "$date1"}}}]
 
 - ExpressionDayOfYear:
   LoadConfig:
@@ -580,7 +580,7 @@ Actors:
       name: ExpressionDayOfYear
       active: [56]
       operationMetricsName: AggExpressionDayOfYear
-      projection: {dayOfYear: { $dayOfYear: "$date1"}}
+      Pipeline: [{$project: {dayOfYear: { $dayOfYear: "$date1"}}}]
 
 - ExpressionDateAdd:
   LoadConfig:
@@ -589,7 +589,7 @@ Actors:
       name: ExpressionDateAdd
       active: [57]
       operationMetricsName: AggExpressionDateAdd
-      projection: {dateAdd: { $dateAdd: {startDate: "$date1", unit: month, amount: 32}}}
+      Pipeline: [{$project: {dateAdd: { $dateAdd: {startDate: "$date1", unit: month, amount: 32}}}}]
 
 - ExpressionDateSubtract:
   LoadConfig:
@@ -598,7 +598,7 @@ Actors:
       name: ExpressionDateSubtract
       active: [58]
       operationMetricsName: AggExpressionDateSubtract
-      projection: {dateSubtract: { $dateSubtract: {startDate: "$date1", unit: month, amount: 32}}}
+      Pipeline: [{$project: {dateSubtract: { $dateSubtract: {startDate: "$date1", unit: month, amount: 32}}}}]
 
 - ExpressionLast:
   LoadConfig:
@@ -607,7 +607,7 @@ Actors:
       name: ExpressionLast
       active: [59]
       operationMetricsName: AggExpressionLast
-      projection: {last: { $last: "$array"}}
+      Pipeline: [{$project: {last: { $last: "$array"}}}]
 
 - ExpressionDateFromParts:
   LoadConfig:
@@ -616,7 +616,7 @@ Actors:
       name: ExpressionDateFromParts
       active: [60]
       operationMetricsName: AggExpressionDateFromParts
-      projection: {dateFromParts: { $dateFromParts: {'year': "$year", 'month': "$month", 'day': "$day", 'hour': "$hour"}}}
+      Pipeline: [{$project: {dateFromParts: { $dateFromParts: {'year': "$year", 'month': "$month", 'day': "$day", 'hour': "$hour"}}}}]
 
 - ExpressionDateToParts:
   LoadConfig:
@@ -625,7 +625,7 @@ Actors:
       name: ExpressionDateToParts
       active: [61]
       operationMetricsName: AggExpressionDateToParts
-      projection: {dateToParts: { $dateToParts: {date: "$date1", timezone: "America/New_York"}}}
+      Pipeline: [{$project: {dateToParts: { $dateToParts: {date: "$date1", timezone: "America/New_York"}}}}]
 
 - ExpressionSubtract:
   LoadConfig:
@@ -634,7 +634,7 @@ Actors:
       name: ExpressionSubtract
       active: [62]
       operationMetricsName: AggExpressionSubtract
-      projection: {subtract: { $subtract: ["$int", "$int2"]}}
+      Pipeline: [{$project: {subtract: { $subtract: ["$int", "$int2"]}}}]
 
 - ExpressionRange:
   LoadConfig:
@@ -643,7 +643,7 @@ Actors:
       name: ExpressionRange
       active: [63]
       operationMetricsName: AggExpressionRange
-      projection: {range: { $range: ["$zero", "$posInt"]}}
+      Pipeline: [{$project: {range: { $range: ["$zero", "$posInt"]}}}]
 
 AutoRun:
 - When:
