@@ -32,7 +32,34 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 50
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 17
+  MaxPhases: &MaxPhases 23
+
+# Templates for executing a rooted $or over a configurable number of clauses for the aggregation
+# and match languages, respectively.
+AggregationOrWithManyChildClausesTemplate:
+  Filter:
+    {$expr: { $or:
+                { ^Array: { of: {$and: [
+                  {$eq:
+                     ["$a",
+                      { ^RandomInt:
+                          { min: 2, max: {^Parameter: {Name: "aMaxValue", Default: 1000}}}}]},
+                  {$eq:
+                     ["$b",
+                      { ^RandomInt:
+                          { min: 2, max: {^Parameter: {Name: "bMaxValue", Default: 1000}}}}]}]},
+                            number: {^Parameter: {Name: "NumberOfClauses", Default: 50}}}}}}
+
+MatchOrWithManyChildClausesTemplate:
+  Filter:
+    { $or:
+        { ^Array:
+            { of:
+                { a: { ^RandomInt:
+                         { min: 2, max: {^Parameter: {Name: "aMaxValue", Default: 1000}}}},
+                  b: { ^RandomInt:
+                         { min: 2, max: {^Parameter: {Name: "bMaxValue", Default: 1000}}}}},
+              number: {^Parameter: {Name: "NumberOfClauses", Default: 50}}}}}
 
 Actors:
 # Clear any pre-existing collection state.
@@ -516,6 +543,126 @@ Actors:
         - OperationName: find
           OperationCommand:
             Filter: {"n1.a.b.c.d.z": 0}
+
+- Name: AggregationExpressionFiftyClauseRootedOr
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [17]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            LoadConfig:
+              Path: "FilterWithComplexLogicalExpression.yml"
+              Key: AggregationOrWithManyChildClausesTemplate
+              Parameters:
+                NumberOfClauses: 50
+
+- Name: MatchExpressionFiftyClauseRootedOr
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [18]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            LoadConfig:
+              Path: "FilterWithComplexLogicalExpression.yml"
+              Key: MatchOrWithManyChildClausesTemplate
+              Parameters:
+                NumberOfClauses: 50
+
+- Name: AggregationExpressionOneHundredClauseRootedOr
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [19]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            LoadConfig:
+              Path: "FilterWithComplexLogicalExpression.yml"
+              Key: AggregationOrWithManyChildClausesTemplate
+              Parameters:
+                NumberOfClauses: 100
+
+- Name: MatchExpressionOneHundredClauseRootedOr
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [20]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            LoadConfig:
+              Path: "FilterWithComplexLogicalExpression.yml"
+              Key: MatchOrWithManyChildClausesTemplate
+              Parameters:
+                NumberOfClauses: 100
+
+- Name: AggregationExpressionTwoHundredClauseRootedOr
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [21]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            LoadConfig:
+              Path: "FilterWithComplexLogicalExpression.yml"
+              Key: AggregationOrWithManyChildClausesTemplate
+              Parameters:
+                NumberOfClauses: 200
+
+- Name: MatchExpressionTwoHundredClauseRootedOr
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [22]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            LoadConfig:
+              Path: "FilterWithComplexLogicalExpression.yml"
+              Key: MatchOrWithManyChildClausesTemplate
+              Parameters:
+                NumberOfClauses: 200
 
 AutoRun:
 - When:
