@@ -4,11 +4,11 @@ Description: |
   This workload compares the query performance of SSB (star schema benchmark) queries with columnar indexes to performances without them.
 
   The workload consists of the following phases and actors:
-    0. Warm up cache.
     1. Run SSB queries with columnstore indexes.
     2. Drop columnstore indexes.
-    3. Warm up cache again for regular scans.
-    4. Run SSB queries without columnstore indexes.
+    3. Run SSB queries without columnstore indexes.
+
+  The DSI test_control will drop caches inbetween each test to measure cold cache performance.
 
 Keywords:
 - columnstore
@@ -19,8 +19,8 @@ Clients:
   Default:
     QueryOptions:
       # Allow for longer duration since column store index build may take a while.
-      socketTimeoutMS: 7_200_000  # = 2 hours
-      connectTimeoutMS: 7_200_000
+      socketTimeoutMS: 3_600_000  # = 1 hour
+      connectTimeoutMS: 3_600_000
 
 # Defines the database name.
 Database: &db ssb
@@ -257,6 +257,7 @@ Q3Query: &Q3Query
     ]
   cursor: {}
 
+# Q4 queries are (currently) limited to 10000 documents because they take many hours to finish.
 Q4_1Query: &Q4_1Query
   aggregate: *Collection
   pipeline:
@@ -504,12 +505,10 @@ TestRepeatCount: &TestRepeatCount 1
 
 SetupPhase: &SetupPhase 0
 BuildColumnStoreIndexPhase: &BuildColumnStoreIndexPhase 1
-WarmupCache1Phase: &WarmupCache1Phase 2
-ColumnstoreScanPhase: &ColumnstoreScanPhase 3
-DropColumnstoreIndexPhase: &DropColumnstoreIndexPhase 4
-WarmupCache2Phase: &WarmupCache2Phase 5
-CollScanPhase: &CollScanPhase 6
-MaxPhases: &MaxPhases 6
+ColumnstoreScanPhase: &ColumnstoreScanPhase 2
+DropColumnstoreIndexPhase: &DropColumnstoreIndexPhase 3
+CollScanPhase: &CollScanPhase 4
+MaxPhases: &MaxPhases 5
 
 ColumnStoreIndexName: &ColumnStoreIndexName $**_columnstore
 
@@ -551,21 +550,6 @@ Actors:
             - key: {"$**": "columnstore"}
               name: *ColumnStoreIndexName
 
-# The 'WarmupCache1' actor warms up the buffer cache.
-- Name: WarmupCache1
-  Type: RunCommand
-  Database: *db
-  Thread: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [*WarmupCache1Phase]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Database: *db
-        Operations: *TestOperations
-
 # The 'ColumnstoreScan' actor measures the perf with columnar indexes.
 - Name: ColumnstoreScan
   Type: RunCommand
@@ -596,20 +580,6 @@ Actors:
           OperationCommand:
             dropIndexes: *Collection
             index: *ColumnStoreIndexName
-
-# The 'WarmupCache2' actor warms up the buffer cache for a regular scan.
-- Name: WarmupCache2
-  Type: RunCommand
-  Database: *db
-  Phases:
-    OnlyActiveInPhases:
-      Active: [*WarmupCache2Phase]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Database: *db
-        Operations: *TestOperations
 
 # The 'CollScan' actor measures the perf without columnar indexes.
 - Name: CollScan
