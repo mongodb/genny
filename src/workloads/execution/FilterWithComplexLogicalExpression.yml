@@ -32,34 +32,108 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 50
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 23
+  MaxPhases: &MaxPhases 25
 
-# Templates for executing a rooted $or over a configurable number of clauses for the aggregation
-# and match languages, respectively.
-AggregationOrWithManyChildClausesTemplate:
-  Filter:
-    {$expr: { $or:
-                { ^Array: { of: {$and: [
-                  {$eq:
-                     ["$a",
-                      { ^RandomInt:
-                          { min: 2, max: {^Parameter: {Name: "aMaxValue", Default: 1000}}}}]},
-                  {$eq:
-                     ["$b",
-                      { ^RandomInt:
-                          { min: 2, max: {^Parameter: {Name: "bMaxValue", Default: 1000}}}}]}]},
-                            number: {^Parameter: {Name: "NumberOfClauses", Default: 50}}}}}}
+# Set of actor templates for executing a rooted $and/$or over a configurable number of clauses for
+# the aggregation and match languages, respectively.
+ActorTemplates:
+- TemplateName: AggregationOrWithManyChildClausesTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "AggregationOr"}}
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+          Collection: *Collection
+          Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter:
+                {$expr:
+                   {$or:
+                      {^Array: {of: {$and: [
+                        {$eq:
+                           ["$a",
+                            {^RandomInt:
+                               {min: 2, max: { ^Parameter: { Name: "aMaxValue", Default: 1000}}}}]},
+                        {$eq:
+                           ["$b",
+                            {^RandomInt:
+                               {min: 2, max: {^Parameter: { Name: "bMaxValue", Default: 1000}}}}]}]},
+                                number: {^Parameter: { Name: "NumberOfClauses", Default: 50}}}}}}
 
-MatchOrWithManyChildClausesTemplate:
-  Filter:
-    { $or:
-        { ^Array:
-            { of:
-                { a: { ^RandomInt:
-                         { min: 2, max: {^Parameter: {Name: "aMaxValue", Default: 1000}}}},
-                  b: { ^RandomInt:
-                         { min: 2, max: {^Parameter: {Name: "bMaxValue", Default: 1000}}}}},
-              number: {^Parameter: {Name: "NumberOfClauses", Default: 50}}}}}
+- TemplateName: MatchOrWithManyChildClausesTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "MatchOr"}}
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+          Collection: *Collection
+          Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter:
+                { $or:
+                    { ^Array:
+                        { of:
+                            { a: { ^RandomInt:
+                                     { min: 2, max: { ^Parameter: { Name: "aMaxValue", Default: 1000 } } } },
+                              b: { ^RandomInt:
+                                     { min: 2, max: { ^Parameter: { Name: "bMaxValue", Default: 1000 } } } } },
+                          number: { ^Parameter: { Name: "NumberOfClauses", Default: 50 } } } } }
+
+- TemplateName: MatchAndWithManyChildClausesTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "MatchAnd"}}
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+          Collection: *Collection
+          Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {^Parameter: {Name: "Filter", Default: {}}}
+
+Array: &Array
+  {^Cycle: {ofLength: 1, fromGenerator: {^Array: {number: 200, of: {^Inc: {start: 0, step: 1}}}}}}
+
+FiftyClauseRootedAnd: &FiftyClauseRootedAnd
+  {$and:
+     {^Cycle: {ofLength: 1, fromGenerator:
+                 {^Array: {of:
+                             {^Object: {withNEntries: 1, havingKeys: "arr", andValues: {^Inc:{start: 0, step: 1}}}},
+                           number: 50}}}}}
+
+OneHundredClauseRootedAnd: &OneHundredClauseRootedAnd
+  {$and:
+     {^Cycle: {ofLength: 1, fromGenerator:
+                 {^Array: {of:
+                             {^Object: {withNEntries: 1, havingKeys: "arr", andValues: {^Inc: {start: 0, step: 1}}}},
+                           number: 100}}}}}
+
+TwoHundredClauseRootedAnd: &TwoHundredClauseRootedAnd
+  {$and:
+     {^Cycle: {ofLength: 1, fromGenerator:
+                 {^Array: {of:
+                             {^Object: {withNEntries: 1, havingKeys: "arr", andValues: {^Inc: {start: 0, step: 1}}}},
+                           number: 200}}}}}
 
 Actors:
 # Clear any pre-existing collection state.
@@ -95,7 +169,8 @@ Actors:
         BatchSize: 1000
         Document:
           # NOTE: These documents will not produce a match for the filter below, forcing the query
-          # to scan the entire collection.
+          # to scan the entire collection. The only exception to this is the 'arr' field, which
+          # is intended to be used in rooted $and queries of the form {arr: 1, arr: 2, ... arr: n}
           a: 1
           b: 1
           c: 1
@@ -149,6 +224,7 @@ Actors:
                            andValues: { ^Object: { withNEntries: 1,
                                                    havingKeys: "d",
                                                    andValues: 1 } } } }
+          arr: *Array
 
 # Phase 1: Ensure all data is synced to disk.
 - Name: Quiesce
@@ -544,125 +620,77 @@ Actors:
           OperationCommand:
             Filter: {"n1.a.b.c.d.z": 0}
 
-- Name: AggregationExpressionFiftyClauseRootedOr
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [17]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            LoadConfig:
-              Path: "FilterWithComplexLogicalExpression.yml"
-              Key: AggregationOrWithManyChildClausesTemplate
-              Parameters:
-                NumberOfClauses: 50
+- ActorFromTemplate:
+    TemplateName: AggregationOrWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: AggregationExpressionFiftyClauseRootedOr
+      Repeat: 5
+      ActivePhase: 17
+      NumberOfClauses: 50
 
-- Name: MatchExpressionFiftyClauseRootedOr
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [18]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            LoadConfig:
-              Path: "FilterWithComplexLogicalExpression.yml"
-              Key: MatchOrWithManyChildClausesTemplate
-              Parameters:
-                NumberOfClauses: 50
+- ActorFromTemplate:
+    TemplateName: MatchOrWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: MatchExpressionFiftyClauseRootedOr
+      Repeat: 5
+      ActivePhase: 18
+      NumberOfClauses: 50
 
-- Name: AggregationExpressionOneHundredClauseRootedOr
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [19]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            LoadConfig:
-              Path: "FilterWithComplexLogicalExpression.yml"
-              Key: AggregationOrWithManyChildClausesTemplate
-              Parameters:
-                NumberOfClauses: 100
+- ActorFromTemplate:
+    TemplateName: AggregationOrWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: AggregationExpressionOneHundredClauseRootedOr
+      Repeat: 1
+      ActivePhase: 19
+      NumberOfClauses: 100
 
-- Name: MatchExpressionOneHundredClauseRootedOr
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [20]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            LoadConfig:
-              Path: "FilterWithComplexLogicalExpression.yml"
-              Key: MatchOrWithManyChildClausesTemplate
-              Parameters:
-                NumberOfClauses: 100
+- ActorFromTemplate:
+    TemplateName: MatchOrWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: MatchExpressionOneHundredClauseRootedOr
+      Repeat: 1
+      ActivePhase: 20
+      NumberOfClauses: 100
 
-- Name: AggregationExpressionTwoHundredClauseRootedOr
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [21]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            LoadConfig:
-              Path: "FilterWithComplexLogicalExpression.yml"
-              Key: AggregationOrWithManyChildClausesTemplate
-              Parameters:
-                NumberOfClauses: 200
+- ActorFromTemplate:
+    TemplateName: AggregationOrWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: AggregationExpressionTwoHundredClauseRootedOr
+      Repeat: 1
+      ActivePhase: 21
+      NumberOfClauses: 200
 
-- Name: MatchExpressionTwoHundredClauseRootedOr
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [22]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            LoadConfig:
-              Path: "FilterWithComplexLogicalExpression.yml"
-              Key: MatchOrWithManyChildClausesTemplate
-              Parameters:
-                NumberOfClauses: 200
+- ActorFromTemplate:
+    TemplateName: MatchOrWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: MatchExpressionTwoHundredClauseRootedOr
+      Repeat: 1
+      ActivePhase: 22
+      NumberOfClauses: 200
+
+- ActorFromTemplate:
+    TemplateName: MatchAndWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: MatchExpressionFiftyClauseRootedAnd
+      Repeat: 5
+      ActivePhase: 23
+      Filter: *FiftyClauseRootedAnd
+
+- ActorFromTemplate:
+    TemplateName: MatchAndWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: MatchExpressionOneHundredClauseRootedAnd
+      Repeat: 1
+      ActivePhase: 24
+      Filter: *OneHundredClauseRootedAnd
+
+- ActorFromTemplate:
+    TemplateName: MatchAndWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: MatchExpressionTwoHundredClauseRootedAnd
+      Repeat: 1
+      ActivePhase: 25
+      Filter: *TwoHundredClauseRootedAnd
 
 AutoRun:
 - When:
