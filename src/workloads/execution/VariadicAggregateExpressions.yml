@@ -1,0 +1,311 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  This workload measures aggregation expression performance for aggregations that
+  can take in multiple expressions as arguments.
+
+  While measuring performances, this workload collects numbers
+  for either the SBE or the classic engine aggregation expression
+  implementations, depending on environments that it runs on.
+
+  Numbers on the 'standalone-all-feature-flags' environment are for
+  the SBE variadic aggregation expressions and numbers on the 'standalone'
+  environment for the classic variadic aggregation expressions.
+
+Keywords:
+- aggregate
+- sbe
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  DocumentCount: &DocumentCount 1e6
+  Repeat: &Repeat 10
+  Threads: &Threads 1
+  MaxPhases: &MaxPhases 16
+  IntFields10: &IntFields10 ["$int1", "$int2", "$int3", "$int4", "$int5", "$int6", "$int7", "$int8", "$int9", "$int10"]
+  IntFields20: &IntFields20 ["$int1", "$int2", "$int3", "$int4", "$int5", "$int6", "$int7", "$int8", "$int9", "$int10", "$int11", "$int12", "$int13", "$int14", "$int15", "$int16", "$int17", "$int18", "$int19", "$int20"]
+
+Actors:
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: *Threads
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: *DocumentCount
+        BatchSize: 1000
+        Document:
+          int1: {^RandomInt: {min: -100, max: 100}}
+          int2: {^RandomInt: {min: -100, max: 100}}
+          int3: {^RandomInt: {min: -100, max: 100}}
+          int4: {^RandomInt: {min: -100, max: 100}}
+          int5: {^RandomInt: {min: -100, max: 100}}
+          int6: {^RandomInt: {min: -100, max: 100}}
+          int7: {^RandomInt: {min: -100, max: 100}}
+          int8: {^RandomInt: {min: -100, max: 100}}
+          int9: {^RandomInt: {min: -100, max: 100}}
+          int10: {^RandomInt: {min: -100, max: 100}}
+          int11: {^RandomInt: {min: -100, max: 100}}
+          int12: {^RandomInt: {min: -100, max: 100}}
+          int13: {^RandomInt: {min: -100, max: 100}}
+          int14: {^RandomInt: {min: -100, max: 100}}
+          int15: {^RandomInt: {min: -100, max: 100}}
+          int16: {^RandomInt: {min: -100, max: 100}}
+          int17: {^RandomInt: {min: -100, max: 100}}
+          int18: {^RandomInt: {min: -100, max: 100}}
+          int19: {^RandomInt: {min: -100, max: 100}}
+          int20: {^RandomInt: {min: -100, max: 100}}
+          str1: {^RandomString: {length: 16}}
+          str2: {^RandomString: {length: 16}}
+          str3: {^RandomString: {length: 16}}
+          str4: {^RandomString: {length: 16}}
+          str5: {^RandomString: {length: 16}}
+          str6: {^RandomString: {length: 16}}
+          str7: {^RandomString: {length: 16}}
+          str8: {^RandomString: {length: 16}}
+          str9: {^RandomString: {length: 16}}
+          str10: {^RandomString: {length: 16}}
+          str11: {^RandomString: {length: 16}}
+          str12: {^RandomString: {length: 16}}
+          str13: {^RandomString: {length: 16}}
+          str14: {^RandomString: {length: 16}}
+          str15: {^RandomString: {length: 16}}
+          str16: {^RandomString: {length: 16}}
+          str17: {^RandomString: {length: 16}}
+          str18: {^RandomString: {length: 16}}
+          str19: {^RandomString: {length: 16}}
+          str20: {^RandomString: {length: 16}}
+          arr1: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr2: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr3: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr4: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr5: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr6: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr7: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr8: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr9: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr10: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr11: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr12: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr13: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr14: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr15: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr16: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr17: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr18: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr19: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          arr20: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          false1: false
+          false2: false
+          false3: false
+          false4: false
+          false5: false
+          false6: false
+          false7: false
+          false8: false
+          false9: false
+          false10: false
+          false11: false
+          false12: false
+          false13: false
+          false14: false
+          false15: false
+          false16: false
+          false17: false
+          false18: false
+          false19: false
+          false20: false
+
+
+# Phase 2: Ensure all data is synced to disk.
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+
+# Phase 3-N: Run variadic aggregate expression benchmarks
+- ExpressionAdd10:
+  LoadConfig: &loadConfig
+    Path: "../../phases/execution/AggregateExpressions.yml"
+    Key: ExpressionTemplate
+    Parameters:
+      name: VariadicExpressionAdd10
+      nopInPhasesUpTo: *MaxPhases
+      active: [3]
+      operationMetricsName: VariadicAggExpressionAdd10
+      Pipeline: [{$project: {add: { $add: *IntFields10}}}]
+
+- ExpressionAdd20:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionAdd20
+      nopInPhasesUpTo: *MaxPhases
+      active: [4]
+      operationMetricsName: VariadicAggExpressionAdd20
+      Pipeline: [{$project: {add: { $add: *IntFields20}}}]
+
+- ExpressionConcat10:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionConcat10
+      nopInPhasesUpTo: *MaxPhases
+      active: [5]
+      operationMetricsName: VariadicAggExpressionConcat10
+      Pipeline: [{$project: {concat: { $concat: ["$str1", "$str2", "$str3", "$str4", "$str5", "$str6", "$str7", "$str8", "$str9", "$str10"]}}}]
+
+- ExpressionConcat20:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionConcat20
+      nopInPhasesUpTo: *MaxPhases
+      active: [6]
+      operationMetricsName: VariadicAggExpressionConcat20
+      Pipeline: [{$project: {concat: { $concat: ["$str1", "$str2", "$str3", "$str4", "$str5", "$str6", "$str7", "$str8", "$str9", "$str10", "$str11", "$str12", "$str13", "$str14", "$str15", "$str16", "$str17", "$str18", "$str19", "$str20"]}}}]
+
+- ExpressionConcatArrays10:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionConcat10
+      nopInPhasesUpTo: *MaxPhases
+      active: [7]
+      operationMetricsName: VariadicAggExpressionConcatArrays10
+      Pipeline: [{$project: {concatArrays: { $concatArrays: ["$arr1", "$arr2", "$arr3", "$arr4", "$arr5", "$arr6", "$arr7", "$arr8", "$arr9", "$arr10"]}}}]
+
+- ExpressionConcatArrays20:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionConcatArrays20
+      nopInPhasesUpTo: *MaxPhases
+      active: [8]
+      operationMetricsName: VariadicAggExpressionConcatArrays20
+      Pipeline: [{$project: {concatArrays: { $concatArrays: ["$arr1", "$arr2", "$arr3", "$arr4", "$arr5", "$arr6", "$arr7", "$arr8", "$arr9", "$arr10", "$arr11", "$arr12", "$arr13", "$arr14", "$arr15", "$arr16", "$arr17", "$arr18", "$arr19", "$arr20"]}}}]
+
+- ExpressionIfNull10:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionIfNull10
+      nopInPhasesUpTo: *MaxPhases
+      active: [9]
+      operationMetricsName: VariadicAggExpressionIfNull10
+      Pipeline: [{$project: {ifNull: { $ifNull: ["$arr1", "$arr2", "$arr3", "$arr4", "$arr5", "$arr6", "$arr7", "$arr8", "$arr9", "$arr10", 0]}}}]
+
+- ExpressionIfNull20:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionIfNull20
+      nopInPhasesUpTo: *MaxPhases
+      active: [10]
+      operationMetricsName: VariadicAggExpressionIfNull20
+      Pipeline: [{$project: {ifNull: { $ifNull: ["$arr1", "$arr2", "$arr3", "$arr4", "$arr5", "$arr6", "$arr7", "$arr8", "$arr9", "$arr10", "$arr11", "$arr12", "$arr13", "$arr14", "$arr15", "$arr16", "$arr17", "$arr18", "$arr19", "$arr20", 0]}}}]
+
+- ExpressionLet10:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionLet10
+      nopInPhasesUpTo: *MaxPhases
+      active: [11]
+      operationMetricsName: VariadicAggExpressionLet10
+      Pipeline: [{$project: {let: { $let: {vars: { a: "$int1", b: "$int2", c: "$int3", d: "$int4", e: "$int5", f: "$int6", g: "$int7", h: "$int8", i: "$int9", j: "$int10"}, in: {$add: ["$$a", "$$b", "$$c", "$$d", "$$e", "$$f", "$$g", "$$h", "$$i", "$$j"]}}}}}]
+
+- ExpressionLet20:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionLet20
+      nopInPhasesUpTo: *MaxPhases
+      active: [12]
+      operationMetricsName: VariadicAggExpressionLet20
+      Pipeline: [{$project: {let: { $let: {vars: { a: "$int1", b: "$int2", c: "$int3", d: "$int4", e: "$int5", f: "$int6", g: "$int7", h: "$int8", i: "$int9", j: "$int10", k: "$int11", l: "$int12", m: "$int13", n: "$int14", o: "$int15", p: "$int16", q: "$int17", r: "$int18", s: "$int19", t: "$int20"}, in: {$add: ["$$a", "$$b", "$$c", "$$d", "$$e", "$$f", "$$g", "$$h", "$$i", "$$j", "$$k", "$$l", "$$m", "$$n", "$$o", "$$p", "$$q", "$$r", "$$s", "$$t"]}}}}}]
+
+- ExpressionMultiply10:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionMultiply10
+      nopInPhasesUpTo: *MaxPhases
+      active: [13]
+      operationMetricsName: VariadicAggExpressionMultiply10
+      Pipeline: [{$project: {multiply: { $multiply: *IntFields10}}}]
+
+- ExpressionMultiply20:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionMultiply20
+      nopInPhasesUpTo: *MaxPhases
+      active: [14]
+      operationMetricsName: VariadicAggExpressionMultiply20
+      Pipeline: [{$project: {multiply: { $multiply: *IntFields20}}}]
+
+- ExpressionSwitch10:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionSwitch10
+      nopInPhasesUpTo: *MaxPhases
+      active: [15]
+      operationMetricsName: VariadicAggExpressionSwitch10
+      Pipeline: [{$project: {switch: { $switch: { branches: [{case: "$false1", then: "$int1"}, {case: "$false2", then: "$int2"}, {case: "$false3", then: "$int3"}, {case: "$false4", then: "$int4"}, {case: "$false5", then: "$int5"}, {case: "$false6", then: "$int6"}, {case: "$false7", then: "$int7"}, {case: "$false8", then: "$int8"}, {case: "$false9", then: "$int9"}, {case: "$false10", then: "$int10" }], default: "$int1"}}}}]
+
+- ExpressionSwitch20:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: VariadicExpressionSwitch20
+      nopInPhasesUpTo: *MaxPhases
+      active: [15]
+      operationMetricsName: VariadicAggExpressionSwitch20
+      Pipeline: [{$project: {switch: { $switch: { branches: [{case: "$false1", then: "$int1"}, {case: "$false2", then: "$int2"}, {case: "$false3", then: "$int3"}, {case: "$false4", then: "$int4"}, {case: "$false5", then: "$int5"}, {case: "$false6", then: "$int6"}, {case: "$false7", then: "$int7"}, {case: "$false8", then: "$int8"}, {case: "$false9", then: "$int9"}, {case: "$false10", then: "$int10" }, {case: "$false11", then: "$int11"}, {case: "$false12", then: "$int12"}, {case: "$false13", then: "$int13"}, {case: "$false14", then: "$int14"}, {case: "$false15", then: "$int15"}, {case: "$false16", then: "$int16"}, {case: "$false17", then: "$int17"}, {case: "$false18", then: "$int18"}, {case: "$false19", then: "$int19"}, {case: "$false20", then: "$int20" }], default: "$int1"}}}}]
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-sbe
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
