@@ -8,7 +8,6 @@ Description: |
   interesting behavior, such as reads getting faster because of a write regression, or reads being
   starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
   starved out by writes.
-
 # This workload does not support sharding yet.
 Keywords:
 - scale
@@ -54,8 +53,8 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 10
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}} 
+        NopInPhasesUpTo: 20
         PhaseConfig:
           LoadConfig:
             Path: ../../phases/scale/MixPhases.yml
@@ -70,8 +69,8 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 10
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
+        NopInPhasesUpTo: 20
         PhaseConfig:
           LoadConfig:
             Path: ../../phases/scale/MixPhases.yml
@@ -86,8 +85,8 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 10
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
+        NopInPhasesUpTo: 20
         PhaseConfig:
           LoadConfig:
             Path: ../../phases/scale/MixPhases.yml
@@ -102,8 +101,8 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 10
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
+        NopInPhasesUpTo: 20
         PhaseConfig:
           LoadConfig:
             Path: ../../phases/scale/MixPhases.yml
@@ -129,7 +128,7 @@ Actors:
     Indexes:
     - keys: {id: 1}
     - keys: {a: 1}
-  - Phase: 1..10
+  - Phase: 1..20
     Nop: true
 
 - Name: QuiesceBetweenLevels
@@ -155,6 +154,54 @@ Actors:
   - *nop
   - *quiesce
   - *nop
+  - *quiesce
+  - *nop
+  - *quiesce
+  - *nop
+  - *quiesce
+  - *nop
+  - *quiesce
+  - *nop
+  - *quiesce
+  - *nop
+
+
+#This actor will speed up the FTDC sampling rate rate from the default of 1000 ms to 100 ms for the second phase that each CRUD actor is active. 
+- Name: ToggleView
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true 
+  - Nop: true  
+  - &toggleView
+    Repeat: 1800
+    Database: *dbname
+    Operations:
+    - OperationMetricsName: CreateViewMetric
+      OperationName: RunCommand
+      OperationCommand:
+        {create: myView7, viewOn: Collection0, pipeline: [ { $match: { id: { $lt: 10 } } } ]}
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: myView7
+  - Nop: true
+  - Nop: true 
+  - Nop: true        
+  - *toggleView
+  - Nop: true
+  - Nop: true 
+  - Nop: true  
+  - *toggleView
+  - Nop: true
+  - Nop: true 
+  - Nop: true  
+  - *toggleView
+  - Nop: true
+  - Nop: true 
+  - Nop: true  
+  - *toggleView
 
 # Update Actors
 - ActorFromTemplate:
@@ -162,35 +209,35 @@ Actors:
     TemplateParameters:
       Name: Update_1
       Threads: 1
-      OnlyActiveInPhase: 2
+      OnlyActiveInPhase: [2,4]
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_16
       Threads: 16
-      OnlyActiveInPhase: 4
+      OnlyActiveInPhase: [6,8]
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_32
       Threads: 32
-      OnlyActiveInPhase: 6
+      OnlyActiveInPhase: [10,12]
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_64
       Threads: 64
-      OnlyActiveInPhase: 8
+      OnlyActiveInPhase: [14,16]
 
 - ActorFromTemplate:
     TemplateName: UpdateTemplate
     TemplateParameters:
       Name: Update_128
       Threads: 128
-      OnlyActiveInPhase: 10
+      OnlyActiveInPhase: [18,20]
 
 #
 ## Remove Actors
@@ -200,35 +247,35 @@ Actors:
     TemplateParameters:
       Name: Remove_1
       Threads: 1
-      OnlyActiveInPhase: 2
+      OnlyActiveInPhase: [2,4]
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Remove_16
       Threads: 16
-      OnlyActiveInPhase: 4
+      OnlyActiveInPhase: [6,8]
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Remove_32
       Threads: 32
-      OnlyActiveInPhase: 6
+      OnlyActiveInPhase: [10,12]
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Remove_64
       Threads: 64
-      OnlyActiveInPhase: 8
+      OnlyActiveInPhase: [14,16]
 
 - ActorFromTemplate:
     TemplateName: RemoveTemplate
     TemplateParameters:
       Name: Remove_128
       Threads: 128
-      OnlyActiveInPhase: 10
+      OnlyActiveInPhase: [18,20]
 
 ## Insert Actors
 #
@@ -237,35 +284,35 @@ Actors:
     TemplateParameters:
       Name: Insert_1
       Threads: 1
-      OnlyActiveInPhase: 2
+      OnlyActiveInPhase: [2,4]
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Insert_16
       Threads: 16
-      OnlyActiveInPhase: 4
+      OnlyActiveInPhase: [6,8]
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Insert_32
       Threads: 32
-      OnlyActiveInPhase: 6
+      OnlyActiveInPhase: [10,12]
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Insert_64
       Threads: 64
-      OnlyActiveInPhase: 8
+      OnlyActiveInPhase: [14,16]
 
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
       Name: Insert_128
       Threads: 128
-      OnlyActiveInPhase: 10
+      OnlyActiveInPhase: [18,20]
 
 ## Find Actors
 
@@ -274,35 +321,35 @@ Actors:
     TemplateParameters:
       Name: Find_1
       Threads: 1
-      OnlyActiveInPhase: 2
+      OnlyActiveInPhase: [2,4]
 
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
       Name: Find_16
       Threads: 16
-      OnlyActiveInPhase: 4
+      OnlyActiveInPhase: [6,8]
 
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
       Name: Find_32
       Threads: 32
-      OnlyActiveInPhase: 6
+      OnlyActiveInPhase: [10,12]
 
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
       Name: Find_64
       Threads: 64
-      OnlyActiveInPhase: 8
+      OnlyActiveInPhase: [14,16]
 
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
       Name: Find_128
       Threads: 128
-      OnlyActiveInPhase: 10
+      OnlyActiveInPhase: [18,20]
 
 AutoRun:
 - When:
