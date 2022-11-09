@@ -25,6 +25,7 @@
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/Cast.hpp>
+#include <gennylib/MongoException.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 
@@ -38,6 +39,7 @@ struct MonotonicSingleLoader::PhaseConfig {
     mongocxx::collection collection;
     int64_t batchSize;
     int64_t numDocuments;
+    int64_t firstId;
     DocumentGenerator documentExpr;
 };
 
@@ -51,6 +53,7 @@ MonotonicSingleLoader::PhaseConfig::PhaseConfig(PhaseContext& phaseContext,
           db.collection(phaseContext["Collection"].maybe<std::string>().value_or("Collection0"))},
       batchSize{phaseContext["BatchSize"].to<IntegerSpec>()},
       numDocuments{phaseContext["DocumentCount"].to<IntegerSpec>()},
+      firstId{phaseContext["FirstId"].maybe<IntegerSpec>().value_or(0)},
       documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext, id)} {}
 
 void MonotonicSingleLoader::run() {
@@ -66,7 +69,7 @@ void MonotonicSingleLoader::run() {
                 docs.reserve(config->batchSize);
 
                 size_t numBytes = 0;
-                for (auto id = lowId; id <= highId; ++id) {
+                for (auto id = config->firstId + lowId; id <= highId; ++id) {
                     auto builder = bsoncxx::builder::stream::document();
                     builder << "_id" << id;
                     builder << bsoncxx::builder::concatenate(config->documentExpr());
@@ -82,14 +85,21 @@ void MonotonicSingleLoader::run() {
                     // Use ordered:false to increase write parallelism for sharded collections.
                     auto options = mongocxx::options::insert();
                     options.ordered(false);
-                    auto result = config->collection.insert_many(std::move(docs), options);
-
-                    totalOpCtx.addBytes(numBytes);
-                    individualOpCtx.addBytes(numBytes);
-                    if (result) {
-                        totalOpCtx.addDocuments(result->inserted_count());
-                        individualOpCtx.addDocuments(result->inserted_count());
+                    try {
+                        auto result = config->collection.insert_many(std::move(docs), options);
+                        totalOpCtx.addBytes(numBytes);
+                        individualOpCtx.addBytes(numBytes);
+                        if (result) {
+                            totalOpCtx.addDocuments(result->inserted_count());
+                            individualOpCtx.addDocuments(result->inserted_count());
+                        }
+                    } catch (const mongocxx::operation_exception& e) {
+                        individualOpCtx.failure();
+                        totalOpCtx.failure();
+                        BOOST_LOG_TRIVIAL(info)
+                            << " Error inserting: " << bsoncxx::to_json(e.raw_server_error().get());
                     }
+
 
                     individualOpCtx.success();
                 }
