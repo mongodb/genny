@@ -1,0 +1,282 @@
+GlobalDefaults: 
+  TwoDigitNumberGenerator: &TwoDigitNumberGenerator {^RandomInt: {min: 0, max: 99}}
+  # The dates all seem to be april or may for some reason...
+  Random2016Date: &Random2016Date {^FormatString: {format: "2016-%02d-%02dT%02d:%02d:%02d", withArgs: [{^RandomInt: {min: 4, max: 5}}, *TwoDigitNumberGenerator, *TwoDigitNumberGenerator, *TwoDigitNumberGenerator, *TwoDigitNumberGenerator]}}
+  RandomImgUrl: &RandomImgUrl {^FormatString: {format: "http://img.bbystatic.com/BestBuy_US/images/products/%04d/%08d.jpg", withArgs: [{^RandomInt: {min: 0, max: 9999}}, {^RandomInt: {min: 0, max: 99999999}}]}}
+  RandomSku: &RandomSku {^RandomInt: {distribution: "uniform", min: 0, max: 99999999999}}
+
+# The Sample Document Shape.
+Document: &Doc
+  # This is based on a template document but is not necessarily realistic. For example the sale price may be more than the regular price. The types should be correct though.
+  # There are some fields which sometimes exist, but are mostly not set (>60%, often >80%). 
+  # This list includes: accessories, aspectRatio, buybackPlans, cast, color, condition, crew,
+  # depth, description, details, digitalSku, earlyTerminationFees, esrbRating, features, hardGoodType,
+  # height, includedItemList, lengthInMinutes, longDescription, longDescriptionHtml (TODO should we generate these and make them short sometimes?)
+  # members, modelNumber, mpaaRating, numberOfPlayers, platform, plot, plotHtml (TODO?)
+  # preOwnedSku, protectionPlan[s|Details|HighPrice|LowPrice|Term|Type], screenFormat
+  # (seems only used for TVs), software[Age|Grade|NumberOfPlayers], techSupportPlans, 
+  # theatricalReleaseDate, tradeInValue, weight, width
+
+  sku: *RandomSku
+  productId: *RandomSku
+  name: {^FastRandomString: {length: {^RandomInt: {min: 5, max: 45}}}}
+  # ~96% of reference is "bestbuy."
+  source: "bestbuy"
+  # Mostly "Music", "Movie", or "HardGood", in that order of frequency.
+  type: "Music"
+  # Mostly 2000s, but some others going back back to at least 1980.
+  startDate: {^FormatString: {format: "%04d-%02d-%02d", withArgs: [{^RandomInt: {min: 1980, max: 2016}}, *TwoDigitNumberGenerator, *TwoDigitNumberGenerator]}}
+  # Almost always false.
+  new: false
+  # 38% true, 62% false
+  active: false
+  # 45% true, 55% false
+  lowPriceGuarantee: false
+  activeUpdateDate: *Random2016Date
+  regularPrice: {^RandomDouble: {min: 0.0, max: 1000.0}}
+  # Unknown if this is different than 'salePrice.' Some are larger than 400, but only a handful.
+  salePrice: {^RandomDouble: {min: 1.99, max: 400.0}}
+  # Almost always false.
+  onSale: false
+  # Almost always null
+  planPrice: null
+  # Mostly the empty array.
+  priceWithPlan: [ ]
+  # 98% false.
+  advertisedPriceRestriction: false
+  # Almost always empty string.
+  minimumDisplayPrice: ""
+  # Unknown if this is different than 'salePrice.' Some are larger than 400, but only a handful.
+  restrictedSalePrice: {^RandomDouble: {min: 1.99, max: 400.0}}
+  # Almost always null.
+  icrType: null
+  # Almost always null.
+  icrStartDate: null
+  # Almost always null.
+  icrEndDate: null
+  # Almost always null.
+  priceRestriction: null
+  # Mostly 2016, but some others going back back to at least 2008.
+  priceUpdateDate: {^FormatString: {format: "%04d-%02d-%02d", withArgs: [{^RandomInt: {min: 2008, max: 2016}}, *TwoDigitNumberGenerator, *TwoDigitNumberGenerator]}}
+  # Almost always false.
+  digital: false
+  # Almost always false.
+  preowned: false
+  # Almost always null.
+  outletCenter: null
+  # Almost always null.
+  secondaryMarket: null
+  # Ideally the sku here would always exist so that it corresponds to some other product.
+  # Average of 0.06 other skus, so we'll just go with empty array.
+  frequentlyPurchasedWith: []
+  # Average of 1.3 related products. Only skus.
+  relatedProducts: 
+   - sku: *RandomSku
+  # Almost always empty.
+  crossSell: []
+  # These three are almost always null.
+  salesRankShortTerm: null
+  salesRankMediumTerm: null
+  salesRankLongTerm: null
+  # Almost always null
+  bestSellingRank: null
+  # Mostly null, but sometimes a unique url.
+  url: null
+  # Almost always null.
+  spin360Url: null
+  # Mostly null.
+  mobileUrl: null
+  # Always null.
+  affiliateUrl: null
+  # Mostly null (63%).
+  addToCartUrl: null
+  # Always null.
+  affiliateAddToCartUrl: null
+  # Seems to always be an empty string.
+  linkShareAffiliateUrl: ""
+  # Seems to always be an empty string.
+  linkShareAffiliateAddToCartUrl: ""
+  # Almost always null.
+  search: null
+  upc: 
+    ^RandomString: 
+      length: 12
+      alphabet: "0123456789"
+  # Almost always null.
+  productTemplate: null
+  # This one seems like a sort of 'breadcrumbs' schema. Hard to generate correctly so we'll just pretend everything is music.
+  categoryPath: 
+    - id: 'cat00000'
+      name: 'Best Buy'
+    - id: 'abcat0600000'
+      name: 'Movies & Music'
+    - id: 'cat02001'
+      name: 'Music (CDs & Vinyl)'
+  # Almost always empty.
+  lists: [ ]
+  # Null most of the time.
+  customerReviewCount: null
+  # Null most of the time.
+  customerReviewAverage: null
+  # Most often false.
+  customerTopRated: false
+  # Most common are "CD" or "DVD".
+  format: "CD"
+  # Almost always false.
+  freeShipping: false
+  # Mostly false.
+  freeShippingEligible: false
+  # Almost always false.
+  inStoreAvailability: false
+  # This is the most common string by far.
+  inStoreAvailabilityText: "Store Pickup: Not Available"
+  # This is the most common string by far.
+  inStoreAvailabilityTextHtml: "<b>Store Pickup:</b> Not Available"
+  inStoreAvailabilityUpdateDate: {^FormatString: {format: "2016-04-27T%02d:%02d:%02d", withArgs: [*TwoDigitNumberGenerator, *TwoDigitNumberGenerator, *TwoDigitNumberGenerator]}}
+  itemUpdateDate: *Random2016Date
+  # Mostly false.
+  onlineAvailability: false
+  # This exact string about 60% of the time.
+  onlineAvailabilityText: "Shipping: Not Available"
+  # This exact string about 60% of the time.
+  onlineAvailabilityTextHtml: "<b>Shipping:</b> Not Available"
+  onlineAvailabilityUpdateDate: *Random2016Date
+  releaseDate: {^FormatString: {format: "%04d-%02d-%02d", withArgs: [{^RandomInt: {min: 1980, max: 2016}}, *TwoDigitNumberGenerator, *TwoDigitNumberGenerator]}}
+  # Sometimes a double which is often 3.99, mostly an empty string.
+  shippingCost: ""
+  # Sometimes has nested documents with fields like 'ground' or 'nextDay', but we will skip for now.
+  shipping: []
+  # 'serviceLevelId' is actually only ever 1, 3, or 5 - but I don't know how to do that.
+  # 'serviceLevelName' could be "Standard", "Expedited", or "Express", correspondingly.
+  shippingLevelsOfService: 
+    - {serviceLevelId: 1, serviceLevelName: "Standard", unitShippingPrice: {^RandomDouble: {min: 0.0, max: 7.0}}}
+    - {serviceLevelId: 3, serviceLevelName: "Expedited", unitShippingPrice: {^RandomDouble: {min: 5.0, max: 17.0}}}
+  # Almost always false.
+  specialOrder: false
+  # Mostly null.
+  shortDescription: null
+  # Mostly null.
+  shortDescriptionHtml: null
+  # This is by far the most common string at 59%.
+  class: "COMPACT DISC"
+  # Matches "COMPACT DISC"
+  classId: 77
+  # Seems like it's usually a mix of genre from movies and music? A long tail of different values, so we'll make some up.
+  subclass: {^FastRandomString: {length: 4}}
+  # Theoretically would correspond to the above.
+  subclassId: {^RandomInt: {min: 1000, max: 2000}}
+  # Most common department (~82%).
+  department: "VIDEO/COMPACT DISC"
+  # Matches "VIDEO/COMPACT DISC".
+  departmentId: 8
+  # Seems to always be the empty string
+  bestBuyItemId: ""
+  # Mostly the empty array.
+  productFamilies: [ ]
+  # This one has a pretty complex distribution... We'll pretend to invent some studios. There's a long tail of less common ones.
+  studio: {^FastRandomString: {length: 4}}
+  image: *RandomImgUrl
+  # Almost always null.
+  largeFrontImage: null
+  # Mostly null.
+  mediumImage: null
+  thumbnailImage: *RandomImgUrl
+  # Mostly null.
+  largeImage: null
+  # Almost always null.
+  alternateViewsImage: null
+  # Almost always null.
+  angleImage: null
+  # Almost always null.
+  backViewImage: null
+  # Almost always null.
+  energyGuideImage: null
+  # ALmost always null.
+  leftViewImage: null
+  # Almost always null.
+  accessoriesImage: null
+  # Almost always null.
+  remoteControlImage: null
+  # Almost always null.
+  rightViewImage: null
+  # Almost always null.
+  topViewImage: null
+  # Almost always false.
+  inStorePickup: false
+  # Almost always false.
+  friendsAndFamilyPickup: false
+  # Almost always false.
+  homeDelivery: false
+  # Almost always 3.
+  quantityLimit: 3
+  # Almost always this exact string.
+  fulfilledBy: "BestBuy.com"
+  # Sometimes has a nested {sku: #}, but often empty.
+  bundledIn: [ ]
+  # Almost always null or missing.
+  relatedCinemaNowId: null
+  # Almost always null or missing.
+  relatedCinemaNowUrl: null
+  # This is a tough one. It's actually a kind of enum with a sort of zipfian distribution... 
+  # We will just simplify to creating some new genres for now.
+  genre: {^FastRandomString: {length: 3}}
+  # Almost always 0.
+  dollarSavings: 0
+  # Almost always this exact string.
+  percentSavings: "0.0"
+  # This exact string about 70% of the time.
+  orderable: "NotOrderable"
+  # Most (~70%) are this weight (must be the weight of a CD/DVD?). Curious that it's a string...
+  shippingWeight: "0.25"
+  # Pretty complex sub-array. Many have this exact offer, we won't bother trying to sprinkle in some other less common ones.
+  # Average of 0.4 offers.
+  offers: 
+  - endDate: "2018-03-31%23:59:59-05:00"
+    heading: null
+    id: 148313
+    imageUrl: null
+    startDate: "2016-01-02-T23:45:00-06:00"
+    text: "Free Shipping on Orders $35 and Up"
+    type: "special_offer"
+    url: "/site/offer/148313/pcmcat748301485567.c?id=pcmcat748301485567"
+  # Almost always false.
+  marketplace: false
+  # Almost always null.
+  listingId: null
+  # Almost always null.
+  sellerId: null
+  # Almost always null.
+  shippingRestrictions: null
+  # Mostly set, often "UNKNOWN" (~8%).
+  manufacturer: {^FastRandomString: {length: {^RandomInt: {min: 5, max: 20}}}}
+  # Could be anything!
+  albumTitle: {^FastRandomString: {length: {^RandomInt: {min: 5, max: 20}}}}
+  # 55% populated with a string, usually short.
+  artistName: {^FastRandomString: {length: {^RandomInt: {min: 5, max: 20}}}}
+  # 55% populated with a string, Always of the form "BYPart000000" with ranging digits.
+  artistId: {^Join: {array: ["BYPart", {^RandomString: {alphabet: "0123456789", length: {^RandomInt: {min: 4, max: 7}}}}]}}
+  # It is unknown if there is a difference between this and 'releaseDate.'
+  originalReleaseDate: {^FormatString: {format: "%04d-%02d-%02d", withArgs: [{^RandomInt: {min: 1980, max: 2016}}, *TwoDigitNumberGenerator, *TwoDigitNumberGenerator]}}
+  # Sometimes null, sometimes missing. Almost always false when present.
+  parentalAdvisory: false
+  # Sometimes null, sometimes missing. Almost always 1 when present.
+  mediaCount: 1
+  # Sometimes null, sometimes missing. Mostly "Stereo" when present.
+  monoStereo: "Stereo"
+  # Mostly "Studio" or "n/a".
+  studioLive: "Studio"
+  # Mostly an empty array. Not present in a high fraction.
+  relatedNapsterSkus: [ ]
+  # Mostly an empty array. Not present in a high fraction.
+  relatedBestBuySkus: [ ]
+  # 55% populated with a string, usually short.
+  albumLabel: {^FastRandomString: {length: {^RandomInt: {min: 5, max: 20}}}}
+  # Almost always empty array or missing.
+  carrierPlans: [ ]
+  # Mostly null or missing.
+  technologyCode: null
+  # Almost always null or missing.
+  carrierModelNumber: null
+  # Mostly null warranty info. Occaisonally short strings like "90 days."
+  warrantyLabor: null
+  warrantyParts: null

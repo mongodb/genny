@@ -1,0 +1,27 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Insert a some data with and without a column store index.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+#Collection: &Collection "customer"
+
+Actors:
+- Name: InsertDocs
+  Type: SamplingLoader
+  Database: tpch
+  ClientName: Default
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: tpch
+    Collection: test # TODO: Change
+    SampleSize: 2
+    Threads: 1
+    InsertBatchSize: 11
+    Batches: 2
+    
