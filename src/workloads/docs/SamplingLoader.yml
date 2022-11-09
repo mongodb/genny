@@ -14,18 +14,18 @@ Actors:
 - Name: CollectionSeed
   Type: MonotonicSingleLoader
   Phases:
-   OnlyActiveInPhases:
-     Active: [0]
-     NopInPhasesUpTo: 3
-     PhaseConfig:
-       Threads: 4
-       Collection: *Collection
-       Database: *db
-       Repeat: 1
-       Document: 
-         x: {^Inc: {}}
-       DocumentCount: 4000
-       BatchSize: 1000
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: 3
+      PhaseConfig:
+        Threads: 4
+        Collection: *Collection
+        Database: *db
+        Repeat: 1
+        Document:
+          x: {^Inc: {}}
+        DocumentCount: 4000
+        BatchSize: 1000
 
 # Our first demonstration of the sampling loader. This will have 4 threads take a sample of size 10
 # and insert those 10 documents again in two batches. The sample size here is computed and defaulted
@@ -36,15 +36,15 @@ Actors:
   Type: SamplingLoader
   Threads: 4
   Phases:
-   OnlyActiveInPhases:
-     Active: [1]
-     NopInPhasesUpTo: 3
-     PhaseConfig:
-       Repeat: 1
-       Database: *db
-       Collection: *Collection
-       Batches: 2
-       InsertBatchSize: 5
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: 3
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Collection: *Collection
+        Batches: 2
+        InsertBatchSize: 5
 
 # In this case we explicitly specify the sample size of 5, meaning we will re-insert those same 5
 # documents over and over again - in this case 20 times each (4 times in each batch, 5 batches).
@@ -55,19 +55,19 @@ Actors:
 #
 # Note that the sample size does not need to be correlated or a multiple of the insert batch size
 # or number of batches.
-# 
+#
 # Again here, each thread has an independent sample.
 - Name: ExplicitSampleSizeDemo
   Type: SamplingLoader
   Threads: 4
   Phases:
-   OnlyActiveInPhases:
-     Active: [2]
-     NopInPhasesUpTo: 3
-     PhaseConfig:
-       Repeat: 1
-       Database: *db
-       Collection: *Collection
-       SampleSize: 5
-       Batches: 5
-       InsertBatchSize: 20
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: 3
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Collection: *Collection
+        SampleSize: 5
+        Batches: 5
+        InsertBatchSize: 20
