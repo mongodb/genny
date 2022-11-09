@@ -1,0 +1,73 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload demonstrates using the SamplingLoader to expand the contents of a collection. This
+  actor will take a random sample of a configurable size and re-insert the same documents. It will
+  project out the "_id" field before re-inserting to avoid duplicate key errors.
+GlobalDefaults:
+  db: &db test
+  Collection: &Collection sampling_loader_demo
+
+Actors:
+# This is just to seed the collection with 4000 documents so that we'll have some sample data to
+# draw from.
+- Name: CollectionSeed
+  Type: MonotonicSingleLoader
+  Phases:
+   OnlyActiveInPhases:
+     Active: [0]
+     NopInPhasesUpTo: 3
+     PhaseConfig:
+       Threads: 4
+       Collection: *Collection
+       Database: *db
+       Repeat: 1
+       Document: 
+         x: {^Inc: {}}
+       DocumentCount: 4000
+       BatchSize: 1000
+
+# Our first demonstration of the sampling loader. This will have 4 threads take a sample of size 10
+# and insert those 10 documents again in two batches. The sample size here is computed and defaulted
+# based on the number of total documents we'll need. So there is no re-use of the sample. Each
+# thread's sample is independent, meaning we should *not* get the same 10 documents inserted 4 times
+# (or at least, that is very unlikely).
+- Name: ImpliedSampleSizeDemo
+  Type: SamplingLoader
+  Threads: 4
+  Phases:
+   OnlyActiveInPhases:
+     Active: [1]
+     NopInPhasesUpTo: 3
+     PhaseConfig:
+       Repeat: 1
+       Database: *db
+       Collection: *Collection
+       Batches: 2
+       InsertBatchSize: 5
+
+# In this case we explicitly specify the sample size of 5, meaning we will re-insert those same 5
+# documents over and over again - in this case 20 times each (4 times in each batch, 5 batches).
+#
+# This may be useful if you want to insert a lot of documents to measure that performance, but
+# don't necessarily need a big sample and want to benefit from the random cursor optimization for
+# small sample sizes to keep the test's runtime lower.
+#
+# Note that the sample size does not need to be correlated or a multiple of the insert batch size
+# or number of batches.
+# 
+# Again here, each thread has an independent sample.
+- Name: ExplicitSampleSizeDemo
+  Type: SamplingLoader
+  Threads: 4
+  Phases:
+   OnlyActiveInPhases:
+     Active: [2]
+     NopInPhasesUpTo: 3
+     PhaseConfig:
+       Repeat: 1
+       Database: *db
+       Collection: *Collection
+       SampleSize: 5
+       Batches: 5
+       InsertBatchSize: 20
