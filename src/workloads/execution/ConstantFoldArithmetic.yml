@@ -106,10 +106,11 @@ Actors:
         Name: MiddleFieldpath
         Expression: {^Concat: {arrays: [*constArray, ["$x"], *constArray]}}
 
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - single-replica-classic-query-engine
-      - single-replica-sbe
+# TODO PERF-3517: Re-enable this workload.
+# AutoRun:
+# - When:
+#    mongodb_setup:
+#      $eq:
+#      - replica
+#      - single-replica-classic-query-engine
+#      - single-replica-sbe
