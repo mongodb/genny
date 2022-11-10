@@ -34,7 +34,7 @@ using namespace bsoncxx;
 TEST_CASE_METHOD(
     MongoTestFixture,
     "SamplingLoader - demo",
-    "[standalone][single_node_replset-1][three_node_replset][sharded][SamplingLoader]") {
+    "[standalone][single_node_replset][three_node_replset][sharded][SamplingLoader]") {
 
     dropAllDatabases();
     auto db = client.database("test");
@@ -49,33 +49,37 @@ TEST_CASE_METHOD(
         Actors:
         - Name: CollectionSeeder
           Type: MonotonicSingleLoader
+          Threads: 1
           Phases:
           - Repeat: 1
             Database: test
             Collection: sampling_loader_test
-            Threads: 1
             DocumentCount: 5
             BatchSize: 5
             Document: 
               x: {^Inc: {}}
           - {Nop: true}
-            
+
         # In order to test something this random, we'll use a sample size equal to the collection
         # size, and that way we can verify that every document gets re-inserted the same number of
         # times.
         - Name: SamplingLoader
           Type: SamplingLoader
+          Threads: 2
           Phases:
           - {Nop: true}
           - Repeat: 1
             Database: test
             Collection: sampling_loader_test
-            Threads: 1
-            # Should see each document inserted an _additional_ 4 times, so should appear 5
-            # times each.
+            # Should see each document inserted an _additional_ 4 times (2 threads, twice each), so
+            # should appear 5 times each when complete.
             SampleSize: 5
-            InsertBatchSize: 4
+            InsertBatchSize: 2
             Batches: 5
+
+        Metrics:
+          Format: csv
+
     )",
                                   __FILE__);
 
@@ -84,9 +88,8 @@ TEST_CASE_METHOD(
         "Inserts documents, samples all of them and re-inserts, check if documents are duplciated "
         "the right number of times") {
         try {
-            genny::ActorHelper ah(nodes.root(), 1);
-            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[1]->run(); });
+            genny::ActorHelper ah(nodes.root(), 3 /* 1 thread for loading, 2 for samplers */);
+            ah.run();
 
             // Assert we see each value of "x" occur 5 times, and that there are 5 unique values.
             mongocxx::pipeline pipe;
@@ -95,7 +98,7 @@ TEST_CASE_METHOD(
             size_t nResults = 0;
             for (auto&& result : cursor) {
                 nResults++;
-                REQUIRE(result["count"].get_double() == 5.0);
+                REQUIRE(result["count"].get_int32() == 5);
             }
             REQUIRE(nResults == 5);
 
