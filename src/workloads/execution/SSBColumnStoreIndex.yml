@@ -29,8 +29,7 @@ Database: &db ssb
 Collection: &Collection order_lineitem
 
 Q1_1Query: &Q1_1Query
-  aggregate: *Collection
-  pipeline:
+  Pipeline:
     [
       {
         "$match": {
@@ -49,11 +48,9 @@ Q1_1Query: &Q1_1Query
         }
       }
     ]
-  cursor: {}
 
 Q1_2Query: &Q1_2Query
-  aggregate: *Collection
-  pipeline:
+  Pipeline:
     [
       {
         "$match": {
@@ -72,11 +69,9 @@ Q1_2Query: &Q1_2Query
         }
       }
     ]
-  cursor: {}
 
 Q1_3Query: &Q1_3Query
-  aggregate: *Collection
-  pipeline:
+  Pipeline:
     [
       {
         $match: {
@@ -97,11 +92,9 @@ Q1_3Query: &Q1_3Query
         }
       }
     ]
-  cursor: {}
 
 Q2_1Query: &Q2_1Query
-  aggregate: *Collection
-  pipeline:
+  Pipeline:
     [
       { $match: { 'part.p_brand': 'Brand#21' } },
       {
@@ -121,11 +114,9 @@ Q2_1Query: &Q2_1Query
         }
       }
     ]
-  cursor: {}
 
 Q2_2Query: &Q2_2Query
-  aggregate: *Collection
-  pipeline:
+  Pipeline:
     [
       {
         $match: {
@@ -163,11 +154,9 @@ Q2_2Query: &Q2_2Query
         }
       }
     ]
-  cursor: {}
 
 Q2_3Query: &Q2_3Query
-  aggregate: *Collection
-  pipeline:
+  Pipeline:
     [
       {
         $match: {
@@ -203,11 +192,9 @@ Q2_3Query: &Q2_3Query
         }
       }
     ]
-  cursor: {}
 
 Q3Query: &Q3Query
-  aggregate: *Collection
-  pipeline:
+  Pipeline:
     [
       {
         "$match": {
@@ -255,12 +242,10 @@ Q3Query: &Q3Query
       },
       {"$sort": {"order_year": 1, "revenue": -1}}
     ]
-  cursor: {}
 
 # Q4 queries are (currently) limited to 10000 documents because they take many hours to finish.
 Q4_1Query: &Q4_1Query
-  aggregate: *Collection
-  pipeline:
+  Pipeline:
     [
       { $limit: 10000 },
       { $match: { 'part.p_mfgr': { $in: ['Manufacturer#1', 'Manufacturer#2'] } } },
@@ -316,11 +301,9 @@ Q4_1Query: &Q4_1Query
         }
       }
     ]
-  cursor: {}
 
 Q4_2Query: &Q4_2Query
-  aggregate: *Collection
-  pipeline:
+  Pipeline:
     [
       { $limit: 10000 },
       {
@@ -370,11 +353,9 @@ Q4_2Query: &Q4_2Query
       },
       {"$addFields": {"order_year": "$_id.order_year", "customer_nation": "$_id.c_nation"} }
     ]
-  cursor: {}
 
 Q4_3Query: &Q4_3Query
-  aggregate: *Collection
-  pipeline:
+  Pipeline:
     [
       { $limit: 10000 },
       {
@@ -432,73 +413,39 @@ Q4_3Query: &Q4_3Query
       },
       {"$sort": {"order_year": 1, "customer_nation": 1, "part_brand": 1}}
     ]
-  cursor: {}
 
 # Defines test operations.
-# Here we use explain with verbosity = execustionStats instead of using plain aggregate command
-# so that aggregate pipeline runs to completion but yet we don't need to exhaust cursor. As of now
-# we don't have an easy way to exhaust cursor.
 TestOperations: &TestOperations
 - OperationMetricsName: Q1_1Query
-  OperationName: RunCommand
-  OperationCommand:
-    explain: *Q1_1Query
-    verbosity:
-      executionStats
+  OperationName: aggregate
+  OperationCommand: *Q1_1Query
 - OperationMetricsName: Q1_2Query
-  OperationName: RunCommand
-  OperationCommand:
-    explain: *Q1_2Query
-    verbosity:
-      executionStats
+  OperationName: aggregate
+  OperationCommand: *Q1_2Query
 - OperationMetricsName: Q1_3Query
-  OperationName: RunCommand
-  OperationCommand:
-    explain: *Q1_3Query
-    verbosity:
-      executionStats
+  OperationName: aggregate
+  OperationCommand: *Q1_3Query
 - OperationMetricsName: Q2_1Query
-  OperationName: RunCommand
-  OperationCommand:
-    explain: *Q2_1Query
-    verbosity:
-      executionStats
+  OperationName: aggregate
+  OperationCommand: *Q2_1Query
 - OperationMetricsName: Q2_2Query
-  OperationName: RunCommand
-  OperationCommand:
-    explain: *Q2_2Query
-    verbosity:
-      executionStats
+  OperationName: aggregate
+  OperationCommand: *Q2_2Query
 - OperationMetricsName: Q2_3Query
-  OperationName: RunCommand
-  OperationCommand:
-    explain: *Q2_3Query
-    verbosity:
-      executionStats
+  OperationName: aggregate
+  OperationCommand: *Q2_3Query
 - OperationMetricsName: Q3Query
-  OperationName: RunCommand
-  OperationCommand:
-    explain: *Q3Query
-    verbosity:
-      executionStats
+  OperationName: aggregate
+  OperationCommand: *Q3Query
 - OperationMetricsName: Q4_1Query
-  OperationName: RunCommand
-  OperationCommand:
-    explain: *Q4_1Query
-    verbosity:
-      executionStats
+  OperationName: aggregate
+  OperationCommand: *Q4_1Query
 - OperationMetricsName: Q4_2Query
-  OperationName: RunCommand
-  OperationCommand:
-    explain: *Q4_2Query
-    verbosity:
-      executionStats
+  OperationName: aggregate
+  OperationCommand: *Q4_2Query
 - OperationMetricsName: Q4_3Query
-  OperationName: RunCommand
-  OperationCommand:
-    explain: *Q4_3Query
-    verbosity:
-      executionStats
+  OperationName: aggregate
+  OperationCommand: *Q4_3Query
 
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 1
@@ -552,8 +499,7 @@ Actors:
 
 # The 'ColumnstoreScan' actor measures the perf with columnar indexes.
 - Name: ColumnstoreScan
-  Type: RunCommand
-  Database: *db
+  Type: CrudActor
   Phases:
     OnlyActiveInPhases:
       Active: [*ColumnstoreScanPhase]
@@ -561,6 +507,7 @@ Actors:
       PhaseConfig:
         Repeat: *TestRepeatCount
         Database: *db
+        Collection: *Collection
         Operations: *TestOperations
 
 # The 'DropColumnstoreIndexes' actor drops columnstore indexes.
@@ -583,8 +530,7 @@ Actors:
 
 # The 'CollScan' actor measures the perf without columnar indexes.
 - Name: CollScan
-  Type: RunCommand
-  Database: *db
+  Type: CrudActor
   Phases:
     OnlyActiveInPhases:
       Active: [*CollScanPhase]
@@ -592,4 +538,5 @@ Actors:
       PhaseConfig:
         Repeat: *TestRepeatCount
         Database: *db
+        Collection: *Collection
         Operations: *TestOperations
