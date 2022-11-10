@@ -39,7 +39,7 @@ GlobalDefaults:
 ActorTemplates:
 - TemplateName: ManyChildClauseQueryTemplate
   Config:
-    Name: {^Parameter: {Name: "Name", Default: "ManyChildClauseActor"}}
+    Name: {^Parameter: {Name: "Name", Default: "unused"}}
     Type: CrudActor
     Database: *Database
     Threads: 1
@@ -53,28 +53,22 @@ ActorTemplates:
           Operations:
           - OperationName: find
             OperationCommand:
-              Filter: {^Parameter: {Name: "Filter", Default: {}}}
+              Filter: {^Parameter: {Name: "Filter", Default: {unused: "please specify a valid filter"}}}
 
 - TemplateName: AggregationOrWithManyChildClausesTemplate
   Config:
     ActorFromTemplate:
       TemplateName: ManyChildClauseQueryTemplate
       TemplateParameters:
-        Name: {^Parameter: {Name: "Name", Default: "AggregationOrWithManyChildClausesTemplate"}}
+        Name: {^Parameter: {Name: "Name", Default: "unused"}}
         Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
         ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
         Filter:
           {$expr:
              {$or:
                 {^Array: {of: {$and: [
-                  {$eq:
-                     ["$a",
-                      {^RandomInt:
-                         {min: 2, max: { ^Parameter: { Name: "aMaxValue", Default: 1000}}}}]},
-                  {$eq:
-                     ["$b",
-                      {^RandomInt:
-                         {min: 2, max: {^Parameter: { Name: "bMaxValue", Default: 1000}}}}]}]},
+                  {$eq: ["$a", {^RandomInt: {min: 2, max: 1000}}]},
+                  {$eq: ["$b", {^RandomInt: {min: 2, max: 1000}}]}]},
                           number: {^Parameter: { Name: "NumberOfClauses", Default: 50}}}}}}
 
 - TemplateName: MatchOrWithManyChildClausesTemplate
@@ -82,29 +76,34 @@ ActorTemplates:
     ActorFromTemplate:
       TemplateName: ManyChildClauseQueryTemplate
       TemplateParameters:
-        Name: {^Parameter: {Name: "Name", Default: "MatchOrWithManyChildClausesTemplate"}}
+        Name: {^Parameter: {Name: "Name", Default: "unused"}}
         Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
         ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
         Filter:
           {$or:
-             {^Array:
-                { of:
-                    { a: { ^RandomInt:
-                             { min: 2, max: { ^Parameter: { Name: "aMaxValue", Default: 1000 } } } },
-                      b: { ^RandomInt:
-                             { min: 2, max: { ^Parameter: { Name: "bMaxValue", Default: 1000 } } } } },
-                  number: { ^Parameter: { Name: "NumberOfClauses", Default: 50 } } } } }
+             {^Array: {of:
+                         {a: {^RandomInt: {min: 2, max: 1000}}},
+                       b: {^RandomInt: {min: 2, max: 1000}},
+                       number: {^Parameter: {Name: "NumberOfClauses", Default: 50}}}}}
 
 - TemplateName: MatchAndWithManyChildClausesTemplate
   Config:
     ActorFromTemplate:
       TemplateName: ManyChildClauseQueryTemplate
       TemplateParameters:
-        Name: {^Parameter: {Name: "Name", Default: "MatchAndWithManyChildClausesTemplate"}}
+        Name: {^Parameter: {Name: "Name", Default: "unused"}}
         Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
         ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
         Filter:
           {$and:
+             # Each time that this template is invoked, we wish to generate a query of the form:
+             #
+             # {$and: [{"arr": 0, "arr": 1, ... "arr": NumberOfClauses - 1}]}
+             #
+             # We achieve this using the "^Inc" generator. However, because ^Inc increments
+             # globally, we need to bind the generated array and keep using it to avoid generating
+             # values greater than/equal to NumberOfClauses. As such, we generate the array within
+             # a ^Cycle and keep repeating it to avoid this problem.
              {^Cycle: {ofLength: 1, fromGenerator:
                          {^Array: {of:
                                      {^Object: {withNEntries: 1, havingKeys: "arr", andValues: {^Inc: {start: 0, step: 1}}}},
