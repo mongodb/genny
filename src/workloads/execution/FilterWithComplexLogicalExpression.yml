@@ -32,7 +32,82 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 50
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 17
+  MaxPhases: &MaxPhases 25
+
+# Set of actor templates for executing a rooted $and/$or over a configurable number of clauses for
+# the aggregation and match languages, respectively.
+ActorTemplates:
+- TemplateName: ManyChildClauseQueryTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+          Collection: *Collection
+          Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {^Parameter: {Name: "Filter", Default: {unused: "please specify a valid filter"}}}
+
+- TemplateName: AggregationOrWithManyChildClausesTemplate
+  Config:
+    ActorFromTemplate:
+      TemplateName: ManyChildClauseQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "Name", Default: "unused"}}
+        Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+        Filter:
+          {$expr:
+             {$or:
+                {^Array: {of: {$and: [
+                  {$eq: ["$a", {^RandomInt: {min: 2, max: 1000}}]},
+                  {$eq: ["$b", {^RandomInt: {min: 2, max: 1000}}]}]},
+                          number: {^Parameter: { Name: "NumberOfClauses", Default: -1}}}}}}
+
+- TemplateName: MatchOrWithManyChildClausesTemplate
+  Config:
+    ActorFromTemplate:
+      TemplateName: ManyChildClauseQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "Name", Default: "unused"}}
+        Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+        Filter:
+          {$or:
+             {^Array: {of:
+                         {a: {^RandomInt: {min: 2, max: 1000}},
+                          b: {^RandomInt: {min: 2, max: 1000}}},
+                       number: {^Parameter: {Name: "NumberOfClauses", Default: -1}}}}}
+
+- TemplateName: MatchAndWithManyChildClausesTemplate
+  Config:
+    ActorFromTemplate:
+      TemplateName: ManyChildClauseQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "Name", Default: "unused"}}
+        Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+        Filter:
+          {$and:
+             # Each time that this template is invoked, we wish to generate a query of the form:
+             #
+             # {$and: [{"arr": 0, "arr": 1, ... "arr": NumberOfClauses - 1}]}
+             #
+             # We achieve this using the "^Inc" generator. However, because ^Inc increments
+             # globally, we need to bind the generated array and keep using it to avoid generating
+             # values greater than/equal to NumberOfClauses. As such, we generate the array within
+             # a ^Cycle of length 1 and keep repeating it to avoid this problem.
+             {^Cycle: {ofLength: 1, fromGenerator:
+                         {^Array: {of:
+                                     {^Object: {withNEntries: 1, havingKeys: "arr", andValues: {^Inc: {start: 0, step: 1}}}},
+                                   number: {^Parameter: {Name: "NumberOfClauses", Default: -1}}}}}}}
 
 Actors:
 # Clear any pre-existing collection state.
@@ -68,7 +143,9 @@ Actors:
         BatchSize: 1000
         Document:
           # NOTE: These documents will not produce a match for the filter below, forcing the query
-          # to scan the entire collection.
+          # to scan the entire collection. The only exception to this is the 'arr' field, which
+          # is intended to be used in rooted $and queries of the form:
+          # {$and: [{arr: 1}, {arr: 2}, ..., {arr: n}]
           a: 1
           b: 1
           c: 1
@@ -122,6 +199,7 @@ Actors:
                            andValues: { ^Object: { withNEntries: 1,
                                                    havingKeys: "d",
                                                    andValues: 1 } } } }
+          arr: {^Cycle: {ofLength: 1, fromGenerator: {^Array: {number: 200, of: {^Inc: {start: 0, step: 1}}}}}}
 
 # Phase 1: Ensure all data is synced to disk.
 - Name: Quiesce
@@ -516,6 +594,78 @@ Actors:
         - OperationName: find
           OperationCommand:
             Filter: {"n1.a.b.c.d.z": 0}
+
+- ActorFromTemplate:
+    TemplateName: AggregationOrWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: AggregationExpressionFiftyClauseRootedOr
+      Repeat: 5
+      ActivePhase: 17
+      NumberOfClauses: 50
+
+- ActorFromTemplate:
+    TemplateName: MatchOrWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: MatchExpressionFiftyClauseRootedOr
+      Repeat: 5
+      ActivePhase: 18
+      NumberOfClauses: 50
+
+- ActorFromTemplate:
+    TemplateName: AggregationOrWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: AggregationExpressionOneHundredClauseRootedOr
+      Repeat: 1
+      ActivePhase: 19
+      NumberOfClauses: 100
+
+- ActorFromTemplate:
+    TemplateName: MatchOrWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: MatchExpressionOneHundredClauseRootedOr
+      Repeat: 1
+      ActivePhase: 20
+      NumberOfClauses: 100
+
+- ActorFromTemplate:
+    TemplateName: AggregationOrWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: AggregationExpressionTwoHundredClauseRootedOr
+      Repeat: 1
+      ActivePhase: 21
+      NumberOfClauses: 200
+
+- ActorFromTemplate:
+    TemplateName: MatchOrWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: MatchExpressionTwoHundredClauseRootedOr
+      Repeat: 1
+      ActivePhase: 22
+      NumberOfClauses: 200
+
+- ActorFromTemplate:
+    TemplateName: MatchAndWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: MatchExpressionFiftyClauseRootedAnd
+      Repeat: 5
+      ActivePhase: 23
+      NumberOfClauses: 50
+
+- ActorFromTemplate:
+    TemplateName: MatchAndWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: MatchExpressionOneHundredClauseRootedAnd
+      Repeat: 1
+      ActivePhase: 24
+      NumberOfClauses: 100
+
+- ActorFromTemplate:
+    TemplateName: MatchAndWithManyChildClausesTemplate
+    TemplateParameters:
+      Name: MatchExpressionTwoHundredClauseRootedAnd
+      Repeat: 1
+      ActivePhase: 25
+      NumberOfClauses: 200
 
 AutoRun:
 - When:
