@@ -69,7 +69,7 @@ ActorTemplates:
                 {^Array: {of: {$and: [
                   {$eq: ["$a", {^RandomInt: {min: 2, max: 1000}}]},
                   {$eq: ["$b", {^RandomInt: {min: 2, max: 1000}}]}]},
-                          number: {^Parameter: { Name: "NumberOfClauses", Default: 50}}}}}}
+                          number: {^Parameter: { Name: "NumberOfClauses", Default: -1}}}}}}
 
 - TemplateName: MatchOrWithManyChildClausesTemplate
   Config:
@@ -84,7 +84,7 @@ ActorTemplates:
              {^Array: {of:
                          {a: {^RandomInt: {min: 2, max: 1000}},
                           b: {^RandomInt: {min: 2, max: 1000}}},
-                       number: {^Parameter: {Name: "NumberOfClauses", Default: 50}}}}}
+                       number: {^Parameter: {Name: "NumberOfClauses", Default: -1}}}}}
 
 - TemplateName: MatchAndWithManyChildClausesTemplate
   Config:
@@ -103,11 +103,11 @@ ActorTemplates:
              # We achieve this using the "^Inc" generator. However, because ^Inc increments
              # globally, we need to bind the generated array and keep using it to avoid generating
              # values greater than/equal to NumberOfClauses. As such, we generate the array within
-             # a ^Cycle and keep repeating it to avoid this problem.
+             # a ^Cycle of length 1 and keep repeating it to avoid this problem.
              {^Cycle: {ofLength: 1, fromGenerator:
                          {^Array: {of:
                                      {^Object: {withNEntries: 1, havingKeys: "arr", andValues: {^Inc: {start: 0, step: 1}}}},
-                                   number: {^Parameter: {Name: "NumberOfClauses", Default: 50}}}}}}}
+                                   number: {^Parameter: {Name: "NumberOfClauses", Default: -1}}}}}}}
 
 Actors:
 # Clear any pre-existing collection state.
