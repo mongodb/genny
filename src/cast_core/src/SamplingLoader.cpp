@@ -1,4 +1,4 @@
-// Copyright 2019-present MongoDB Inc.
+// Copyright 2021-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,7 +71,6 @@ struct SamplingLoader::PhaseConfig {
 };
 
 void genny::actor::SamplingLoader::run() {
-    // First read a sample from the collection.
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
             BOOST_LOG_TRIVIAL(info) << "Beginning to run SamplingLoader";
