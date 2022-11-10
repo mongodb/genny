@@ -31,14 +31,19 @@ using namespace genny::testing;
 namespace bson_stream = bsoncxx::builder::stream;
 using namespace bsoncxx;
 
-TEST_CASE_METHOD(
-    MongoTestFixture,
-    "SamplingLoader - demo",
-    "[standalone][single_node_replset][three_node_replset][sharded][SamplingLoader]") {
+TEST_CASE_METHOD(MongoTestFixture,
+                 "SamplingLoader - demo",
+                 "[standalone][single_node_replset][three_node_replset][sharded][SamplingLoader]") {
 
     dropAllDatabases();
     auto db = client.database("test");
     auto collection = db.collection("sampling_loader_test");
+    // Seed some data.
+    collection.insert_many(std::vector{from_json("{\"x\": 0}"),
+                                       from_json("{\"x\": 1}"),
+                                       from_json("{\"x\": 2}"),
+                                       from_json("{\"x\": 3}"),
+                                       from_json("{\"x\": 4}")});
 
     NodeSource nodes = NodeSource(R"(
         SchemaVersion: 2018-07-01
@@ -47,27 +52,13 @@ TEST_CASE_METHOD(
             URI: )" + MongoTestFixture::connectionUri().to_string() +
                                       R"(
         Actors:
-        - Name: CollectionSeeder
-          Type: MonotonicSingleLoader
-          Threads: 1
-          Phases:
-          - Repeat: 1
-            Database: test
-            Collection: sampling_loader_test
-            DocumentCount: 5
-            BatchSize: 5
-            Document: 
-              x: {^Inc: {}}
-          - {Nop: true}
-
         # In order to test something this random, we'll use a sample size equal to the collection
         # size, and that way we can verify that every document gets re-inserted the same number of
-        # times.
+        # times. A smaller sample size would be non-determinisitc.
         - Name: SamplingLoader
           Type: SamplingLoader
           Threads: 2
           Phases:
-          - {Nop: true}
           - Repeat: 1
             Database: test
             Collection: sampling_loader_test
@@ -88,7 +79,8 @@ TEST_CASE_METHOD(
         "Inserts documents, samples all of them and re-inserts, check if documents are duplciated "
         "the right number of times") {
         try {
-            genny::ActorHelper ah(nodes.root(), 3 /* 1 thread for loading, 2 for samplers */);
+            REQUIRE(collection.count_documents(bsoncxx::document::view()) == 5);
+            genny::ActorHelper ah(nodes.root(), 2 /* 2 threads for samplers */);
             ah.run();
 
             // Assert we see each value of "x" occur 5 times, and that there are 5 unique values.
