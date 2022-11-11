@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run an artifical TPC-H query to sum up total price across all orders against the denormalized
+  Run an internal TPC-H query to sum up total price across all orders against the denormalized
   schema for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
@@ -12,18 +12,18 @@ TPCHDenormalizedTotalOrderRevenueAggregation: &TPCHDenormalizedTotalOrderRevenue
   pipeline:
     [
       {
-        '$project': {
-          'totalPrice': '$orders.o_totalprice'
+        $project: {
+          totalPrice: '$orders.o_totalprice'
         }
       }, {
-        '$unwind': {
-          'path': '$totalPrice'
+        $unwind: {
+          path: '$totalPrice'
         }
       }, {
-        '$group': {
-          '_id': null,
-          'totalRevenue': {
-            '$sum': '$totalPrice'
+        $group: {
+          _id: null,
+          totalRevenue: {
+            $sum: '$totalPrice'
           }
         }
       }

@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run an artifical TPC-H query to get the average customer account balance against the denormalized
+  Run an internal TPC-H query to get the average customer account balance against the denormalized
   schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
