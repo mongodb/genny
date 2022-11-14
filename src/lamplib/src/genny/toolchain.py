@@ -16,7 +16,7 @@ _triplet_os_map = {"Darwin": "osx", "Linux": "linux", "NT": "windows"}
 # Define complex operations as private methods on the module to keep the
 # public Context object clean.
 def _create_compile_environment(
-    triplet_os: str, toolchain_dir: str, system_env: Optional[dict] = None
+        triplet_os: str, toolchain_dir: str, arch: str, system_env: Optional[dict] = None
 ) -> dict:
     system_env = system_env if system_env else os.environ.copy()
 
@@ -25,6 +25,10 @@ def _create_compile_environment(
 
     # For mongodbtoolchain compiler (if there).
     paths.insert(0, "/opt/mongodbtoolchain/v3/bin")
+
+    if (arch == "arm64"):
+        paths.insert(0, os.path.join(toolchain_dir, "installed/tools/arm64-linux/tools/cmake-3.25.0-rc4-linux-aarch64/bin"))
+        paths.insert(0, os.path.join(toolchain_dir, "installed/tools/arm64-linux"))
 
     # For cmake and ctest
     cmake_bin_relative_dir = {
@@ -94,7 +98,7 @@ def _compute_toolchain_info(
         ignore_toolchain_version=ignore_toolchain_version,
     )
     toolchain_dir = toolchain_downloader.result_dir
-    toolchain_env = _create_compile_environment(triplet_os, toolchain_dir)
+    toolchain_env = _create_compile_environment(triplet_os, toolchain_dir, arch)
     if not toolchain_downloader.fetch_and_install():
         raise Exception("Could not fetch and install")
     return ToolchainInfo(
