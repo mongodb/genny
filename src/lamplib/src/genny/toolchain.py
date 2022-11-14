@@ -30,18 +30,19 @@ def _create_compile_environment(
         paths.insert(0, os.path.join(toolchain_dir, "installed/tools/arm64-linux/tools/cmake-3.25.0-rc4-linux-aarch64/bin"))
         paths.insert(0, os.path.join(toolchain_dir, "installed/tools/arm64-linux"))
 
-    # For cmake and ctest
-    cmake_bin_relative_dir = {
-        "linux": "downloads/tools/cmake-3.20.2-linux/cmake-3.20.2-linux-x86_64/bin",
-        "osx": "downloads/tools/cmake-3.20.2-osx/cmake-3.20.2-Darwin-x86_64/CMake.app/Contents/bin",
-    }[triplet_os]
-    paths.insert(0, os.path.join(toolchain_dir, cmake_bin_relative_dir))
+    else:
+        # For cmake and ctest
+        cmake_bin_relative_dir = {
+            "linux": "downloads/tools/cmake-3.20.2-linux/cmake-3.20.2-linux-x86_64/bin",
+            "osx": "downloads/tools/cmake-3.20.2-osx/cmake-3.20.2-Darwin-x86_64/CMake.app/Contents/bin",
+        }[triplet_os]
+        paths.insert(0, os.path.join(toolchain_dir, cmake_bin_relative_dir))
 
-    # For ninja
-    ninja_bin_dir = os.path.join(
-        toolchain_dir, "downloads/tools/ninja-1.10.1-{}:".format(triplet_os)
-    )
-    paths.insert(0, ninja_bin_dir)
+        # For ninja
+        ninja_bin_dir = os.path.join(
+            toolchain_dir, "downloads/tools/ninja-1.10.1-{}:".format(triplet_os)
+        )
+        paths.insert(0, ninja_bin_dir)
 
     out["PATH"] = ":".join(paths)
     out["NINJA_STATUS"] = "[%f/%t (%p) %es] "  # make the ninja output even nicer
@@ -96,6 +97,7 @@ def _compute_toolchain_info(
         os_family=os_family,
         linux_distro=linux_distro,
         ignore_toolchain_version=ignore_toolchain_version,
+        arch=arch,
     )
     toolchain_dir = toolchain_downloader.result_dir
     toolchain_env = _create_compile_environment(triplet_os, toolchain_dir, arch)
@@ -191,7 +193,6 @@ class ToolchainDownloader(Downloader):
             workspace_root=workspace_root,
             os_family=os_family,
             linux_distro=linux_distro,
-            arch=arch,
             install_dir=ToolchainDownloader.TOOLCHAIN_ROOT,
             name="gennytoolchain",
         )
