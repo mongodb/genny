@@ -27,8 +27,8 @@ def _create_compile_environment(
     paths.insert(0, "/opt/mongodbtoolchain/v3/bin")
 
     if (arch == "arm64"):
-        paths.insert(0, os.path.join(toolchain_dir, "installed/tools/arm64-linux/tools/cmake-3.25.0-rc4-linux-aarch64/bin"))
-        paths.insert(0, os.path.join(toolchain_dir, "installed/tools/arm64-linux"))
+        paths.insert(0, os.path.join(toolchain_dir, "installed/arm64-linux/tools/cmake-3.25.0-rc4-linux-aarch64/bin"))
+        paths.insert(0, os.path.join(toolchain_dir, "installed/arm64-linux/tools/ninja"))
 
     else:
         # For cmake and ctest
