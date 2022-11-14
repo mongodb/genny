@@ -85,9 +85,11 @@ def _compute_toolchain_info(
     workspace_root: str,
     os_family: str,
     linux_distro: str,
-    arch: str,
     ignore_toolchain_version: bool,
 ) -> ToolchainInfo:
+    arch = "x64"
+    if linux_distro == "amazon2arm":
+        arch = "arm64"
     if os_family not in _triplet_os_map:
         raise Exception(f"os_family {os_family} is unknown. Pass the --linux-distro option.")
     triplet_os = _triplet_os_map[os_family]
@@ -150,7 +152,6 @@ def toolchain_info(
         info: ToolchainInfo = _compute_toolchain_info(
             genny_repo_root=genny_repo_root,
             workspace_root=workspace_root,
-            arch=arch,
             os_family=os_family,
             linux_distro=linux_distro,
             ignore_toolchain_version=ignore_toolchain_version,
