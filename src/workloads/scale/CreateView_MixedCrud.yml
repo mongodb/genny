@@ -1,0 +1,484 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  This workload is a port of the mixed_workloads in the workloads
+  repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
+  operations, each with dedicated actors/threads. The 4 operations are insertOne, findOne,
+  updateOne, and deleteOne. Since each type of operation runs in a dedicated thread it enables
+  interesting behavior, such as reads getting faster because of a write regression, or reads being
+  starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
+  starved out by writes.
+# This workload does not support sharding yet.
+Keywords:
+- scale
+- insertOne
+- insert
+- findOne
+- find
+- updateOne
+- update
+- deleteOne
+- delete
+
+# These two values should match those are the top of MixPhases.yml
+dbname: &dbname mix
+DocumentCount: &NumDocs 100000
+CollectionCount: &NumColls 1
+MaxPhases: &MaxPhases 5
+
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 500
+  Insert:
+    QueryOptions:
+      maxPoolSize: 500
+  Query:
+    QueryOptions:
+      maxPoolSize: 500
+  Remove:
+    QueryOptions:
+      maxPoolSize: 500
+  Update:
+    QueryOptions:
+      maxPoolSize: 500
+
+ActorTemplates:
+- TemplateName: UpdateTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Update"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Update
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}} 
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LoadConfig:
+            Path: ../../phases/scale/MixPhases.yml
+            Key: UpdatePhase
+
+- TemplateName: RemoveTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Remove"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Remove
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LoadConfig:
+            Path: ../../phases/scale/MixPhases.yml
+            Key: RemovePhase
+
+- TemplateName: InsertTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Insert"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Insert
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LoadConfig:
+            Path: ../../phases/scale/MixPhases.yml
+            Key: InsertPhase
+
+- TemplateName: FindTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Find"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Query
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: [2]}}
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LoadConfig:
+            Path: ../../phases/scale/MixPhases.yml
+            Key: FindPhase
+
+- TemplateName: ViewCreate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Short.Update.Baseline"}}
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "Active", Default: [4]}}
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 10000
+          Database: *dbname
+          Blocking: None          
+          Operations:
+          - OperationMetricsName: CreateViewMetric
+            OperationIsQuiet: true
+            OperationName: RunCommand
+            OperationCommand:
+              {create: {^Parameter: {Name: "Name", Default: "view1"}}, viewOn: Collection0, pipeline: [ { $match: { id: { $lt: 10 } } } ]}
+          - OperationName: RunCommand
+            OperationMetricsName: DropViewMetricSingle      
+            OperationIsQuiet: true
+            OperationCommand:
+              drop: {^Parameter: {Name: "Name", Default: "view1"}}
+
+Actors:
+- Name: Setup
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    BatchSize: 100
+    Threads: 1
+    DocumentCount: *NumDocs
+    Database: *dbname
+    CollectionCount: *NumColls
+    Document: &doc
+      id: {^RandomInt: {min: 0, max: *NumDocs}}
+      a: {^RandomInt: {min: 0, max: *NumDocs}}
+      c: &string {^RandomString: {length: 50}}  # Adjust this so the doc comes out as 100 B.
+    Indexes:
+    - keys: {id: 1}
+    - keys: {a: 1}
+  - Phase: 1..5
+    Nop: true
+
+- Name: QuiesceBetweenLevels
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - &nop {Nop: true}
+  - &quiesce
+    Repeat: 1
+    Database: admin
+    Operations:
+    # Fsync to force a checkpoint and quiesce the system.
+    - OperationMetricsName: FsyncCommand
+      OperationName: AdminCommand
+      OperationCommand:
+        fsync: 1
+  - *nop
+  - *quiesce
+  - *nop
+  - *quiesce
+
+
+# Using Name to set a unique collection name for each actor so 
+# they don't conflict during creation 
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v0
+      #OnlyActiveInPhase: [4]
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v1
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v2
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v3
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v4
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v5
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v6
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v7
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v8
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v9
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v10
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v11
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v12
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v13
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v14
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v15
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v16
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v17
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v18
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v19
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v20
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v21
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v22
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v23
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v24
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v25
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v26
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v27
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v28
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v29
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v30
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v31
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v32
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v33
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v34
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v35
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v36
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v37
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v38
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v39
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v40
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v41
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v42
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v43
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v44
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v45
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v46
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v47
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v48
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v49
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v50
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v51
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v52
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v53
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v54
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v55
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v56
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v57
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v58
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v59
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v60
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v61
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v62
+- ActorFromTemplate:
+    TemplateName: ViewCreate
+    TemplateParameters:
+      Name: v63
+
+
+- ActorFromTemplate:
+    TemplateName: UpdateTemplate
+    TemplateParameters:
+      Name: Update_64
+      Threads: 64
+      OnlyActiveInPhase: [2,4]
+
+
+- ActorFromTemplate:
+    TemplateName: RemoveTemplate
+    TemplateParameters:
+      Name: Remove_64
+      Threads: 64
+      OnlyActiveInPhase: [2,4]
+
+
+- ActorFromTemplate:
+    TemplateName: InsertTemplate
+    TemplateParameters:
+      Name: Insert_64
+      Threads: 64
+      OnlyActiveInPhase: [2,4]
+
+
+- ActorFromTemplate:
+    TemplateName: FindTemplate
+    TemplateParameters:
+      Name: Find_64
+      Threads: 64
+      OnlyActiveInPhase: [2,4]
+
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas
+      - replica
+      - replica-1dayhistory-15gbwtcache
+      - replica-all-feature-flags
+      - replica-maintenance-events
+      - replica-noflowcontrol
+      - single-replica
+      - single-replica-classic-query-engine
+      - single-replica-sbe
+      - standalone

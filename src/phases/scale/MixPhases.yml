@@ -21,7 +21,7 @@ Keywords:
 - delete
 
 dbname: &dbname mix
-runtime: &runtime 3 minutes
+runtime: &runtime 60 minutes
 DocumentCount: &NumDocs 100000
 CollectionCount: &NumColls 1
 
