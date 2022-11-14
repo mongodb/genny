@@ -48,7 +48,6 @@ def cmake(
     # We set both the prefix path and the toolchain file here as a hack to allow cmake
     # to find both shared and static libraries. vcpkg doesn't natively support a project
     # using both.
-    SLOG.info("toolchain information", toolchain_info=toolchain_info)
     cmake_prefix_paths = [
         os.path.join(
             toolchain_info.toolchain_dir, f"installed/{toolchain_info.triplet_arch}-{toolchain_info.triplet_os}-dynamic",
