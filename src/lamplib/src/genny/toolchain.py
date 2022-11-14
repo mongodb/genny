@@ -1,3 +1,4 @@
+
 import json
 import os
 
@@ -201,6 +202,9 @@ class ToolchainDownloader(Downloader):
 
     def _get_url(self):
         prefix = "macos_1014" if self._os_family == "Darwin" else self._linux_distro
+        # Special case for now for arm64 until we get it built properly in the waterfall
+        if arch == "arm64":
+            return ("https://stm.s3.amazonaws.com/gennytoolchain-arm64.tgz")
         return (
             "https://s3.amazonaws.com/mciuploads/genny-toolchain/"
             "genny_toolchain_{}_{}/gennytoolchain.tgz".format(

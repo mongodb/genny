@@ -217,10 +217,14 @@ class CuratorDownloader(Downloader):
             self._curator_distro = "arm"
 
     def _get_url(self):
+        # The pinned curator version was before arm support was added. Use a newer version for Arm
+        verion = CURATOR_VERSION
+        if self._curator_distro == "arm":
+            version = "965d53845fd1987ddbf04a937ff625f3c243dee3"
         return (
             "https://s3.amazonaws.com/boxes.10gen.com/build/curator/"
             "curator-dist-{distro}-{build}.tar.gz".format(
-                distro=self._curator_distro, build=CuratorDownloader.CURATOR_VERSION
+                distro=self._curator_distro, build=version
             )
         )
 
