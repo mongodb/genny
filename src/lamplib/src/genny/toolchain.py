@@ -49,6 +49,7 @@ class ToolchainInfo(NamedTuple):
     triplet_os: str
     toolchain_env: dict
     linux_distro: str
+    triplet_arch: str
 
     @property
     def is_darwin(self) -> bool:
@@ -60,6 +61,7 @@ class ToolchainInfo(NamedTuple):
             "triplet_os": self.triplet_os,
             "toolchain_env": self.toolchain_env,
             "linux_distro": self.linux_distro,
+            "triplet_arch": self.triplet_arch
         }
 
     @staticmethod
@@ -69,6 +71,7 @@ class ToolchainInfo(NamedTuple):
             triplet_os=data["triplet_os"],
             toolchain_env=data["toolchain_env"],
             linux_distro=data["linux_distro"],
+            triplet_arch=data["triplet_arch"],
         )
 
 
@@ -77,6 +80,7 @@ def _compute_toolchain_info(
     workspace_root: str,
     os_family: str,
     linux_distro: str,
+    arch: str,
     ignore_toolchain_version: bool,
 ) -> ToolchainInfo:
     if os_family not in _triplet_os_map:
@@ -96,6 +100,7 @@ def _compute_toolchain_info(
     return ToolchainInfo(
         toolchain_dir=toolchain_dir,
         triplet_os=triplet_os,
+        triplet_arch=arch,
         toolchain_env=toolchain_env,
         linux_distro=linux_distro,
     )
@@ -104,6 +109,7 @@ def _compute_toolchain_info(
 def toolchain_info(
     genny_repo_root: str,
     workspace_root: str,
+    arch: Optional[str] = None,
     os_family: Optional[str] = None,
     linux_distro: Optional[str] = None,
     ignore_toolchain_version: Optional[bool] = None,
@@ -138,6 +144,7 @@ def toolchain_info(
         info: ToolchainInfo = _compute_toolchain_info(
             genny_repo_root=genny_repo_root,
             workspace_root=workspace_root,
+            arch=arch,
             os_family=os_family,
             linux_distro=linux_distro,
             ignore_toolchain_version=ignore_toolchain_version,
@@ -172,6 +179,7 @@ class ToolchainDownloader(Downloader):
         workspace_root: str,
         os_family: str,
         linux_distro: str,
+        arch: str,
         ignore_toolchain_version: bool,
     ):
         super().__init__(
@@ -179,6 +187,7 @@ class ToolchainDownloader(Downloader):
             workspace_root=workspace_root,
             os_family=os_family,
             linux_distro=linux_distro,
+            arch=arch,
             install_dir=ToolchainDownloader.TOOLCHAIN_ROOT,
             name="gennytoolchain",
         )

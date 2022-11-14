@@ -213,6 +213,9 @@ class CuratorDownloader(Downloader):
         if self._linux_distro in ("amazon2", "rhel8", "rhel62"):
             self._curator_distro = "rhel70"
 
+        if self._linux_distro == "amazon2arm":
+            self._curator_distro = "arm"
+
     def _get_url(self):
         return (
             "https://s3.amazonaws.com/boxes.10gen.com/build/curator/"

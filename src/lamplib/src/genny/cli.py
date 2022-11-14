@@ -46,7 +46,7 @@ def cli(ctx: click.Context, verbose: bool) -> None:
     "--linux-distro",
     required=False,
     default="not-linux",
-    type=click.Choice(["ubuntu1804", "ubuntu2004", "rhel8", "rhel70", "amazon2", "not-linux",]),
+    type=click.Choice(["ubuntu1804", "ubuntu2004", "rhel8", "rhel70", "amazon2", "amazon2arm", "not-linux",]),
     help=(
         "Specify the linux distro you're on; if your system isn't available,"
         " please contact us at #workload-generation. The not-linux value is useful on macOS."
