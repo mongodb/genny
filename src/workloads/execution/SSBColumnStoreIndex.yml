@@ -288,7 +288,7 @@ Q4_1Query: &Q4_1Query
             order_year: { $year: '$order.o_orderdate' },
             c_nation: '$customer.nation.n_name'
           },
-          revenue: {
+          profit: {
             $sum: {
               $subtract: ['$l_extendedprice', { $multiply: ['$l_extendedprice', '$l_discount'] }]
             }
@@ -342,7 +342,7 @@ Q4_2Query: &Q4_2Query
             "order_year": {"$year": "$order.o_orderdate"},
             "c_nation": "$customer.nation.n_name"
           },
-          "revenue": {
+          "profit": {
             "$sum": {
               "$subtract": [
                 "$l_extendedprice",
@@ -395,7 +395,7 @@ Q4_3Query: &Q4_3Query
             "c_nation": "$customer.nation.n_name",
             "p_brand": "$part.p_brand"
           },
-          "revenue": {
+          "profit": {
             "$sum": {
               "$subtract": [
                 "$l_extendedprice",
