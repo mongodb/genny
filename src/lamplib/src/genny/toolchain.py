@@ -1,4 +1,3 @@
-
 import json
 import os
 
@@ -17,7 +16,7 @@ _triplet_os_map = {"Darwin": "osx", "Linux": "linux", "NT": "windows"}
 # Define complex operations as private methods on the module to keep the
 # public Context object clean.
 def _create_compile_environment(
-        triplet_os: str, toolchain_dir: str, arch: str, system_env: Optional[dict] = None
+    triplet_os: str, toolchain_dir: str, arch: str, system_env: Optional[dict] = None
 ) -> dict:
     system_env = system_env if system_env else os.environ.copy()
 
@@ -27,8 +26,13 @@ def _create_compile_environment(
     # For mongodbtoolchain compiler (if there).
     paths.insert(0, "/opt/mongodbtoolchain/v3/bin")
 
-    if (arch == "arm64"):
-        paths.insert(0, os.path.join(toolchain_dir, "installed/arm64-linux/tools/cmake-3.25.0-rc4-linux-aarch64/bin"))
+    if arch == "arm64":
+        paths.insert(
+            0,
+            os.path.join(
+                toolchain_dir, "installed/arm64-linux/tools/cmake-3.25.0-rc4-linux-aarch64/bin"
+            ),
+        )
         paths.insert(0, os.path.join(toolchain_dir, "installed/arm64-linux/tools/ninja"))
 
     else:
@@ -67,7 +71,7 @@ class ToolchainInfo(NamedTuple):
             "triplet_os": self.triplet_os,
             "toolchain_env": self.toolchain_env,
             "linux_distro": self.linux_distro,
-            "triplet_arch": self.triplet_arch
+            "triplet_arch": self.triplet_arch,
         }
 
     @staticmethod
@@ -205,7 +209,7 @@ class ToolchainDownloader(Downloader):
         prefix = "macos_1014" if self._os_family == "Darwin" else self._linux_distro
         # Special case for now for arm64 until we get it built properly in the waterfall
         if self.arch == "arm64":
-            return ("https://stm.s3.amazonaws.com/gennytoolchain-arm64.tgz")
+            return "https://stm.s3.amazonaws.com/gennytoolchain-arm64.tgz"
         return (
             "https://s3.amazonaws.com/mciuploads/genny-toolchain/"
             "genny_toolchain_{}_{}/gennytoolchain.tgz".format(

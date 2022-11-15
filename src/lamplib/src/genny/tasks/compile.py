@@ -50,9 +50,13 @@ def cmake(
     # using both.
     cmake_prefix_paths = [
         os.path.join(
-            toolchain_info.toolchain_dir, f"installed/{toolchain_info.triplet_arch}-{toolchain_info.triplet_os}-dynamic",
+            toolchain_info.toolchain_dir,
+            f"installed/{toolchain_info.triplet_arch}-{toolchain_info.triplet_os}-dynamic",
         ),
-        os.path.join(toolchain_info.toolchain_dir, f"installed/{toolchain_info.triplet_arch}-{toolchain_info.triplet_os}",),
+        os.path.join(
+            toolchain_info.toolchain_dir,
+            f"installed/{toolchain_info.triplet_arch}-{toolchain_info.triplet_os}",
+        ),
     ]
 
     cmake_toolchain_file = os.path.join(
