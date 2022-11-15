@@ -18,7 +18,7 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      # Allow for longer duration since column store index build may take a while.
+      # Allow for longer duration since column store index build and collection scans may take a while.
       socketTimeoutMS: 3_600_000  # = 1 hour
       connectTimeoutMS: 3_600_000
 
@@ -35,7 +35,7 @@ Q1_1Query: &Q1_1Query
         "$match": {
           "order.o_orderdate": {
             "$gte": ISODate("1992-01-01T00:00:00Z"),
-            "$lte": ISODate("1996-01-01T00:00:00Z")
+            "$lt": ISODate("1996-01-01T00:00:00Z")
           },
           "l_discount": {"$gte": 0.1, "$lte": 0.3},
           "l_quantity": {"$lte": 25}
@@ -56,7 +56,7 @@ Q1_2Query: &Q1_2Query
         "$match": {
           "order.o_orderdate": {
             "$gte": ISODate("1994-01-01T00:00:00.000Z"),
-            "$lte": ISODate("1994-02-01T00:00:00.000Z")
+            "$lt": ISODate("1994-02-01T00:00:00.000Z")
           },
           "l_discount": {"$gte": 0.04, "$lte": 0.06},
           "l_quantity": {"$gte": 26, "$lt": 33}
@@ -76,8 +76,9 @@ Q1_3Query: &Q1_3Query
       {
         $match: {
           $and: [
-            { $expr: { $eq: [{$year: '$order.o_orderdate'}, 1994] } },
-            { $expr: { $eq: [{$week: '$order.o_orderdate'}, 6] } },
+            {"order.o_orderdate": {
+              "$gte": ISODate("1994-02-07T00:00:00.000Z"),
+              "$lt": ISODate("1994-02-14T00:00:00.000Z")}},
             { l_discount: { $gte: 0.04 } },
             { l_discount: { $lte: 0.06 } },
             { l_quantity: { $gte: 26 } },
