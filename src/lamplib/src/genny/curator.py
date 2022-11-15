@@ -218,7 +218,7 @@ class CuratorDownloader(Downloader):
 
     def _get_url(self):
         # The pinned curator version was before arm support was added. Use a newer version for Arm
-        verion = CURATOR_VERSION
+        verion = CuratorDownloader.CURATOR_VERSION
         if self._curator_distro == "arm":
             version = "965d53845fd1987ddbf04a937ff625f3c243dee3"
         return (
