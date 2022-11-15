@@ -1,0 +1,19 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run an artifical TPC-H query to sum up total price across all orders against the denormalized
+  schema for scale 10.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHDenormalizedTotalOrderRevenueExplain
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - LoadConfig:
+      Path: ../../../../phases/tpch/denormalized/TotalOrderRevenue.yml
+      Key: TPCHDenormalizedTotalOrderRevenueExplain
