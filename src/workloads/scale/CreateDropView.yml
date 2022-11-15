@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  This workload loads a collection with documents and then repeatedly 
+  This workload loads a collection with documents and then repeatedly
   create and drops a view on that collection.
 Keywords:
 - view
@@ -51,13 +51,13 @@ Actors:
   - *nop
   - *quiesce
 
-#This actor repeatedly creates and then drops a view
+# This actor repeatedly creates and then drops a view
 - Name: ViewCreateDrop
   Type: RunCommand
   Threads: 1
   Phases:
   - Nop: true
-  - Nop: true 
+  - Nop: true
   - &toggleView1
     Repeat: 100000
     Database: *dbname
@@ -66,13 +66,13 @@ Actors:
       OperationIsQuiet: true
       OperationName: RunCommand
       OperationCommand:
-        {create: myView, viewOn: Collection0, pipeline: [ { $match: { id: { $lt: 10 } } } ]}
+        {create: myView, viewOn: Collection0, pipeline: [{$match: {id: {$lt: 10}}}]}
     - OperationName: RunCommand
       OperationMetricsName: DropViewMetric
       OperationIsQuiet: true
       OperationCommand:
         drop: myView
-  - Nop: true        
+  - Nop: true
 
 AutoRun:
 - When:
