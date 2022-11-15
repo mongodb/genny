@@ -66,6 +66,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             # should appear 5 times each when complete.
             SampleSize: 5
             InsertBatchSize: 2
+            Pipeline: [{$set: {y: "SamplingLoader wuz here"}}]
             Batches: 5
 
         Metrics:
@@ -76,8 +77,8 @@ TEST_CASE_METHOD(MongoTestFixture,
 
 
     SECTION(
-        "Inserts documents, samples all of them and re-inserts, check if documents are duplciated "
-        "the right number of times") {
+        "Samples and re-inserts documents, then checks if documents are duplciated the right "
+        "number of times") {
         try {
             REQUIRE(collection.count_documents(bsoncxx::document::view()) == 5);
             genny::ActorHelper ah(nodes.root(), 2 /* 2 threads for samplers */);
@@ -93,6 +94,9 @@ TEST_CASE_METHOD(MongoTestFixture,
                 REQUIRE(result["count"].get_int32() == 5);
             }
             REQUIRE(nResults == 5);
+
+            // Assert that the Pipeline was run and we should see 20 documents with a 'y' field.
+            REQUIRE(collection.count_documents(from_json(R"({"y": {"$exists": true}})")) == 20);
 
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);

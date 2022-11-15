@@ -36,7 +36,7 @@ namespace genny::actor {
 class SamplingLoader : public Actor {
 
 public:
-    explicit SamplingLoader(ActorContext& context, uint thread, size_t totalThreads);
+    explicit SamplingLoader(ActorContext& context);
     ~SamplingLoader() override = default;
 
     static std::string_view defaultName() {

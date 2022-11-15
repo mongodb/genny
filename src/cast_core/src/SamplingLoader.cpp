@@ -20,12 +20,11 @@
 
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
-
-#include <yaml-cpp/yaml.h>
 
 #include <boost/log/trivial.hpp>
 
@@ -33,8 +32,8 @@
 #include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
 
-#include <bsoncxx/builder/stream/document.hpp>
 #include <value_generators/DocumentGenerator.hpp>
+#include <value_generators/Pipeline.hpp>
 
 namespace genny::actor {
 
@@ -47,11 +46,7 @@ using bsoncxx::builder::basic::make_document;
 
 /** @private */
 struct SamplingLoader::PhaseConfig {
-    PhaseConfig(PhaseContext& context,
-                mongocxx::pool::entry& client,
-                uint threadId,
-                size_t totalThreads,
-                ActorId id)
+    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, ActorId id)
         : database{(*client)[context["Database"].to<std::string>()]},
           collection{database[context["Collection"].to<std::string>()]},
           // The next line uses integer division for non multithreaded configurations.
@@ -60,34 +55,42 @@ struct SamplingLoader::PhaseConfig {
           numBatches{context["Batches"].to<IntegerSpec>()},
           sampleSize{
               context["SampleSize"].maybe<IntegerSpec>().value_or(numBatches * insertBatchSize)},
-          threadId(threadId) {}
+          pipelineSuffix{context["Pipeline"].maybe<Pipeline>(context, id).value_or(Pipeline{})} {}
 
     mongocxx::database database;
     mongocxx::collection collection;
     int64_t insertBatchSize;
     int64_t numBatches;
     int64_t sampleSize;
-    uint threadId;
+    Pipeline pipelineSuffix;
 };
 
 void genny::actor::SamplingLoader::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
-            BOOST_LOG_TRIVIAL(info) << "Beginning to run SamplingLoader";
+            BOOST_LOG_TRIVIAL(debug) << "Beginning to run SamplingLoader";
             // Read the sample size documents into a vector.
-            mongocxx::pipeline pipe;
-            pipe.sample(config->sampleSize);
-            pipe.project(make_document(kvp("_id", 0)));
-            auto cursor = config->collection.aggregate(pipe, mongocxx::options::aggregate{});
+            mongocxx::pipeline samplePipeline;
+            samplePipeline.sample(config->sampleSize);
+            samplePipeline.project(make_document(kvp("_id", 0)));
+            samplePipeline.append_stages(config->pipelineSuffix.generatePipeline().view_array());
+            auto cursor =
+                config->collection.aggregate(samplePipeline, mongocxx::options::aggregate{});
             const auto sampleDocs =
                 std::vector<bsoncxx::document::value>(cursor.begin(), cursor.end());
 
             if (sampleDocs.empty()) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException("Collection has no documents"));
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "Collection '" + to_string(config->collection.name()) +
+                    "' has no documents. Attempting to sample " +
+                    boost::to_string(config->sampleSize) + " documents."));
             }
             if (sampleDocs.size() < config->sampleSize) {
-                BOOST_THROW_EXCEPTION(
-                    InvalidConfigurationException("Collection smaller than sample size"));
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "Collection '" + to_string(config->collection.name()) +
+                    "' is smaller than the requested sample size of " +
+                    boost::to_string(config->sampleSize) + " documents. Found only " +
+                    boost::to_string(sampleDocs.size()) + " documents."));
             }
 
             // Maintain an index into the sample that's used for the insert batches so we
@@ -115,40 +118,20 @@ void genny::actor::SamplingLoader::run() {
                     BOOST_THROW_EXCEPTION(x);
                 }
             }
-            BOOST_LOG_TRIVIAL(info) << "Finished SamplingLoader on thread " << config->threadId;
+            BOOST_LOG_TRIVIAL(debug) << "Finished SamplingLoader";
         }
     }
 }
 
-SamplingLoader::SamplingLoader(genny::ActorContext& context, uint thread, size_t totalThreads)
+SamplingLoader::SamplingLoader(genny::ActorContext& context)
     : Actor(context),
       _totalBulkLoad{context.operation("TotalBulkInsert", SamplingLoader::id())},
       _individualBulkLoad{context.operation("IndividualBulkInsert", SamplingLoader::id())},
       _client{std::move(
           context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
-      _loop{context, _client, thread, totalThreads, SamplingLoader::id()} {}
-
-class SamplingLoaderProducer : public genny::ActorProducer {
-public:
-    SamplingLoaderProducer(const std::string_view& name) : ActorProducer(name) {}
-    genny::ActorVector produce(genny::ActorContext& context) {
-        if (context["Type"].to<std::string>() != "SamplingLoader") {
-            return {};
-        }
-        genny::ActorVector out;
-        uint totalThreads = context["Threads"].to<int>();
-
-        for (uint i = 0; i < totalThreads; ++i) {
-            out.emplace_back(
-                std::make_unique<genny::actor::SamplingLoader>(context, i, totalThreads));
-        }
-        return out;
-    }
-};
+      _loop{context, _client, SamplingLoader::id()} {}
 
 namespace {
-std::shared_ptr<genny::ActorProducer> loaderProducer =
-    std::make_shared<SamplingLoaderProducer>("SamplingLoader");
-auto registration = genny::Cast::registerCustom<genny::ActorProducer>(loaderProducer);
+auto registration = genny::Cast::registerDefault<SamplingLoader>();
 }  // namespace
 }  // namespace genny::actor

@@ -34,6 +34,7 @@
 #include <gennylib/conventions.hpp>
 #include <value_generators/DefaultRandom.hpp>
 #include <value_generators/DocumentGenerator.hpp>
+#include <value_generators/Pipeline.hpp>
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
@@ -700,41 +701,6 @@ private:
 };
 
 struct AggregateOperation : public BaseOperation {
-    struct Pipeline {
-        /**
-         * Converts the given 'pipeline' to an object with numerical property names.
-         */
-        static bsoncxx::document::value copyPipelineToDocument(const mongocxx::pipeline& pipeline) {
-            auto arrayView = pipeline.view_array();
-            bsoncxx::document::view docView{arrayView.data(), arrayView.length()};
-            return bsoncxx::document::value{docView};
-        }
-
-        Pipeline(const Node& node, PhaseContext& context, ActorId id) {
-            if (!node.isSequence()) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException("'Pipeline' must be an array"));
-            }
-            for (auto&& [_, stageNode] : node) {
-                stageGenerators.push_back(stageNode.to<DocumentGenerator>(context, id));
-            }
-        }
-
-        /**
-         * Evaluates each 'DocumentGenerator' in 'stageGenerators' and returns the resulting
-         * aggregation pipeline.
-         */
-        mongocxx::pipeline generatePipeline() {
-            mongocxx::pipeline pipeline;
-            for (auto&& stage : stageGenerators) {
-                pipeline.append_stage(stage());
-            }
-
-            return pipeline;
-        }
-
-        std::vector<DocumentGenerator> stageGenerators;
-    };
-
     AggregateOperation(const Node& opNode,
                        bool onSession,
                        mongocxx::collection collection,
