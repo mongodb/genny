@@ -183,6 +183,11 @@ class CuratorDownloader(Downloader):
     # https://evergreen.mongodb.com/waterfall/curator
 
     CURATOR_VERSION = "3df28d2514d4c4de7c903d027e43f3ee48bf8ec1"
+    ARM_CURATOR_VERSION = "965d53845fd1987ddbf04a937ff625f3c243dee3"
+
+    SPECIAL_CURATOR_VERSIONS = {
+        "arm": ARM_CURATOR_VERSION,
+    }
 
     def __init__(
         self,
@@ -217,10 +222,10 @@ class CuratorDownloader(Downloader):
             self._curator_distro = "arm"
 
     def _get_url(self):
-        # The pinned curator version was before arm support was added. Use a newer version for Arm
-        version = CuratorDownloader.CURATOR_VERSION
-        if self._curator_distro == "arm":
-            version = "965d53845fd1987ddbf04a937ff625f3c243dee3"
+        # Check if we need a special curator version for the distro. Otherwise use the default
+        # CURATOR_VERSION
+        version = SPECIAL_CURATOR_VERSION.get(self._curator_distro,
+                                              CuratorDownloader.CURATOR_VERSION)
         return (
             "https://s3.amazonaws.com/boxes.10gen.com/build/curator/"
             "curator-dist-{distro}-{build}.tar.gz".format(
