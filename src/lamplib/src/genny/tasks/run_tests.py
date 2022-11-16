@@ -18,7 +18,7 @@ MONGO_COMMIT = "e61bf27c2f6a83fed36e5a13c008a32d563babe2"
 CANNED_ARTIFACTS = {
     "osx": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-macos-x86_64-6.0.0.tgz",
     "amazon2": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-amazon2-6.0.0.tgz",
-    "amazon2arm": "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master/amazon-linux2-arm64-compile/f6c50e0b5e59381e2bb309845206cdbeffa96654/dist/mongo-mongodb_mongo_master_amazon_linux2_arm64_compile_f6c50e0b5e59381e2bb309845206cdbeffa96654_22_11_16_16_07_49.tgz",
+    "amazon2arm": "https://mciuploads.s3.amazonaws.com/mongodb-mongo-master-nightly/amazon2-arm64/d608948720384e57ece7eb27513fcb338d24a34e/dist/mongo-mongodb_mongo_master_nightly_amazon2_arm64_637460443627e0584d69bc62_22_11_16_04_00_04.tgz",
     "ubuntu1804": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-ubuntu1804-6.0.0.tgz",
     "ubuntu2004": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-ubuntu2004-6.0.0.tgz",
     "rhel70": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-rhel70-6.0.0.tgz",
