@@ -14,8 +14,7 @@ Actors:
 - Name: CollectionSeed
   Type: MonotonicSingleLoader
   Phases:
-  - Threads: 4
-    Collection: *Collection
+  - Collection: *Collection
     Database: *db
     Repeat: 1
     Document:
@@ -26,11 +25,11 @@ Actors:
   - {Nop: true}
   - {Nop: true}
 
-# Our first demonstration of the sampling loader. This will have 4 threads take a sample of size 10
-# and insert those 10 documents again in two batches. The sample size here is computed and defaulted
-# based on the number of total documents we'll need. So there is no re-use of the sample. Each
-# thread's sample is independent, meaning we should *not* get the same 10 documents inserted 4 times
-# (or at least, that is very unlikely).
+# Our first demonstration of the sampling loader. This will have 4 threads each take a sample of
+# (defaulted) size 10 and insert those 10 documents again in two batches. The sample size here is
+# computed and defaulted based on the number of total documents we'll need. So there is no re-use of
+# the sample. Each thread's sample is independent, meaning we should *not* get the same 10 documents
+# inserted 4 times (or at least, that is very unlikely).
 - Name: ImpliedSampleSizeDemo
   Type: SamplingLoader
   Threads: 4
@@ -47,8 +46,8 @@ Actors:
 # In this case we explicitly specify the sample size of 5, meaning we will re-insert those same 5
 # documents over and over again - in this case 20 times each (4 times in each batch, 5 batches).
 # This is repeated per thread, for a total of 400 new documents inserted. Note this is somewhat
-# different than the 'Loader', 'MonotonicLoader', etc. which have an overall document count which
-# gets divided amongst the threads.
+# different than the configuration of 'Loader', 'MonotonicLoader', etc. which accept an overall
+# document count target which gets divided amongst the threads.
 #
 # This may be useful if you want to insert a lot of documents to measure that performance, but
 # don't necessarily need a big sample and want to benefit from the random cursor optimization for
@@ -73,7 +72,9 @@ Actors:
   - {Nop: true}
 
 # Now we'll demonstrate the ability to specify a pipeline suffix to tack on after the one with
-# $sample. Note it runs after the "_id" has been projected out.
+# $sample. Note it runs after the "_id" has been projected out. Also note that you should not put
+# stages like a $match in here - the actor is expecting only one-to-one transformations like the one
+# shown, to provide identifiability to the docs inserted.
 - Name: ExplicitSampleSizeDemo
   Type: SamplingLoader
   Threads: 4
@@ -87,4 +88,5 @@ Actors:
     SampleSize: 5
     Batches: 5
     InsertBatchSize: 20
+    # Note again: each thread is independent, so 'nTimesSoFar' will refer to that thread's count.
     Pipeline: [{$set: {y: "SamplingLoader wuz here", nTimesSoFar: {^Inc: {}}}}]

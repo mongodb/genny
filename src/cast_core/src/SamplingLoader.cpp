@@ -28,12 +28,13 @@
 
 #include <boost/log/trivial.hpp>
 
+#include <cast_core/helpers/pipeline_helpers.hpp>
+
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
 
-#include <value_generators/DocumentGenerator.hpp>
-#include <value_generators/Pipeline.hpp>
+#include <value_generators/PipelineGenerator.hpp>
 
 namespace genny::actor {
 
@@ -49,20 +50,24 @@ struct SamplingLoader::PhaseConfig {
     PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, ActorId id)
         : database{(*client)[context["Database"].to<std::string>()]},
           collection{database[context["Collection"].to<std::string>()]},
-          // The next line uses integer division for non multithreaded configurations.
-          // The Remainder is accounted for below.
           insertBatchSize{context["InsertBatchSize"].to<IntegerSpec>()},
           numBatches{context["Batches"].to<IntegerSpec>()},
+          // A sample size is optional. If unspecified, we'll make a sample size such that each
+          // sample document is inserted one time.
           sampleSize{
               context["SampleSize"].maybe<IntegerSpec>().value_or(numBatches * insertBatchSize)},
-          pipelineSuffix{context["Pipeline"].maybe<Pipeline>(context, id).value_or(Pipeline{})} {}
+          pipelineSuffixGenerator{context["Pipeline"]
+                                      .maybe<PipelineGenerator>(context, id)
+                                      .value_or(PipelineGenerator{})} {}
 
     mongocxx::database database;
     mongocxx::collection collection;
     int64_t insertBatchSize;
     int64_t numBatches;
     int64_t sampleSize;
-    Pipeline pipelineSuffix;
+    // User can specify any pipeline here, but it's worth noting that some will not play nicely. For
+    // example, adding a $match will deflate the sample size.
+    PipelineGenerator pipelineSuffixGenerator;
 };
 
 void genny::actor::SamplingLoader::run() {
@@ -73,7 +78,9 @@ void genny::actor::SamplingLoader::run() {
             mongocxx::pipeline samplePipeline;
             samplePipeline.sample(config->sampleSize);
             samplePipeline.project(make_document(kvp("_id", 0)));
-            samplePipeline.append_stages(config->pipelineSuffix.generatePipeline().view_array());
+            const auto suffixStages =
+                pipeline_helpers::makePipeline(config->pipelineSuffixGenerator).view_array();
+            samplePipeline.append_stages(suffixStages);
             auto cursor =
                 config->collection.aggregate(samplePipeline, mongocxx::options::aggregate{});
             const auto sampleDocs =
@@ -87,10 +94,14 @@ void genny::actor::SamplingLoader::run() {
             }
             if (sampleDocs.size() < config->sampleSize) {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "Collection '" + to_string(config->collection.name()) +
+                    "Could not get a sample of the expected size. Either the collection '" +
+                    to_string(config->collection.name()) +
                     "' is smaller than the requested sample size of " +
-                    boost::to_string(config->sampleSize) + " documents. Found only " +
-                    boost::to_string(sampleDocs.size()) + " documents."));
+                    boost::to_string(config->sampleSize) +
+                    " documents, or the specified pipeline suffix is filtering documents. Found "
+                    "only " +
+                    boost::to_string(sampleDocs.size()) +
+                    " documents. Pipeline suffix = " + to_json(suffixStages)));
             }
 
             // Maintain an index into the sample that's used for the insert batches so we

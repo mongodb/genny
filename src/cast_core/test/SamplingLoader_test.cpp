@@ -62,12 +62,13 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Repeat: 1
             Database: test
             Collection: sampling_loader_test
-            # Should see each document inserted an _additional_ 4 times (2 threads, twice each), so
-            # should appear 5 times each when complete.
+            # Should see each document inserted an _additional_ 8 times
+            # (2 threads x 2 batches x 2 per batch (batch size = 10)), so should appear 9 times each
+            # when complete.
             SampleSize: 5
-            InsertBatchSize: 2
+            InsertBatchSize: 10
             Pipeline: [{$set: {y: "SamplingLoader wuz here"}}]
-            Batches: 5
+            Batches: 2
 
         Metrics:
           Format: csv
@@ -91,12 +92,13 @@ TEST_CASE_METHOD(MongoTestFixture,
             size_t nResults = 0;
             for (auto&& result : cursor) {
                 nResults++;
-                REQUIRE(result["count"].get_int32() == 5);
+                REQUIRE(result["count"].get_int32() == 9);
             }
             REQUIRE(nResults == 5);
 
-            // Assert that the Pipeline was run and we should see 20 documents with a 'y' field.
-            REQUIRE(collection.count_documents(from_json(R"({"y": {"$exists": true}})")) == 20);
+            // Assert that the Pipeline was run and we should see 8*5 = 40 documents with a 'y'
+            // field.
+            REQUIRE(collection.count_documents(from_json(R"({"y": {"$exists": true}})")) == 40);
 
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);

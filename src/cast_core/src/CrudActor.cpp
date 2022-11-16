@@ -14,6 +14,7 @@
 
 #include <cast_core/actors/CrudActor.hpp>
 #include <cast_core/actors/OptionsConversion.hpp>
+#include <cast_core/helpers/pipeline_helpers.hpp>
 
 #include <chrono>
 #include <memory>
@@ -34,7 +35,7 @@
 #include <gennylib/conventions.hpp>
 #include <value_generators/DefaultRandom.hpp>
 #include <value_generators/DocumentGenerator.hpp>
-#include <value_generators/Pipeline.hpp>
+#include <value_generators/PipelineGenerator.hpp>
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
@@ -711,14 +712,14 @@ struct AggregateOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _pipeline{opNode["Pipeline"].to<Pipeline>(context, id)} {
+          _pipelineGenerator{opNode["Pipeline"].to<PipelineGenerator>(context, id)} {
         if (opNode["Options"]) {
             _options = opNode["Options"].to<mongocxx::options::aggregate>();
         }
     }
 
     void run(mongocxx::client_session& session) override {
-        auto pipeline = _pipeline.generatePipeline();
+        auto pipeline = pipeline_helpers::makePipeline(_pipelineGenerator);
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto cursor = _onSession ? _collection.aggregate(session, pipeline, _options)
                                      : _collection.aggregate(pipeline, _options);
@@ -726,7 +727,7 @@ struct AggregateOperation : public BaseOperation {
                 ctx.addDocuments(1);
                 ctx.addBytes(doc.length());
             }
-            return Pipeline::copyPipelineToDocument(pipeline);
+            return pipeline_helpers::copyPipelineToDocument(pipeline);
         });
     }
 
@@ -734,7 +735,7 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::aggregate _options;
-    Pipeline _pipeline;
+    PipelineGenerator _pipelineGenerator;
     metrics::Operation _operation;
 };
 
