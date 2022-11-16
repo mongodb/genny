@@ -189,6 +189,15 @@ class CuratorDownloader(Downloader):
         "arm": ARM_CURATOR_VERSION,
     }
 
+    DISTRO_MAPPING = {
+        "ubuntu": "ubuntu",
+        "archlinux": "linux-amd64",
+        "amazon2": "rhel70",
+        "rhel8": "rhel70",
+        "rhel62": "rhel70",
+        "amazon2arm": "arm",
+    }
+
     def __init__(
         self,
         genny_repo_root: str,
@@ -209,17 +218,7 @@ class CuratorDownloader(Downloader):
         if self._os_family == "Darwin":
             self._curator_distro = "macos"
 
-        if "ubuntu" in self._linux_distro:
-            self._curator_distro = "ubuntu"
-
-        if self._linux_distro == "archlinux":
-            self._curator_distro = "linux-amd64"
-
-        if self._linux_distro in ("amazon2", "rhel8", "rhel62"):
-            self._curator_distro = "rhel70"
-
-        if self._linux_distro == "amazon2arm":
-            self._curator_distro = "arm"
+        self._curator_distro = DISTRO_MAPPING.get(self._linux_distro, self._curator_distro)
 
     def _get_url(self):
         # Check if we need a special curator version for the distro. Otherwise use the default
