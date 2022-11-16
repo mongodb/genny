@@ -190,7 +190,6 @@ class CuratorDownloader(Downloader):
     }
 
     DISTRO_MAPPING = {
-        "ubuntu": "ubuntu",
         "archlinux": "linux-amd64",
         "amazon2": "rhel70",
         "rhel8": "rhel70",
@@ -217,6 +216,11 @@ class CuratorDownloader(Downloader):
         self._curator_distro = self._linux_distro
         if self._os_family == "Darwin":
             self._curator_distro = "macos"
+
+        # Note that this checks a substring. We could replace this check by finding all the valid
+        # ubuntu versions and putting their names in DISTRO_MAPPING
+        if "ubuntu" in self._linux_distro:
+            self._curator_distro = "ubuntu"
 
         self._curator_distro = CuratorDownloader.DISTRO_MAPPING.get(
             self._linux_distro, self._curator_distro
