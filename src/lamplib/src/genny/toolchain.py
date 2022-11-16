@@ -113,7 +113,7 @@ def _compute_toolchain_info(
     return ToolchainInfo(
         toolchain_dir=toolchain_dir,
         triplet_os=triplet_os,
-        triplet_triplet_arch=triplet_arch,
+        triplet_arch=triplet_arch,
         toolchain_env=toolchain_env,
         linux_distro=linux_distro,
     )
