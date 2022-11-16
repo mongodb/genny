@@ -218,7 +218,7 @@ class CuratorDownloader(Downloader):
         if self._os_family == "Darwin":
             self._curator_distro = "macos"
 
-        self._curator_distro = DISTRO_MAPPING.get(self._linux_distro, self._curator_distro)
+        self._curator_distro = CuratorDownloader.DISTRO_MAPPING.get(self._linux_distro, self._curator_distro)
 
     def _get_url(self):
         # Check if we need a special curator version for the distro. Otherwise use the default
