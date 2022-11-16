@@ -16,7 +16,7 @@ _triplet_os_map = {"Darwin": "osx", "Linux": "linux", "NT": "windows"}
 # Define complex operations as private methods on the module to keep the
 # public Context object clean.
 def _create_compile_environment(
-    triplet_os: str, toolchain_dir: str, arch: str, system_env: Optional[dict] = None
+    triplet_os: str, toolchain_dir: str, triplet_arch: str, system_env: Optional[dict] = None
 ) -> dict:
     system_env = system_env if system_env else os.environ.copy()
 
@@ -26,7 +26,7 @@ def _create_compile_environment(
     # For mongodbtoolchain compiler (if there).
     paths.insert(0, "/opt/mongodbtoolchain/v3/bin")
 
-    if arch == "arm64":
+    if triplet_arch == "arm64":
         paths.insert(
             0,
             os.path.join(
@@ -92,9 +92,9 @@ def _compute_toolchain_info(
     linux_distro: str,
     ignore_toolchain_version: bool,
 ) -> ToolchainInfo:
-    arch = "x64"
+    triplet_arch = "x64"
     if linux_distro == "amazon2arm":
-        arch = "arm64"
+        triplet_arch = "arm64"
     if os_family not in _triplet_os_map:
         raise Exception(f"os_family {os_family} is unknown. Pass the --linux-distro option.")
     triplet_os = _triplet_os_map[os_family]
@@ -104,16 +104,16 @@ def _compute_toolchain_info(
         os_family=os_family,
         linux_distro=linux_distro,
         ignore_toolchain_version=ignore_toolchain_version,
-        arch=arch,
+        triplet_arch=triplet_arch,
     )
     toolchain_dir = toolchain_downloader.result_dir
-    toolchain_env = _create_compile_environment(triplet_os, toolchain_dir, arch)
+    toolchain_env = _create_compile_environment(triplet_os, toolchain_dir, triplet_arch)
     if not toolchain_downloader.fetch_and_install():
         raise Exception("Could not fetch and install")
     return ToolchainInfo(
         toolchain_dir=toolchain_dir,
         triplet_os=triplet_os,
-        triplet_arch=arch,
+        triplet_triplet_arch=triplet_arch,
         toolchain_env=toolchain_env,
         linux_distro=linux_distro,
     )
@@ -122,7 +122,7 @@ def _compute_toolchain_info(
 def toolchain_info(
     genny_repo_root: str,
     workspace_root: str,
-    arch: Optional[str] = None,
+    triplet_arch: Optional[str] = None,
     os_family: Optional[str] = None,
     linux_distro: Optional[str] = None,
     ignore_toolchain_version: Optional[bool] = None,
@@ -191,7 +191,7 @@ class ToolchainDownloader(Downloader):
         workspace_root: str,
         os_family: str,
         linux_distro: str,
-        arch: str,
+        triplet_arch: str,
         ignore_toolchain_version: bool,
     ):
         super().__init__(
@@ -203,12 +203,12 @@ class ToolchainDownloader(Downloader):
             name="gennytoolchain",
         )
         self.ignore_toolchain_version = ignore_toolchain_version
-        self.arch = arch
+        self.triplet_arch = triplet_arch
 
     def _get_url(self):
         prefix = "macos_1014" if self._os_family == "Darwin" else self._linux_distro
         # Special case for now for arm64 until we get it built properly in the waterfall
-        if self.arch == "arm64":
+        if self.triplet_arch == "arm64":
             return "https://stm.s3.amazonaws.com/gennytoolchain-arm64.tgz"
         return (
             "https://s3.amazonaws.com/mciuploads/genny-toolchain/"
