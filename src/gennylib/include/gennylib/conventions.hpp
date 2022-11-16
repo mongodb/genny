@@ -27,6 +27,7 @@
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Node.hpp>
 
+
 namespace genny {
 
 /**

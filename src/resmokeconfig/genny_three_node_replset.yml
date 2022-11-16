@@ -13,7 +13,7 @@ executor:
     - "--success"
     - "--out"
     - "../../build/XUnitXML/cast_core_test.junit.xml"
-    - "[SamplingLoader]"
+    - "[three_node_replset]"
   fixture:
     class: ReplicaSetFixture
     mongod_options:

@@ -1,4 +1,4 @@
-// Copyright 2021-present MongoDB Inc.
+// Copyright 2022-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ namespace genny::actor {
 /**
  * Given a collection that's already populated, will pull a sample of documents from that
  * collection and then re insert them in order to grow the collection. This is not guaranteed
- * to the distributions of values in the collection.
+ * to match the distributions of values in the collection.
  *
  * Owner: query
  */

@@ -1,4 +1,4 @@
-// Copyright 2021-present MongoDB Inc.
+// Copyright 2022-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -88,9 +88,12 @@ void genny::actor::SamplingLoader::run() {
 
             if (sampleDocs.empty()) {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                    "Collection '" + to_string(config->collection.name()) +
-                    "' has no documents. Attempting to sample " +
-                    boost::to_string(config->sampleSize) + " documents."));
+                    "Sample was unable to find any documents from collection '" +
+                    to_string(config->collection.name()) +
+                    "'. Could the collection be empty or could the pipeline be filtering out "
+                    "documents? Attempting to sample " +
+                    boost::to_string(config->sampleSize) +
+                    " documents. Pipeline suffix = " + to_json(suffixStages)));
             }
             if (sampleDocs.size() < config->sampleSize) {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(
