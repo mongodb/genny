@@ -415,49 +415,9 @@ Q4_3Query: &Q4_3Query
       {"$sort": {"order_year": 1, "customer_nation": 1, "part_brand": 1}}
     ]
 
-# Defines test operations.
-TestOperations: &TestOperations
-- OperationMetricsName: Q1_1Query
-  OperationName: aggregate
-  OperationCommand: *Q1_1Query
-- OperationMetricsName: Q1_2Query
-  OperationName: aggregate
-  OperationCommand: *Q1_2Query
-- OperationMetricsName: Q1_3Query
-  OperationName: aggregate
-  OperationCommand: *Q1_3Query
-- OperationMetricsName: Q2_1Query
-  OperationName: aggregate
-  OperationCommand: *Q2_1Query
-- OperationMetricsName: Q2_2Query
-  OperationName: aggregate
-  OperationCommand: *Q2_2Query
-- OperationMetricsName: Q2_3Query
-  OperationName: aggregate
-  OperationCommand: *Q2_3Query
-- OperationMetricsName: Q3Query
-  OperationName: aggregate
-  OperationCommand: *Q3Query
-- OperationMetricsName: Q4_1Query
-  OperationName: aggregate
-  OperationCommand: *Q4_1Query
-- OperationMetricsName: Q4_2Query
-  OperationName: aggregate
-  OperationCommand: *Q4_2Query
-- OperationMetricsName: Q4_3Query
-  OperationName: aggregate
-  OperationCommand: *Q4_3Query
-
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 1
-
-SetupPhase: &SetupPhase 0
-BuildColumnStoreIndexPhase: &BuildColumnStoreIndexPhase 1
-ColumnstoreScanPhase: &ColumnstoreScanPhase 2
-DropColumnstoreIndexPhase: &DropColumnstoreIndexPhase 3
-CollScanPhase: &CollScanPhase 4
-MaxPhases: &MaxPhases 5
-
+MaxPhases: &MaxPhases 42
 ColumnStoreIndexName: &ColumnStoreIndexName $**_columnstore
 
 Actors:
@@ -466,7 +426,7 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [*SetupPhase]
+      Active: [0]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -483,7 +443,7 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [*BuildColumnStoreIndexPhase]
+      Active: [1]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -498,18 +458,168 @@ Actors:
             - key: {"$**": "columnstore"}
               name: *ColumnStoreIndexName
 
-# The 'ColumnstoreScan' actor measures the perf with columnar indexes.
-- Name: ColumnstoreScan
+# Quiesce before each query
+- Name: QuiescePhase
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+
+# Run each SSB query in a separate phase, both with and without a column store index.
+- Name: Q1_1
   Type: CrudActor
   Phases:
     OnlyActiveInPhases:
-      Active: [*ColumnstoreScanPhase]
+      Active: [3, 24]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *TestRepeatCount
         Database: *db
         Collection: *Collection
-        Operations: *TestOperations
+        Operations:
+        - OperationMetricsName: Q1_1Query
+          OperationName: aggregate
+          OperationCommand: *Q1_1Query
+
+- Name: Q1_2
+  Type: CrudActor
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5, 26]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: Q1_2Query
+          OperationName: aggregate
+          OperationCommand: *Q1_2Query
+
+- Name: Q1_3
+  Type: CrudActor
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7, 28]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: Q1_3Query
+          OperationName: aggregate
+          OperationCommand: *Q1_3Query
+
+- Name: Q2_1
+  Type: CrudActor
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9, 30]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: Q2_1Query
+          OperationName: aggregate
+          OperationCommand: *Q2_1Query
+
+- Name: Q2_2
+  Type: CrudActor
+  Phases:
+    OnlyActiveInPhases:
+      Active: [11, 32]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: Q2_2Query
+          OperationName: aggregate
+          OperationCommand: *Q2_2Query
+
+- Name: Q2_3
+  Type: CrudActor
+  Phases:
+    OnlyActiveInPhases:
+      Active: [13, 34]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: Q2_3Query
+          OperationName: aggregate
+          OperationCommand: *Q2_3Query
+
+- Name: Q3
+  Type: CrudActor
+  Phases:
+    OnlyActiveInPhases:
+      Active: [15, 36]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: Q3Query
+          OperationName: aggregate
+          OperationCommand: *Q3Query
+
+- Name: Q4_1
+  Type: CrudActor
+  Phases:
+    OnlyActiveInPhases:
+      Active: [17, 38]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: Q4_1Query
+          OperationName: aggregate
+          OperationCommand: *Q4_1Query
+
+- Name: Q4_2
+  Type: CrudActor
+  Phases:
+    OnlyActiveInPhases:
+      Active: [19, 40]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: Q4_2Query
+          OperationName: aggregate
+          OperationCommand: *Q4_2Query
+
+- Name: Q4_3
+  Type: CrudActor
+  Phases:
+    OnlyActiveInPhases:
+      Active: [21, 42]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *TestRepeatCount
+        Database: *db
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: Q4_3Query
+          OperationName: aggregate
+          OperationCommand: *Q4_3Query
 
 # The 'DropColumnstoreIndexes' actor drops columnstore indexes.
 - Name: DropColumnstoreIndex
@@ -517,7 +627,7 @@ Actors:
   Database: *db
   Phases:
     OnlyActiveInPhases:
-      Active: [*DropColumnstoreIndexPhase]
+      Active: [22]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -528,16 +638,3 @@ Actors:
           OperationCommand:
             dropIndexes: *Collection
             index: *ColumnStoreIndexName
-
-# The 'CollScan' actor measures the perf without columnar indexes.
-- Name: CollScan
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
-      Active: [*CollScanPhase]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations: *TestOperations
