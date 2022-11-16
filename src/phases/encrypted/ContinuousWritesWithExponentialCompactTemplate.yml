@@ -126,7 +126,7 @@ Actors:
   ClientName: EncryptedPool
   Phases:
     OnlyActiveInPhases:
-      Active: [4,6]
+      Active: [4, 6]
       NopInPhasesUpTo: *max_phases
       PhaseConfig:
         Repeat: 1
