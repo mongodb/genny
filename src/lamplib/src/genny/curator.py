@@ -224,8 +224,9 @@ class CuratorDownloader(Downloader):
     def _get_url(self):
         # Check if we need a special curator version for the distro. Otherwise use the default
         # CURATOR_VERSION
-        version = SPECIAL_CURATOR_VERSION.get(self._curator_distro,
-                                              CuratorDownloader.CURATOR_VERSION)
+        version = SPECIAL_CURATOR_VERSION.get(
+            self._curator_distro, CuratorDownloader.CURATOR_VERSION
+        )
         return (
             "https://s3.amazonaws.com/boxes.10gen.com/build/curator/"
             "curator-dist-{distro}-{build}.tar.gz".format(
