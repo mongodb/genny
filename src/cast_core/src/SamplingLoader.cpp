@@ -23,6 +23,7 @@
 #include <bsoncxx/json.hpp>
 
 #include <mongocxx/client.hpp>
+#include <mongocxx/exception/operation_exception.hpp>
 #include <mongocxx/pool.hpp>
 
 #include <yaml-cpp/yaml.h>
@@ -79,9 +80,33 @@ void genny::actor::SamplingLoader::run() {
             mongocxx::pipeline pipe;
             pipe.sample(config->sampleSize);
             pipe.project(make_document(kvp("_id", 0)));
-            auto cursor = config->collection.aggregate(pipe, mongocxx::options::aggregate{});
-            const auto sampleDocs =
-                std::vector<bsoncxx::document::value>(cursor.begin(), cursor.end());
+            std::vector<bsoncxx::document::value> sampleDocs;
+            const int maxRetries = 3;
+            int nRetries = 0;
+            while (sampleDocs.empty()) {
+                try {
+                    auto cursor =
+                        config->collection.aggregate(pipe, mongocxx::options::aggregate{});
+                    sampleDocs =
+                        std::vector<bsoncxx::document::value>(cursor.begin(), cursor.end());
+                } catch (const mongocxx::operation_exception& ex) {
+                    if (nRetries >= maxRetries) {
+                        BOOST_LOG_TRIVIAL(warning)
+                            << "Exceeded maximum number of retries: " << maxRetries
+                            << ". Giving up";
+                        BOOST_THROW_EXCEPTION(ex);
+                    } else if (ex.code().value() == 28799) {
+                        // $sample couldn't find a non-duplicate document.
+                        // See SERVER-29446, this can happen sporadically and is safe to retry.
+                        BOOST_LOG_TRIVIAL(info)
+                            << "Got a retryable error when gathering the sample. Retrying...";
+                        ++nRetries;
+                    } else {
+                        BOOST_LOG_TRIVIAL(warning) << "Unexpected error when gathering sample: ";
+                        BOOST_THROW_EXCEPTION(ex);
+                    }
+                }
+            }
 
             if (sampleDocs.empty()) {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException("Collection has no documents"));
