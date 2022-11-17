@@ -415,8 +415,8 @@ Q4_3Query: &Q4_3Query
       {"$sort": {"order_year": 1, "customer_nation": 1, "part_brand": 1}}
     ]
 
-# Defines how many times each test operation is executed.
-TestRepeatCount: &TestRepeatCount 1
+# Defines how many times each test operation is executed. Using 3 due to variability in timing numbers.
+TestRepeatCount: &TestRepeatCount 3
 MaxPhases: &MaxPhases 42
 ColumnStoreIndexName: &ColumnStoreIndexName $**_columnstore
 
