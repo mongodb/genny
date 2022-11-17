@@ -14,44 +14,33 @@ Description: |
 
 StartMongosync:
   Repeat: 1
-  Command: python3
+  Module: mongosync_actor
+  Endpoint: start
   MetricsName: StartMongosync
-  Script: |
-    import mongosync_actor as actor
-    actor.change_state("/api/v1/start",
-        {"Source": "cluster0", "Destination": "cluster1"})
 
 PollForCEA:
   Repeat: 1
-  Command: python3
+  Module: mongosync_actor
+  Endpoint: poll_for_cea
   MetricsName: PollForCEA
-  Script: |
-    import mongosync_actor as actor
-    actor.poll(lambda x: x != "change event application", "info")
 
 DrainWrites:
   Repeat: 1
-  Command: python3
+  Module: mongosync_actor
+  Endpoint: drain_writes
   MetricsName: DrainWrites
-  Script: |
-    import mongosync_actor as actor
-    actor.poll(lambda x: int(x) > 5, "lagTimeSeconds")
 
 Commit:
   Repeat: 1
-  Command: python3
+  Module: mongosync_actor
+  Endpoint: commit
   MetricsName: Commit
-  Script: |
-    import mongosync_actor as actor
-    actor.change_state("/api/v1/commit", {})
 
 WaitForCommit:
   Repeat: 1
-  Command: python3
+  Module: mongosync_actor
+  Endpoint: wait_for_commit
   MetricsName: WaitForCommit
-  Script: |
-    import mongosync_actor as actor
-    actor.poll(lambda x: x != "COMMITTED", "state")
 
 InsertShortTestData:
   Repeat: 1

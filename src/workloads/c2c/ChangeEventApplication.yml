@@ -13,8 +13,9 @@ Keywords:
 - change event application
 - CEA
 
-EnvironmentVariables:
-  MongosyncConnectionUrls: http://localhost:27182
+EnvironmentDetails:
+  MongosyncConnectionURIs:
+    - http://localhost:27182
 
 Clients:
   Default:
@@ -43,7 +44,7 @@ Actors:
   - *nop
 
 - Name: Mongosync
-  Type: ExternalScriptRunner
+  Type: Python
   Threads: 1
   Phases:
   - *nop

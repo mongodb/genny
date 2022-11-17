@@ -3,24 +3,27 @@ import time
 import requests
 import functools
 from concurrent.futures import ThreadPoolExecutor
+import click
+import yaml
 
 
-def _get_connection_urls():
-    mongosync_connection_var = "MongosyncConnectionUrls"
-    connection_urls = os.environ.get(mongosync_connection_var)
-    if not connection_urls:
+def _get_connection_urls(workload_yaml):
+    with open(workload_yaml) as f:
+        workload = yaml.safe_load(f)
+    uris = workload.get("EnvironmentDetails", {}).get("MongosyncConnectionURIs")
+    if not uris:
         raise Exception(
-            f'The environment variable "{mongosync_connection_var}" must be set to use this script'
+            f"This actor requires setting EnvironmentDetails: MongosyncConnectionURIs to use this script"
         )
-    return connection_urls.split()
+    return uris
 
 
-def poll(predicate, key):
+def poll(workload_yaml, predicate, key):
     """
     Wait for all mongosyncs to reach a certain state (e.g. predicate returns False)
     based on a value returned by the /progress endpoint
     """
-    connection_urls = _get_connection_urls()
+    connection_urls = _get_connection_urls(workload_yaml)
 
     def get_progress():
         res = requests.get(f"{url}/api/v1/progress")
@@ -46,14 +49,14 @@ def _change_one_mongosync_state(route, body, url):
     return success
 
 
-def change_state(route, body):
+def change_state(workload_yaml, route, body):
     """
     Helper function to change state of mongosync. This must
     send all requests in parallel, as some commands block until
     all instances recieve them
     """
 
-    connection_urls = _get_connection_urls()
+    connection_urls = _get_connection_urls(workload_yaml)
 
     fn = functools.partial(_change_one_mongosync_state, route, body)
     with ThreadPoolExecutor() as executor:
@@ -65,3 +68,52 @@ def change_state(route, body):
             futures.append(executor.submit(fn, url))
         for f in futures:
             f.result()
+
+
+@click.group(name="MongosyncActor", context_settings=dict(help_option_names=["-h", "--help"]))
+def cli():
+    pass
+
+
+@cli.command(
+    "start", help=("Issue /start to all mongosync processes"),
+)
+@click.argument("workload_yaml", nargs=1)
+def start(workload_yaml):
+    change_state(workload_yaml, "/api/v1/start", {"Source": "cluster0", "Destination": "cluster1"})
+
+
+@cli.command(
+    "poll_for_cea", help=("Poll all available instances for the CEA stage"),
+)
+@click.argument("workload_yaml", nargs=1)
+def poll_for_cea(workload_yaml):
+    poll(workload_yaml, lambda x: x != "change event application", "info")
+
+
+@cli.command(
+    "drain_writes", help=("Wait till all writes have been drained to the destination cluster"),
+)
+@click.argument("workload_yaml", nargs=1)
+def drain_writes(workload_yaml):
+    poll(workload_yaml, lambda x: int(x) > 5, "lagTimeSeconds")
+
+
+@cli.command(
+    "commit", help=("Commit the migration"),
+)
+@click.argument("workload_yaml", nargs=1)
+def commit(workload_yaml):
+    change_state(workload_yaml, "/api/v1/commit", {})
+
+
+@cli.command(
+    "wait_for_commit", help=("Wait until all mongosyncs are finished commiting the migration"),
+)
+@click.argument("workload_yaml", nargs=1)
+def wait_for_commit(workload_yaml):
+    poll(workload_yaml, lambda x: x != "COMMITTED", "state")
+
+
+if __name__ == "__main__":
+    cli()

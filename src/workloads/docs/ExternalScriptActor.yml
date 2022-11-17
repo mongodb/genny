@@ -37,3 +37,10 @@ Actors:
     Command: "sh"
     MetricsName: MyMetrics
     Script: "echo 1"
+- Name: PythonRunner
+  Type: Python
+  Threads: 5
+  Phases:
+    - Repeat: 5
+      Module: example_actor
+      Endpoint: hello_world

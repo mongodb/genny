@@ -13,6 +13,10 @@ Keywords:
 # These two values should match those are the top of MixPhases.yml
 ScriptsPath: &scriptsPath ./MongosyncScripts.yml
 
+EnvironmentDetails:
+  MongosyncConnectionURIs:
+    - http://localhost:27182
+
 Parameters:
 - &Nop {Nop: true}
 
@@ -58,7 +62,7 @@ Actors:
   - *Nop
 
 - Name: Mongosync
-  Type: ExternalScriptRunner
+  Type: Python
   Threads: 1
   Phases:
   - *Nop
