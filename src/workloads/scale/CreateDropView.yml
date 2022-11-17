@@ -27,29 +27,20 @@ Actors:
     Document: &doc
       id: {^RandomInt: {min: 0, max: *NumDocs}}
       a: {^RandomInt: {min: 0, max: *NumDocs}}
-      c: &string {^RandomString: {length: 50}}  # Adjust this so the doc comes out as 100 B.
-    Indexes:
-    - keys: {id: 1}
-    - keys: {a: 1}
+      c: &string {^RandomString: {length: 50}}
   - Phase: 1..3
     Nop: true
 
-- Name: QuiesceBetweenLevels
-  Type: RunCommand
+- Name: QuiesceActor
+  Type: QuiesceActor
   Threads: 1
+  Database: dbname
   Phases:
-  - &nop {Nop: true}
-  - &quiesce
-    Repeat: 1
-    Database: admin
-    Operations:
-    # Fsync to force a checkpoint and quiesce the system.
-    - OperationMetricsName: FsyncCommand
-      OperationName: AdminCommand
-      OperationCommand:
-        fsync: 1
-  - *nop
-  - *quiesce
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+  - Repeat: 1
+
 
 # This actor repeatedly creates and then drops a view
 - Name: ViewCreateDrop
@@ -58,8 +49,7 @@ Actors:
   Phases:
   - Nop: true
   - Nop: true
-  - &toggleView1
-    Repeat: 100000
+  - Repeat: 100000
     Database: *dbname
     Operations:
     - OperationMetricsName: CreateViewMetric
