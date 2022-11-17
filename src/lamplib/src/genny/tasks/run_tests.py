@@ -18,6 +18,7 @@ MONGO_COMMIT = "e61bf27c2f6a83fed36e5a13c008a32d563babe2"
 CANNED_ARTIFACTS = {
     "osx": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-macos-x86_64-6.0.0.tgz",
     "amazon2": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-amazon2-6.0.0.tgz",
+    "amazon2arm": "https://fastdl.mongodb.org/linux/mongodb-linux-aarch64-amazon2-6.0.0.tgz",
     "ubuntu1804": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-ubuntu1804-6.0.0.tgz",
     "ubuntu2004": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-ubuntu2004-6.0.0.tgz",
     "rhel70": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-rhel70-6.0.0.tgz",

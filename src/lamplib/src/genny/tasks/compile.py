@@ -50,9 +50,13 @@ def cmake(
     # using both.
     cmake_prefix_paths = [
         os.path.join(
-            toolchain_info.toolchain_dir, f"installed/x64-{toolchain_info.triplet_os}-dynamic",
+            toolchain_info.toolchain_dir,
+            f"installed/{toolchain_info.triplet_arch}-{toolchain_info.triplet_os}-dynamic",
         ),
-        os.path.join(toolchain_info.toolchain_dir, f"installed/x64-{toolchain_info.triplet_os}",),
+        os.path.join(
+            toolchain_info.toolchain_dir,
+            f"installed/{toolchain_info.triplet_arch}-{toolchain_info.triplet_os}",
+        ),
     ]
 
     cmake_toolchain_file = os.path.join(
@@ -65,7 +69,7 @@ def cmake(
         "-DCMAKE_PREFIX_PATH={}".format(";".join(cmake_prefix_paths)),
         "-DCMAKE_TOOLCHAIN_FILE={}".format(cmake_toolchain_file),
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
-        f"-DVCPKG_TARGET_TRIPLET=x64-{toolchain_info.triplet_os}",
+        f"-DVCPKG_TARGET_TRIPLET={toolchain_info.triplet_arch}-{toolchain_info.triplet_os}",
     ]
 
     cmake_cmd += _sanitizer_flags(sanitizer)
