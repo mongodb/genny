@@ -16,10 +16,9 @@ Description: |
   bound mongod.
 
   The workload consists of the following phases and actors:
-   - Bulk inserting without any indexes. (SamplingLoader used to generate artificial inserts)
-   - Build the indexes we typically see with Best Buy. (RunCommand Actor)
-   - Measure bulk inserting again (SamplingLoader)
+   - Bulk inserting with the deefault indexes. (SamplingLoader used to generate artificial inserts)
    - Drop all non-_id indexes (RunCommand Actor)
+   - Measure bulk inserting again (SamplingLoader)
    - Build the column store index (RunCommand Actor)
    - Measure bulk inserting again (SamplingLoader)
 
@@ -58,75 +57,14 @@ GlobalDefaults:
     SampleSize: 4000
 
 Actors:
-- Name: NoIndexes
-  Type: SamplingLoader
-  Threads: *LoadThreads
-  Phases:
-  - *SamplingLoaderPhaseConfig
-  - {Nop: true}
-  - {Nop: true}
-  - {Nop: true}
-  - {Nop: true}
-  - {Nop: true}
-
-- Name: BuildBestBuyIndexes
-  Type: RunCommand
-  Phases:
-  - {Nop: true}
-  - Repeat: 1
-    Database: *db
-    Operations:
-    - OperationMetricsName: BuildBestBuyIndexes
-      OperationName: RunCommand
-      OperationCommand:
-        createIndexes: *Collection
-        indexes:
-        - key:
-            categoryPath.name : 1
-          name: "categoryPath.name_1"
-        - key:
-            type: 1
-            genre: 1
-          name: "type_1_genre_1"
-          partialFilterExpression: {type: "Music"}
-        - key:
-            type: 1
-            "mpaaRating" : 1
-            "format" : 1
-            "genre" : 1
-            "theatricalReleaseDate" : 1
-          name: "type_1_mpaaRating_1_format_1_genre_1_theatricalReleaseDate_1"
-          "partialFilterExpression" : {type: "Movie"}
-        - key:
-            type: 1
-            "customerReviewCount" : -1
-          name: "type_1_customerReviewCount_-1"
-        - key:
-            type: 1
-            name: 1
-          name: "type_1_name_1"
-        - key:
-            angleImage: 1
-          name: "angleImage_1"
-          "partialFilterExpression" : { "angleImage" : { "$type" : 2 } }
-        - key:
-            type: 1
-            subclass : 1
-            genre : 1
-            format : 1
-          name: "type_1_subclass_1_genre_1_format_1"
-  - {Nop: true}
-  - {Nop: true}
-  - {Nop: true}
-  - {Nop: true}
-
+# This insert load phase will run with the default dataset in place, which includes ~7 indexes
+# already.
 - Name: BaselineBestBuyIndexes
   Type: SamplingLoader
   Threads: *LoadThreads
   Phases:
-  - {Nop: true}
-  - {Nop: true}
   - *SamplingLoaderPhaseConfig
+  - {Nop: true}
   - {Nop: true}
   - {Nop: true}
   - {Nop: true}
@@ -134,8 +72,6 @@ Actors:
 - Name: DropBaselineIndexes
   Type: RunCommand
   Phases:
-  - {Nop: true}
-  - {Nop: true}
   - {Nop: true}
   - Repeat: 1
     Database: *db
@@ -147,11 +83,21 @@ Actors:
         index: "*"
   - {Nop: true}
   - {Nop: true}
+  - {Nop: true}
+
+- Name: NoIndexes
+  Type: SamplingLoader
+  Threads: *LoadThreads
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - *SamplingLoaderPhaseConfig
+  - {Nop: true}
+  - {Nop: true}
 
 - Name: BuildColumnStoreIndex
   Type: RunCommand
   Phases:
-  - {Nop: true}
   - {Nop: true}
   - {Nop: true}
   - {Nop: true}
@@ -170,7 +116,6 @@ Actors:
   Type: SamplingLoader
   Threads: *LoadThreads
   Phases:
-  - {Nop: true}
   - {Nop: true}
   - {Nop: true}
   - {Nop: true}
