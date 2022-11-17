@@ -59,6 +59,16 @@ ForeignSmallDocTemplate:
   arr_key: {^Array: {of: *RandIntUpTo, number: 5}}
   data1: *Rand32BitInt
 
+# The document template for both local and foreign collections in NLJ Lookups. The doc contains
+# scalar, single element array, 8 elements array, simple object and nested object.
+LargeComplexDocTemplate:
+  int_key1: &RandInt0To1k {^RandomInt: {min: 0, max: 1000}}
+  int_key2: {^RandomInt: {min: 2000, max: 12000}}
+  arr1: [*RandInt0To1k]
+  arr8: {^Array: {of: *RandInt0To1k, number: 8}}
+  obj1: {int_key: *RandInt0To1k}
+  obj4: {obj3: {obj2: {obj1: {int_key: *RandInt0To1k}}}}
+
 # The command template for HJ lookups. Note that 'allowDiskUse' is true.
 HJLookupCmdTemplate:
   aggregate: {^Parameter: {Name: "l", Default: "local"}}

@@ -88,7 +88,7 @@ void MultiCollectionQuery::run() {
             // BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filter.view());
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
             {
-                // Only time the actual update, not the setup of arguments
+                // Only time the actual query, not the setup of arguments
                 auto opCtx = _queryOp.start();
                 auto cursor = collection.find(std::move(filter), config->options);
                 // exhaust the cursor

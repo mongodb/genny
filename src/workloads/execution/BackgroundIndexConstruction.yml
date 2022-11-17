@@ -1,0 +1,163 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: |
+  This workload tests the write performance impact of creating indexes on a very large collection.
+  For this workload we perform an index build in parallel with a write workload.
+
+  We measure and care about the index creation time and throughput/latency of write operation
+  (inserts, deletes). Usually we'll see trade-offs in favour of either background index build time
+  or write operations.
+
+  This test synthetically lowers the number of concurrent operations allowed to represent a
+  saturated server.
+
+Keywords:
+- stress
+- indexes
+- InsertRemove
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 1024
+      socketTimeoutMS: 7200000  # = 2 hours
+
+Actors:
+# Phase 1: Insert enough data to ensure than an index build on each field spills to disk with a
+# memory limit of 100MB.
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10_000_000
+    BatchSize: 1000
+    Document:
+      randomInt: {^RandomInt: {min: -10000000, max: 10000000}}
+      randomString: {^RandomString: {length: 16}}
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Phase 2: Lower the memory limit for spilling to disk so that it occurs more often.
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: AdminCommand
+      OperationCommand:
+        setParameter: 1
+        storageEngineConcurrentWriteTransactions: 5
+    - OperationMetricsName: LimitIndexBuildMemoryUsageCommand
+      OperationName: RunCommand
+      OperationCommand:
+        setParameter: 1
+        maxIndexBuildMemoryUsageMegabytes: 100
+  - *Nop
+  - *Nop
+  - *Nop
+
+# Phase 3: Quiesce the system
+- Name: QuiesceActor
+  Type: QuiesceActor
+  # Using multiple threads will result in an error.
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+
+# Phases 4, 5: Build indexes on each field.
+- Name: IndexCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  # Build an index on an integer field.
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationMetricsName: CreateIndexInt
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: &coll Collection0
+        indexes:
+        - key:
+            randomInt: 1
+          name: random_int
+    - OperationMetricsName: DropIndexInt
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: *coll
+        index: random_int
+  # Build an index on a string field.
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationMetricsName: CreateIndexString
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key:
+            randomString: 1
+          name: random_string
+    - OperationMetricsName: DropIndexString
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: *coll
+        index: random_string
+
+- Name: BackgroundWrites
+  Type: InsertRemove
+  Threads: 256
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  # Execute while building an index on an integer field.
+  - Blocking: None
+    Database: *db
+    Collection: &otherColl Collection1  # Work on a different collection to avoid overloading the index target.
+  # Execute while building an index on a string field.
+  - Blocking: None
+    Database: *db
+    Collection: *otherColl
+
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3, 4]
+      NopInPhasesUpTo: 4
+      PhaseConfig:
+        LogEvery: 10 minutes
+        Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-all-feature-flags
+      - standalone
+      - standalone-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.2
+      - v4.4
+      - v5.0
