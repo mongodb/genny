@@ -68,4 +68,5 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - single-replica
+      - replica
+      - shard-lite
