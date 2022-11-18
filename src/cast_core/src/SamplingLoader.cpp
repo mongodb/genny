@@ -24,7 +24,6 @@
 #include <bsoncxx/json.hpp>
 
 #include <mongocxx/client.hpp>
-#include <mongocxx/exception/operation_exception.hpp>
 #include <mongocxx/pool.hpp>
 
 #include <boost/log/trivial.hpp>
