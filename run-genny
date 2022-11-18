@@ -17,8 +17,8 @@ if [ -d "/opt/mongodbtoolchain/v3/bin" ]; then
     export PATH="/opt/mongodbtoolchain/v3/bin:$PATH"
 fi
 
-if [ -d "/Applications/Xcode10.1.app" ]; then
-    export DEVELOPER_DIR="/Applications/Xcode10.1.app"
+if [ -d "/Applications/Xcode.app" ]; then
+    export DEVELOPER_DIR="/Applications/Xcode.app"
 fi
 
 _HAVE_PRINTED_DIAGNOSTICS=
