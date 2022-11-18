@@ -111,18 +111,20 @@ void genny::actor::SamplingLoader::run() {
             // insert roughly the same number of copies for each sample.
             size_t sampleIdx = 0;
 
-            auto batchOfDocs = std::vector<bsoncxx::document::view_or_value>{};
+            // We will re-use the vector of the same size for each batch.
+            auto batchOfDocs = std::vector<bsoncxx::document::view_or_value>(
+                static_cast<size_t>(config->insertBatchSize));
             auto totalOpCtx = _totalBulkLoad.start();
             for (size_t batch = 0; batch < config->numBatches; ++batch) {
                 for (size_t i = 0; i < config->insertBatchSize; ++i) {
-                    batchOfDocs.push_back(sampleDocs[sampleIdx].view());
+                    batchOfDocs[i] = sampleDocs[sampleIdx].view();
                     sampleIdx = (sampleIdx + 1) % sampleDocs.size();
                 }
 
                 // Now do the insert.
                 auto individualOpCtx = _individualBulkLoad.start();
                 try {
-                    auto result = config->collection.insert_many(std::move(batchOfDocs));
+                    config->collection.insert_many(batchOfDocs);
                     individualOpCtx.success();
                     totalOpCtx.success();
                 } catch (const mongocxx::operation_exception& x) {

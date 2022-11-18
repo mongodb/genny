@@ -52,9 +52,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             URI: )" + MongoTestFixture::connectionUri().to_string() +
                                       R"(
         Actors:
-        # In order to test something this random, we'll use a sample size equal to the collection
-        # size, and that way we can verify that every document gets re-inserted the same number of
-        # times. A smaller sample size would be non-determinisitc.
+
+        # Insert 40 new documents (batches=2 * batchSize=10 * threads=2), each with a 'y' field.
         - Name: SamplingLoader
           Type: SamplingLoader
           Threads: 2
@@ -62,9 +61,6 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Repeat: 1
             Database: test
             Collection: sampling_loader_test
-            # Should see each document inserted an _additional_ 8 times
-            # (2 threads x 2 batches x 2 per batch (batch size = 10)), so should appear 9 times each
-            # when complete.
             SampleSize: 5
             InsertBatchSize: 10
             Pipeline: [{$set: {y: "SamplingLoader wuz here"}}]
@@ -85,19 +81,19 @@ TEST_CASE_METHOD(MongoTestFixture,
             genny::ActorHelper ah(nodes.root(), 2 /* 2 threads for samplers */);
             ah.run();
 
-            // Assert we see each value of "x" occur 5 times, and that there are 5 unique values.
-            mongocxx::pipeline pipe;
-            pipe.sort_by_count("$x");
-            auto cursor = collection.aggregate(pipe, mongocxx::options::aggregate{});
-            size_t nResults = 0;
-            for (auto&& result : cursor) {
-                nResults++;
-                REQUIRE(result["count"].get_int32() == 9);
-            }
-            REQUIRE(nResults == 5);
+            // We can't make many reliable assertions on the output data, since each thread is
+            // acting independently, and (as mentioned in src/workloads/docs/SamplingLoader.yml) one
+            // thread may read another's inserted documents in its sample. So, we'll just assert
+            // the following:
 
-            // Assert that the Pipeline was run and we should see 8*5 = 40 documents with a 'y'
-            // field.
+            // There should still be only 5 distinct values of 'x'.
+            mongocxx::pipeline pipe;
+            pipe.group(from_json(R"({"_id": "$x"})"));
+            auto cursor = collection.aggregate(pipe, mongocxx::options::aggregate{});
+            REQUIRE(std::distance(cursor.begin(), cursor.end()) == 5);
+
+            // There should be 40 new documents, and each new document should have a 'y' field.
+            REQUIRE(collection.count_documents(bsoncxx::document::view()) == 45);
             REQUIRE(collection.count_documents(from_json(R"({"y": {"$exists": true}})")) == 40);
 
         } catch (const std::exception& e) {
