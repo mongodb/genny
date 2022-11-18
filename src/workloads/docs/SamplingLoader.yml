@@ -1,0 +1,114 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload demonstrates using the SamplingLoader to expand the contents of a collection. This
+  actor will take a random sample of a configurable size and re-insert the same documents, with the
+  option of transforming them with an agg pipeline. It will project out the "_id" field before
+  re-inserting to avoid duplicate key errors.
+GlobalDefaults:
+  db: &db test
+  Collection: &Collection sampling_loader_demo
+
+Actors:
+# This is just to seed the collection with 40 documents so that we'll have some sample data to draw
+# from.
+- Name: CollectionSeed
+  Type: MonotonicSingleLoader
+  Phases:
+  - Collection: *Collection
+    Database: *db
+    Repeat: 1
+    Document:
+      x: {^Inc: {}}
+    DocumentCount: 40
+    BatchSize: 10
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+
+# Our first demonstration of the sampling loader.
+- Name: BasicSamplingDemo
+  Type: SamplingLoader
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - Repeat: 1
+    Database: *db
+    Collection: *Collection
+    # Number of documents in a single insert operation.
+    InsertBatchSize: 5
+    # Number of insert operations. The total number of documents to be inserted is
+    # Batches * InsertBatchSize.
+    Batches: 2
+    # Number of documents in the sample. The loader will cycle through the sampled docs, using them
+    # as templates for the ones to be incerted, until it inserts the requested number of batches.
+    # For example, if the sample size is set to 1, exactly one document is sampled from the original
+    # dataset and reused as a template for _all_ of the inserted docs. And if the sample size is
+    # equal to the insert batch size, each sampled document will be "re-inserted" as many times as
+    # the number of batches.
+    #
+    # Using a small sample size may be useful if you want to measure performance of inserting many
+    # documents that don't need a variety of input data, as the small sample size allows for the
+    # random cursor optimization during sampling.
+    #
+    # Note that the sample size does not need to be correlated or a multiple of the insert batch size
+    # or number of batches.
+    #
+    # If the sample size is omitted, the loader will set it to the number of the requested documents
+    # (Batches * InsertBatchSize) so that each sampled document is re-inserted exactly once.
+    SampleSize: 7
+  - {Nop: true}
+  - {Nop: true}
+
+# In this case we use multiple threads.
+# With multiple threads, each thread will operate independently, including in gathering the sample.
+# A word of caution: because there is no synchronization between threads, this means it is possible
+# for one thread to observe a document that was inserted by another SamplingLoader in the same
+# phase. Plan accordingly.
+#
+# The total number of documents inserted then will be Threads * Batches * InsertBatchSize, here
+# 4 * 5 * 20 = 400.
+#
+# Note this is somewhat different than the configuration of 'Loader', 'MonotonicLoader', etc. which
+# accept an overall document count target which gets divided amongst the threads.
+- Name: MultiThreadedExample
+  Type: SamplingLoader
+  Threads: 4
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Repeat: 1
+    Database: *db
+    Collection: *Collection
+    SampleSize: 5
+    Batches: 5
+    InsertBatchSize: 20
+  - {Nop: true}
+
+# Now we'll demonstrate the ability to specify a pipeline suffix to tack on after the one with
+# $sample. Note it runs after the "_id" has been projected out. Also note that you should not put
+# stages like a $match in here - the actor is expecting only one-to-one transformations like the one
+# shown, to provide identifiability to the docs inserted.
+- Name: PipelineOptionExample
+  Type: SamplingLoader
+  Threads: 4
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - Repeat: 1
+    Database: *db
+    Collection: *Collection
+    SampleSize: 5
+    Batches: 5
+    InsertBatchSize: 20
+    # Note again: each thread is independent. As mentioned earlier, it is possible that in a race
+    # condition one thread will observe another thread's inserted documents in the sample. Here that
+    # would mean we might see a document that already has the 'y' and 'actorId' fields present. In
+    # this case they will be overridden with new values though, so it would be harmless. The end
+    # result should be that we see Batches * InsertBatchSize = 100 new documents per thread, and
+    # each actorId repeated 100 times.
+    #
+    # Note that the pipeline is run only once to gather the sample, and so any document generators
+    # you use in the pipeline specification will be instantiated once and only once.
+    Pipeline: [{$set: {y: "SamplingLoader wuz here", actorId: {^ActorId: {}}}}]

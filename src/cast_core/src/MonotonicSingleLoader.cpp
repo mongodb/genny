@@ -25,6 +25,7 @@
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/Cast.hpp>
+#include <gennylib/MongoException.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 
@@ -82,14 +83,21 @@ void MonotonicSingleLoader::run() {
                     // Use ordered:false to increase write parallelism for sharded collections.
                     auto options = mongocxx::options::insert();
                     options.ordered(false);
-                    auto result = config->collection.insert_many(std::move(docs), options);
-
-                    totalOpCtx.addBytes(numBytes);
-                    individualOpCtx.addBytes(numBytes);
-                    if (result) {
-                        totalOpCtx.addDocuments(result->inserted_count());
-                        individualOpCtx.addDocuments(result->inserted_count());
+                    try {
+                        auto result = config->collection.insert_many(std::move(docs), options);
+                        totalOpCtx.addBytes(numBytes);
+                        individualOpCtx.addBytes(numBytes);
+                        if (result) {
+                            totalOpCtx.addDocuments(result->inserted_count());
+                            individualOpCtx.addDocuments(result->inserted_count());
+                        }
+                    } catch (const mongocxx::operation_exception& e) {
+                        individualOpCtx.failure();
+                        totalOpCtx.failure();
+                        BOOST_LOG_TRIVIAL(info)
+                            << " Error inserting: " << bsoncxx::to_json(e.raw_server_error().get());
                     }
+
 
                     individualOpCtx.success();
                 }
