@@ -116,11 +116,33 @@ Tests:
       - {a: [ { "a": 1 }, 1, { "a": 1 } ] }
       - {a: [ 1, 1, { "a": 1 }, 1, "abc" ] }
 
-  - Name: ArrayChooseDeterministic
+  - Name: Generate Array with choose deterministic where number is greater than from
     GivenTemplate:
       a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: 1}}, number: 6}}
     ThenReturns:
       - {a: [ 1, 2, 3, 1, 2, 3 ] }
+      - {a: [ 1, 2, 3, 1, 2, 3 ] }
+      - {a: [ 1, 2, 3, 1, 2, 3 ] }
+
+  - Name: Generate Array with choose deterministic where number is 1
+    GivenTemplate:
+      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: 1}}, number: 1}}
+    ThenReturns:
+      - {a: [ 1 ] }
+      - {a: [ 2 ] }
+      - {a: [ 3 ] }
+
+  - Name: Generate Array with choose deterministic where number is smaller than from
+    GivenTemplate:
+      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: 1}}, number: 2}}
+    ThenReturns:
+      - {a: [ 1, 2 ] }
+      - {a: [ 3, 1 ] }
+      - {a: [ 2, 3 ] }
+
+  - Name: Choose InvalidValueGeneratorSyntax
+    GivenTemplate: {a: {^Choose: {from: [1, "a", 2], deterministic: 1, weights: [1, 1, 1]}}}
+    ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: ArrayChooseNestedGenerator
     GivenTemplate:
@@ -492,17 +514,17 @@ Tests:
       - {a: yz}
       - {a: xyxyx}
 
-  - Name: RandomDataFromDataset requieres a path
+  - Name: RandomDataFromDataset requires a path
     GivenTemplate:
       a: {^ChooseFromDataset: {}}
     ThenThrows: InvalidValueGeneratorSyntax
 
-  - Name: RandomDataFromDataset requieres a file that exists
+  - Name: RandomDataFromDataset requires a file that exists
     GivenTemplate:
       a: {^ChooseFromDataset: {"path": "/tmp/itdoesnotexist"}}
     ThenThrows: InvalidValueGeneratorSyntax
 
-  - Name: RandomDataFromDataset requieres a non-empty file
+  - Name: RandomDataFromDataset requires a non-empty file
     GivenTemplate:
       a: {^ChooseFromDataset: {"path": "../../../src/workloads/datasets/empty_test.txt"}}
     ThenThrows: InvalidValueGeneratorSyntax

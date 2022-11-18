@@ -1905,6 +1905,11 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         msg << "Malformed node for choose from array. Not a sequence " << node;
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
     }
+    if (node["deterministic"] && node["weights"]) {
+        std::stringstream msg;
+        msg << "Invalid Syntax for choose: cannot have both 'deterministic' and 'weights'";
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+    }
     for (const auto&& [k, v] : node["from"]) {
         _choices.push_back(valueGenerator<false, UniqueAppendable>(v, generatorArgs, allParsers));
     }
@@ -1918,7 +1923,7 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
     }
     if (node["deterministic"]) {
         auto val = node["deterministic"].maybe<int32_t>().value_or(-1);
-        val > 0 ? _deterministic = true : _deterministic = false; 
+        _deterministic = val > 0;
     } else {
         _deterministic = false;
     }
