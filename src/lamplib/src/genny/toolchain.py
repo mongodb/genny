@@ -5,6 +5,7 @@ import platform
 from typing import Optional, NamedTuple
 import structlog
 
+from pathlib import Path
 from genny.cmd_runner import run_command
 from genny.download import Downloader
 
@@ -187,7 +188,7 @@ class ToolchainDownloader(Downloader):
 
     TOOLCHAIN_BUILD_ID = "da48b38e2d563a0b58db10ed3c3f42de0522ad8e_637e5384850e6153879bf7e4_22_11_23_17_08_23"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
-    TOOLCHAIN_ROOT = "~/data/mci"  # TODO BUILD-7624 change this to /opt.
+    TOOLCHAIN_ROOT = str(Path.home()) + "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
     def __init__(
         self,
@@ -198,13 +199,12 @@ class ToolchainDownloader(Downloader):
         triplet_arch: str,
         ignore_toolchain_version: bool,
     ):
-        toolchain_root = "/opt/mci" if self._os_family == "Darwin" else "/data/mci"
         super().__init__(
             genny_repo_root=genny_repo_root,
             workspace_root=workspace_root,
             os_family=os_family,
             linux_distro=linux_distro,
-            install_dir=toolchain_root,
+            install_dir=ToolchainDownloader.TOOLCHAIN_ROOT,
             name="gennytoolchain",
         )
         self.ignore_toolchain_version = ignore_toolchain_version
