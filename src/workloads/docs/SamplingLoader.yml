@@ -102,12 +102,10 @@ Actors:
     SampleSize: 5
     Batches: 5
     InsertBatchSize: 20
-    # Note again: each thread is independent, so 'nTimesSoFar' will refer to that thread's count,
-    # since each thread will run the document generator independently. As mentioned earlier, it is
-    # possible that in a race condition one thread will observe another thread's inserted documents
-    # in the sample. Here that would mean we might see a document that already has the 'y' and
-    # 'nTimesSoFar' fields present. In this case they will be overridden with new values though, so
-    # it would be harmless. The end result should be that we see Batches * InsertBatchSize = 100 new
-    # documents per thread, and the numbers 1 through 100 repeated per thread accordingly in the
-    # 'nTimesSoFar' field.
-    Pipeline: [{$set: {y: "SamplingLoader wuz here", nTimesSoFar: {^Inc: {}}}}]
+    # Note again: each thread is independent. As mentioned earlier, it is possible that in a race
+    # condition one thread will observe another thread's inserted documents in the sample. Here that
+    # would mean we might see a document that already has the 'y' and 'actorId' fields present. In
+    # this case they will be overridden with new values though, so it would be harmless. The end
+    # result should be that we see Batches * InsertBatchSize = 100 new documents per thread, and
+    # each actorId repeated 100 times.
+    Pipeline: [{$set: {y: "SamplingLoader wuz here", actorId: {^ActorId: {}}}}]

@@ -62,11 +62,11 @@ struct SamplingLoader::PhaseConfig {
 
     mongocxx::database database;
     mongocxx::collection collection;
+    // See src/workloads/docs/SamplingLoader.yml for a description of the arguments and some
+    // examples.
     int64_t insertBatchSize;
     int64_t numBatches;
     int64_t sampleSize;
-    // User can specify any pipeline here, but it's worth noting that some will not play nicely. For
-    // example, adding a $match will deflate the sample size.
     PipelineGenerator pipelineSuffixGenerator;
 };
 
