@@ -70,7 +70,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: 500    # Classic updates on small documents phase.
+  - Repeat: &RunCommandRepeat 500   # Classic updates on small documents phase.
     GlobalRate: 2 per 100 milliseconds
     Database: *db
     Operations:
@@ -124,7 +124,7 @@ Actors:
         updates: [{q: {t: *partitionIDSmall}, u: *smallDocument, multi: false}]
         writeConcern: {w: majority}
   - *Nop
-  - Repeat: 500    # Classic updates on large documents phase.
+  - Repeat: *RunCommandRepeat    # Classic updates on large documents phase.
     Database: *db
     GlobalRate: 2 per 100 milliseconds
     Operations:
@@ -178,7 +178,7 @@ Actors:
         updates: [{q: {t: *partitionIDLarge}, u: *largeDocument, multi: false}]
         writeConcern: {w: majority}
   - *Nop
-  - Repeat: 500    # Pipeline-based updates on small documents phase.
+  - Repeat: *RunCommandRepeat    # Pipeline-based updates on small documents phase.
     GlobalRate: 2 per 100 milliseconds
     Database: *db
     Operations:
@@ -234,7 +234,7 @@ Actors:
         updates: [{q: {t: *partitionIDSmall}, u: [{$replaceWith: *smallDocument}], multi: false}]
         writeConcern: {w: majority}
   - *Nop
-  - Repeat: 500    # Pipeline-based updates on large documents phase.
+  - Repeat: *RunCommandRepeat    # Pipeline-based updates on large documents phase.
     GlobalRate: 2 per 100 milliseconds
     Database: *db
     Operations:
