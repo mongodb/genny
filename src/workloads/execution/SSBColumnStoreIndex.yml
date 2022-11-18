@@ -22,11 +22,12 @@ Clients:
       socketTimeoutMS: 3_600_000  # = 1 hour
       connectTimeoutMS: 3_600_000
 
-# Defines the database name.
 Database: &db ssb
-
-# Defines the collection name.
 Collection: &Collection order_lineitem
+# Defines how many times each test operation is executed. Using 3 due to variability in timing numbers.
+TestRepeatCount: &TestRepeatCount 3
+MaxPhases: &MaxPhases 43
+ColumnStoreIndexName: &ColumnStoreIndexName $**_columnstore
 
 Q1_1Query: &Q1_1Query
   Pipeline:
@@ -415,10 +416,24 @@ Q4_3Query: &Q4_3Query
       {"$sort": {"order_year": 1, "customer_nation": 1, "part_brand": 1}}
     ]
 
-# Defines how many times each test operation is executed. Using 3 due to variability in timing numbers.
-TestRepeatCount: &TestRepeatCount 3
-MaxPhases: &MaxPhases 42
-ColumnStoreIndexName: &ColumnStoreIndexName $**_columnstore
+
+ActorTemplates:
+- TemplateName: SSB.Query
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Q1_1"}}
+    Type: CrudActor
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "Active", Default: [3]}}
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *TestRepeatCount
+          Database: *db
+          Collection: *Collection
+          Operations:
+          - OperationMetricsName: {^Parameter: {Name: "Name", Default: "Q1_1"}}
+            OperationName: aggregate
+            OperationCommand: {^Parameter: {Name: "OperationCommand", Default: *Q1_1Query}}
 
 Actors:
 - Name: Setup
@@ -465,161 +480,81 @@ Actors:
   Database: *db
   Phases:
     OnlyActiveInPhases:
-      Active: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41]
+      Active: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
 
 # Run each SSB query in a separate phase with column store index.
-- Name: Q1_1
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q1_1
+      OperationCommand: *Q1_1Query
       Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q1_1Query
-          OperationName: aggregate
-          OperationCommand: *Q1_1Query
 
-- Name: Q1_2
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q1_2
+      OperationCommand: *Q1_2Query
       Active: [5]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q1_2Query
-          OperationName: aggregate
-          OperationCommand: *Q1_2Query
 
-- Name: Q1_3
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q1_3
+      OperationCommand: *Q1_3Query
       Active: [7]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q1_3Query
-          OperationName: aggregate
-          OperationCommand: *Q1_3Query
 
-- Name: Q2_1
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q2_1
+      OperationCommand: *Q2_1Query
       Active: [9]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q2_1Query
-          OperationName: aggregate
-          OperationCommand: *Q2_1Query
 
-- Name: Q2_2
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q2_2
+      OperationCommand: *Q2_2Query
       Active: [11]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q2_2Query
-          OperationName: aggregate
-          OperationCommand: *Q2_2Query
 
-- Name: Q2_3
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q2_3
+      OperationCommand: *Q2_3Query
       Active: [13]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q2_3Query
-          OperationName: aggregate
-          OperationCommand: *Q2_3Query
 
-- Name: Q3
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q3
+      OperationCommand: *Q3Query
       Active: [15]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q3Query
-          OperationName: aggregate
-          OperationCommand: *Q3Query
 
-- Name: Q4_1
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q4_1
+      OperationCommand: *Q4_1Query
       Active: [17]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q4_1Query
-          OperationName: aggregate
-          OperationCommand: *Q4_1Query
 
-- Name: Q4_2
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q4_2
+      OperationCommand: *Q4_2Query
       Active: [19]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q4_2Query
-          OperationName: aggregate
-          OperationCommand: *Q4_2Query
 
-- Name: Q4_3
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q4_3
+      OperationCommand: *Q4_3Query
       Active: [21]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q4_3Query
-          OperationName: aggregate
-          OperationCommand: *Q4_3Query
 
 # The 'DropColumnstoreIndexes' actor drops columnstore indexes.
 - Name: DropColumnstoreIndex
@@ -627,7 +562,7 @@ Actors:
   Database: *db
   Phases:
     OnlyActiveInPhases:
-      Active: [22]
+      Active: [23]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -639,153 +574,73 @@ Actors:
             dropIndexes: *Collection
             index: *ColumnStoreIndexName
 
-# run same queries without column store index (Collection Scan)
-- Name: Q1_1CollScan
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
-      Active: [24]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q1_1QueryCollScan
-          OperationName: aggregate
-          OperationCommand: *Q1_1Query
+# run same queries without indexes
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q1_1.NoIndex
+      OperationCommand: *Q1_1Query
+      Active: [25]
 
-- Name: Q1_2CollScan
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
-      Active: [26]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q1_2QueryCollScan
-          OperationName: aggregate
-          OperationCommand: *Q1_2Query
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q1_2.NoIndex
+      OperationCommand: *Q1_2Query
+      Active: [27]
 
-- Name: Q1_3CollScan
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
-      Active: [28]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q1_3QueryCollScan
-          OperationName: aggregate
-          OperationCommand: *Q1_3Query
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q1_3.NoIndex
+      OperationCommand: *Q1_3Query
+      Active: [29]
 
-- Name: Q2_1CollScan
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
-      Active: [30]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q2_1QueryCollScan
-          OperationName: aggregate
-          OperationCommand: *Q2_1Query
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q2_1.NoIndex
+      OperationCommand: *Q2_1Query
+      Active: [31]
 
-- Name: Q2_2CollScan
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
-      Active: [32]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q2_2QueryCollScan
-          OperationName: aggregate
-          OperationCommand: *Q2_2Query
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q2_2.NoIndex
+      OperationCommand: *Q2_2Query
+      Active: [33]
 
-- Name: Q2_3CollScan
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
-      Active: [34]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q2_3QueryCollScan
-          OperationName: aggregate
-          OperationCommand: *Q2_3Query
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q2_3.NoIndex
+      OperationCommand: *Q2_3Query
+      Active: [35]
 
-- Name: Q3CollScan
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
-      Active: [36]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q3QueryCollScan
-          OperationName: aggregate
-          OperationCommand: *Q3Query
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q3.NoIndex
+      OperationCommand: *Q3Query
+      Active: [37]
 
-- Name: Q4_1CollScan
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
-      Active: [38]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q4_1QueryCollScan
-          OperationName: aggregate
-          OperationCommand: *Q4_1Query
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q4_1.NoIndex
+      OperationCommand: *Q4_1Query
+      Active: [39]
 
-- Name: Q4_2CollScan
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
-      Active: [40]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q4_2QueryCollScan
-          OperationName: aggregate
-          OperationCommand: *Q4_2Query
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q4_2.NoIndex
+      OperationCommand: *Q4_2Query
+      Active: [41]
 
-- Name: Q4_3CollScan
-  Type: CrudActor
-  Phases:
-    OnlyActiveInPhases:
-      Active: [42]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeatCount
-        Database: *db
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: Q4_3QueryCollScan
-          OperationName: aggregate
-          OperationCommand: *Q4_3Query
+- ActorFromTemplate:
+    TemplateName: SSB.Query
+    TemplateParameters:
+      Name: Q4_3.NoIndex
+      OperationCommand: *Q4_3Query
+      Active: [43]
