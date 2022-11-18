@@ -1,4 +1,4 @@
-// Copyright 2019-present MongoDB Inc.
+// Copyright 2022-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,14 +29,14 @@ namespace genny::actor {
 /**
  * Given a collection that's already populated, will pull a sample of documents from that
  * collection and then re insert them in order to grow the collection. This is not guaranteed
- * to the distributions of values in the collection.
+ * to match the distributions of values in the collection.
  *
  * Owner: query
  */
 class SamplingLoader : public Actor {
 
 public:
-    explicit SamplingLoader(ActorContext& context, uint thread, size_t totalThreads);
+    explicit SamplingLoader(ActorContext& context);
     ~SamplingLoader() override = default;
 
     static std::string_view defaultName() {
@@ -47,6 +47,8 @@ public:
 private:
     /** @private */
     struct PhaseConfig;
+
+    std::vector<bsoncxx::document::value> gatherSample(PhaseConfig*);
 
     metrics::Operation _totalBulkLoad;
     metrics::Operation _individualBulkLoad;

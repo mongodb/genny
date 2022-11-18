@@ -31,14 +31,19 @@ using namespace genny::testing;
 namespace bson_stream = bsoncxx::builder::stream;
 using namespace bsoncxx;
 
-TEST_CASE_METHOD(
-    MongoTestFixture,
-    "SamplingLoader - demo",
-    "[standalone][single_node_replset-1][three_node_replset][sharded][SamplingLoader]") {
+TEST_CASE_METHOD(MongoTestFixture,
+                 "SamplingLoader - demo",
+                 "[standalone][single_node_replset][three_node_replset][sharded][SamplingLoader]") {
 
     dropAllDatabases();
     auto db = client.database("test");
     auto collection = db.collection("sampling_loader_test");
+    // Seed some data.
+    collection.insert_many(std::vector{from_json("{\"x\": 0}"),
+                                       from_json("{\"x\": 1}"),
+                                       from_json("{\"x\": 2}"),
+                                       from_json("{\"x\": 3}"),
+                                       from_json("{\"x\": 4}")});
 
     NodeSource nodes = NodeSource(R"(
         SchemaVersion: 2018-07-01
@@ -47,57 +52,49 @@ TEST_CASE_METHOD(
             URI: )" + MongoTestFixture::connectionUri().to_string() +
                                       R"(
         Actors:
-        - Name: CollectionSeeder
-          Type: MonotonicSingleLoader
-          Phases:
-          - Repeat: 1
-            Database: test
-            Collection: sampling_loader_test
-            Threads: 1
-            DocumentCount: 5
-            BatchSize: 5
-            Document: 
-              x: {^Inc: {}}
-          - {Nop: true}
-            
-        # In order to test something this random, we'll use a sample size equal to the collection
-        # size, and that way we can verify that every document gets re-inserted the same number of
-        # times.
+
+        # Insert 40 new documents (batches=2 * batchSize=10 * threads=2), each with a 'y' field.
         - Name: SamplingLoader
           Type: SamplingLoader
+          Threads: 2
           Phases:
-          - {Nop: true}
           - Repeat: 1
             Database: test
             Collection: sampling_loader_test
-            Threads: 1
-            # Should see each document inserted an _additional_ 4 times, so should appear 5
-            # times each.
             SampleSize: 5
-            InsertBatchSize: 4
-            Batches: 5
+            InsertBatchSize: 10
+            Pipeline: [{$set: {y: "SamplingLoader wuz here"}}]
+            Batches: 2
+
+        Metrics:
+          Format: csv
+
     )",
                                   __FILE__);
 
 
     SECTION(
-        "Inserts documents, samples all of them and re-inserts, check if documents are duplciated "
-        "the right number of times") {
+        "Samples and re-inserts documents, then checks if documents are duplciated the right "
+        "number of times") {
         try {
-            genny::ActorHelper ah(nodes.root(), 1);
-            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[1]->run(); });
+            // REQUIRE(collection.count_documents(bsoncxx::document::view()) == 5);
+            genny::ActorHelper ah(nodes.root(), 2 /* 2 threads for samplers */);
+            ah.run();
 
-            // Assert we see each value of "x" occur 5 times, and that there are 5 unique values.
+            // We can't make many reliable assertions on the output data, since each thread is
+            // acting independently, and (as mentioned in src/workloads/docs/SamplingLoader.yml) one
+            // thread may read another's inserted documents in its sample. So, we'll just assert
+            // the following:
+
+            // There should still be only 5 distinct values of 'x'.
             mongocxx::pipeline pipe;
-            pipe.sort_by_count("$x");
+            pipe.group(from_json(R"({"_id": "$x"})"));
             auto cursor = collection.aggregate(pipe, mongocxx::options::aggregate{});
-            size_t nResults = 0;
-            for (auto&& result : cursor) {
-                nResults++;
-                REQUIRE(result["count"].get_double() == 5.0);
-            }
-            REQUIRE(nResults == 5);
+            REQUIRE(std::distance(cursor.begin(), cursor.end()) == 5);
+
+            // There should be 40 new documents, and each new document should have a 'y' field.
+            REQUIRE(collection.count_documents(bsoncxx::document::view()) == 45);
+            REQUIRE(collection.count_documents(from_json(R"({"y": {"$exists": true}})")) == 40);
 
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
