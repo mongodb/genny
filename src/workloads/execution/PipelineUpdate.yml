@@ -76,49 +76,49 @@ Actors:
     Operations:
     - OperationMetricsName: ClassicUpdateAddFieldsSmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: {$set: {newStr: *string}}, multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: ClassicUpdateModifyFieldsSmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: {$set: {int: *integer}}, multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: ClassicUpdateAddElementToArraySmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: {$push: {nestedObj.arr: *integer}}, multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: ClassicUpdateTruncateArraySmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: {$pop: {nestedObj.arr: 1}}, multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: ClassicUpdateUnsetTopLevelFieldsSmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: {$unset: {int: "", str: ""}}, multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: ClassicUpdateUnsetNestedFieldsSmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: {$unset: {nestedObj.str: ""}}, multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: ClassicUpdateReplaceDocumentSmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: *smallDocument, multi: false}]
@@ -130,49 +130,49 @@ Actors:
     Operations:
     - OperationMetricsName: ClassicUpdateAddFieldsLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: {$set: {newStr: *string}}, multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: ClassicUpdateModifyFieldsLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: {$set: {int: *integer}}, multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: ClassicUpdateAddElementToArrayLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: {$push: {nestedObj.arr: *integer}}, multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: ClassicUpdateTruncateArrayLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: {$pop: {nestedObj.arr: 1}}, multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: ClassicUpdateUnsetTopLevelFieldsLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: {$unset: {int: "", str: ""}}, multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: ClassicUpdateUnsetNestedFieldsLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: {$unset: {nestedObj.str: ""}}, multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: ClassicUpdateReplaceDocumentLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: *largeDocument, multi: false}]
@@ -184,21 +184,21 @@ Actors:
     Operations:
     - OperationMetricsName: PipelineUpdateAddFieldsSmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: [{$addFields: {newStr: *string}}], multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: PipelineUpdateModifyFieldsSmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: [{$addFields: {int: *integer}}], multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: PipelineUpdateAddElementToArraySmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: [
@@ -206,7 +206,7 @@ Actors:
         writeConcern: {w: majority}
     - OperationMetricsName: PipelineUpdateTruncateArraySmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: [
@@ -214,21 +214,21 @@ Actors:
         writeConcern: {w: majority}
     - OperationMetricsName: PipelineUpdateUnsetTopLevelFieldsSmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: [{$unset: [int, str]}], multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: PipelineUpdateUnsetNestedFieldsSmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: [{$unset: [nestedObj.str]}], multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: PipelineUpdateReplaceDocumentSmallDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDSmall}, u: [{$replaceWith: *smallDocument}], multi: false}]
@@ -240,21 +240,21 @@ Actors:
     Operations:
     - OperationMetricsName: PipelineUpdateAddFieldsLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: [{$addFields: {newStr: *string}}], multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: PipelineUpdateModifyFieldsLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: [{$addFields: {int: *integer}}], multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: PipelineUpdateAddElementToArrayLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: [
@@ -262,7 +262,7 @@ Actors:
         writeConcern: {w: majority}
     - OperationMetricsName: PipelineUpdateTruncateArrayLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: [
@@ -270,21 +270,21 @@ Actors:
         writeConcern: {w: majority}
     - OperationMetricsName: PipelineUpdateUnsetTopLevelFieldsLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: [{$unset: [int, str]}], multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: PipelineUpdateUnsetNestedFieldsLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: [{$unset: [nestedObj.str]}], multi: true}]
         writeConcern: {w: majority}
     - OperationMetricsName: PipelineUpdateReplaceDocumentLargeDoc
       OperationName: RunCommand
-      OperationIsQuiet: true 
+      OperationIsQuiet: true
       OperationCommand:
         update: Collection0
         updates: [{q: {t: *partitionIDLarge}, u: [{$replaceWith: *largeDocument}], multi: false}]
