@@ -77,7 +77,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         "Samples and re-inserts documents, then checks if documents are duplciated the right "
         "number of times") {
         try {
-            // REQUIRE(collection.count_documents(bsoncxx::document::view()) == 5);
+            REQUIRE(collection.count_documents(bsoncxx::document::view()) == 5);
             genny::ActorHelper ah(nodes.root(), 2 /* 2 threads for samplers */);
             ah.run();
 

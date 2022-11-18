@@ -80,6 +80,7 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         dropIndexes: *Collection
+        # This will drop all non-essential indexes (_id and any shard key index remain)
         index: "*"
   - {Nop: true}
   - {Nop: true}

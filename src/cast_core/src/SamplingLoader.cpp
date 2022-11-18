@@ -72,7 +72,6 @@ struct SamplingLoader::PhaseConfig {
 };
 
 std::vector<bsoncxx::document::value> SamplingLoader::gatherSample(PhaseConfig* config) {
-    // Read the sample size documents into a vector.
     mongocxx::pipeline samplePipeline;
     samplePipeline.sample(config->sampleSize);
     samplePipeline.project(make_document(kvp("_id", 0)));
@@ -109,10 +108,9 @@ std::vector<bsoncxx::document::value> SamplingLoader::gatherSample(PhaseConfig* 
             "Sample was unable to find any documents from collection '" +
             to_string(config->collection.name()) +
             "'. Could the collection be empty or could the pipeline be filtering out "
-            "documents? Attempting to sample "
-            + boost::to_string(config->sampleSize) +
-            " documents. Pipeline suffix = " +
-            to_json(suffixPipe.view_array())));
+            "documents? Attempting to sample " +
+            boost::to_string(config->sampleSize) +
+            " documents. Pipeline suffix = " + to_json(suffixPipe.view_array())));
     }
     if (sampleDocs.size() < config->sampleSize) {
         BOOST_THROW_EXCEPTION(InvalidConfigurationException(
