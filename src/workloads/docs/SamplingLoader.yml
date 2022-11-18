@@ -47,9 +47,9 @@ Actors:
     # equal to the insert batch size, each sampled document will be "re-inserted" as many times as
     # the number of batches.
     #
-    # This may be useful if you want to insert a lot of documents to measure that performance, but
-    # don't necessarily need a big sample and want to benefit from the random cursor optimization for
-    # small sample sizes to keep the test's runtime lower.
+    # Using a small sample size may be useful if you want to measure performance of inserting many
+    # documents that don't need a variety of input data, as the small sample size allows for the
+    # random cursor optimization during sampling.
     #
     # Note that the sample size does not need to be correlated or a multiple of the insert batch size
     # or number of batches.
