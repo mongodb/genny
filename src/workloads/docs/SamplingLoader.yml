@@ -2,8 +2,9 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
   This workload demonstrates using the SamplingLoader to expand the contents of a collection. This
-  actor will take a random sample of a configurable size and re-insert the same documents. It will
-  project out the "_id" field before re-inserting to avoid duplicate key errors.
+  actor will take a random sample of a configurable size and re-insert the same documents, with the
+  option of transforming them with an agg pipeline. It will project out the "_id" field before
+  re-inserting to avoid duplicate key errors.
 GlobalDefaults:
   db: &db test
   Collection: &Collection sampling_loader_demo
@@ -26,7 +27,7 @@ Actors:
   - {Nop: true}
 
 # Our first demonstration of the sampling loader.
-- Name: ImpliedSampleSizeDemo
+- Name: BasicSamplingDemo
   Type: SamplingLoader
   Threads: 1
   Phases:
@@ -40,9 +41,9 @@ Actors:
     # Batches * InsertBatchSize.
     Batches: 2
     # Number of documents in the sample. The loader will cycle through the sampled docs, using them
-    # as templates # for the ones to be incerted, until it inserts the requested number of batches.
+    # as templates for the ones to be incerted, until it inserts the requested number of batches.
     # For example, if the sample size is set to 1, exactly one document is sampled from the original
-    # dataset and reused as a template for  _all_ of the inserted docs. And if the sample size is
+    # dataset and reused as a template for _all_ of the inserted docs. And if the sample size is
     # equal to the insert batch size, each sampled document will be "re-inserted" as many times as
     # the number of batches.
     #
@@ -55,7 +56,7 @@ Actors:
     #
     # If the sample size is omitted, the loader will set it to the number of the requested documents
     # (Batches * InsertBatchSize) so that each sampled document is re-inserted exactly once.
-    SampleSize: 1
+    SampleSize: 7
   - {Nop: true}
   - {Nop: true}
 
@@ -70,7 +71,7 @@ Actors:
 #
 # Note this is somewhat different than the configuration of 'Loader', 'MonotonicLoader', etc. which
 # accept an overall document count target which gets divided amongst the threads.
-- Name: ExplicitSampleSizeDemo
+- Name: MultiThreadedExample
   Type: SamplingLoader
   Threads: 4
   Phases:
@@ -88,7 +89,7 @@ Actors:
 # $sample. Note it runs after the "_id" has been projected out. Also note that you should not put
 # stages like a $match in here - the actor is expecting only one-to-one transformations like the one
 # shown, to provide identifiability to the docs inserted.
-- Name: ExplicitSampleSizeDemo
+- Name: PipelineOptionExample
   Type: SamplingLoader
   Threads: 4
   Phases:

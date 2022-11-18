@@ -111,12 +111,14 @@ void genny::actor::SamplingLoader::run() {
             // insert roughly the same number of copies for each sample.
             size_t sampleIdx = 0;
 
-            auto batchOfDocs = std::vector<bsoncxx::document::view_or_value>{};
+            // We'll re-use the same vector slots each time, just overwriting the memory on each new
+            // batch.
+            auto batchOfDocs = std::vector<bsoncxx::document::view_or_value>{
+                static_cast<size_t>(config->insertBatchSize)};
             auto totalOpCtx = _totalBulkLoad.start();
             for (size_t batch = 0; batch < config->numBatches; ++batch) {
-                batchOfDocs.clear();
                 for (size_t i = 0; i < config->insertBatchSize; ++i) {
-                    batchOfDocs.push_back(sampleDocs[sampleIdx].view());
+                    batchOfDocs[i] = sampleDocs[sampleIdx].view();
                     sampleIdx = (sampleIdx + 1) % sampleDocs.size();
                 }
 
