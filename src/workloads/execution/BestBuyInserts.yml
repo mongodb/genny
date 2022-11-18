@@ -5,8 +5,8 @@ Description: |
   workloads. It's main purpose is to compare the insert performance with columnar indexes to inserts
   without them. To get a better illustration, it measures insert performance in three scenarios:
    - No indexes present
-   - "Default" indexes present - a set of indexes that are typically present on the Best Buy dataset,
-     those that would be useful for the typical query workloads.
+   - "Default" indexes present - a set of indexes that are typically present on the Best Buy
+     dataset, those that would be useful for the typical query workloads.
    - Only a column store index. A column store index isn't expected to realistically replace all of
      those indexes in production, but it could replace some and knowing it's relative performance
      cost could help make that decision.
