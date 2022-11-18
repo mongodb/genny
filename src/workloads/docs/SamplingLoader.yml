@@ -25,38 +25,51 @@ Actors:
   - {Nop: true}
   - {Nop: true}
 
-# Our first demonstration of the sampling loader. This will have 4 threads each take a sample of
-# (defaulted) size 10 and insert those 10 documents again in two batches. The sample size here is
-# computed and defaulted based on the number of total documents we'll need. So there is no re-use of
-# the sample. Each thread's sample is independent, meaning we should *not* get the same 10 documents
-# inserted 4 times (or at least, that is very unlikely).
+# Our first demonstration of the sampling loader.
 - Name: ImpliedSampleSizeDemo
   Type: SamplingLoader
-  Threads: 4
+  Threads: 1
   Phases:
   - {Nop: true}
   - Repeat: 1
     Database: *db
     Collection: *Collection
-    Batches: 2
+    # Number of documents in a single insert operation.
     InsertBatchSize: 5
+    # Number of insert operations. The total number of documents to be inserted is
+    # Batches * InsertBatchSize.
+    Batches: 2
+    # Number of documents in the sample. The loader will cycle through the sampled docs, using them
+    # as templates # for the ones to be incerted, until it inserts the requested number of batches.
+    # For example, if the sample size is set to 1, exactly one document is sampled from the original
+    # dataset and reused as a template for  _all_ of the inserted docs. And if the sample size is
+    # equal to the insert batch size, each sampled document will be "re-inserted" as many times as
+    # the number of batches.
+    #
+    # This may be useful if you want to insert a lot of documents to measure that performance, but
+    # don't necessarily need a big sample and want to benefit from the random cursor optimization for
+    # small sample sizes to keep the test's runtime lower.
+    #
+    # Note that the sample size does not need to be correlated or a multiple of the insert batch size
+    # or number of batches.
+    #
+    # If the sample size is omitted, the loader will set it to the number of the requested documents
+    # (Batches * InsertBatchSize) so that each sampled document is re-inserted exactly once.
+    SampleSize: 1
   - {Nop: true}
   - {Nop: true}
 
-# In this case we explicitly specify the sample size of 5, meaning we will re-insert those same 5
-# documents over and over again - in this case 20 times each (4 times in each batch, 5 batches).
-# This is repeated per thread, for a total of 400 new documents inserted. Note this is somewhat
-# different than the configuration of 'Loader', 'MonotonicLoader', etc. which accept an overall
-# document count target which gets divided amongst the threads.
+# In this case we use multiple threads.
+# With multiple threads, each thread will operate independently, including in gathering the sample.
+# A word of caution: because there is no synchronization between threads, this means it is possible
+# for one thread to observe a document that was inserted by another SamplingLoader in the same
+# phase. Plan accordingly.
 #
-# This may be useful if you want to insert a lot of documents to measure that performance, but
-# don't necessarily need a big sample and want to benefit from the random cursor optimization for
-# small sample sizes to keep the test's runtime lower.
+# The total number of documents inserted then will be Threads * Batches * InsertBatchSize, here
+# 4 * 5 * 20 = 400.
 #
-# Note that the sample size does not need to be correlated or a multiple of the insert batch size
-# or number of batches.
-#
-# Again here, each thread has an independent sample.
+# Note this is somewhat different than the configuration of 'Loader', 'MonotonicLoader', etc. which
+# accept an overall document count target which gets divided amongst the threads.
 - Name: ExplicitSampleSizeDemo
   Type: SamplingLoader
   Threads: 4
@@ -88,5 +101,12 @@ Actors:
     SampleSize: 5
     Batches: 5
     InsertBatchSize: 20
-    # Note again: each thread is independent, so 'nTimesSoFar' will refer to that thread's count.
+    # Note again: each thread is independent, so 'nTimesSoFar' will refer to that thread's count,
+    # since each thread will run the document generator independently. As mentioned earlier, it is
+    # possible that in a race condition one thread will observe another thread's inserted documents
+    # in the sample. Here that would mean we might see a document that already has the 'y' and
+    # 'nTimesSoFar' fields present. In this case they will be overridden with new values though, so
+    # it would be harmless. The end result should be that we see Batches * InsertBatchSize = 100 new
+    # documents per thread, and the numbers 1 through 100 repeated per thread accordingly in the
+    # 'nTimesSoFar' field.
     Pipeline: [{$set: {y: "SamplingLoader wuz here", nTimesSoFar: {^Inc: {}}}}]
