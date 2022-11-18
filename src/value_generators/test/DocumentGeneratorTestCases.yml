@@ -116,6 +116,12 @@ Tests:
       - {a: [ { "a": 1 }, 1, { "a": 1 } ] }
       - {a: [ 1, 1, { "a": 1 }, 1, "abc" ] }
 
+  - Name: ArrayChooseDeterministic
+    GivenTemplate:
+      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: 1}}, number: 6}}
+    ThenReturns:
+      - {a: [ 1, 2, 3, 1, 2, 3 ] }
+
   - Name: ArrayChooseNestedGenerator
     GivenTemplate:
       a: {^Array: {number: 4, of: {^Choose: {from: [

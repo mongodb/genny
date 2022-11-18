@@ -516,13 +516,17 @@ private:
 // by JoinGenerator today. See ChooseStringGenerator.
 class ChooseGenerator : public Appendable {
 public:
-    // constructore defined at bottom of the file to use other symbol
+    // constructor defined at bottom of the file to use other symbol
     ChooseGenerator(const Node& node, GeneratorArgs generatorArgs);
     Appendable& choose() {
+        if (_deterministic) {
+            ++_elemNumber;
+            return *_choices[_elemNumber % _choices.size()];
+        }
         // Pick a random number between 0 and sum(weights)
         // Pick value based on that.
         auto distribution = boost::random::discrete_distribution(_weights);
-        return (*_choices[distribution(_rng)]);
+        return (*_choices[distribution(_rng)]); 
     }
 
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
@@ -537,6 +541,8 @@ protected:
     ActorId _id;
     std::vector<UniqueAppendable> _choices;
     std::vector<int64_t> _weights;
+    int32_t _elemNumber;
+    bool _deterministic;
 };
 
 // This is a a more specific version of ChooseGenerator that produces strings. It is only used
@@ -1910,6 +1916,13 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         // If not passed in, give each choice equal weight
         _weights.assign(_choices.size(), 1);
     }
+    if (node["deterministic"]) {
+        auto val = node["deterministic"].maybe<int32_t>().value_or(-1);
+        val > 0 ? _deterministic = true : _deterministic = false; 
+    } else {
+        _deterministic = false;
+    }
+    _elemNumber = -1;
 }
 
 /**
