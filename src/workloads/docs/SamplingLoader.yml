@@ -108,4 +108,7 @@ Actors:
     # this case they will be overridden with new values though, so it would be harmless. The end
     # result should be that we see Batches * InsertBatchSize = 100 new documents per thread, and
     # each actorId repeated 100 times.
+    #
+    # Note that the pipeline is run only once to gather the sample, and so any document generators
+    # you use in the pipeline specification will be instantiated once and only once.
     Pipeline: [{$set: {y: "SamplingLoader wuz here", actorId: {^ActorId: {}}}}]
