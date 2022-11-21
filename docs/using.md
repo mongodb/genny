@@ -398,6 +398,30 @@ You can also use the `translate` subcommand to convert results to a [t2-readable
 
 If you are running Genny through DSI in Evergreen, the FTDC contents are rolled up into summary statistics like `OperationThroughput` and such, viewable in the Evergreen perf UI. 
 
+If you are running Genny locally, you can use `perf_results_summary.py` to print a summary of the most recent run (or any `CedarMetrics` directory) to the console. For example,
+
+```bash
+python test_result_summary.py -m throughput timers.dur -a ".*Sleep.*" -b 3
+SleepTest.SleepTest summary:
+        timers.dur (measured in nanoseconds, displayed in milliseconds):
+                count     : 160     
+                average   : 1001.3  
+                median    : 1000.9  
+                mode      : 1000.9  
+                stddev    : 0.4     
+                [min, max]: [1000.4, 1002.5]
+                histogram:
+                        [1000,1001): ***************************        (27)
+                        [1001,1002): ************************************************************...    (128)
+                        [1002,1002]: *****      (5)
+        throughput:
+                ops       : 160.0   
+                seconds   : 160.213370114
+                ops per second: 0.9987  
+
+```
+
+Try using `python test_results_summary.py --help` for more options.
 
 <a id="org0e7c476"></a>
 
