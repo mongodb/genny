@@ -1,8 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 Description: |
-  Run updateOnes, deleteOnes, and findAndModifys without shard key or id in their queries against a
-  replica set.
+  Run updateOnes, deleteOnes, and findAndModifys on a replica set.
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
