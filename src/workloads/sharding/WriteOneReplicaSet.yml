@@ -23,7 +23,7 @@ Actors:
   - *Nop
   - *Nop
 
-- Name: CRUDOpsWithoutShardKey
+- Name: CRUDOps
   Type: CrudActor
   Threads: 1  # Use 1 thread to avoid updates throwing WriteConflict errors.
   Phases:
@@ -32,7 +32,7 @@ Actors:
     Database: *Database
     Collection: Collection0
     Operations:
-    - OperationMetricsName: UpdateOneWithoutShardKey
+    - OperationMetricsName: UpdateOne
       OperationName: updateOne
       OperationCommand:
         Filter: {y: 1}
@@ -45,7 +45,7 @@ Actors:
     Database: *Database
     Collection: Collection0
     Operations:
-    - OperationMetricsName: FindAndModifyWithoutShardKey
+    - OperationMetricsName: FindAndModify
       OperationName: findOneAndUpdate
       OperationCommand:
         Filter: {y: 2}
@@ -58,7 +58,7 @@ Actors:
     Database: *Database
     Collection: Collection0
     Operations:
-    - OperationMetricsName: DeleteOneWithoutShardKey
+    - OperationMetricsName: DeleteOne
       OperationName: deleteOne
       OperationCommand:
         Filter: {z: 1}
