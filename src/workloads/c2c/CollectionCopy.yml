@@ -15,7 +15,7 @@ ScriptsPath: &scriptsPath ./MongosyncScripts.yml
 
 EnvironmentDetails:
   MongosyncConnectionURIs:
-    - http://localhost:27182
+  - http://localhost:27182
 
 Parameters:
 - &Nop {Nop: true}

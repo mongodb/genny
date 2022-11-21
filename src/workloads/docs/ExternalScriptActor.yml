@@ -41,6 +41,6 @@ Actors:
   Type: Python
   Threads: 5
   Phases:
-    - Repeat: 5
-      Module: example_actor
-      Endpoint: hello_world
+  - Repeat: 5
+    Module: example_actor
+    Endpoint: hello_world

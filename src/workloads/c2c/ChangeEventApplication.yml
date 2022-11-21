@@ -15,7 +15,7 @@ Keywords:
 
 EnvironmentDetails:
   MongosyncConnectionURIs:
-    - http://localhost:27182
+  - http://localhost:27182
 
 Clients:
   Default:
