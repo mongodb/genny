@@ -9,7 +9,7 @@ import math
 import json
 
 default_metrics_path = 'build/WorkloadOutput/CedarMetrics'
-default_metrics = ['timers.total', 'timers.dur']
+default_metrics = ['throughput', 'timers.dur']
 
 
 def path_to_string(path_component_array):
