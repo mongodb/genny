@@ -832,13 +832,15 @@ This will create new Actor .cpp and .h files, an example workload yaml, as well 
 
 If your configuration wants to use logic, ifs, or anything beyond simple or existing commands in a loop, then consider writing your own Actor. It doesn't need to be super general or even super well-tested or refactored. Genny is open to submissions and you own whatever Actor you write. No need to loop TIPS in to your custom actor's PR unless you'd just like a second look.
 
-## Creating a Python Actor
+### Creating a Python Actor
 
-Python actors are useful for two cases: 1. Adding some form of test orchestration not currently supported by DSI and 2. For prototyping support for some new feature. For the second case we encourage you to rewrite your Python actor in C++ if the prototype is successful. We particularly discourage the use of the Python actor for cases in which the actor performance itself is important (e.g., measuring anything that is expected to take milliseconds to complete).
+**Using Python actors isn't recommended at the current time. If you have a use-case where you think that a Python actor could be useful, please reach out to the performance team.**
 
-Note that using Python actors isn't recommended at the current time due to the experimental nature of the feature. If you have a use-case where you think that a Python actor could be useful, please reach out to the performance team. See [example_actor.py](../src/cast_python/src/example_actor.py) for an example of how to write a Python actor and [mongosync_actor.py](../src/cast_python/src/mongosync_actor.py) for an example of a Python actor that is currently used in a real performance workload.
+Python actors are an experimental feature added for two cases: 1. Adding some form of test orchestration not currently supported by DSI and 2. For prototyping support for some new feature. For the second case we encourage you to rewrite your Python actor in C++ if the prototype is successful. We particularly discourage the use of the Python actor for cases in which the actor performance itself is important (e.g., measuring anything that is expected to take milliseconds to complete). Python actors have very limited support for metrics reporting and will not provide accurate timings of code. In short, Python actors should only be used for test orchestration in limited cases.
 
-When adding a Python actor, please add a suite of unit tests in (../src/cast_python/test/test_mongosync_actor.py) to ensure that Python version upgrades in the genny toolchain don't break the actor. Python actor unit tests can be run with `./run-genny self-test` and the code can be linted with `./run-genny lint-python`.
+See [example_actor.py](../src/cast_python/src/example_actor.py) for an example of how to write a Python actor and [mongosync_actor.py](../src/cast_python/src/mongosync_actor.py) for an example of a Python actor that is currently used in a real performance workload. The reason a Python actor was chosen for this workload is because we required orchestration of an external REST service during certain phases of the workload. The phases using the Python actor were expected to take minutes due to the nature of the system under test, and so the overheads from using Python didn't matter to the measurements.
+
+When adding a Python actor, please add a suite of unit tests in (../src/cast_python/test/test_mongosync_actor.py) to ensure that Python version upgrades in the genny toolchain don't break the actor. Python actor unit tests can be run with `./run-genny self-test` and the code can be linted with `./run-genny lint-python`. Without good unit tests, there is a risk that upgrades to genny's Python will break workloads that use the actor.
 
 
 <a id="org3aaae9e"></a>
