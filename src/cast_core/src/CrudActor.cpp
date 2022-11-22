@@ -14,6 +14,7 @@
 
 #include <cast_core/actors/CrudActor.hpp>
 #include <cast_core/actors/OptionsConversion.hpp>
+#include <cast_core/helpers/pipeline_helpers.hpp>
 
 #include <chrono>
 #include <memory>
@@ -34,6 +35,7 @@
 #include <gennylib/conventions.hpp>
 #include <value_generators/DefaultRandom.hpp>
 #include <value_generators/DocumentGenerator.hpp>
+#include <value_generators/PipelineGenerator.hpp>
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
@@ -700,41 +702,6 @@ private:
 };
 
 struct AggregateOperation : public BaseOperation {
-    struct Pipeline {
-        /**
-         * Converts the given 'pipeline' to an object with numerical property names.
-         */
-        static bsoncxx::document::value copyPipelineToDocument(const mongocxx::pipeline& pipeline) {
-            auto arrayView = pipeline.view_array();
-            bsoncxx::document::view docView{arrayView.data(), arrayView.length()};
-            return bsoncxx::document::value{docView};
-        }
-
-        Pipeline(const Node& node, PhaseContext& context, ActorId id) {
-            if (!node.isSequence()) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException("'Pipeline' must be an array"));
-            }
-            for (auto&& [_, stageNode] : node) {
-                stageGenerators.push_back(stageNode.to<DocumentGenerator>(context, id));
-            }
-        }
-
-        /**
-         * Evaluates each 'DocumentGenerator' in 'stageGenerators' and returns the resulting
-         * aggregation pipeline.
-         */
-        mongocxx::pipeline generatePipeline() {
-            mongocxx::pipeline pipeline;
-            for (auto&& stage : stageGenerators) {
-                pipeline.append_stage(stage());
-            }
-
-            return pipeline;
-        }
-
-        std::vector<DocumentGenerator> stageGenerators;
-    };
-
     AggregateOperation(const Node& opNode,
                        bool onSession,
                        mongocxx::collection collection,
@@ -745,14 +712,14 @@ struct AggregateOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _pipeline{opNode["Pipeline"].to<Pipeline>(context, id)} {
+          _pipelineGenerator{opNode["Pipeline"].to<PipelineGenerator>(context, id)} {
         if (opNode["Options"]) {
             _options = opNode["Options"].to<mongocxx::options::aggregate>();
         }
     }
 
     void run(mongocxx::client_session& session) override {
-        auto pipeline = _pipeline.generatePipeline();
+        auto pipeline = pipeline_helpers::makePipeline(_pipelineGenerator);
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto cursor = _onSession ? _collection.aggregate(session, pipeline, _options)
                                      : _collection.aggregate(pipeline, _options);
@@ -760,7 +727,7 @@ struct AggregateOperation : public BaseOperation {
                 ctx.addDocuments(1);
                 ctx.addBytes(doc.length());
             }
-            return Pipeline::copyPipelineToDocument(pipeline);
+            return pipeline_helpers::copyPipelineToDocument(pipeline);
         });
     }
 
@@ -768,7 +735,7 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::aggregate _options;
-    Pipeline _pipeline;
+    PipelineGenerator _pipelineGenerator;
     metrics::Operation _operation;
 };
 
