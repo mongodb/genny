@@ -96,7 +96,7 @@ def convert_to_csv(args, actor_file):
     return tmp_file_location
 
 
-def summarize_diffed_data(args, metrics_of_interest):
+def summarize_diffed_data(args, actor_name, metrics_of_interest):
     """
     Computes statistical measures on data points that have been pre-processed by diffing one
     recording from the previous recording.
@@ -137,8 +137,8 @@ def summarize_diffed_data(args, metrics_of_interest):
     return results
 
 
-def summarize_readings(args, metrics_of_interest, header, last_line):
-    results = summarize_diffed_data(args, metrics_of_interest)
+def summarize_readings(args, actor_name, metrics_of_interest, header, last_line):
+    results = summarize_diffed_data(args, actor_name, metrics_of_interest)
 
     if args.verbose:
         print(
@@ -174,7 +174,7 @@ def is_measured_in_nanoseconds(metric_name):
     return metric_name.startswith("timers.")
 
 
-def process_csv(args, csv_reader):
+def process_csv(args, actor_name, csv_reader):
     header = csv_reader.readline().split(',')
     if args.verbose:
         print("Analyzing the following metrics", args.metrics)
@@ -232,8 +232,9 @@ def process_csv(args, csv_reader):
               nRows)
 
     # strip out the 'last recording' piece of information - not needed anymore.
-    just_data = {m: all_data for (m, (_, all_data)) in metrics_of_interest.items()}
-    return summarize_readings(args, just_data, header, last_line)
+    just_data = {m: all_data for (m, (_, all_data))
+                 in metrics_of_interest.items()}
+    return summarize_readings(args, actor_name, just_data, header, last_line)
 
 
 def print_histogram_bucket(prefix, global_max, bucket_min, bucket_max, end_bracket, stars, n_items):
@@ -245,7 +246,15 @@ def print_histogram_bucket(prefix, global_max, bucket_min, bucket_max, end_brack
     max_digits = math.ceil(math.log(global_max, 10))
     bound_fmt = "%" + str(max_digits) + "d"
     fmt_string = "%s[" + bound_fmt + "," + bound_fmt + "%s: %s\t(%d)"
-    print(fmt_string % (prefix, round(bucket_min), round(bucket_max), end_bracket, stars, n_items))
+    print(fmt_string %
+          (
+              prefix,
+              round(bucket_min),
+              round(bucket_max),
+              end_bracket,
+              stars,
+              n_items
+          ))
 
 
 def print_histogram(data_points, n_buckets, prefix=""):
@@ -253,12 +262,14 @@ def print_histogram(data_points, n_buckets, prefix=""):
     # 'processed' must be sorted.
     min_v, max_v = data_points[0], data_points[-1]
     step = (max_v - min_v) / n_buckets
-    split_points = [min_v + step*i for i in range(n_buckets)] + [data_points[-1]]
+    split_points = [min_v + step *
+                    i for i in range(n_buckets)] + [data_points[-1]]
 
     data_idx = 0
     # One more split point than we have buckets. e.g. 11 splits means 10 buckets.
     for splits_idx in range(1, len(split_points)):
-        bucket_min, bucket_max = split_points[splits_idx - 1], split_points[splits_idx]
+        bucket_min = split_points[splits_idx - 1]
+        bucket_max = split_points[splits_idx]
 
         starting_idx = data_idx
         while data_idx < len(data_points) and data_points[data_idx] < split_points[splits_idx]:
@@ -343,7 +354,7 @@ def main():
 
         tmp_file = convert_to_csv(args, actor_file)
         with open(tmp_file, 'r') as csv_reader:
-            metric_summaries = process_csv(args, csv_reader)
+            metric_summaries = process_csv(args, actor_name, csv_reader)
 
             for (metric_name, summary_data) in metric_summaries.items():
                 global_summaries[actor_name][metric_name] = summary_data
