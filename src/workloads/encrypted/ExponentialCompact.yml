@@ -1,0 +1,50 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+  With queryable encryption enabled, this workload runs alternating CRUD and compact phases,
+  where the total number of inserts & updates is increased on every CRUD+Compact cycle in order
+  to grow the ECOC collection to a size that is at least twice its pre-compaction size in
+  the previous cycle. This is meant to test how long compaction takes relative to ECOC size.
+
+Encryption:
+  UseCryptSharedLib: true
+  CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so
+  EncryptedCollections:
+  - Database: genny_qebench
+    Collection: testcoll
+    EncryptionType: queryable
+    QueryableEncryptedFields:
+      field0: { type: "string", queries: [{queryType: "equality"}] }
+
+Clients:
+  EncryptedPool:
+    QueryOptions:
+      maxPoolSize: 400
+      socketTimeoutMS: -1
+    # Comment this section out to disable encryption
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_qebench.testcoll
+
+LoadConfig:
+  Path: ../../phases/encrypted/ContinuousWritesWithExponentialCompactTemplate.yml
+  Parameters:
+    Database: genny_qebench
+    Collection: testcoll
+    Namespace: genny_qebench.testcoll
+    ClientName: EncryptedPool
+    ShardCollectionPhase: {Nop: true}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica-fle
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
