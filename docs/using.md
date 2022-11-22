@@ -1,42 +1,39 @@
 
 # Table of Contents
 
-- [Table of Contents](#table-of-contents)
-- [Introduction](#introduction)
-- [Getting Started and Building](#getting-started-and-building)
-- [Core Concepts](#core-concepts)
-  - [What is load generation?](#what-is-load-generation)
-    - [What other load generation tools are there?](#what-other-load-generation-tools-are-there)
-  - [What is the system under test?](#what-is-the-system-under-test)
-  - [What is a workload?](#what-is-a-workload)
-    - [How are workloads configured?](#how-are-workloads-configured)
-    - [What is an Actor?](#what-is-an-actor)
-    - [What is a phase?](#what-is-a-phase)
-    - [How do I run a workload?](#how-do-i-run-a-workload)
-  - [Outputs](#outputs)
-  - [Workload Development](#workload-development)
-- [Further Concepts](#further-concepts)
-  - [Common Actors](#common-actors)
-  - [AutoRun](#autorun)
-    - [What is AutoRun?](#what-is-autorun)
-    - [Configuring AutoRun](#configuring-autorun)
-  - [Value Generators](#value-generators)
-  - [Preprocessor](#preprocessor)
-    - [LoadConfig](#loadconfig)
-    - [ActorTemplate](#actortemplate)
-    - [OnlyActiveInPhases](#onlyactiveinphases)
-    - [Defaults and Overrides](#defaults-and-overrides)
-  - [Connecting to the Server](#connecting-to-the-server)
-    - [Connection Strings and Pools](#connection-strings-and-pools)
-    - [Multiple Connection Strings](#multiple-connection-strings)
-    - [Default](#default)
-  - [Creating an Actor](#creating-an-actor)
-  - [Creating a Python Actor](#creating-a-python-actor)
-- [Pitfalls](#pitfalls)
-  - [pipe creation failed (24): Too many open files](#pipe-creation-failed-24-too-many-open-files)
-  - [Actor integration tests fail locally](#actor-integration-tests-fail-locally)
-  - [The Loader agent requires thread count set on both Actor and phase level](#the-loader-agent-requires-thread-count-set-on-both-actor-and-phase-level)
-  - [Two similarly-named workloads are not permitted to coexist](#two-similarly-named-workloads-are-not-permitted-to-coexist)
+1.  [Introduction](#orgf1f92f6)
+2.  [Getting Started and Building](#org35e6dff)
+3.  [Core Concepts](#org1140a6b)
+    1.  [What is load generation?](#orgdcd1898)
+	2.  [What other load generation tools are there?](#orgc7988ae)
+    3.  [What is the system under test?](#orgc7904ae)
+    4.  [What is a workload?](#org3610c67)
+        1.  [How are workloads configured?](#orgdecc7ae)
+        2.  [What is an Actor?](#org51d4d33)
+        3.  [What is a phase?](#orgb655d69)
+        4.  [How do I run a workload?](#org32b8ad3)
+    5.  [Outputs](#orgec88ad4)
+    6.  [Workload Development](#org0e7c476)
+4.  [Further Concepts](#org61c719c)
+    1.  [Common Actors](#org78b250a)
+    2.  [AutoRun](#org2b04b49)
+        1.  [What is AutoRun?](#orgd0067d1)
+        2.  [Configuring AutoRun](#orgbfb0d8e)
+    3.  [Value Generators](#orgd89f221)
+    4.  [Preprocessor](#org2078b23)
+        1.  [LoadConfig](#orga6d35c7)
+        2.  [ActorTemplate](#orga45b1d8)
+        3.  [OnlyActiveInPhases](#orgf9c328f)
+        4.  [Defaults and Overrides](#org22b7a0f)
+    5.  [Connecting to the Server](#orgd6b0450)
+        1.  [Connection Strings and Pools](#orgd2659db)
+        2.  [Multiple Connection Strings](#orga591018)
+        3.  [Default](#org65830c2)
+    6.  [Creating an Actor](#org7e6c6bd)
+5.  [Pitfalls](#org3aaae9e)
+    1.  [pipe creation failed (24): Too many open files](#orga7ab911)
+    2.  [Actor integration tests fail locally](#orgb084b49)
+    3.  [The Loader agent requires thread count set on both Actor and phase level](#org97681a9)
 
 
 <a id="orgf1f92f6"></a>
@@ -54,12 +51,12 @@ If you have any questions, please reach out to the TIPS team in our dedicated sl
 
 For build instructions, see the installation guide [here](setup.md).
 
-To try launching Genny, navigate to the root of the Genny repo and run the following:
+To try launching Genny, navigate to the root of the Genny repo and run the following: 
 
 ```bash
 ./run-genny workload src/workloads/docs/HelloWorld.yml
 ```
-
+	
 You should see output similar to the following:
 
 ```
@@ -305,7 +302,7 @@ A couple of notes about the above:
 1.  Sleeping
 
     In addition to the above keys, Actors can also be configured to sleep during parts of phases. For example:
-
+    
 ```yaml
 Actors:
 - Name: HelloWorldExample
@@ -317,16 +314,16 @@ Actors:
     Duration: 50 milliseconds
     SleepAfter: 15 milliseconds
 ```
-
+    
 This will sleep for 10 milliseconds at the beginning of *every* Actor iteration and for 15 milliseconds at the end of every iteration. This time is counted as part of the phase duration. Genny accepts the following sleep configurations:
-
+    
 -   `SleepBefore` - duration to sleep at the beginning of each iteration
 -   `SleepAfter` - duration to sleep after each iteration
 
 2.  Rate Limiting
 
 By default, Actors will repeat their main loop as quickly as possible. Sometimes you want to restrict how quickly an Actor works. This can be done using a rate limiter:
-
+    
 ```yaml
 Actors:
 - Name: HelloWorldExample
@@ -337,11 +334,11 @@ Actors:
     GlobalRate: 5 per 10 milliseconds
     Duration: 50 milliseconds
 ```
-
+    
 Using the `GlobalRate` configuration, the above Actor will only have 5 threads act every 10 milliseconds, despite having 100 threads that could reasonable act at once. If this workload's outputs were to be analyzed and the intrarun time series were graphed, the user would see only 5 operations occurring every 10 milliseconds. (See [here](#orgec88ad4) for more details about outputs.)
-
+    
 In addition to hard-coding how many threads act and when, you can configure Genny to rate-limit the Actor at a percentage of the detected maximum rate:
-
+    
 ```yaml
 Actors:
 - Name: HelloWorldExample
@@ -352,15 +349,15 @@ Actors:
     GlobalRate: 80%
     Duration: 2 minutes
 ```
-
+    
     The above workload will run `HelloWorldExample` at maximum throughput for either 1 minutes or 3 iterations of the Actor's loop, whichever is longer. Afterwards, Genny will use the estimated throughput from that time to limit the Actor to 80% of the max throughput.
-
+    
 Note that the rate limiter uses a [token bucket algorithm](https://en.wikipedia.org/wiki/Token_bucket). This means that bursty behavior is possible. For example, if we configure `GlobalRate: 5 per 10 milliseconds` then we will have 5 threads act all at once, followed by 9 or so milliseconds without any threads acting, then another burst of 5 threads acting, etc. We can smooth the rate by specifying a tighter yet equivalent rate limit: `GlobalRate: 1 per 2 milliseconds`.
-
+    
 Since the percentage-based limiting treats the entire estimation period as the duration in the rate specification, it is highly prone to bursty behavior.
-
+    
 Rate limiting accepts the following configurations:
-
+    
 -   `GlobalRate` - specified as either a rate specification (x per y minutes/seconds/milliseconds/etc) or as a percentage
 
 
@@ -399,7 +396,7 @@ For example, to export the results of the Insert operation in the InsertRemove w
 
 You can also use the `translate` subcommand to convert results to a [t2-readable](https://github.com/10gen/t2/) format.
 
-If you are running Genny through DSI in Evergreen, the FTDC contents are rolled up into summary statistics like `OperationThroughput` and such, viewable in the Evergreen perf UI.
+If you are running Genny through DSI in Evergreen, the FTDC contents are rolled up into summary statistics like `OperationThroughput` and such, viewable in the Evergreen perf UI. 
 
 
 <a id="org0e7c476"></a>
@@ -407,7 +404,7 @@ If you are running Genny through DSI in Evergreen, the FTDC contents are rolled 
 ## Workload Development
 
 1.  Create a yaml file in `./src/workloads` in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in `./src/phases` (and for more details about what that means, see [here](#org2078b23)). Consider whether existing Actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [here](#org7e6c6bd).
-
+    
     ```bash
     vim src/workloads/[workload_dir]/[workload_name.yml]
     vim src/phases/[phase_dir]/[phases_name.yml] # Only necessary if creating external configuration
@@ -415,23 +412,23 @@ If you are running Genny through DSI in Evergreen, the FTDC contents are rolled 
     ```
 
 2.  Run the self-tests:
-
+    
     ```bash
 	./run-genny lint-yaml  # Lint all YAML files
 	./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
 	./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
     ```
-
+		
     Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
 
 3.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
-
+    
     ```bash
     ./run-genny workload -u [connection_uri] src/workloads/[workload_dir/workload_name.yml]
     ```
 
 4.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](./run-dsi onboarding  # introductory DSI command; see link above for details) for details:
-
+    
 	```bash
 	./run-dsi onboarding  # introductory DSI command; see link above for details
 	cd WORK
@@ -441,16 +438,16 @@ If you are running Genny through DSI in Evergreen, the FTDC contents are rolled 
 	```
 
 5.  Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
-
+    
 	```bash
 	cd ~/[path_to_evg_project_repo]
 	evergreen patch -p [evg_project]
 	cd ~/[path_to_genny]/genny
 	evergreen patch-set-module -i [patch_id_number] -m genny
 	```
-
+	
 	The `evg_project` above should correspond to the Evergreen project being tested. For example, `sys-perf`.
-
+    
     You can then select `schedule_patch_auto_tasks` on a variant to schedule any modified or new Genny tasks created by AutoRun. Alternatively, you could select `schedule_variant_auto_tasks` to schedule all Genny tasks on that variant.
 
 For more details on workload development, please check out our general docs on [Developing and Modifying Workloads](https://github.com/10gen/performance-tooling-docs/blob/main/new_workloads.md) and on [Basic Performance Patch Testing](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md).
@@ -586,7 +583,7 @@ For convenience when developing workloads, Genny offers a preprocessing syntax t
 ```bash
 ./run-genny evaluate src/workloads/[workload_dir/workload_name.yml]
 ```
-
+	
 This command helps find yaml-based mistakes. Note that we don't do schema-checking for this yaml.
 
 
@@ -623,7 +620,7 @@ UseMe:
   Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
 ```
 
-Using `LoadConfig`, the contents of the `UseMe` key will be placed into the location where the `LoadConfig` was evaluated, with parameters substituted, so we end up with the following ouput from evaluation:
+Using `LoadConfig`, the contents of the `UseMe` key will be placed into the location where the `LoadConfig` was evaluated, with parameters substituted, so we end up with the following ouput from evaluation: 
 
 ```yaml
 Actors:
@@ -700,7 +697,7 @@ should only be used to set values that absolutely need to be specified at runtim
 Furthermore, there is a default Actor that is injected during preprocessing, which has the following configuration:
 
 ```yaml
-Name: PhaseTimingRecorder
+Name: PhaseTimingRecorder 
 Type: PhaseTimingRecorder
 Threads: 1
 ```
@@ -835,12 +832,6 @@ This will create new Actor .cpp and .h files, an example workload yaml, as well 
 
 If your configuration wants to use logic, ifs, or anything beyond simple or existing commands in a loop, then consider writing your own Actor. It doesn't need to be super general or even super well-tested or refactored. Genny is open to submissions and you own whatever Actor you write. No need to loop TIPS in to your custom actor's PR unless you'd just like a second look.
 
-## Creating a Python Actor
-
-Python actors are a highly experimental feature that lets you write actor code in python instead of C++. Note that using Python actors isn't recommended at the current time due to the experimental nature of the feature. If you have a use-case where you think that a Python actor could be useful, please reach out to the performance team. See [example_actor.py](../src/cast_python/src/example_actor.py) for an example of how to write a Python actor and [mongosync_actor.py](../src/cast_python/src/mongosync_actor.py) for an example of a Python actor that is currently used in a real performance workload.
-
-When adding a Python actor, please add a suite of unit tests in (../src/cast_python/test/test_mongosync_actor.py) to ensure that Python version upgrades in the genny toolchain don't break the actor. Python actor unit tests can be run with `./run-genny self-test` and the code can be linted with `./run-genny lint-python`.
-
 
 <a id="org3aaae9e"></a>
 
@@ -871,5 +862,5 @@ This is tracked in [TIG-3016](https://jira.mongodb.org/browse/TIG-3016) which wi
 
 ## Two similarly-named workloads are not permitted to coexist
 
-This is tracked in [TIG-3700](https://jira.mongodb.org/browse/TIG-3700) which will correct the issue.
-Note that the failure symptom when this occurs could be an infractrue provisioning error, even though the issue is unrelated to provisioning.
+This is tracked in [TIG-3700](https://jira.mongodb.org/browse/TIG-3700) which will correct the issue. 
+Note that the failure symptom when this occurs could be an infractrue provisioning error, even though the issue is unrelated to provisioning. 
