@@ -837,7 +837,7 @@ If your configuration wants to use logic, ifs, or anything beyond simple or exis
 
 ## Creating a Python Actor
 
-Python actors are a highly experimental feature that lets you write actor code in python instead of C++. Note that using Python actors isn't recommended at the current time due to the experimental nature of the feature. If you have a use-case where you think that a Python actor could be useful, please reach out to the performance team. See (../src/cast_python/src/example_actor.py) for an example of how to write a Python actor and (../src/cast_python/src/mongosync_actor.py) for an example of a Python actor that is currently used in a real test.
+Python actors are a highly experimental feature that lets you write actor code in python instead of C++. Note that using Python actors isn't recommended at the current time due to the experimental nature of the feature. If you have a use-case where you think that a Python actor could be useful, please reach out to the performance team. See [example_actor.py](../src/cast_python/src/example_actor.py) for an example of how to write a Python actor and [mongosync_actor.py](../src/cast_python/src/mongosync_actor.py) for an example of a Python actor that is currently used in a real performance workload.
 
 When adding a Python actor, please add a suite of unit tests in (../src/cast_python/test/test_mongosync_actor.py) to ensure that Python version upgrades in the genny toolchain don't break the actor. Python actor unit tests can be run with `./run-genny self-test` and the code can be linted with `./run-genny lint-python`.
 
