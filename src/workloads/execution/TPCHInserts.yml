@@ -1,0 +1,158 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  This workload measures bulk insert performance with the TPC-H dataset. It's main purpose is to
+  compare the insert performance with columnar indexes to inserts without them. To get a better
+  illustration, it measures insert performance in three scenarios:
+   - No indexes present
+   - "Default" indexes present - a set of indexes that are typically present on the TPC-H dataset,
+     those that would be useful for the typical query workloads.
+   - Only a column store index. A column store index isn't expected to realistically replace all of
+     those indexes in production, but it could replace some and knowing it's relative performance
+     cost could help make that decision.
+
+  In order to run this workload, the denormalized TPC-H dataset must be present already in the
+  database under test. This is designed to test insert performance in more of a steady-state and
+  hopefully I/O bound mongod.
+
+  The workload consists of the following phases and actors:
+   - Bulk inserting without any indexes. (SamplingLoader used to generate artificial inserts)
+   - Build the indexes we typically see with TPC-H. (RunCommand Actor)
+   - Measure bulk inserting again (SamplingLoader)
+   - Drop all non-_id indexes (RunCommand Actor)
+   - Build the column store index (RunCommand Actor)
+   - Measure bulk inserting again (SamplingLoader)
+
+Keywords:
+- columnstore
+- analytics
+- scale
+- insert
+
+Clients:
+  Default:
+    QueryOptions:
+      # Allow for longer duration since index builds may take a while.
+      socketTimeoutMS: 3_600_000  # = 1 hour
+      connectTimeoutMS: 3_600_000
+
+GlobalDefaults:
+  # Defines the database name.
+  Database: &db tpch
+
+  # Defines the collection name.
+  Collection: &Collection customer
+
+  ColumnStoreIndexSpec: &ColumnStoreIndexSpec
+    key: {$**: "columnstore"}
+    name: "columnstore"
+
+  LoadThreads: &LoadThreads 8
+
+  SamplingLoaderPhaseConfig: &SamplingLoaderPhaseConfig
+    Collection: *Collection
+    Database: *db
+    Repeat: 1
+    InsertBatchSize: 400
+    Batches: 20  # Per Thread
+    SampleSize: 4000
+
+NoIndexesInsertPhase: &NoIndexesInsertPhase 0
+BuildTpchIndexesPhase: &BuildTpchIndexesPhase 1
+BaselineTpchIndexesInsertPhase: &BaselineTpchIndexesInsertPhase 2
+DropBaselineIndexesPhase: &DropBaselineIndexesPhase 3
+BuildColumnStoreIndexPhase: &BuildColumnStoreIndexPhase 4
+ColumnStoreIndexInsertPhase: &ColumnStoreIndexInsertPhase 5
+MaxPhases: &MaxPhases 5
+
+Actors:
+- Name: NoIndexes
+  Type: SamplingLoader
+  Threads: *LoadThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*NoIndexesInsertPhase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: *SamplingLoaderPhaseConfig
+
+- Name: BuildTpchIndexes
+  Type: RunCommand
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*BuildTpchIndexesPhase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operations:
+        - OperationMetricsName: BuildTpchIndexes
+          OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *Collection
+            indexes:
+            - key:
+                "c_custkey": 1
+              name: "c_custkey_1"
+            - key:
+                "nation.n_nationkey": 1
+              name: "nation.n_nationkey_1"
+            - key:
+                "nation.region.r_regionkey": 1
+              name: "nation.region.r_regionkey_1"
+            - key:
+                "orders.o_orderdate": 1
+              name: "orders.o_orderdate_1"
+            - key:
+                "orders.lineitem.l_shipdate": 1
+              name: "orders.lineitem.l_shipdate_1"
+
+- Name: BaselineTpchIndexes
+  Type: SamplingLoader
+  Threads: *LoadThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*BaselineTpchIndexesInsertPhase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: *SamplingLoaderPhaseConfig
+
+- Name: DropBaselineIndexes
+  Type: RunCommand
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*DropBaselineIndexesPhase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operations:
+        - OperationMetricsName: DropBaselineIndexes
+          OperationName: RunCommand
+          OperationCommand:
+            dropIndexes: *Collection
+            index: "*"
+
+- Name: BuildColumnStoreIndex
+  Type: RunCommand
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*BuildColumnStoreIndexPhase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operations:
+        - OperationMetricsName: BuildColumnStoreIndex
+          OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *Collection
+            indexes:
+            - *ColumnStoreIndexSpec
+
+- Name: ColumnStoreIndex
+  Type: SamplingLoader
+  Threads: *LoadThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*ColumnStoreIndexInsertPhase]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig: *SamplingLoaderPhaseConfig
