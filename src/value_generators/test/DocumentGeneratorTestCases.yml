@@ -632,14 +632,23 @@ Tests:
 
   - Name: Join With Deterministic Choose
     GivenTemplate:
-      a: {^Object: {withNEntries: 5, havingKeys: {^Join: {array: ["a", {^Choose: {from: ["1", "2"], deterministic: 1}}], sep: ""}}, andValues: 1}}
+      a: {^Object: {withNEntries: 4, havingKeys: {^Join: {array: ["a", {^Choose: {from: ["1", "2"], deterministic: 1}}], sep: ""}}, andValues: 1}}
     ThenReturns:
     - a:
         a1: 1
         a2: 1
         a1: 1
         a2: 1
-        a1: 1 
+    - a:
+        a1: 1
+        a2: 1
+        a1: 1
+        a2: 1 
+    - a:
+        a1: 1
+        a2: 1
+        a1: 1
+        a2: 1 
 
   - Name: Concat two singletons
     GivenTemplate:

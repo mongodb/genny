@@ -599,7 +599,6 @@ protected:
     std::vector<int64_t> _weights;
     int32_t _elemNumber;
     bool _deterministic;
-
 };
 
 class IPGenerator : public Generator<std::string> {
