@@ -573,8 +573,7 @@ public:
             _weights.assign(_choices.size(), 1);
         }
         if (node["deterministic"]) {
-            auto val = node["deterministic"].maybe<int32_t>().value_or(-1);
-            _deterministic = val > 0;
+            _deterministic = node["deterministic"].maybe<bool>().value_or(false);
         } else {
             _deterministic = false;
         }
@@ -1941,8 +1940,7 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         _weights.assign(_choices.size(), 1);
     }
     if (node["deterministic"]) {
-        auto val = node["deterministic"].maybe<int32_t>().value_or(-1);
-        _deterministic = val > 0;
+        _deterministic = node["deterministic"].maybe<bool>().value_or(false);
     } else {
         _deterministic = false;
     }

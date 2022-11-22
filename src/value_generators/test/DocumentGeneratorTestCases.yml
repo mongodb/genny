@@ -116,32 +116,32 @@ Tests:
       - {a: [ { "a": 1 }, 1, { "a": 1 } ] }
       - {a: [ 1, 1, { "a": 1 }, 1, "abc" ] }
 
-  - Name: Generate Array with choose deterministic where number is greater than from
+  - Name: Generate Array with deterministic choose where 'number' is greater than size of 'from'
     GivenTemplate:
-      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: 1}}, number: 6}}
+      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 6}}
     ThenReturns:
       - {a: [ 1, 2, 3, 1, 2, 3 ] }
       - {a: [ 1, 2, 3, 1, 2, 3 ] }
       - {a: [ 1, 2, 3, 1, 2, 3 ] }
 
-  - Name: Generate Array with choose deterministic where number is 1
+  - Name: Generate Array with deterministic choose where 'number' is 1
     GivenTemplate:
-      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: 1}}, number: 1}}
+      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 1}}
     ThenReturns:
       - {a: [ 1 ] }
       - {a: [ 2 ] }
       - {a: [ 3 ] }
 
-  - Name: Generate Array with choose deterministic where number is smaller than from
+  - Name: Generate Array with deterministic deterministic where 'number' is smaller than size of 'from'
     GivenTemplate:
-      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: 1}}, number: 2}}
+      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 2}}
     ThenReturns:
       - {a: [ 1, 2 ] }
       - {a: [ 3, 1 ] }
       - {a: [ 2, 3 ] }
 
   - Name: Choose InvalidValueGeneratorSyntax
-    GivenTemplate: {a: {^Choose: {from: [1, "a", 2], deterministic: 1, weights: [1, 1, 1]}}}
+    GivenTemplate: {a: {^Choose: {from: [1, "a", 2], deterministic: true, weights: [1, 1, 1]}}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: ArrayChooseNestedGenerator

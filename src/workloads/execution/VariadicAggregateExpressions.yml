@@ -23,27 +23,12 @@ GlobalDefaults:
   Repeat: &Repeat 10
   Threads: &Threads 1
   MaxPhases: &MaxPhases 32
-  ListOfTenInts: &ListOfTenInts {^Choose: {from: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"], deterministic: 1}}
-  ListOfFiftyInts: &ListOfFiftyInts {^Choose: {from: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-                                                      "11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
-                                                      "21", "22", "23", "24", "25", "26", "27", "28", "29", "10",
-                                                      "31", "32", "33", "34", "35", "36", "37", "38", "39", "40",
-                                                      "41", "42", "43", "44", "45", "46", "47", "48", "49", "50"], deterministic: 1}}
-  ListOfHundredInts: &ListOfHundredInts {^Choose: {from: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-                                                          "11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
-                                                          "21", "22", "23", "24", "25", "26", "27", "28", "29", "10",
-                                                          "31", "32", "33", "34", "35", "36", "37", "38", "39", "40",
-                                                          "41", "42", "43", "44", "45", "46", "47", "48", "49", "50",
-                                                          "51", "52", "53", "54", "55", "56", "57", "58", "59", "60",
-                                                          "61", "62", "63", "64", "65", "66", "67", "68", "69", "70",
-                                                          "71", "72", "73", "74", "75", "76", "77", "78", "79", "80",
-                                                          "81", "82", "83", "84", "85", "86", "87", "88", "89", "90",
-                                                          "91", "92", "93", "94", "95", "96", "97", "98", "99", "100"], deterministic: 1}}
+  ListOfTenInts: &ListOfTenInts {^Choose: {from: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"], deterministic: true}}
   GenIntFields: &GenIntFields {^Join: {array: ["$int", *ListOfTenInts], sep: ""}}
   GenStrFields: &GenStrFields {^Join: {array: ["$str", *ListOfTenInts], sep: ""}}
   GenArrFields: &GenArrFields {^Join: {array: ["$arr", *ListOfTenInts], sep: ""}}
   GenNonExistentFields: &GenNonExistentFields {^Join: {array: ["$a", *ListOfTenInts], sep: ""}}
-  GenDupArrFields: &GenDupArrFields {^Join: {array: ["$arrDup", {^Choose: {from: ["1", "2", "3", "4", "5", "6", "7", "8", "9"], deterministic: 1}}], sep: ""}}
+  GenDupArrFields: &GenDupArrFields {^Join: {array: ["$arr1Dup", {^Choose: {from: ["1", "2", "3", "4", "5", "6", "7", "8", "9"], deterministic: true}}], sep: ""}}
   GenSwitchCaseBranches: &GenSwitchCaseBranches [{case: {$gt: ["$int1", 100]}, then: "$int1"},
                                                  {case: {$gt: ["$int2", 100]}, then: "$int2"},
                                                  {case: {$gt: ["$int3", 100]}, then: "$int3"},
@@ -54,6 +39,9 @@ GlobalDefaults:
                                                  {case: {$gt: ["$int8", 100]}, then: "$int8"},
                                                  {case: {$gt: ["$int9", 100]}, then: "$int9"},
                                                  {case: {$gt: ["$int10", 100]}, then: "$int10"}]
+  IntGenerator: &IntGenerator {^Join: {array: [{ ^FormatString: {format: "%03d", withArgs: [{^Inc: {start: 1}}]}}]}}
+  FiftyBoundVariables: &FiftyBoundVariables {^FixedGeneratedValue: {fromGenerator: {^Object: {withNEntries: 50, havingKeys: {^Join: {array: ["a", *IntGenerator], sep: ""}}, andValues: *GenIntFields}}}}
+  HundredBoundVariables: &HundredBoundVariables {^FixedGeneratedValue: {fromGenerator: {^Object: {withNEntries: 100, havingKeys: {^Join: {array: ["a", *IntGenerator], sep: ""}}, andValues: *GenIntFields}}}}
 
 Actors:
 # Clear any pre-existing collection state.
@@ -348,12 +336,8 @@ Actors:
       Pipeline: [{$project:
                     {let:
                        {$let:
-                          {vars:
-                             {
-                               ^Object: {withNEntries: 50, havingKeys: {^Join: {array: ["a", *ListOfFiftyInts], sep: ""}}, andValues: *GenIntFields}
-                             },
-                           in: {$add: ["$$a1", "$$a50"]
-                           }}}}}]
+                          {vars: *FiftyBoundVariables, in: {$add: ["$$a001", "$$a050"]}}
+                       }}}]
 
 - ExpressionLetHundred:
   LoadConfig:
@@ -366,12 +350,8 @@ Actors:
       Pipeline: [{$project:
                     {let:
                        {$let:
-                          {vars:
-                             {
-                               ^Object: {withNEntries: 100, havingKeys: {^Join: {array: ["a", *ListOfHundredInts], sep: ""}}, andValues: *GenIntFields}
-                             },
-                           in: {$add: ["$$a1", "$$a100"]}
-                          }}}}]
+                          {vars: *HundredBoundVariables, in: {$add: ["$$a001", "$$a100"]}}
+                       }}}]
 
 - ExpressionMultiplyTen:
   LoadConfig:
@@ -426,7 +406,7 @@ Actors:
       Pipeline: [{$project:
                     {switch:
                        {$switch:
-                          {branches: {^Array: {of: {^Choose: {from: *GenSwitchCaseBranches, deterministic: 1}}, number: 10}},
+                          {branches: {^Array: {of: {^Choose: {from: *GenSwitchCaseBranches, deterministic: true}}, number: 10}},
                            default: "$int1"
                           }}}}]
 
@@ -441,7 +421,7 @@ Actors:
       Pipeline: [{$project:
                     {switch:
                        {$switch:
-                          {branches: {^Array: {of: {^Choose: {from: *GenSwitchCaseBranches, deterministic: 1}}, number: 50}},
+                          {branches: {^Array: {of: {^Choose: {from: *GenSwitchCaseBranches, deterministic: true}}, number: 50}},
                            default: "$int1"
                           }}}}]
 
@@ -456,7 +436,7 @@ Actors:
       Pipeline: [{$project:
                     {switch:
                        {$switch:
-                          {branches: {^Array: {of: {^Choose: {from: *GenSwitchCaseBranches, deterministic: 1}}, number: 100}},
+                          {branches: {^Array: {of: {^Choose: {from: *GenSwitchCaseBranches, deterministic: true}}, number: 100}},
                            default: "$int1"
                           }}}}]
 

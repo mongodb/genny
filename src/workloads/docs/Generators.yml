@@ -212,8 +212,8 @@ Actors:
             task_id: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"]}},
                                       {^RandomString: {length: 10}}], sep: "-"}}
 
-            # You can use Choose with deterministic with Join.
-            task_id_deterministic: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"], deterministic: 1}},
+            # You can use Choose deterministically with Join.
+            task_id_deterministic: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"], deterministic: true}},
                                                     {^RandomString: {length: 10}}], sep: "-"}}
 
             id_with_actor: {^Join: {array: ["ActorId-", {^ActorIdString: {}}]}}
@@ -229,10 +229,11 @@ Actors:
                                              prid: { ^RandomDouble: { min: 0.0, max: 1000.0 } },
                                              data: { ^Join: { array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}},
                                        number: 10}}
-            # You can choose elements deterministically. from is an array of values to pick from.
-            # If deterministic > 0, then we select values from the from array deterministically.
+
+            # You can choose elements deterministically. 'from' is an array of values to pick from.
+            # If 'deterministic' = true, then we select values from the from array deterministically.
             # The following example returns - repeatingSeq: [1, 2, 3, 1, 2]
-            repeatingSeq: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: 1}}, number: 5}}
+            repeatingSeq: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 5}}
 
             # Concatenate constant arrays and generated arrays together.
             combinedArrays: {^Concat: {arrays: [[1, 1], [2, 3, 5]]}}
