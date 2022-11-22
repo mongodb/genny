@@ -42,8 +42,8 @@ WorkloadContext::WorkloadContext(const Node& node,
     : v1::HasNode{node},
       _orchestrator{&orchestrator},
       _rateLimiters{10},
-      _poolManager{apmCallback, dryRun} {
-
+      _poolManager{apmCallback, dryRun},
+      _workloadPath{node.key()} {
     std::set<std::string> validSchemaVersions{"2018-07-01"};
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept

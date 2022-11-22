@@ -162,6 +162,10 @@ public:
         return _actors;
     }
 
+    const std::string& workloadPath() const {
+        return _workloadPath;
+    }
+
     /**
      * @return
      *   *the* DefaultRandom instance for the given `id`.
@@ -300,6 +304,8 @@ private:
 
     std::unordered_map<std::string, std::unique_ptr<GlobalRateLimiter>> _rateLimiters;
     std::mutex _limiterLock;
+
+    std::string _workloadPath;
 };
 
 // For some reason need to decl this; see impl below
@@ -550,16 +556,16 @@ public:
 
     /**
      * @brief [Experimental] Create a metrics::Operation with the specified name
-     * 
-     * The current operation() function will always return the same operation if MetricsName is specified. 
+     *
+     * The current operation() function will always return the same operation if MetricsName is specified.
      * According to the HelloWorld actor, it seems not the expected behavior
      * But it is too risky to change the behavior without thoroughly exam the impact
      * Created TIG-4328 to track this work
-     * 
+     *
      * @param metricsName name of the metric
-     * @param id 
-     * @param internal 
-     * @return auto 
+     * @param id
+     * @param internal
+     * @return auto
      */
     auto namedOperation(const std::string& metricsName, ActorId id, bool internal = false) const {
 

@@ -12,88 +12,35 @@ Description: |
         Path: ./MongosyncScripts.yml
         Key: StartMongosync
 
-  Note that the polling scripts start with set -eou pipefail so that any
-  subcommand run during the script failing will cause the entire script to fail.
-  This way if mongosync crashes during the test, it will stop the test execution
-  immediately and genny will bubble up the error and fail the test
-
-  For curl commands we pass -s and -S so that an errors are still reported (-S)
-  but download progress stats are not logged to stderr
-
 StartMongosync:
   Repeat: 1
-  Command: sh
+  Module: mongosync_actor
+  Endpoint: start
   MetricsName: StartMongosync
-  Script: |
-    curl -s -S -X POST http://10.2.0.160:27182/api/v1/start \
-      -H 'Content-Type: application/json' \
-      -d '{"Source": "cluster0", "Destination": "cluster1"}'
 
 PollForCEA:
   Repeat: 1
-  Command: sh
+  Module: mongosync_actor
+  Endpoint: poll_for_cea
   MetricsName: PollForCEA
-  Script: |
-    set -eou pipefail
-
-    getState() {
-      curl -s -S http://10.2.0.160:27182/api/v1/progress | jq '.progress.info' --raw-output
-    }
-
-    state=$(getState)
-    while [ "$state" != "change event application" ]
-    do
-      echo "Polling for change event application, current state=$state"
-      sleep 1;
-      state=$(getState)
-    done
 
 DrainWrites:
   Repeat: 1
-  Command: sh
+  Module: mongosync_actor
+  Endpoint: drain_writes
   MetricsName: DrainWrites
-  Script: |
-    set -eou pipefail
-
-    getLag () {
-      curl -s -S http://10.2.0.160:27182/api/v1/progress | jq '.progress.lagTimeSeconds'
-    }
-
-    lagTime=$(getLag)
-    while [ $lagTime -gt 0 ];
-    do
-      echo "Waiting for writes to drain, currentLag=$lagTime"
-      sleep 1;
-      lagTime=$(getLag)
-    done
 
 Commit:
   Repeat: 1
-  Command: sh
+  Module: mongosync_actor
+  Endpoint: commit
   MetricsName: Commit
-  Script: |
-    curl -s -S -X POST http://10.2.0.160:27182/api/v1/commit \
-      -H 'Content-Type: application/json' \
-      -d '{}'
 
 WaitForCommit:
   Repeat: 1
-  Command: sh
+  Module: mongosync_actor
+  Endpoint: wait_for_commit
   MetricsName: WaitForCommit
-  Script: |
-    set -eou pipefail
-
-    getState() {
-      curl -s -S http://10.2.0.160:27182/api/v1/progress | jq '.progress.state' --raw-output
-    }
-
-    state=$(getState)
-    while [ $state != "COMMITTED" ]
-    do
-      echo "Waiting for commit to finish, state=$state"
-      sleep 1;
-      state=$(getState)
-    done
 
 InsertShortTestData:
   Repeat: 1
@@ -114,3 +61,27 @@ InsertShortTestData:
   Indexes:
   - keys: { id: 1 }
   - keys: { a: 1 }
+
+SetupShardKey:
+  Repeat: 1
+  Database: admin
+  # We also run this on replica sets and so we
+  # ignore if this command fails
+  ThrowOnFailure: false
+  Operations:
+  - OperationMetricsName: EnableShardingMetrics
+    OperationName: AdminCommand
+    OperationCommand:
+      enableSharding: db
+
+ShardCollection:
+  Repeat: 1
+  Database: admin
+  ThrowOnFailure: false
+  Operations:
+  - OperationMetricsName: ShardCollectionMetrics
+    OperationName: AdminCommand
+    OperationCommand:
+      shardCollection: db.Collection0
+      key:
+        _id: hashed
