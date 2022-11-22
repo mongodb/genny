@@ -1,5 +1,5 @@
 # /bin/python
-# You may need to install the accompanying pip requirements in `requirements.txt` in this directory.
+# You may need to pip install some of the imports below if you don't have them already
 
 import os
 import re
