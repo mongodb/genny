@@ -212,6 +212,10 @@ Actors:
             task_id: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"]}},
                                       {^RandomString: {length: 10}}], sep: "-"}}
 
+            # You can use Choose with deterministic with Join.
+            task_id_deterministic: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"], deterministic: 1}},
+                                                    {^RandomString: {length: 10}}], sep: "-"}}
+
             id_with_actor: {^Join: {array: ["ActorId-", {^ActorIdString: {}}]}}
 
 
