@@ -39,7 +39,7 @@ GlobalDefaults:
                                                  {case: {$gt: ["$int8", 100]}, then: "$int8"},
                                                  {case: {$gt: ["$int9", 100]}, then: "$int9"},
                                                  {case: {$gt: ["$int10", 100]}, then: "$int10"}]
-  IntGenerator: &IntGenerator {^Join: {array: [{ ^FormatString: {format: "%03d", withArgs: [{^Inc: {start: 1}}]}}]}}
+  IntGenerator: &IntGenerator {^Join: {array: [{^FormatString: {format: "%03d", withArgs: [{^Inc: {start: 1}}]}}]}}
   FiftyBoundVariables: &FiftyBoundVariables {^FixedGeneratedValue: {fromGenerator: {^Object: {withNEntries: 50, havingKeys: {^Join: {array: ["a", *IntGenerator], sep: ""}}, andValues: *GenIntFields}}}}
   HundredBoundVariables: &HundredBoundVariables {^FixedGeneratedValue: {fromGenerator: {^Object: {withNEntries: 100, havingKeys: {^Join: {array: ["a", *IntGenerator], sep: ""}}, andValues: *GenIntFields}}}}
 
@@ -258,7 +258,7 @@ Actors:
 
 # For the following $ifNull test cases, the arguments do not exist in the
 # documents that we insert into our collection. This results in executing
-# every argument to $ifNull
+# every argument of $ifNull
 - ExpressionIfNullTen:
   LoadConfig:
     <<: *loadConfig
