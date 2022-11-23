@@ -103,6 +103,67 @@ bool isNumeric(YAML::Node node) {
 // (Mostly fighting the compiler with yaml scalars versus the many numeric bson types.)
 // For now just assert a subset
 void requireEvent(ApmEvent& event, YAML::Node requirements) {
+    if (auto sort = requirements["sort"]) {
+        auto expectedSort = genny::testing::toDocumentBson(sort);
+        auto actualSort = event.command["sort"].get_document();
+        REQUIRE(expectedSort.view() == actualSort.view());
+    }
+    if (auto collation = requirements["collation"]) {
+        auto expectedCollation = genny::testing::toDocumentBson(collation);
+        auto actualCollation = event.command["collation"].get_document();
+        REQUIRE(expectedCollation.view() == actualCollation.view());
+    }
+    if (auto hint = requirements["hint"]; hint) {
+        REQUIRE(event.command["hint"].get_utf8().value == hint.as<std::string>());
+    }
+    if (auto comment = requirements["comment"]) {
+        REQUIRE(event.command["comment"].get_utf8().value == comment.as<std::string>());
+    }
+    if (auto limit = requirements["limit"]) {
+        REQUIRE(event.command["limit"].get_int64() == limit.as<int64_t>());
+    }
+    if (auto skip = requirements["skip"]) {
+        REQUIRE(event.command["skip"].get_int64() == skip.as<int64_t>());
+    }
+    if (auto batchSize = requirements["batchSize"]) {
+        REQUIRE(event.command["batchSize"].get_int32() == batchSize.as<int32_t>());
+    }
+    if (auto maxTime = requirements["maxTime"]) {
+        auto actualMaxTime = genny::TimeSpec(std::chrono::milliseconds{event.command["maxTimeMS"].get_int64()});
+        auto expectedMaxTime = genny::TimeSpec(std::chrono::milliseconds{maxTime.as<int64_t>()});
+        REQUIRE(actualMaxTime == expectedMaxTime);
+    }
+
+    if (auto cursorType = requirements["cursorType"]){
+        const auto kNonTailable = "non_tailable";
+        const auto kTailable = "tailable";
+        const auto kTailableAwait =  "tailable_await";
+        const auto cursorTypeString = cursorType.as<std::string>();
+
+        auto getBoolValue = [&](const std::string& paramName) {
+            auto val = event.command[paramName];
+            return val ? val.get_bool().value : false;
+        };
+        // Figure out the cursor type.
+        const bool tailable = getBoolValue("tailable");
+        const bool awaitData =  getBoolValue("awaitData");
+
+        const std::string actualCursorTypeString = [&]() {
+            if(tailable && awaitData){
+                return kTailableAwait;
+            } else if (tailable) {
+                return kTailable;
+            } else {
+                // It is illegal to specify 'awaitData' without specifying 'tailable'.
+                REQUIRE(!awaitData);
+                return kNonTailable;
+            }
+        }();
+
+
+        REQUIRE(cursorTypeString == actualCursorTypeString);
+    }
+
     if (auto w = requirements["writeConcern"]["w"]; w) {
         if (isNumeric(w)) {
             REQUIRE(event.command["writeConcern"]["w"].get_int32() == w.as<int32_t>());

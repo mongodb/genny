@@ -117,7 +117,7 @@ Actors:
     Operations:
     - OperationName: RunCommand
       OperationCommand:
-        createIndexes: &collection Collection0
+        createIndexes: Collection0
         indexes:
         - key:
             address.state: 1
@@ -130,7 +130,7 @@ Actors:
   - *Nop
 
 - Name: RunQueries
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -138,16 +138,18 @@ Actors:
   - Repeat: 100
     Duration: 5 minutes
     Database: *DB
-    Collection: *collection
     Operations:
     - OperationMetricsName: QueryNoProjectionNoIndex
-      OperationName: find
+      OperationName: RunCommand
       OperationCommand:
-        Filter: &filter {
+        find: Collection0
+        filter: &filter {
           gender: "Female",
           dob: {
-            $gte: { ^Date: "1990-01-01" },
-            $lte: { ^Date: "1990-12-31" }
+            # Currently, using generator is the only way to generate date value with the appropriate BSON type.
+            # TODO: PERF-2084 Use ^Date instead.
+            $gte: {^RandomDate: {min: "1990-01-01", max: "1990-01-01T00:00:00.001"}},
+            $lte: {^RandomDate: {min: "1990-12-31", max: "1990-12-31T00:00:00.001"}}
           },
           address.state: "UT",
           policies: {
@@ -160,25 +162,25 @@ Actors:
   - Repeat: 100
     Duration: 5 minutes
     Database: *DB
-    Collection: *collection
     Operations:
     - OperationMetricsName: QueryWithProjectionNoIndex
-      OperationName: find
+      OperationName: RunCommand
       OperationCommand:
-        Filter: *filter
-        Projection: &projection {_id: 0, firstname: 1, lastname: 1, dob: 1}
+        find: Collection0
+        filter: *filter
+        projection: &projection {_id: 0, firstname: 1, lastname: 1, dob: 1}
   - *Nop
   - *Nop
   - Repeat: 1000  # This query is very fast, so we need to run it more times than others.
     Duration: 5 minutes
     Database: *DB
-    Collection: *collection
     Operations:
     - OperationMetricsName: QueryWithProjectionWithIndex
-      OperationName: find
+      OperationName: RunCommand
       OperationCommand:
-        Filter: *filter
-        Projection: *projection
+        find: Collection0
+        filter: *filter
+        projection: *projection
 
 AutoRun:
 - When:
