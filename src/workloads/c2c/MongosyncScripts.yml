@@ -24,6 +24,15 @@ PollForCEA:
   Endpoint: poll_for_cea
   MetricsName: PollForCEA
 
+# Keep poll until canCommit = true and lagTimeSeconds < 120
+PollForCommitPoint:
+  Repeat: 1
+  Command: python3
+  MetricsName: PollForCommitPoint
+  Script: |
+    import mongosync_actor as actor
+    actor.poll(lambda x: bool(x) == False, "canCommit") or actor.poll(lambda x: int(x) > 1200, "lagTimeSeconds") # TODO: change back to 120
+
 DrainWrites:
   Repeat: 1
   Module: mongosync_actor
