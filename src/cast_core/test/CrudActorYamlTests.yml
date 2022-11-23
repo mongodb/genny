@@ -813,7 +813,7 @@ Tests:
           OperationCommand:
             Filter: { a: 1 }
             Options:
-              MaxTime: 1001
+              MaxTime: 1001 milliseconds
     ExpectAllEvents:
       maxTime: 1001
 
@@ -954,7 +954,7 @@ Tests:
         OperationCommand:
           Filter: { a: 1 }
           Options:
-            MaxTime: 1001
+            MaxTime: 1001 milliseconds
     ExpectAllEvents:
       maxTime: 1001
 

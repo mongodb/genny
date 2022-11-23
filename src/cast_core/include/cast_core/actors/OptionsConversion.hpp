@@ -372,7 +372,8 @@ struct NodeConvert<mongocxx::options::find> {
             rhs.batch_size(batchSize.to<long>());
         }
         if (const auto& maxTime = node["MaxTime"]) {
-            rhs.max_time(std::chrono::milliseconds{node["MaxTime"].to<int>()});
+            auto max = maxTime.to<genny::TimeSpec>();
+            rhs.max_time(std::chrono::milliseconds{max});
         }
         if (const auto& readPref = node["ReadPreference"]) {
             rhs.read_preference(readPref.to<mongocxx::read_preference>());
