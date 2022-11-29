@@ -39,7 +39,8 @@ Actors:
         andValues: {^Object: {
           withNEntries: 100,
           havingKeys: {^FastRandomString: {length: { ^RandomInt: { min: 1, max: 3 }}}},
-          andValues: { ^RandomInt: { min: 1, max: 10 }}
+          andValues: { ^RandomInt: { min: 1, max: 10 }},
+          allowDuplicatedKeys: true
         }}
       }}
       a: 0

@@ -163,7 +163,13 @@ Tests:
 
   - Name: Object Generator
     GivenTemplate:
-      a: {^Object: {withNEntries: 10, havingKeys: {^RandomString: {length: 10}}, andValues: {^Inc: {}}}}
+      a:
+        {^Object: {
+          withNEntries: 10,
+          havingKeys: {^RandomString: {length: 10}},
+          andValues: {^Inc: {}},
+          allowDuplicateKeys: true
+        }}
     ThenReturns:
       - a:
           JGBEV0zQZI: { "$numberLong": "1" }
@@ -176,6 +182,19 @@ Tests:
           AzUNSxcpt0: { "$numberLong": "8" }
           xYYXCh/Ybl: { "$numberLong": "9" }
           EHcmXZX/d4: { "$numberLong": "10" }
+
+  - Name: Object Generator disallow duplicate keys
+    GivenTemplate:
+      a:
+        {^Object: {
+          withNEntries: 3,
+          havingKeys: "c",
+          andValues: {^Inc: {}},
+          allowDuplicateKeys: false
+        }}
+    ThenReturns:
+      - a:
+          c: { "$numberLong": "1" }
 
   - Name: one RandomInt
     GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: 10000000010}}}

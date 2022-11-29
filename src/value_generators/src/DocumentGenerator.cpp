@@ -1286,7 +1286,9 @@ protected:
     std::vector<UniqueGenerator<bsoncxx::array::value>> _parts;
 };
 
-/** `{^Object: {withNEntries: 10, havingKeys: {^Foo}, andValues: {^Bar}}` */
+/** 
+ * `{^Object: {withNEntries: 10, havingKeys: {^Foo}, andValues: {^Bar}, allowDuplicateKeys: bool}`
+ */
 class ObjectGenerator : public Generator<bsoncxx::document::value> {
 public:
     ObjectGenerator(const Node& node,
@@ -1298,13 +1300,22 @@ public:
           _keyGen{stringGenerator(node["havingKeys"], generatorArgs)},
           _valueGen{
               valueGenerator<false, UniqueAppendable>(node["andValues"], generatorArgs, parsers)},
-          _nTimesGen{intGenerator(extract(node, "withNEntries", "^Object"), generatorArgs)} {}
+          _nTimesGen{intGenerator(extract(node, "withNEntries", "^Object"), generatorArgs)},
+          _allowDuplicateKeys{node["allowDuplicateKeys"].to<bool>()} {}
 
     bsoncxx::document::value evaluate() override {
         bsoncxx::builder::basic::document builder;
         auto times = _nTimesGen->evaluate();
+
+        std::unordered_set<std::string> usedKeys;
         for (int i = 0; i < times; ++i) {
-            _valueGen->append(_keyGen->evaluate(), builder);
+            auto key = _keyGen->evaluate();
+            if (_allowDuplicateKeys || usedKeys.insert(key).second) {
+                _valueGen->append(key, builder);
+            }
+        }
+        if (!_allowDuplicateKeys && usedKeys.size() < times) {
+            BOOST_LOG_TRIVIAL(warning) << " Generated duplicate keys: " << times - usedKeys.size();
         }
         return builder.extract();
     }
@@ -1316,6 +1327,7 @@ private:
     const UniqueGenerator<std::string> _keyGen;
     const UniqueAppendable _valueGen;
     const UniqueGenerator<int64_t> _nTimesGen;
+    const bool _allowDuplicateKeys;
 };
 
 

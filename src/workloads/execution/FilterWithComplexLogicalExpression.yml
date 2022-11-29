@@ -104,10 +104,21 @@ ActorTemplates:
              # globally, we need to bind the generated array and keep using it to avoid generating
              # values greater than/equal to NumberOfClauses. As such, we generate the array within
              # a ^Cycle of length 1 and keep repeating it to avoid this problem.
-             {^Cycle: {ofLength: 1, fromGenerator:
-                         {^Array: {of:
-                                     {^Object: {withNEntries: 1, havingKeys: "arr", andValues: {^Inc: {start: 0, step: 1}}}},
-                                   number: {^Parameter: {Name: "NumberOfClauses", Default: -1}}}}}}}
+             {^Cycle: {
+               ofLength: 1,
+               fromGenerator:
+                 {^Array: {
+                   of:
+                     {^Object: {
+                       withNEntries: 1,
+                       havingKeys: "arr",
+                       andValues: {^Inc: {start: 0, step: 1}},
+                       allowDuplicatedKeys: true
+                     }},
+                   number: {^Parameter: {Name: "NumberOfClauses", Default: -1}}
+                 }}
+             }}
+          }
 
 Actors:
 # Clear any pre-existing collection state.
@@ -198,7 +209,8 @@ Actors:
                            havingKeys: { ^RandomString: { length: 1, alphabet: "bc" } },
                            andValues: { ^Object: { withNEntries: 1,
                                                    havingKeys: "d",
-                                                   andValues: 1 } } } }
+                                                   andValues: 1,
+                                                   allowDuplicatedKeys: true } } } }
           arr: {^Cycle: {ofLength: 1, fromGenerator: {^Array: {number: 200, of: {^Inc: {start: 0, step: 1}}}}}}
 
 # Phase 1: Ensure all data is synced to disk.
