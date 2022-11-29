@@ -1,0 +1,107 @@
+SchemaVersion: 2018-07-01
+Owner: "@TODO"
+Description: >
+  TODO
+
+Actors:
+- Name: MongoshScriptRunner
+  Type: ExternalScriptRunner
+  Threads: 1
+  Phases:
+  - &nop {Nop: true}
+  - Repeat: 1
+    # script command
+    Command: "mongosh"
+    MetricsName: MyMetrics
+    Script: "console.log(1)"
+  - *nop
+  - *nop
+
+- Name: Configure replication on secondary
+  Type: ExternalScriptRunner
+  Threads: 1
+  Phases:
+  # Turn off replication
+  - Repeat: 1
+    Command: "sh"
+    Script: |
+      sudo mv /media/ephemeral0/workdir/mongosh/bin/mongosh /bin
+      mongosh md0:27017/admin --eval "db.setProfilingLevel(0, -1)"
+      mongosh md1:27017/admin --eval "db.adminCommand({configureFailPoint: 'stopReplProducer', mode: 'alwaysOn'})"
+  # Sleep 10s to ensure flag is set
+  - Repeat: 1
+    Command: "sh"
+    Script: |
+      sleep 10
+  # Pause for two phases
+  - *nop
+  #- *nop
+  # Turn on replication
+  - Repeat: 1
+    Command: "sh"
+    Script: |
+      export PATH="/media/ephemeral0/workdir/mongosh/bin/:$PATH"
+      mongosh md1:27017/admin --eval "db.currentOp()"
+      mongosh md1:27017/admin --eval "db.adminCommand({configureFailPoint: 'stopReplProducer', mode: 'off'})"
+
+- Name: BulkInsert
+  Type: CrudActor
+  Threads: 16
+  Database: admin
+  Phases:
+  - *nop
+  - *nop
+  # This one should work
+  #- Repeat: 100
+  #  Collection: bench.collection
+  #  Operations:
+  #  - OperationName: insertOne
+  #    OperationCommand: 
+  #      Document: {s: {^FastRandomString: {length: 1}}}
+  #      OperationOptions:
+  #        WriteConcern:
+  #          Level: 1
+  ## This one should stall
+  - Repeat: 1
+    Collection: test
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: {s: {^FastRandomString: {length: 1}}}
+      Options:
+        WriteConcern:
+          Level: 2
+  # This one should work
+  #- Repeat: 100
+  #  Collection: bench.collection
+  #  Operations:
+  #  - OperationName: bulkWrite
+  #    OperationCommand:
+  #      WriteOperations:
+  #        - WriteCommand: insertOne
+  #          Document: {s: {^FastRandomString: {length: 1}}}
+  #      Options:
+  #        WriteConcern:
+  #          Level: 1
+  # This one should stall
+  #- Repeat: 100
+  #  Collection: bench.collection
+  #  Operations:
+  #  - OperationName: bulkWrite
+  #    OperationCommand:
+  #      WriteOperations:
+  #        - WriteCommand: insertOne
+  #          Document: {s: {^FastRandomString: {length: 1}}}
+  #      Options:
+  #        WriteConcern:
+  #          Level: 2
+  - *nop
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-2node
+    branch_name:
+      $neq:
+      - v4.0

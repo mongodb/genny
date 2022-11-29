@@ -60,11 +60,11 @@ Actors:
           OperationCommand:
             setParameter: 1
             ttlMonitorSleepSecs: 1
-        - OperationName: AdminCommand
-          OperationCommand:
-            setParameter: 1
+        #- OperationName: AdminCommand
+        #  OperationCommand:
+        #    setParameter: 1
             # Reduce tickets to the minimum allowed to force contention.
-            storageEngineConcurrentWriteTransactions: 5
+        #    storageEngineConcurrentWriteTransactions: 5
         SleepAfter: 60 seconds  # Wait 60 seconds so that the new ttl sleep config is active.
 
 - Name: InsertData

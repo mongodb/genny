@@ -1,0 +1,55 @@
+SchemaVersion: 2018-07-01
+Owner: "@TODO"
+Description: >
+  TODO
+
+Actors:
+- Name: Load
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 1
+    BatchSize: 1
+    Document: 
+      x: 1
+  - &nop {Nop: true}
+  - *nop
+      
+- Name: DropCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *nop
+  - Repeat: 1
+    Database: test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: Collection0
+  - *nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: test
+  Phases:
+  - *nop
+  - *nop
+  - Repeat: 1
+  
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      #- replica-last-continuous-fcv
+      #- replica-last-lts-fcv
+      - replica-all-feature-flags
+      - atlas-like-replica
+    branch_name:
+      $neq:
+      - v4.0
