@@ -186,7 +186,7 @@ class ToolchainDownloader(Downloader):
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
 
-    TOOLCHAIN_BUILD_ID = "da48b38e2d563a0b58db10ed3c3f42de0522ad8e_637e5384850e6153879bf7e4_22_11_23_17_08_23"
+    TOOLCHAIN_BUILD_ID = "patch_da48b38e2d563a0b58db10ed3c3f42de0522ad8e_637bdba30ae6066fdca71a81_22_11_21_20_12_54"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
     TOOLCHAIN_ROOT = str(Path.home()) + "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
@@ -214,9 +214,9 @@ class ToolchainDownloader(Downloader):
         # TODO: Need to update prefixes for waterfall
         if self._os_family == "Darwin":
             if self.triplet_arch == "arm64":
-                prefix = "macos_1100_arm64_patch"
+                prefix = "macos_1100_arm64"
             else:
-                prefix = "macos_1100_patch"
+                prefix = "macos_1100"
         else:
             prefix = self._linux_distro
         return (
