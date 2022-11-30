@@ -131,7 +131,7 @@ Actors:
 # Phase 3-N: Run variadic aggregate expression benchmarks
 - ExpressionAddTen:
   LoadConfig: &loadConfig
-    Path: "../../phases/execution/AggregateExpressions.yml"
+    Path: "../../phases/query/AggregateExpressions.yml"
     Key: ExpressionTemplate
     Parameters:
       name: VariadicExpressionAddTen
