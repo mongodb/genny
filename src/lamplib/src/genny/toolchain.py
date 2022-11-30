@@ -217,6 +217,8 @@ class ToolchainDownloader(Downloader):
                 prefix = "macos_1100_arm64_patch"
             else:
                 prefix = "macos_1100_patch"
+        else:
+            prefix = self._linux_distro
         return (
             "https://s3.amazonaws.com/mciuploads/genny-toolchain/"
             "genny_toolchain_{}_{}/gennytoolchain.tgz".format(
