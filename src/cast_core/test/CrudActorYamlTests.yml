@@ -717,6 +717,16 @@ Tests:
     Error: |
       .*'Pipeline' must be an array.*
 
+  - Description: Test that a 'find' command can accept 'allowDiskUse'.
+    Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: {a: 100}
+          Options:
+            AllowDiskUse: true
+    ExpectAllEvents:
+      allowDiskUse: true
+
   - Description: Test that a 'find' command applies the specified projection.
     Operations:
       - OperationName: find
@@ -743,7 +753,7 @@ Tests:
         OperationCommand:
           Filter: { a : 1 }
           Options:
-            Sort: {a: -1}
+            Sort: "{\"a\": {\"$numberInt\": \"-1\"}}"
     ExpectAllEvents:
       sort: {a: -1}
 
@@ -753,7 +763,7 @@ Tests:
           OperationCommand:
             Filter: { a: 1 }
             Options:
-              Collation: { locale: "simple" }
+              Collation: "{\"locale\": \"simple\"}"
     ExpectAllEvents:
       collation: { locale: "simple" }
 
@@ -817,7 +827,7 @@ Tests:
     ExpectAllEvents:
       maxTime: 1001
 
-  - Description: Test that a 'find' command can construct a non-tailable  cursor.
+  - Description: Test that a 'find' command can construct a non-tailable cursor.
     Operations:
       - OperationName: find
         OperationCommand:
@@ -868,6 +878,16 @@ Tests:
     Error: |
       .*Cannot do inclusion on field b in exclusion projection.*
 
+  - Description: Test that a 'findOne' command can accept 'allowDiskUse'.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: {a: 100}
+          Options:
+            AllowDiskUse: true
+    ExpectAllEvents:
+      allowDiskUse: true
+
   - Description: Test that a 'findOne' command applies the specified projection.
     Operations:
       - OperationName: findOne
@@ -884,7 +904,7 @@ Tests:
         OperationCommand:
           Filter: { a: 1 }
           Options:
-            Sort: { a: -1 }
+            Sort: "{\"a\": {\"$numberInt\": \"-1\"}}"
     ExpectAllEvents:
       sort: { a: -1 }
 
@@ -894,7 +914,7 @@ Tests:
         OperationCommand:
           Filter: { a: 1 }
           Options:
-            Collation: { locale: "simple" }
+            Collation: "{\"locale\": \"simple\"}"
     ExpectAllEvents:
       collation: { locale: "simple" }
 
@@ -918,15 +938,15 @@ Tests:
     ExpectAllEvents:
       comment: *comment
 
-  - Description: Test that a 'findOne' command ignores the specified limit.
+  - Description: Test that a 'findOne' command throws when a limit is specified.
     Operations:
       - OperationName: findOne
         OperationCommand:
           Filter: { a: 1 }
           Options:
             Limit: 20000
-    ExpectAllEvents:
-      limit: 1
+    Error: |
+      .*Cannot specify 'limit' to 'findOne' operation.*
 
   - Description: Test that a 'findOne' command applies the specified skip.
     Operations:
@@ -938,15 +958,15 @@ Tests:
     ExpectAllEvents:
       skip: 2
 
-  - Description: Test that a 'findOne' command applies the specified batchSize.
+  - Description: Test that a 'findOne' command throws when a batchSize is specified.
     Operations:
       - OperationName: findOne
         OperationCommand:
           Filter: { a: 1 }
           Options:
             BatchSize: 2
-    ExpectAllEvents:
-      batchSize: 2
+    Error: |
+      .*Cannot specify 'batchSize' to 'findOne' operation.*
 
   - Description: Test that a 'findOne' command applies the specified maxTime.
     Operations:
@@ -958,7 +978,7 @@ Tests:
     ExpectAllEvents:
       maxTime: 1001
 
-  - Description: Test that a 'findOne' command can construct a non-tailable  cursor.
+  - Description: Test that a 'findOne' command can construct a non-tailable cursor.
     Operations:
       - OperationName: findOne
         OperationCommand:

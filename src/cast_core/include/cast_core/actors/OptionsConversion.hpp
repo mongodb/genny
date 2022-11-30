@@ -18,18 +18,12 @@
 #include <string_view>
 
 #include <boost/throw_exception.hpp>
-
-#include <bsoncxx/builder/basic/array.hpp>
-#include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/json.hpp>
-#include <bsoncxx/types.hpp>
-
-#include <mongocxx/database.hpp>
-#include <mongocxx/pool.hpp>
-
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
+#include <mongocxx/database.hpp>
+#include <mongocxx/pool.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 
@@ -125,224 +119,6 @@ struct NodeConvert<mongocxx::options::count> {
     }
 };
 
-// TODO EVG-18364: This code is duplicated from yamlToBson.hpp to elide a linking issue. Deduplicate
-//  this code.
-namespace {
-class InvalidYAMLToBsonException : public std::invalid_argument {
-    using std::invalid_argument::invalid_argument;
-};
-
-/**
- * @param node map node
- * @return bson representation of it.
- * @throws InvalidYAMLToBsonException if node isn't a map
- */
-bsoncxx::document::value toDocumentBson(const YAML::Node& node);
-
-/**
- * @param node map node
- * @return bson representation of it.
- * @throws InvalidYAMLToBsonException if node isn't a map
- */
-bsoncxx::document::value toDocumentBson(const std::string& yaml);
-
-/**
- * @param node map node
- * @return bson representation of it.
- * @throws InvalidYAMLToBsonException if node isn't a map
- */
-bsoncxx::document::value toDocumentBson(const genny::Node& node);
-
-
-/**
- * @param node list node
- * @return bson representation of it.
- * @throws InvalidYAMLToBsonException if node isn't a list (sequence)
- */
-bsoncxx::array::value toArrayBson(const YAML::Node& node);
-
-/**
- * @param node list node
- * @return bson representation of it.
- * @throws InvalidYAMLToBsonException if node isn't a list (sequence)
- */
-bsoncxx::array::value toArrayBson(const std::string& node);
-
-/**
- * @param node yaml list node
- * @return bson representation of it.
- * @throws InvalidYAMLToBsonException if node isn't a list (sequence)
- */
-bsoncxx::array::value toArrayBson(const genny::Node& node);
-
-// Helper type cribbed from value_generators
-// The value_generators version will likely disappear soon.
-class Value {
-public:
-    explicit Value(bool value) : _value{value} {}
-    explicit Value(int32_t value) : _value{value} {}
-    explicit Value(int64_t value) : _value{value} {}
-    explicit Value(double value) : _value{value} {}
-    explicit Value(std::string value) : _value{value} {}
-    explicit Value(bsoncxx::types::b_null value) : _value{value} {}
-    void appendToBuilder(bsoncxx::builder::basic::document& doc, std::string key) {
-        std::visit(
-            [&](auto&& arg) { doc.append(bsoncxx::builder::basic::kvp(std::move(key), arg)); },
-            std::move(_value));
-    }
-    void appendToBuilder(bsoncxx::builder::basic::array& arr) {
-        std::visit([&](auto&& arg) { arr.append(arg); }, std::move(_value));
-    }
-
-    static Value parseScalar(const YAML::Node& node) {
-        if (!node.IsScalar() && !node.IsNull()) {
-            std::stringstream msg;
-            msg << "Expected scalar or null got " << node.Type();
-            BOOST_THROW_EXCEPTION(InvalidYAMLToBsonException(msg.str()));
-        }
-
-        if (node.Type() == YAML::NodeType::Null) {
-            return Value{bsoncxx::types::b_null{}};
-        }
-
-        // `YAML::Node::Tag() == "!"` means that the scalar value is quoted. In that case, we want
-        // to avoid converting any numeric string values to numbers. See
-        // https://github.com/jbeder/yaml-cpp/issues/261 for more details.
-        if (node.Tag() != "!") {
-            try {
-                return Value{node.as<int32_t>()};
-            } catch (const YAML::BadConversion& e) {
-            }
-
-            try {
-                return Value{node.as<int64_t>()};
-            } catch (const YAML::BadConversion& e) {
-            }
-
-            try {
-                return Value{node.as<double>()};
-            } catch (const YAML::BadConversion& e) {
-            }
-
-            try {
-                return Value{node.as<bool>()};
-            } catch (const YAML::BadConversion& e) {
-            }
-        }
-
-        return Value{node.as<std::string>()};
-    }
-
-private:
-    using VariantType =
-        std::variant<bool, int32_t, int64_t, double, std::string, bsoncxx::types::b_null>;
-    VariantType _value;
-};
-
-
-std::string to_string(const YAML::Node& node) {
-    YAML::Emitter e;
-    e << node;
-    return std::string{e.c_str()};
-}
-
-void appendToBuilder(const YAML::Node& node,
-                     const std::string& key,
-                     bsoncxx::builder::basic::document& doc) {
-    switch (node.Type()) {
-        case YAML::NodeType::Map:
-            doc.append(bsoncxx::builder::basic::kvp(key, toDocumentBson(node)));
-            return;
-        case YAML::NodeType::Sequence:
-            doc.append(bsoncxx::builder::basic::kvp(key, toArrayBson(node)));
-            return;
-        case YAML::NodeType::Undefined:
-        case YAML::NodeType::Scalar:
-        case YAML::NodeType::Null: {
-            Value val = Value::parseScalar(node);
-            val.appendToBuilder(doc, key);
-            return;
-        }
-    }
-    std::abort();
-}
-
-void appendToBuilder(const YAML::Node& node, bsoncxx::builder::basic::array& arr) {
-    switch (node.Type()) {
-        case YAML::NodeType::Map:
-            arr.append(toDocumentBson(node));
-            return;
-        case YAML::NodeType::Sequence:
-            arr.append(toArrayBson(node));
-            return;
-        case YAML::NodeType::Undefined:
-        case YAML::NodeType::Scalar:
-        case YAML::NodeType::Null: {
-            Value val = Value::parseScalar(node);
-            val.appendToBuilder(arr);
-            return;
-        }
-    }
-
-    std::abort();
-}
-
-bsoncxx::document::value toDocumentBson(const YAML::Node& node) {
-    if (!node.IsMap()) {
-        std::stringstream msg;
-        msg << "Wanted map got " << node.Type() << ": " << to_string(node);
-        BOOST_THROW_EXCEPTION(InvalidYAMLToBsonException(msg.str()));
-    }
-
-    bsoncxx::builder::basic::document doc{};
-    for (auto&& kvp : node) {
-        appendToBuilder(kvp.second, kvp.first.as<std::string>(), doc);
-    }
-    return doc.extract();
-}
-
-bsoncxx::array::value toArrayBson(const YAML::Node& node) {
-    if (!node.IsSequence()) {
-        std::stringstream msg;
-        msg << "Wanted sequence got " << node.Type() << ": " << to_string(node);
-        BOOST_THROW_EXCEPTION(InvalidYAMLToBsonException(msg.str()));
-    }
-
-    bsoncxx::builder::basic::array arr{};
-    for (auto&& elt : node) {
-        appendToBuilder(elt, arr);
-    }
-    return arr.extract();
-}
-
-bsoncxx::document::value toDocumentBson(const genny::Node& node) {
-    std::stringstream str;
-    str << node;
-    const YAML::Node asYaml = YAML::Load(str.str());
-    return genny::toDocumentBson(asYaml);
-}
-
-bsoncxx::document::value toDocumentBson(const std::string& yaml) {
-    const YAML::Node asYaml = YAML::Load(yaml);
-    return genny::toDocumentBson(asYaml);
-}
-
-bsoncxx::array::value toArrayBson(const std::string& yaml) {
-    const YAML::Node asYaml = YAML::Load(yaml);
-    return genny::toArrayBson(asYaml);
-}
-
-}  // namespace
-
-template <>
-struct NodeConvert<bsoncxx::document::value> {
-    using type = bsoncxx::document::value;
-
-    static type convert(const Node& node) {
-        return toDocumentBson(node);
-    }
-};
-
 template <>
 struct NodeConvert<mongocxx::options::find> {
     using type = mongocxx::options::find;
@@ -350,26 +126,31 @@ struct NodeConvert<mongocxx::options::find> {
     static type convert(const Node& node) {
         type rhs{};
 
+        if (const auto& allowDiskUse = node["AllowDiskUse"]) {
+            rhs.allow_disk_use(allowDiskUse.to<bool>());
+        }
         if (const auto& sort = node["Sort"]) {
-            rhs.sort(sort.to<bsoncxx::document::value>());
+            rhs.sort(bsoncxx::from_json(sort.to<std::string>()));
         }
         if (const auto& collation = node["Collation"]) {
-            rhs.collation(collation.to<bsoncxx::document::value>());
+            rhs.collation(bsoncxx::from_json(collation.to<std::string>()));
         }
+        // Note that the conversion of hints (here and elsewhere in this file) could be extended
+        // to support either documents or strings.
         if (const auto& hint = node["Hint"]) {
-            rhs.hint(mongocxx::hint(std::move(hint.to<std::string>())));
+            rhs.hint(mongocxx::hint(hint.to<std::string>()));
         }
         if (const auto& comment = node["Comment"]) {
             rhs.comment(comment.to<std::string>());
         }
         if (const auto& limit = node["Limit"]) {
-            rhs.limit(limit.to<long>());
+            rhs.limit(limit.to<int64_t>());
         }
         if (const auto& skip = node["Skip"]) {
-            rhs.skip(skip.to<long>());
+            rhs.skip(skip.to<int64_t>());
         }
         if (const auto& batchSize = node["BatchSize"]) {
-            rhs.batch_size(batchSize.to<long>());
+            rhs.batch_size(batchSize.to<int32_t>());
         }
         if (const auto& maxTime = node["MaxTime"]) {
             auto max = maxTime.to<genny::TimeSpec>();
@@ -386,8 +167,8 @@ struct NodeConvert<mongocxx::options::find> {
 
         // Figure out the cursor type.
         const bool tailable = getBoolValue("Tailable");
-        const bool awaitData =  getBoolValue("AwaitData");
-        if(tailable && awaitData){
+        const bool awaitData = getBoolValue("AwaitData");
+        if (tailable && awaitData) {
             rhs.cursor_type(mongocxx::cursor::type::k_tailable_await);
         } else if (tailable) {
             rhs.cursor_type(mongocxx::cursor::type::k_tailable);

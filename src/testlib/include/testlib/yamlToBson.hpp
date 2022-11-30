@@ -28,8 +28,6 @@
 
 namespace genny::testing {
 
-// TODO EVG-18364: This code is duplicated from OptionsConversion.hpp to elide a linking issue.
-//  Deduplicate this code.
 class InvalidYAMLToBsonException : public std::invalid_argument {
     using std::invalid_argument::invalid_argument;
 };
