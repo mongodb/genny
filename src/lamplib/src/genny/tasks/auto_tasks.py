@@ -78,7 +78,7 @@ class WorkloadLister:
 
     def all_workload_files(self) -> Set[str]:
         pattern = os.path.join(self.workspace_root, "src", "*", "src", "workloads", "**", "*.yml")
-        return {*glob.glob(pattern)}
+        return {*glob.glob(pattern, recursive=True)}
 
     def modified_workload_files(self) -> Set[str]:
         """Relies on git to find files in src/workloads modified versus origin/master"""
