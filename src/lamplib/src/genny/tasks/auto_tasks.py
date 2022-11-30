@@ -220,13 +220,24 @@ class Workload:
 
         self.auto_run_info = auto_run_info
 
-    @property
-    def file_base_name(self) -> str:
-        return str(os.path.basename(self.file_path).split(".yml")[0])
+    def _get_relative_path_from_src_workloads(self):
+        relative_path = self.file_path.split("src/workloads/")
+        if len(relative_path) != 2:
+            raise ValueError(f"Invalid workload path {self.file_path}")
+        return relative_path[1]
 
     @property
     def snake_case_base_name(self) -> str:
-        return self._to_snake_case(self.file_base_name)
+        # Workload path is workspace_root/src/*/src/workloads/**/*.yml.
+        # To create a base name we leave only **/*.yml and convert it to snake case. To preserve
+        # legacy names, we omit the first directory that was matched as part of **.
+        relative_path = self._get_relative_path_from_src_workloads()
+        relative_path = os.path.splitext(relative_path)[0]
+        relative_path = relative_path.split(os.sep)
+        if len(relative_path) == 1:
+            return self._to_snake_case(relative_path[0])
+        else:
+            return "_".join([self._to_snake_case(part) for part in relative_path[1:]])
 
     @property
     def relative_path(self) -> str:
