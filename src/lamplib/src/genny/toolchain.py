@@ -98,7 +98,7 @@ def _compute_toolchain_info(
     if linux_distro == "amazon2arm":
         triplet_arch = "arm64"
     if os_family == "Darwin":
-        triplet_arch = "arm64" if platform.processor() == "arm" else triplet_arch = "x64"
+        triplet_arch = "arm64" if platform.processor() == "arm" else "x64"
 
     if os_family not in _triplet_os_map:
         raise Exception(f"os_family {os_family} is unknown. Pass the --linux-distro option.")
