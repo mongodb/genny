@@ -1,5 +1,6 @@
 import json
 import os
+import platform
 
 from typing import Optional, NamedTuple
 import structlog
@@ -26,7 +27,7 @@ def _create_compile_environment(
     # For mongodbtoolchain compiler (if there).
     paths.insert(0, "/opt/mongodbtoolchain/v3/bin")
 
-    if triplet_arch == "arm64":
+    if triplet_arch == "arm64" and triplet_os == "linux":
         paths.insert(
             0,
             os.path.join(
@@ -39,13 +40,13 @@ def _create_compile_environment(
         # For cmake and ctest
         cmake_bin_relative_dir = {
             "linux": "downloads/tools/cmake-3.20.2-linux/cmake-3.20.2-linux-x86_64/bin",
-            "osx": "downloads/tools/cmake-3.20.2-osx/cmake-3.20.2-Darwin-x86_64/CMake.app/Contents/bin",
+            "osx": "downloads/tools/cmake-3.24.0-osx/cmake-3.24.0-macos-universal/CMake.app/Contents/bin",
         }[triplet_os]
         paths.insert(0, os.path.join(toolchain_dir, cmake_bin_relative_dir))
 
         # For ninja
         ninja_bin_dir = os.path.join(
-            toolchain_dir, "downloads/tools/ninja-1.10.1-{}:".format(triplet_os)
+            toolchain_dir, "downloads/tools/ninja/1.10.2-{}:".format(triplet_os)
         )
         paths.insert(0, ninja_bin_dir)
 
@@ -95,6 +96,9 @@ def _compute_toolchain_info(
     triplet_arch = "x64"
     if linux_distro == "amazon2arm":
         triplet_arch = "arm64"
+    if os_family == "Darwin":
+        triplet_arch = "arm64" if platform.processor() == "arm" else triplet_arch = "x64"
+
     if os_family not in _triplet_os_map:
         raise Exception(f"os_family {os_family} is unknown. Pass the --linux-distro option.")
     triplet_os = _triplet_os_map[os_family]
@@ -181,9 +185,8 @@ class ToolchainDownloader(Downloader):
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
 
-    TOOLCHAIN_BUILD_ID = "da48b38e2d563a0b58db10ed3c3f42de0522ad8e_22_09_09_13_07_35"
+    TOOLCHAIN_BUILD_ID = "da48b38e2d563a0b58db10ed3c3f42de0522ad8e_637e5384850e6153879bf7e4_22_11_23_17_08_23"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
-    TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 
     def __init__(
         self,
@@ -194,22 +197,25 @@ class ToolchainDownloader(Downloader):
         triplet_arch: str,
         ignore_toolchain_version: bool,
     ):
+        toolchain_root = "/opt/mci" if self._os_family == "Darwin" else "/data/mci"
         super().__init__(
             genny_repo_root=genny_repo_root,
             workspace_root=workspace_root,
             os_family=os_family,
             linux_distro=linux_distro,
-            install_dir=ToolchainDownloader.TOOLCHAIN_ROOT,
+            install_dir=toolchain_root,
             name="gennytoolchain",
         )
         self.ignore_toolchain_version = ignore_toolchain_version
         self.triplet_arch = triplet_arch
 
     def _get_url(self):
-        prefix = "macos_1014" if self._os_family == "Darwin" else self._linux_distro
-        # Special case for now for arm64 until we get it built properly in the waterfall
-        if self.triplet_arch == "arm64":
-            return "https://stm.s3.amazonaws.com/gennytoolchain-arm64.tgz"
+        # TODO: Need to update prefixes for waterfall
+        if self._os_family == "Darwin":
+            if self.triplet_arch == "arm64":
+                prefix = "macos_1100_arm64_patch"
+            else:
+                prefix = "macos_1100_patch"
         return (
             "https://s3.amazonaws.com/mciuploads/genny-toolchain/"
             "genny_toolchain_{}_{}/gennytoolchain.tgz".format(
