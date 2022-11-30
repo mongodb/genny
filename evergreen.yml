@@ -110,16 +110,16 @@ buildvariants:
   tasks:
   - name: tg_compile
 
-- name: macos-1014
-  display_name: macOS Mojave
+- name: macos-1100
+  display_name: macOS Big Sur
   modules: [mongo]
   run_on:
-  - macos-1014
+  - macos-1100
   tasks:
   - name: tg_compile
 
 - name: macos-1100-arm64
-  display_name: macOS Mojave
+  display_name: macOS Bug Sur Arm64
   modules: [mongo]
   run_on:
   - macos-1100-arm64
