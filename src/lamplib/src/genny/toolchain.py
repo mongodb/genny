@@ -40,7 +40,7 @@ def _create_compile_environment(
     else:
         # For cmake and ctest
         cmake_bin_relative_dir = {
-            "linux": "downloads/tools/cmake-3.20.2-linux/cmake-3.20.2-linux-x86_64/bin",
+            "linux": "downloads/tools/cmake-3.24.0-linux/cmake-3.24.0-linux-x86_64/bin",
             "osx": "downloads/tools/cmake-3.24.0-osx/cmake-3.24.0-macos-universal/CMake.app/Contents/bin",
         }[triplet_os]
         paths.insert(0, os.path.join(toolchain_dir, cmake_bin_relative_dir))
