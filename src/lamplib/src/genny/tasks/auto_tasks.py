@@ -70,14 +70,18 @@ class WorkloadLister:
     Separate from the Repo class for easier testing.
     """
 
-    def __init__(self, workspace_root: str, genny_repo_root: str, reader: YamlReader):
+    def __init__(self, workspace_root: str, genny_repo_root: str, reader: YamlReader, workload_root: Optional[str] = None):
         self.workspace_root = workspace_root
         self.genny_repo_root = genny_repo_root
         self._expansions = None
         self.reader = reader
+        self.workload_root = workload_root
 
     def all_workload_files(self) -> Set[str]:
-        pattern = os.path.join(self.workspace_root, "src", "*", "src", "workloads", "**", "*.yml")
+        if self.workload_root is None:
+            pattern = os.path.join(self.workspace_root, "src", "*", "src", "workloads", "**", "*.yml")
+        else:
+            pattern = os.path.join(self.workload_root, "src", "workloads", "**", "*.yml")
         return {*glob.glob(pattern)}
 
     def modified_workload_files(self) -> Set[str]:
@@ -126,10 +130,11 @@ class CLIOperation(NamedTuple):
     execution: Optional[str]
     genny_repo_root: str
     workspace_root: str
+    workload_root: str
 
     @staticmethod
     def create(
-        mode_name: str, reader: YamlReader, genny_repo_root: str, workspace_root: str
+        mode_name: str, reader: YamlReader, genny_repo_root: str, workspace_root: str, workload_root: Optional[str] = None
     ) -> "CLIOperation":
         mode = OpName.ALL_TASKS
         variant = None
@@ -144,7 +149,7 @@ class CLIOperation(NamedTuple):
             mode = OpName.VARIANT_TASKS
             variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
         return CLIOperation(
-            mode, variant, execution, genny_repo_root=genny_repo_root, workspace_root=workspace_root
+            mode, variant, execution, genny_repo_root=genny_repo_root, workspace_root=workspace_root, workload_root=workspace_root
         )
 
 
@@ -440,8 +445,12 @@ class ConfigWriter:
             config: Configuration = self.variant_tasks(tasks, self.op.variant)
         else:
             config = self.all_tasks_modern(tasks)
-
-        output_file = os.path.join(self.op.workspace_root, "build", "TaskJSON", "Tasks.json")
+        
+        output_file_name = "Tasks.json" 
+        if self.op.workload_root is not None:
+            repo_name = self.op.workload_root.split("/")[-1]
+            output_file_name = f"Tasks-{repo_name}.jsom"
+        output_file = os.path.join(self.op.workspace_root, "build", "TaskJSON", output_file_name)
 
         success = False
         raised = None
@@ -501,7 +510,7 @@ class ConfigWriter:
         return c
 
 
-def main(mode_name: str, genny_repo_root: str, workspace_root: str) -> None:
+def main(mode_name: str, genny_repo_root: str, workspace_root: str, workload_root: Optional[str] = None) -> None:
     reader = YamlReader()
     build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
     op = CLIOperation.create(
@@ -509,9 +518,10 @@ def main(mode_name: str, genny_repo_root: str, workspace_root: str) -> None:
         reader=reader,
         genny_repo_root=genny_repo_root,
         workspace_root=workspace_root,
+        workload_root=workload_root
     )
     lister = WorkloadLister(
-        workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader
+        workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader, workload_root=workload_root
     )
     repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
     tasks = repo.tasks(op=op, build=build)

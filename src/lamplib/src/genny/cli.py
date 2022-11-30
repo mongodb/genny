@@ -522,14 +522,23 @@ def lint_yaml(ctx: click.Context):
 @click.option(
     "--tasks", required=True, type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks"]),
 )
+@click.option(
+    "-w",
+    "--workload-repo",
+    required=False,
+    default=None,
+    help=("The workload repo name from where the tasks need to be  generated. By default "),
+)
 @click.pass_context
-def auto_tasks(ctx: click.Context, tasks: str):
+def auto_tasks(ctx: click.Context, tasks: str, workload_repo: str):
     from genny.tasks import auto_tasks
+    workload_root = os.path.join(ctx.obj["WORKSPACE_ROOT"], "src", workload_repo)
 
     auto_tasks.main(
         mode_name=tasks,
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        workload_root=workload_root
     )
 
 
