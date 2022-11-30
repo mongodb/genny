@@ -14,15 +14,6 @@ CreateIndex:
       indexes:
       - {key: {^Parameter: {Name: "IndexPattern", Default: {}}}, name: {^Parameter: {Name: "IndexName", Default: ""}}}
 
-Quiesce:
-  Repeat: 1
-  Database: admin
-  Operations:
-  - OperationName: RunCommand
-    OperationMetricsName: Quiesce
-    OperationCommand:
-      fsync: 1
-
 RunLastPointQuery:
   Repeat: 10
   Database: *db

@@ -16,10 +16,6 @@ phasePath: &phasePath ../../phases/execution/TimeSeriesLastpoint.yml
 
 # Operations reused in multiple Phases.
 Nop: &Nop {Nop: true}
-Quiesce: &Quiesce
-  LoadConfig:
-    Key: Quiesce
-    Path: *phasePath
 LastpointQueryMetaAscTimeDesc: &LastpointQueryMetaAscTimeDesc
   LoadConfig:
     Path: *phasePath
@@ -145,7 +141,7 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - *Quiesce
+  - *Nop
   - *LastpointQueryMetaAscTimeDesc
   - *Nop
   - *Nop
@@ -184,7 +180,7 @@ Actors:
         Collection: *coll
         IndexName: &metaAscTimeDesc "MetaSubfieldAscendingTimeDescending"
         IndexPattern: *sortPatternMetaAscTimeDesc
-  - *Quiesce
+  - *Nop
   - *LastpointQueryMetaAscTimeDesc
   - LoadConfig:
       Path: *phasePath
@@ -222,7 +218,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Quiesce
+  - *Nop
   - *LastpointQueryMetaDescTimeDesc
   - *Nop
   - *Nop
@@ -261,7 +257,7 @@ Actors:
         Collection: *coll
         IndexName: &metaDescTimeDesc "MetaSubfieldDescendingTimeDescending"
         IndexPattern: *sortPatternMetaDescTimeDesc
-  - *Quiesce
+  - *Nop
   - *LastpointQueryMetaDescTimeDesc
   - LoadConfig:
       Path: *phasePath
@@ -299,7 +295,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Quiesce
+  - *Nop
   - *LastpointQueryMetaDescTimeAsc
   - *Nop
   - *Nop
@@ -338,7 +334,7 @@ Actors:
         Collection: *coll
         IndexName: &metaDescTimeAsc "MetaSubfieldDescendingTimeAscending"
         IndexPattern: *sortPatternMetaDescTimeAsc
-  - *Quiesce
+  - *Nop
   - *LastpointQueryMetaDescTimeAsc
   - LoadConfig:
       Path: *phasePath
@@ -374,7 +370,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Quiesce
+  - *Nop
   - *LastpointQueryMetaAscTimeAsc
   - *Nop
   - *Nop
@@ -413,7 +409,7 @@ Actors:
         Collection: *coll
         IndexName: &metaAscTimeAsc "MetaSubfieldAscendingTimeAscending"
         IndexPattern: *sortPatternMetaAscTimeAsc
-  - *Quiesce
+  - *Nop
   - *LastpointQueryMetaAscTimeAsc
   - LoadConfig:
       Path: *phasePath
@@ -421,6 +417,35 @@ Actors:
       Parameters:
         Collection: *coll
         IndexName: *metaAscTimeAsc
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - Repeat: 1
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
 
 AutoRun:
 - When:
