@@ -1,12 +1,36 @@
 SchemaVersion: 2018-07-01
-Owner: "@TODO"
+Owner: "@TODO" # what should go here? us or the owners of secondary_reads? 
 Description: >
-  TODO
+ Test performance of secondary reads while applying oplogs
+ 
+ ### Setup
+ 
+ This workload should be run in a replica set of at least two nodes. The
+ IP addresses of the primary and one of the secondaries are specified by the
+ configuration.
+ 
+ ### Test
+ 
+ On an empty replica set, the workload performs the following actions:
+ - Setup stage:
+    - Inserted *initial_nb_docs* documents into both the primary and the
+      secondaries. This should be done before any writes and reads.
+ - Actual test stage:
+    - *nWriters* background writers doing infinite writes on the primary which
+      will replicate these writes to secondaries.
+    - 1/16/32 readers doing queries on a sepcified seconary. Each query has
+      *batch_size* numbers of documents and only reads documents inserted in the
+      setup stage in order to have more constant behavior all the time.
+    - Finally, a query with WriteConcern 3 is used to measure the replication lag
+ - Cleanup stage:
+   - Drop the collection to reset the db SortPattern:
+ The test cycles through these stages for 1, 16, and 32 reader threads.
+
 
 Initial_nb_docs: &initial_nb_docs 10000
-DocumentSize: &document_size 459 # Object.bsonsize({_id: ObjectId(), x: 0, str: "x"}) + 1 --> 41
-InsertLimit: &insert_limit 100
-TestDurationInSecs: &test_duration 10 seconds
+DocumentSize: &document_size 459 # Target document size of 500 and Object.bsonsize({_id: ObjectId(), x: 0, str: "x"}) + 1 = 41
+ReadLimit: &read_limit 100
+TestDurationInSecs: &test_duration 180 seconds
 Db: &db test
 WriterThreads: &writer_threads 16
 NumPhases: &max_phase 13
@@ -74,7 +98,6 @@ ActorTemplates:
                 #s: {^Repeat: {count: *document_size, fromGenerator: {^Choose: {from: ["x"]}}}} --> why does this not work?
                 s: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-
 - TemplateName: ReadsOnSecondaryTemplate
   Config:
     Name: {^Parameter: {Name: "Name", Default: ReadsOnSecondary}}
@@ -92,9 +115,9 @@ ActorTemplates:
           Operations:
           - OperationName: find
             OperationCommand:
-              Filter: { x: {$gte: {^RandomInt: {min: 0, max: *initial_nb_docs}}}}
+              Filter: { x: {$gte: {^RandomInt: {min: 0, max: *initial_nb_docs}}}} # this should be *initial_nb_docs - *read_limit but we don't seem to have and add/subtract generator and it doesn't really impact performance
               Options:
-                Limit: *insert_limit
+                Limit: *read_limit
                 BatchSize: 200
                 ReadPreference:
                   ReadMode: secondaryPreferred
