@@ -135,7 +135,7 @@ Actors:
 - Name: QuiesceBetweenLevels
   Type: QuiesceActor
   Threads: 1
-  Database: *dbname
+  Database: admin
   Phases:
   - &nop {Nop: true}
   - Repeat: 1
