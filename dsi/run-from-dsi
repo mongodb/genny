@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+pushd "$(dirname "$0")/../../genny/" >/dev/null
+    GENNY_REPO_ROOT="$(pwd -P)"
+    export GENNY_REPO_ROOT
+popd >/dev/null
+
+pushd "$(dirname "$0")/.." >/dev/null
+    WORKLOAD_REPO_ROOT="$(pwd -P)"
+    export WORKLOAD_REPO_ROOT
+popd >/dev/null
+
+declare -a COMMAND
+COMMAND=("$@")
+echo $COMMAND
+"${GENNY_REPO_ROOT}/run-genny" "auto-tasks" "--tasks" "${@}" "--workload-repo" "${WORKLOAD_REPO_ROOT}"
