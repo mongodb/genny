@@ -40,8 +40,22 @@ GlobalDefaults:
                                                  {case: {$gt: ["$int9", 100]}, then: "$int9"},
                                                  {case: {$gt: ["$int10", 100]}, then: "$int10"}]
   IntGenerator: &IntGenerator {^Join: {array: [{^FormatString: {format: "%03d", withArgs: [{^Inc: {start: 1}}]}}]}}
-  FiftyBoundVariables: &FiftyBoundVariables {^FixedGeneratedValue: {fromGenerator: {^Object: {withNEntries: 50, havingKeys: {^Join: {array: ["a", *IntGenerator], sep: ""}}, andValues: *GenIntFields}}}}
-  HundredBoundVariables: &HundredBoundVariables {^FixedGeneratedValue: {fromGenerator: {^Object: {withNEntries: 100, havingKeys: {^Join: {array: ["a", *IntGenerator], sep: ""}}, andValues: *GenIntFields}}}}
+  FiftyBoundVariables: &FiftyBoundVariables {
+    ^FixedGeneratedValue: {fromGenerator: {^Object: {
+      withNEntries: 50,
+      havingKeys: {^Join: {array: ["a", *IntGenerator], sep: ""}},
+      andValues: *GenIntFields,
+      duplicatedKeys: insert
+    }}}
+  }
+  HundredBoundVariables: &HundredBoundVariables {
+    ^FixedGeneratedValue: {fromGenerator: {^Object: {
+      withNEntries: 100,
+      havingKeys: {^Join: {array: ["a", *IntGenerator], sep: ""}},
+      andValues: *GenIntFields,
+      duplicatedKeys: insert
+    }}}
+  }
 
 Actors:
 # Clear any pre-existing collection state.
@@ -319,9 +333,12 @@ Actors:
                     {let:
                        {$let:
                           {vars:
-                             {
-                               ^Object: {withNEntries: 10, havingKeys: {^Join: {array: ["a", *ListOfTenInts], sep: ""}}, andValues: *GenIntFields}
-                             },
+                             {^Object: {
+                               withNEntries: 10,
+                               havingKeys: {^Join: {array: ["a", *ListOfTenInts], sep: ""}},
+                               andValues: *GenIntFields,
+                               duplicatedKeys: insert
+                             }},
                            in: {$add: ["$$a1", "$$a10"]
                            }}}}}]
 

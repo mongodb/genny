@@ -239,10 +239,32 @@ Actors:
             combinedArrays: {^Concat: {arrays: [[1, 1], [2, 3, 5]]}}
             combinedArraysWithGenerator: {^Concat: {arrays: [{^Array: {of: 1, number: 2}}, [2, 3, 5]]}}
 
-            # Generate an object with 10 key-value pairs using the specified generator for each key and value.
-            # Note: the default alphabet used by RandomString is fine for key names.
-            # But see https://docs.mongodb.com/manual/core/dot-dollar-considerations/#std-label-crud-concepts-dot-dollar-considerations if other generators are used for the names.
-            randomObject: {^Object: {withNEntries: 10, havingKeys: {^RandomString: {length: 10}}, andValues: {^RandomString: {length: 10}}}}
+            # Generate an object with 10 key-value pairs using the specified generator for each key
+            # and value. In the unlikely case when the key generator produces the same key multiple
+            # times, the object will have repeated field names, which is supported by BSON.
+            # Allowing duplicated keys is faster; set this parameter to "true" if the generator does
+            # not produce duplicates or if duplicated fields in an object is OK for your workload.
+            # Note: the default alphabet used by RandomString is fine for key names. But see
+            # https://docs.mongodb.com/manual/core/dot-dollar-considerations/#std-label-crud-concepts-dot-dollar-considerations
+            # if other generators are used for the names.
+            randomObject: {^Object: {
+              withNEntries: 10,
+              havingKeys: {^RandomString: {length: 10}},
+              andValues: {^RandomString: {length: 10}},
+              duplicatedKeys: insert
+            }}
+
+            # Generate an object with up to 3 key-value pairs. If the generator produces a repeated
+            # key name, it will be skipped. Thus, the generated object will contain 1, 2, or 3 keys.
+            # Note: setting `withNEntries` here to a number larger than 3 won't be flagged as an
+            # error and will generate the same universe of objects, but it's wasteful because the
+            # generator can produce at most 3 unique keys.
+            randomObjectNoKeyDuplication: {^Object: {
+              withNEntries: 3,
+              havingKeys: {^RandomString: {length: 1, alphabet: abc}},
+              andValues: 42,
+              duplicatedKeys: skip
+            }}
 
             # Large sequences of random strings can be expensive to generate.  FixedGeneratedValue
             # can be used to generate an array once during initialization for re-use
