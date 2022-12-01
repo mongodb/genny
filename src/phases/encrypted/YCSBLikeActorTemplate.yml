@@ -1,0 +1,119 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+  Phase definitions for encrypted YCSB-like workloads. This defines the YCSBLikeActor
+  that emulates the MongoDB YCSB workloads.
+  Parameters:
+    Database:             name of encrypted database
+    Collection:           name of encrypted collection
+    ClientName:           name of encrypted client pool
+    Threads:              number of client threads for the CrudActor
+    Filter:               filter document to use for find and update operations
+    UpdateDocument:       document used in the $set field of an update operation
+    InsertDocument:       document to insert during the load phase
+    100ReadRepeat:        how many iterations of the 100% read phase to run per thread
+    95Read5UpdateRepeat:  how many iterations of the 95/5 phase to run per thread
+    100UpdateRepeat:      how many iterations of the 100% update phase to run per thread
+    50Read50UpdateRepeat: how many iterations of the 50/50 phase to run per thread
+
+# Variables
+RandomString: &rand_string {^FastRandomString: {length: 100}}
+DefaultDocument: &default_doc
+  field0: *rand_string
+  field1: *rand_string
+  field2: *rand_string
+  field3: *rand_string
+  field4: *rand_string
+  field5: *rand_string
+  field6: *rand_string
+  field7: *rand_string
+  field8: *rand_string
+  field9: *rand_string
+
+# Parameterized operations
+FindOneOperation: &find_op
+  OperationName: findOne
+  OperationMetricsName: reads
+  OperationCommand:
+    Filter: &filter_param {^Parameter: {Name: "Filter", Default: ""}}
+UpdateOneOperation: &update_op
+  OperationName: updateOne
+  OperationMetricsName: writes
+  OperationCommand:
+    Filter: *filter_param
+    Update: {$set: {^Parameter: {Name: "UpdateDocument", Default: *default_doc}}}
+
+# Parameterized phase definitions
+LoadPhase: &load_phase
+  Repeat: {^Parameter: {Name: "LoadRepeat", Default: 3125}}
+  Collection: &collection_param {^Parameter: {Name: "Collection", Default: "testcoll"}}
+  MetricsName: "load"
+  Operations:
+  - OperationName: insertOne
+    OperationMetricsName: inserts
+    OperationCommand:
+      Document: {^Parameter: {Name: "InsertDocument", Default: *default_doc}}
+
+100ReadPhase: &100read_phase
+  Repeat: {^Parameter: {Name: "100ReadRepeat", Default: 3125}}
+  Collection: *collection_param
+  MetricsName: "100read"
+  Operations:
+  - *find_op
+
+95Read5UpdatePhase: &95read5update_phase
+  Repeat: {^Parameter: {Name: "95Read5UpdateRepeat", Default: 157}}
+  Collection: *collection_param
+  MetricsName: "95read5update"
+  Operations:
+  - *update_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+  - *find_op
+
+50Read50UpdatePhase: &50read50update_phase
+  Repeat: {^Parameter: {Name: "50Read50UpdateRepeat", Default: 1563}}
+  Collection: *collection_param
+  MetricsName: "50read50update"
+  Operations:
+  - *find_op
+  - *update_op
+
+100UpdatePhase: &100update_phase
+  Repeat: {^Parameter: {Name: "100UpdateRepeat", Default: 3125}}
+  Collection: *collection_param
+  MetricsName: "100update"
+  Operations:
+  - *update_op
+
+# Parameterized Actor
+YCSBLikeActor:
+  Name: YCSBLike
+  Type: CrudActor
+  Threads: {^Parameter: {Name: "Threads", Default: 32}}
+  Database: {^Parameter: {Name: "Database", Default: ""}}
+  ClientName: {^Parameter: {Name: "ClientName", Default: "Default"}}
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - *load_phase
+  - *100read_phase
+  - *95read5update_phase
+  - *100update_phase
+  - *50read50update_phase
