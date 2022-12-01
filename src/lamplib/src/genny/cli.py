@@ -533,13 +533,11 @@ def lint_yaml(ctx: click.Context):
 def auto_tasks(ctx: click.Context, tasks: str, workload_repo: str):
     from genny.tasks import auto_tasks
 
-    workload_root = os.path.join(ctx.obj["WORKSPACE_ROOT"], "src", workload_repo)
-
     auto_tasks.main(
         mode_name=tasks,
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
-        workload_root=workload_root,
+        workload_root=workload_repo,
     )
 
 

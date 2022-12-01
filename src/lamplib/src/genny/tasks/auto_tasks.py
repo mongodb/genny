@@ -166,7 +166,7 @@ class CLIOperation(NamedTuple):
             execution,
             genny_repo_root=genny_repo_root,
             workspace_root=workspace_root,
-            workload_root=workspace_root,
+            workload_root=workload_root,
         )
 
 
@@ -466,7 +466,7 @@ class ConfigWriter:
         output_file_name = "Tasks.json"
         if self.op.workload_root is not None:
             repo_name = self.op.workload_root.split("/")[-1]
-            output_file_name = f"Tasks-{repo_name}.jsom"
+            output_file_name = f"Tasks-{repo_name}.json"
         output_file = os.path.join(self.op.workspace_root, "build", "TaskJSON", output_file_name)
 
         success = False
