@@ -1291,6 +1291,18 @@ protected:
  */
 class ObjectGenerator : public Generator<bsoncxx::document::value> {
 public:
+    enum class OnDuplicatedKeys {
+        // BSON supports objects with duplicated keys and in some cases we might want to test such
+        // scenarios. Allowing to insert duplicated keys is faster than tracking them, so in the
+        // cases when duplicates are impossible (or unlikely and don't affect the test), this option
+        // is also a good choice.
+        insert = 0,
+        // The configuration to skip duplicated keys tracks already inserted keys and never inserts
+        // duplicates. This means that the resulting object might have fewer keys than specified in
+        // 'withNEntries' setting.
+        skip,
+        // TODO: "retry" option, that is, regenerate the key until get a unique one.
+    };
     ObjectGenerator(const Node& node,
                     GeneratorArgs generatorArgs,
                     std::map<std::string, Parser<UniqueAppendable>> parsers)
@@ -1300,8 +1312,17 @@ public:
           _keyGen{stringGenerator(node["havingKeys"], generatorArgs)},
           _valueGen{
               valueGenerator<false, UniqueAppendable>(node["andValues"], generatorArgs, parsers)},
-          _nTimesGen{intGenerator(extract(node, "withNEntries", "^Object"), generatorArgs)},
-          _allowDuplicateKeys{node["allowDuplicateKeys"].to<bool>()} {}
+          _nTimesGen{intGenerator(extract(node, "withNEntries", "^Object"), generatorArgs)} {
+            const auto duplicatedKeys = _node["duplicatedKeys"].to<std::string>();
+            if (duplicatedKeys == "insert") {
+                _onDuplicatedKeys = OnDuplicatedKeys::insert;
+            } else if (duplicatedKeys == "skip") {
+                _onDuplicatedKeys = OnDuplicatedKeys::skip;
+            } else {
+                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                    "Unknown value for 'duplicatedKeys'"));
+            }
+          }
 
     bsoncxx::document::value evaluate() override {
         bsoncxx::builder::basic::document builder;
@@ -1310,12 +1331,9 @@ public:
         std::unordered_set<std::string> usedKeys;
         for (int i = 0; i < times; ++i) {
             auto key = _keyGen->evaluate();
-            if (_allowDuplicateKeys || usedKeys.insert(key).second) {
+            if (_onDuplicatedKeys == OnDuplicatedKeys::insert || usedKeys.insert(key).second) {
                 _valueGen->append(key, builder);
             }
-        }
-        if (!_allowDuplicateKeys && usedKeys.size() < times) {
-            BOOST_LOG_TRIVIAL(warning) << " Generated duplicate keys: " << times - usedKeys.size();
         }
         return builder.extract();
     }
@@ -1327,7 +1345,7 @@ private:
     const UniqueGenerator<std::string> _keyGen;
     const UniqueAppendable _valueGen;
     const UniqueGenerator<int64_t> _nTimesGen;
-    const bool _allowDuplicateKeys;
+    OnDuplicatedKeys _onDuplicatedKeys;
 };
 
 

@@ -242,19 +242,19 @@ Actors:
               withNEntries: 10,
               havingKeys: {^RandomString: {length: 10}},
               andValues: {^RandomString: {length: 10}},
-              allowDuplicatedKeys: true
+              duplicatedKeys: insert
             }}
 
             # Generate an object with up to 3 key-value pairs. If the generator produces a repeated
-            # key name, it will be ignored. Thus, the generated object will contain 1, 2, or 3 keys.
+            # key name, it will be skipped. Thus, the generated object will contain 1, 2, or 3 keys.
             # Note: setting `withNEntries` here to a number larger than 3 won't be flagged as an
             # error and will generate the same universe of objects, but it's wasteful because the
-            # generator can at most produce 3 unique keys.
+            # generator can produce at most 3 unique keys.
             randomObjectNoKeyDuplication: {^Object: {
               withNEntries: 3,
               havingKeys: {^RandomString: {length: 1, alphabet: abc}},
               andValues: 42,
-              allowDuplicatedKeys: false
+              duplicatedKeys: skip
             }}
 
             # Large sequences of random strings can be expensive to generate.  FixedGeneratedValue

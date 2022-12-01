@@ -168,7 +168,8 @@ Tests:
           withNEntries: 10,
           havingKeys: {^RandomString: {length: 10}},
           andValues: {^Inc: {}},
-          allowDuplicateKeys: true
+          # All generated keys are unique, so "insert" is fine for this test.
+          duplicatedKeys: insert
         }}
     ThenReturns:
       - a:
@@ -183,18 +184,36 @@ Tests:
           xYYXCh/Ybl: { "$numberLong": "9" }
           EHcmXZX/d4: { "$numberLong": "10" }
 
-  - Name: Object Generator disallow duplicate keys
+  - Name: Object Generator skip duplicated keys
     GivenTemplate:
       a:
         {^Object: {
+          # Because the name of the keys is fixed, the second and third key would have duplicated
+          # names and should not be inserted.
           withNEntries: 3,
           havingKeys: "c",
           andValues: {^Inc: {}},
-          allowDuplicateKeys: false
+          duplicatedKeys: skip
         }}
     ThenReturns:
       - a:
           c: { "$numberLong": "1" }
+
+  - Name: Object Generator insert duplicated keys
+    GivenTemplate:
+      a:
+        {^Object: {
+          # Because the name of the keys is fixed, the second and third key would have duplicated
+          # names. YAML doesn't allow us to test that the resulting object has all three keys, but
+          # the last inserted one should be visible.
+          withNEntries: 3,
+          havingKeys: "c",
+          andValues: {^Inc: {}},
+          duplicatedKeys: insert
+        }}
+    ThenReturns:
+      - a:
+          c: { "$numberLong": "3" }
 
   - Name: one RandomInt
     GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: 10000000010}}}
