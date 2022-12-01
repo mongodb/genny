@@ -224,6 +224,8 @@ class Workload:
         relative_path = self.file_path.split("src/workloads/")
         if len(relative_path) != 2:
             raise ValueError(f"Invalid workload path {self.file_path}")
+        # Example: "src/genny/src/workloads/directory/nested/Workload.yml" will be converted to
+        # "directory/nested/Workload.yml"
         return relative_path[1]
 
     @property
@@ -231,13 +233,26 @@ class Workload:
         # Workload path is workspace_root/src/*/src/workloads/**/*.yml.
         # To create a base name we leave only **/*.yml and convert it to snake case. To preserve
         # legacy names, we omit the first directory that was matched as part of **.
+        # Example file_path: "src/genny/src/workloads/directory/nested/MyWorkload.yml".
+
+        # Example relative_path: "directory/nested/MyWorkload.yml".
         relative_path = self._get_relative_path_from_src_workloads()
+
+        # Split the extention away. Example: "directory/nested/MyWorkload".
         relative_path = os.path.splitext(relative_path)[0]
+
+        # Split by directory separatior: ["directory", "nested", "MyWorkload"].
         relative_path = relative_path.split(os.sep)
+
         if len(relative_path) == 1:
+            # Convert workload file name to snake case.
             return self._to_snake_case(relative_path[0])
         else:
-            return "_".join([self._to_snake_case(part) for part in relative_path[1:]])
+            # Omit first directory. Example: ["nested", "MyWorkload"].
+            relative_path = relative_path[1:]
+
+            # Convert each part to snake case and join with "_". Example: nested_my_workload
+            return "_".join([self._to_snake_case(part) for part in relative_path])
 
     @property
     def relative_path(self) -> str:

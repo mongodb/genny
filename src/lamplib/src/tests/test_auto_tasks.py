@@ -132,12 +132,12 @@ class AutoTasksTests(BaseTestClass):
             yaml_conts=auto_run,
         )
         nested_unmodified_genny = MockFile(
-            base_name="src/genny/src/workloads/directory/nested/Unmodified.yml",
+            base_name="src/genny/src/workloads/directory/nested_directory/Unmodified.yml",
             modified=False,
             yaml_conts=auto_run,
         )
         nested_unmodified_other = MockFile(
-            base_name="src/other/src/workloads/directory/nested/UnmodifiedOther.yml",
+            base_name="src/other/src/workloads/directory/nested_directory/UnmodifiedOther.yml",
             modified=False,
             yaml_conts=auto_run,
         )
@@ -244,14 +244,14 @@ class AutoTasksTests(BaseTestClass):
                         "priority": 5,
                     },
                     {
-                        "name": "nested_unmodified_a",
+                        "name": "nested_directory_unmodified_a",
                         "commands": [
                             TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
-                                    "test_control": "nested_unmodified_a",
-                                    "auto_workload_path": "src/genny/src/workloads/directory/nested/Unmodified.yml",
+                                    "test_control": "nested_directory_unmodified_a",
+                                    "auto_workload_path": "src/genny/src/workloads/directory/nested_directory/Unmodified.yml",
                                     "mongodb_setup": "a",
                                 },
                             },
@@ -259,14 +259,14 @@ class AutoTasksTests(BaseTestClass):
                         "priority": 5,
                     },
                     {
-                        "name": "nested_unmodified_b",
+                        "name": "nested_directory_unmodified_b",
                         "commands": [
                             TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
-                                    "test_control": "nested_unmodified_b",
-                                    "auto_workload_path": "src/genny/src/workloads/directory/nested/Unmodified.yml",
+                                    "test_control": "nested_directory_unmodified_b",
+                                    "auto_workload_path": "src/genny/src/workloads/directory/nested_directory/Unmodified.yml",
                                     "arb_bootstrap_key": "b",
                                 },
                             },
@@ -274,14 +274,14 @@ class AutoTasksTests(BaseTestClass):
                         "priority": 5,
                     },
                     {
-                        "name": "nested_unmodified_other_a",
+                        "name": "nested_directory_unmodified_other_a",
                         "commands": [
                             TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
-                                    "test_control": "nested_unmodified_other_a",
-                                    "auto_workload_path": "src/other/src/workloads/directory/nested/UnmodifiedOther.yml",
+                                    "test_control": "nested_directory_unmodified_other_a",
+                                    "auto_workload_path": "src/other/src/workloads/directory/nested_directory/UnmodifiedOther.yml",
                                     "mongodb_setup": "a",
                                 },
                             },
@@ -289,14 +289,14 @@ class AutoTasksTests(BaseTestClass):
                         "priority": 5,
                     },
                     {
-                        "name": "nested_unmodified_other_b",
+                        "name": "nested_directory_unmodified_other_b",
                         "commands": [
                             TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
-                                    "test_control": "nested_unmodified_other_b",
-                                    "auto_workload_path": "src/other/src/workloads/directory/nested/UnmodifiedOther.yml",
+                                    "test_control": "nested_directory_unmodified_other_b",
+                                    "auto_workload_path": "src/other/src/workloads/directory/nested_directory/UnmodifiedOther.yml",
                                     "arb_bootstrap_key": "b",
                                 },
                             },
