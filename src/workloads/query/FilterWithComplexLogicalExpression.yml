@@ -210,7 +210,8 @@ Actors:
                            andValues: { ^Object: { withNEntries: 1,
                                                    havingKeys: "d",
                                                    andValues: 1,
-                                                   duplicatedKeys: insert } } } }
+                                                   duplicatedKeys: insert } },
+                           duplicatedKeys: insert } }
           arr: {^Cycle: {ofLength: 1, fromGenerator: {^Array: {number: 200, of: {^Inc: {start: 0, step: 1}}}}}}
 
 # Phase 1: Ensure all data is synced to disk.
