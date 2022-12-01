@@ -15,16 +15,14 @@
 #ifndef HEADER_1AFC7FF3_F491_452B_9805_18CAEDE4663D_INCLUDED
 #define HEADER_1AFC7FF3_F491_452B_9805_18CAEDE4663D_INCLUDED
 
-#include <string_view>
-
 #include <boost/throw_exception.hpp>
 #include <bsoncxx/json.hpp>
+#include <mongocxx/database.hpp>
+#include <string_view>
+
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
-#include <mongocxx/database.hpp>
-#include <mongocxx/pool.hpp>
-
 #include <value_generators/DocumentGenerator.hpp>
 
 namespace genny {
@@ -136,7 +134,8 @@ struct NodeConvert<mongocxx::options::find> {
             rhs.collation(bsoncxx::from_json(collation.to<std::string>()));
         }
         // Note that the conversion of hints (here and elsewhere in this file) could be extended
-        // to support either documents or strings.
+        // to support the hint specified as a document. Right now it only supports hints specified
+        // as a string giving the index name.
         if (const auto& hint = node["Hint"]) {
             rhs.hint(mongocxx::hint(hint.to<std::string>()));
         }
