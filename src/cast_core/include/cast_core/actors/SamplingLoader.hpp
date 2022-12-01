@@ -12,13 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HEADER_25AE844D_6E55_42EB_9E93_56C7CB727F54_INCLUDED
-#define HEADER_25AE844D_6E55_42EB_9E93_56C7CB727F54_INCLUDED
+#ifndef HEADER_SAMPLING_LOADER
+#define HEADER_SAMPLING_LOADER
 
-#include <string_view>
-#include <string>
-
-#include <mongocxx/pool.hpp>
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
@@ -26,34 +22,38 @@
 
 #include <metrics/metrics.hpp>
 
+#include <value_generators/DocumentGenerator.hpp>
+
 namespace genny::actor {
 
 /**
+ * Given a collection that's already populated, will pull a sample of documents from that
+ * collection and then re insert them in order to grow the collection. This is not guaranteed
+ * to match the distributions of values in the collection.
  *
- * Owner: 10gen/query
+ * Owner: query
  */
-class ExternalScriptRunner : public Actor {
-
+class SamplingLoader : public Actor {
 
 public:
-
-    explicit ExternalScriptRunner(ActorContext& context);
-    ~ExternalScriptRunner() = default;
-
-    void run() override;
+    explicit SamplingLoader(ActorContext& context);
+    ~SamplingLoader() override = default;
 
     static std::string_view defaultName() {
-        return "ExternalScriptRunner";
+        return "SamplingLoader";
     }
+    void run() override;
 
 private:
-
     /** @private */
     struct PhaseConfig;
+
+    metrics::Operation _totalBulkLoad;
+    metrics::Operation _individualBulkLoad;
+    mongocxx::pool::entry _client;
     PhaseLoop<PhaseConfig> _loop;
-    std::string _command;
 };
 
 }  // namespace genny::actor
 
-#endif  // HEADER_25AE844D_6E55_42EB_9E93_56C7CB727F54_INCLUDED
+#endif  // HEADER_SAMPLING_LOADER

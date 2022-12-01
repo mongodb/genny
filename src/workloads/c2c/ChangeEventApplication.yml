@@ -13,6 +13,10 @@ Keywords:
 - change event application
 - CEA
 
+EnvironmentDetails:
+  MongosyncConnectionURIs:
+  - http://localhost:27182
+
 Clients:
   Default:
     QueryOptions:
@@ -21,17 +25,37 @@ Clients:
 ScriptsPath: &scriptsPath ./MongosyncScripts.yml
 
 Actors:
-- Name: Mongosync
-  Type: ExternalScriptRunner
+
+- Name: SetupSharding
+  Type: AdminCommand
   Threads: 1
   Phases:
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: SetupShardKey
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: ShardCollection
+  - &nop {Nop: true}
+  - *nop
+  - *nop
+  - *nop
+  - *nop
+  - *nop
+
+- Name: Mongosync
+  Type: Python
+  Threads: 1
+  Phases:
+  - *nop
+  - *nop
   - LoadConfig:
       Path: *scriptsPath
       Key: StartMongosync
   - LoadConfig:
       Path: *scriptsPath
       Key: PollForCEA
-  - &nop {Nop: true}
+  - *nop
   - LoadConfig:
       Path: *scriptsPath
       Key: DrainWrites
@@ -46,6 +70,8 @@ Actors:
   Type: Loader
   Threads: 1
   Phases:
+  - *nop
+  - *nop
   - *nop
   - *nop
   - LoadConfig:

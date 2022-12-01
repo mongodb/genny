@@ -116,6 +116,34 @@ Tests:
       - {a: [ { "a": 1 }, 1, { "a": 1 } ] }
       - {a: [ 1, 1, { "a": 1 }, 1, "abc" ] }
 
+  - Name: Generate Array with deterministic choose where 'number' is greater than size of 'from'
+    GivenTemplate:
+      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 6}}
+    ThenReturns:
+      - {a: [ 1, 2, 3, 1, 2, 3 ] }
+      - {a: [ 1, 2, 3, 1, 2, 3 ] }
+      - {a: [ 1, 2, 3, 1, 2, 3 ] }
+
+  - Name: Generate Array with deterministic choose where 'number' is 1
+    GivenTemplate:
+      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 1}}
+    ThenReturns:
+      - {a: [ 1 ] }
+      - {a: [ 2 ] }
+      - {a: [ 3 ] }
+
+  - Name: Generate Array with deterministic deterministic where 'number' is smaller than size of 'from'
+    GivenTemplate:
+      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 2}}
+    ThenReturns:
+      - {a: [ 1, 2 ] }
+      - {a: [ 3, 1 ] }
+      - {a: [ 2, 3 ] }
+
+  - Name: Choose InvalidValueGeneratorSyntax
+    GivenTemplate: {a: {^Choose: {from: [1, "a", 2], deterministic: true, weights: [1, 1, 1]}}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
   - Name: ArrayChooseNestedGenerator
     GivenTemplate:
       a: {^Array: {number: 4, of: {^Choose: {from: [
@@ -486,17 +514,17 @@ Tests:
       - {a: yz}
       - {a: xyxyx}
 
-  - Name: RandomDataFromDataset requieres a path
+  - Name: RandomDataFromDataset requires a path
     GivenTemplate:
       a: {^ChooseFromDataset: {}}
     ThenThrows: InvalidValueGeneratorSyntax
 
-  - Name: RandomDataFromDataset requieres a file that exists
+  - Name: RandomDataFromDataset requires a file that exists
     GivenTemplate:
       a: {^ChooseFromDataset: {"path": "/tmp/itdoesnotexist"}}
     ThenThrows: InvalidValueGeneratorSyntax
 
-  - Name: RandomDataFromDataset requieres a non-empty file
+  - Name: RandomDataFromDataset requires a non-empty file
     GivenTemplate:
       a: {^ChooseFromDataset: {"path": "../../../src/workloads/datasets/empty_test.txt"}}
     ThenThrows: InvalidValueGeneratorSyntax
@@ -601,6 +629,26 @@ Tests:
     - a: "Hello random person: Huey"
     - a: "Hello random person: Huey"
     - a: "Hello random person: IonKmglImH"
+
+  - Name: Join With Deterministic Choose
+    GivenTemplate:
+      a: {^Object: {withNEntries: 4, havingKeys: {^Join: {array: ["a", {^Choose: {from: ["1", "2"], deterministic: true}}], sep: ""}}, andValues: 1}}
+    ThenReturns:
+    - a:
+        a1: 1
+        a2: 1
+        a1: 1
+        a2: 1
+    - a:
+        a1: 1
+        a2: 1
+        a1: 1
+        a2: 1 
+    - a:
+        a1: 1
+        a2: 1
+        a1: 1
+        a2: 1 
 
   - Name: Concat two singletons
     GivenTemplate:

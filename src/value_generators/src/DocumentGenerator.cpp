@@ -516,9 +516,13 @@ private:
 // by JoinGenerator today. See ChooseStringGenerator.
 class ChooseGenerator : public Appendable {
 public:
-    // constructore defined at bottom of the file to use other symbol
+    // constructor defined at bottom of the file to use other symbol
     ChooseGenerator(const Node& node, GeneratorArgs generatorArgs);
     Appendable& choose() {
+        if (_deterministic) {
+            ++_elemNumber;
+            return *_choices[_elemNumber % _choices.size()];
+        }
         // Pick a random number between 0 and sum(weights)
         // Pick value based on that.
         auto distribution = boost::random::discrete_distribution(_weights);
@@ -537,6 +541,8 @@ protected:
     ActorId _id;
     std::vector<UniqueAppendable> _choices;
     std::vector<int64_t> _weights;
+    int32_t _elemNumber;
+    bool _deterministic;
 };
 
 // This is a a more specific version of ChooseGenerator that produces strings. It is only used
@@ -545,6 +551,11 @@ class ChooseStringGenerator : public Generator<std::string> {
 public:
     ChooseStringGenerator(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng}, _id{generatorArgs.actorId} {
+        if (node["deterministic"] && node["weights"]) {
+            std::stringstream msg;
+            msg << "Invalid Syntax for choose: cannot have both 'deterministic' and 'weights'";
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
         if (!node["from"].isSequence()) {
             std::stringstream msg;
             msg << "Malformed node for choose from array. Not a sequence " << node;
@@ -561,8 +572,19 @@ public:
             // If not passed in, give each choice equal weight
             _weights.assign(_choices.size(), 1);
         }
+        if (node["deterministic"]) {
+            _deterministic = node["deterministic"].maybe<bool>().value_or(false);
+        } else {
+            _deterministic = false;
+        }
+        _elemNumber = -1;
     }
+
     std::string evaluate() override {
+        if (_deterministic) {
+            ++_elemNumber;
+            return (_choices[_elemNumber % _choices.size()]->evaluate());
+        }
         // Pick a random number between 0 and sum(weights)
         // Pick value based on that.
         auto distribution = boost::random::discrete_distribution(_weights);
@@ -574,6 +596,8 @@ protected:
     ActorId _id;
     std::vector<UniqueGenerator<std::string>> _choices;
     std::vector<int64_t> _weights;
+    int32_t _elemNumber;
+    bool _deterministic;
 };
 
 class IPGenerator : public Generator<std::string> {
@@ -1899,6 +1923,11 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         msg << "Malformed node for choose from array. Not a sequence " << node;
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
     }
+    if (node["deterministic"] && node["weights"]) {
+        std::stringstream msg;
+        msg << "Invalid Syntax for choose: cannot have both 'deterministic' and 'weights'";
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+    }
     for (const auto&& [k, v] : node["from"]) {
         _choices.push_back(valueGenerator<false, UniqueAppendable>(v, generatorArgs, allParsers));
     }
@@ -1910,6 +1939,12 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         // If not passed in, give each choice equal weight
         _weights.assign(_choices.size(), 1);
     }
+    if (node["deterministic"]) {
+        _deterministic = node["deterministic"].maybe<bool>().value_or(false);
+    } else {
+        _deterministic = false;
+    }
+    _elemNumber = -1;
 }
 
 /**
