@@ -143,7 +143,7 @@ void requireEvent(ApmEvent& event, YAML::Node requirements) {
 
         auto getBoolValue = [&](const std::string& paramName) {
             auto val = event.command[paramName];
-            return val ? val.get_bool().value : false;
+            return val && val.get_bool().value;
         };
         // Figure out the cursor type.
         const bool tailable = getBoolValue("tailable");

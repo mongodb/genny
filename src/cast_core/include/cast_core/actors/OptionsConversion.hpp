@@ -161,7 +161,7 @@ struct NodeConvert<mongocxx::options::find> {
 
         auto getBoolValue = [&](const std::string& paramName) {
             const auto& val = node[paramName];
-            return val ? val.to<bool>() : false;
+            return val && val.to<bool>();
         };
 
         // Figure out the cursor type.
