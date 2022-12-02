@@ -78,7 +78,7 @@ class WorkloadLister:
 
     def all_workload_files(self) -> Set[str]:
         pattern = os.path.join(self.workspace_root, "src", "*", "src", "workloads", "**", "*.yml")
-        return {*glob.glob(pattern)}
+        return {*glob.glob(pattern, recursive=True)}
 
     def modified_workload_files(self) -> Set[str]:
         """Relies on git to find files in src/workloads modified versus origin/master"""
@@ -220,13 +220,39 @@ class Workload:
 
         self.auto_run_info = auto_run_info
 
-    @property
-    def file_base_name(self) -> str:
-        return str(os.path.basename(self.file_path).split(".yml")[0])
+    def _get_relative_path_from_src_workloads(self):
+        relative_path = self.file_path.split("src/workloads/")
+        if len(relative_path) != 2:
+            raise ValueError(f"Invalid workload path {self.file_path}")
+        # Example: "src/genny/src/workloads/directory/nested/Workload.yml" will be converted to
+        # "directory/nested/Workload.yml"
+        return relative_path[1]
 
     @property
     def snake_case_base_name(self) -> str:
-        return self._to_snake_case(self.file_base_name)
+        # Workload path is workspace_root/src/*/src/workloads/**/*.yml.
+        # To create a base name we leave only **/*.yml and convert it to snake case. To preserve
+        # legacy names, we omit the first directory that was matched as part of **.
+        # Example file_path: "src/genny/src/workloads/directory/nested/MyWorkload.yml".
+
+        # Example relative_path: "directory/nested/MyWorkload.yml".
+        relative_path = self._get_relative_path_from_src_workloads()
+
+        # Split the extention away. Example: "directory/nested/MyWorkload".
+        relative_path = os.path.splitext(relative_path)[0]
+
+        # Split by directory separatior: ["directory", "nested", "MyWorkload"].
+        relative_path = relative_path.split(os.sep)
+
+        if len(relative_path) == 1:
+            # Convert workload file name to snake case.
+            return self._to_snake_case(relative_path[0])
+        else:
+            # Omit first directory. Example: ["nested", "MyWorkload"].
+            relative_path = relative_path[1:]
+
+            # Convert each part to snake case and join with "_". Example: nested_my_workload
+            return "_".join([self._to_snake_case(part) for part in relative_path])
 
     @property
     def relative_path(self) -> str:

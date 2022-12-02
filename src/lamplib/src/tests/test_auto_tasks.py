@@ -115,29 +115,31 @@ class AutoTasksTests(BaseTestClass):
             modified=False,
             yaml_conts={},
         )
+        auto_run = {
+            "AutoRun": [
+                {
+                    "When": {"mongodb_setup": {"$eq": "matches"}},
+                    "ThenRun": [{"mongodb_setup": "a"}, {"arb_bootstrap_key": "b"}],
+                }
+            ]
+        }
         multi_modified_genny = MockFile(
-            base_name="src/genny/src/workloads/src/Multi.yml",
-            modified=True,
-            yaml_conts={
-                "AutoRun": [
-                    {
-                        "When": {"mongodb_setup": {"$eq": "matches"}},
-                        "ThenRun": [{"mongodb_setup": "a"}, {"arb_bootstrap_key": "b"}],
-                    }
-                ]
-            },
+            base_name="src/genny/src/workloads/src/Multi.yml", modified=True, yaml_conts=auto_run,
         )
         multi_modified_other = MockFile(
             base_name="src/other/src/workloads/src/MultiOther.yml",
             modified=True,
-            yaml_conts={
-                "AutoRun": [
-                    {
-                        "When": {"mongodb_setup": {"$eq": "matches"}},
-                        "ThenRun": [{"mongodb_setup": "a"}, {"arb_bootstrap_key": "b"}],
-                    }
-                ]
-            },
+            yaml_conts=auto_run,
+        )
+        nested_unmodified_genny = MockFile(
+            base_name="src/genny/src/workloads/directory/nested_directory/Unmodified.yml",
+            modified=False,
+            yaml_conts=auto_run,
+        )
+        nested_unmodified_other = MockFile(
+            base_name="src/other/src/workloads/directory/nested_directory/UnmodifiedOther.yml",
+            modified=False,
+            yaml_conts=auto_run,
         )
 
         self.assert_result(
@@ -147,6 +149,8 @@ class AutoTasksTests(BaseTestClass):
                 empty_other_unmodified,
                 multi_modified_genny,
                 multi_modified_other,
+                nested_unmodified_genny,
+                nested_unmodified_other,
             ],
             and_mode="all_tasks",
             then_writes={
@@ -234,6 +238,66 @@ class AutoTasksTests(BaseTestClass):
                                     "test_control": "multi_other_b",
                                     "auto_workload_path": "src/other/src/workloads/src/MultiOther.yml",
                                     "arb_bootstrap_key": "b",  # test that arb bootstrap_key works
+                                },
+                            },
+                        ],
+                        "priority": 5,
+                    },
+                    {
+                        "name": "nested_directory_unmodified_a",
+                        "commands": [
+                            TIMEOUT_COMMAND,
+                            {
+                                "func": "f_run_dsi_workload",
+                                "vars": {
+                                    "test_control": "nested_directory_unmodified_a",
+                                    "auto_workload_path": "src/genny/src/workloads/directory/nested_directory/Unmodified.yml",
+                                    "mongodb_setup": "a",
+                                },
+                            },
+                        ],
+                        "priority": 5,
+                    },
+                    {
+                        "name": "nested_directory_unmodified_b",
+                        "commands": [
+                            TIMEOUT_COMMAND,
+                            {
+                                "func": "f_run_dsi_workload",
+                                "vars": {
+                                    "test_control": "nested_directory_unmodified_b",
+                                    "auto_workload_path": "src/genny/src/workloads/directory/nested_directory/Unmodified.yml",
+                                    "arb_bootstrap_key": "b",
+                                },
+                            },
+                        ],
+                        "priority": 5,
+                    },
+                    {
+                        "name": "nested_directory_unmodified_other_a",
+                        "commands": [
+                            TIMEOUT_COMMAND,
+                            {
+                                "func": "f_run_dsi_workload",
+                                "vars": {
+                                    "test_control": "nested_directory_unmodified_other_a",
+                                    "auto_workload_path": "src/other/src/workloads/directory/nested_directory/UnmodifiedOther.yml",
+                                    "mongodb_setup": "a",
+                                },
+                            },
+                        ],
+                        "priority": 5,
+                    },
+                    {
+                        "name": "nested_directory_unmodified_other_b",
+                        "commands": [
+                            TIMEOUT_COMMAND,
+                            {
+                                "func": "f_run_dsi_workload",
+                                "vars": {
+                                    "test_control": "nested_directory_unmodified_other_b",
+                                    "auto_workload_path": "src/other/src/workloads/directory/nested_directory/UnmodifiedOther.yml",
+                                    "arb_bootstrap_key": "b",
                                 },
                             },
                         ],
@@ -475,6 +539,16 @@ class AutoTasksTests(BaseTestClass):
             modified=True,
             yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "matches"}}}]},
         )
+        nested_unmodified = MockFile(
+            base_name="src/workloads/directory/nested/Unmodified.yml",
+            modified=False,
+            yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "matches"}}}]},
+        )
+        nested_modified = MockFile(
+            base_name="src/workloads/directory/nested/Modified.yml",
+            modified=True,
+            yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "matches"}}}]},
+        )
         self.assert_result(
             given_files=[
                 expansions,
@@ -482,6 +556,8 @@ class AutoTasksTests(BaseTestClass):
                 multi_unmodified,
                 matches_unmodified,
                 matches_modified,
+                nested_unmodified,
+                nested_modified,
             ],
             and_mode="patch_tasks",
             then_writes={
@@ -495,6 +571,7 @@ class AutoTasksTests(BaseTestClass):
                             {"name": "multi_modified_f"},
                             {"name": "multi_modified_infra_a"},
                             {"name": "matches_modified"},
+                            {"name": "nested_modified"},
                         ],
                     }
                 ]
