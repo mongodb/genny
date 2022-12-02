@@ -1,0 +1,271 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  This workload compares performance of inserts into a collection with only the default _id index,
+  and in presence of either columnstore or wildcard indexes. It uses an artificial data set with
+  a wide overall schema and narrow individual objects to model fragmented access to CSI, which
+  clusters entries by path.
+
+Keywords:
+- columnstore
+- wildcard
+- insert
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v6.0
+
+Clients:
+  Default:
+    QueryOptions:
+      # Allow for longer duration since index builds may take a while.
+      socketTimeoutMS: 600_000  # = 10 min
+      connectTimeoutMS: 600_000
+
+GlobalDefaults:
+  MaxPhases: &maxPhases 15
+  Database: &db csiFragmentedInsertsFlat
+  # The Loader actor creates collections named "Collection<N>" where N corresponds to the thread's
+  # number. We'll use a single collection, created by a single thread, so it becomes 'Collection0'.
+  Collection: &coll Collection0
+  # If modifying any of the these parameters, please review 'CsiFragmentedInsertsNested.yml' to
+  # ensure that the results of these two workloads can still be correlated.
+  DocumentCount: &docCount 1e6
+  SchemaWidth: &schemaWidth 10000
+  ObjectWidth: &objectWidth 10
+  SampleSize: &sampleSize 100  # want: sampleSize * objectWidth ~ 0.1 * schemaWidth
+
+ActorTemplates:
+- TemplateName: InsertFromSample
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Insert"}}
+    Type: SamplingLoader
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Database: *db
+          Collection: *coll
+          # The 'SamplingLoader' actor re-samples on repeat, meaning that it would get a new set of
+          # documents likely with different paths. This makes each repeat hit different parts of the
+          # index, causing a long warm up tail.
+          Repeat: 1
+          # Sample size of 100 means that no more than 100*objectWidth paths will be "touched" by
+          # "the sample.
+          SampleSize: *sampleSize
+          # When the batch size is the same as sample size, each sampled document will be used in
+          # the batch exactly once, and this will be repeated for the number of batches. We expect,
+          # that the first batch would exhibit "cold" cache behaviour and the subsequent batches
+          # would be fully warmed up.
+          InsertBatchSize: *sampleSize
+          # The instances of the template should explicitly specify the number of batches to make it
+          # clear what they are testing wrt to cold/warm scenario. Using the default of 0 is UB.
+          # The stats per batch are available in 'IndividualBulkInsert' measurement.
+          Batches: {^Parameter: {Name: "Batches", Default: 0}}
+
+- TemplateName: SettleDown
+  Config:
+    # We are not interested in measuring the quiese phases, so it's OK to use the same name for all
+    # of them.
+    Name: Quiese
+    Type: QuiesceActor
+    Threads: 1
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+
+Actors:
+- Name: Setup
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Repeat: 1
+        Thread: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            internalQueryFrameworkControl: "trySbeEngine"
+
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        # Cannot have more threads than the actor itself.
+        Threads: 1
+        Repeat: 1
+        Database: *db
+        CollectionCount: 1
+        DocumentCount: *docCount
+        BatchSize: 1000
+        Document:
+          root: {^Object: {
+            withNEntries: *objectWidth,
+            # Do we want to use a non-uniform distribution for the fiedls, modelling that some are
+            # rarer than others? The sampling might become unstable in this case and even harder to
+            # interpret the results.
+            havingKeys: {^FormatString: {
+              "format": "x%d",
+              "withArgs": [{^RandomInt: {min: 0, max: *schemaWidth}}]
+            }},
+            # We would like to compare CSI to wildcard indexes and while arrays is an interesting
+            # use case for CSI, they expload the time to create wildcard index. We also didn't see
+            # any anomalous patterns wrt to arrays when running smaller workloads locally, so we
+            # believe using scalar values here covers the basics sufficiently.
+            andValues: {^RandomInt: {min: 1, max: *schemaWidth}},
+            # Occasionally, the key generator might produce the same key name. For this workload,
+            # it's OK to have some of the objects with fewer than 'objectWidth' fields (and we don't
+            # want to test parsing of the duplicated keys for the index as it's not a common user
+            # scenario).
+            duplicatedKeys: skip
+          }}
+
+# Isolate the perf data for a cold insert in absence of indexes.
+- ActorFromTemplate:
+    TemplateName: SettleDown
+    TemplateParameters:
+      OnlyActiveInPhase: 2
+
+- ActorFromTemplate:
+    TemplateName: InsertFromSample
+    TemplateParameters:
+      Name: Insert_no_indexes_cold
+      OnlyActiveInPhase: 3
+      Batches: 1
+
+# Resampling might affect the caches made by the insert above. To start from the same point, settle
+# again. The first batch is expected to have similar pert to the cold insert above, and the later
+# batches to be stabely warm.
+- ActorFromTemplate:
+    TemplateName: SettleDown
+    TemplateParameters:
+      OnlyActiveInPhase: 4
+
+- ActorFromTemplate:
+    TemplateName: InsertFromSample
+    TemplateParameters:
+      Name: Insert_no_indexes_warm
+      OnlyActiveInPhase: 5
+      Batches: 10
+
+- Name: BuildColumnStoreIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operations:
+        - OperationMetricsName: BulkBuildColumnStoreIndex
+          OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *coll
+            indexes:
+            - key: {"$**": "columnstore"}
+              name: csi
+
+# Isolate the perf data for a cold insert in presence of a columnstore index.
+- ActorFromTemplate:
+    TemplateName: SettleDown
+    TemplateParameters:
+      OnlyActiveInPhase: 7
+
+- ActorFromTemplate:
+    TemplateName: InsertFromSample
+    TemplateParameters:
+      Name: Insert_csi_cold
+      OnlyActiveInPhase: 8
+      Batches: 1
+
+# We expect the first batch of 10 to have the same perf charteristics as the cold insert above, the
+# following batches should be warm both in the rowstore and in the index because the same paths are
+# reused (from the single sample).
+- ActorFromTemplate:
+    TemplateName: SettleDown
+    TemplateParameters:
+      OnlyActiveInPhase: 9
+
+- ActorFromTemplate:
+    TemplateName: InsertFromSample
+    TemplateParameters:
+      Name: Insert_csi_warm
+      OnlyActiveInPhase: 10
+      Batches: 10
+
+- Name: ReplaceCsiWithWildcardIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [11]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            dropIndexes: *coll
+            index: csi
+        - OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *coll
+            indexes:
+            - key: {"root.$**": 1}
+              name: root
+
+# Isolate the perf data for a cold insert in presence of a wildcard index.
+- ActorFromTemplate:
+    TemplateName: SettleDown
+    TemplateParameters:
+      OnlyActiveInPhase: 12
+
+- ActorFromTemplate:
+    TemplateName: InsertFromSample
+    TemplateParameters:
+      Name: Insert_wildcard_cold
+      OnlyActiveInPhase: 13
+      Batches: 1
+
+# We expect the first batch of 10 to have the same perf charteristics as the cold insert above, the
+# following batches should be warm both in the rowstore and in the index because the same paths and
+#  values are reused (from the single sample).
+- ActorFromTemplate:
+    TemplateName: SettleDown
+    TemplateParameters:
+      OnlyActiveInPhase: 14
+
+- ActorFromTemplate:
+    TemplateName: InsertFromSample
+    TemplateParameters:
+      Name: Insert_wildcard_warm
+      OnlyActiveInPhase: 15
+      Batches: 10
+
