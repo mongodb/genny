@@ -1,16 +1,16 @@
 SchemaVersion: 2018-07-01
-Owner: "@TODO" # what should go here? us or the owners of secondary_reads? 
+Owner: "@TODO"  # what should go here? us or the owners of secondary_reads?
 Description: >
  Test performance of secondary reads while applying oplogs
- 
+
  ### Setup
- 
+
  This workload should be run in a replica set of at least two nodes. The
  IP addresses of the primary and one of the secondaries are specified by the
  configuration.
- 
+
  ### Test
- 
+
  On an empty replica set, the workload performs the following actions:
  - Setup stage:
     - Inserted *initial_nb_docs* documents into both the primary and the
@@ -28,55 +28,20 @@ Description: >
 
 
 Initial_nb_docs: &initial_nb_docs 10000
-DocumentSize: &document_size 459 # Target document size of 500 and Object.bsonsize({_id: ObjectId(), x: 0, str: "x"}) + 1 = 41
+DocumentSize: &document_size 459  # Target document size of 500 and Object.bsonsize({_id: ObjectId(), x: 0, str: "x"}) + 1 = 41
 ReadLimit: &read_limit 100
-TestDurationInSecs: &test_duration 180 seconds
+MaxIdForFinds: &max_id_for_finds 9900
+TestDurationInSecs: &phase_duration 180 seconds
 Db: &db test
 WriterThreads: &writer_threads 16
 NumPhases: &max_phase 13
+
 
 Clients:
   Secondary:
     URI: mongodb://md1:27017
 
 ActorTemplates:
-- TemplateName: LoadInitialDataTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: LoadInitialData}}
-    Type: Loader
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [-1]}}
-        NopInPhasesUpTo: *max_phase
-        PhaseConfig:
-          Repeat: 1
-          Database: *db
-          Threads: 1
-          CollectionCount: 1
-          DocumentCount: *initial_nb_docs
-          BatchSize: *initial_nb_docs
-          Document: 
-            x: {^Inc: {}}
-            #s: {^Repeat: {count: *document_size, fromGenerator: {^Choose: {from: ["x"]}}}} --> why does this not work?
-            s: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-          Indexes:
-          - keys: {x: 1}
-
-- TemplateName: QuiesceTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: Quiesce}}
-    Type: QuiesceActor
-    Threads: 1
-    Database: *db
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [-1]}}
-        NopInPhasesUpTo: *max_phase
-        PhaseConfig:
-          Repeat: 1
-            
-
 - TemplateName: WritesOnPrimaryTemplate
   Config:
     Name: {^Parameter: {Name: "Name", Default: WritesOnPrimary}}
@@ -88,15 +53,14 @@ ActorTemplates:
         Active: {^Parameter: {Name: "ActivePhases", Default: [-1]}}
         NopInPhasesUpTo: *max_phase
         PhaseConfig:
-          Duration: *test_duration
+          Duration: *phase_duration
           Collection: Collection0
           Operations:
           - OperationName: insertOne
             OperationCommand:
               Document:
                 x: {^RandomInt: {min: *initial_nb_docs, max: 1000000000}}
-                #s: {^Repeat: {count: *document_size, fromGenerator: {^Choose: {from: ["x"]}}}} --> why does this not work?
-                s: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                s: {^RandomString: {length: *document_size}}
 
 - TemplateName: ReadsOnSecondaryTemplate
   Config:
@@ -110,12 +74,12 @@ ActorTemplates:
         Active: {^Parameter: {Name: "ActivePhases", Default: [-1]}}
         NopInPhasesUpTo: *max_phase
         PhaseConfig:
-          Duration: *test_duration
+          Duration: *phase_duration
           Collection: Collection0
           Operations:
           - OperationName: find
             OperationCommand:
-              Filter: { x: {$gte: {^RandomInt: {min: 0, max: *initial_nb_docs}}}} # this should be *initial_nb_docs - *read_limit but we don't seem to have and add/subtract generator and it doesn't really impact performance
+              Filter: { x: {$gte: {^RandomInt: {min: 0, max: *max_id_for_finds}}}}
               Options:
                 Limit: *read_limit
                 BatchSize: 200
@@ -144,41 +108,53 @@ ActorTemplates:
                   Level: 3
                   Journal: true
 
-- TemplateName: CleanUpTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: CleanUp}}
-    Type: RunCommand
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [-1]}}
-        NopInPhasesUpTo: *max_phase
-        PhaseConfig:
-          Repeat: 1
-          Database: *db
-          Operations:
-          - OperationName: RunCommand
-            OperationCommand:
-              drop: Collection0
 
 Actors:
-- ActorFromTemplate:
-    TemplateName: LoadInitialDataTemplate
-    TemplateParameters:
-      Name: LoadInitialData
-      ActivePhases: [0, 5, 10]
+- Name: LoadInitialData
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0, 5, 10]
+      NopInPhasesUpTo: *max_phase
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: *initial_nb_docs
+        BatchSize: *initial_nb_docs
+        Document:
+          x: {^Inc: {}}
+          s: {^RandomString: {length: *document_size}}
+        Indexes:
+        - keys: {x: 1}
 
-- ActorFromTemplate:
-    TemplateName: QuiesceTemplate
-    TemplateParameters:
-      Name: Quiesce
-      ActivePhases: [1, 6, 11]
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1, 6, 11]
+      NopInPhasesUpTo: *max_phase
+      PhaseConfig:
+        Repeat: 1
 
-- ActorFromTemplate:
-    TemplateName: CleanUpTemplate
-    TemplateParameters:
-      Name: CleanUp
-      ActivePhases: [4, 9]
+- Name: CleanUp
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4, 9]
+      NopInPhasesUpTo: *max_phase
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            drop: Collection0
 
 - ActorFromTemplate:
     TemplateName: WritesOnPrimaryTemplate
@@ -243,8 +219,8 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
-      #- replica-last-continuous-fcv
-      #- replica-last-lts-fcv
+      # - replica-last-continuous-fcv
+      # - replica-last-lts-fcv
       - replica-all-feature-flags
       - atlas-like-replica
     branch_name:
