@@ -636,13 +636,19 @@ struct FindOperation : public BaseOperation {
           _collection{std::move(collection)},
           _operation{operation},
           _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {
-        if (opNode["Options"]) {
-            _options = opNode["Options"].to<mongocxx::options::find>();
+        if (const auto& options = opNode["Options"]; options) {
+            _options = options.to<mongocxx::options::find>();
+            if (options["Projection"]) {
+                _projection.emplace(options["Projection"].to<DocumentGenerator>(context, id));
+            }
         }
     }
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filter();
+        if (_projection) {
+            _options.projection(_projection.value()());
+        }
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto cursor = (_onSession) ? _collection.find(session, filter.view(), _options)
                                        : _collection.find(filter.view(), _options);
@@ -660,6 +666,7 @@ private:
     mongocxx::collection _collection;
     mongocxx::options::find _options;
     DocumentGenerator _filter;
+    std::optional<DocumentGenerator> _projection;
     metrics::Operation _operation;
 };
 
@@ -675,13 +682,27 @@ struct FindOneOperation : public BaseOperation {
           _collection{std::move(collection)},
           _operation{operation},
           _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {
-        if (opNode["Options"]) {
-            _options = opNode["Options"].to<mongocxx::options::find>();
+        if (const auto& options = opNode["Options"]; options) {
+            _options = options.to<mongocxx::options::find>();
+            if (options["Projection"]) {
+                _projection.emplace(options["Projection"].to<DocumentGenerator>(context, id));
+            }
+            if (options["Limit"]) {
+                BOOST_THROW_EXCEPTION(
+                    InvalidConfigurationException("Cannot specify 'limit' to 'findOne' operation"));
+            }
+            if (options["BatchSize"]) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "Cannot specify 'batchSize' to 'findOne' operation"));
+            }
         }
     }
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filter();
+        if (_projection) {
+            _options.projection(_projection.value()());
+        }
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession) ? _collection.find_one(session, filter.view(), _options)
                                        : _collection.find_one(filter.view(), _options);
@@ -698,6 +719,7 @@ private:
     mongocxx::collection _collection;
     mongocxx::options::find _options;
     DocumentGenerator _filter;
+    std::optional<DocumentGenerator> _projection;
     metrics::Operation _operation;
 };
 

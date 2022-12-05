@@ -129,7 +129,6 @@ Actors:
   - *Nop
   - *Nop
 
-# TODO: TIG-3050 Switch to CrudActor once projection argument is supported for find operation.
 - Name: RunQueries
   Type: RunCommand
   Threads: 1
