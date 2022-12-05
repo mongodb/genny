@@ -97,7 +97,7 @@ Actors:
 # Phase 3-N: Run aggregate expression benchmarks
 - ExpressionAbs:
   LoadConfig: &loadConfig
-    Path: "../../phases/execution/AggregateExpressions.yml"
+    Path: "../../phases/query/AggregateExpressions.yml"
     Key: ExpressionTemplate
     Parameters:
       name: ExpressionAbs

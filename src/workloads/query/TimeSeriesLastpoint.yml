@@ -12,7 +12,7 @@ Description: |
 # Parameters reused in multiple Actors.
 db: &db test
 coll: &coll Collection0
-phasePath: &phasePath ../../phases/execution/TimeSeriesLastpoint.yml
+phasePath: &phasePath ../../phases/query/TimeSeriesLastpoint.yml
 
 # Operations reused in multiple Phases.
 Nop: &Nop {Nop: true}

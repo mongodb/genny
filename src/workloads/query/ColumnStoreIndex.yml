@@ -47,7 +47,7 @@ TotalTenantCreatedQuery: &TotalTenantCreatedQuery
 
 Date1: &DateForActiveCloudUsersLastMonthQuery
   LoadConfig:
-    Path: "../../phases/execution/GetBsonDate.yml"
+    Path: "../../phases/query/GetBsonDate.yml"
     Key: GetBsonDate
     Parameters:
       date: "2020-03-09T01:10:04"
@@ -73,7 +73,7 @@ ActiveCloudUsersLastMonthQuery: &ActiveCloudUsersLastMonthQuery
 
 Date2: &DateForVersionHistogramQuery
   LoadConfig:
-    Path: "../../phases/execution/GetBsonDate.yml"
+    Path: "../../phases/query/GetBsonDate.yml"
     Key: GetBsonDate
     Parameters:
       date: "2020-04-02T01:10:52"
@@ -104,7 +104,7 @@ VersionsHistogramQuery: &VersionsHistogramQuery
 
 Date3: &DateForUniqueUsersPerMonthQuery
   LoadConfig:
-    Path: "../../phases/execution/GetBsonDate.yml"
+    Path: "../../phases/query/GetBsonDate.yml"
     Key: GetBsonDate
     Parameters:
       date: "2019-07-09T01:12:32"
@@ -163,7 +163,7 @@ UniqueUsersPerMonthQuery: &UniqueUsersPerMonthQuery
 
 Date4: &DateForTopErrorsQuery
   LoadConfig:
-    Path: "../../phases/execution/GetBsonDate.yml"
+    Path: "../../phases/query/GetBsonDate.yml"
     Key: GetBsonDate
     Parameters:
       date: "2020-04-02T01:13:04"
@@ -217,7 +217,7 @@ TopErrorsQuery: &TopErrorsQuery
 
 Date5: &DateForNumberOfChartsPerTypeQuery
   LoadConfig:
-    Path: "../../phases/execution/GetBsonDate.yml"
+    Path: "../../phases/query/GetBsonDate.yml"
     Key: GetBsonDate
     Parameters:
       date: "2020-01-09T01:13:37"
@@ -243,14 +243,14 @@ NumberOfChartsPerTypeQuery: &NumberOfChartsPerTypeQuery
 
 Date6: &StartDateForEventsByVersionQuery
   LoadConfig:
-    Path: "../../phases/execution/GetBsonDate.yml"
+    Path: "../../phases/query/GetBsonDate.yml"
     Key: GetBsonDate
     Parameters:
       date: "2020-04-08T01:14:07"
 
 Date7: &EndDateForEventsByVersionQuery
   LoadConfig:
-    Path: "../../phases/execution/GetBsonDate.yml"
+    Path: "../../phases/query/GetBsonDate.yml"
     Key: GetBsonDate
     Parameters:
       date: "2020-04-09T01:14:07"
@@ -300,7 +300,7 @@ EventsByVersionQuery: &EventsByVersionQuery
 
 Date8: &DateForBrowserUsageByDistinctUserQuery
   LoadConfig:
-    Path: "../../phases/execution/GetBsonDate.yml"
+    Path: "../../phases/query/GetBsonDate.yml"
     Key: GetBsonDate
     Parameters:
       date: "2020-03-10T01:17:41"
@@ -341,7 +341,7 @@ BrowserUsageByDistinctUserQuery: &BrowserUsageByDistinctUserQuery
 
 Date9: &DateForTopTenantsByNoOfEventsQuery
   LoadConfig:
-    Path: "../../phases/execution/GetBsonDate.yml"
+    Path: "../../phases/query/GetBsonDate.yml"
     Key: GetBsonDate
     Parameters:
       date: "2020-03-10T01:17:41"

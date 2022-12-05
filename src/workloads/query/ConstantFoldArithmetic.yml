@@ -79,7 +79,7 @@ Actors:
   - *Nop
   - *Nop
   - LoadConfig:
-      Path: &multiplyPhase ../../phases/execution/RunLargeArithmeticOp.yml
+      Path: &multiplyPhase ../../phases/query/RunLargeArithmeticOp.yml
       Key: Multiply
       Parameters:
         Name: AllConstants
