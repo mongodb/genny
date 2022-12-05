@@ -36,7 +36,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  
+
 # Phase 3: Lower the memory limit for spilling to disk so that it occurs more often.
 - Name: Setup
   Type: RunCommand
