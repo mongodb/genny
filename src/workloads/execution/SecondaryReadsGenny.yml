@@ -5,9 +5,9 @@ Description: >
 
  ### Setup
 
- This workload should be run in a replica set of at least two nodes. The
- IP addresses of the primary and one of the secondaries are specified by the
- configuration.
+ This workload runs only in a replica set with EXACTLY 3 NODES. 
+ To use it in a replica set with a different number of nodes, adapt the 
+ *number_of_nodes parameter (needs to be >1).
 
  ### Test
 
@@ -35,8 +35,10 @@ TestDurationInSecs: &phase_duration 180 seconds
 Db: &db test
 WriterThreads: &writer_threads 16
 NumPhases: &max_phase 13
+NumberOfNodes: &number_of_nodes 3
 
-
+# This client allows the ReadsOnSecondary actor to directrly connect to the secondary node.
+# All other actors use the default client to connect to the primary node.
 Clients:
   Secondary:
     URI: mongodb://md1:27017
@@ -105,7 +107,7 @@ ActorTemplates:
               Document: {s: 1}
               OperationOptions:
                 WriteConcern:
-                  Level: 3
+                  Level: *number_of_nodes
                   Journal: true
 
 
@@ -214,13 +216,14 @@ Actors:
       ActivePhases: [13]
 
 
+# This workload runs only in a replica set with EXACTLY 3 NODES. 
+# To use it in a replica set with a different number of nodes, adapt the 
+# *number_of_nodes parameter (needs to be >1).
 AutoRun:
 - When:
     mongodb_setup:
       $eq:
       - replica
-      # - replica-last-continuous-fcv
-      # - replica-last-lts-fcv
       - replica-all-feature-flags
       - atlas-like-replica
     branch_name:
