@@ -5,8 +5,8 @@ Description: >
 
  ### Setup
 
- This workload runs only in a replica set with EXACTLY 3 NODES. 
- To use it in a replica set with a different number of nodes, adapt the 
+ This workload runs only in a replica set with EXACTLY 3 NODES.
+ To use it in a replica set with a different number of nodes, adapt the
  *number_of_nodes parameter (needs to be >1).
 
  ### Test
@@ -216,8 +216,8 @@ Actors:
       ActivePhases: [13]
 
 
-# This workload runs only in a replica set with EXACTLY 3 NODES. 
-# To use it in a replica set with a different number of nodes, adapt the 
+# This workload runs only in a replica set with EXACTLY 3 NODES.
+# To use it in a replica set with a different number of nodes, adapt the
 # *number_of_nodes parameter (needs to be >1).
 AutoRun:
 - When:
