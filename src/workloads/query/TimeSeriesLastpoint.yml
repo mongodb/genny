@@ -422,7 +422,6 @@ Actors:
     Path: *phasePath
     Key: QuiesceActor
     Parameters:
-      Active: [2, 5, 8, 11, 14, 17, 18, 21]
       MaxPhases: 23
 
 AutoRun:

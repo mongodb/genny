@@ -85,14 +85,14 @@ DropIndex:
       index: {^Parameter: {Name: "IndexName", Default: ""}}
 
 QuiesceActor:
-  Name: {^Parameter: {Name: "Name", Default: "FindOne"}}
+  Name: {^Parameter: {Name: "Name", Default: "QuiesceActor"}}
   Type: QuiesceActor
   Threads: 1
   Database: {^Parameter: {Name: "Database", Default: admin}}
   Phases:
     OnlyActiveInPhases:
-      Active: {^Parameter: {Name: "Active", Default: [0, 2, 4, 6, 8, 10]}}
-      NopInPhasesUpTo: {^Parameter: {Name: "MaxPhases", Default: 20}}
+      Active: {^Parameter: {Name: "Active", Default: [2, 5, 8, 11, 14, 17, 18, 21]}}
+      NopInPhasesUpTo: {^Parameter: {Name: "MaxPhases", Default: 23}}
       PhaseConfig:
         SleepBefore: 1 seconds
         SleepAfter: 1 seconds
