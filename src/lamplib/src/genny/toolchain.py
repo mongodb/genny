@@ -25,7 +25,7 @@ def _create_compile_environment(
     paths = [system_env["PATH"]]
 
     # For mongodbtoolchain compiler (if there).
-    paths.insert(0, "/opt/mongodbtoolchain/v3/bin")
+    paths.insert(0, "/opt/mongodbtoolchain/v4/bin")
 
     if triplet_arch == "arm64":
         paths.insert(
@@ -207,7 +207,7 @@ class ToolchainDownloader(Downloader):
         self.triplet_arch = triplet_arch
 
     def _get_url(self):
-        prefix = "macos_1014" if self._os_family == "Darwin" else self._linux_distro
+        prefix = "macos_1100" if self._os_family == "Darwin" else self._linux_distro
         # Special case for now for arm64 until we get it built properly in the waterfall
         if self.triplet_arch == "arm64":
             return "https://stm.s3.amazonaws.com/gennytoolchain-arm64.tgz"
@@ -219,7 +219,7 @@ class ToolchainDownloader(Downloader):
         )
 
     def _can_ignore(self):
-        # If the toolchain dir is outdated or we ignore the toolchain version.
+        # If the toolchain dir is outdated, or we ignore the toolchain version.
         return os.path.exists(self.result_dir) and (
             self.ignore_toolchain_version or self._check_toolchain_githash()
         )
