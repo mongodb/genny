@@ -88,7 +88,7 @@ QuiesceActor:
   Name: {^Parameter: {Name: "Name", Default: "FindOne"}}
   Type: QuiesceActor
   Threads: 1
-  Database: {^Parameter: {Name: "Database", Default: *db_name}}
+  Database: {^Parameter: {Name: "Database", Default: admin}}
   Phases:
     OnlyActiveInPhases:
       Active: {^Parameter: {Name: "Active", Default: [0, 2, 4, 6, 8, 10]}}
