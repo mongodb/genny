@@ -5,6 +5,9 @@ Description: |
   and in presence of a full columnstore index. We are not comparing to wildcard because the nested
   data makes creating of a wildcard index too slow. Before changing any of the parameters in this
   workload please make sure the results can be correlated with 'CsiFragmentedInsertsFlat.yml'.
+  As the approach in this workload is the same as in 'CsiFragmentedInsertsFlat.yml' with the exception
+  of data used by the loader (and not comparing to the wildcard index), comments are intentionally
+  omitted, please refer to the "flat" workload for the details.
 
 Keywords:
 - columnstore
@@ -26,22 +29,17 @@ AutoRun:
 Clients:
   Default:
     QueryOptions:
-      # Allow for longer duration since index builds may take a while.
       socketTimeoutMS: 600_000  # = 10 min
       connectTimeoutMS: 600_000
 
 GlobalDefaults:
   MaxPhases: &maxPhases 10
   Database: &db csiFragmentedInsertsNested
-  # The Loader actor creates collections named "Collection<N>" where N corresponds to the thread's
-  # number. We'll use a single collection, created by a single thread, so it becomes 'Collection0'.
   Collection: &coll Collection0
-  # If modifying any of the these parameters, please review 'CsiFragmentedInsertsFlat.yml' to
-  # ensure that the results of these two workloads can still be correlated.
   DocumentCount: &docCount 1e6
   SchemaWidth: &schemaWidth 10000
   ObjectWidth: &objectWidth 5  # with two nested paths, get 10 paths_per_object
-  SampleSize: &sampleSize 100  # want: sampleSize * paths_per_object ~ 0.1 * schemaWidth
+  SampleSize: &sampleSize 10
 
 ActorTemplates:
 - TemplateName: InsertFromSample
@@ -56,37 +54,10 @@ ActorTemplates:
         PhaseConfig:
           Database: *db
           Collection: *coll
-          # The 'SamplingLoader' actor re-samples on repeat, meaning that it would get a new set of
-          # documents likely with different paths. This makes each repeat hit different parts of the
-          # index, causing a long warm up tail.
-          Repeat: 1
-          # Sample size of 100 means that no more than 100*objectWidth = 1000 paths will be
-          # "touched" by the sample, which is about 10% of all paths (aka schemaWidth).
           SampleSize: *sampleSize
-          # When the batch size is the same as sample size, each sampled document will be used in
-          # the batch exactly once, and this will be repeated for the number of batches. We expect,
-          # that the first batch would exhibit "cold" cache behaviour and the subsequent batches
-          # would be fully warmed up.
           InsertBatchSize: *sampleSize
-          # The instances of the template should explicitly specify the number of batches to make it
-          # clear what they are testing wrt to cold/warm scenario. Using the default of 0 is UB.
-          # The stats per batch are available in 'IndividualBulkInsert' measurement.
-          Batches: {^Parameter: {Name: "Batches", Default: 0}}
-
-- TemplateName: SettleDown
-  Config:
-    # We are not interested in measuring the quiese phases, so it's OK to use the same name for all
-    # of them.
-    Name: Quiese
-    Type: QuiesceActor
-    Threads: 1
-    Database: *db
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: 1
+          Repeat: {^Parameter: {Name: "Repeats", Default: -1}}
+          Batches: {^Parameter: {Name: "Batches", Default: -1}}
 
 Actors:
 - Name: Setup
@@ -114,7 +85,6 @@ Actors:
       Active: [1]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
-        # Cannot have more threads than the actor itself.
         Threads: 1
         Repeat: 1
         Database: *db
@@ -167,40 +137,47 @@ Actors:
             number: 1
           }}
 
-# Isolate the perf data for a cold insert in absence of indexes.
-- ActorFromTemplate:
-    TemplateName: SettleDown
-    TemplateParameters:
-      OnlyActiveInPhase: 2
+- Name: Quiese
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1, 11, 21]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Repeat: 1
 
 - ActorFromTemplate:
     TemplateName: InsertFromSample
     TemplateParameters:
-      Name: Insert_no_indexes_cold
-      OnlyActiveInPhase: 3
+      Name: NoIndexes_cold
+      OnlyActiveInPhase: 2
+      Repeats: 5
       Batches: 1
 
-# Resampling might affect the caches made by the insert above. To start from the same point, settle
-# again. The first batch is expected to have similar pert to the cold insert above, and the later
-# batches to be stabely warm.
 - ActorFromTemplate:
-    TemplateName: SettleDown
+    TemplateName: InsertFromSample
     TemplateParameters:
-      OnlyActiveInPhase: 4
+      Name: NoIndexes_tail
+      OnlyActiveInPhase: 3
+      Repeats: 200
+      Batches: 1
 
 - ActorFromTemplate:
     TemplateName: InsertFromSample
     TemplateParameters:
-      Name: Insert_no_indexes_warm
-      OnlyActiveInPhase: 5
-      Batches: 10
+      Name: NoIndexes_warm
+      OnlyActiveInPhase: 4
+      Repeats: 1
+      Batches: 200
 
 - Name: BuildColumnStoreIndex
   Type: RunCommand
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [6]
+      Active: [10]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Repeat: 1
@@ -214,32 +191,28 @@ Actors:
             - key: {"$**": "columnstore"}
               name: csi
 
-# Isolate the perf data for a cold insert in presence of a columnstore index.
-- ActorFromTemplate:
-    TemplateName: SettleDown
-    TemplateParameters:
-      OnlyActiveInPhase: 7
-
 - ActorFromTemplate:
     TemplateName: InsertFromSample
     TemplateParameters:
-      Name: Insert_csi_cold
-      OnlyActiveInPhase: 8
+      Name: Csi_cold
+      OnlyActiveInPhase: 12
+      Repeats: 5
       Batches: 1
 
-# We expect the first batch of 10 to have the same perf charteristics as the cold insert above, the
-# following batches should be warm both in the rowstore and in the index because the same paths are
-# reused (from the single sample).
 - ActorFromTemplate:
-    TemplateName: SettleDown
+    TemplateName: InsertFromSample
     TemplateParameters:
-      OnlyActiveInPhase: 9
+      Name: Csi_tail
+      OnlyActiveInPhase: 13
+      Repeats: 200
+      Batches: 1
 
 - ActorFromTemplate:
     TemplateName: InsertFromSample
     TemplateParameters:
-      Name: Insert_csi_warm
-      OnlyActiveInPhase: 10
-      Batches: 10
+      Name: Csi_warm
+      OnlyActiveInPhase: 14
+      Repeats: 1
+      Batches: 200
 
 
