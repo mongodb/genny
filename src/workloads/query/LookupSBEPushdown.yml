@@ -63,7 +63,7 @@ LocalSmallDoc100k: &LocalSmallDoc100k local_smalldoc_100k
 # 'LocalSmallDocTemplate' to understand how each doc is filled.
 LocalSmallDoc: &LocalSmallDoc
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: LocalSmallDocTemplate
 
 # Defines foreign collections with 1500 / 3500 / 5500 / 7500 / 9500 documents which is used by
@@ -71,35 +71,35 @@ LocalSmallDoc: &LocalSmallDoc
 # each doc is filled.
 ForeignSmallDoc1500: &ForeignSmallDoc1500
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: ForeignSmallDocTemplate
     Parameters:
       card: 1500
 
 ForeignSmallDoc3500: &ForeignSmallDoc3500
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: ForeignSmallDocTemplate
     Parameters:
       card: 3500
 
 ForeignSmallDoc5500: &ForeignSmallDoc5500
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: ForeignSmallDocTemplate
     Parameters:
       card: 5500
 
 ForeignSmallDoc7500: &ForeignSmallDoc7500
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: ForeignSmallDocTemplate
     Parameters:
       card: 7500
 
 ForeignSmallDoc9500: &ForeignSmallDoc9500
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: ForeignSmallDocTemplate
     Parameters:
       card: 9500
@@ -110,7 +110,7 @@ ForeignSmallDoc9500: &ForeignSmallDoc9500
 # indexes on any join fields.
 HJLookupForeign1500Cmd: &HJLookupForeign1500Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: HJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -118,7 +118,7 @@ HJLookupForeign1500Cmd: &HJLookupForeign1500Cmd
 
 HJLookupForeign3500Cmd: &HJLookupForeign3500Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: HJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -126,7 +126,7 @@ HJLookupForeign3500Cmd: &HJLookupForeign3500Cmd
 
 HJLookupForeign5500Cmd: &HJLookupForeign5500Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: HJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -134,7 +134,7 @@ HJLookupForeign5500Cmd: &HJLookupForeign5500Cmd
 
 HJLookupForeign7500Cmd: &HJLookupForeign7500Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: HJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -142,7 +142,7 @@ HJLookupForeign7500Cmd: &HJLookupForeign7500Cmd
 
 HJLookupForeign9500Cmd: &HJLookupForeign9500Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: HJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -153,7 +153,7 @@ HJLookupForeign9500Cmd: &HJLookupForeign9500Cmd
 # will be enabled when the foreign join field is indexed.
 NLJLookupForeign1500Cmd: &NLJLookupForeign1500Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -161,7 +161,7 @@ NLJLookupForeign1500Cmd: &NLJLookupForeign1500Cmd
 
 NLJLookupForeign3500Cmd: &NLJLookupForeign3500Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -169,7 +169,7 @@ NLJLookupForeign3500Cmd: &NLJLookupForeign3500Cmd
 
 NLJLookupForeign5500Cmd: &NLJLookupForeign5500Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -177,7 +177,7 @@ NLJLookupForeign5500Cmd: &NLJLookupForeign5500Cmd
 
 NLJLookupForeign7500Cmd: &NLJLookupForeign7500Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -185,7 +185,7 @@ NLJLookupForeign7500Cmd: &NLJLookupForeign7500Cmd
 
 NLJLookupForeign9500Cmd: &NLJLookupForeign9500Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
