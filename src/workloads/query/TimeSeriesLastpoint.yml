@@ -418,35 +418,12 @@ Actors:
         Collection: *coll
         IndexName: *metaAscTimeAsc
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
+- LoadConfig:
+    Path: *path
+    Key: QuiesceActor
+    Parameters:
+      Active: [2, 5, 8, 11, 14, 17, 18, 21]
+      MaxPhases: 23
 
 AutoRun:
 - When:

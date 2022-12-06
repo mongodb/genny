@@ -83,3 +83,17 @@ DropIndex:
     OperationCommand:
       dropIndexes: {^Parameter: {Name: "Collection", Default: "Collection0"}}
       index: {^Parameter: {Name: "IndexName", Default: ""}}
+
+QuiesceActor:
+  Name: {^Parameter: {Name: "Name", Default: "FindOne"}}
+  Type: QuiesceActor
+  Threads: 1
+  Database: {^Parameter: {Name: "Database", Default: *db_name}}
+  Phases:
+    OnlyActiveInPhases:
+      Active: {^Parameter: {Name: "Active", Default: [0, 2, 4, 6, 8, 10]}}
+      NopInPhasesUpTo: {^Parameter: {Name: "MaxPhases", Default: 20}}
+      PhaseConfig:
+        SleepBefore: 1 seconds
+        SleepAfter: 1 seconds
+        Repeat: 1

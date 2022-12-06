@@ -23,9 +23,8 @@ Actors:
   - &Nop {Nop: true}
   - *Nop
   - *Nop
-  - *Nop
 
-# Phase 2: Quiesce
+# Phase 2: Lower the memory limit for spilling to disk so that it occurs more often.
 - Name: Quiesce
   Type: QuiesceActor
   Database: *db
@@ -35,14 +34,11 @@ Actors:
   - Repeat: 1
   - *Nop
   - *Nop
-  - *Nop
 
-# Phase 3: Lower the memory limit for spilling to disk so that it occurs more often.
 - Name: Setup
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
   - *Nop
   - Repeat: 1
     Database: admin
@@ -55,12 +51,11 @@ Actors:
   - *Nop
   - *Nop
 
-# Phases 4+: Build indexes on each field.
+# Phases 3+: Build indexes on each field.
 - Name: IndexCollection
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
   - *Nop
   - *Nop
   # Build an index on an integer field.

@@ -100,7 +100,7 @@ Actors:
 - Name: Quiesce
   Type: QuiesceActor
   Threads: 1
-  Database: *Database
+  Database: admin
   Phases:
   - *Nop
   - *Nop
