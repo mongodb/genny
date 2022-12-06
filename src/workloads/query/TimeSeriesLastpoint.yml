@@ -419,7 +419,7 @@ Actors:
         IndexName: *metaAscTimeAsc
 
 - LoadConfig:
-    Path: *path
+    Path: *phasePath
     Key: QuiesceActor
     Parameters:
       Active: [2, 5, 8, 11, 14, 17, 18, 21]
