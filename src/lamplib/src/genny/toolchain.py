@@ -2,12 +2,13 @@ import json
 import os
 import platform
 
-from typing import Optional, NamedTuple
-import structlog
-
 from pathlib import Path
+import structlog
+from typing import Optional, NamedTuple
+
 from genny.cmd_runner import run_command
 from genny.download import Downloader
+
 
 SLOG = structlog.get_logger(__name__)
 
@@ -186,7 +187,8 @@ class ToolchainDownloader(Downloader):
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
 
-    TOOLCHAIN_BUILD_ID = "patch_da48b38e2d563a0b58db10ed3c3f42de0522ad8e_6387a085850e610cae2d0af0_22_11_30_18_27_58"
+    # TODO: Replace this with a non-patch build
+    TOOLCHAIN_BUILD_ID = "patch_da48b38e2d563a0b58db10ed3c3f42de0522ad8e_638f8f8257e85a2fc9e56467_22_12_06_18_53_29"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
     TOOLCHAIN_ROOT = str(Path.home()) + "/data/mci"  # TODO BUILD-7624 change this to /opt.
 

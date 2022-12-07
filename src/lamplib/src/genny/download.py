@@ -3,10 +3,31 @@ import os
 import shutil
 import platform
 import urllib.request
+import progressbar
 
 from genny.cmd_runner import run_command
 
 SLOG = structlog.get_logger(__name__)
+
+
+class ProgressBar:
+    """
+    A simple progress bar to show while downloading the toolkit tarball. Useful to let the user know that the
+     application hasn't frozen.
+    """
+    def __init__(self):
+        self.bar = None
+
+    def __call__(self, block_num, block_size, total_size):
+        if not self.bar:
+            self.bar = progressbar.ProgressBar(maxval=total_size)
+            self.bar.start()
+
+        downloaded = block_num * block_size
+        if downloaded < total_size:
+            self.bar.update(downloaded)
+        else:
+            self.bar.finish()
 
 
 class Downloader:
@@ -95,13 +116,14 @@ class Downloader:
 
     def _fetch_and_install_impl(self) -> None:
         tarball = os.path.join(self._install_dir, self._name + ".tgz")
-        # if os.path.isfile(tarball):
-        #    SLOG.info("Skipping downloading since already exists", tarball=tarball)
-        # else:
-        url = self._get_url()
-        SLOG.debug("Downloading", name=self._name, url=url)
-        urllib.request.urlretrieve(url, tarball)
-        SLOG.debug("Finished Downloading", name=self._name, tarball=tarball)
+        if os.path.isfile(tarball):
+            SLOG.info("Skipping downloading since already exists", tarball=tarball)
+        else:
+            url = self._get_url()
+            SLOG.debug("Downloading", name=self._name, url=url)
+            print("Downloading toolchain to", tarball)
+            urllib.request.urlretrieve(url, tarball, ProgressBar())
+            SLOG.debug("Finished Downloading", name=self._name, tarball=tarball)
 
         SLOG.debug("Extracting", name=self._name, into=self.result_dir)
 
