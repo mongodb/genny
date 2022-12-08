@@ -32,7 +32,7 @@ def _get_poplar_args(genny_repo_root: str, workspace_root: str):
     Returns the argument list used to create the Poplar gRPC process.
 
     If we are in the root of the genny repo, use the local executable.
-    Otherwise we search the PATH.
+    Otherwise, we search the PATH.
     """
     curator = _find_curator(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     if curator is None:
@@ -182,8 +182,8 @@ class CuratorDownloader(Downloader):
     # These build IDs are from the Curator Evergreen task.
     # https://evergreen.mongodb.com/waterfall/curator
 
-    CURATOR_VERSION = "3df28d2514d4c4de7c903d027e43f3ee48bf8ec1"
-    ARM_CURATOR_VERSION = "965d53845fd1987ddbf04a937ff625f3c243dee3"
+    CURATOR_VERSION = "7eda5c26b085558b746eea11522084dec27a9e9e"
+    ARM_CURATOR_VERSION = "7eda5c26b085558b746eea11522084dec27a9e9e"
 
     SPECIAL_CURATOR_VERSIONS = {
         "arm": ARM_CURATOR_VERSION,
