@@ -6,7 +6,7 @@ import enum
 import glob
 import os
 import re
-from typing import NamedTuple, List, Optional, Set
+from typing import NamedTuple, List, Optional, Set, Dict, Any
 import yaml
 import structlog
 
@@ -92,103 +92,17 @@ class WorkloadLister:
             pattern = os.path.join(self.workload_root, "src", "workloads", "**", "*.yml")
         return {*glob.glob(pattern)}
 
-    def modified_workload_files(self) -> Set[str]:
-        """Relies on git to find files in src/workloads modified versus origin/master"""
-        src_path = os.path.join(self.workspace_root, "src")
-        all_repo_directories = {
-            path for path in os.listdir(src_path) if os.path.isdir(os.path.join(src_path, path))
-        }
-        command = (
-            "git diff --name-only --diff-filter=AMR "
-            "$(git merge-base HEAD origin) -- src/workloads/"
-        )
-        modified_workloads = set()
-        for repo_directory in all_repo_directories:
-            repo_path = os.path.join(src_path, repo_directory)
-            cmd = run_command(cmd=[command], cwd=repo_path, shell=True, check=True)
-            if cmd.returncode != 0:
-                SLOG.fatal("Failed to compare workload directory to origin.", *cmd)
-                raise RuntimeError(
-                    "Failed to compare workload directory to origin: stdout: {cmd.stdout} stderr: {cmd.stderr}"
-                )
-            lines = cmd.stdout
-            modified_workloads.update(
-                {os.path.join(repo_path, line) for line in lines if line.endswith(".yml")}
-            )
-        return modified_workloads
-
-
-class OpName(enum.Enum):
-    """
-    What kind of tasks we're generating in this invocation.
-    """
-
-    ALL_TASKS = object()
-    VARIANT_TASKS = object()
-    PATCH_TASKS = object()
-
 
 class CLIOperation(NamedTuple):
     """
     Represents the "input" to what we're doing"
     """
 
-    mode: OpName
-    variant: Optional[str]
-    execution: Optional[str]
     genny_repo_root: str
     workspace_root: str
     workload_root: str
-
-    @staticmethod
-    def create(
-        mode_name: str,
-        reader: YamlReader,
-        genny_repo_root: str,
-        workspace_root: str,
-        workload_root: Optional[str] = None,
-    ) -> "CLIOperation":
-        mode = OpName.ALL_TASKS
-        variant = None
-
-        execution = int(reader.load(workspace_root, "expansions.yml")["execution"])
-        if mode_name == "all_tasks":
-            mode = OpName.ALL_TASKS
-        if mode_name == "patch_tasks":
-            mode = OpName.PATCH_TASKS
-            variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
-        if mode_name == "variant_tasks":
-            mode = OpName.VARIANT_TASKS
-            variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
-        return CLIOperation(
-            mode,
-            variant,
-            execution,
-            genny_repo_root=genny_repo_root,
-            workspace_root=workspace_root,
-            workload_root=workload_root,
-        )
-
-
-class CurrentBuildInfo:
-    def __init__(self, reader: YamlReader, workspace_root: str):
-        self.reader = reader
-        self.workspace_root = workspace_root
-        self.conts = self.expansions()
-
-    def expansions(self):
-        return self.reader.load(self.workspace_root, "expansions.yml")
-
-    def has(self, key: str, acceptable_values: List[str]) -> bool:
-        """
-        :param key: a key from environment (expansions.yml, bootstrap.yml, etc)
-        :param acceptable_values: possible values we accept
-        :return: if the actual value from env[key] is in the list of acceptable values
-        """
-        if key not in self.conts:
-            return False
-        actual = self.conts[key]
-        return any(actual == acceptable_value for acceptable_value in acceptable_values)
+    variant: Optional[str] = None
+    execution: Optional[str] = None
 
 
 class GeneratedTask(NamedTuple):
@@ -203,6 +117,12 @@ class AutoRunBlock(NamedTuple):
     then_run: dict
 
 
+class DsiTask(NamedTuple):
+    name: str
+    runs_on_variants: List[str]
+    bootstrap_vars: Dict[str, str]
+
+
 class Workload:
     """
     Represents a workload yaml file.
@@ -212,15 +132,12 @@ class Workload:
     file_path: str
     """Path relative to repo root."""
 
-    is_modified: bool
-
     auto_run_info: Optional[List[AutoRunBlock]] = None
     """The list of `When/ThenRun` blocks, if present"""
 
-    def __init__(self, workspace_root: str, file_path: str, is_modified: bool, reader: YamlReader):
+    def __init__(self, workspace_root: str, file_path: str, reader: YamlReader):
         self.workspace_root = workspace_root
         self.file_path = file_path
-        self.is_modified = is_modified
 
         conts = reader.load(workspace_root, self.file_path)
         SLOG.info(f"Running auto-tasks for workload: {self.file_path}")
@@ -281,48 +198,6 @@ class Workload:
         tasks = []
         for block in self.auto_run_info:
             tasks += self.generate_requested_tasks(block.then_run)
-
-        return self._dedup_task(tasks)
-
-    def variant_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
-        """
-        :param build: info about current build
-        :return: tasks that we should do given the current build e.g. if we have When/ThenRun info etc.
-        """
-        if not self.auto_run_info:
-            return []
-
-        tasks = []
-        for block in self.auto_run_info:
-            when = block.when
-            then_run = block.then_run
-            # All When conditions must be true. We set okay: False if any single one is not true.
-            okay = True
-            for key, condition in when.items():
-                if len(condition) != 1:
-                    raise ValueError(
-                        f"Need exactly one condition per key in When block."
-                        f" Got key ${key} with condition ${condition}."
-                    )
-                if "$eq" in condition:
-                    acceptable_values = condition["$eq"]
-                    if not isinstance(acceptable_values, list):
-                        acceptable_values = [acceptable_values]
-                    if not build.has(key, acceptable_values):
-                        okay = False
-                elif "$neq" in condition:
-                    unacceptable_values = condition["$neq"]
-                    if not isinstance(unacceptable_values, list):
-                        unacceptable_values = [unacceptable_values]
-                    if build.has(key, unacceptable_values):
-                        okay = False
-                else:
-                    raise ValueError(
-                        f"The only supported operators are $eq and $neq. Got ${condition.keys()}"
-                    )
-
-            if okay:
-                tasks += self.generate_requested_tasks(then_run)
 
         return self._dedup_task(tasks)
 
@@ -392,94 +267,76 @@ class Repo:
 
     def all_workloads(self) -> List[Workload]:
         all_files = self.lister.all_workload_files()
-        modified = self.lister.modified_workload_files()
         return [
-            Workload(
-                workspace_root=self.workspace_root,
-                file_path=fpath,
-                is_modified=fpath in modified,
-                reader=self.reader,
-            )
+            Workload(workspace_root=self.workspace_root, file_path=fpath, reader=self.reader,)
             for fpath in all_files
         ]
 
-    def modified_workloads(self) -> List[Workload]:
-        return [workload for workload in self.all_workloads() if workload.is_modified]
-
-    def all_tasks(self) -> List[GeneratedTask]:
-        """
-        :return: All possible tasks fom all possible workloads
-        """
-        # Double list-comprehensions always read backward to me :(
-        return [task for workload in self.all_workloads() for task in workload.all_tasks()]
-
-    def variant_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
-        """
-        :return: Tasks to schedule given the current variant (runtime)
-        """
-        return [task for workload in self.all_workloads() for task in workload.variant_tasks(build)]
-
-    def patch_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
-        """
-        :return: Tasks for modified workloads current variant (runtime)
-        """
-        return [
-            task for workload in self.modified_workloads() for task in workload.variant_tasks(build)
-        ]
-
-    def tasks(self, op: CLIOperation, build: CurrentBuildInfo) -> List[GeneratedTask]:
+    def tasks(self, op: CLIOperation) -> List[GeneratedTask]:
         """
         :param op: current cli invocation
         :param build: current build info
         :return: tasks that should be scheduled given the above
         """
-        if op.mode == OpName.ALL_TASKS:
-            tasks = self.all_tasks()
-        elif op.mode == OpName.PATCH_TASKS:
-            tasks = self.patch_tasks(build)
-        elif op.mode == OpName.VARIANT_TASKS:
-            tasks = self.variant_tasks(build)
-        else:
-            raise Exception("Invalid operation mode")
-        return tasks
+
+        # Double list-comprehensions always read backward to me :(
+        return [task for workload in self.all_workloads() for task in workload.all_tasks()]
+
+    def generate_dsi_tasks(self, op: CLIOperation) -> List[DsiTask]:
+        dsi_tasks = []
+        tasks = self.tasks(op)
+        for task in tasks:
+            variants = []
+            if task.workload.auto_run_info is None:
+                continue
+            for block in task.workload.auto_run_info:
+                when = block.when
+                for key, condition in when.items():
+                    if "$eq" in condition and key == "mongodb_setup":
+                        acceptable_values = condition["$eq"]
+                        if isinstance(acceptable_values, list):
+                            variants.extend(acceptable_values)
+                        else:
+                            variants.append(acceptable_values)
+            bootstrap_vars = {
+                "test_control": task.name,
+                "auto_workload_path": task.workload.relative_path,
+            }
+            if task.bootstrap_key:
+                bootstrap_vars[task.bootstrap_key] = task.bootstrap_value
+            dsi_tasks.append(
+                DsiTask(name=task.name, runs_on_variants=variants, bootstrap_vars=bootstrap_vars)
+            )
+        return dsi_tasks
 
 
 class ConfigWriter:
-    """
-    Takes tasks and converts them to shrub Configuration objects.
-    """
-
     def __init__(self, op: CLIOperation):
         self.op = op
 
-    def write(self, tasks: List[GeneratedTask], write: bool = True) -> Configuration:
+    def write(self, tasks: List[DsiTask], write: bool = True) -> Configuration:
         """
         :param tasks: tasks to write
         :param write: boolean to actually write the file - exposed for testing
         :return: the configuration object to write (exposed for testing)
         """
-        if self.op.mode != OpName.ALL_TASKS:
-            config: Configuration = self.variant_tasks(tasks, self.op.variant)
-        else:
-            config = self.all_tasks_modern(tasks)
-
-        output_file_name = "Tasks.json"
+        output_file_name = "DsiTasks.yml"
         if self.op.workload_root is not None:
             repo_name = self.op.workload_root.split("/")[-1]
-            output_file_name = f"Tasks-{repo_name}.json"
-        output_file = os.path.join(self.op.workspace_root, "build", "TaskJSON", output_file_name)
+            output_file_name = f"DsiTasks-{repo_name}.yml"
+        output_file = os.path.join(self.op.workspace_root, "build", "DSITasks", output_file_name)
 
         success = False
         raised = None
         if write:
             try:
-                out_text = config.to_json()
+                out_text = yaml.dump(self._get_dsi_task_dict(tasks), indent=4, sort_keys=False)
                 os.makedirs(os.path.dirname(output_file), exist_ok=True)
                 if os.path.exists(output_file):
                     os.unlink(output_file)
                 with open(output_file, "w") as output:
                     output.write(out_text)
-                    SLOG.debug("Wrote task json", output_file=output_file, contents=out_text)
+                    SLOG.debug("Wrote task yaml", output_file=output_file, contents=out_text)
                 success = True
             except Exception as e:
                 raised = e
@@ -494,50 +351,18 @@ class ConfigWriter:
                         "Repeated executions will not re-generate tasks.",
                         execution=self.op.execution,
                     )
-        return config
 
-    @staticmethod
-    def variant_tasks(tasks: List[GeneratedTask], variant: str) -> Configuration:
-        c = Configuration()
-        c.variant(variant).tasks([TaskSpec(task.name) for task in tasks])
-        return c
-
-    @staticmethod
-    def all_tasks_modern(tasks: List[GeneratedTask]) -> Configuration:
-        c = Configuration()
-        c.exec_timeout(64800)  # 18 hours
+    def _get_dsi_task_dict(self, tasks: List[DsiTask]) -> List[Dict[str, Any]]:
+        all_tasks = []
         for task in tasks:
-            bootstrap = {
-                "test_control": task.name,
-                "auto_workload_path": task.workload.relative_path,
-            }
-            if task.bootstrap_key:
-                bootstrap[task.bootstrap_key] = task.bootstrap_value
-
-            t = c.task(task.name)
-            t.priority(5)
-            t.commands(
-                [
-                    CommandDefinition()
-                    .command("timeout.update")
-                    .params({"exec_timeout_secs": 86400, "timeout_secs": 7200}),  # 24 hours
-                    CommandDefinition().function("f_run_dsi_workload").vars(bootstrap),
-                ]
-            )
-        return c
+            all_tasks.append(dict(task._asdict()))
+        return all_tasks
 
 
-def main(
-    mode_name: str, genny_repo_root: str, workspace_root: str, workload_root: Optional[str] = None
-) -> None:
+def main(genny_repo_root: str, workspace_root: str, workload_root: Optional[str] = None) -> None:
     reader = YamlReader()
-    build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
-    op = CLIOperation.create(
-        mode_name=mode_name,
-        reader=reader,
-        genny_repo_root=genny_repo_root,
-        workspace_root=workspace_root,
-        workload_root=workload_root,
+    op = CLIOperation(
+        genny_repo_root=genny_repo_root, workspace_root=workspace_root, workload_root=workload_root,
     )
     lister = WorkloadLister(
         workspace_root=workspace_root,
@@ -546,7 +371,7 @@ def main(
         workload_root=workload_root,
     )
     repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
-    tasks = repo.tasks(op=op, build=build)
+    tasks = repo.generate_dsi_tasks(op=op)
 
     writer = ConfigWriter(op)
     writer.write(tasks)

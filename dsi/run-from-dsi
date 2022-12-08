@@ -10,4 +10,4 @@ pushd "$(dirname "$0")/.." >/dev/null
     export WORKLOAD_REPO_ROOT
 popd >/dev/null
 
-"${GENNY_REPO_ROOT}/run-genny" "auto-tasks" "--tasks" "${@}" "--workload-repo" "${WORKLOAD_REPO_ROOT}"
+"${GENNY_REPO_ROOT}/run-genny" "auto-tasks" "--workload-repo" "${WORKLOAD_REPO_ROOT}"
