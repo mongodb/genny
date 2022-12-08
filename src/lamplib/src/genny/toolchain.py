@@ -2,7 +2,6 @@ import json
 import os
 import platform
 
-from pathlib import Path
 import structlog
 from typing import Optional, NamedTuple
 
@@ -190,7 +189,7 @@ class ToolchainDownloader(Downloader):
     # TODO: Replace this with a non-patch build
     TOOLCHAIN_BUILD_ID = "patch_da48b38e2d563a0b58db10ed3c3f42de0522ad8e_638f8f8257e85a2fc9e56467_22_12_06_18_53_29"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
-    TOOLCHAIN_ROOT = str(Path.home()) + "/data/mci"  # TODO BUILD-7624 change this to /opt.
+    TOOLCHAIN_ROOT = "/opt/gennytoolchain"
 
     def __init__(
         self,
