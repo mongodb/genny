@@ -31,7 +31,7 @@
         3.  [Default](#org65830c2)
     6.  [Creating an Actor](#org7e6c6bd)
     7.  [Enabling Client-Side Field Level Encryption](#org627591d)
-5.  [Creating a new Genny based workload repository](#building-a-new-genny-based-workload-repository)
+5.  [Creating a new Genny based workload repository](#creating-a-new-genny-based-workload-repository)
 6.  [Pitfalls](#org3aaae9e)
     1.  [pipe creation failed (24): Too many open files](#orga7ab911)
     2.  [Actor integration tests fail locally](#orgb084b49)
@@ -917,7 +917,7 @@ Genny workloads can also live in repositories outside the genny repository. Here
 
 For convenience, genny provides a command to create a new workload. This command creates the necessary directory and files for the new workload.
 
-1. First, let's initialize a workload repo in $HOME/new-workload-repo(directory already exist)
+1. First, let's initialize an existing workload repo in $HOME/new-workload-repo
 ```bash
 ./run-genny init-new-workload-repo --path $HOME/new-workload-repo
 ```
