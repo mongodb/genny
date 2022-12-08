@@ -29,6 +29,7 @@
 #include <gennylib/Orchestrator.hpp>
 
 #include <metrics/Period.hpp>
+#include <metrics/PostCondition.hpp>
 #include <metrics/v1/TimeSeries.hpp>
 #include <metrics/v2/event.hpp>
 
@@ -333,7 +334,7 @@ public:
      * @warning After calling success() it is illegal to call any methods on this instance.
      */
     void success() {
-        reportOutcome(OutcomeType::kSuccess);
+        reportOutcome(OutcomeType::kSuccess, ClockSource::now());
     }
 
     /**
@@ -343,7 +344,26 @@ public:
      * @warning After calling failure() it is illegal to call any methods on this instance.
      */
     void failure() {
-        reportOutcome(OutcomeType::kFailure);
+        reportOutcome(OutcomeType::kFailure, ClockSource::now());
+    }
+
+    /**
+     * Report the operation as having succeeded if 'postCondition' holds for the reported metrics.
+     * Otherwise, report the operations as having failed and then propagate the exception thrown by
+     * the post-condition check.
+     *
+     * @warning After calling conditionalSuccess() it is illegal to call any methods on this
+     * instance.
+     */
+    void conditionalSuccess(const PostCondition& postCondition = {}) {
+        auto finished = ClockSource::now();
+        try {
+            postCondition.check(_event.number, _event.size);
+            reportOutcome(OutcomeType::kSuccess, finished);
+        } catch (const PostConditionException&) {
+            reportOutcome(OutcomeType::kFailure, finished);
+            throw;
+        }
     }
 
     /**
@@ -356,8 +376,7 @@ public:
     }
 
 private:
-    void reportOutcome(OutcomeType outcome) {
-        auto finished = ClockSource::now();
+    void reportOutcome(OutcomeType outcome, time_point finished) {
         _event.duration = finished - _started;
         _event.outcome = outcome;
 

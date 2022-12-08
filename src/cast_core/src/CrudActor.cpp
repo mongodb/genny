@@ -69,7 +69,6 @@ ThrowMode decodeThrowMode(const Node& operation, PhaseContext& phaseContext) {
 
 bsoncxx::document::value emptyDoc = bsoncxx::from_json("{}");
 
-
 // A large number of subclasses have
 // - metrics::Operation
 // - mongocxx::collection
@@ -79,11 +78,15 @@ bsoncxx::document::value emptyDoc = bsoncxx::from_json("{}");
 // duplication.
 struct BaseOperation {
     ThrowMode throwMode;
+    PostCondition checker;
 
     using MaybeDoc = std::optional<bsoncxx::document::value>;
 
-    explicit BaseOperation(PhaseContext& phaseContext, const Node& operation)
-        : throwMode{decodeThrowMode(operation, phaseContext)} {}
+    explicit BaseOperation(PhaseContext& phaseContext,
+                           const Node& operation,
+                           const Node& postCondition)
+        : throwMode{decodeThrowMode(operation, phaseContext)},
+          checker{postCondition.maybe<PostCondition>().value_or(PostCondition{})} {}
 
     template <typename F>
     void doBlock(metrics::Operation& op, F&& f) {
@@ -101,7 +104,7 @@ struct BaseOperation {
                 return;
             }
         }
-        ctx.success();
+        ctx.conditionalSuccess(checker);
     }
 
     virtual void run(mongocxx::client_session& session) = 0;
@@ -109,6 +112,7 @@ struct BaseOperation {
 };
 
 using OpCallback = std::function<std::unique_ptr<BaseOperation>(const Node&,
+                                                                const Node&,
                                                                 bool,
                                                                 mongocxx::collection,
                                                                 metrics::Operation,
@@ -118,13 +122,18 @@ using OpCallback = std::function<std::unique_ptr<BaseOperation>(const Node&,
 std::unordered_map<std::string, OpCallback&> getOpConstructors();
 
 struct WriteOperation : public BaseOperation {
-    WriteOperation(PhaseContext& phaseContext, const Node& operation)
-        : BaseOperation(phaseContext, operation) {}
+    WriteOperation(PhaseContext& phaseContext, const Node& operation, const Node& postCondition)
+        : BaseOperation(phaseContext, operation, postCondition) {}
     virtual mongocxx::model::write getModel() = 0;
 };
 
-using WriteOpCallback = std::function<std::unique_ptr<WriteOperation>(
-    const Node&, bool, mongocxx::collection, metrics::Operation, PhaseContext&, ActorId)>;
+using WriteOpCallback = std::function<std::unique_ptr<WriteOperation>(const Node&,
+                                                                      const Node&,
+                                                                      bool,
+                                                                      mongocxx::collection,
+                                                                      metrics::Operation,
+                                                                      PhaseContext&,
+                                                                      ActorId)>;
 
 // Not technically "crud" but it was easy to add and made
 // a few of the tests easier to write (by allowing inserts
@@ -139,12 +148,13 @@ struct CreateIndexOperation : public BaseOperation {
     bool _onSession;
 
     CreateIndexOperation(const Node& opNode,
+                         const Node& postCondition,
                          bool onSession,
                          mongocxx::collection collection,
                          metrics::Operation operation,
                          PhaseContext& context,
                          ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _collection(std::move(collection)),
           _operation{operation},
           _onSession{onSession},
@@ -168,12 +178,13 @@ struct CreateIndexOperation : public BaseOperation {
 
 struct InsertOneOperation : public WriteOperation {
     InsertOneOperation(const Node& opNode,
+                       const Node& postCondition,
                        bool onSession,
                        mongocxx::collection collection,
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : WriteOperation(context, opNode),
+        : WriteOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -210,12 +221,13 @@ private:
 
 struct UpdateOneOperation : public WriteOperation {
     UpdateOneOperation(const Node& opNode,
+                       const Node& postCondition,
                        bool onSession,
                        mongocxx::collection collection,
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : WriteOperation(context, opNode),
+        : WriteOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -256,12 +268,13 @@ private:
 
 struct UpdateManyOperation : public WriteOperation {
     UpdateManyOperation(const Node& opNode,
+                        const Node& postCondition,
                         bool onSession,
                         mongocxx::collection collection,
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : WriteOperation(context, opNode),
+        : WriteOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -302,12 +315,13 @@ private:
 
 struct DeleteOneOperation : public WriteOperation {
     DeleteOneOperation(const Node& opNode,
+                       const Node& postCondition,
                        bool onSession,
                        mongocxx::collection collection,
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : WriteOperation(context, opNode),
+        : WriteOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -342,12 +356,13 @@ private:
 
 struct DeleteManyOperation : public WriteOperation {
     DeleteManyOperation(const Node& opNode,
+                        const Node& postCondition,
                         bool onSession,
                         mongocxx::collection collection,
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : WriteOperation(context, opNode),
+        : WriteOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -380,12 +395,13 @@ private:
 
 struct ReplaceOneOperation : public WriteOperation {
     ReplaceOneOperation(const Node& opNode,
+                        const Node& postCondition,
                         bool onSession,
                         mongocxx::collection collection,
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : WriteOperation(context, opNode),
+        : WriteOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -428,12 +444,14 @@ private:
 
 template <class P, class C, class O>
 C baseCallback = [](const Node& opNode,
+                    const Node& postCondition,
                     bool onSession,
                     mongocxx::collection collection,
                     metrics::Operation operation,
                     PhaseContext& context,
                     ActorId id) -> std::unique_ptr<P> {
-    return std::make_unique<O>(opNode, onSession, collection, operation, context, id);
+    return std::make_unique<O>(
+        opNode, postCondition, onSession, collection, operation, context, id);
 };
 
 // Maps the WriteCommand name to the constructor of the designated Operation struct.
@@ -466,12 +484,13 @@ std::unordered_map<std::string, WriteOpCallback&> bulkWriteConstructors = {
 struct BulkWriteOperation : public BaseOperation {
 
     BulkWriteOperation(const Node& opNode,
+                       const Node& postCondition,
                        bool onSession,
                        mongocxx::collection collection,
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation} {
@@ -497,9 +516,10 @@ struct BulkWriteOperation : public BaseOperation {
         }
         auto createWriteOp = writeOpConstructor->second;
         auto& yamlCommand = writeOp["OperationCommand"];
+        auto& postCondition = writeOp["PostCondition"];
         bool onSession = yamlCommand["OnSession"].maybe<bool>().value_or(_onSession);
         _writeOps.push_back(
-            createWriteOp(writeOp, onSession, _collection, _operation, context, id));
+            createWriteOp(writeOp, postCondition, onSession, _collection, _operation, context, id));
     }
 
     void run(mongocxx::client_session& session) override {
@@ -546,12 +566,13 @@ private:
  */
 struct CountDocumentsOperation : public BaseOperation {
     CountDocumentsOperation(const Node& opNode,
+                            const Node& postCondition,
                             bool onSession,
                             mongocxx::collection collection,
                             metrics::Operation operation,
                             PhaseContext& context,
                             ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -584,12 +605,13 @@ private:
 
 struct EstimatedDocumentCountOperation : public BaseOperation {
     EstimatedDocumentCountOperation(const Node& opNode,
+                                    const Node& postCondition,
                                     bool onSession,
                                     mongocxx::collection collection,
                                     metrics::Operation operation,
                                     PhaseContext& context,
                                     ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation} {
@@ -626,12 +648,13 @@ private:
 
 struct FindOperation : public BaseOperation {
     FindOperation(const Node& opNode,
+                  const Node& postCondition,
                   bool onSession,
                   mongocxx::collection collection,
                   metrics::Operation operation,
                   PhaseContext& context,
                   ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -665,12 +688,13 @@ private:
 
 struct FindOneOperation : public BaseOperation {
     FindOneOperation(const Node& opNode,
+                     const Node& postCondition,
                      bool onSession,
                      mongocxx::collection collection,
                      metrics::Operation operation,
                      PhaseContext& context,
                      ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -703,12 +727,13 @@ private:
 
 struct AggregateOperation : public BaseOperation {
     AggregateOperation(const Node& opNode,
+                       const Node& postCondition,
                        bool onSession,
                        mongocxx::collection collection,
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -719,6 +744,7 @@ struct AggregateOperation : public BaseOperation {
     }
 
     void run(mongocxx::client_session& session) override {
+        BOOST_LOG_TRIVIAL(info) << "Running aggregate operation";
         auto pipeline = pipeline_helpers::makePipeline(_pipelineGenerator);
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto cursor = _onSession ? _collection.aggregate(session, pipeline, _options)
@@ -741,12 +767,13 @@ private:
 
 struct FindOneAndUpdateOperation : public BaseOperation {
     FindOneAndUpdateOperation(const Node& opNode,
+                              const Node& postCondition,
                               bool onSession,
                               mongocxx::collection collection,
                               metrics::Operation operation,
                               PhaseContext& context,
                               ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -779,12 +806,13 @@ private:
 
 struct FindOneAndDeleteOperation : public BaseOperation {
     FindOneAndDeleteOperation(const Node& opNode,
+                              const Node& postCondition,
                               bool onSession,
                               mongocxx::collection collection,
                               metrics::Operation operation,
                               PhaseContext& context,
                               ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -814,12 +842,13 @@ private:
 
 struct FindOneAndReplaceOperation : public BaseOperation {
     FindOneAndReplaceOperation(const Node& opNode,
+                               const Node& postCondition,
                                bool onSession,
                                mongocxx::collection collection,
                                metrics::Operation operation,
                                PhaseContext& context,
                                ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -863,12 +892,13 @@ private:
 struct InsertManyOperation : public BaseOperation {
 
     InsertManyOperation(const Node& opNode,
+                        const Node& postCondition,
                         bool onSession,
                         mongocxx::collection collection,
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation} {
@@ -932,12 +962,13 @@ private:
 struct StartTransactionOperation : public BaseOperation {
 
     StartTransactionOperation(const Node& opNode,
+                              const Node& postCondition,
                               bool onSession,
                               mongocxx::collection collection,
                               metrics::Operation operation,
                               PhaseContext& context,
                               ActorId id)
-        : BaseOperation(context, opNode), _operation{operation} {
+        : BaseOperation(context, opNode, postCondition), _operation{operation} {
         if (!opNode.isMap())
             return;
         if (opNode["Options"]) {
@@ -966,12 +997,13 @@ private:
 struct CommitTransactionOperation : public BaseOperation {
 
     CommitTransactionOperation(const Node& opNode,
+                               const Node& postCondition,
                                bool onSession,
                                mongocxx::collection collection,
                                metrics::Operation operation,
                                PhaseContext& context,
                                ActorId id)
-        : BaseOperation(context, opNode), _operation{operation} {}
+        : BaseOperation(context, opNode, postCondition), _operation{operation} {}
 
     void run(mongocxx::client_session& session) override {
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
@@ -1002,12 +1034,13 @@ private:
 struct WithTransactionOperation : public BaseOperation {
 
     WithTransactionOperation(const Node& opNode,
+                             const Node& postCondition,
                              bool onSession,
                              mongocxx::collection collection,
                              metrics::Operation operation,
                              PhaseContext& context,
                              ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation} {
@@ -1054,13 +1087,15 @@ private:
         }
         auto createOp = opConstructor->second;
         auto& yamlCommand = txnOp["OperationCommand"];
+        auto& yamlPostCondition = txnOp["PostCondition"];
         // operations can override withTransaction's OnSession value
         // This behavior is hard to test.
         // The CrudActorYamlTests suite exercises both branches of this boolean
         // but doesn't assert the behavior.
         // Be careful when making changes around this code.
         bool onSession = yamlCommand["OnSession"].maybe<bool>().value_or(_onSession);
-        _txnOps.push_back(createOp(yamlCommand, onSession, _collection, _operation, context, id));
+        _txnOps.push_back(createOp(
+            yamlCommand, yamlPostCondition, onSession, _collection, _operation, context, id));
     }
 
     mongocxx::collection _collection;
@@ -1081,12 +1116,13 @@ private:
 
 struct SetReadConcernOperation : public BaseOperation {
     SetReadConcernOperation(const Node& opNode,
+                            const Node& postCondition,
                             bool onSession,
                             mongocxx::collection collection,
                             metrics::Operation operation,
                             PhaseContext& context,
                             ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _collection{std::move(collection)},
           _operation{operation} {
         _readConcern = opNode["ReadConcern"].to<mongocxx::read_concern>();
@@ -1117,12 +1153,13 @@ private:
  */
 struct DropOperation : public BaseOperation {
     DropOperation(const Node& opNode,
+                  const Node& postCondition,
                   bool onSession,
                   mongocxx::collection collection,
                   metrics::Operation operation,
                   PhaseContext& context,
                   ActorId id)
-        : BaseOperation(context, opNode),
+        : BaseOperation(context, opNode, postCondition),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation} {
@@ -1488,6 +1525,7 @@ struct CrudActor::PhaseConfig {
                                                 ActorId id) const {
         auto collection = (*client)[dbName][name];
         auto& yamlCommand = node["OperationCommand"];
+        auto& yamlPostCondition = node["PostCondition"];
         auto opName = node["OperationName"].to<std::string>();
         auto opMetricsName = node["OperationMetricsName"].maybe<std::string>().value_or(opName);
         auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
@@ -1519,6 +1557,7 @@ struct CrudActor::PhaseConfig {
             stm << *metricsName << "." << opMetricsName;
 
             return opCreator(yamlCommand,
+                             yamlPostCondition,
                              onSession,
                              collection,
                              phaseContext.actor().operation(stm.str(), id),
@@ -1527,6 +1566,7 @@ struct CrudActor::PhaseConfig {
         }
 
         return opCreator(yamlCommand,
+                         yamlPostCondition,
                          onSession,
                          collection,
                          perPhaseMetrics ? phaseContext.operation(opMetricsName, id)
