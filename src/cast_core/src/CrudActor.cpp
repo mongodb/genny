@@ -1219,7 +1219,7 @@ public:
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "Each TimeSpec needs a unit declaration."));
         }
-        auto unitString = node["^TimeSpec"]["unit"].to<std::string>()
+        auto unitString = node["^TimeSpec"]["unit"].to<std::string>();
 
         // Use string::find here so plurals get parsed correctly.
         if (unitString.find("nanosecond") == 0) {
