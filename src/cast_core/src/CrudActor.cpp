@@ -1215,7 +1215,7 @@ class Delay {
 public:
     Delay(const Node& node, GeneratorArgs args)
         : numberGenerator{makeDoubleGenerator(node["^TimeSpec"]["value"], args)} {
-        auto unitString = node["^TimeSpec"]["unit"];
+        auto unitString = node["^TimeSpec"]["unit"].toString();
 
         // Use string::find here so plurals get parsed correctly.
         if (unitString.find("nanosecond") == 0) {
