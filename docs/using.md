@@ -31,7 +31,8 @@
         3.  [Default](#org65830c2)
     6.  [Creating an Actor](#org7e6c6bd)
     7.  [Enabling Client-Side Field Level Encryption](#org627591d)
-5.  [Pitfalls](#org3aaae9e)
+5.  [Creating a new Genny based workload repository](#building-a-new-genny-based-workload-repository)
+6.  [Pitfalls](#org3aaae9e)
     1.  [pipe creation failed (24): Too many open files](#orga7ab911)
     2.  [Actor integration tests fail locally](#orgb084b49)
     3.  [The Loader agent requires thread count set on both Actor and phase level](#org97681a9)
@@ -909,6 +910,30 @@ namespace.
 By default, encrypted CRUD operations require a `mongocryptd` daemon to be running and listening on localhost:27020. Genny will **not** automatically spawn this daemon on a workload run. Alternatively, one can set `Encryption.UseCryptSharedLib` to `true`, and provide the path to the `mongo_crypt_v1.so` shared library file using `Encryption.CryptSharedLibPath`.
 
 For a full example of an encrypted workload, see [here](../src/workloads/docs/CrudActorEncrypted.yml).
+
+
+# Creating a new Genny based workload repository
+Genny workloads can also live in repositories outside the genny repository. Here are the steps to create a new genny workload and configure them to run with DSI.
+
+For convenience, genny provides a command to create a new workload. This command creates the necessary directory and files for the new workload.
+
+1. First, let's initialize a workload repo in $HOME/new-workload-repo(directory already exist)
+```bash
+./run-genny init-new-workload-repo --path $HOME/new-workload-repo
+```
+
+2. This creates the following content in $HOME/new-workload-repo if it already doesn't exist
+```
+$HOME/new-workload-repo
+├── dsi
+│   └── run-from-dsi
+└── src
+    └── workloads
+        └── docs
+```
+3. `dsi/run-from-dsi` is the task generator script required by DSI in all workload repositories. This file requires no changes if the repository host has genny workloads. This shell script calls `./run-genny auto-tasks` to generate DSI tasks for all the workloads in the current repository. 
+4. You genny workloads yamls can live in `src/workload/docs` or any directory inside `src/workload`
+
 
 <a id="org3aaae9e"></a>
 
