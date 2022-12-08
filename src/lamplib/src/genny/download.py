@@ -214,7 +214,7 @@ Then run the following commands:
     $ sudo diskutil enableOwnership /data 
     $ sudo chflags hidden /data 
     $ echo \LABEL=Data /data apfs rw\ | sudo tee -a /etc/fstab 
-    $ mkdir /data/mci
+    $ mkdir /opt/gennytoolchain
 
 👯‍♂️🧞‍♀️ Back to real life 🧞‍♂️👯
 Re-run the lamp command to download and setup the genny toolchain and build genny.
