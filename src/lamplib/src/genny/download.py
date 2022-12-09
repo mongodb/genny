@@ -121,7 +121,7 @@ class Downloader:
         else:
             url = self._get_url()
             SLOG.debug("Downloading", name=self._name, url=url)
-            print("Downloading toolchain to", tarball)
+            print(f"Downloading %s to %s" % (url, tarball))
             urllib.request.urlretrieve(url, tarball, ProgressBar())
             SLOG.debug("Finished Downloading", name=self._name, tarball=tarball)
 
