@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@TODO"  # what should go here? us or the owners of secondary_reads?
+Owner: mongodb/server-replication"
 Description: >
  Test performance of secondary reads while applying oplogs
 
@@ -18,7 +18,7 @@ Description: >
  - Actual test stage:
     - *nWriters* background writers doing infinite writes on the primary which
       will replicate these writes to secondaries.
-    - 1/16/32 readers doing queries on a sepcified seconary. Each query has
+    - 1/16/32 readers doing queries on a specified seconary. Each query has
       *batch_size* numbers of documents and only reads documents inserted in the
       setup stage in order to have more constant behavior all the time.
     - Finally, a query with WriteConcern 3 is used to measure the replication lag
@@ -37,7 +37,7 @@ WriterThreads: &writer_threads 16
 NumPhases: &max_phase 13
 NumberOfNodes: &number_of_nodes 3
 
-# This client allows the ReadsOnSecondary actor to directrly connect to the secondary node.
+# This client allows the ReadsOnSecondary actor to directly connect to the secondary node.
 # All other actors use the default client to connect to the primary node.
 Clients:
   Secondary:
