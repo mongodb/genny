@@ -43,7 +43,7 @@ Here're the steps to get Genny up and running locally:
     On a Mac, run `brew install python3` (assuming you have [homebrew installed](https://brew.sh/))
     and then restart your shell.
 
-    This command expects that the /opt/gennytoolchain directory exists, and that you have write access
+    This command expects that the /data/mci/gennytoolchain directory exists, and that you have write access
     to it. It will error otherwise.
     
 ### Errors Mentioning zstd
@@ -81,8 +81,8 @@ should look something like this:
 
 ```bash
 -G some-build-system \
--DCMAKE_PREFIX_PATH=/opt/gennytoolchain/installed/x64-osx-shared \
--DCMAKE_TOOLCHAIN_FILE=/opt/gennytoolchain/scripts/buildsystems/vcpkg.cmake \
+-DCMAKE_PREFIX_PATH=/data/mci/gennytoolchain/installed/x64-osx-shared \
+-DCMAKE_TOOLCHAIN_FILE=/data/mci/gennytoolchain/scripts/buildsystems/vcpkg.cmake \
 -DVCPKG_TARGET_TRIPLET=x64-osx-static
 ```
 

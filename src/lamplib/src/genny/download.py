@@ -121,7 +121,7 @@ class Downloader:
         else:
             url = self._get_url()
             SLOG.debug("Downloading", name=self._name, url=url)
-            print(f"Downloading %s to %s" % (url, tarball))
+            print(f"Downloading {url} to {tarball}")
             urllib.request.urlretrieve(url, tarball, ProgressBar())
             SLOG.debug("Finished Downloading", name=self._name, tarball=tarball)
 
@@ -214,7 +214,7 @@ Then run the following commands:
     $ sudo diskutil enableOwnership /data 
     $ sudo chflags hidden /data 
     $ echo \LABEL=Data /data apfs rw\ | sudo tee -a /etc/fstab 
-    $ mkdir /opt/gennytoolchain
+    $ mkdir /data/mci
 
 👯‍♂️🧞‍♀️ Back to real life 🧞‍♂️👯
 Re-run the lamp command to download and setup the genny toolchain and build genny.

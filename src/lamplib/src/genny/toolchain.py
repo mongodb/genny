@@ -26,7 +26,7 @@ def _create_compile_environment(
     paths = [system_env["PATH"]]
 
     # For mongodbtoolchain compiler (if there).
-    paths.insert(0, "/opt/mongodbtoolchain/v3/bin")
+    paths.insert(0, "/opt/mongodbtoolchain/v4/bin")
 
     if triplet_arch == "arm64" and triplet_os == "linux":
         paths.insert(
@@ -189,7 +189,7 @@ class ToolchainDownloader(Downloader):
     # TODO: Replace this with a non-patch build
     TOOLCHAIN_BUILD_ID = "patch_da48b38e2d563a0b58db10ed3c3f42de0522ad8e_638f8f8257e85a2fc9e56467_22_12_06_18_53_29"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
-    TOOLCHAIN_ROOT = "/opt/gennytoolchain"
+    TOOLCHAIN_ROOT = "/data/mci/gennytoolchain"
 
     def __init__(
         self,

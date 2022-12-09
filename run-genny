@@ -13,8 +13,8 @@ pushd "$(dirname "$0")" >/dev/null
 popd >/dev/null
 
 
-if [ -d "/opt/mongodbtoolchain/v3/bin" ]; then
-    export PATH="/opt/mongodbtoolchain/v3/bin:$PATH"
+if [ -d "/opt/mongodbtoolchain/v4/bin" ]; then
+    export PATH="/opt/mongodbtoolchain/v4/bin:$PATH"
 fi
 
 if [ -d "/Applications/Xcode.app" ]; then
@@ -80,7 +80,7 @@ fi
 
 if ! python3 -c 'import sys; sys.exit(1 if "Python3.framework" in sys.prefix else 0)' >/dev/null 2>&1; then
     actual_prefix=$(python3 -c 'import sys; print(sys.prefix)')
-    echo >&2 "The python built into macOS Catalania is known to be problematic."
+    echo >&2 "The python built into macOS Catalina is known to be problematic."
     echo >&2 "It complains with 'architecture not supported' during setup."
     echo >&2 "Detected system prefix: $actual_prefix"
     echo >&2 ""
