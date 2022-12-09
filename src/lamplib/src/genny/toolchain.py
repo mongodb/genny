@@ -95,7 +95,7 @@ def _compute_toolchain_info(
     ignore_toolchain_version: bool,
 ) -> ToolchainInfo:
     triplet_arch = "x64"
-    if linux_distro == "amazon2arm":
+    if linux_distro == "amazon2_arm64":
         triplet_arch = "arm64"
     if os_family == "Darwin":
         triplet_arch = "arm64" if platform.processor() == "arm" else "x64"
@@ -228,7 +228,7 @@ class ToolchainDownloader(Downloader):
         )
 
     def _can_ignore(self):
-        # If the toolchain dir is outdated or we ignore the toolchain version.
+        # If the toolchain dir is outdated, or we ignore the toolchain version.
         return os.path.exists(self.result_dir) and (
             self.ignore_toolchain_version or self._check_toolchain_githash()
         )

@@ -195,7 +195,7 @@ class CuratorDownloader(Downloader):
         "rhel8": "rhel70",
         "rhel62": "rhel70",
         "ubuntu2004": "rhel70",
-        "amazon2arm": "arm",
+        "amazon2_arm64": "arm",
     }
 
     def __init__(

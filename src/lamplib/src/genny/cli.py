@@ -47,7 +47,7 @@ def cli(ctx: click.Context, verbose: bool) -> None:
     required=False,
     default="not-linux",
     type=click.Choice(
-        ["ubuntu1804", "ubuntu2004", "rhel8", "rhel70", "amazon2", "amazon2arm", "not-linux",]
+        ["ubuntu1804", "ubuntu2004", "rhel8", "rhel70", "amazon2", "amazon2_arm64", "not-linux",]
     ),
     help=(
         "Specify the linux distro you're on; if your system isn't available,"

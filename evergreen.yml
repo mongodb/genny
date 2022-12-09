@@ -58,13 +58,13 @@ buildvariants:
   tasks:
   - name: tg_compile_and_test_with_server
 
-- name: amazon2arm64
+- name: amazon2_arm64
   display_name: Amazon Linux 2 Arm64
   modules: [mongo]
   run_on:
   - amazon2-arm64-large
   expansions:
-    distro: amazon2arm
+    distro: amazon2_arm64
   tasks:
   - name: tg_compile_and_test_with_server
 
