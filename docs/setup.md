@@ -43,7 +43,7 @@ Here're the steps to get Genny up and running locally:
     On a Mac, run `brew install python3` (assuming you have [homebrew installed](https://brew.sh/))
     and then restart your shell.
 
-    This command expects that the /data/mci/gennytoolchain directory exists, and that you have write access
+    This command expects that the /data/mci directory exists, and that you have write access
     to it. It will error otherwise.
     
 ### Errors Mentioning zstd

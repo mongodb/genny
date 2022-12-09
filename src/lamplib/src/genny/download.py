@@ -116,14 +116,14 @@ class Downloader:
 
     def _fetch_and_install_impl(self) -> None:
         tarball = os.path.join(self._install_dir, self._name + ".tgz")
-        if os.path.isfile(tarball):
-            SLOG.info("Skipping downloading since already exists", tarball=tarball)
-        else:
-            url = self._get_url()
-            SLOG.debug("Downloading", name=self._name, url=url)
-            print(f"Downloading {url} to {tarball}")
-            urllib.request.urlretrieve(url, tarball, ProgressBar())
-            SLOG.debug("Finished Downloading", name=self._name, tarball=tarball)
+        # if os.path.isfile(tarball):
+        #    SLOG.info("Skipping downloading since already exists", tarball=tarball)
+        # else:
+        url = self._get_url()
+        SLOG.debug("Downloading", name=self._name, url=url)
+        print(f"Downloading {url} to {tarball}")
+        urllib.request.urlretrieve(url, tarball, ProgressBar())
+        SLOG.debug("Finished Downloading", name=self._name, tarball=tarball)
 
         SLOG.debug("Extracting", name=self._name, into=self.result_dir)
 
