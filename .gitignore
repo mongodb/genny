@@ -31,3 +31,5 @@ genny.egg-info
 curator
 .ccls-cache
 .vscode
+# clangd
+.cache

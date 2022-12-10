@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <mutex>
 #include <value_generators/DocumentGenerator.hpp>
+#include <value_generators/FrequencyMap.hpp>
 
+#include <cmath>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -21,7 +24,6 @@
 #include <map>
 #include <sstream>
 #include <unordered_map>
-#include <cmath>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/date_time.hpp>
@@ -57,7 +59,7 @@ private:
     // Number of distinct elements in the distribution.
     IntType _n;
 
-    // This implementation is based on https://cse.usf.edu/~kchriste/tools/genzipf.c, 
+    // This implementation is based on https://cse.usf.edu/~kchriste/tools/genzipf.c,
     // it uses the inverse transform sampling method for generating random numbers.
     // This method is not the most accurate and efficient for heavy tailed distributions,
     // but is sufficient for our current purposes as we're not doing any numerical analysis.
@@ -499,7 +501,7 @@ public:
     ZipfianInt64Generator(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng},
           _id{generatorArgs.actorId},
-          _distribution{extract(node, "alpha", "zipfian").to<double>(), 
+          _distribution{extract(node, "alpha", "zipfian").to<double>(),
                         intGenerator(extract(node, "n", "zipfian"), generatorArgs)->evaluate()} {}
 
     int64_t evaluate() override {
@@ -599,6 +601,80 @@ protected:
     int32_t _elemNumber;
     bool _deterministic;
 };
+
+/**
+ * FrequencyMaps
+ * A list of {string, count} pairs.
+ * An item will be pulled from a random bucket and its count will be decremented. If all buckets are
+ * empty, the generator throws an error.
+ */
+class FrequencyMapGenerator : public Generator<std::string> {
+public:
+    FrequencyMapGenerator(const Node& node, GeneratorArgs generatorArgs) : _rng{generatorArgs.rng} {
+        if (!node["from"].isMap()) {
+            std::stringstream msg;
+            msg << "Malformed node for 'TakeRandomStringFromFrequencyMap' from a map " << node;
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
+
+        for (const auto&& [k, v] : node["from"]) {
+            _map.push_back(v.key(), static_cast<size_t>(v.maybe<std::int64_t>().value()));
+        }
+    }
+
+    std::string evaluate() override {
+        if (_map.size() == 1) {
+            return _map.take(0);
+        }
+
+        // Pick a random number between 0 and _map.size() inclusive
+        auto distribution = boost::random::uniform_int_distribution<size_t>(0, _map.size() - 1);
+        auto value = distribution(_rng);
+        return _map.take(value);
+    };
+
+private:
+    DefaultRandom& _rng;
+    FrequencyMap _map;
+};
+
+/**
+ * Singleton FrequencyMaps
+ * Keep singletons shared frequency maps shared across threads.
+ * This can be used to ensure the distribution across threads matches exactly. This is important if
+ * you want a single value for given thread, but use multiple threads to load the data. Maps are
+ * identified by their "id" are shared.
+ */
+class FrequencyMapSingletonGenerator : public Generator<std::string> {
+public:
+    FrequencyMapSingletonGenerator(const Node& node, GeneratorArgs generatorArgs) {
+        _id = node["id"].maybe<std::string>().value();
+
+        // Keep a singleton of these generators by id
+        {
+            std::lock_guard<std::mutex> lck(_mutex);
+
+            if (_generators.count(_id) == 0) {
+                FrequencyMapGenerator gen(node, generatorArgs);
+                _generators.insert({_id, gen});
+            }
+        }
+    }
+
+    std::string evaluate() override {
+        std::lock_guard<std::mutex> lck(_mutex);
+        return _generators.at(_id).evaluate();
+    };
+
+private:
+    std::string _id;
+
+    static std::unordered_map<std::string, FrequencyMapGenerator> _generators;
+    static std::mutex _mutex;
+};
+
+std::unordered_map<std::string, FrequencyMapGenerator> FrequencyMapSingletonGenerator::_generators;
+std::mutex FrequencyMapSingletonGenerator::_mutex;
 
 class IPGenerator : public Generator<std::string> {
 public:
@@ -1027,8 +1103,8 @@ public:
     }
 };
 
-// The following formats also cover "%Y-%m-%d". Timezones require local_time_input_facet AND local_date_time
-// see https://www.boost.org/doc/libs/1_75_0/doc/html/date_time/date_time_io.html.
+// The following formats also cover "%Y-%m-%d". Timezones require local_time_input_facet AND
+// local_date_time see https://www.boost.org/doc/libs/1_75_0/doc/html/date_time/date_time_io.html.
 // We strive to use smart pointers where possible. In this case this is not possible
 // but not a huge deal as these objects are statically allocated.
 const static auto formats = {
@@ -1592,6 +1668,14 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<ChooseGenerator>(node, generatorArgs);
      }},
+    {"^TakeRandomStringFromFrequencyMap",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<FrequencyMapGenerator>(node, generatorArgs);
+     }},
+    {"^TakeRandomStringFromFrequencyMapSingleton",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<FrequencyMapSingletonGenerator>(node, generatorArgs);
+     }},
     {"^IP",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<IPGenerator>(node, generatorArgs);
@@ -1719,7 +1803,7 @@ UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
  */
 //
 // We need this additional lookup function because we do "double-dispatch"
-// for ^RandomDouble. So doubleOperand determines if we're looking at 
+// for ^RandomDouble. So doubleOperand determines if we're looking at
 // ^RandomDouble or a constant. If we're looking at ^RandomDouble
 // it dispatches to here to determine which doubleGenerator to use.
 //
@@ -1886,6 +1970,14 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
         {"^Choose",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ChooseStringGenerator>(node, generatorArgs);
+         }},
+        {"^TakeRandomStringFromFrequencyMap",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<FrequencyMapGenerator>(node, generatorArgs);
+         }},
+        {"^TakeRandomStringFromFrequencyMapSingleton",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<FrequencyMapSingletonGenerator>(node, generatorArgs);
          }},
         {"^IP",
          [](const Node& node, GeneratorArgs generatorArgs) {

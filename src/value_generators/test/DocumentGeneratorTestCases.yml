@@ -655,8 +655,8 @@ Tests:
   - Name: Join With Deterministic Choose
     GivenTemplate:
       a: {^Object: {
-        withNEntries: 4, 
-        havingKeys: {^Join: {array: ["a", {^Choose: {from: ["1", "2"], deterministic: true}}], sep: ""}}, 
+        withNEntries: 4,
+        havingKeys: {^Join: {array: ["a", {^Choose: {from: ["1", "2"], deterministic: true}}], sep: ""}},
         andValues: 1,
         duplicatedKeys: insert
       }}
@@ -670,12 +670,12 @@ Tests:
         a1: 1
         a2: 1
         a1: 1
-        a2: 1 
+        a2: 1
     - a:
         a1: 1
         a2: 1
         a1: 1
-        a2: 1 
+        a2: 1
 
   - Name: Concat two singletons
     GivenTemplate:
@@ -1364,3 +1364,34 @@ Tests:
       - { "a" : [3.9359523367534210436, 105.26147012586838514] }
       - { "a" : [3.8554769964739108445, 105.32083105246911714] }
       - { "a" : [3.7750016561944006455, 105.38019197906984914] }
+
+  - Name: TakeTest
+    GivenTemplate:
+        foo:
+          ^TakeRandomStringFromFrequencyMap:
+            from:
+              v1: 1
+              v2: 2
+              v3: 2
+    ThenReturns:
+        - foo : v1
+        - foo : v2
+        - foo : v2
+        - foo : v3
+        - foo : v3
+
+  - Name: TakeSingletonTest
+    GivenTemplate:
+        foo:
+          ^TakeRandomStringFromFrequencyMapSingleton:
+            id: foo1
+            from:
+              v1: 1
+              v2: 2
+              v3: 2
+    ThenReturns:
+        - foo : v1
+        - foo : v2
+        - foo : v2
+        - foo : v3
+        - foo : v3
