@@ -33,7 +33,7 @@ Clients:
       connectTimeoutMS: 600_000
 
 GlobalDefaults:
-  MaxPhases: &maxPhases 10
+  MaxPhases: &maxPhases 20
   Database: &db csiFragmentedInsertsNested
   Collection: &coll Collection0
   DocumentCount: &docCount 1e6
@@ -60,29 +60,21 @@ ActorTemplates:
           Batches: {^Parameter: {Name: "Batches", Default: -1}}
 
 Actors:
-- Name: Setup
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
-        Thread: 1
-        Database: admin
-        Operations:
-        - OperationName: AdminCommand
-          OperationCommand:
-            setParameter: 1
-            internalQueryFrameworkControl: "trySbeEngine"
-
+# This workload is completely linear with one actor per phase. Having phases when nothing happens
+# is mildly wasteful, but I'm tired of having to adjust the phases' numbers, so assuming "sparse"
+# numbering scheme that is easier to maintain.
+# Phases:
+# 0 setup no index,   10 create CSI
+# 1,                  11,          - quiese
+# 2,                  12,          - insert cold
+# 3,                  13,          - insert tail
+# 4,                  14,          - insert warm
 - Name: Loader
   Type: Loader
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [1]
+      Active: [0]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Threads: 1
@@ -143,7 +135,7 @@ Actors:
   Database: *db
   Phases:
     OnlyActiveInPhases:
-      Active: [1, 11, 21]
+      Active: [1, 11]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Repeat: 1
