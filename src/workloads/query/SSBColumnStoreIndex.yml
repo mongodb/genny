@@ -431,8 +431,7 @@ ActorTemplates:
           Database: *db
           Collection: *Collection
           Operations:
-          - OperationMetricsName: {^Parameter: {Name: "Name", Default: "Q1_1"}}
-            OperationName: aggregate
+          - OperationName: aggregate
             OperationCommand: {^Parameter: {Name: "OperationCommand", Default: *Q1_1Query}}
 
 Actors:
