@@ -489,70 +489,70 @@ Actors:
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q1_1
+      Name: Index.Q1_1
       OperationCommand: *Q1_1Query
       Active: [3]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q1_2
+      Name: Index.Q1_2
       OperationCommand: *Q1_2Query
       Active: [5]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q1_3
+      Name: Index.Q1_3
       OperationCommand: *Q1_3Query
       Active: [7]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q2_1
+      Name: Index.Q2_1
       OperationCommand: *Q2_1Query
       Active: [9]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q2_2
+      Name: Index.Q2_2
       OperationCommand: *Q2_2Query
       Active: [11]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q2_3
+      Name: Index.Q2_3
       OperationCommand: *Q2_3Query
       Active: [13]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q3
+      Name: Index.Q3
       OperationCommand: *Q3Query
       Active: [15]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q4_1
+      Name: Index.Q4_1
       OperationCommand: *Q4_1Query
       Active: [17]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q4_2
+      Name: Index.Q4_2
       OperationCommand: *Q4_2Query
       Active: [19]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q4_3
+      Name: Index.Q4_3
       OperationCommand: *Q4_3Query
       Active: [21]
 
@@ -578,69 +578,69 @@ Actors:
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q1_1.NoIndex
+      Name: NoIndex.1_1
       OperationCommand: *Q1_1Query
       Active: [25]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q1_2.NoIndex
+      Name: NoIndex.1_2
       OperationCommand: *Q1_2Query
       Active: [27]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q1_3.NoIndex
+      Name: NoIndex.1_3
       OperationCommand: *Q1_3Query
       Active: [29]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q2_1.NoIndex
+      Name: NoIndex.2_1
       OperationCommand: *Q2_1Query
       Active: [31]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q2_2.NoIndex
+      Name: NoIndex.2_2
       OperationCommand: *Q2_2Query
       Active: [33]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q2_3.NoIndex
+      Name: NoIndex.2_3
       OperationCommand: *Q2_3Query
       Active: [35]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q3.NoIndex
+      Name: NoIndex.3
       OperationCommand: *Q3Query
       Active: [37]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q4_1.NoIndex
+      Name: NoIndex.4_1
       OperationCommand: *Q4_1Query
       Active: [39]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q4_2.NoIndex
+      Name: NoIndex.4_2
       OperationCommand: *Q4_2Query
       Active: [41]
 
 - ActorFromTemplate:
     TemplateName: SSB.Query
     TemplateParameters:
-      Name: Q4_3.NoIndex
+      Name: NoIndex.4_3
       OperationCommand: *Q4_3Query
       Active: [43]
