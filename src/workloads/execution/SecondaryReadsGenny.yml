@@ -26,6 +26,23 @@ Description: >
    - Drop the collection to reset the db SortPattern:
  The test cycles through these stages for 1, 16, and 32 reader threads.
 
+ ### Phases
+
+ - 0: LoadInitialData
+ - 1: Quiesce (fsync, etc)
+ - 2: WritesOnPrimary (16 Threads) + ReadsOnSecondary (1 Thread)
+ - 3: ReplicationLag (measure replication lag via write with w:3)
+ - 4: CleanUp (drop collection)
+ - 5: LoadInitialData
+ - 6: Quiesce
+ - 7: WritesOnPrimary (16 Threads) + ReadsOnSecondary (16 Threads)
+ - 8: ReplicationLag
+ - 9: CleanUp
+ - 10: LoadInitialData
+ - 11: Quiesce
+ - 12: WritesOnPrimary (16 Threads) + ReadsOnSecondary (32 Threads)
+ - 13: Replication lag
+
 
 Initial_nb_docs: &initial_nb_docs 10000
 DocumentSize: &document_size 459  # Target document size of 500 and Object.bsonsize({_id: ObjectId(), x: 0, str: "x"}) + 1 = 41
@@ -41,7 +58,7 @@ NumberOfNodes: &number_of_nodes 3
 # All other actors use the default client to connect to the primary node.
 Clients:
   Secondary:
-    URI: mongodb://md1:27017
+    URI: mongodb://username:password@md1:27017/admin?ssl=true&tlsAllowInvalidHostnames=true
 
 ActorTemplates:
 - TemplateName: WritesOnPrimaryTemplate
