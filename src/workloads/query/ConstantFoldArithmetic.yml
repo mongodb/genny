@@ -1,0 +1,116 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  SERVER-63099 addresses a correctness issue in how we constant fold during multiplication and addition.
+  This workload tests the impact of the constant folding optimization in the aggregation pipeline to better
+  understand the impact of SERVER-63099 and hopefully mitigate the performance regression with other optimizations.
+
+  The first pipeline is the control and should be unaffected by changes to the associativity of multiplication in the optimizer
+  because it only contains constants.
+
+  The three pipelines in this workload that contain a fieldpath should have different performance characteristics depending
+  on the level of associativity in the optimizer.
+
+  - Full associativity:
+    All three pipelines should have similar performance statistics because all 1000 constants are rearranged to be
+    folded into one another, ignoring the order of operations in the original pipeline.
+
+  - No associativity (simple correctness fix):
+    All three pipelines should have similar performance that is significantly worse than full associativity, because
+    each document in the pipeline will require 1000 multiplication operations because no constant folding will happen
+    with $multiply marked as non-associative.
+
+  - Left associativity (implementation of a correct optimization):
+    StartingFieldpath should see no regression from the "no associativity" case.
+    MiddleFieldpath should see a speedup that puts its performance in between "no associativity" and "full associativity".
+    TailingFieldpath should speed up back to its performance in the "full associativity" case.
+
+
+GlobalDefaults:
+  dbname: &db test
+  batchSize: &batchSize 3000
+  nop: &Nop {Nop: true}
+  constArray: &constArray {^Array: {of: {^RandomInt: {min: -500, max: 500}}, number: 500}}
+
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *db
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10000
+    BatchSize: *batchSize
+    Document: {
+      _id: {^Inc: {}},
+      x: {^RandomInt: {min: -1000, max: 1000}},
+    }
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - Repeat: 1
+  - *Nop
+
+- Name: RunMultiply
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - LoadConfig:
+      Path: &multiplyPhase ../../phases/query/RunLargeArithmeticOp.yml
+      Key: Multiply
+      Parameters:
+        Name: AllConstants
+        Expression: {^Concat: {arrays: [*constArray, *constArray, [{^RandomInt: {min: -500, max: 500}}]]}}
+  - *Nop
+  - LoadConfig:
+      Path: *multiplyPhase
+      Key: Multiply
+      Parameters:
+        Name: StartingFieldpath
+        Expression: {^Concat: {arrays: [["$x"], *constArray, *constArray]}}
+  - *Nop
+  - LoadConfig:
+      Path: *multiplyPhase
+      Key: Multiply
+      Parameters:
+        Name: TailingFieldpath
+        Expression: {^Concat: {arrays: [*constArray, *constArray, ["$x"]]}}
+  - *Nop
+  - LoadConfig:
+      Path: *multiplyPhase
+      Key: Multiply
+      Parameters:
+        Name: MiddleFieldpath
+        Expression: {^Concat: {arrays: [*constArray, ["$x"], *constArray]}}
+
+# TODO PERF-3517: Re-enable this workload.
+# AutoRun:
+# - When:
+#    mongodb_setup:
+#      $eq:
+#      - replica
+#      - single-replica-classic-query-engine
+#      - single-replica-sbe

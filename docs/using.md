@@ -30,6 +30,7 @@
         2.  [Multiple Connection Strings](#orga591018)
         3.  [Default](#org65830c2)
     6.  [Creating an Actor](#org7e6c6bd)
+    7.  [Enabling Client-Side Field Level Encryption](#org627591d)
 5.  [Pitfalls](#org3aaae9e)
     1.  [pipe creation failed (24): Too many open files](#orga7ab911)
     2.  [Actor integration tests fail locally](#orgb084b49)
@@ -398,6 +399,30 @@ You can also use the `translate` subcommand to convert results to a [t2-readable
 
 If you are running Genny through DSI in Evergreen, the FTDC contents are rolled up into summary statistics like `OperationThroughput` and such, viewable in the Evergreen perf UI. 
 
+If you are running Genny locally, you can use `src/workloads/contrib/analysis/perf_results_summary.py` to print a summary of the most recent run (or any `CedarMetrics` directory) to the console. For example,
+
+```
+python src/workloads/contrib/analysis/test_result_summary.py -m throughput timers.dur -a ".*Sleep.*" -b 3
+SleepTest.SleepTest summary:
+        timers.dur (measured in nanoseconds, displayed in milliseconds):
+                count     : 160     
+                average   : 1001.3  
+                median    : 1000.9  
+                mode      : 1000.9  
+                stddev    : 0.4     
+                [min, max]: [1000.4, 1002.5]
+                histogram:
+                        [1000,1001): ***************************        (27)
+                        [1001,1002): ************************************************************...    (128)
+                        [1002,1002]: *****      (5)
+        throughput:
+                ops       : 160.0   
+                seconds   : 160.213370114
+                ops per second: 0.9987  
+
+```
+
+Try using `python test_results_summary.py --help` for more options.
 
 <a id="org0e7c476"></a>
 
@@ -832,6 +857,58 @@ This will create new Actor .cpp and .h files, an example workload yaml, as well 
 
 If your configuration wants to use logic, ifs, or anything beyond simple or existing commands in a loop, then consider writing your own Actor. It doesn't need to be super general or even super well-tested or refactored. Genny is open to submissions and you own whatever Actor you write. No need to loop TIPS in to your custom actor's PR unless you'd just like a second look.
 
+
+<a id="org627591d"></a>
+
+## Enabling Client-Side Field Level Encryption
+
+To enable encryption in your workload using either Field Level Encryption (FLE) or Queryable Encryption (QE), the schema for the encrypted collection must first be defined in the `Encryption.EncryptedCollections` node of the workload YAML file. The following example shows a FLE schema defined for namespace `encrypted_db.fle_encrypted_coll`, and a QE schema defined for namespace `encrypted_db.qe_encrypted_coll`:
+
+```yaml
+Encryption:
+  EncryptedCollections:
+  - Database: encrypted_db
+    Collection: fle_encrypted_coll
+    EncryptionType: fle
+    FLEEncryptedFields:
+      name: { type: "string", algorithm: "random" }
+      pii.ssn: { type: "string", algorithm: "deterministic" }
+  - Database: encrypted_db
+    Collection: qe_encrypted_coll
+    EncryptionType: qe
+    QueryableEncryptedFields:
+      name: { type: "string", queries: [{queryType: "equality"}] }
+      pii.ssn: { type: "string", queries: [{queryType: "equality"}] }
+```
+
+The required `Database` and `Collection` fields specify the namespace of the encrypted collection. Each node in this sequence must have a unique combination of these two names in order to avoid two different encryption schemas for the same namespace on the same URI.
+
+The `FLEEncryptedFields` and `QueryableEncryptedFields` fields hold the schema definitions for FLE and QE, respectively. Both can be specified, however only one of them is applied to the collection during the workload. This is determined by the required `EncryptionType` field, which can be set to `"fle"` or `"qe"` to apply the schema in either the `FLEEncryptedFields` or `QueryableEncryptedFields`, respectively.
+
+Once the schema is defined for an encrypted collection, encryption must be enabled in every connection pool defined under `Clients` that will be running operations on this collection. To do this, provide an `EncryptionOptions` node under the client definition as follows:
+
+```yaml
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 100
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - encrypted_db.fle_encrypted_coll
+      - encrypted_db.qe_encrypted_coll
+```
+In the above example, we enable encryption in the `Default` client pool. The `EncryptionOptions` node requires that the namespace of the key vault be specified via the `KeyVaultDatabase` and `KeyVaultCollection` fields. It also requires that the encrypted namespaces that will be operated on through this client be listed under the `EncryptedCollections` field. These namespaces must have a corresponding definition in `Encryption.EncryptedCollections`.
+
+During client pool setup, key vaults in each unique URI are dropped & created once, when the first client pool for that URI is created. Data keys for encrypted namespaces are generated only once, if the associated key vault & URI does not yet contain keys for that namespace. This means that if two client pools have a similar URI and key vault namespace, then the encrypted collections they have in common will be using the same data keys.
+
+An Actor that wishes to perform encrypted operations on an encrypted collection must be using a client pool with an `EncryptedCollections` subnode that includes the collection's
+namespace.
+
+By default, encrypted CRUD operations require a `mongocryptd` daemon to be running and listening on localhost:27020. Genny will **not** automatically spawn this daemon on a workload run. Alternatively, one can set `Encryption.UseCryptSharedLib` to `true`, and provide the path to the `mongo_crypt_v1.so` shared library file using `Encryption.CryptSharedLibPath`.
+
+For a full example of an encrypted workload, see [here](../src/workloads/docs/CrudActorEncrypted.yml).
 
 <a id="org3aaae9e"></a>
 

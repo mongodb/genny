@@ -673,3 +673,348 @@ Tests:
     OutcomeData:
       - {a: 2}
     AssertNumTransactionsCommitted: 1
+
+  - Description: Test that an aggregate command with $out produces the expected data.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: "foo", b: 3 }
+            - WriteCommand: insertOne
+              Document: { a: "foo", b: 4 }
+      - OperationName: aggregate
+        OperationCommand:
+            # In order to test that the pipeline produces the correct results, we use $out to
+            # persist the result of the query to the "test" collection. The contents of the
+            # collection are subsequently validated using 'OutcomeData'.
+            #
+            # The test is written this way because the 'CrudActor' iterates the agg cursor and
+            # throws out the query results, without providing an easy way to validate that the
+            # contents of the cursor are as expected. (Although this is something that we could
+            # potentially add support for in the future.)
+            Pipeline: [{$group: {_id: "$a", sum: {$sum: "$b"}}}, {$out: "test"}]
+    OutcomeData:
+        - {_id: "foo", sum: 7}
+
+  - Description: Test that an aggregate command passes through its command options.
+    Operations:
+      - OperationName: aggregate
+        OperationCommand:
+            Pipeline: [{$group: {_id: "$a", sum: {$sum: "$b"}}}, {$out: "test"}]
+            Options:
+              AllowDiskUse: false
+              BypassDocumentValidation: true
+    ExpectAllEvents:
+      allowDiskUse: false
+      bypassDocumentValidation: true
+
+  - Description: Test that an error is thrown when the pipeline is not an array.
+    Operations:
+      - OperationName: aggregate
+        OperationCommand:
+            Pipeline: {$group: {_id: "$a", sum: {$sum: "$b"}}}
+    Error: |
+      .*'Pipeline' must be an array.*
+
+  - Description: Test that a 'find' command can accept 'allowDiskUse'.
+    Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: {a: 100}
+          Options:
+            AllowDiskUse: true
+    ExpectAllEvents:
+      allowDiskUse: true
+
+  - Description: Test that a 'find' command applies the specified projection.
+    Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: {a: 100}
+          Options:
+            Projection: {_id: 0, b: 1}
+    ExpectAllEvents:
+      projection: {_id: 0, b: 1}
+
+  - Description: Test that an error is thrown when an invalid projection is specified in 'find'.
+    Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: {a: 100}
+          Options:
+            Projection: {_id: 0, b: 1, a: 0}
+    Error: |
+      .*Cannot do exclusion on field a in inclusion projection.*
+
+  - Description: Test that a 'find' command applies the specified sort.
+    Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: { a : 1 }
+          Options:
+            Sort: '{"a": {"$numberInt": "-1"}}'
+    ExpectAllEvents:
+      sort: {a: -1}
+
+  - Description: Test that a 'find' command applies the specified collation.
+    Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: { a: 1 }
+            Options:
+              Collation: '{"locale": "simple"}'
+    ExpectAllEvents:
+      collation: { locale: "simple" }
+
+  - Description: Test that a 'find' command applies a hint specified as a string.
+    Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: { a: 1 }
+            Options:
+              Hint: "_id_1"
+    ExpectAllEvents:
+      hint: "_id_1"
+
+  - Description: Test that a 'find' command uses the specified comment.
+    Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: { a: 1 }
+            Options:
+              Comment: &comment "Please show up in the logs"
+    ExpectAllEvents:
+      comment: *comment
+
+  - Description: Test that a 'find' command applies the specified limit.
+    Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: { a: 1 }
+            Options:
+              Limit: 2
+    ExpectAllEvents:
+      limit: 2
+
+  - Description: Test that a 'find' command applies the specified skip.
+    Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: { a: 1 }
+            Options:
+              Skip: 2
+    ExpectAllEvents:
+      skip: 2
+
+  - Description: Test that a 'find' command applies the specified batchSize.
+    Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: { a: 1 }
+            Options:
+              BatchSize: 2
+    ExpectAllEvents:
+      batchSize: 2
+
+  - Description: Test that a 'find' command applies the specified maxTime.
+    Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: { a: 1 }
+            Options:
+              MaxTime: 1001 milliseconds
+    ExpectAllEvents:
+      maxTime: 1001
+
+  - Description: Test that a 'find' command can construct a non-tailable cursor.
+    Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            Tailable: false
+    ExpectAllEvents:
+      cursorType: non_tailable
+
+  - Description: Test that a 'find' command can construct a tailable cursor.
+    Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: { a: 1 }
+            Options:
+              Tailable: true
+    ExpectAllEvents:
+      cursorType: tailable
+
+  - Description: Test that a 'find' command can construct a tailable await cursor.
+    Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: { a: 1 }
+            Options:
+              Tailable: true
+              AwaitData: true
+    ExpectAllEvents:
+      cursorType: tailable_await
+
+  - Description: Test that specifying 'awaitData' without 'tailable' results in an error.
+    Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: { a: 1 }
+            Options:
+              AwaitData: true
+    Error: | 
+      .*Cannot set 'awaitData' to true without also setting 'tailable' to true.*
+
+  - Description: Test that an error is thrown when an invalid projection is specified in 'findOne'.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: {a: 100}
+          Options:
+            Projection: {_id: 0, a: 0, b: 1}
+    Error: |
+      .*Cannot do inclusion on field b in exclusion projection.*
+
+  - Description: Test that a 'findOne' command can accept 'allowDiskUse'.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: {a: 100}
+          Options:
+            AllowDiskUse: true
+    ExpectAllEvents:
+      allowDiskUse: true
+
+  - Description: Test that a 'findOne' command applies the specified projection.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: {a: 100}
+          Options:
+            Projection: {_id: 0, b: 1}
+    ExpectAllEvents:
+      projection: {_id: 0, b: 1}
+
+  - Description: Test that a 'findOne' command applies the specified sort.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            Sort: '{"a": {"$numberInt": "-1"}}'
+    ExpectAllEvents:
+      sort: { a: -1 }
+
+  - Description: Test that a 'findOne' command applies the specified collation.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            Collation: '{"locale": "simple"}'
+    ExpectAllEvents:
+      collation: { locale: "simple" }
+
+  - Description: Test that a 'findOne' command applies a hint specified as a string.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            Hint: "_id_1"
+    ExpectAllEvents:
+      hint: "_id_1"
+
+  - Description: Test that a 'findOne' command uses the specified comment.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            Comment: &comment "Please show up in the logs"
+    ExpectAllEvents:
+      comment: *comment
+
+  - Description: Test that a 'findOne' command throws when a limit is specified.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            Limit: 20000
+    Error: |
+      .*Cannot specify 'limit' to 'findOne' operation.*
+
+  - Description: Test that a 'findOne' command applies the specified skip.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            Skip: 2
+    ExpectAllEvents:
+      skip: 2
+
+  - Description: Test that a 'findOne' command throws when a batchSize is specified.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            BatchSize: 2
+    Error: |
+      .*Cannot specify 'batchSize' to 'findOne' operation.*
+
+  - Description: Test that a 'findOne' command applies the specified maxTime.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            MaxTime: 1001 milliseconds
+    ExpectAllEvents:
+      maxTime: 1001
+
+  - Description: Test that a 'findOne' command can construct a non-tailable cursor.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            Tailable: false
+    ExpectAllEvents:
+      cursorType: non_tailable
+
+  - Description: Test that a 'findOne' command can construct a tailable cursor.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            Tailable: true
+    ExpectAllEvents:
+      cursorType: tailable
+
+  - Description: Test that a 'findOne' command can construct a tailable await cursor.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            Tailable: true
+            AwaitData: true
+    ExpectAllEvents:
+      cursorType: tailable_await
+
+  - Description: Test that specifying 'awaitData' without 'tailable' results in an error.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            AwaitData: true
+    Error: |
+      .*Cannot set 'awaitData' to true without also setting 'tailable' to true.*

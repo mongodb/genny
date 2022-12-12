@@ -1,0 +1,661 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  This workload measures aggregation expression performance.
+
+  While measuring performances, this workload collects numbers
+  for either the SBE or the classic engine aggregation expression
+  implementations, depending on environments that it runs on.
+
+  Numbers on the 'standalone-all-feature-flags' environment are for
+  the SBE aggregation expressions and numbers on the 'standalone' environment
+  for the classic aggregation expressions.
+
+Keywords:
+- aggregate
+- sbe
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  DocumentCount: &DocumentCount 1e6
+  Repeat: &Repeat 10
+  Threads: &Threads 1
+  MaxPhases: &MaxPhases 63
+
+Actors:
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: *Threads
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: *DocumentCount
+        BatchSize: 1000
+        Document:
+          int: &integer {^RandomInt: {min: -100, max: 100}}
+          int2: *integer
+          zero: 0
+          negativeInt: {^RandomInt: {min: -1000, max: -1}}
+          year: {^RandomInt: {min: 1, max: 9999}}
+          month: {^RandomInt: {min: 1, max: 12}}
+          day: {^RandomInt: {min: 1, max: 31}}
+          hour: {^RandomInt: {min: 1, max: 24}}
+          posInt: {^RandomInt: {min: 1, max: 100}}
+          bool: {^Choose: {from: [true, false], weights: [1, 1]}}
+          nullVal: null
+          string: &string {^RandomString: {length: 16}}
+          string2: *string
+          hello: "hellohellohellohellobye"
+          upper: "THISISANALLUPPERCASESTRING"
+          preDeterminedString: {^Choose: {from: ["one", "two", "three"], weights: [1, 1, 1]}}
+          array: &array [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+          array2: *array
+          nestedObj: {int: *integer, array: *array}
+          double: &double {^RandomDouble: {distribution: normal, mean: 50, sigma: 13}}
+          doubleBounded: {^RandomDouble: {min: -1, max: 1}}
+          doubleBoundedNonZero: {^Choose: {from: [^RandomDouble: {min: -1, max: -0.000000001}, ^RandomDouble: {min: 0.000000001, max: 1}], weights: [1, 1]}}
+          date1: &date {^RandomDate: {min: "2021-01-01T00:00:02.000Z", max: "2054-01-01T00:00:10.000Z"}}
+          date2: *date
+          randomType: {^Choose: {from: [*integer, *double, *date, *string, *array, null], weights: [1, 1, 1, 1, 1, 1]}}
+
+# Phase 2: Ensure all data is synced to disk.
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+
+# Phase 3-N: Run aggregate expression benchmarks
+- ExpressionAbs:
+  LoadConfig: &loadConfig
+    Path: "../../phases/query/AggregateExpressions.yml"
+    Key: ExpressionTemplate
+    Parameters:
+      name: ExpressionAbs
+      active: [3]
+      operationMetricsName: AggExpressionAbs
+      Pipeline: [{$project: {abs: { $abs: "$negativeInt"}}}]
+
+- ExpressionAdd:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionAdd
+      active: [4]
+      operationMetricsName: AggExpressionAdd
+      Pipeline: [{$project: {add: { $add: ["$int", "$int2"]}}}]
+
+- ExpressionArrayElemAt:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionArrayElemAt
+      active: [5]
+      operationMetricsName: AggExpressionArrayElemAt
+      Pipeline: [{$project: {arrayElemAt: { $arrayElemAt: ["$array", 5]}}}]
+
+- ExpressionFirst:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionFirst
+      active: [6]
+      operationMetricsName: AggExpressionFirst
+      Pipeline: [{$project: {first: { $first: "$array"}}}]
+
+- ExpressionBSONSize:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionBSONSize
+      active: [7]
+      operationMetricsName: AggExpressionBSONSize
+      Pipeline: [{$project: {bsonSize: { $bsonSize: "$nestedObj"}}}]
+
+- ExpressionCeil:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionCeil
+      active: [8]
+      operationMetricsName: AggExpressionCeil
+      Pipeline: [{$project: {ceil: { $ceil: "$double"}}}]
+
+- ExpressionCompare:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionCompare
+      active: [9]
+      operationMetricsName: AggExpressionCompare
+      Pipeline: [{$project: {cmp: { $cmp: ["$int", 0]}}}]
+
+- ExpressionConcat:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionConcat
+      active: [10]
+      operationMetricsName: AggExpressionConcat
+      Pipeline: [{$project: {concat: { $concat: ["$string", "_", "$string2"]}}}]
+
+- ExpressionConcatArrays:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionConcatArrays
+      active: [11]
+      operationMetricsName: AggExpressionConcatArrays
+      Pipeline: [{$project: {concatArrays: { $concatArrays: ["$array1", "$array2"]}}}]
+
+- ExpressionCond:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionCond
+      active: [12]
+      operationMetricsName: AggExpressionCond
+      Pipeline: [{$project: {cond: { $cond: { if: { $gte: ["$int", 0] }, then: 100, else: -100 } }}}]
+
+- ExpressionDateDiff:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionDateDiff
+      active: [13]
+      operationMetricsName: AggExpressionDateDiff
+      Pipeline: [{$project: {dateDiff: {$dateDiff: {startDate: "$date1", endDate: "$date2", unit: "millisecond"}}}}]
+
+- ExpressionDateTrunc:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionDateTrunc
+      active: [14]
+      operationMetricsName: AggExpressionDateTrunc
+      Pipeline: [{$project: {dateTrunc: {$dateTrunc: {date: "$date1", unit: "millisecond"}}}}]
+
+- ExpressionDivide:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionDivide
+      active: [15]
+      operationMetricsName: AggExpressionDivide
+      Pipeline: [{$project: {divide: {$divide: ["$int", "$posInt"]}}}]
+
+- ExpressionExp:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionExp
+      active: [16]
+      operationMetricsName: AggExpressionExp
+      Pipeline: [{$project: {exp: {$exp: "$int"}}}]
+
+- ExpressionFilter:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionFilter
+      active: [17]
+      operationMetricsName: AggExpressionFilter
+      Pipeline: [{$project: {filter: { $filter: {input: "$array", as: "a", cond: { $eq: ["$$a.b", 0] }}}}}]
+
+- ExpressionFloor:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionFloor
+      active: [18]
+      operationMetricsName: AggExpressionFloor
+      Pipeline: [{$project: {floor: { $floor: "$double"}}}]
+
+- ExpressionIfNull:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionIfNull
+      active: [19]
+      operationMetricsName: AggExpressionIfNull
+      Pipeline: [{$project: {ifNull: { $ifNull: ["$nullVal", 0]}}}]
+
+- ExpressionIndexOfBytes:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionIndexOfBytes
+      active: [20]
+      operationMetricsName: AggExpressionIndexOfBytes
+      Pipeline: [{$project: {indexOfBytes: { $indexOfBytes: ["$hello", "o"]}}}]
+
+- ExpressionIndexOfCP:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionIndexOfCP
+      active: [21]
+      operationMetricsName: AggExpressionIndexOfCP
+      Pipeline: [{$project: {indexOfCP: { $indexOfCP: ["$hello", "l"]}}}]
+
+- ExpressionIsNumber:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionIsNumber
+      active: [22]
+      operationMetricsName: AggExpressionIsNumber
+      Pipeline: [{$project: {isNumber: { $isNumber: "$randomType"}}}]
+
+- ExpressionLet:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionLet
+      active: [23]
+      operationMetricsName: AggExpressionLet
+      Pipeline: [{$project: {let: { $let: {vars: { a: "$int", b: "$int2"}, in: {$gte: ["$$a", "$$b"]}}}}}]
+
+- ExpressionLn:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionLn
+      active: [24]
+      operationMetricsName: AggExpressionLn
+      Pipeline: [{$project: {ln: { $ln: "$posInt"}}}]
+
+- ExpressionLog10:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionLog10
+      active: [25]
+      operationMetricsName: AggExpressionLog10
+      Pipeline: [{$project: {log10: { $log10: "$posInt"}}}]
+
+- ExpressionMod:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionMod
+      active: [26]
+      operationMetricsName: AggExpressionMod
+      Pipeline: [{$project: {mod: { $mod: ["$int", "$posInt"]}}}]
+
+- ExpressionMultiply:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionMultiply
+      active: [27]
+      operationMetricsName: AggExpressionMultiply
+      Pipeline: [{$project: {multiply: { $multiply: ["$int", "$int2"]}}}]
+
+- ExpressionNot:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionNot
+      active: [28]
+      operationMetricsName: AggExpressionNot
+      Pipeline: [{$project: {not: { $not: "$bool"}}}]
+
+- ExpressionReplaceOne:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionReplaceOne
+      active: [29]
+      operationMetricsName: AggExpressionReplaceOne
+      Pipeline: [{$project: {replaceOne: { $replaceOne: {input: "$hello", find: "bye", replacement: "hello"}}}}]
+
+- ExpressionReverseArray:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionReverseArray
+      active: [30]
+      operationMetricsName: AggExpressionReverseArray
+      Pipeline: [{$project: {reverseArray: { $reverseArray: "$array"}}}]
+
+- ExpressionIsArray:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionIsArray
+      active: [31]
+      operationMetricsName: AggExpressionIsArray
+      Pipeline: [{$project: {isArray: { $isArray: "$randomType"}}}]
+
+- ExpressionSqrt:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionSqrt
+      active: [32]
+      operationMetricsName: AggExpressionSqrt
+      Pipeline: [{$project: {sqrt: { $sqrt: "$posInt"}}}]
+
+- ExpressionSwitch:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionSwitch
+      active: [33]
+      operationMetricsName: AggExpressionSwitch
+      Pipeline: [{$project: {switch: { $switch: {branches: [{case: {$gte: ["$int", 0]}, then: "GTE 0"}, {case: {$lt: ["$int", 0]}, then: "LT 0"}], default: "Out of bounds"}}}}]
+
+- ExpressionToLower:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionToLower
+      active: [34]
+      operationMetricsName: AggExpressionToLower
+      Pipeline: [{$project: {toLower: { $toLower: "$upper"}}}]
+
+- ExpressionToUpper:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionTestToUpper
+      active: [35]
+      operationMetricsName: AggExpressionTestToUpper
+      Pipeline: [{$project: {toUpper: { $toUpper: "$hello"}}}]
+
+- ExpressionRegexFind:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionRegexFind
+      active: [36]
+      operationMetricsName: AggExpressionRegexFind
+      Pipeline: [{$project: {regexFind: { $regexFind: {input: "$hello", regex: /(h)*/}}}}]
+
+- ExpressionRegexFindAll:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionRegexFindAll
+      active: [37]
+      operationMetricsName: AggExpressionRegexFindAll
+      Pipeline: [{$project: {regexFindAll: { $regexFindAll: {input: "$hello", regex: /(h)*/}}}}]
+
+- ExpressionRegexMatch:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionRegexMatch
+      active: [38]
+      operationMetricsName: AggExpressionRegexMatch
+      Pipeline: [{$project: {regexMatch: { $regexMatch: {input: "$string", regex: /(s(be)*)/}}}}]
+
+- ExpressionCosine:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionCosine
+      active: [39]
+      operationMetricsName: AggExpressionCosine
+      Pipeline: [{$project: {cos: { $cos: "$double"}}}]
+
+- ExpressionSine:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionSine
+      active: [40]
+      operationMetricsName: AggExpressionSine
+      Pipeline: [{$project: {sin: { $sin: "$double"}}}]
+
+- ExpressionTangent:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionTangent
+      active: [41]
+      operationMetricsName: AggExpressionTangent
+      Pipeline: [{$project: {tan: { $tan: "$double"}}}]
+
+- ExpressionArcCosine:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionArcCosine
+      active: [42]
+      operationMetricsName: AggExpressionArcCosine
+      Pipeline: [{$project: {acos: { $acos: "$doubleBounded"}}}]
+
+- ExpressionArcSine:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionArcSine
+      active: [43]
+      operationMetricsName: AggExpressionArcSine
+      Pipeline: [{$project: {asin: { $asin: "$doubleBounded"}}}]
+
+- ExpressionArcTangent:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionArcTangent
+      active: [44]
+      operationMetricsName: AggExpressionArcTangent
+      Pipeline: [{$project: {atan: { $atan: "$double"}}}]
+
+- ExpressionArcTangent2:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionArcTangent2
+      active: [45]
+      operationMetricsName: AggExpressionArcTangent2
+      Pipeline: [{$project: {atan2: { $atan2: ["$double", "$doubleBoundedNonZero"]}}}]
+
+- ExpressionHyperbolicArcTangent:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionHyperbolicArcTangent
+      active: [46]
+      operationMetricsName: AggExpressionHyperbolicArcTangent
+      Pipeline: [{$project: {atanh: { $atanh: "$doubleBounded"}}}]
+
+- ExpressionHyperbolicArcCosine:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionHyperbolicArcCosine
+      active: [47]
+      operationMetricsName: AggExpressionHyperbolicArcCosine
+      Pipeline: [{$project: {acosh: { $acosh: "$posInt"}}}]
+
+- ExpressionHyperbolicArcSine:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionHyperbolicArcSine
+      active: [48]
+      operationMetricsName: AggExpressionHyperbolicArcSine
+      Pipeline: [{$project: {asinh: { $asinh: "$double"}}}]
+
+- ExpressionHyperbolicCosine:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionHyperbolicCosine
+      active: [49]
+      operationMetricsName: AggExpressionHyperbolicCosine
+      Pipeline: [{$project: {cosh: { $cosh: "$double"}}}]
+
+- ExpressionHyperbolicSine:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionHyperbolicSine
+      active: [50]
+      operationMetricsName: AggExpressionHyperbolicSine
+      Pipeline: [{$project: {sinh: { $sinh: "$double"}}}]
+
+- ExpressionHyperbolicTangent:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionHyperbolicTangent
+      active: [51]
+      operationMetricsName: AggExpressionHyperbolicTangent
+      Pipeline: [{$project: {tanh: { $tanh: "$double"}}}]
+
+- ExpressionDegreesToRadians:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionDegreesToRadians
+      active: [52]
+      operationMetricsName: AggExpressionDegreesToRadians
+      Pipeline: [{$project: {degreesToRadians: { $degreesToRadians: "$double"}}}]
+
+- ExpressionRadiansToDegrees:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionRadiansToDegrees
+      active: [53]
+      operationMetricsName: AggExpressionRadiansToDegrees
+      Pipeline: [{$project: {radiansToDegrees: { $radiansToDegrees: "$double"}}}]
+
+- ExpressionDayOfMonth:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionDayOfMonth
+      active: [54]
+      operationMetricsName: AggExpressionDayOfMonth
+      Pipeline: [{$project: {dayOfMonth: { $dayOfMonth: "$date1"}}}]
+
+- ExpressionDayOfWeek:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionDayOfWeek
+      active: [55]
+      operationMetricsName: AggExpressionDayOfWeek
+      Pipeline: [{$project: {dayOfWeek: { $dayOfWeek: "$date1"}}}]
+
+- ExpressionDayOfYear:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionDayOfYear
+      active: [56]
+      operationMetricsName: AggExpressionDayOfYear
+      Pipeline: [{$project: {dayOfYear: { $dayOfYear: "$date1"}}}]
+
+- ExpressionDateAdd:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionDateAdd
+      active: [57]
+      operationMetricsName: AggExpressionDateAdd
+      Pipeline: [{$project: {dateAdd: { $dateAdd: {startDate: "$date1", unit: month, amount: 32}}}}]
+
+- ExpressionDateSubtract:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionDateSubtract
+      active: [58]
+      operationMetricsName: AggExpressionDateSubtract
+      Pipeline: [{$project: {dateSubtract: { $dateSubtract: {startDate: "$date1", unit: month, amount: 32}}}}]
+
+- ExpressionLast:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionLast
+      active: [59]
+      operationMetricsName: AggExpressionLast
+      Pipeline: [{$project: {last: { $last: "$array"}}}]
+
+- ExpressionDateFromParts:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionDateFromParts
+      active: [60]
+      operationMetricsName: AggExpressionDateFromParts
+      Pipeline: [{$project: {dateFromParts: { $dateFromParts: {'year': "$year", 'month': "$month", 'day': "$day", 'hour': "$hour"}}}}]
+
+- ExpressionDateToParts:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionDateToParts
+      active: [61]
+      operationMetricsName: AggExpressionDateToParts
+      Pipeline: [{$project: {dateToParts: { $dateToParts: {date: "$date1", timezone: "America/New_York"}}}}]
+
+- ExpressionSubtract:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionSubtract
+      active: [62]
+      operationMetricsName: AggExpressionSubtract
+      Pipeline: [{$project: {subtract: { $subtract: ["$int", "$int2"]}}}]
+
+- ExpressionRange:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionRange
+      active: [63]
+      operationMetricsName: AggExpressionRange
+      Pipeline: [{$project: {range: { $range: ["$zero", "$posInt"]}}}]
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-sbe
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0

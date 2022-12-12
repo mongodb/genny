@@ -1,0 +1,394 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  This workload conducts testing for the following test matrix:
+  - LocalCollectionCardinality: 100k / 300k / 500k / 700k
+  - DocumentSize: Small document size vs Large document size
+  - JoinFieldType: string type / sub-field type / array type / sub-field array type
+  - NumberOfLookups: 1 / 2 / 3
+  - The foreign collection has 1500 documents each of which has a unique key value
+
+  But this workload does not try to measure performances for full combination of the above test
+  dimensions to avoid too lengthy test execution.
+
+  While measuring performances, this workload collects numbers for either the SBE INLJ or the
+  classic engine INLJ $lookup implementations, depending on environments that it runs on. The reason
+  why it collects numbers for the INLJ lookup implementation is to compare both implementations on
+  the same algorithmic complexity for fairer comparison and yet to minimize the test execution time
+  since the INLJ lookup is supposed to be very fast on both the SBE and the classic egnine.
+
+  Numbers on the 'standalone-all-feature-flags' environment are for the SBE INLJ lookup and numbers
+  on the 'standalone' environment for the classic INLJ lookup until the SBE $lookup feature will be
+  turned on by default.
+
+  The workload consists of the following phases and actors:
+    0. Cleans up database
+       - 'Setup' actor
+    1. Loads data into the local and foreign collections.
+       - 'LoadXXX' actors.
+    2. Builds indexes on the foreign collection.
+       - 'BuildIndexes' actor.
+    3. Calms down to isolate any trailing impacts from the previous phase
+       - 'QuiesceActor'
+    4. Runs and measures the miscellaneous lookups.
+       - 'INLJLookupMisc' actor
+
+Keywords:
+- lookup
+- aggregate
+- sbe
+
+# Defines the database name.
+Database: &db lookup_sbe_pushdown_inlj_misc
+
+# Defines foreign collection names.
+Foreign: &Foreign foreign
+
+# Defines the local collection names.
+LocalSmallDoc100k: &LocalSmallDoc100k local_smalldoc_100k
+LocalSmallDoc300k: &LocalSmallDoc300k local_smalldoc_300k
+LocalSmallDoc500k: &LocalSmallDoc500k local_smalldoc_500k
+LocalSmallDoc700k: &LocalSmallDoc700k local_smalldoc_700k
+LocalLargeDoc100k: &LocalLargeDoc100k local_largedoc_100k
+
+# Defines the small local collection document type which is used by 'LoadLocalSmallDocXXX' actors.
+# See 'LocalSmallDocTemplate' to understand how each doc is filled.
+LocalSmallDoc: &LocalSmallDoc
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LocalSmallDocTemplate
+    Parameters: {card: 1500}
+
+# Defines the large local collection document type which is used by 'LoadLocalLargeDoc100k' actor.
+# See 'LocalLargeDocTemplate' to understand how each doc is filled.
+LocalLargeDoc: &LocalLargeDoc
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LocalLargeDocTemplate
+    Parameters: {card: 1500}
+
+# Defines the foreign collection document type which is used by 'LoadForeign' See
+# 'ForeignSmallDocTemplate' to understand how each doc is filled.
+ForeignSmallDoc: &ForeignSmallDoc
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: ForeignSmallDocTemplate
+    Parameters: {card: 1500}
+
+# The lookup command for local_smalldoc_100k.str_key == foreign.str_key.
+INLJLookupOnStrKeyCmd: &INLJLookupOnStrKeyCmd
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign
+      lk: "str_key"
+      k: "str_key"
+
+# The lookup command for local_smalldoc_100k.int_key == foreign.arr_key.
+INLJLookupOnArrKeyCmd: &INLJLookupOnArrKeyCmd
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign
+      k: "arr_key"
+
+# The lookup command for local_smalldoc_100k.int_key == foreign.doc_key.int.
+INLJLookupOnSubFieldKeyCmd: &INLJLookupOnSubFieldKeyCmd
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign
+      k: "doc_key.int"
+
+# The lookup command for local_smalldoc_100k.int_key == foreign.doc_key.arr.
+INLJLookupOnSubArrFieldKeyCmd: &INLJLookupOnSubArrFieldKeyCmd
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign
+      k: "doc_key.arr"
+
+# The lookup command for local_largedoc_100k.int_key == foreign.int_key.
+INLJLookupLargeDocCmd: &INLJLookupLargeDocCmd
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalLargeDoc100k
+      f: *Foreign
+
+# The lookup command for local_smalldoc_300k.int_key == foreign.int_key.
+INLJLookupLocal100kCmd: &INLJLookupLocal100kCmd
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+      f: *Foreign
+
+# The lookup command for local_smalldoc_300k.int_key == foreign.int_key.
+INLJLookupLocal300kCmd: &INLJLookupLocal300kCmd
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc300k
+      f: *Foreign
+
+# The lookup command for local_smalldoc_500k.int_key == foreign.int_key.
+INLJLookupLocal500kCmd: &INLJLookupLocal500kCmd
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc500k
+      f: *Foreign
+
+# The lookup command for local_smalldoc_700k.int_key == foreign.int_key.
+INLJLookupLocal700kCmd: &INLJLookupLocal700kCmd
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: NLJLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc700k
+      f: *Foreign
+
+# The lookup command for local_smalldoc_100k.int_key == foreign.int_key
+# | local_smalldoc_100k.str_key == foreign.str_key.
+INLJDoubleLookupCmd: &INLJDoubleLookupCmd
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: NLJDoubleLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+
+# The lookup command for local_smalldoc_100k.int_key == foreign.int_key
+# | local_smalldoc_100k.str_key == foreign.str_key
+# | local_smalldoc_100k.int_key == foreign.arr_key.
+INLJTripleLookupCmd: &INLJTripleLookupCmd
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: NLJTripleLookupCmdTemplate
+    Parameters:
+      l: *LocalSmallDoc100k
+
+# Defines test operations for both 'SBE_Misc' and 'Classic_Misc' actors.
+TestOperations: &TestOperations
+- OperationMetricsName: LocalSmallDoc100k_StrTopField
+  OperationName: RunCommand
+  OperationCommand: *INLJLookupOnStrKeyCmd
+- OperationMetricsName: LocalSmallDoc100k_ArrTopField
+  OperationName: RunCommand
+  OperationCommand: *INLJLookupOnArrKeyCmd
+- OperationMetricsName: LocalSmallDoc100k_SubField
+  OperationName: RunCommand
+  OperationCommand: *INLJLookupOnSubFieldKeyCmd
+- OperationMetricsName: LocalSmallDoc100k_SubArrField
+  OperationName: RunCommand
+  OperationCommand: *INLJLookupOnSubArrFieldKeyCmd
+- OperationMetricsName: LocalLargeDoc100k_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *INLJLookupLargeDocCmd
+- OperationMetricsName: LocalSmallDoc100k_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *INLJLookupLocal100kCmd
+- OperationMetricsName: LocalSmallDoc300k_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *INLJLookupLocal300kCmd
+- OperationMetricsName: LocalSmallDoc500k_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *INLJLookupLocal500kCmd
+- OperationMetricsName: LocalSmallDoc700k_IntTopField
+  OperationName: RunCommand
+  OperationCommand: *INLJLookupLocal700kCmd
+- OperationMetricsName: LocalSmallDoc100k_DoubleLookups
+  OperationName: RunCommand
+  OperationCommand: *INLJDoubleLookupCmd
+- OperationMetricsName: LocalSmallDoc100k_TripleLookups
+  OperationName: RunCommand
+  OperationCommand: *INLJTripleLookupCmd
+
+# Defines how many times each test operation is executed.
+TestRepeatCount: &TestRepeatCount 10
+
+Actors:
+# The 'Setup' actor drops the database and runs in the 0th phase.
+- Name: Setup
+  Type: RunCommand
+  Database: *db
+  Thread: 1
+  Phases:
+  - Repeat: 1
+    Threads: 1
+    Database: *db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+  - Phase: 1..4
+    Nop: true
+
+# The 'LoadForeign' / 'LoadLocalSmallDoc100k' / 'LocalSmallDoc300k' / 'LocalSmallDoc500k' /
+# 'LocalSmallDoc700k' / 'LoadLocalLargeDoc100k' actors runs in the 1st phase.
+- Name: LoadForeign
+  Type: CrudActor
+  Database: *db
+  Threads: 1
+  Phases:
+  - &Nop {Nop: true}
+  - Repeat: 1500
+    Threads: 1
+    Collection: *Foreign
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *ForeignSmallDoc
+  - Phase: 2..4
+    Nop: true
+
+- Name: LoadLocalSmallDoc100k
+  Type: CrudActor
+  Database: *db
+  Threads: 10
+  Phases:
+  - *Nop
+  - Repeat: 10000
+    Threads: 1
+    Collection: *LocalSmallDoc100k
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *LocalSmallDoc
+  - Phase: 2..4
+    Nop: true
+
+- Name: LoadLocalSmallDoc300k
+  Type: CrudActor
+  Database: *db
+  Threads: 10
+  Phases:
+  - *Nop
+  - Repeat: 30000
+    Threads: 1
+    Collection: *LocalSmallDoc300k
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *LocalSmallDoc
+  - Phase: 2..4
+    Nop: true
+
+- Name: LoadLocalSmallDoc500k
+  Type: CrudActor
+  Database: *db
+  Threads: 10
+  Phases:
+  - *Nop
+  - Repeat: 50000
+    Threads: 1
+    Collection: *LocalSmallDoc500k
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *LocalSmallDoc
+  - Phase: 2..4
+    Nop: true
+
+- Name: LoadLocalSmallDoc700k
+  Type: CrudActor
+  Database: *db
+  Threads: 10
+  Phases:
+  - *Nop
+  - Repeat: 70000
+    Threads: 1
+    Collection: *LocalSmallDoc700k
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *LocalSmallDoc
+  - Phase: 2..4
+    Nop: true
+
+- Name: LoadLocalLargeDoc100k
+  Type: CrudActor
+  Database: *db
+  Threads: 10
+  Phases:
+  - *Nop
+  - Repeat: 10000
+    Threads: 1
+    Collection: *LocalLargeDoc100k
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *LocalLargeDoc
+  - Phase: 2..4
+    Nop: true
+
+# The 'BuildIndexes' actor builds indexes on all foreign join fields so that INLJ lookup
+# performances can be measured and runs in the 2nd phase.
+- Name: BuildIndexes
+  Type: RunCommand
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *Foreign
+        indexes:
+        - {key: {"int_key": 1}, name: "idx1"}
+        - {key: {"str_key": 1}, name: "idx2"}
+        - {key: {"doc_key.int": 1}, name: "idx3"}
+        - {key: {"doc_key.arr": 1}, name: "idx4"}
+        - {key: {"arr_key": 1}, name: "idx5"}
+  - *Nop
+  - *Nop
+
+# The 'Quiesce' actor calms down to avoid any trailing impacts from the previous phase and runs
+# in the 4th phase.
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Phase: 0..2
+    Nop: true
+  - Repeat: 1
+  - *Nop
+
+# The 'INLJLookupMisc' actor measures the SBE INLJ lookup performances on an all-feature-flags build
+# and the classic INLJ lookup performances on a normal build and runs in the 4th phase.
+- Name: INLJLookupMisc
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - Phase: 0..3
+    Nop: true
+  - Repeat: *TestRepeatCount
+    Database: *db
+    Operations: *TestOperations
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-sbe
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4

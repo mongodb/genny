@@ -183,6 +183,19 @@ class CuratorDownloader(Downloader):
     # https://evergreen.mongodb.com/waterfall/curator
 
     CURATOR_VERSION = "3df28d2514d4c4de7c903d027e43f3ee48bf8ec1"
+    ARM_CURATOR_VERSION = "965d53845fd1987ddbf04a937ff625f3c243dee3"
+
+    SPECIAL_CURATOR_VERSIONS = {
+        "arm": ARM_CURATOR_VERSION,
+    }
+
+    DISTRO_MAPPING = {
+        "archlinux": "linux-amd64",
+        "amazon2": "rhel70",
+        "rhel8": "rhel70",
+        "rhel62": "rhel70",
+        "amazon2arm": "arm",
+    }
 
     def __init__(
         self,
@@ -204,20 +217,25 @@ class CuratorDownloader(Downloader):
         if self._os_family == "Darwin":
             self._curator_distro = "macos"
 
+        # Note that this checks a substring. We could replace this check by finding all the valid
+        # ubuntu versions and putting their names in DISTRO_MAPPING
         if "ubuntu" in self._linux_distro:
             self._curator_distro = "ubuntu"
 
-        if self._linux_distro == "archlinux":
-            self._curator_distro = "linux-amd64"
-
-        if self._linux_distro in ("amazon2", "rhel8", "rhel62"):
-            self._curator_distro = "rhel70"
+        self._curator_distro = CuratorDownloader.DISTRO_MAPPING.get(
+            self._linux_distro, self._curator_distro
+        )
 
     def _get_url(self):
+        # Check if we need a special curator version for the distro. Otherwise use the default
+        # CURATOR_VERSION
+        version = CuratorDownloader.SPECIAL_CURATOR_VERSIONS.get(
+            self._curator_distro, CuratorDownloader.CURATOR_VERSION
+        )
         return (
             "https://s3.amazonaws.com/boxes.10gen.com/build/curator/"
             "curator-dist-{distro}-{build}.tar.gz".format(
-                distro=self._curator_distro, build=CuratorDownloader.CURATOR_VERSION
+                distro=self._curator_distro, build=version
             )
         )
 
