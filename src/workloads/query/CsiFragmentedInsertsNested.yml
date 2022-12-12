@@ -66,7 +66,6 @@ Actors:
 # Phases:
 # 0 setup no index,   10 create CSI
 # 1,                  11,          - quiese
-# 2,                  12,          - insert cold
 # 3,                  13,          - insert tail
 # 4,                  14,          - insert warm
 - Name: Loader
@@ -143,14 +142,6 @@ Actors:
 - ActorFromTemplate:
     TemplateName: InsertFromSample
     TemplateParameters:
-      Name: NoIndexes_cold
-      OnlyActiveInPhase: 2
-      Repeats: 5
-      Batches: 1
-
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
       Name: NoIndexes_tail
       OnlyActiveInPhase: 3
       Repeats: 200
@@ -182,14 +173,6 @@ Actors:
             indexes:
             - key: {"$**": "columnstore"}
               name: csi
-
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: Csi_cold
-      OnlyActiveInPhase: 12
-      Repeats: 5
-      Batches: 1
 
 - ActorFromTemplate:
     TemplateName: InsertFromSample

@@ -90,7 +90,6 @@ Actors:
 # Phases:
 # 0 setup (no index), 10 create CSI, 20 replace CSI with wildcard index
 # 1,                  11,            21                                  - quiese
-# 2,                  12,            22                                  - insert cold
 # 3,                  13,            23                                  - insert tail
 # 4,                  14,            24                                  - insert warm
 
@@ -153,20 +152,8 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-# Do a few inserts with re-sampling, we expect a long warm-up tail in this test. MaxLatency would
-# be indicative of a "cold" insert but it might be too noisy to track from run to run so we'll
-# average across 5 inserts, even though the 5th might be twice as fast as the first one.
-# Target measurements: AverageLatency
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: NoIndexes_cold
-      OnlyActiveInPhase: 2
-      Repeats: 5
-      Batches: 1
-
 # Do a bunch of inserts with re-sampling, we expect a long warm-up tail in this test but not too
-# long (P50 and P80 should for latency should be close).
+# long (P50 and P80 for latency should be close).
 # Target measurements: Latency50thPercentile
 - ActorFromTemplate:
     TemplateName: InsertFromSample
@@ -210,15 +197,7 @@ Actors:
 
 # Repeat the same tests as with no index in presence of CSI. We are instantiating new actors as we
 # need to collect the same measurements with different names. The previous stages have inserted
-# 5*10 + 200*10 + 200*10 = 4050 new documents, which is tiny compared to the 1e6 collection size.
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: Csi_cold
-      OnlyActiveInPhase: 12
-      Repeats: 5
-      Batches: 1
-
+# 200*10 + 200*10 = 4000 new documents, which is tiny compared to the 1e6 collection size.
 - ActorFromTemplate:
     TemplateName: InsertFromSample
     TemplateParameters:
@@ -259,16 +238,8 @@ Actors:
 
 # Repeat the same tests as with no index in presence of CSI. We are instantiating new actors as we
 # need to collect the same measurements with different names. The previous stages have inserted
-# 2*(5*10 + 200*10 + 200*10) = 8100 new documents, which is still tiny compared to the 1e6
+# 2*(200*10 + 200*10) = 8000 new documents, which is still tiny compared to the 1e6
 # collection size.
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: Wildcard_cold
-      OnlyActiveInPhase: 22
-      Repeats: 5
-      Batches: 1
-
 - ActorFromTemplate:
     TemplateName: InsertFromSample
     TemplateParameters:
