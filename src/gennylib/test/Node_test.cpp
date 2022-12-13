@@ -225,7 +225,7 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(bool(yaml[0]) == false);
             // ...but it does barf when treating a scalar like a sequence
             REQUIRE_THROWS_WITH([&]() { yaml["foo"][0]; }(),
-                                Catch::Matchers::Matches("operator\\[\\] call on a scalar \\(key: \"0\"\\)"));
+                                Catch::Matchers::ContainsSubstring("operator[] call on a scalar (key: \"0\")"));
         }
 
         {
