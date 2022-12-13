@@ -240,8 +240,8 @@ task_groups:
   # run after t_compile.
   - t_compile
   - t_python_test
-  - t_lint_python
-  - t_lint_workloads
+  #- t_lint_python
+  #- t_lint_workloads
   - t_cmake_test
 
 - <<: *a_compile_and_test
@@ -255,8 +255,8 @@ task_groups:
   tasks:
   - t_compile
   - t_python_test
-  - t_lint_python
-  - t_lint_workloads
+  #- t_lint_python
+  #- t_lint_workloads
   - t_cmake_test
   - t_integration_test_single_node_replset
   - t_integration_test_three_node_replset
