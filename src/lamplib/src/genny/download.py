@@ -15,6 +15,7 @@ class ProgressBar:
     A simple progress bar to show while downloading the toolkit tarball. Useful to let the user know that the
      application hasn't frozen.
     """
+
     def __init__(self):
         self.bar = None
 
@@ -151,7 +152,7 @@ class Downloader:
 
 # Instructions derived from https://github.com/NixOS/nix/issues/2925#issuecomment-539570232
 def _macos_install_instructions(name):
-    return fr"""
+    return rf"""
 
 😲 You must create the parent directory {name} for the genny toolchain.
    You are on On MacOS Catalina or later, so use use the synthetic.conf method.

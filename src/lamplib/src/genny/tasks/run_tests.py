@@ -282,7 +282,10 @@ def _setup_resmoke(
         # only required if the local repo didn't exist and had to be cloned
         mongodb_commit = _get_mongo_commit(mongod, workspace_root)
         cmd_runner.run_command(
-            cmd=["git", "checkout", mongodb_commit], cwd=mongo_repo_path, check=True, capture=False,
+            cmd=["git", "checkout", mongodb_commit],
+            cwd=mongo_repo_path,
+            check=True,
+            capture=False,
         )
 
     # Setup resmoke venv unless exists
@@ -297,7 +300,10 @@ def _setup_resmoke(
 
         cmd = [resmoke_python, "-mpip", "install", "-r", reqs_file]
         cmd_runner.run_command(
-            cmd=cmd, cwd=workspace_root, capture=False, check=True,
+            cmd=cmd,
+            cwd=workspace_root,
+            capture=False,
+            check=True,
         )
 
         open(resmoke_setup_sentinel, "w")

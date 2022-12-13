@@ -1,3 +1,5 @@
+import errno
+import socket
 import os
 import shutil
 import subprocess
@@ -144,7 +146,24 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
             raise OSError("Failed to start Poplar.")
         try:
             os.chdir(prior_cwd)
-            time.sleep(0.5)  # sleep to let curator get started. This is a heuristic.
+            connected = False
+            for i in range(10):
+                time.sleep(0.2)  # sleep to let curator get started. This is a heuristic.
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                try:
+                    sock.connect(("127.0.0.1", 2288))
+                    # If we didn't throw an exception, then we successfully connected
+                    connected = True
+                    break
+                except socket.error as socket_error:
+                    if socket_error.errno != errno.ECONNREFUSED:
+                        # We expect to get connection refused if poplar is not up yet.
+                        # If we get something else, bail
+                        raise socket_error
+                finally:
+                    sock.close()
+            if not connected:
+                raise OSError(f"Poplar not listening on port 2288")
             yield poplar
         finally:
             try:
@@ -247,7 +266,9 @@ class CuratorDownloader(Downloader):
         if curator is None:
             return False
         res: RunCommandOutput = run_command(
-            cmd=[curator, "-v"], check=True, cwd=self._workspace_root,
+            cmd=[curator, "-v"],
+            check=True,
+            cwd=self._workspace_root,
         )
         installed_version = "".join(res.stdout).strip()
         wanted_version = f"curator version {CuratorDownloader.CURATOR_VERSION}"
