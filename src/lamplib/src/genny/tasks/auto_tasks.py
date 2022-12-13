@@ -2,19 +2,12 @@
 Generates evergreen tasks based on the current state of the repo.
 """
 
-import enum
 import glob
 import os
 import re
 from typing import NamedTuple, List, Optional, Set, Dict, Any
 import yaml
 import structlog
-
-from shrub.command import CommandDefinition
-from shrub.config import Configuration
-from shrub.variant import TaskSpec
-
-from genny.cmd_runner import run_command
 
 SLOG = structlog.get_logger(__name__)
 
@@ -95,7 +88,7 @@ class WorkloadLister:
 
 class CLIOperation(NamedTuple):
     """
-    Represents the "input" to what we're doing"
+    Represents the "input" to what we're doing
     """
 
     genny_repo_root: str
@@ -118,6 +111,7 @@ class AutoRunBlock(NamedTuple):
 
 
 class DsiTask(NamedTuple):
+    """Represents a  DSI Task entry."""
     name: str
     runs_on_variants: List[str]
     bootstrap_vars: Dict[str, str]
@@ -309,6 +303,9 @@ class Repo:
         return [task for workload in self.all_workloads() for task in workload.all_tasks()]
 
     def generate_dsi_tasks(self, op: CLIOperation) -> List[DsiTask]:
+        """
+        Generates list DSI Task objects that represents the schema that DSI expects to generate Evergreen Task file.
+        """
         dsi_tasks = []
         tasks = self.tasks(op)
         for task in tasks:
@@ -340,7 +337,7 @@ class ConfigWriter:
     def __init__(self, op: CLIOperation):
         self.op = op
 
-    def write(self, tasks: List[DsiTask], write: bool = True) -> Configuration:
+    def write(self, tasks: List[DsiTask], write: bool = True) -> None:
         """
         :param tasks: tasks to write
         :param write: boolean to actually write the file - exposed for testing
@@ -379,6 +376,7 @@ class ConfigWriter:
                     )
 
     def _get_dsi_task_dict(self, tasks: List[DsiTask]) -> List[Dict[str, Any]]:
+        """Converts DSITask object to a dict to facilitate YAML dump."""
         all_tasks = []
         for task in tasks:
             all_tasks.append(dict(task._asdict()))
