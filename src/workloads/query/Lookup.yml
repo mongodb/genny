@@ -77,17 +77,13 @@ Actors:
   - *Nop
 
 - Name: Quiesce
-  Type: RunCommand
+  Type: QuiesceActor
   Threads: 1
+  Database: admin
   Phases:
   - *Nop
   - *Nop
   - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        fsync: 1
   - *Nop
 
 - Name: RunLookups

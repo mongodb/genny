@@ -15,15 +15,14 @@
 #ifndef HEADER_1AFC7FF3_F491_452B_9805_18CAEDE4663D_INCLUDED
 #define HEADER_1AFC7FF3_F491_452B_9805_18CAEDE4663D_INCLUDED
 
-#include <string_view>
-
+#include <boost/throw_exception.hpp>
+#include <bsoncxx/json.hpp>
 #include <mongocxx/database.hpp>
-#include <mongocxx/pool.hpp>
+#include <string_view>
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
-
 #include <value_generators/DocumentGenerator.hpp>
 
 namespace genny {
@@ -125,30 +124,58 @@ struct NodeConvert<mongocxx::options::find> {
     static type convert(const Node& node) {
         type rhs{};
 
-        if (node["Hint"]) {
-            auto h = node["Hint"].to<std::string>();
-            auto hint = mongocxx::hint(std::move(h));
-            rhs.hint(mongocxx::hint(hint));
+        if (const auto& allowDiskUse = node["AllowDiskUse"]) {
+            rhs.allow_disk_use(allowDiskUse.to<bool>());
         }
-        if (node["Comment"]) {
-            auto c = node["Comment"].to<std::string>();
-            rhs.comment(std::move(c));
+        if (const auto& sort = node["Sort"]) {
+            rhs.sort(bsoncxx::from_json(sort.to<std::string>()));
         }
-        if (node["Limit"]) {
-            auto limit = node["Limit"].to<int>();
-            rhs.limit(limit);
+        if (const auto& collation = node["Collation"]) {
+            rhs.collation(bsoncxx::from_json(collation.to<std::string>()));
         }
-        if (node["BatchSize"]) {
-            auto batchSize = node["BatchSize"].to<int>();
-            rhs.batch_size(batchSize);
+        // Note that the conversion of hints (here and elsewhere in this file) could be extended
+        // to support the hint specified as a document. Right now it only supports hints specified
+        // as a string giving the index name.
+        if (const auto& hint = node["Hint"]) {
+            rhs.hint(mongocxx::hint(hint.to<std::string>()));
         }
-        if (node["MaxTime"]) {
-            auto maxTime = node["MaxTime"].to<genny::TimeSpec>();
-            rhs.max_time(std::chrono::milliseconds{maxTime});
+        if (const auto& comment = node["Comment"]) {
+            rhs.comment(comment.to<std::string>());
         }
-        if (node["ReadPreference"]) {
-            auto readPref = node["ReadPreference"].to<mongocxx::read_preference>();
-            rhs.read_preference(readPref);
+        if (const auto& limit = node["Limit"]) {
+            rhs.limit(limit.to<int64_t>());
+        }
+        if (const auto& skip = node["Skip"]) {
+            rhs.skip(skip.to<int64_t>());
+        }
+        if (const auto& batchSize = node["BatchSize"]) {
+            rhs.batch_size(batchSize.to<int32_t>());
+        }
+        if (const auto& maxTime = node["MaxTime"]) {
+            auto max = maxTime.to<genny::TimeSpec>();
+            rhs.max_time(std::chrono::milliseconds{max});
+        }
+        if (const auto& readPref = node["ReadPreference"]) {
+            rhs.read_preference(readPref.to<mongocxx::read_preference>());
+        }
+
+        auto getBoolValue = [&](const std::string& paramName) {
+            const auto& val = node[paramName];
+            return val && val.to<bool>();
+        };
+
+        // Figure out the cursor type.
+        const bool tailable = getBoolValue("Tailable");
+        const bool awaitData = getBoolValue("AwaitData");
+        if (tailable && awaitData) {
+            rhs.cursor_type(mongocxx::cursor::type::k_tailable_await);
+        } else if (tailable) {
+            rhs.cursor_type(mongocxx::cursor::type::k_tailable);
+        } else if (awaitData) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "Cannot set 'awaitData' to true without also setting 'tailable' to true"));
+        } else {
+            rhs.cursor_type(mongocxx::cursor::type::k_non_tailable);
         }
         return rhs;
     }

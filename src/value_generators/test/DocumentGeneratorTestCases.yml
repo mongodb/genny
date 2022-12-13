@@ -191,7 +191,14 @@ Tests:
 
   - Name: Object Generator
     GivenTemplate:
-      a: {^Object: {withNEntries: 10, havingKeys: {^RandomString: {length: 10}}, andValues: {^Inc: {}}}}
+      a:
+        {^Object: {
+          withNEntries: 10,
+          havingKeys: {^RandomString: {length: 10}},
+          andValues: {^Inc: {}},
+          # All generated keys are unique, so "insert" is fine for this test.
+          duplicatedKeys: insert
+        }}
     ThenReturns:
       - a:
           JGBEV0zQZI: { "$numberLong": "1" }
@@ -204,6 +211,21 @@ Tests:
           AzUNSxcpt0: { "$numberLong": "8" }
           xYYXCh/Ybl: { "$numberLong": "9" }
           EHcmXZX/d4: { "$numberLong": "10" }
+
+  - Name: Object Generator skip duplicated keys
+    GivenTemplate:
+      a:
+        {^Object: {
+          # Because the name of the keys is fixed, the second and third key would have duplicated
+          # names and should not be inserted.
+          withNEntries: 3,
+          havingKeys: "c",
+          andValues: {^Inc: {}},
+          duplicatedKeys: skip
+        }}
+    ThenReturns:
+      - a:
+          c: { "$numberLong": "1" }
 
   - Name: one RandomInt
     GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: 10000000010}}}
@@ -632,7 +654,12 @@ Tests:
 
   - Name: Join With Deterministic Choose
     GivenTemplate:
-      a: {^Object: {withNEntries: 4, havingKeys: {^Join: {array: ["a", {^Choose: {from: ["1", "2"], deterministic: true}}], sep: ""}}, andValues: 1}}
+      a: {^Object: {
+        withNEntries: 4, 
+        havingKeys: {^Join: {array: ["a", {^Choose: {from: ["1", "2"], deterministic: true}}], sep: ""}}, 
+        andValues: 1,
+        duplicatedKeys: insert
+      }}
     ThenReturns:
     - a:
         a1: 1
