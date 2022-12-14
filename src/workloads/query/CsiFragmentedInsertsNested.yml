@@ -2,9 +2,9 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-execution"
 Description: |
   This workload compares performance of inserts into a collection with only the default _id index
-  and in presence of a full columnstore index. We are not comparing to wildcard because the nested
-  data makes creating of a wildcard index too slow. Before changing any of the parameters in this
-  workload please make sure the results can be correlated with 'CsiFragmentedInsertsFlat.yml'.
+  and in presence of a full columnstore index. We are not comparing to wildcard index because the
+  nested data makes creating of a wildcard index too slow. Before changing any of the parameters in
+  this workload please make sure the results can be correlated with 'CsiFragmentedInsertsFlat.yml'.
   As the approach in this workload is the same as in 'CsiFragmentedInsertsFlat.yml' with the exception
   of data used by the loader (and not comparing to the wildcard index), comments are intentionally
   omitted, please refer to the "flat" workload for the details.
@@ -41,6 +41,52 @@ GlobalDefaults:
   ObjectWidth: &objectWidth 5  # with two nested paths, get 10 paths_per_object
   SampleSize: &sampleSize 10
 
+  Document: &document
+    # Generate documents that would produce non-trivial array info strings. When these docs
+    # are inserted, we want them to affect about 10 separated locations in the index, which is
+    # achieved by uniform distribution of xN fields and because for each xN both "a" and "b"
+    # subpaths are likely to be generated.
+    # The documents will looks like:
+    # {
+    #   _id: ObjectId("63890d0df7b608a2d303b941"),
+    #   root: [
+    #     {
+    #       x8372 : [{a: [42, *]}, {b: {obj: *}}, {a: [42, *], b: [42, *]}, {b: *}, {b: *}],
+    #       <4 more xN fields>
+    #     }
+    #   ]
+    # }
+    root: {^Array: {
+      of: {^Object: {
+        withNEntries: *objectWidth,
+        havingKeys: {^FormatString: {
+          "format": "x%d", "withArgs": [{^RandomInt: {min: 0, max: *schemaWidth}}]
+        }},
+        andValues: {^Array: {
+          of:
+            # Create an object with either "a" or "b" key, or both. This is achieved by using
+            # 'duplicatedKeys: skip' parameter, which would ignore the second generated key if
+            # it has the same name as the first, so with probability 1/2 we'll get both fields
+            # and with probability 1/4 each of {a: } and {b: }.
+            {^Object: {
+              withNEntries: 2,
+              havingKeys: {^RandomString: {length: 1, alphabet: ab}},
+              andValues: {^Choose: {from: [
+                {^RandomInt: {min: 0, max: *schemaWidth}},
+                [42, {^RandomInt: {min: 0, max: *schemaWidth}}],
+                {obj: {^RandomInt: {min: 0, max: *schemaWidth}}}
+              ]}},
+              duplicatedKeys: skip
+            }},
+          # 5 elements make it almost certain that both "a" and "b" are used in the array to
+          # yield ~10 paths per object.
+          number: 5
+        }},
+        duplicatedKeys: skip
+      }},
+      number: 1
+    }}
+
 ActorTemplates:
 - TemplateName: InsertFromSample
   Config:
@@ -56,18 +102,10 @@ ActorTemplates:
           Collection: *coll
           SampleSize: *sampleSize
           InsertBatchSize: *sampleSize
-          Repeat: {^Parameter: {Name: "Repeats", Default: -1}}
-          Batches: {^Parameter: {Name: "Batches", Default: -1}}
+          Repeat: {^Parameter: {Name: "Repeats", Default: 1}}
+          Batches: {^Parameter: {Name: "Batches", Default: 500}}
 
 Actors:
-# This workload is completely linear with one actor per phase. Having phases when nothing happens
-# is mildly wasteful, but I'm tired of having to adjust the phases' numbers, so assuming "sparse"
-# numbering scheme that is easier to maintain.
-# Phases:
-# 0 setup no index,   10 create CSI
-# 1,                  11,          - quiese
-# 3,                  13,          - insert tail
-# 4,                  14,          - insert warm
 - Name: Loader
   Type: Loader
   Threads: 1
@@ -82,51 +120,7 @@ Actors:
         CollectionCount: 1
         DocumentCount: *docCount
         BatchSize: 1000
-        Document:
-          # Generate documents that would produce non-trivial array info strings. When these docs
-          # are inserted, we want them to affect about 10 separated locations in the index, which is
-          # achieved by uniform distribution of xN fields and because for each xN both "a" and "b"
-          # subpaths are likely to be generated.
-          # The documents will looks like:
-          # {
-          #   _id: ObjectId("63890d0df7b608a2d303b941"),
-          #   root: [
-          #     {
-          #       x8372 : [{a: [42, *]}, {b: {obj: *}}, {a: [42, *], b: [42, *]}, {b: *}, {b: *}],
-          #       <4 more xN fields>
-          #     }
-          #   ]
-          # }
-          root: {^Array: {
-            of: {^Object: {
-              withNEntries: *objectWidth,
-              havingKeys: {^FormatString: {
-                "format": "x%d", "withArgs": [{^RandomInt: {min: 0, max: *schemaWidth}}]
-              }},
-              andValues: {^Array: {
-                of:
-                  # Create an object with either "a" or "b" key, or both. This is achieved by using
-                  # 'duplicatedKeys: skip' parameter, which would ignore the second generated key if
-                  # it has the same name as the first, so with probability 1/2 we'll get both fields
-                  # and with probability 1/4 each of {a: } and {b: }.
-                  {^Object: {
-                    withNEntries: 2,
-                    havingKeys: {^RandomString: {length: 1, alphabet: ab}},
-                    andValues: {^Choose: {from: [
-                      {^RandomInt: {min: 0, max: *schemaWidth}},
-                      [42, {^RandomInt: {min: 0, max: *schemaWidth}}],
-                      {obj: {^RandomInt: {min: 0, max: *schemaWidth}}}
-                    ]}},
-                    duplicatedKeys: skip
-                  }},
-                # 5 elements make it almost certain that both "a" and "b" are used in the array to
-                # yield ~10 paths per object.
-                number: 5
-              }},
-              duplicatedKeys: skip
-            }},
-            number: 1
-          }}
+        Document: *document
 
 - Name: Quiese
   Type: QuiesceActor
@@ -134,7 +128,7 @@ Actors:
   Database: *db
   Phases:
     OnlyActiveInPhases:
-      Active: [1, 11]
+      Active: [1, 4]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Repeat: 1
@@ -142,25 +136,15 @@ Actors:
 - ActorFromTemplate:
     TemplateName: InsertFromSample
     TemplateParameters:
-      Name: NoIndexes_tail
-      OnlyActiveInPhase: 3
-      Repeats: 200
-      Batches: 1
-
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: NoIndexes_warm
-      OnlyActiveInPhase: 4
-      Repeats: 1
-      Batches: 200
+      Name: NoIndexes
+      OnlyActiveInPhase: 2
 
 - Name: BuildColumnStoreIndex
   Type: RunCommand
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [10]
+      Active: [3]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Repeat: 1
@@ -177,17 +161,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: InsertFromSample
     TemplateParameters:
-      Name: Csi_tail
-      OnlyActiveInPhase: 13
-      Repeats: 200
-      Batches: 1
-
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: Csi_warm
-      OnlyActiveInPhase: 14
-      Repeats: 1
-      Batches: 200
+      Name: Csi
+      OnlyActiveInPhase: 5
 
 

@@ -49,7 +49,41 @@ GlobalDefaults:
   ObjectWidth: &objectWidth 10
   SampleSize: &sampleSize 10
 
+  Document: &document
+    # {
+    #   _id: ObjectId(...),
+    #   root: {
+    #     x271: NumberInt(9917),
+    #     x6305: NumberInt(11),
+    #     x8: NumberInt(1022),
+    #     <7 more fields like this>
+    #   }
+    # }
+    root: {^Object: {
+      withNEntries: *objectWidth,
+
+      # Do we want to use a non-uniform distribution for the fiedls, modelling that some are
+      # rarer than others? The sampling might become unstable in this case and even harder to
+      # interpret the results.
+      havingKeys: {^FormatString: {
+        "format": "x%d",
+        "withArgs": [{^RandomInt: {min: 0, max: *schemaWidth}}]
+      }},
+
+      # We would like to compare CSI to wildcard indexes and to model similarly fragmented
+      # access to the index, we are using uniform value distribution here.
+      andValues: {^RandomInt: {min: 0, max: *schemaWidth}},
+
+      # Occasionally, the key generator might produce the same key name. For this workload,
+      # it's OK to have some of the objects with fewer than 'objectWidth' fields (and we don't
+      # want to test parsing of the duplicated keys for the index as it's not a common user
+      # scenario).
+      duplicatedKeys: skip
+    }}
+
 ActorTemplates:
+# We want to be able to compare results from the same test between the runs in presence of different
+# indexes. For this we'll have to instantiate the same actor multiple times with a unique name.
 - TemplateName: InsertFromSample
   Config:
     Name: {^Parameter: {Name: "Name", Default: "Insert"}}
@@ -74,14 +108,14 @@ ActorTemplates:
 
           # The 'SamplingLoader' actor re-samples on repeat, meaning that it would get a new set of
           # documents likely with different paths and values. This makes each repeat hit different
-          # parts of the indexes, causing a long warm up tail. The instances of this template must
-          # provide a valid "Repeats" value as using the default of -1 is UB.
-          Repeat: {^Parameter: {Name: "Repeats", Default: -1}}
+          # parts of the indexes, causing a long warm up tail. To avoid this we test with a single
+          # repeat but multiple batches.
+          Repeat: {^Parameter: {Name: "Repeats", Default: 1}}
 
           # The instances of the template must specify the number of batches to make it clear what
-          # they are testing wrt to cold/warm state. Using the default of -1 is UB.
-          # The stats per batch are available in 'IndividualBulkInsert' measurement.
-          Batches: {^Parameter: {Name: "Batches", Default: -1}}
+          # they are testing wrt to cold/warm state. The stats per batch will be available in the
+          # 'IndividualBulkInsert' measurement.
+          Batches: {^Parameter: {Name: "Batches", Default: 500}}
 
 Actors:
 # This workload is completely linear with one actor per phase. Having phases when nothing happens
@@ -90,8 +124,7 @@ Actors:
 # Phases:
 # 0 setup (no index), 10 create CSI, 20 replace CSI with wildcard index
 # 1,                  11,            21                                  - quiese
-# 3,                  13,            23                                  - insert tail
-# 4,                  14,            24                                  - insert warm
+# 2,                  12,            22                                  - insert
 
 - Name: Loader
   Type: Loader
@@ -108,38 +141,7 @@ Actors:
         CollectionCount: 1
         DocumentCount: *docCount
         BatchSize: 1000
-        Document:
-          # This loader will populate the collection with documents that look like:
-          # {
-          #   _id: ObjectId(...),
-          #   root: {
-          #     x271: NumberInt(9917),
-          #     x6305: NumberInt(11),
-          #     x8: NumberInt(1022),
-          #     <7 more fields like this>
-          #   }
-          # }
-          root: {^Object: {
-            withNEntries: *objectWidth,
-
-            # Do we want to use a non-uniform distribution for the fiedls, modelling that some are
-            # rarer than others? The sampling might become unstable in this case and even harder to
-            # interpret the results.
-            havingKeys: {^FormatString: {
-              "format": "x%d",
-              "withArgs": [{^RandomInt: {min: 0, max: *schemaWidth}}]
-            }},
-
-            # We would like to compare CSI to wildcard indexes and to model similarly fragmented
-            # access to the index, we are using uniform value distribution here.
-            andValues: {^RandomInt: {min: 0, max: *schemaWidth}},
-
-            # Occasionally, the key generator might produce the same key name. For this workload,
-            # it's OK to have some of the objects with fewer than 'objectWidth' fields (and we don't
-            # want to test parsing of the duplicated keys for the index as it's not a common user
-            # scenario).
-            duplicatedKeys: skip
-          }}
+        Document: *document
 
 - Name: Quiese
   Type: QuiesceActor
@@ -152,29 +154,16 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-# Do a bunch of inserts with re-sampling, we expect a long warm-up tail in this test but not too
-# long (P50 and P80 for latency should be close).
-# Target measurements: Latency50thPercentile
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: NoIndexes_tail
-      OnlyActiveInPhase: 3
-      Repeats: 200  # with sample size of 10, this "touches" 200*10*10 paths > schemaWidth
-      Batches: 1
-
-# Now do multiple inserts of documents with the same schema. The performance of the first insert
-# might be affected by the inserts in the previous stages, but it should stabilize after that so, by
-# using a large number of batches, it should ammortize sufficiently to have P90 simialr to P50 for
-# the latency.
+# Do multiple inserts of documents with the same schema. The performance of the first insert might
+# be affected by the inserts in the previous stages, but it should stabilize after that so, by using
+# a large number of batches, it should ammortize sufficiently to have P90 simialr to P50 for the
+# latency.
 # Target measurements: Latency90thPercentile
 - ActorFromTemplate:
     TemplateName: InsertFromSample
     TemplateParameters:
-      Name: NoIndexes_warm
-      OnlyActiveInPhase: 4
-      Repeats: 1
-      Batches: 200
+      Name: NoIndexes
+      OnlyActiveInPhase: 2
 
 - Name: BuildColumnStoreIndex
   Type: RunCommand
@@ -195,24 +184,12 @@ Actors:
             - key: {"$**": "columnstore"}
               name: csi
 
-# Repeat the same tests as with no index in presence of CSI. We are instantiating new actors as we
-# need to collect the same measurements with different names. The previous stages have inserted
-# 200*10 + 200*10 = 4000 new documents, which is tiny compared to the 1e6 collection size.
+# Repeat the same tests as with no index in presence of CSI.
 - ActorFromTemplate:
     TemplateName: InsertFromSample
     TemplateParameters:
-      Name: Csi_tail
-      OnlyActiveInPhase: 13
-      Repeats: 200
-      Batches: 1
-
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: Csi_warm
-      OnlyActiveInPhase: 14
-      Repeats: 1
-      Batches: 200
+      Name: Csi
+      OnlyActiveInPhase: 12
 
 - Name: ReplaceCsiWithWildcardIndex
   Type: RunCommand
@@ -236,23 +213,10 @@ Actors:
             - key: {"root.$**": 1}
               name: root
 
-# Repeat the same tests as with no index in presence of CSI. We are instantiating new actors as we
-# need to collect the same measurements with different names. The previous stages have inserted
-# 2*(200*10 + 200*10) = 8000 new documents, which is still tiny compared to the 1e6
-# collection size.
+# Repeat the same tests as with no index in presence of a total wildcard index.
 - ActorFromTemplate:
     TemplateName: InsertFromSample
     TemplateParameters:
-      Name: Wildcard_tail
-      OnlyActiveInPhase: 23
-      Repeats: 200
-      Batches: 1
-
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: Wildcard_warm
-      OnlyActiveInPhase: 24
-      Repeats: 1
-      Batches: 200
+      Name: Wildcard
+      OnlyActiveInPhase: 22
 
