@@ -50,6 +50,9 @@ def cli(ctx: click.Context, verbose: bool) -> None:
         [
             "ubuntu1804",
             "ubuntu2004",
+            "ubuntu2004_arm64",
+            "ubuntu2204",
+            "ubuntu2204_arm64",
             "rhel8",
             "rhel70",
             "amazon2",

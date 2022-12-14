@@ -240,7 +240,7 @@ def _setup_resmoke(
             download_required = False
         else:
             SLOG.info(
-                "Mongo binary exist, but is not the correct version. Mongo will be dowloaded from the canned artifact."
+                "Mongo binary exist, but is not the correct version. Mongo will be downloaded from the canned artifact."
             )
 
     if download_required:

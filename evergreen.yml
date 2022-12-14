@@ -49,7 +49,7 @@ ignore:
 
 buildvariants:
 - name: amazon2
-  display_name: Amazon Linux 2
+  display_name: Amazon Linux 2 x64
   modules: [mongo]
   run_on:
   - amazon2-build
@@ -59,7 +59,7 @@ buildvariants:
   - name: tg_compile_and_test_with_server
 
 - name: amazon2_arm64
-  display_name: Amazon Linux 2 Arm64
+  display_name: Amazon Linux 2 arm64
   modules: [mongo]
   run_on:
   - amazon2-arm64-large
@@ -67,8 +67,6 @@ buildvariants:
     distro: amazon2_arm64
   tasks:
   - name: tg_compile_and_test_with_server
-
-
 
 - name: rhel70
   display_name: RHEL 7
@@ -101,17 +99,47 @@ buildvariants:
   - name: tg_compile
 
 - name: ubuntu2004
-  display_name: Ubuntu 20.04
+  display_name: Ubuntu 20.04 x64
   modules: [mongo]
   expansions:
     distro: ubuntu2004
   run_on:
   - ubuntu2004-large
   tasks:
-  - name: tg_compile
+  - name: tg_compile_and_test_with_server
+
+- name: ubuntu2004_arm64
+  display_name: Ubuntu 20.04 arm64
+  modules: [mongo]
+  expansions:
+    distro: ubuntu2004_arm64
+  run_on:
+    - ubuntu2004-large-arm64
+  tasks:
+    - name: tg_compile_and_test_with_server
+
+- name: ubuntu2204
+  display_name: Ubuntu 22.04 x64
+  modules: [mongo]
+  expansions:
+    distro: ubuntu2204
+  run_on:
+    - ubuntu2204-large
+  tasks:
+    - name: tg_compile
+
+- name: ubuntu2204_arm64
+  display_name: Ubuntu 22.04 arm64
+  modules: [mongo]
+  expansions:
+    distro: ubuntu2204_arm64
+  run_on:
+    - ubuntu2204-large-arm64
+  tasks:
+    - name: tg_compile
 
 - name: macos-1100
-  display_name: macOS Big Sur
+  display_name: macOS Big Sur x64
   modules: [mongo]
   run_on:
   - macos-1100
@@ -119,7 +147,7 @@ buildvariants:
   - name: tg_compile
 
 - name: macos-1100-arm64
-  display_name: macOS Bug Sur Arm64
+  display_name: macOS Bug Sur arm64
   modules: [mongo]
   run_on:
   - macos-1100-arm64
