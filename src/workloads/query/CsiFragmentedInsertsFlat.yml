@@ -2,10 +2,10 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-execution"
 Description: |
   This workload compares performance of inserts into a collection with only the default _id index,
-  and in presence of either columnstore or wildcard indexes. It uses an artificial data set with
-  a wide overall schema and narrow individual objects to model fragmented access to CSI, which
-  clusters entries by path.
-  The data size is relatively small (1e6 documents yield ~175MB data size and ~105MB storage size).
+  and in presence of the columnstore index. It uses an artificial data set with a wide overall
+  schema and narrow individual objects to model fragmented access to CSI, which clusters entries by
+  path. The data size is relatively small (1e6 documents yield ~175MB data size and ~105MB storage
+  size).
   We would like to be able to correlate the results of this workload with the similar one that uses
   nested data (CsiFragmentedInsertsNested.yml). Please make sure to update both when making changes.
 
@@ -35,7 +35,7 @@ Clients:
       connectTimeoutMS: 600_000
 
 GlobalDefaults:
-  MaxPhases: &maxPhases 26
+  MaxPhases: &maxPhases 5
   Database: &db csiFragmentedInsertsFlat
 
   # The Loader actor creates collections named "Collection<N>" where N corresponds to the thread's
@@ -62,16 +62,13 @@ GlobalDefaults:
     root: {^Object: {
       withNEntries: *objectWidth,
 
-      # Do we want to use a non-uniform distribution for the fiedls, modelling that some are
-      # rarer than others? The sampling might become unstable in this case and even harder to
-      # interpret the results.
+      # We are using uniform distribution of fields to make the sampling more stable.
       havingKeys: {^FormatString: {
         "format": "x%d",
         "withArgs": [{^RandomInt: {min: 0, max: *schemaWidth}}]
       }},
 
-      # We would like to compare CSI to wildcard indexes and to model similarly fragmented
-      # access to the index, we are using uniform value distribution here.
+      # We don't expect the actual values to matter.
       andValues: {^RandomInt: {min: 0, max: *schemaWidth}},
 
       # Occasionally, the key generator might produce the same key name. For this workload,
@@ -118,14 +115,6 @@ ActorTemplates:
           Batches: {^Parameter: {Name: "Batches", Default: 500}}
 
 Actors:
-# This workload is completely linear with one actor per phase. Having phases when nothing happens
-# is mildly wastful, but I'm tired of having to adjust the numbers, so assuming "sparse" numbering
-# scheme that is more stable.
-# Phases:
-# 0 setup (no index), 10 create CSI, 20 replace CSI with wildcard index
-# 1,                  11,            21                                  - quiese
-# 2,                  12,            22                                  - insert
-
 - Name: Loader
   Type: Loader
   Threads: 1
@@ -149,7 +138,7 @@ Actors:
   Database: *db
   Phases:
     OnlyActiveInPhases:
-      Active: [1, 11, 21]
+      Active: [1, 4]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Repeat: 1
@@ -170,7 +159,7 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [10]
+      Active: [3]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Repeat: 1
@@ -189,34 +178,6 @@ Actors:
     TemplateName: InsertFromSample
     TemplateParameters:
       Name: Csi
-      OnlyActiveInPhase: 12
+      OnlyActiveInPhase: 5
 
-- Name: ReplaceCsiWithWildcardIndex
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [20]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            dropIndexes: *coll
-            index: csi
-        - OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *coll
-            indexes:
-            - key: {"root.$**": 1}
-              name: root
-
-# Repeat the same tests as with no index in presence of a total wildcard index.
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: Wildcard
-      OnlyActiveInPhase: 22
 

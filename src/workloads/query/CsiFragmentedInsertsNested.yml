@@ -33,7 +33,7 @@ Clients:
       connectTimeoutMS: 600_000
 
 GlobalDefaults:
-  MaxPhases: &maxPhases 20
+  MaxPhases: &maxPhases 5
   Database: &db csiFragmentedInsertsNested
   Collection: &coll Collection0
   DocumentCount: &docCount 1e6
