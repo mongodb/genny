@@ -1,6 +1,7 @@
 # /bin/python
 # You may need to pip install some of the imports below if you don't have them already
 
+<<<<<<< Updated upstream
 import os
 import re
 import subprocess
@@ -8,6 +9,17 @@ import statistics
 import argparse
 import math
 import json
+=======
+from datetime import datetime
+import argparse
+import json
+import math
+import os
+import re
+import statistics
+import subprocess
+import textwrap
+>>>>>>> Stashed changes
 
 default_metrics_path = 'build/WorkloadOutput/CedarMetrics'
 default_metrics = ['throughput', 'timers.dur']
@@ -35,26 +47,70 @@ are probably superior for detailed analysis, but this is meant to give quick fee
 things are working as expected during development or local testing''',
         epilog='''
 Please feel free to update this script to handle your metris or to adjust the output to something
+<<<<<<< Updated upstream
 you consider more useful.''')
+=======
+you consider more useful.''',
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+>>>>>>> Stashed changes
 
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument(
         '-d',
         '--workloadOutputDir',
         default=default_metrics_path,
+<<<<<<< Updated upstream
         help="""The directory to look for the .ftdc workload output files.
                 Defaults to """ + default_metrics_path)
+=======
+        help=textwrap.dedent("""\
+            The directory to look for the .ftdc workload output files.
+            Defaults to """ + default_metrics_path))
+>>>>>>> Stashed changes
     parser.add_argument(
         '-m',
         '--metrics',
         nargs="+",
         default=default_metrics,
+<<<<<<< Updated upstream
         help="""Which metrics should this script look at and summarize?
              Specify as a space separated list. Defaults to """ + json.dumps(default_metrics))
     parser.add_argument(
         '--hideHistograms',
         action='store_true',
         help="Hide histogram output")
+=======
+        help=textwrap.dedent("""\
+            Which metrics should this script look at and summarize?
+
+            Specify as a space separated list. Defaults to """ + json.dumps(default_metrics)))
+    parser.add_argument(
+        '-f',
+        '--format',
+        choices=["default", "stats_only", "single_columns", "tabular"],
+        default="default",
+        help=textwrap.dedent("""\
+        Choose how you would like the data to be displayed:
+           default:
+               displays histograms and summary statistics, one at a time. Good for human viewing.
+           stats_only:
+               like default but hides the histograms. Good for getting data more compact for easier
+               visual comparisons.
+           tabular:
+               displays a tab-separated table:
+               test_name     metric   result
+           single_columns:
+               the 'tabular' format isn't easily copyable into google sheets (though it is copyable
+               into Apple Numbers and possibly Excel), so this option will print one column at a
+               time, which is more easily translated into a spreadsheet.
+        """))
+    parser.add_argument(
+        '--showRawData',
+        default=False,
+        action="store_true",
+        help="Should the array of raw measurements be displayed? Default false.")
+>>>>>>> Stashed changes
     parser.add_argument(
         '-b',
         '--nHistogramBuckets',
@@ -64,10 +120,18 @@ you consider more useful.''')
     parser.add_argument(
         '-a',
         '--actorRegex',
+<<<<<<< Updated upstream
         help="""An optional regex to apply to filter out processing results for certain actors.
         The results for ExampleActor will be stored in something like
         '.../WorkloadOutput/CedarMetrics/ExampleActor.ftdc. Your regex should assume it is working
         with just the actor name: "ExampleActor" in this case.""")
+=======
+        help=textwrap.dedent("""\
+            An optional regex to apply to filter out processing results for certain actors.
+            The results for ExampleActor will be stored in something like
+            '.../WorkloadOutput/CedarMetrics/ExampleActor.ftdc. Your regex should assume it is
+            working with just the actor name: "ExampleActor" in this case."""))
+>>>>>>> Stashed changes
     return parser.parse_args()
 
 
@@ -82,8 +146,13 @@ def convert_to_csv(args, actor_file):
     if (os.path.exists(tmp_file_location)):
         if args.verbose:
             print(
+<<<<<<< Updated upstream
                 """Found pre-existing %s. Assuming this is the result of converting
                 %s to csv. Proceeding by using it rather than re-converting. Rename
+=======
+                """Found pre-existing % s. Assuming this is the result of converting
+                % s to csv. Proceeding by using it rather than re-converting. Rename
+>>>>>>> Stashed changes
                 it or delete it if you don't want to use it.""" %
                 (tmp_file_location, actor_file))
         return tmp_file_location
@@ -101,7 +170,11 @@ def summarize_diffed_data(args, actor_name, metrics_of_interest):
     Computes statistical measures on data points that have been pre-processed by diffing one
     recording from the previous recording.
 
+<<<<<<< Updated upstream
     Returns a mapping from metric name to a dictionary of summary statistics, e.g. 
+=======
+    Returns a mapping from metric name to a dictionary of summary statistics, e.g.
+>>>>>>> Stashed changes
     {
         'timers.dur (measured in nanoseconds, displayed in milliseconds)': {
             count: 10,
@@ -122,6 +195,7 @@ def summarize_diffed_data(args, actor_name, metrics_of_interest):
         sorted_res = sorted(diffed_readings)
         if is_measured_in_nanoseconds(metric_name):
             metric_name += " (measured in nanoseconds, displayed in milliseconds)"
+<<<<<<< Updated upstream
         results[metric_name] = {
             "count": len(diffed_readings),
             "average": round(statistics.mean(diffed_readings), 1),
@@ -131,6 +205,27 @@ def summarize_diffed_data(args, actor_name, metrics_of_interest):
             "[min, max]": [round(sorted_res[0], 1), round(sorted_res[-1], 1)],
             "sorted_raw_data": sorted_res
         }
+=======
+        summary = {
+            "LatencyAverage": round(statistics.mean(diffed_readings), 1),
+            "LatencyMode": round(statistics.mode(diffed_readings), 1),
+            "LatencyMin": round(sorted_res[0], 1),
+            "LatencyMax": round(sorted_res[-1], 1),
+            "sorted_raw_data": sorted_res,
+            "raw_data": diffed_readings
+        }
+        if len(diffed_readings) > 1:
+            summary["LatencyStdDev"] = round(
+                statistics.stdev(diffed_readings), 1)
+
+        def percentile(sorted_data, percent):
+            return sorted_data[math.floor((percent / 100.0) * len(sorted_data))]
+        for percent in [50, 80, 90, 95, 99]:
+            summary["Latency%dthPercentile" % percent] = round(
+                percentile(sorted_res, percent), 1)
+
+        results[metric_name] = summary
+>>>>>>> Stashed changes
         if args.verbose:
             print("Summared", metric_name)
             pretty_print_summary(args, results[metric_name], "\t")
@@ -144,20 +239,13 @@ def summarize_readings(args, actor_name, metrics_of_interest, header, last_line)
         print(
             "Finished summarizing diffed data, computing metrics from the the last row...")
 
+<<<<<<< Updated upstream
     if "throughput" in args.metrics:
         if "counters.ops" in header and "timers.dur" in header:
             n_ops = float(last_line[header.index("counters.ops")])
             elapsed_nanos = float(last_line[header.index("timers.dur")])
             elapsed_seconds = elapsed_nanos / (1000.0 * 1000.0 * 1000.0)
-            results["throughput"] = {
-                "ops": n_ops,
-                "seconds": elapsed_seconds,
-                "ops per second": round(n_ops / elapsed_seconds, 4),
-            }
-            if args.verbose:
-                print("throughput:")
-                pretty_print_summary(args, results["throughput"], "\t")
-
+=======
     if "errors" in args.metrics:
         if "counters.errors" in header:
             n_errors = last_line[header.index("counters.errors")]
@@ -167,6 +255,43 @@ def summarize_readings(args, actor_name, metrics_of_interest, header, last_line)
             elif args.verbose:
                 print("errors: ", n_errors)
 
+    if "throughput" in args.metrics:
+        if "counters.ops" in header and "ts" in header:
+            n_ops = float(last_line[header.index("counters.ops")])
+            # Convert the timestamp string into something we can diff. Python's
+            # datetime util doesn't like the trailing 'Z' for some reason.
+            duration_total = float(last_line[header.index("timers.dur")])
+            num_workers = float(last_line[header.index("gauges.workers")])
+            elapsed_seconds = (duration_total / num_workers) / \
+                (1000 * 1000 * 1000)
+            if elapsed_seconds == 0:
+                if args.verbose:
+                    print(
+                        "Skipping throughput reporting since it looks like 0 seconds elapsed.")
+                return results
+
+>>>>>>> Stashed changes
+            results["throughput"] = {
+                "ops": n_ops,
+                "seconds": elapsed_seconds,
+                "ops per second": round(n_ops / elapsed_seconds, 4),
+            }
+            if args.verbose:
+                print("throughput:")
+                pretty_print_summary(args, results["throughput"], "\t")
+
+<<<<<<< Updated upstream
+    if "errors" in args.metrics:
+        if "counters.errors" in header:
+            n_errors = last_line[header.index("counters.errors")]
+            if n_errors != 0:
+                print("WARNING non-zero error count: ", n_errors)
+                results["errors"] = {"total": n_errors}
+            elif args.verbose:
+                print("errors: ", n_errors)
+
+=======
+>>>>>>> Stashed changes
     return results
 
 
@@ -191,7 +316,11 @@ def process_csv(args, actor_name, csv_reader):
             print("Unable to find metric with the name '%s'. Available metrics: %s" % (
                 metric_name, json.dumps(header)))
             print("Skipping this actor analysis")
+<<<<<<< Updated upstream
             return {metric_name: []}
+=======
+            return {metric_name: {}}
+>>>>>>> Stashed changes
 
         # Other metrics should be easy to add, but are untested so not included here.
         assert metric_name.endswith(".total") or metric_name.endswith('.dur'), """
@@ -296,13 +425,30 @@ def print_histogram(data_points, n_buckets, prefix=""):
 
 def pretty_print_summary(args, summary, prefix=""):
     for key in summary:
+<<<<<<< Updated upstream
         if key == "sorted_raw_data":
+=======
+        if key in ("LatencyMin", "LatencyMax"):
+            continue # Handled below
+
+        if not args.showRawData and key in ("raw_data", "sorted_raw_data"):
+>>>>>>> Stashed changes
             continue
 
         if summary[key] is not None:
             print("%s%-10s: %-8s" % (prefix, key, summary[key]))
 
+<<<<<<< Updated upstream
     if not args.hideHistograms and "sorted_raw_data" in summary:
+=======
+    # Print min and max condensed, just to save some space.
+    if "LatencyMin" in summary and summary["LatencyMin"] is not None:
+        assert ("LatencyMax" in summary and summary["LatencyMax"] is not None)
+        print("%s%-10s: %-8s" %
+              (prefix, "[LatencyMin, LatencyMax]", "[%d, %d]" % (summary["LatencyMin"], summary["LatencyMin"])))
+
+    if args.format != "stats_only" and "sorted_raw_data" in summary:
+>>>>>>> Stashed changes
         print("%shistogram:" % prefix)
         print_histogram(summary["sorted_raw_data"],
                         args.nHistogramBuckets, prefix + "\t")
@@ -324,6 +470,37 @@ def parse_actor_regex(args):
     return actor_regex
 
 
+<<<<<<< Updated upstream
+=======
+def print_single_columns(args, global_summaries):
+    for (actor_name, metrics) in global_summaries.items():
+        # Each actor may have different metrics available. It would be great to print the header
+        # only once, but it may not quite work. For example, an insert workload may have some
+        # similar insertion phases to compare, but an intervening command stage dropping indexes.
+        # That command stage won't have the same metrics available, so we give each a separate
+        # header column.
+        print("===== Header column =====")
+
+        print("Actor")
+        for (metric_name, summary_data) in metrics.items():
+            print(metric_name)
+            for key in summary_data:
+                if args.showRawData or (key != "sorted_raw_data" and key != "raw_data"):
+                    print("├─" + key)
+
+        print("\n")
+        print("----- Begin measurements -----")
+        print("\n")
+
+        print(actor_name)
+        for (metric_name, summary_data) in metrics.items():
+            print("")
+            for (key, val) in summary_data.items():
+                if args.showRawData or (key != "sorted_raw_data" and key != "raw_data"):
+                    print(val)
+
+
+>>>>>>> Stashed changes
 def main():
     args = parse_args()
 
@@ -359,6 +536,24 @@ def main():
             for (metric_name, summary_data) in metric_summaries.items():
                 global_summaries[actor_name][metric_name] = summary_data
 
+<<<<<<< Updated upstream
+=======
+    print_metrics(args, global_summaries)
+
+
+def print_metrics(args, global_summaries):
+    strategies = {
+        "default": print_with_histograms,
+        # This will check 'args' and hide histograms.
+        "stats_only": print_with_histograms,
+        "single_columns": print_single_columns,
+        "tabular": print_tabular_format
+    }
+    strategies[args.format](args, global_summaries)
+
+
+def print_with_histograms(args, global_summaries):
+>>>>>>> Stashed changes
     for (actor_name, metrics) in global_summaries.items():
         print(actor_name, "summary:")
         for (metric_name, summary_data) in metrics.items():
@@ -367,5 +562,18 @@ def main():
         print("\n")
 
 
+<<<<<<< Updated upstream
+=======
+def print_tabular_format(args, global_summaries):
+    fmt_string = "%-50s\t%-30s\t%s"
+    print(fmt_string % ("test_name", "metric", "result"))
+    for (actor_name, metrics) in global_summaries.items():
+        for (cedar_metric_name, summary_data) in metrics.items():
+            for (metric_name, result) in summary_data.items():
+                if args.showRawData or (metric_name != "sorted_raw_data" and metric_name != "raw_data"):
+                    print(fmt_string % (actor_name, metric_name, result))
+
+
+>>>>>>> Stashed changes
 if __name__ == "__main__":
     main()
