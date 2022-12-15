@@ -22,7 +22,8 @@
 
 #include <metrics/metrics.hpp>
 
-#include <value_generators/DocumentGenerator.hpp>
+#include <mongocxx/collection.hpp>
+#include <value_generators/PipelineGenerator.hpp>
 
 namespace genny::actor {
 
@@ -36,7 +37,10 @@ namespace genny::actor {
 class SamplingLoader : public Actor {
 
 public:
-    explicit SamplingLoader(ActorContext& context);
+    SamplingLoader(ActorContext& context,
+                   std::string dbName,
+                   std::string collectionName,
+                   const std::vector<bsoncxx::document::value>& sampleDocs);
     ~SamplingLoader() override = default;
 
     static std::string_view defaultName() {
@@ -44,15 +48,24 @@ public:
     }
     void run() override;
 
+    /**
+     * Returns a vector of owned documents after running a $sample. If given out to multiple
+     * locations, should be converted into a bsoncxx::document::view first.
+     */
+    static std::vector<bsoncxx::document::value> gatherSample(mongocxx::collection collection,
+                                                              uint sampleSize,
+                                                              PipelineGenerator& pipelineGenerator);
+
 private:
     /** @private */
     struct PhaseConfig;
 
-    std::vector<bsoncxx::document::value> gatherSample(PhaseConfig*);
+    std::vector<bsoncxx::document::value> _sampleDocs;
 
     metrics::Operation _totalBulkLoad;
     metrics::Operation _individualBulkLoad;
     mongocxx::pool::entry _client;
+    mongocxx::collection _collection;
     PhaseLoop<PhaseConfig> _loop;
 };
 

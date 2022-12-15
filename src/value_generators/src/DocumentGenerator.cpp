@@ -516,9 +516,13 @@ private:
 // by JoinGenerator today. See ChooseStringGenerator.
 class ChooseGenerator : public Appendable {
 public:
-    // constructore defined at bottom of the file to use other symbol
+    // constructor defined at bottom of the file to use other symbol
     ChooseGenerator(const Node& node, GeneratorArgs generatorArgs);
     Appendable& choose() {
+        if (_deterministic) {
+            ++_elemNumber;
+            return *_choices[_elemNumber % _choices.size()];
+        }
         // Pick a random number between 0 and sum(weights)
         // Pick value based on that.
         auto distribution = boost::random::discrete_distribution(_weights);
@@ -537,6 +541,8 @@ protected:
     ActorId _id;
     std::vector<UniqueAppendable> _choices;
     std::vector<int64_t> _weights;
+    int32_t _elemNumber;
+    bool _deterministic;
 };
 
 // This is a a more specific version of ChooseGenerator that produces strings. It is only used
@@ -545,6 +551,11 @@ class ChooseStringGenerator : public Generator<std::string> {
 public:
     ChooseStringGenerator(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng}, _id{generatorArgs.actorId} {
+        if (node["deterministic"] && node["weights"]) {
+            std::stringstream msg;
+            msg << "Invalid Syntax for choose: cannot have both 'deterministic' and 'weights'";
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
         if (!node["from"].isSequence()) {
             std::stringstream msg;
             msg << "Malformed node for choose from array. Not a sequence " << node;
@@ -561,8 +572,19 @@ public:
             // If not passed in, give each choice equal weight
             _weights.assign(_choices.size(), 1);
         }
+        if (node["deterministic"]) {
+            _deterministic = node["deterministic"].maybe<bool>().value_or(false);
+        } else {
+            _deterministic = false;
+        }
+        _elemNumber = -1;
     }
+
     std::string evaluate() override {
+        if (_deterministic) {
+            ++_elemNumber;
+            return (_choices[_elemNumber % _choices.size()]->evaluate());
+        }
         // Pick a random number between 0 and sum(weights)
         // Pick value based on that.
         auto distribution = boost::random::discrete_distribution(_weights);
@@ -574,6 +596,8 @@ protected:
     ActorId _id;
     std::vector<UniqueGenerator<std::string>> _choices;
     std::vector<int64_t> _weights;
+    int32_t _elemNumber;
+    bool _deterministic;
 };
 
 class IPGenerator : public Generator<std::string> {
@@ -1286,9 +1310,23 @@ protected:
     std::vector<UniqueGenerator<bsoncxx::array::value>> _parts;
 };
 
-/** `{^Object: {withNEntries: 10, havingKeys: {^Foo}, andValues: {^Bar}}` */
+/** 
+ * `{^Object: {withNEntries: 10, havingKeys: {^Foo}, andValues: {^Bar}, allowDuplicateKeys: bool}`
+ */
 class ObjectGenerator : public Generator<bsoncxx::document::value> {
 public:
+    enum class OnDuplicatedKeys {
+        // BSON supports objects with duplicated keys and in some cases we might want to test such
+        // scenarios. Allowing to insert duplicated keys is faster than tracking them, so in the
+        // cases when duplicates are impossible (or unlikely and don't affect the test), this option
+        // is also a good choice.
+        insert = 0,
+        // The configuration to skip duplicated keys tracks already inserted keys and never inserts
+        // duplicates. This means that the resulting object might have fewer keys than specified in
+        // 'withNEntries' setting.
+        skip,
+        // TODO: "retry" option, that is, regenerate the key until get a unique one.
+    };
     ObjectGenerator(const Node& node,
                     GeneratorArgs generatorArgs,
                     std::map<std::string, Parser<UniqueAppendable>> parsers)
@@ -1298,13 +1336,28 @@ public:
           _keyGen{stringGenerator(node["havingKeys"], generatorArgs)},
           _valueGen{
               valueGenerator<false, UniqueAppendable>(node["andValues"], generatorArgs, parsers)},
-          _nTimesGen{intGenerator(extract(node, "withNEntries", "^Object"), generatorArgs)} {}
+          _nTimesGen{intGenerator(extract(node, "withNEntries", "^Object"), generatorArgs)} {
+            const auto duplicatedKeys = _node["duplicatedKeys"].to<std::string>();
+            if (duplicatedKeys == "insert") {
+                _onDuplicatedKeys = OnDuplicatedKeys::insert;
+            } else if (duplicatedKeys == "skip") {
+                _onDuplicatedKeys = OnDuplicatedKeys::skip;
+            } else {
+                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                    "Unknown value for 'duplicatedKeys'"));
+            }
+          }
 
     bsoncxx::document::value evaluate() override {
         bsoncxx::builder::basic::document builder;
         auto times = _nTimesGen->evaluate();
+
+        std::unordered_set<std::string> usedKeys;
         for (int i = 0; i < times; ++i) {
-            _valueGen->append(_keyGen->evaluate(), builder);
+            auto key = _keyGen->evaluate();
+            if (_onDuplicatedKeys == OnDuplicatedKeys::insert || usedKeys.insert(key).second) {
+                _valueGen->append(key, builder);
+            }
         }
         return builder.extract();
     }
@@ -1316,6 +1369,7 @@ private:
     const UniqueGenerator<std::string> _keyGen;
     const UniqueAppendable _valueGen;
     const UniqueGenerator<int64_t> _nTimesGen;
+    OnDuplicatedKeys _onDuplicatedKeys;
 };
 
 
@@ -1899,6 +1953,11 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         msg << "Malformed node for choose from array. Not a sequence " << node;
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
     }
+    if (node["deterministic"] && node["weights"]) {
+        std::stringstream msg;
+        msg << "Invalid Syntax for choose: cannot have both 'deterministic' and 'weights'";
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+    }
     for (const auto&& [k, v] : node["from"]) {
         _choices.push_back(valueGenerator<false, UniqueAppendable>(v, generatorArgs, allParsers));
     }
@@ -1910,6 +1969,12 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         // If not passed in, give each choice equal weight
         _weights.assign(_choices.size(), 1);
     }
+    if (node["deterministic"]) {
+        _deterministic = node["deterministic"].maybe<bool>().value_or(false);
+    } else {
+        _deterministic = false;
+    }
+    _elemNumber = -1;
 }
 
 /**

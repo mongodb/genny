@@ -55,7 +55,7 @@ LocalLargeDoc100k: &LocalLargeDoc100k local_largedoc_100k
 # See 'LocalSmallDocTemplate' to understand how each doc is filled.
 LocalSmallDoc: &LocalSmallDoc
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: LocalSmallDocTemplate
     Parameters: {card: 1500}
 
@@ -63,7 +63,7 @@ LocalSmallDoc: &LocalSmallDoc
 # See 'LocalLargeDocTemplate' to understand how each doc is filled.
 LocalLargeDoc: &LocalLargeDoc
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: LocalLargeDocTemplate
     Parameters: {card: 1500}
 
@@ -71,14 +71,14 @@ LocalLargeDoc: &LocalLargeDoc
 # 'ForeignSmallDocTemplate' to understand how each doc is filled.
 ForeignSmallDoc: &ForeignSmallDoc
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: ForeignSmallDocTemplate
     Parameters: {card: 1500}
 
 # The lookup command for local_smalldoc_100k.str_key == foreign.str_key.
 INLJLookupOnStrKeyCmd: &INLJLookupOnStrKeyCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -89,7 +89,7 @@ INLJLookupOnStrKeyCmd: &INLJLookupOnStrKeyCmd
 # The lookup command for local_smalldoc_100k.int_key == foreign.arr_key.
 INLJLookupOnArrKeyCmd: &INLJLookupOnArrKeyCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -99,7 +99,7 @@ INLJLookupOnArrKeyCmd: &INLJLookupOnArrKeyCmd
 # The lookup command for local_smalldoc_100k.int_key == foreign.doc_key.int.
 INLJLookupOnSubFieldKeyCmd: &INLJLookupOnSubFieldKeyCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -109,7 +109,7 @@ INLJLookupOnSubFieldKeyCmd: &INLJLookupOnSubFieldKeyCmd
 # The lookup command for local_smalldoc_100k.int_key == foreign.doc_key.arr.
 INLJLookupOnSubArrFieldKeyCmd: &INLJLookupOnSubArrFieldKeyCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -119,7 +119,7 @@ INLJLookupOnSubArrFieldKeyCmd: &INLJLookupOnSubArrFieldKeyCmd
 # The lookup command for local_largedoc_100k.int_key == foreign.int_key.
 INLJLookupLargeDocCmd: &INLJLookupLargeDocCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalLargeDoc100k
@@ -128,7 +128,7 @@ INLJLookupLargeDocCmd: &INLJLookupLargeDocCmd
 # The lookup command for local_smalldoc_300k.int_key == foreign.int_key.
 INLJLookupLocal100kCmd: &INLJLookupLocal100kCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -137,7 +137,7 @@ INLJLookupLocal100kCmd: &INLJLookupLocal100kCmd
 # The lookup command for local_smalldoc_300k.int_key == foreign.int_key.
 INLJLookupLocal300kCmd: &INLJLookupLocal300kCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc300k
@@ -146,7 +146,7 @@ INLJLookupLocal300kCmd: &INLJLookupLocal300kCmd
 # The lookup command for local_smalldoc_500k.int_key == foreign.int_key.
 INLJLookupLocal500kCmd: &INLJLookupLocal500kCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc500k
@@ -155,7 +155,7 @@ INLJLookupLocal500kCmd: &INLJLookupLocal500kCmd
 # The lookup command for local_smalldoc_700k.int_key == foreign.int_key.
 INLJLookupLocal700kCmd: &INLJLookupLocal700kCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc700k
@@ -165,7 +165,7 @@ INLJLookupLocal700kCmd: &INLJLookupLocal700kCmd
 # | local_smalldoc_100k.str_key == foreign.str_key.
 INLJDoubleLookupCmd: &INLJDoubleLookupCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJDoubleLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k
@@ -175,7 +175,7 @@ INLJDoubleLookupCmd: &INLJDoubleLookupCmd
 # | local_smalldoc_100k.int_key == foreign.arr_key.
 INLJTripleLookupCmd: &INLJTripleLookupCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJTripleLookupCmdTemplate
     Parameters:
       l: *LocalSmallDoc100k

@@ -42,8 +42,6 @@ public:
 
     void run() override;
 
-    std::string exec(const char* cmd);
-
     static std::string_view defaultName() {
         return "ExternalScriptRunner";
     }

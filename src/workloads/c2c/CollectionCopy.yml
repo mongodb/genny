@@ -13,6 +13,10 @@ Keywords:
 # These two values should match those are the top of MixPhases.yml
 ScriptsPath: &scriptsPath ./MongosyncScripts.yml
 
+EnvironmentDetails:
+  MongosyncConnectionURIs:
+  - http://localhost:27182
+
 Parameters:
 - &Nop {Nop: true}
 
@@ -22,10 +26,31 @@ Clients:
       maxPoolSize: 500
 
 Actors:
+
+- Name: SetupSharding
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: SetupShardKey
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: ShardCollection
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
 - Name: Setup
   Type: Loader
   Threads: 1
   Phases:
+  - *Nop
+  - *Nop
   - LoadConfig:
       Path: *scriptsPath
       Key: InsertShortTestData
@@ -37,9 +62,11 @@ Actors:
   - *Nop
 
 - Name: Mongosync
-  Type: ExternalScriptRunner
+  Type: Python
   Threads: 1
   Phases:
+  - *Nop
+  - *Nop
   - *Nop
   - LoadConfig:
       Path: *scriptsPath

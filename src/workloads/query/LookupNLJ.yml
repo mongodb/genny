@@ -49,14 +49,14 @@ LocalDoc100k: &LocalDoc100k local_doc_100k
 # collections. See 'LargeComplexDocTemplate' to understand how each doc is filled.
 LoadDoc: &LoadDoc
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: LargeComplexDocTemplate
 
 # Defines NLJ lookup commands which are used by 'NLJLookup' actors. See 'NLJLookupCmdTemplate' for
 # details.
 NLJLookupForeign1kScalarScalarCmd: &NLJLookupForeign1kScalarScalarCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -66,7 +66,7 @@ NLJLookupForeign1kScalarScalarCmd: &NLJLookupForeign1kScalarScalarCmd
 
 NLJLookupForeign1kScalarObj2Cmd: &NLJLookupForeign1kScalarObj2Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -76,7 +76,7 @@ NLJLookupForeign1kScalarObj2Cmd: &NLJLookupForeign1kScalarObj2Cmd
 
 NLJLookupForeign1kScalarObj5Cmd: &NLJLookupForeign1kScalarObj5Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -86,7 +86,7 @@ NLJLookupForeign1kScalarObj5Cmd: &NLJLookupForeign1kScalarObj5Cmd
 
 NLJLookupForeign1kObj5ScalarCmd: &NLJLookupForeign1kObj5ScalarCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -96,7 +96,7 @@ NLJLookupForeign1kObj5ScalarCmd: &NLJLookupForeign1kObj5ScalarCmd
 
 NLJLookupForeign1kScalarArr1Cmd: &NLJLookupForeign1kScalarArr1Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -106,7 +106,7 @@ NLJLookupForeign1kScalarArr1Cmd: &NLJLookupForeign1kScalarArr1Cmd
 
 NLJLookupForeign1kScalarArr8Cmd: &NLJLookupForeign1kScalarArr8Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -116,7 +116,7 @@ NLJLookupForeign1kScalarArr8Cmd: &NLJLookupForeign1kScalarArr8Cmd
 
 NLJLookupForeign1kArr8ScalarCmd: &NLJLookupForeign1kArr8ScalarCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -126,7 +126,7 @@ NLJLookupForeign1kArr8ScalarCmd: &NLJLookupForeign1kArr8ScalarCmd
 
 NLJLookupForeign10kScalarScalarCmd: &NLJLookupForeign10kScalarScalarCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -136,7 +136,7 @@ NLJLookupForeign10kScalarScalarCmd: &NLJLookupForeign10kScalarScalarCmd
 
 NLJLookupForeign10kScalarObj2Cmd: &NLJLookupForeign10kScalarObj2Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -146,7 +146,7 @@ NLJLookupForeign10kScalarObj2Cmd: &NLJLookupForeign10kScalarObj2Cmd
 
 NLJLookupForeign10kScalarObj5Cmd: &NLJLookupForeign10kScalarObj5Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -156,7 +156,7 @@ NLJLookupForeign10kScalarObj5Cmd: &NLJLookupForeign10kScalarObj5Cmd
 
 NLJLookupForeign10kObj5ScalarCmd: &NLJLookupForeign10kObj5ScalarCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -166,7 +166,7 @@ NLJLookupForeign10kObj5ScalarCmd: &NLJLookupForeign10kObj5ScalarCmd
 
 NLJLookupForeign10kScalarArr1Cmd: &NLJLookupForeign10kScalarArr1Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -176,7 +176,7 @@ NLJLookupForeign10kScalarArr1Cmd: &NLJLookupForeign10kScalarArr1Cmd
 
 NLJLookupForeign10kScalarArr8Cmd: &NLJLookupForeign10kScalarArr8Cmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k
@@ -186,7 +186,7 @@ NLJLookupForeign10kScalarArr8Cmd: &NLJLookupForeign10kScalarArr8Cmd
 
 NLJLookupForeign10kArr8ScalarCmd: &NLJLookupForeign10kArr8ScalarCmd
   LoadConfig:
-    Path: "../../phases/execution/LookupCommands.yml"
+    Path: "../../phases/query/LookupCommands.yml"
     Key: NLJLookupCmdTemplate
     Parameters:
       l: *LocalDoc100k

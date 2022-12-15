@@ -116,6 +116,34 @@ Tests:
       - {a: [ { "a": 1 }, 1, { "a": 1 } ] }
       - {a: [ 1, 1, { "a": 1 }, 1, "abc" ] }
 
+  - Name: Generate Array with deterministic choose where 'number' is greater than size of 'from'
+    GivenTemplate:
+      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 6}}
+    ThenReturns:
+      - {a: [ 1, 2, 3, 1, 2, 3 ] }
+      - {a: [ 1, 2, 3, 1, 2, 3 ] }
+      - {a: [ 1, 2, 3, 1, 2, 3 ] }
+
+  - Name: Generate Array with deterministic choose where 'number' is 1
+    GivenTemplate:
+      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 1}}
+    ThenReturns:
+      - {a: [ 1 ] }
+      - {a: [ 2 ] }
+      - {a: [ 3 ] }
+
+  - Name: Generate Array with deterministic deterministic where 'number' is smaller than size of 'from'
+    GivenTemplate:
+      a: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 2}}
+    ThenReturns:
+      - {a: [ 1, 2 ] }
+      - {a: [ 3, 1 ] }
+      - {a: [ 2, 3 ] }
+
+  - Name: Choose InvalidValueGeneratorSyntax
+    GivenTemplate: {a: {^Choose: {from: [1, "a", 2], deterministic: true, weights: [1, 1, 1]}}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
   - Name: ArrayChooseNestedGenerator
     GivenTemplate:
       a: {^Array: {number: 4, of: {^Choose: {from: [
@@ -163,7 +191,14 @@ Tests:
 
   - Name: Object Generator
     GivenTemplate:
-      a: {^Object: {withNEntries: 10, havingKeys: {^RandomString: {length: 10}}, andValues: {^Inc: {}}}}
+      a:
+        {^Object: {
+          withNEntries: 10,
+          havingKeys: {^RandomString: {length: 10}},
+          andValues: {^Inc: {}},
+          # All generated keys are unique, so "insert" is fine for this test.
+          duplicatedKeys: insert
+        }}
     ThenReturns:
       - a:
           JGBEV0zQZI: { "$numberLong": "1" }
@@ -176,6 +211,21 @@ Tests:
           AzUNSxcpt0: { "$numberLong": "8" }
           xYYXCh/Ybl: { "$numberLong": "9" }
           EHcmXZX/d4: { "$numberLong": "10" }
+
+  - Name: Object Generator skip duplicated keys
+    GivenTemplate:
+      a:
+        {^Object: {
+          # Because the name of the keys is fixed, the second and third key would have duplicated
+          # names and should not be inserted.
+          withNEntries: 3,
+          havingKeys: "c",
+          andValues: {^Inc: {}},
+          duplicatedKeys: skip
+        }}
+    ThenReturns:
+      - a:
+          c: { "$numberLong": "1" }
 
   - Name: one RandomInt
     GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: 10000000010}}}
@@ -486,17 +536,17 @@ Tests:
       - {a: yz}
       - {a: xyxyx}
 
-  - Name: RandomDataFromDataset requieres a path
+  - Name: RandomDataFromDataset requires a path
     GivenTemplate:
       a: {^ChooseFromDataset: {}}
     ThenThrows: InvalidValueGeneratorSyntax
 
-  - Name: RandomDataFromDataset requieres a file that exists
+  - Name: RandomDataFromDataset requires a file that exists
     GivenTemplate:
       a: {^ChooseFromDataset: {"path": "/tmp/itdoesnotexist"}}
     ThenThrows: InvalidValueGeneratorSyntax
 
-  - Name: RandomDataFromDataset requieres a non-empty file
+  - Name: RandomDataFromDataset requires a non-empty file
     GivenTemplate:
       a: {^ChooseFromDataset: {"path": "../../../src/workloads/datasets/empty_test.txt"}}
     ThenThrows: InvalidValueGeneratorSyntax
@@ -601,6 +651,31 @@ Tests:
     - a: "Hello random person: Huey"
     - a: "Hello random person: Huey"
     - a: "Hello random person: IonKmglImH"
+
+  - Name: Join With Deterministic Choose
+    GivenTemplate:
+      a: {^Object: {
+        withNEntries: 4, 
+        havingKeys: {^Join: {array: ["a", {^Choose: {from: ["1", "2"], deterministic: true}}], sep: ""}}, 
+        andValues: 1,
+        duplicatedKeys: insert
+      }}
+    ThenReturns:
+    - a:
+        a1: 1
+        a2: 1
+        a1: 1
+        a2: 1
+    - a:
+        a1: 1
+        a2: 1
+        a1: 1
+        a2: 1 
+    - a:
+        a1: 1
+        a2: 1
+        a1: 1
+        a2: 1 
 
   - Name: Concat two singletons
     GivenTemplate:

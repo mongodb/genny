@@ -1,0 +1,138 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+  Template for encryption-enabled workloads that emulate a YCSB workload.
+  Performs queries on an encrypted field, instead of _id, during the read/update phase.
+  Parameters:
+    Database:             name of encrypted database
+    Collection:           name of encrypted collection
+    ClientName:           name of encrypted client pool
+    Field<n>Value:        value of the nth field (n is 1..8)
+    ShardCollectionPhase: must be set to {Nop: true} for unsharded tests
+
+GlobalDefaults:
+  Database: &encrypted_db {^Parameter: {Name: "Database", Default: ""}}
+  Collection: &encrypted_coll {^Parameter: {Name: "Collection", Default: "testcoll"}}
+  Namespace: &encrypted_ns {^Parameter: {Name: "Namespace", Default: ""}}
+  ClientName: &encrypted_pool {^Parameter: {Name: "ClientName", Default: "Default"}}
+
+  # 8 threads, 100,000 documents, ~10,000 operations
+  ThreadCount: &thread_count 8
+  # 100k documents / 8 threads = 12.5k inserts per thread
+  InsertIterations: &insert_iterations 12500
+  # 10k operations / 1 op per iteration / 8 threads = 1250 iterations per thread
+  1OpPerThreadIterations: &1op_per_thread_iterations 1250
+  # 10k operations / 2 ops per iteration / 8 threads = 625 iterations per thread
+  2OpsPerThreadIterations: &2op_per_thread_iterations 625
+  # 10k operations / 20 ops per iteration / 8 threads = 62.5 iterations per thread
+  # Real op count is 10080 ops due to round-up.
+  20OpsPerThreadIterations: &20op_per_thread_iterations 63
+  # Encrypted values are 0-padded strings of length 100 with values uniformly
+  # selected between 1-100. ie. cardinality of each encrypted field is 100.
+  # With 100k documents, ~1000 documents (1%) will have the same encrypted key.
+  #
+  # Each document is queried using two keys. An encrypted primary key (field0) with,
+  # on average, 1000 documents per unique value; and an unencrypted secondary key,
+  # randomly selected value between 1 to 10, which is used to narrow down the set
+  # of documents that each query operation targets.
+  RandomPrimaryKey: &rand_primary_key {^RandomInt: {min: 1, max: 100}}
+  RandomSecondaryKey: &rand_secondary_key {^RandomInt: {min: 1, max: 10}}
+  RandomString: &rand_string {^FastRandomString: {length: 100}}
+  InsertDocument: &insert_doc
+    field0: {^FormatString: {"format": "%0100d", "withArgs": [*rand_primary_key]}}
+    field1: {^Parameter: {Name: "Field1Value", Default: *rand_string}}
+    field2: {^Parameter: {Name: "Field2Value", Default: *rand_string}}
+    field3: {^Parameter: {Name: "Field3Value", Default: *rand_string}}
+    field4: {^Parameter: {Name: "Field4Value", Default: *rand_string}}
+    field5: {^Parameter: {Name: "Field5Value", Default: *rand_string}}
+    field6: {^Parameter: {Name: "Field6Value", Default: *rand_string}}
+    field7: {^Parameter: {Name: "Field7Value", Default: *rand_string}}
+    field8: {^Parameter: {Name: "Field8Value", Default: *rand_string}}
+    field9: {^FormatString: {"format": "%0100d", "withArgs": [*rand_secondary_key]}}
+  UpdateDocument: &update_doc
+    field0: {^FormatString: {"format": "%0100d", "withArgs": [*rand_primary_key]}}
+    field1: {^Parameter: {Name: "Field1Value", Default: *rand_string}}
+    field2: {^Parameter: {Name: "Field2Value", Default: *rand_string}}
+    field3: {^Parameter: {Name: "Field3Value", Default: *rand_string}}
+    field4: {^Parameter: {Name: "Field4Value", Default: *rand_string}}
+    field5: {^Parameter: {Name: "Field5Value", Default: *rand_string}}
+    field6: {^Parameter: {Name: "Field6Value", Default: *rand_string}}
+    field7: {^Parameter: {Name: "Field7Value", Default: *rand_string}}
+    field8: {^Parameter: {Name: "Field8Value", Default: *rand_string}}
+  ShardCollectionPhase: &shard_or_nop
+    ^Parameter:
+      Name: "ShardCollectionPhase"
+      Default:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationMetricsName: EnableSharding
+          OperationName: AdminCommand
+          OperationCommand:
+            enableSharding: *encrypted_db
+        - OperationMetricsName: ShardCollection
+          OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: *encrypted_ns
+            key: {field9: hashed}
+
+Actors:
+- LoadConfig:
+    Path: ../../phases/encrypted/YCSBLikeActorTemplate.yml
+    Key: YCSBLikeActor
+    Parameters:
+      Threads: *thread_count
+      Database: *encrypted_db
+      Collection: *encrypted_coll
+      ClientName: *encrypted_pool
+      # The load, 100read, & 100update phases do 1 op per thread,
+      # so the total opcount = thread_count * 1 op * iter_count
+      LoadRepeat: *insert_iterations
+      100ReadRepeat: *1op_per_thread_iterations
+      100UpdateRepeat: *1op_per_thread_iterations
+      # The 50/50 phase does 2 ops per thread,
+      # so the total opcount = thread_count * 2 ops * iter_count
+      50Read50UpdateRepeat: *2op_per_thread_iterations
+      # The 95/5 phase does 20 ops per thread,
+      # so the total opcount = thread_count * 20 ops * iter_count
+      95Read5UpdateRepeat: *20op_per_thread_iterations
+      InsertDocument: *insert_doc
+      Filter:
+        $and:
+        - {field0: {^FormatString: {"format": "%0100d", "withArgs": [*rand_primary_key]}}}
+        - {field9: {^FormatString: {"format": "%0100d", "withArgs": [*rand_secondary_key]}}}
+      UpdateDocument: *update_doc
+
+- Name: IndexSecondaryKey
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *encrypted_db
+    MetricsName: "indexSecondary"
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *encrypted_coll
+        indexes:
+        - key:
+            field9: 1
+          name: field9
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: ShardCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *shard_or_nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
