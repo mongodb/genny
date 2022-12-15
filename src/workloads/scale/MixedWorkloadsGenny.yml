@@ -133,27 +133,20 @@ Actors:
     Nop: true
 
 - Name: QuiesceBetweenLevels
-  Type: RunCommand
+  Type: QuiesceActor
   Threads: 1
+  Database: admin
   Phases:
   - &nop {Nop: true}
-  - &quiesce
-    Repeat: 1
-    Database: admin
-    Operations:
-    # Fsync to force a checkpoint and quiesce the system.
-    - OperationMetricsName: FsyncCommand
-      OperationName: AdminCommand
-      OperationCommand:
-        fsync: 1
+  - Repeat: 1
   - *nop
-  - *quiesce
+  - Repeat: 1
   - *nop
-  - *quiesce
+  - Repeat: 1
   - *nop
-  - *quiesce
+  - Repeat: 1
   - *nop
-  - *quiesce
+  - Repeat: 1
   - *nop
 
 # Update Actors
