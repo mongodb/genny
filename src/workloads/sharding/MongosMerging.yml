@@ -43,7 +43,6 @@ ActorTemplates:
           Operations:
           - OperationMetricsName: AggregationPipeline
             OperationName: RunCommand
-            OperationIsQuiet: true
             OperationCommand:
               aggregate: Collection0
               pipeline: {^Parameter: {Name: "Pipeline", Default: []}}
