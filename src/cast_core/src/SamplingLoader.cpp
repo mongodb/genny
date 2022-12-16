@@ -57,20 +57,27 @@ struct SamplingLoader::PhaseConfig {
     int64_t numBatches;
 };
 
-// static
-std::vector<bsoncxx::document::value> SamplingLoader::gatherSample(
-    mongocxx::collection collection, uint sampleSize, PipelineGenerator& pipelineSuffixGenerator) {
+std::vector<bsoncxx::document::view> DeferredSample::getSample() {
+    if (_sampleDocs.empty()) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _sampleDocs = gatherSample(lock);
+    }
+    return makeBsonView(_sampleDocs);
+}
+
+std::vector<bsoncxx::document::value> DeferredSample::gatherSample(
+    const std::lock_guard<std::mutex>& lock) {
     mongocxx::pipeline samplePipeline;
-    samplePipeline.sample(sampleSize);
+    samplePipeline.sample(_sampleSize);
     samplePipeline.project(make_document(kvp("_id", 0)));
-    const auto suffixPipe = pipeline_helpers::makePipeline(pipelineSuffixGenerator);
+    const auto suffixPipe = pipeline_helpers::makePipeline(_pipelineSuffixGenerator);
     samplePipeline.append_stages(suffixPipe.view_array());
 
     std::vector<bsoncxx::document::value> sampleDocs;
     const int maxRetries = 3;
     for (int nRetries = 0; nRetries < maxRetries; ++nRetries) {
         try {
-            auto cursor = collection.aggregate(samplePipeline, mongocxx::options::aggregate{});
+            auto cursor = _collection.aggregate(samplePipeline, mongocxx::options::aggregate{});
             sampleDocs = std::vector<bsoncxx::document::value>(cursor.begin(), cursor.end());
             break;
         } catch (const mongocxx::operation_exception& ex) {
@@ -92,18 +99,18 @@ std::vector<bsoncxx::document::value> SamplingLoader::gatherSample(
 
     if (sampleDocs.empty()) {
         BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-            "Sample was unable to find any documents from collection '" +
-            to_string(collection.name()) +
+            _actorName + ": Sample was unable to find any documents from collection '" +
+            to_string(_collection.name()) +
             "'. Could the collection be empty or could the pipeline be filtering out "
             "documents? Attempting to sample " +
-            boost::to_string(sampleSize) +
+            boost::to_string(_sampleSize) +
             " documents. Pipeline suffix = " + to_json(suffixPipe.view_array())));
     }
-    if (sampleDocs.size() < sampleSize) {
+    if (sampleDocs.size() < _sampleSize) {
         BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-            "Could not get a sample of the expected size. Either the collection '" +
-            to_string(collection.name()) + "' is smaller than the requested sample size of " +
-            boost::to_string(sampleSize) +
+            _actorName + ": Could not get a sample of the expected size. Either the collection '" +
+            to_string(_collection.name()) + "' is smaller than the requested sample size of " +
+            boost::to_string(_sampleSize) +
             " documents, or the specified pipeline suffix is filtering documents. Found "
             "only " +
             boost::to_string(sampleDocs.size()) +
@@ -113,6 +120,9 @@ std::vector<bsoncxx::document::value> SamplingLoader::gatherSample(
 }
 
 void genny::actor::SamplingLoader::run() {
+    // Now that we are running, we know our designated phase has started. Let's collect the deferred
+    // sample now - it can now observe the results of previous phases.
+    auto sampleDocs = _deferredSample->getSample();
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
             BOOST_LOG_TRIVIAL(debug) << "Beginning to run SamplingLoader";
@@ -124,8 +134,8 @@ void genny::actor::SamplingLoader::run() {
             auto totalOpCtx = _totalBulkLoad.start();
             for (size_t batch = 0; batch < config->numBatches; ++batch) {
                 for (size_t i = 0; i < config->insertBatchSize; ++i) {
-                    batchOfDocs[i] = _sampleDocs[sampleIdx].view();
-                    sampleIdx = (sampleIdx + 1) % _sampleDocs.size();
+                    batchOfDocs[i] = sampleDocs[sampleIdx];
+                    sampleIdx = (sampleIdx + 1) % sampleDocs.size();
                 }
 
                 // Now do the insert.
@@ -149,21 +159,14 @@ void genny::actor::SamplingLoader::run() {
 SamplingLoader::SamplingLoader(genny::ActorContext& context,
                                std::string dbName,
                                std::string collectionName,
-                               const std::vector<bsoncxx::document::value>& sampleDocs)
+                               std::shared_ptr<DeferredSample> deferredSample)
     : Actor(context),
-      _sampleDocs([&sampleDocs]() {
-          std::vector<bsoncxx::document::value> docsCopy;
-          docsCopy.reserve(sampleDocs.size());
-          for (auto&& doc : sampleDocs) {
-              docsCopy.emplace_back(doc.view());
-          }
-          return docsCopy;
-      }()),
       _totalBulkLoad{context.operation("TotalBulkInsert", SamplingLoader::id())},
       _individualBulkLoad{context.operation("IndividualBulkInsert", SamplingLoader::id())},
       _client{std::move(
           context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
-      _collection((*_client)[dbName][collectionName]),
+      _collection{(*_client)[dbName][collectionName]},
+      _deferredSample{std::move(deferredSample)},
       _loop{context, _client, SamplingLoader::id()} {}
 
 class SamplingLoaderProducer : public genny::ActorProducer {
@@ -180,15 +183,24 @@ public:
         auto pipelineSuffixGenerator =
             context["Pipeline"].maybe<PipelineGenerator>(context).value_or(PipelineGenerator{});
         auto clientName = context.get("ClientName").maybe<std::string>().value_or("Default");
-        auto entry = context.client(clientName);
-        auto database = entry->database(context["Database"].to<std::string>());
-        auto collection = database[context["Collection"].to<std::string>()];
-        auto sampleDocs =
-            SamplingLoader::gatherSample(collection, sampleSize, pipelineSuffixGenerator);
+        auto client = context.client(clientName);
+        auto database = client->database(context["Database"].to<std::string>());
+        auto collName = context["Collection"].to<std::string>();
+        auto collection = database[collName];
+        auto deferredSample =
+            std::make_shared<DeferredSample>(context["Name"].maybe<std::string>().value_or(
+                                                 std::string{SamplingLoader::defaultName()}),
+                                             std::move(client),
+                                             std::move(collection),
+                                             sampleSize,
+                                             std::move(pipelineSuffixGenerator));
 
         for (uint i = 0; i < totalThreads; ++i) {
-            out.emplace_back(std::make_unique<genny::actor::SamplingLoader>(
-                context, database.name().to_string(), collection.name().to_string(), sampleDocs));
+            out.emplace_back(
+                std::make_unique<genny::actor::SamplingLoader>(context,
+                                                               database.name().to_string(),
+                                                               collName,
+                                                               deferredSample));
         }
         return out;
     }

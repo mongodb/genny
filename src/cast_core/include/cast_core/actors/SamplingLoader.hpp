@@ -23,9 +23,60 @@
 #include <metrics/metrics.hpp>
 
 #include <mongocxx/collection.hpp>
+#include <mutex>
 #include <value_generators/PipelineGenerator.hpp>
 
 namespace genny::actor {
+
+/**
+ * This class represents a sample of documents from a collection which is lazily loaded on the first
+ * request. It is designed to be shared across threads - it is thread safe.
+ */
+class DeferredSample {
+public:
+    DeferredSample(std::string actorName,
+                   mongocxx::pool::entry client,
+                   mongocxx::collection collection,
+                   uint sampleSize,
+                   PipelineGenerator pipelineSuffixGenerator)
+        : _actorName{std::move(actorName)},
+          _client(std::move(client)),
+          _collection(std::move(collection)),
+          _sampleSize(sampleSize),
+          _pipelineSuffixGenerator(std::move(pipelineSuffixGenerator)) {}
+
+    /**
+     * If this is the first caller, will run an aggregation to gather the sample and return it.
+     * Subsequent callers will block until that is finished and then receive a copy of those
+     * results.
+     */
+    std::vector<bsoncxx::document::view> getSample() ;
+
+private:
+    auto makeBsonView(std::vector<bsoncxx::document::value> bsonValues) const {
+        std::vector<bsoncxx::document::view> ret;
+        ret.reserve(bsonValues.size());
+        for (auto&& bsonValue : bsonValues) {
+            ret.emplace_back(bsonValue);
+        }
+        return ret;
+    }
+
+    std::vector<bsoncxx::document::value> gatherSample(
+        const std::lock_guard<std::mutex>& lock);
+
+    std::mutex _mutex;
+
+    // This vector lazily loaded, but once populated it is owned here and other threads will receive
+    // a view of these documents via a bsoncxx::document::view.
+    std::vector<bsoncxx::document::value> _sampleDocs = {};
+
+    std::string _actorName;
+    mongocxx::pool::entry _client;
+    mongocxx::collection _collection;
+    uint _sampleSize;
+    PipelineGenerator _pipelineSuffixGenerator;
+};
 
 /**
  * Given a collection that's already populated, will pull a sample of documents from that
@@ -40,7 +91,7 @@ public:
     SamplingLoader(ActorContext& context,
                    std::string dbName,
                    std::string collectionName,
-                   const std::vector<bsoncxx::document::value>& sampleDocs);
+                   std::shared_ptr<DeferredSample> deferredSamplingLoader);
     ~SamplingLoader() override = default;
 
     static std::string_view defaultName() {
@@ -48,24 +99,16 @@ public:
     }
     void run() override;
 
-    /**
-     * Returns a vector of owned documents after running a $sample. If given out to multiple
-     * locations, should be converted into a bsoncxx::document::view first.
-     */
-    static std::vector<bsoncxx::document::value> gatherSample(mongocxx::collection collection,
-                                                              uint sampleSize,
-                                                              PipelineGenerator& pipelineGenerator);
 
 private:
     /** @private */
     struct PhaseConfig;
 
-    std::vector<bsoncxx::document::value> _sampleDocs;
-
     metrics::Operation _totalBulkLoad;
     metrics::Operation _individualBulkLoad;
     mongocxx::pool::entry _client;
     mongocxx::collection _collection;
+    std::shared_ptr<DeferredSample> _deferredSample;
     PhaseLoop<PhaseConfig> _loop;
 };
 
