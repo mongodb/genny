@@ -2,8 +2,8 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: |
   This workload tests the impact of background TTL deletions in a heavily modified collection with
-  extreme ticket contention. This test does not quiesce between phases as we want the TTL deleter
-  to be constantly running.
+  concurrent crud operations on a second collection to simulate extreme ticket contention.
+
 Keywords:
 - ttl
 - stress
@@ -14,35 +14,23 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 260
+      maxPoolSize: 10000
 
-NumPhases: &NumPhases 6
+SmallDoc: &SmallDoc
+  a: {^FastRandomString: {length: 123}}
+  numField: {^RandomInt: {min: 0, max: 1000}}
+  counter: 0
+  expireDate: {^Date: "1970-01-01"}
 
-Document: &generatedDoc
-  expireDate: {^Date: "1970-01-01"}  # Instantly expire the document
-  y: 999
-  b: "Arbitrary string with 45 different characters"
+LargeDoc: &LargeDoc
+  a: {^FastRandomString: {length: 67890}}
+  numField: {^RandomInt: {min: 0, max: 1000}}
+  counter: 0
+  expireDate: {^Date: "1970-01-01"}
 
-ActorTemplates:
-- TemplateName: WritesActorTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: WritesActor}}
-    Type: CrudActor
-    Database: &db test
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Duration: {^Parameter: {Name: "Duration", Default: 3 minutes}}
-          CollectionCount: &NumColls 1
-          Operations:
-          - OperationName: insertMany
-            OperationCommand:
-              Documents:  # Insert 1 document at a time
-              - *generatedDoc
-
+WMajorityJFalse: &WMajorityJFalse
+  Level: majority
+  Journal: false
 
 Actors:
 - Name: Setup
@@ -51,7 +39,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [1]
-      NopInPhasesUpTo: *NumPhases
+      NopInPhasesUpTo: &NumPhases 3
       PhaseConfig:
         Repeat: 1
         Database: admin
@@ -63,8 +51,8 @@ Actors:
         - OperationName: AdminCommand
           OperationCommand:
             setParameter: 1
-            # Reduce tickets to the minimum allowed to force contention.
-            storageEngineConcurrentWriteTransactions: 5
+            # Reduce tickets to force contention.
+            storageEngineConcurrentWriteTransactions: 32
         SleepAfter: 60 seconds  # Wait 60 seconds so that the new ttl sleep config is active.
 
 - Name: InsertData
@@ -72,29 +60,174 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [2]
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: &db test
+        Threads: 1
+        CollectionCount: &NumColls 1
+        DocumentCount: 1
+        BatchSize: 1
+        Document: *SmallDoc
+        Indexes:
+        - keys: {expireDate: 1}
+          options: {expireAfterSeconds: 0}
+        - keys: {numField: 1}
+
+- Name: CreateIndexes
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
       NopInPhasesUpTo: *NumPhases
       PhaseConfig:
         Repeat: 1
         Database: *db
-        Threads: 1
-        CollectionCount: *NumColls
-        DocumentCount: 200_000  # Add an initial set of documents. This will reduce noise in the next phases
-        BatchSize: 10_000
-        Document: *generatedDoc
-        Indexes:
-        - keys: {expireDate: 1}
-          options: {expireAfterSeconds: 0}
+        Operations:
+        - OperationMetricsName: CreateNumFieldIndex
+          OperationName: RunCommand
+          OperationCommand:
+            createIndexes: &otherColl otherColl
+            indexes:
+            - key:
+                numField: 1
+              name: numField
+        - OperationMetricsName: CreateStringFieldIndex
+          OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *otherColl
+            indexes:
+            - key:
+                a: 1
+              name: string
 
-# We do not perform a quiesce between phases as it would allow the TTL deleter to catch up. We want
-# it to constantly be running for this workload.
-- ActorFromTemplate:
-    TemplateName: WritesActorTemplate
-    TemplateParameters:
-      Name: Writes_256_Thread
-      Threads: 256
-      ActivePhases: [3]
-      Duration: 10 minutes
+- Name: Quiesce
+  Type: QuiesceActor
+  Database: *db
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Threads: 1
+        Repeat: 1
+
+- Name: UpdateOtherColl
+  Type: CrudActor
+  Database: *db
+  Threads: &numThreads 50
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Duration: &phaseDuration 10 minutes
+        Collection: *otherColl
+        Operations:
+        - OperationName: updateOne
+          OperationCommand:
+            Filter: &filter
+              numField: {^RandomInt: {min: 0, max: 1000}}
+            Update:
+              $inc: {counter: 1}
+            OperationOptions:
+              WriteConcern: *WMajorityJFalse
+
+- Name: RemoveOtherColl
+  Type: CrudActor
+  Database: *db
+  Threads: *numThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Duration: *phaseDuration
+        Collection: *otherColl
+        Operations:
+        - OperationName: deleteOne
+          OperationCommand:
+            Filter: *filter
+          OperationOptions:
+            WriteConcern: *WMajorityJFalse
+
+- Name: InsertOtherCollSmall
+  Type: CrudActor
+  Database: *db
+  Threads: &halfThreads 25
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Duration: *phaseDuration
+        Collection: *otherColl
+        Operations:
+        - OperationName: insertOne
+          OperationCommand:
+            Document: *SmallDoc
+          OperationOptions:
+            WriteConcern: *WMajorityJFalse
+
+- Name: InsertOtherCollLarge
+  Type: CrudActor
+  Database: *db
+  Threads: *halfThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Duration: *phaseDuration
+        Collection: *otherColl
+        Operations:
+        - OperationName: insertOne
+          OperationCommand:
+            Document: *LargeDoc
+          OperationOptions:
+            WriteConcern: *WMajorityJFalse
+
+- Name: InsertTTLColl-Small
+  Type: RunCommand
+  Threads: 300
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        MetricsName: Insert_WMajority_JFalse
+        Duration: *phaseDuration
+        Database: *db
+        Operations:
+        - OperationName: RunCommand
+          OperationIsQuiet: true
+          OperationCommand:
+            insert: Collection0
+            documents: [*SmallDoc]
+            writeConcern: {w: majority, j: false}
+
+- Name: InsertTTLColl-Large
+  Type: RunCommand
+  Threads: 300
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        MetricsName: Insert_WMajority_JFalse
+        Duration: *phaseDuration
+        Database: *db
+        Operations:
+        - OperationName: RunCommand
+          OperationIsQuiet: true
+          OperationCommand:
+            insert: Collection0
+            documents: [*LargeDoc]
+            writeConcern: {w: majority, j: false}
+
 AutoRun:
 - When:
     mongodb_setup:
