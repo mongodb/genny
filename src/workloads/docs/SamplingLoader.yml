@@ -48,6 +48,8 @@ Actors:
   SampleSize: 7
   Phases:
   - {Nop: true}
+  # "Repeat" is pretty redundant with "InsertBatchSize", but "InsertBatchSize" is preferred.
+  # Repetitions will still share the same sample.
   - Repeat: 1
     # Number of documents in a single insert operation.
     InsertBatchSize: 5

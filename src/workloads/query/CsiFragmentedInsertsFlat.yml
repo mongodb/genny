@@ -102,10 +102,8 @@ ActorTemplates:
           # would be fully warmed up.
           InsertBatchSize: *sampleSize
 
-          # The 'SamplingLoader' actor re-samples on repeat, meaning that it would get a new set of
-          # documents likely with different paths and values. This makes each repeat hit different
-          # parts of the indexes, causing a long warm up tail. To avoid this we test with a single
-          # repeat but multiple batches.
+          # "Repeat" is pretty redundant with "InsertBatchSize", but "InsertBatchSize" is preferred.
+          # Repetitions will still share the same sample.
           Repeat: {^Parameter: {Name: "Repeats", Default: 1}}
 
           # The instances of the template must specify the number of batches to make it clear what

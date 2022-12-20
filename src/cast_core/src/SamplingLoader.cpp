@@ -58,8 +58,8 @@ struct SamplingLoader::PhaseConfig {
 };
 
 std::vector<bsoncxx::document::value> DeferredSample::getSample() {
+    std::lock_guard<std::mutex> lock(_mutex);
     if (_sampleDocs.empty()) {
-        std::lock_guard<std::mutex> lock(_mutex);
         _sampleDocs = gatherSample(lock);
     }
     return _sampleDocs;
