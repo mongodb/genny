@@ -50,7 +50,7 @@ public:
      * Subsequent callers will block until that is finished and then receive a copy of those
      * results.
      */
-    std::vector<bsoncxx::document::view> getSample() ;
+    std::vector<bsoncxx::document::value> getSample();
 
 private:
     auto makeBsonView(std::vector<bsoncxx::document::value> bsonValues) const {
@@ -62,8 +62,7 @@ private:
         return ret;
     }
 
-    std::vector<bsoncxx::document::value> gatherSample(
-        const std::lock_guard<std::mutex>& lock);
+    std::vector<bsoncxx::document::value> gatherSample(const std::lock_guard<std::mutex>& lock);
 
     std::mutex _mutex;
 

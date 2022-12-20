@@ -59,11 +59,11 @@ TEST_CASE_METHOD(MongoTestFixture,
           Database: test
           Collection: sampling_loader_test
           SampleSize: 5
+          Pipeline: [{$set: {y: "SamplingLoader wuz here"}}]
           Threads: 2
           Phases:
           - Repeat: 1
             InsertBatchSize: 10
-            Pipeline: [{$set: {y: "SamplingLoader wuz here"}}]
             Batches: 2
 
         Metrics:

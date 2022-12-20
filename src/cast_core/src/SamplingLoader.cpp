@@ -57,12 +57,12 @@ struct SamplingLoader::PhaseConfig {
     int64_t numBatches;
 };
 
-std::vector<bsoncxx::document::view> DeferredSample::getSample() {
+std::vector<bsoncxx::document::value> DeferredSample::getSample() {
     if (_sampleDocs.empty()) {
         std::lock_guard<std::mutex> lock(_mutex);
         _sampleDocs = gatherSample(lock);
     }
-    return makeBsonView(_sampleDocs);
+    return _sampleDocs;
 }
 
 std::vector<bsoncxx::document::value> DeferredSample::gatherSample(
@@ -120,11 +120,11 @@ std::vector<bsoncxx::document::value> DeferredSample::gatherSample(
 }
 
 void genny::actor::SamplingLoader::run() {
-    // Now that we are running, we know our designated phase has started. Let's collect the deferred
-    // sample now - it can now observe the results of previous phases.
-    auto sampleDocs = _deferredSample->getSample();
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
+            // Now that we are running, we know our designated phase has started. Let's collect the
+            // deferred sample now - it can now observe the results of previous phases.
+            auto sampleDocs = _deferredSample->getSample();
             BOOST_LOG_TRIVIAL(debug) << "Beginning to run SamplingLoader";
             size_t sampleIdx = 0;
 
@@ -134,7 +134,7 @@ void genny::actor::SamplingLoader::run() {
             auto totalOpCtx = _totalBulkLoad.start();
             for (size_t batch = 0; batch < config->numBatches; ++batch) {
                 for (size_t i = 0; i < config->insertBatchSize; ++i) {
-                    batchOfDocs[i] = sampleDocs[sampleIdx];
+                    batchOfDocs[i] = sampleDocs[sampleIdx].view();
                     sampleIdx = (sampleIdx + 1) % sampleDocs.size();
                 }
 
@@ -196,11 +196,8 @@ public:
                                              std::move(pipelineSuffixGenerator));
 
         for (uint i = 0; i < totalThreads; ++i) {
-            out.emplace_back(
-                std::make_unique<genny::actor::SamplingLoader>(context,
-                                                               database.name().to_string(),
-                                                               collName,
-                                                               deferredSample));
+            out.emplace_back(std::make_unique<genny::actor::SamplingLoader>(
+                context, database.name().to_string(), collName, deferredSample));
         }
         return out;
     }
