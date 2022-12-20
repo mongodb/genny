@@ -84,18 +84,18 @@ ActorTemplates:
   Config:
     Name: {^Parameter: {Name: "Name", Default: "Insert"}}
     Type: SamplingLoader
+    Database: *db
+    Collection: *coll
+
+    # No more than sampleSize*objectWidth paths can be "touched" by a sample.
+    SampleSize: *sampleSize
+
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Database: *db
-          Collection: *coll
-
-          # No more than sampleSize*objectWidth paths can be "touched" by a sample.
-          SampleSize: *sampleSize
-
           # When the batch size is the same as sample size, each sampled document will be used in
           # the batch exactly once, and this will be repeated for the number of batches. We expect,
           # that the first batch might be affected by "cold" caches but the subsequent batches
