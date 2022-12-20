@@ -31,6 +31,9 @@ namespace genny::actor {
 /**
  * This class represents a sample of documents from a collection which is lazily loaded on the first
  * request. It is designed to be shared across threads - it is thread safe.
+ *
+ * The lazy loading will allow this sample to be taken once the threads are actively running the
+ * workload - after previous stages have taken their effect on the collection.
  */
 class DeferredSample {
 public:
@@ -53,15 +56,6 @@ public:
     std::vector<bsoncxx::document::value> getSample();
 
 private:
-    auto makeBsonView(std::vector<bsoncxx::document::value> bsonValues) const {
-        std::vector<bsoncxx::document::view> ret;
-        ret.reserve(bsonValues.size());
-        for (auto&& bsonValue : bsonValues) {
-            ret.emplace_back(bsonValue);
-        }
-        return ret;
-    }
-
     std::vector<bsoncxx::document::value> gatherSample(const std::lock_guard<std::mutex>& lock);
 
     std::mutex _mutex;
