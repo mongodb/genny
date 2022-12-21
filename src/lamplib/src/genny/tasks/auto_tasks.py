@@ -64,25 +64,15 @@ class WorkloadLister:
     """
 
     def __init__(
-        self,
-        workspace_root: str,
-        genny_repo_root: str,
-        reader: YamlReader,
-        workload_root: Optional[str] = None,
+        self, workspace_root: str, genny_repo_root: str, reader: YamlReader, workload_root: str
     ):
         self.workspace_root = workspace_root
         self.genny_repo_root = genny_repo_root
-        self._expansions = None
         self.reader = reader
         self.workload_root = workload_root
 
     def all_workload_files(self) -> Set[str]:
-        if self.workload_root is None:
-            pattern = os.path.join(
-                self.workspace_root, "src", "*", "src", "workloads", "**", "*.yml"
-            )
-        else:
-            pattern = os.path.join(self.workload_root, "src", "workloads", "**", "*.yml")
+        pattern = os.path.join(self.workload_root, "src", "workloads", "**", "*.yml")
         return {*glob.glob(pattern, recursive=True)}
 
 
@@ -112,6 +102,7 @@ class AutoRunBlock(NamedTuple):
 
 class DsiTask(NamedTuple):
     """Represents a  DSI Task entry."""
+
     name: str
     runs_on_variants: List[str]
     bootstrap_vars: Dict[str, str]
@@ -337,23 +328,22 @@ class ConfigWriter:
     def __init__(self, op: CLIOperation):
         self.op = op
 
-    def write(self, tasks: List[DsiTask], write: bool = True) -> None:
+    def write(self, tasks: List[DsiTask], write: bool = True) -> str:
         """
         :param tasks: tasks to write
         :param write: boolean to actually write the file - exposed for testing
         :return: the configuration object to write (exposed for testing)
         """
         output_file_name = "DsiTasks.yml"
-        if self.op.workload_root is not None:
-            repo_name = self.op.workload_root.split("/")[-1]
-            output_file_name = f"DsiTasks-{repo_name}.yml"
+        repo_name = self.op.workload_root.split("/")[-1]
+        output_file_name = f"DsiTasks-{repo_name}.yml"
         output_file = os.path.join(self.op.workspace_root, "build", "DSITasks", output_file_name)
 
+        out_text = yaml.dump(self._get_dsi_task_dict(tasks), indent=4, sort_keys=False)
         success = False
         raised = None
         if write:
             try:
-                out_text = yaml.dump(self._get_dsi_task_dict(tasks), indent=4, sort_keys=False)
                 os.makedirs(os.path.dirname(output_file), exist_ok=True)
                 if os.path.exists(output_file):
                     os.unlink(output_file)
@@ -374,6 +364,7 @@ class ConfigWriter:
                         "Repeated executions will not re-generate tasks.",
                         execution=self.op.execution,
                     )
+        return out_text
 
     def _get_dsi_task_dict(self, tasks: List[DsiTask]) -> List[Dict[str, Any]]:
         """Converts DSITask object to a dict to facilitate YAML dump."""
@@ -398,4 +389,4 @@ def main(genny_repo_root: str, workspace_root: str, workload_root: Optional[str]
     tasks = repo.generate_dsi_tasks(op=op)
 
     writer = ConfigWriter(op)
-    writer.write(tasks)
+    WorkloadLister.write(tasks)

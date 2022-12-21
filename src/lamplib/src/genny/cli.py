@@ -2,6 +2,7 @@ import platform
 import structlog
 import sys
 import os
+import shutil
 
 from typing import List, Optional
 import click
@@ -522,8 +523,7 @@ def lint_yaml(ctx: click.Context):
 @click.option(
     "-w",
     "--workload-repo",
-    required=False,
-    default=None,
+    required=True,
     help=("The workload repo name from where the tasks need to be  generated. By default "),
 )
 @click.pass_context
@@ -535,6 +535,45 @@ def auto_tasks(ctx: click.Context, workload_repo: str):
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
         workload_root=workload_repo,
     )
+
+
+@cli.command(
+    name="init-new-workload-repo",
+    help=(
+        "Initialize a new genny workload repository. This command creates the necessary "
+        "directories and files for the new workload if it already doesn't exist."
+    ),
+)
+@click.option(
+    "-p",
+    "--path",
+    required=True,
+    help=("The genny workload repo path. This path should already exist."),
+)
+@click.pass_context
+def init_workload_repo(ctx: click.Context, workload_repo_path: str):
+    _init_workload_repo(ctx, workload_repo_path)
+
+
+def _init_workload_repo(ctx: click.Context, workload_repo_path: str):
+    # Check if this path exist.
+    if not os.path.exists(workload_repo_path):
+        SLOG.error(
+            f"The path ${workload_repo_path} doesn't exist. The command only initializes an existing repository. Please make sure the workload repository path exists."
+        )
+        return
+
+    # Create dsi directory and copy run-from-dsi from GENNY_REPO_ROOT if it already doesn't exist.
+    repo_dsi_path = os.path.join(workload_repo_path, "dsi")
+    task_generator_file = os.path.join(repo_dsi_path, "run-from-dsi")
+    if not os.path.exists(task_generator_file):
+        os.makedirs(repo_dsi_path, exist_ok=True)
+        shutil.copyfile(
+            os.path.join(ctx.obj["GENNY_REPO_ROOT"], "dsi", "run-from-dsi"), task_generator_file
+        )
+
+    # Create the workload directory if it already doesn't exist.
+    os.makedirs(os.path.join(workload_repo_path, "src", "workloads", "docs"), exist_ok=True)
 
 
 if __name__ == "__main__":

@@ -915,7 +915,7 @@ For a full example of an encrypted workload, see [here](../src/workloads/docs/Cr
 # Creating a new Genny based workload repository
 Genny workloads can also live in repositories outside the genny repository. Here are the steps to create a new genny workload and configure them to run with DSI.
 
-For convenience, genny provides a command to create a new workload. This command creates the necessary directory and files for the new workload.
+For convenience, genny provides a command to create a new workload. This command creates the necessary directories and files for the new workload.
 
 1. First, let's initialize an existing workload repo in $HOME/new-workload-repo
 ```bash

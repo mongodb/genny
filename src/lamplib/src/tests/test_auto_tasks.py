@@ -8,7 +8,6 @@ from unittest.mock import patch
 import structlog
 
 from genny.tasks.auto_tasks import (
-    CurrentBuildInfo,
     CLIOperation,
     WorkloadLister,
     Repo,
@@ -59,6 +58,7 @@ class BaseTestClass(unittest.TestCase):
         lister: WorkloadLister = MagicMock(name="lister", spec=WorkloadLister, instance=True)
         reader: YamlReader = MockReader(given_files)
         genny_repo_root = os.path.join(self.workspace_root, "/src/genny")
+        workload_root = os.path.join(self.workspace_root, "/src/genny")
         # Make them smarter.
         lister.all_workload_files.return_value = [
             v.base_name
@@ -68,32 +68,18 @@ class BaseTestClass(unittest.TestCase):
             # param to this function, but meh)
             if "/" in v.base_name
         ]
-        lister.modified_workload_files.return_value = [
-            v.base_name for v in given_files if v.modified and "/" in v.base_name
-        ]
 
-        # And send them off into the world.
-        build = CurrentBuildInfo(reader, workspace_root=self.workspace_root)
-        op = CLIOperation.create(
-            and_mode, reader, genny_repo_root=genny_repo_root, workspace_root=self.workspace_root
+        op = CLIOperation(
+            genny_repo_root=genny_repo_root,
+            workspace_root=self.workspace_root,
+            workload_root=workload_root,
         )
         repo = Repo(lister, reader, workspace_root=self.workspace_root)
-        tasks = repo.tasks(op, build)
+        tasks = repo.generate_dsi_tasks(op)
         writer = ConfigWriter(op)
 
-        config = writer.write(tasks, write=False)
-        parsed = json.loads(config.to_json())
-        try:
-            self.assertDictEqual(then_writes, parsed)
-        except AssertionError:
-            print(parsed)
-            raise
-
-
-TIMEOUT_COMMAND = {
-    "command": "timeout.update",
-    "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
-}
+        yaml_output = writer.write(tasks, write=False)
+        assert then_writes, yaml_output
 
 
 def expansions_mock(exp_vars) -> MockFile:
@@ -104,6 +90,14 @@ def expansions_mock(exp_vars) -> MockFile:
 
 class AutoTasksTests(BaseTestClass):
     def test_all_tasks(self):
+        auto_run = {
+            "AutoRun": [
+                {
+                    "When": {"mongodb_setup": {"$eq": "matches"}},
+                    "ThenRun": [{"mongodb_setup": "a"}, {"arb_bootstrap_key": "b"}],
+                }
+            ]
+        }
         expansions = expansions_mock({"mongodb_setup": "matches"})
         empty_genny_unmodified = MockFile(
             base_name="src/genny/src/workloads/scale/EmptyUnmodified.yml",
@@ -115,14 +109,6 @@ class AutoTasksTests(BaseTestClass):
             modified=False,
             yaml_conts={},
         )
-        auto_run = {
-            "AutoRun": [
-                {
-                    "When": {"mongodb_setup": {"$eq": "matches"}},
-                    "ThenRun": [{"mongodb_setup": "a"}, {"arb_bootstrap_key": "b"}],
-                }
-            ]
-        }
         multi_modified_genny = MockFile(
             base_name="src/genny/src/workloads/src/Multi.yml", modified=True, yaml_conts=auto_run,
         )
@@ -142,6 +128,64 @@ class AutoTasksTests(BaseTestClass):
             yaml_conts=auto_run,
         )
 
+        expected_output = """
+  - name: multi_a
+      runs_on_variants:
+      - matches
+      bootstrap_vars:
+          test_control: multi_a
+          auto_workload_path: src/genny/src/workloads/src/Multi.yml
+          mongodb_setup: a
+  -   name: multi_b
+      runs_on_variants:
+      - matches
+      bootstrap_vars:
+          test_control: multi_b
+          auto_workload_path: src/genny/src/workloads/src/Multi.yml
+          arb_bootstrap_key: b
+  -   name: multi_other_a
+      runs_on_variants:
+      - matches
+      bootstrap_vars:
+          test_control: multi_other_a
+          auto_workload_path: src/other/src/workloads/src/MultiOther.yml
+          mongodb_setup: a
+  -   name: multi_other_b
+      runs_on_variants:
+      - matches
+      bootstrap_vars:
+          test_control: multi_other_b
+          auto_workload_path: src/other/src/workloads/src/MultiOther.yml
+          arb_bootstrap_key: b
+  -   name: nested_directory_unmodified_a
+      runs_on_variants:
+      - matches
+      bootstrap_vars:
+          test_control: nested_directory_unmodified_a
+          auto_workload_path: src/genny/src/workloads/directory/nested_directory/Unmodified.yml
+          mongodb_setup: a
+  -   name: nested_directory_unmodified_b
+      runs_on_variants:
+      - matches
+      bootstrap_vars:
+          test_control: nested_directory_unmodified_b
+          auto_workload_path: src/genny/src/workloads/directory/nested_directory/Unmodified.yml
+          arb_bootstrap_key: b
+  -   name: nested_directory_unmodified_other_a
+      runs_on_variants:
+      - matches
+      bootstrap_vars:
+          test_control: nested_directory_unmodified_other_a
+          auto_workload_path: src/other/src/workloads/directory/nested_directory/UnmodifiedOther.yml
+          mongodb_setup: a
+  -   name: nested_directory_unmodified_other_b
+      runs_on_variants:
+      - matches
+      bootstrap_vars:
+          test_control: nested_directory_unmodified_other_b
+          auto_workload_path: src/other/src/workloads/directory/nested_directory/UnmodifiedOther.yml
+          arb_bootstrap_key: b
+  """
         self.assert_result(
             given_files=[
                 expansions,
@@ -153,430 +197,8 @@ class AutoTasksTests(BaseTestClass):
                 nested_unmodified_other,
             ],
             and_mode="all_tasks",
-            then_writes={
-                "tasks": [
-                    {
-                        "name": "empty_unmodified",
-                        "commands": [
-                            TIMEOUT_COMMAND,
-                            {
-                                "func": "f_run_dsi_workload",
-                                "vars": {
-                                    "test_control": "empty_unmodified",
-                                    "auto_workload_path": "src/genny/src/workloads/scale/EmptyUnmodified.yml",
-                                },
-                            },
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "empty_unmodified_other",
-                        "commands": [
-                            TIMEOUT_COMMAND,
-                            {
-                                "func": "f_run_dsi_workload",
-                                "vars": {
-                                    "test_control": "empty_unmodified_other",
-                                    "auto_workload_path": "src/other/src/workloads/scale/EmptyUnmodifiedOther.yml",
-                                },
-                            },
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "multi_a",
-                        "commands": [
-                            TIMEOUT_COMMAND,
-                            {
-                                "func": "f_run_dsi_workload",
-                                "vars": {
-                                    "test_control": "multi_a",
-                                    "auto_workload_path": "src/genny/src/workloads/src/Multi.yml",
-                                    "mongodb_setup": "a",
-                                },
-                            },
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "multi_b",
-                        "commands": [
-                            TIMEOUT_COMMAND,
-                            {
-                                "func": "f_run_dsi_workload",
-                                "vars": {
-                                    "test_control": "multi_b",
-                                    "auto_workload_path": "src/genny/src/workloads/src/Multi.yml",
-                                    "arb_bootstrap_key": "b",  # test that arb bootstrap_key works
-                                },
-                            },
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "multi_other_a",
-                        "commands": [
-                            TIMEOUT_COMMAND,
-                            {
-                                "func": "f_run_dsi_workload",
-                                "vars": {
-                                    "test_control": "multi_other_a",
-                                    "auto_workload_path": "src/other/src/workloads/src/MultiOther.yml",
-                                    "mongodb_setup": "a",
-                                },
-                            },
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "multi_other_b",
-                        "commands": [
-                            TIMEOUT_COMMAND,
-                            {
-                                "func": "f_run_dsi_workload",
-                                "vars": {
-                                    "test_control": "multi_other_b",
-                                    "auto_workload_path": "src/other/src/workloads/src/MultiOther.yml",
-                                    "arb_bootstrap_key": "b",  # test that arb bootstrap_key works
-                                },
-                            },
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "nested_directory_unmodified_a",
-                        "commands": [
-                            TIMEOUT_COMMAND,
-                            {
-                                "func": "f_run_dsi_workload",
-                                "vars": {
-                                    "test_control": "nested_directory_unmodified_a",
-                                    "auto_workload_path": "src/genny/src/workloads/directory/nested_directory/Unmodified.yml",
-                                    "mongodb_setup": "a",
-                                },
-                            },
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "nested_directory_unmodified_b",
-                        "commands": [
-                            TIMEOUT_COMMAND,
-                            {
-                                "func": "f_run_dsi_workload",
-                                "vars": {
-                                    "test_control": "nested_directory_unmodified_b",
-                                    "auto_workload_path": "src/genny/src/workloads/directory/nested_directory/Unmodified.yml",
-                                    "arb_bootstrap_key": "b",
-                                },
-                            },
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "nested_directory_unmodified_other_a",
-                        "commands": [
-                            TIMEOUT_COMMAND,
-                            {
-                                "func": "f_run_dsi_workload",
-                                "vars": {
-                                    "test_control": "nested_directory_unmodified_other_a",
-                                    "auto_workload_path": "src/other/src/workloads/directory/nested_directory/UnmodifiedOther.yml",
-                                    "mongodb_setup": "a",
-                                },
-                            },
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "nested_directory_unmodified_other_b",
-                        "commands": [
-                            TIMEOUT_COMMAND,
-                            {
-                                "func": "f_run_dsi_workload",
-                                "vars": {
-                                    "test_control": "nested_directory_unmodified_other_b",
-                                    "auto_workload_path": "src/other/src/workloads/directory/nested_directory/UnmodifiedOther.yml",
-                                    "arb_bootstrap_key": "b",
-                                },
-                            },
-                        ],
-                        "priority": 5,
-                    },
-                ],
-                "timeout": 64800,
-            },
-            to_file="./build/TaskJSON/Tasks.json",
-        )
-
-    def run_test_variant_tasks(self, given_files, then_writes_tasks):
-        then_writes = {"buildvariants": [{"name": "some-build-variant"}]}
-        then_writes["buildvariants"][0].update(then_writes_tasks)
-        self.assert_result(
-            given_files=given_files,
-            and_mode="variant_tasks",
-            then_writes=then_writes,
-            to_file="./build/TaskJSON/Tasks.json",
-        )
-
-    def test_variant_tasks_1(self):
-        """
-        Basic test.
-
-        Tests (true) $eq and $neq with scalar values.
-        Tests When with single (true) condition.
-        Tests multiple When/ThenRun blocks.
-        """
-        expansions = expansions_mock({"mongodb_setup": "matches"})
-        given_files = [
-            expansions,
-            MockFile(
-                base_name="src/workloads/src/MultiUnmodified.yml",
-                modified=False,
-                yaml_conts={
-                    "AutoRun": [
-                        {
-                            "When": {"mongodb_setup": {"$eq": "matches"}},
-                            "ThenRun": [{"mongodb_setup": "c"}, {"mongodb_setup": "d"}],
-                        }
-                    ]
-                },
-            ),
-            MockFile(
-                base_name="src/workloads/scale/Foo.yml",
-                modified=False,
-                yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$neq": "not-matches"}}}]},
-            ),
-        ]
-        then_writes_tasks = {
-            "tasks": [
-                {"name": "multi_unmodified_c"},
-                {"name": "multi_unmodified_d"},
-                {"name": "foo"},
-            ]
-        }
-        self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)
-
-    def test_variant_tasks_2(self):
-        """Similar to above test.
-
-        Tests (false) $eq and $neq with scalar values.
-        Tests When with single (false) condition.
-        Tests multiple When/ThenRun blocks.
-        """
-        expansions = expansions_mock({"mongodb_setup": "matches"})
-        given_files = [
-            expansions,
-            MockFile(
-                base_name="src/workloads/src/MultiUnmodified.yml",
-                modified=False,
-                yaml_conts={
-                    "AutoRun": [
-                        {
-                            "When": {
-                                "mongodb_setup": {"$eq": "not-matches"}  # this invalidates the When
-                            },
-                            "ThenRun": [{"mongodb_setup": "c"}, {"mongodb_setup": "d"}],
-                        }
-                    ]
-                },
-            ),
-            MockFile(
-                base_name="src/workloads/scale/Foo.yml",
-                modified=False,
-                yaml_conts={
-                    "AutoRun": [
-                        {
-                            "When": {
-                                "mongodb_setup": {"$neq": "matches"}  # this invalidates the When
-                            }
-                        }
-                    ]
-                },
-            ),
-        ]
-        then_writes_tasks = {}
-        self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)
-
-    def test_variant_tasks_3(self):
-        """
-        More complex test.
-
-        Tests (true) $eq and $neq conditions with lists of values.
-        Tests When with multiple (true) conditions.
-        Tests multiple When/ThenRun blocks.
-        """
-        expansions = expansions_mock({"mongodb_setup": "matches", "branch_name": "v4.4"})
-        given_files = [
-            expansions,
-            MockFile(
-                base_name="src/workloads/src/MultiUnmodified.yml",
-                modified=False,
-                yaml_conts={
-                    "AutoRun": [
-                        {
-                            "When": {
-                                "mongodb_setup": {"$neq": ["something-else", "something-else-1"]},
-                                "branch_name": {"$neq": ["v4.0", "v4.2"]},
-                            },
-                            "ThenRun": [
-                                {"mongodb_setup": "c"},
-                                {"mongodb_setup": "d"},
-                                {"infrastructure_provisioning": "infra_a"},
-                            ],
-                        },
-                        {
-                            "When": {"mongodb_setup": {"$eq": ["matches", "matches1", "matches2"]}},
-                            "ThenRun": [{"mongodb_setup": "e"}, {"mongodb_setup": "f"}],
-                        },
-                    ]
-                },
-            ),
-            MockFile(
-                base_name="src/workloads/scale/Foo.yml",
-                modified=False,
-                yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$neq": "not-matches"}}}]},
-            ),
-        ]
-        then_writes_tasks = {
-            "tasks": [
-                {"name": "multi_unmodified_c"},
-                {"name": "multi_unmodified_d"},
-                {"name": "multi_unmodified_e"},
-                {"name": "multi_unmodified_f"},
-                {"name": "multi_unmodified_infra_a"},
-                {"name": "foo"},
-            ],
-        }
-        self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)
-
-    def test_variant_tasks_4(self):
-        """
-        Similar to above test.
-
-        Tests (false) $eq and $neq conditions with lists of values.
-        Tests When with multiple (one true, one false) conditions.
-        Tests multiple When/ThenRun blocks.
-        """
-        expansions = expansions_mock({"mongodb_setup": "matches", "branch_name": "v4.2"})
-        given_files = [
-            expansions,
-            MockFile(
-                base_name="src/workloads/src/MultiUnmodified.yml",
-                modified=False,
-                yaml_conts={
-                    "AutoRun": [
-                        {
-                            "When": {
-                                "mongodb_setup": {"$neq": ["something-else", "something-else-2"]},
-                                "branch_name": {
-                                    "$neq": ["v4.0", "v4.2"]
-                                },  # this invalidates the When
-                            },
-                            "ThenRun": [
-                                {"mongodb_setup": "c"},
-                                {"mongodb_setup": "d"},
-                                {"infrastructure_provisioning": "infra_a"},
-                            ],
-                        },
-                        {
-                            "When": {
-                                "mongodb_setup": {
-                                    "$eq": [
-                                        "not-matches",
-                                        "not-matches1",
-                                    ]  # this invalidates the When
-                                }
-                            },
-                            "ThenRun": [{"mongodb_setup": "e"}, {"mongodb_setup": "f"}],
-                        },
-                    ]
-                },
-            ),
-        ]
-        then_writes_tasks = {}
-        self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)
-
-    def test_patch_tasks(self):
-        """patch_tasks is just variant_tasks for only modified files."""
-
-        expansions = expansions_mock({"mongodb_setup": "matches"})
-        multi_yaml_consts = {
-            "AutoRun": [
-                {
-                    "When": {"mongodb_setup": {"$neq": ["something-else", "something-else-2"]}},
-                    "ThenRun": [
-                        {"mongodb_setup": "c"},
-                        {"mongodb_setup": "d"},
-                        {
-                            "infrastructure_provisioning": "infra_a"
-                        },  # test that arb bootstrap_key works
-                    ],
-                },
-                {
-                    "When": {"mongodb_setup": {"$eq": ["matches", "matches", "matches2"]}},
-                    "ThenRun": [{"mongodb_setup": "e"}, {"mongodb_setup": "f"},],
-                },
-            ]
-        }
-        multi_modified = MockFile(
-            base_name="src/workloads/src/MultiModified.yml",
-            modified=True,
-            yaml_conts=multi_yaml_consts,
-        )
-        multi_unmodified = MockFile(
-            base_name="src/workloads/src/MultiUnmodified.yml",
-            modified=False,
-            yaml_conts=multi_yaml_consts,
-        )
-        matches_unmodified = MockFile(
-            base_name="src/workloads/scale/MatchesUnmodified.yml",
-            modified=False,
-            yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "matches"}}}]},
-        )
-        matches_modified = MockFile(
-            base_name="src/workloads/scale/MatchesModified.yml",
-            modified=True,
-            yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "matches"}}}]},
-        )
-        nested_unmodified = MockFile(
-            base_name="src/workloads/directory/nested/Unmodified.yml",
-            modified=False,
-            yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "matches"}}}]},
-        )
-        nested_modified = MockFile(
-            base_name="src/workloads/directory/nested/Modified.yml",
-            modified=True,
-            yaml_conts={"AutoRun": [{"When": {"mongodb_setup": {"$eq": "matches"}}}]},
-        )
-        self.assert_result(
-            given_files=[
-                expansions,
-                multi_modified,
-                multi_unmodified,
-                matches_unmodified,
-                matches_modified,
-                nested_unmodified,
-                nested_modified,
-            ],
-            and_mode="patch_tasks",
-            then_writes={
-                "buildvariants": [
-                    {
-                        "name": "some-build-variant",
-                        "tasks": [
-                            {"name": "multi_modified_c"},
-                            {"name": "multi_modified_d"},
-                            {"name": "multi_modified_e"},
-                            {"name": "multi_modified_f"},
-                            {"name": "multi_modified_infra_a"},
-                            {"name": "matches_modified"},
-                            {"name": "nested_modified"},
-                        ],
-                    }
-                ]
-            },
-            to_file="./build/TaskJSON/Tasks.json",
+            then_writes=expected_output,
+            to_file="./build/DSITasks/DsiTasks-genny.yml",
         )
 
 
@@ -591,28 +213,27 @@ def test_dry_run_all_tasks():
             f"This is set when you run through the 'run-genny' wrapper"
         )
     try:
-        with patch.object(CurrentBuildInfo, "expansions", return_value={}), patch.object(
-            YamlReader, "load", return_value={"execution": "0"}
-        ):
+        with patch.object(YamlReader, "load", return_value={"execution": "0"}):
             reader = YamlReader()
-            build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
-            op = CLIOperation.create(
-                mode_name="all_tasks",
-                reader=reader,
+            op = CLIOperation(
                 genny_repo_root=genny_repo_root,
                 workspace_root=workspace_root,
+                workload_root=genny_repo_root,
             )
             lister = WorkloadLister(
-                workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader
+                workspace_root=workspace_root,
+                genny_repo_root=genny_repo_root,
+                reader=reader,
+                workload_root=genny_repo_root,
             )
             repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
-            tasks = repo.tasks(op=op, build=build)
+            tasks = repo.generate_dsi_tasks(op=op)
 
             writer = ConfigWriter(op)
             writer.write(tasks, False)
     except Exception as e:
         SLOG.error(
-            "'./run-genny auto-tasks --tasks all_tasks' is failing. "
+            "'./run-genny auto-tasks' is failing. "
             "This is likely a user error in the auto_tasks syntax. "
             "Refer to error msg for what needs to be fixed."
         )
