@@ -66,6 +66,7 @@ private:
 
     std::string _actorName;
     mongocxx::pool::entry _client;
+    // '_collection' needs '_client' to be in scope.
     mongocxx::collection _collection;
     uint _sampleSize;
     PipelineGenerator _pipelineSuffixGenerator;
@@ -92,7 +93,6 @@ public:
     }
     void run() override;
 
-
 private:
     /** @private */
     struct PhaseConfig;
@@ -101,6 +101,11 @@ private:
     metrics::Operation _individualBulkLoad;
     mongocxx::pool::entry _client;
     mongocxx::collection _collection;
+
+    // This is not using WorkloadContext::ShareableState for something that is conceptually similar
+    // because we do not want to share the sample across all phases of the workload, which would be
+    // a constraint of that system. We want one per phase. We still have to share across different
+    // actors for mutliple threads in the same phase, so we do it this way.
     std::shared_ptr<DeferredSample> _deferredSample;
     PhaseLoop<PhaseConfig> _loop;
 };

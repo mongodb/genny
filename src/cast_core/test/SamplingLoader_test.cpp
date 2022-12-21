@@ -81,12 +81,6 @@ TEST_CASE_METHOD(MongoTestFixture,
             genny::ActorHelper ah(nodes.root(), 2 /* 2 threads for samplers */);
             ah.run();
 
-            // We can't make many reliable assertions on the output data, since each thread is
-            // t acting independently, and (as mentioned in src/workloads/docs/SamplingLoader.yml)
-            // one
-            // thread may read another's inserted documents in its sample. So, we'll just assert
-            // the following:
-
             // There should still be only 5 distinct values of 'x'.
             mongocxx::pipeline pipe;
             pipe.group(from_json(R"({"_id": "$x"})"));

@@ -175,7 +175,7 @@ public:
     genny::ActorVector produce(genny::ActorContext& context) {
         if (context["Type"].to<std::string>() != "SamplingLoader") {
             return {};
-        }  // namespace genny::actor
+        }
         genny::ActorVector out;
         uint totalThreads = context["Threads"].to<int>();
 
