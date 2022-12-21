@@ -32,7 +32,7 @@ struct PipelineGenerator {
     PipelineGenerator(const Node& node, ActorContext& context) {
         assertIsArray(node);
         for (auto&& [_, stageNode] : node) {
-            // The '0' here is a lie, but we don't necessarily have an actor ID yet in this
+            // The '1' here is a lie, but we don't necessarily have an actor ID yet in this
             // scenario.
             stageGenerators.push_back(stageNode.to<DocumentGenerator>(context, 1));
         }
