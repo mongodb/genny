@@ -28,10 +28,6 @@ LargeDoc: &LargeDoc
   counter: 0
   expireDate: {^Date: "1970-01-01"}
 
-WMajorityJFalse: &WMajorityJFalse
-  Level: majority
-  Journal: false
-
 Actors:
 - Name: Setup
   Type: AdminCommand
@@ -133,8 +129,6 @@ Actors:
               numField: {^RandomInt: {min: 0, max: 1000}}
             Update:
               $inc: {counter: 1}
-            OperationOptions:
-              WriteConcern: *WMajorityJFalse
 
 - Name: RemoveOtherColl
   Type: CrudActor
@@ -151,8 +145,6 @@ Actors:
         - OperationName: deleteOne
           OperationCommand:
             Filter: *filter
-          OperationOptions:
-            WriteConcern: *WMajorityJFalse
 
 - Name: InsertOtherCollSmall
   Type: CrudActor
@@ -169,8 +161,6 @@ Actors:
         - OperationName: insertOne
           OperationCommand:
             Document: *SmallDoc
-          OperationOptions:
-            WriteConcern: *WMajorityJFalse
 
 - Name: InsertOtherCollLarge
   Type: CrudActor
@@ -187,46 +177,38 @@ Actors:
         - OperationName: insertOne
           OperationCommand:
             Document: *LargeDoc
-          OperationOptions:
-            WriteConcern: *WMajorityJFalse
 
 - Name: InsertTTLColl-Small
-  Type: RunCommand
+  Type: CrudActor
+  Database: *db
   Threads: 300
   Phases:
     OnlyActiveInPhases:
       Active: [3]
       NopInPhasesUpTo: *NumPhases
       PhaseConfig:
-        MetricsName: Insert_WMajority_JFalse
         Duration: *phaseDuration
-        Database: *db
+        Collection: Collection0
         Operations:
-        - OperationName: RunCommand
-          OperationIsQuiet: true
+        - OperationName: insertOne
           OperationCommand:
-            insert: Collection0
-            documents: [*SmallDoc]
-            writeConcern: {w: majority, j: false}
+            Document: *SmallDoc
 
 - Name: InsertTTLColl-Large
-  Type: RunCommand
+  Type: CrudActor
+  Database: *db
   Threads: 300
   Phases:
     OnlyActiveInPhases:
       Active: [3]
       NopInPhasesUpTo: *NumPhases
       PhaseConfig:
-        MetricsName: Insert_WMajority_JFalse
         Duration: *phaseDuration
-        Database: *db
+        Collection: Collection0
         Operations:
-        - OperationName: RunCommand
-          OperationIsQuiet: true
+        - OperationName: insertOne
           OperationCommand:
-            insert: Collection0
-            documents: [*LargeDoc]
-            writeConcern: {w: majority, j: false}
+            Document: *LargeDoc
 
 AutoRun:
 - When:
