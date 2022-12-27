@@ -84,28 +84,26 @@ ActorTemplates:
   Config:
     Name: {^Parameter: {Name: "Name", Default: "Insert"}}
     Type: SamplingLoader
+    Database: *db
+    Collection: *coll
+
+    # No more than sampleSize*objectWidth paths can be "touched" by a sample.
+    SampleSize: *sampleSize
+
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Database: *db
-          Collection: *coll
-
-          # No more than sampleSize*objectWidth paths can be "touched" by a sample.
-          SampleSize: *sampleSize
-
           # When the batch size is the same as sample size, each sampled document will be used in
           # the batch exactly once, and this will be repeated for the number of batches. We expect,
           # that the first batch might be affected by "cold" caches but the subsequent batches
           # would be fully warmed up.
           InsertBatchSize: *sampleSize
 
-          # The 'SamplingLoader' actor re-samples on repeat, meaning that it would get a new set of
-          # documents likely with different paths and values. This makes each repeat hit different
-          # parts of the indexes, causing a long warm up tail. To avoid this we test with a single
-          # repeat but multiple batches.
+          # "Repeat" is pretty redundant with "InsertBatchSize", but "InsertBatchSize" is preferred.
+          # Repetitions will still share the same sample.
           Repeat: {^Parameter: {Name: "Repeats", Default: 1}}
 
           # The instances of the template must specify the number of batches to make it clear what
