@@ -47,7 +47,6 @@ Actors:
     Operation: &find_one
       OperationMetricsName: "Find"
       OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         find: Collection0
         readConcern: {level: local}

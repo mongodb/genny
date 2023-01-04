@@ -22,7 +22,6 @@ Actors:
     Operation:
       OperationMetricsName: Connection
       OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         replSetTestEgress: 1
 
