@@ -915,7 +915,7 @@ For a full example of an encrypted workload, see [here](../src/workloads/docs/Cr
 # Creating a new Genny based workload repository
 Genny workloads can also live in repositories outside the genny repository. Here are the steps to create a new genny workload and configure them to run with DSI.
 
-For convenience, genny provides a command to create a new workload. This command creates the necessary directories and files for the new workload.
+For convenience, genny provides a command to initialize a new genny workload repository. This command creates the necessary directories and files for the new workload.
 
 1. First, let's initialize an existing workload repo in $HOME/new-workload-repo
 ```bash
@@ -934,6 +934,22 @@ $HOME/new-workload-repo
 3. `dsi/run-from-dsi` is the task generator script required by DSI in all workload repositories. This file requires no changes if the repository host has genny workloads. This shell script calls `./run-genny auto-tasks` to generate DSI tasks for all the workloads in the current repository. 
 4. You genny workloads yamls can live in `src/workload/docs` or any directory inside `src/workload`
 
+# Developing a new DSI Task files generator for your custom workload
+
+There could be a case when users have to develop a workload that is not genny based and would require them to build their custom Evergreen tasks generator.
+
+- DSI looks for a task generator executable in a workload repository under `$WORKLOAD_REPO/dsi/run-from-dsi`. 
+- On triggering tasks scheduling using `./run-dsi schedule_tasks` command, DSI executes the task generator for all workload repositories. 
+- The generated DSI tasks files will be under `$WORKSPACE_ROOT/build/DSITasks/`.
+- DSI then combines these Tasks and converts them to a single Evergreen tasks file stored in `$WORKSPACE_ROOT/build/TaskJSON/Tasks.json`.
+
+## Fundamental Rules to follow for DSI task generator:
+- DSI Task generator file should be under `$WORKLOAD_REPO/dsi/run-from-dsi`. 
+- `$WORKLOAD_REPO/dsi/run-from-dsi` can be a shell script or any other executable that creates a YAML DSI task file in the `$WORKSPACE_ROOT/build/DSITasks/` directory.
+- The task file name format should be `DsiTasks-<workload_name>.yml`. For example - the task filename for `genny` will be `DsiTasks-genny.yml`.
+- The tasks YAML file should follow the YAML schema described here
+
+## DSI Tasks file YAML schema
 
 <a id="org3aaae9e"></a>
 

@@ -389,4 +389,4 @@ def main(genny_repo_root: str, workspace_root: str, workload_root: Optional[str]
     tasks = repo.generate_dsi_tasks(op=op)
 
     writer = ConfigWriter(op)
-    WorkloadLister.write(tasks)
+    writer.write(tasks)
