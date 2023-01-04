@@ -932,7 +932,7 @@ $HOME/new-workload-repo
         └── docs
 ```
 3. `dsi/run-from-dsi` is the task generator script required by DSI in all workload repositories. This file requires no changes if the repository host has genny workloads. This shell script calls `./run-genny auto-tasks` to generate DSI tasks for all the workloads in the current repository. 
-4. You genny workloads yamls can live in `src/workload/docs` or any directory inside `src/workload`.
+4. Genny workloads yamls can live in `src/workload/docs` or any directory inside `src/workload`.
 
 <a id="org3aaae9z"></a>
 # Developing a new DSI Task files generator for your custom workload
