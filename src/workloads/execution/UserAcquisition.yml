@@ -28,7 +28,6 @@ Actors:
 
     # Simple leaf roles
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleA'
         roles: ['backup']
@@ -37,7 +36,6 @@ Actors:
           actions: ['insert']
 
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleB'
         roles: ['backup']
@@ -46,7 +44,6 @@ Actors:
           actions: ['insert']
 
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleC'
         roles: ['backup']
@@ -55,7 +52,6 @@ Actors:
           actions: ['insert']
 
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleD'
         roles: ['backup']
@@ -65,7 +61,6 @@ Actors:
 
     # First degree inheritors
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleAB'
         roles:
@@ -76,7 +71,6 @@ Actors:
           actions: ['insert']
 
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleBC'
         roles:
@@ -87,7 +81,6 @@ Actors:
           actions: ['insert']
 
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleCD'
         roles:
@@ -98,7 +91,6 @@ Actors:
           actions: ['insert']
 
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleDA'
         roles:
@@ -110,7 +102,6 @@ Actors:
 
     # 2nd degree inheritors
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleABCD'
         roles:
@@ -121,7 +112,6 @@ Actors:
           actions: ['insert']
 
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleBCDA'
         roles:
@@ -132,7 +122,6 @@ Actors:
           actions: ['insert']
 
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleCDAB'
         roles:
@@ -143,7 +132,6 @@ Actors:
           actions: ['insert']
 
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleDABC'
         roles:
@@ -155,7 +143,6 @@ Actors:
 
     # Composite of 2nd degree inheritors
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createRole: 'userAcquisitionRoleAll'
         roles:
@@ -168,7 +155,6 @@ Actors:
           actions: ['insert']
 
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         createUser: 'testUserAcquisition'
         pwd: 'pwd'
@@ -181,12 +167,10 @@ Actors:
     Operations:
     # Make sure the user is ejected from the read-through cache.
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand: {invalidateUserCache: 1}
 
       # Pull the user definition from the underlying store
     - OperationMetricsName: UserInfoExactUser
-      OperationIsQuiet: true
       OperationName: RunCommand
       OperationCommand:
         usersInfo: {user: "testUserAcquisition", db: "admin"}

@@ -522,37 +522,25 @@ TEST_CASE("EncryptionContext outputs correct schema map document") {
         KeyVaultCollection: 'datakeys',
         EncryptedCollections: [ 'accounts.balances' ]
     })";
-    std::string expectedJson = R"({
-        "accounts.balances" : {
-            "properties" : {
-                "pii" : {
-                    "properties" : {
-                        "dob" : {
-                            "encrypt" : {
-                                "bsonType" : "int",
-                                "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
-                                "keyId" : [ { "$binary" : "/+7duhzdEe2+DbPyHNJwHw==", "$type" : "04" } ]
-                            }
-                        },
-                        "ssn" : {
-                            "encrypt" : {
-                                "bsonType" : "string",
-                                "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
-                                "keyId" : [ { "$binary" : "iTbp6hzdEe2+DbPyHNJwHw==", "$type" : "04" } ]
-                            }
-                        }
-                    },
-                    "bsonType" : "object"
-                },
-                "name" : {
-                    "encrypt" : {
-                        "bsonType" : "string",
-                        "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
-                        "keyId" : [ { "$binary" : "eqNZ4BzdEe2izb+YW2xQhw==", "$type" : "04" } ]
-                    }
-                }
-            },
-            "bsonType" : "object"
+    std::string expectedNameSchema = R"({
+        "encrypt" : {
+            "bsonType" : "string",
+            "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
+            "keyId" : [ { "$binary" : "eqNZ4BzdEe2izb+YW2xQhw==", "$type" : "04" } ]
+        }
+    })";
+    std::string expectedDobSchema = R"({
+        "encrypt" : {
+            "bsonType" : "int",
+            "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
+            "keyId" : [ { "$binary" : "/+7duhzdEe2+DbPyHNJwHw==", "$type" : "04" } ]
+        }
+    })";
+    std::string expectedSsnSchema = R"({
+        "encrypt" : {
+            "bsonType" : "string",
+            "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
+            "keyId" : [ { "$binary" : "iTbp6hzdEe2+DbPyHNJwHw==", "$type" : "04" } ]
         }
     })";
     genny::NodeSource collsNs{encryptedColls, ""};
@@ -562,10 +550,26 @@ TEST_CASE("EncryptionContext outputs correct schema map document") {
     auto encryption = mgr.createEncryptionContext(kSourceUri, optsNs.root());
 
     auto doc = encryption.generateSchemaMapDoc();
-    auto expectedDoc = bsoncxx::from_json(expectedJson);
-    REQUIRE(doc == expectedDoc);
+
+    REQUIRE_NOTHROW(doc.view()["accounts.balances"]["properties"].get_document());
+    REQUIRE_NOTHROW(doc.view()["accounts.balances"]["bsonType"].get_utf8());
+
+    auto rootProperties = doc.view()["accounts.balances"]["properties"].get_document();
+    REQUIRE_NOTHROW(rootProperties.view()["pii"]["properties"].get_document());
+    REQUIRE_NOTHROW(rootProperties.view()["pii"]["bsonType"].get_utf8());
+    REQUIRE_NOTHROW(rootProperties.view()["name"].get_document());
+
+    auto piiProperties = rootProperties.view()["pii"]["properties"].get_document();
+    REQUIRE_NOTHROW(piiProperties.view()["dob"].get_document());
+    REQUIRE_NOTHROW(piiProperties.view()["ssn"].get_document());
+
+    REQUIRE(rootProperties.view()["name"].get_document().view() == bsoncxx::from_json(expectedNameSchema));
+    REQUIRE(piiProperties.view()["dob"].get_document().view() == bsoncxx::from_json(expectedDobSchema));
+    REQUIRE(piiProperties.view()["ssn"].get_document().view() == bsoncxx::from_json(expectedSsnSchema));
+    REQUIRE(doc.view()["accounts.balances"]["bsonType"].get_utf8().value == "object");
+    REQUIRE(rootProperties.view()["pii"]["bsonType"].get_utf8().value == "object");
 }
-/* TODO: Reenable this after the test is fixed
+
 TEST_CASE("EncryptionContext outputs correct encrypted fields map document") {
     std::string encryptedColls = R"({
       Encryption: {
@@ -604,35 +608,44 @@ TEST_CASE("EncryptionContext outputs correct encrypted fields map document") {
         KeyVaultCollection: 'datakeys',
         EncryptedCollections: [ 'accounts.balances' ]
     })";
-    std::string expectedJson = R"({
-      "accounts.balances" : {
-        "fields" : [
-          {
-            "path": "pii.ssn",
-            "keyId": { "$binary" : "iTbp6hzdEe2+DbPyHNJwHw==", "$type" : "04" },
-            "bsonType": "string",
-            "queries": [{"queryType": "equality", "contention": 0}]
-          },
-          {
-            "path": "name",
-            "keyId": { "$binary" : "eqNZ4BzdEe2izb+YW2xQhw==", "$type" : "04" },
-            "bsonType": "string"
-          },
-          {
-            "path": "pii.dob",
-            "keyId": { "$binary" : "/+7duhzdEe2+DbPyHNJwHw==", "$type" : "04" },
-            "bsonType": "int",
-            "queries": [{"queryType": "equality", "contention": 16}, {"queryType": "range"}]
-          },
-          {
-            "path": "amount",
-            "keyId": { "$binary" : "iTbp6hzdEe2+DbPyHNJwHw==", "$type" : "04" },
-            "bsonType": "int",
-            "queries": [{"queryType": "equality"}]
-          }
-        ]
-      }
-    })";
+    std::unordered_map<std::string, std::string> expectedFieldsMap = {
+        {
+            "pii.ssn",
+            R"({
+                "path": "pii.ssn",
+                "keyId": { "$binary" : "iTbp6hzdEe2+DbPyHNJwHw==", "$type" : "04" },
+                "bsonType": "string",
+                "queries": [{"queryType": "equality", "contention": 0}]
+            })"
+        },
+        {
+            "name",
+            R"({
+                "path": "name",
+                "keyId": { "$binary" : "eqNZ4BzdEe2izb+YW2xQhw==", "$type" : "04" },
+                "bsonType": "string"
+            })"
+        },
+        {
+            "pii.dob",
+            R"({
+                "path": "pii.dob",
+                "keyId": { "$binary" : "/+7duhzdEe2+DbPyHNJwHw==", "$type" : "04" },
+                "bsonType": "int",
+                "queries": [{"queryType": "equality", "contention": 16}, {"queryType": "range"}]
+            })"
+        },
+        {
+            "amount",
+            R"({
+                "path": "amount",
+                "keyId": { "$binary" : "iTbp6hzdEe2+DbPyHNJwHw==", "$type" : "04" },
+                "bsonType": "int",
+                "queries": [{"queryType": "equality"}]
+            })"
+        }
+    };
+
     genny::NodeSource collsNs{encryptedColls, ""};
     genny::NodeSource optsNs{encryptionOpts, ""};
     EncryptionManager mgr(collsNs.root(), true);
@@ -640,13 +653,23 @@ TEST_CASE("EncryptionContext outputs correct encrypted fields map document") {
     auto encryption = mgr.createEncryptionContext(kSourceUri, optsNs.root());
 
     auto doc = encryption.generateEncryptedFieldsMapDoc();
-    auto expectedDoc = bsoncxx::from_json(expectedJson);
 
-    BOOST_LOG_TRIVIAL(debug) << "Generated encrypted fields map: " << bsoncxx::to_json(doc);
+    REQUIRE_NOTHROW(doc.view()["accounts.balances"]["fields"].get_array());
+    auto fieldsArray = doc.view()["accounts.balances"]["fields"].get_array();
+    REQUIRE(std::distance(fieldsArray.value.cbegin(), fieldsArray.value.cend()) == expectedFieldsMap.size());
 
-    REQUIRE(doc == expectedDoc);
+    for (auto& subobj : fieldsArray.value) {
+        REQUIRE_NOTHROW(subobj.get_document());
+        auto subdoc = subobj.get_document();
+        REQUIRE_NOTHROW(subdoc.view()["path"].get_utf8());
+        auto path = subdoc.view()["path"].get_utf8();
+
+        auto itr = expectedFieldsMap.find(path.value.to_string());
+        REQUIRE(itr != expectedFieldsMap.end());
+        REQUIRE(bsoncxx::from_json(itr->second) == subdoc.view());
+    }
 }
-*/
+
 TEST_CASE("EncryptionContext outputs correct auto_encryption options") {
     std::string encryptedColls = R"({
         Encryption: {

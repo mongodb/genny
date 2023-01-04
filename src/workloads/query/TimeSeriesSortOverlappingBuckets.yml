@@ -17,7 +17,7 @@ GlobalDefaults:
 
 SortCmd: &SortCmd
   LoadConfig:
-    Path: "../../phases/execution/TimeSeriesSortCommands.yml"
+    Path: "../../phases/query/TimeSeriesSortCommands.yml"
     Key: SortFirstResultCmdTemplate
     Parameters:
       coll: *coll
