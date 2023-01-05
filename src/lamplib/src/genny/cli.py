@@ -3,7 +3,6 @@ import structlog
 import sys
 import os
 import shutil
-
 from typing import List, Optional
 import click
 from click_option_group import optgroup, RequiredMutuallyExclusiveOptionGroup
@@ -551,8 +550,8 @@ def auto_tasks(ctx: click.Context, workload_repo: str):
     help=("The genny workload repo path. This path should already exist."),
 )
 @click.pass_context
-def init_workload_repo(ctx: click.Context, workload_repo_path: str):
-    _init_workload_repo(ctx, workload_repo_path)
+def init_workload_repo(ctx: click.Context, path: str):
+    _init_workload_repo(ctx, path)
 
 
 def _init_workload_repo(ctx: click.Context, workload_repo_path: str):
@@ -571,6 +570,7 @@ def _init_workload_repo(ctx: click.Context, workload_repo_path: str):
         shutil.copyfile(
             os.path.join(ctx.obj["GENNY_REPO_ROOT"], "dsi", "run-from-dsi"), task_generator_file
         )
+        os.chmod(task_generator_file, 0o755)
 
     # Create the workload directory if it already doesn't exist.
     os.makedirs(os.path.join(workload_repo_path, "src", "workloads", "docs"), exist_ok=True)
