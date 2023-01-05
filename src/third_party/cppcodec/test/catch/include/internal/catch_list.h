@@ -29,9 +29,9 @@ namespace Catch {
 
     std::size_t listTags( Config const& config );
 
-    std::size_t listReporters( Config const& /*config*/ );
+    std::size_t listReporters();
     
-    Option<std::size_t> list( Config const& config );
+    Option<std::size_t> list( std::shared_ptr<Config> const& config );
 
 } // end namespace Catch
 

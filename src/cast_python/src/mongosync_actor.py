@@ -76,7 +76,8 @@ def cli():
 
 
 @cli.command(
-    "start", help=("Issue /start to all mongosync processes"),
+    "start",
+    help=("Issue /start to all mongosync processes"),
 )
 @click.argument("workload_yaml", nargs=1)
 def start(workload_yaml):
@@ -84,7 +85,8 @@ def start(workload_yaml):
 
 
 @cli.command(
-    "poll_for_cea", help=("Poll all available instances for the CEA stage"),
+    "poll_for_cea",
+    help=("Poll all available instances for the CEA stage"),
 )
 @click.argument("workload_yaml", nargs=1)
 def poll_for_cea(workload_yaml):
@@ -92,7 +94,8 @@ def poll_for_cea(workload_yaml):
 
 
 @cli.command(
-    "drain_writes", help=("Wait till all writes have been drained to the destination cluster"),
+    "drain_writes",
+    help=("Wait till all writes have been drained to the destination cluster"),
 )
 @click.argument("workload_yaml", nargs=1)
 def drain_writes(workload_yaml):
@@ -100,7 +103,8 @@ def drain_writes(workload_yaml):
 
 
 @cli.command(
-    "commit", help=("Commit the migration"),
+    "commit",
+    help=("Commit the migration"),
 )
 @click.argument("workload_yaml", nargs=1)
 def commit(workload_yaml):
@@ -108,7 +112,8 @@ def commit(workload_yaml):
 
 
 @cli.command(
-    "wait_for_commit", help=("Wait until all mongosyncs are finished commiting the migration"),
+    "wait_for_commit",
+    help=("Wait until all mongosyncs are finished commiting the migration"),
 )
 @click.argument("workload_yaml", nargs=1)
 def wait_for_commit(workload_yaml):

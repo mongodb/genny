@@ -6,8 +6,7 @@
  */
 
 #include "catch_output_redirect.h"
-
-
+#include "catch_enforce.h"
 
 #include <cstdio>
 #include <cstring>
@@ -50,27 +49,36 @@ namespace Catch {
     {}
     auto RedirectedStdErr::str() const -> std::string { return m_rss.str(); }
 
+    RedirectedStreams::RedirectedStreams(std::string& redirectedCout, std::string& redirectedCerr)
+    :   m_redirectedCout(redirectedCout),
+        m_redirectedCerr(redirectedCerr)
+    {}
+
+    RedirectedStreams::~RedirectedStreams() {
+        m_redirectedCout += m_redirectedStdOut.str();
+        m_redirectedCerr += m_redirectedStdErr.str();
+    }
 
 #if defined(CATCH_CONFIG_NEW_CAPTURE)
 
 #if defined(_MSC_VER)
     TempFile::TempFile() {
         if (tmpnam_s(m_buffer)) {
-            throw std::runtime_error("Could not get a temp filename");
+            CATCH_RUNTIME_ERROR("Could not get a temp filename");
         }
-        if (fopen_s(&m_file, m_buffer, "w")) {
+        if (fopen_s(&m_file, m_buffer, "w+")) {
             char buffer[100];
             if (strerror_s(buffer, errno)) {
-                throw std::runtime_error("Could not translate errno to string");
+                CATCH_RUNTIME_ERROR("Could not translate errno to a string");
             }
-            throw std::runtime_error("Could not open the temp file: " + std::string(m_buffer) + buffer);
+            CATCH_RUNTIME_ERROR("Could not open the temp file: '" << m_buffer << "' because: " << buffer);
         }
     }
 #else
     TempFile::TempFile() {
         m_file = std::tmpfile();
         if (!m_file) {
-            throw std::runtime_error("Could not create a temp file.");
+            CATCH_RUNTIME_ERROR("Could not create a temp file.");
         }
     }
 

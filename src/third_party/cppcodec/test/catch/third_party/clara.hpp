@@ -5,7 +5,7 @@
 //
 // See https://github.com/philsquared/Clara for more details
 
-// Clara v1.1.4
+// Clara v1.1.5
 
 #ifndef CLARA_HPP_INCLUDED
 #define CLARA_HPP_INCLUDED
@@ -34,8 +34,8 @@
 //
 // A single-header library for wrapping and laying out basic text, by Phil Nash
 //
-// This work is licensed under the BSD 2-Clause license.
-// See the accompanying LICENSE file, or the one at https://opensource.org/licenses/BSD-2-Clause
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 // This project is hosted at https://github.com/philsquared/textflowcpp
 
@@ -110,6 +110,9 @@ namespace clara { namespace TextFlow {
                 m_suffix = false;
                 auto width = m_column.m_width-indent();
                 m_end = m_pos;
+                if (line()[m_pos] == '\n') {
+                    ++m_end;
+                }
                 while( m_end < line().size() && line()[m_end] != '\n' )
                     ++m_end;
 
@@ -142,6 +145,12 @@ namespace clara { namespace TextFlow {
             }
 
         public:
+            using difference_type = std::ptrdiff_t;
+            using value_type = std::string;
+            using pointer = value_type*;
+            using reference = value_type&;
+            using iterator_category = std::forward_iterator_tag;
+
             explicit iterator( Column const& column ) : m_column( column ) {
                 assert( m_column.m_width > m_column.m_indent );
                 assert( m_column.m_initialIndent == std::string::npos || m_column.m_width > m_column.m_initialIndent );
@@ -153,10 +162,7 @@ namespace clara { namespace TextFlow {
             auto operator *() const -> std::string {
                 assert( m_stringIndex < m_column.m_strings.size() );
                 assert( m_pos <= m_end );
-                if( m_pos + m_column.m_width < m_end )
-                    return addIndentAndSuffix(line().substr(m_pos, m_len));
-                else
-                    return addIndentAndSuffix(line().substr(m_pos, m_end - m_pos));
+                return addIndentAndSuffix(line().substr(m_pos, m_len));
             }
 
             auto operator ++() -> iterator& {
@@ -266,6 +272,12 @@ namespace clara { namespace TextFlow {
             }
 
         public:
+            using difference_type = std::ptrdiff_t;
+            using value_type = std::string;
+            using pointer = value_type*;
+            using reference = value_type&;
+            using iterator_category = std::forward_iterator_tag;
+
             explicit iterator( Columns const& columns )
             :   m_columns( columns.m_columns ),
                 m_activeIterators( m_columns.size() )
@@ -355,7 +367,7 @@ namespace clara { namespace TextFlow {
         cols += other;
         return cols;
     }
-}} // namespace clara::TextFlow
+}}
 
 #endif // CLARA_TEXTFLOW_HPP_INCLUDED
 
@@ -655,7 +667,7 @@ namespace detail {
     }
     inline auto convertInto( std::string const &source, bool &target ) -> ParserResult {
         std::string srcLC = source;
-        std::transform( srcLC.begin(), srcLC.end(), srcLC.begin(), []( char c ) { return static_cast<char>( ::tolower(c) ); } );
+        std::transform( srcLC.begin(), srcLC.end(), srcLC.begin(), []( unsigned char c ) { return static_cast<char>( ::tolower( c ) ); } );
         if (srcLC == "y" || srcLC == "1" || srcLC == "true" || srcLC == "yes" || srcLC == "on")
             target = true;
         else if (srcLC == "n" || srcLC == "0" || srcLC == "false" || srcLC == "no" || srcLC == "off")

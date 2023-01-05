@@ -18,7 +18,7 @@ MONGO_COMMIT = "e61bf27c2f6a83fed36e5a13c008a32d563babe2"
 CANNED_ARTIFACTS = {
     "osx": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-macos-x86_64-6.0.0.tgz",
     "amazon2": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-amazon2-6.0.0.tgz",
-    "amazon2arm": "https://fastdl.mongodb.org/linux/mongodb-linux-aarch64-amazon2-6.0.0.tgz",
+    "amazon2_arm64": "https://fastdl.mongodb.org/linux/mongodb-linux-aarch64-amazon2-6.0.0.tgz",
     "ubuntu1804": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-ubuntu1804-6.0.0.tgz",
     "ubuntu2004": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-ubuntu2004-6.0.0.tgz",
     "rhel70": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-rhel70-6.0.0.tgz",
@@ -240,7 +240,7 @@ def _setup_resmoke(
             download_required = False
         else:
             SLOG.info(
-                "Mongo binary exist, but is not the correct version. Mongo will be dowloaded from the canned artifact."
+                "Mongo binary exist, but is not the correct version. Mongo will be downloaded from the canned artifact."
             )
 
     if download_required:
@@ -282,7 +282,10 @@ def _setup_resmoke(
         # only required if the local repo didn't exist and had to be cloned
         mongodb_commit = _get_mongo_commit(mongod, workspace_root)
         cmd_runner.run_command(
-            cmd=["git", "checkout", mongodb_commit], cwd=mongo_repo_path, check=True, capture=False,
+            cmd=["git", "checkout", mongodb_commit],
+            cwd=mongo_repo_path,
+            check=True,
+            capture=False,
         )
 
     # Setup resmoke venv unless exists
@@ -297,7 +300,10 @@ def _setup_resmoke(
 
         cmd = [resmoke_python, "-mpip", "install", "-r", reqs_file]
         cmd_runner.run_command(
-            cmd=cmd, cwd=workspace_root, capture=False, check=True,
+            cmd=cmd,
+            cwd=workspace_root,
+            capture=False,
+            check=True,
         )
 
         open(resmoke_setup_sentinel, "w")

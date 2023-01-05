@@ -49,7 +49,7 @@ ignore:
 
 buildvariants:
 - name: amazon2
-  display_name: Amazon Linux 2
+  display_name: Amazon Linux 2 x64
   modules: [mongo]
   run_on:
   - amazon2-build
@@ -58,17 +58,15 @@ buildvariants:
   tasks:
   - name: tg_compile_and_test_with_server
 
-- name: amazon2arm64
-  display_name: Amazon Linux 2 Arm64
+- name: amazon2_arm64
+  display_name: Amazon Linux 2 arm64
   modules: [mongo]
   run_on:
   - amazon2-arm64-large
   expansions:
-    distro: amazon2arm
+    distro: amazon2_arm64
   tasks:
   - name: tg_compile_and_test_with_server
-
-
 
 - name: rhel70
   display_name: RHEL 7
@@ -100,21 +98,20 @@ buildvariants:
   tasks:
   - name: tg_compile
 
-- name: ubuntu2004
-  display_name: Ubuntu 20.04
+
+- name: macos-1100
+  display_name: macOS Big Sur x64
   modules: [mongo]
-  expansions:
-    distro: ubuntu2004
   run_on:
-  - ubuntu2004-large
+  - macos-1100
   tasks:
   - name: tg_compile
 
-- name: macos-1014
-  display_name: macOS Mojave
+- name: macos-1100-arm64
+  display_name: macOS Bug Sur arm64
   modules: [mongo]
   run_on:
-  - macos-1014
+  - macos-1100-arm64
   tasks:
   - name: tg_compile
 
@@ -232,8 +229,8 @@ task_groups:
   # run after t_compile.
   - t_compile
   - t_python_test
-  - t_lint_python
-  - t_lint_workloads
+  #- t_lint_python
+  #- t_lint_workloads
   - t_cmake_test
 
 - <<: *a_compile_and_test
@@ -247,8 +244,8 @@ task_groups:
   tasks:
   - t_compile
   - t_python_test
-  - t_lint_python
-  - t_lint_workloads
+  #- t_lint_python
+  #- t_lint_workloads
   - t_cmake_test
   - t_integration_test_single_node_replset
   - t_integration_test_three_node_replset

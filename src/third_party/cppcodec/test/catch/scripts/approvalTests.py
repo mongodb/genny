@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from  __future__ import print_function
+from __future__ import print_function
 
 import io
 import os
@@ -13,12 +13,12 @@ import scriptCommon
 from scriptCommon import catchPath
 
 if os.name == 'nt':
-	# Enable console colours on windows
-	os.system('')
+    # Enable console colours on windows
+    os.system('')
 
 rootPath = os.path.join(catchPath, 'projects/SelfTest/Baselines')
 
-
+langFilenameParser = re.compile(r'(.+\.[ch]pp)')
 filelocParser = re.compile(r'''
     .*/
     (.+\.[ch]pp)  # filename
@@ -28,7 +28,11 @@ filelocParser = re.compile(r'''
 ''', re.VERBOSE)
 lineNumberParser = re.compile(r' line="[0-9]*"')
 hexParser = re.compile(r'\b(0[xX][0-9a-fA-F]+)\b')
-durationsParser = re.compile(r' time="[0-9]*\.[0-9]*"')
+# Note: junit must serialize time with 3 (or or less) decimal places
+#       before generalizing this parser, make sure that this is checked
+#       in other places too.
+junitDurationsParser = re.compile(r' time="[0-9]*\.[0-9]{3}"')
+sonarqubeDurationParser = re.compile(r' duration="[0-9]+"')
 timestampsParser = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}\:\d{2}\:\d{2}Z')
 versionParser = re.compile(r'Catch v[0-9]+\.[0-9]+\.[0-9]+(-develop\.[0-9]+)?')
 nullParser = re.compile(r'\b(__null|nullptr)\b')
@@ -91,13 +95,24 @@ def diffFiles(fileA, fileB):
     return [line for line in diff if line[0] in ('+', '-')]
 
 
-def filterLine(line, isCompact):
+def normalizeFilepath(line):
     if catchPath in line:
         # make paths relative to Catch root
         line = line.replace(catchPath + os.sep, '')
-        # go from \ in windows paths to /
-        line = line.replace('\\', '/')
 
+    m = langFilenameParser.match(line)
+    if m:
+        filepath = m.group(0)
+        # go from \ in windows paths to /
+        filepath = filepath.replace('\\', '/')
+        # remove start of relative path
+        filepath = filepath.replace('../', '')
+        line = line[:m.start()] + filepath + line[m.end():]
+
+    return line
+
+def filterLine(line, isCompact):
+    line = normalizeFilepath(line)
 
     # strip source line numbers
     m = filelocParser.match(line)
@@ -112,7 +127,7 @@ def filterLine(line, isCompact):
     if isCompact:
         line = line.replace(': FAILED', ': failed')
         line = line.replace(': PASSED', ': passed')
-        
+
     # strip Catch version number
     line = versionParser.sub("<version>", line)
 
@@ -126,7 +141,8 @@ def filterLine(line, isCompact):
     line = hexParser.sub("0x<hex digits>", line)
 
     # strip durations and timestamps
-    line = durationsParser.sub(' time="{duration}"', line)
+    line = junitDurationsParser.sub(' time="{duration}"', line)
+    line = sonarqubeDurationParser.sub(' duration="{duration}"', line)
     line = timestampsParser.sub('{iso8601-timestamp}', line)
     line = specialCaseParser.sub('file:\g<1>', line)
     line = errnoParser.sub('errno', line)
@@ -180,19 +196,21 @@ print("Running approvals against executable:")
 print("  " + cmdPath)
 
 
-### Keep default reporters here
+# ## Keep default reporters here ##
 # Standard console reporter
-approve("console.std", ["~[!nonportable]~[!benchmark]~[approvals]", "--order", "lex"])
+approve("console.std", ["~[!nonportable]~[!benchmark]~[approvals]", "--order", "lex", "--rng-seed", "1"])
 # console reporter, include passes, warn about No Assertions
-approve("console.sw", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "--order", "lex"])
+approve("console.sw", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "--order", "lex", "--rng-seed", "1"])
 # console reporter, include passes, warn about No Assertions, limit failures to first 4
-approve("console.swa4", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "-x", "4", "--order", "lex"])
+approve("console.swa4", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "-x", "4", "--order", "lex", "--rng-seed", "1"])
 # junit reporter, include passes, warn about No Assertions
-approve("junit.sw", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "-r", "junit", "--order", "lex"])
+approve("junit.sw", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "-r", "junit", "--order", "lex", "--rng-seed", "1"])
 # xml reporter, include passes, warn about No Assertions
-approve("xml.sw", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "-r", "xml", "--order", "lex"])
+approve("xml.sw", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "-r", "xml", "--order", "lex", "--rng-seed", "1"])
 # compact reporter, include passes, warn about No Assertions
-approve('compact.sw', ['~[!nonportable]~[!benchmark]~[approvals]', '-s', '-w', 'NoAssertions', '-r', 'compact', '--order', 'lex'])
+approve('compact.sw', ['~[!nonportable]~[!benchmark]~[approvals]', '-s', '-w', 'NoAssertions', '-r', 'compact', '--order', 'lex', "--rng-seed", "1"])
+# sonarqube reporter, include passes, warn about No Assertions
+approve("sonarqube.sw", ["~[!nonportable]~[!benchmark]~[approvals]", "-s", "-w", "NoAssertions", "-r", "sonarqube", "--order", "lex", "--rng-seed", "1"])
 
 if overallResult != 0:
     print("If these differences are expected, run approve.py to approve new baselines.")
