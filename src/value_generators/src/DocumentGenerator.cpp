@@ -16,7 +16,6 @@
 
 #include <fstream>
 #include <functional>
-#include <iostream>
 #include <limits>
 #include <map>
 #include <sstream>
@@ -39,9 +38,9 @@
 namespace {
 
 template <class IntType = int64_t>
-class zipfian_distribution {
+class ZipfianDistribution {
 public:
-    explicit zipfian_distribution(double alpha, IntType n)
+    explicit ZipfianDistribution(double alpha, IntType n)
         : _alpha{alpha}, _n{n}, _c{calculateNormalizationConstant(n, alpha)} {}
 
     template <class URNG>
@@ -77,6 +76,7 @@ private:
                 return i;
             }
         }
+        return {};
     }
 
     double calculateNormalizationConstant(IntType n, double alpha) {
@@ -120,12 +120,16 @@ public:
 
 namespace {
 using namespace genny;
-const static boost::posix_time::ptime epoch{boost::gregorian::date(1970, 1, 1)};
+
+boost::posix_time::ptime epoch() {
+    static boost::posix_time::ptime out {boost::gregorian::date(1970, 1, 1)};
+    return out;
+}
 
 template <typename T>
 class ConstantAppender : public Generator<T> {
 public:
-    explicit ConstantAppender(T value) : _value{value} {}
+    explicit ConstantAppender(T value) : _value{std::move(value)} {}
     explicit ConstantAppender() : _value{} {}
     T evaluate() override {
         return _value;
@@ -204,17 +208,24 @@ std::optional<std::string> getMetaKey(const Node& node) {
 }
 
 /** Default alphabet for string generators */
-static const std::string kDefaultAlphabet = std::string{
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz"
-    "0123456789+/"};
+std::string kDefaultAlphabet() {
+    static std::string out{
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789+/"
+    };
+    return out;
+}
 
 // Useful typedefs
 
 template <typename O>
 using Parser = std::function<O(const Node&, GeneratorArgs)>;
 
-const static boost::posix_time::ptime max_date{boost::gregorian::date(2150, 1, 1)};
+boost::posix_time::ptime maxDate(){
+    static boost::posix_time::ptime out{boost::gregorian::date(2150, 1, 1)};
+    return out;
+};
 
 // Pre-declaring all at once
 // Documentation is at the implementations-site.
@@ -228,7 +239,7 @@ UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
 UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<int64_t> dateGenerator(const Node& node,
                                        GeneratorArgs generatorArgs,
-                                       const boost::posix_time::ptime& defaultTime = epoch);
+                                       const boost::posix_time::ptime& defaultTime = epoch());
 template <bool Verbatim, typename Out>
 Out valueGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
@@ -277,7 +288,6 @@ class DoubleGenerator1Parameter : public Generator<double> {
 public:
     DoubleGenerator1Parameter(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng},
-          _actorId{generatorArgs.actorId},
           _parameter1Gen{
               doubleGenerator(extract(node, parameter1name, diststring), generatorArgs)} {}
 
@@ -289,43 +299,39 @@ public:
 
 private:
     DefaultRandom& _rng;
-    ActorId _actorId;
     UniqueGenerator<double> _parameter1Gen;
 };
 
 // Constant strings for arguments for templates
-static const char astr[] = "a";
-static const char bstr[] = "b";
-static const char kstr[] = "k";
-static const char mstr[] = "m";
-static const char nstr[] = "n";
-static const char sstr[] = "s";
-static const char minstr[] = "min";
-static const char maxstr[] = "max";
-static const char stepstr[] = "step";
-static const char startstr[] = "start";
-static const char multiplierstr[] = "multiplier";
-static const char alphastr[] = "alpha";
-static const char betastr[] = "beta";
-static const char lambdastr[] = "lambda";
-static const char meanstr[] = "mean";
-static const char medianstr[] = "median";
-static const char sigmastr[] = "sigma";
+const char astr[] = "a";
+const char bstr[] = "b";
+const char kstr[] = "k";
+const char mstr[] = "m";
+const char nstr[] = "n";
+const char sstr[] = "s";
+const char minstr[] = "min";
+const char maxstr[] = "max";
+const char alphastr[] = "alpha";
+const char betastr[] = "beta";
+const char lambdastr[] = "lambda";
+const char meanstr[] = "mean";
+const char medianstr[] = "median";
+const char sigmastr[] = "sigma";
 
 // constant strings for distribution names in templates
-static const char uniformstr[] = "uniform";
-static const char exponentialstr[] = "exponential";
-static const char gammastr[] = "gamma";
-static const char weibullstr[] = "weibull";
-static const char extremestr[] = "extreme_value";
-static const char laplacestr[] = "laplace";
-static const char normalstr[] = "normal";
-static const char lognormalstr[] = "lognormal";
-static const char chisquaredstr[] = "chi_squared";
-static const char noncentralchisquaredstr[] = "non_central_chi_squared";
-static const char cauchystr[] = "cauchy";
-static const char fisherfstr[] = "fisher_f";
-static const char studenttstr[] = "student_t";
+const char uniformstr[] = "uniform";
+const char exponentialstr[] = "exponential";
+const char gammastr[] = "gamma";
+const char weibullstr[] = "weibull";
+const char extremestr[] = "extreme_value";
+const char laplacestr[] = "laplace";
+const char normalstr[] = "normal";
+const char lognormalstr[] = "lognormal";
+const char chisquaredstr[] = "chi_squared";
+const char noncentralchisquaredstr[] = "non_central_chi_squared";
+const char cauchystr[] = "cauchy";
+const char fisherfstr[] = "fisher_f";
+const char studenttstr[] = "student_t";
 
 using UniformDoubleGenerator =
     DoubleGenerator2Parameter<boost::random::uniform_real_distribution<double>,
@@ -509,7 +515,7 @@ public:
 private:
     ActorId _id;
     DefaultRandom& _rng;
-    zipfian_distribution<int64_t> _distribution;
+    ZipfianDistribution<int64_t> _distribution;
 };
 
 // This generator allows choosing any valid generator, incuding documents. As such it cannot be used
@@ -609,14 +615,14 @@ public:
           _prefix{} {}
 
     std::string evaluate() override {
-        // Pick a random 32 bit integer
+        // Pick a random 32-bit integer
         // Bitwise add with _subnetMask and add to _prefix
         // Note that _subnetMask and _prefix are always default values for now.
         auto distribution = boost::random::uniform_int_distribution<int32_t>{};
         auto ipint = (distribution(_rng) & _subnetMask) + _prefix;
-        int32_t octets[4];
-        for (int i = 0; i < 4; i++) {
-            octets[i] = ipint & 255;
+        uint32_t octets[4];
+        for (auto& octet : octets) {
+            octet = ipint & 255;
             ipint = ipint >> 8;
         }
         // convert to a string
@@ -752,7 +758,7 @@ class FormatStringGenerator : public Generator<std::string> {
 public:
     FormatStringGenerator(const Node& node,
                           GeneratorArgs generatorArgs,
-                          std::map<std::string, Parser<UniqueAppendable>> parsers)
+                          const std::map<std::string, Parser<UniqueAppendable>>& parsers)
         : _rng{generatorArgs.rng}, _format{node["format"].maybe<std::string>().value_or("")} {
         std::stringstream msg;
         if (!node["format"]) {
@@ -822,7 +828,7 @@ public:
         : _rng{generatorArgs.rng},
           _id{generatorArgs.actorId},
           _lengthGen{intGenerator(extract(node, "length", "^RandomString"), generatorArgs)},
-          _alphabet{node["alphabet"].maybe<std::string>().value_or(kDefaultAlphabet)},
+          _alphabet{node["alphabet"].maybe<std::string>().value_or(kDefaultAlphabet())},
           _alphabetLength{_alphabet.size()} {
         if (_alphabetLength <= 0) {
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
@@ -841,7 +847,7 @@ protected:
 
 class DataSetCache {
 public:
-    DataSetCache() {}
+    explicit DataSetCache() = default;
 
     /* The dataset is stored in a map, using the path of the file as the key and a vector of strings
     with file's content as the value. In this method the empty vector is created and return its
@@ -887,7 +893,7 @@ public:
         loadDataset();
     }
 
-    std::string evaluate() {
+    std::string evaluate() override {
         auto dataset = _datasets.getDatasetForPath(_path);
         auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataset.size() - 1};
         return dataset[distribution(_rng)];
@@ -1120,7 +1126,7 @@ public:
         : _rng{generatorArgs.rng},
           _node{node},
           _minGen{dateGenerator(node["min"], generatorArgs)},
-          _maxGen{dateGenerator(node["max"], generatorArgs, max_date)} {}
+          _maxGen{dateGenerator(node["max"], generatorArgs, maxDate())} {}
 
     bsoncxx::types::b_date evaluate() override {
         auto min = _minGen->evaluate();
@@ -1148,13 +1154,13 @@ class CycleGenerator : public Appendable {
 public:
     CycleGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
-                   std::map<std::string, Parser<UniqueAppendable>> parsers)
+                   const std::map<std::string, Parser<UniqueAppendable>>& parsers)
         : CycleGenerator(
               node, generatorArgs, parsers, extract(node, "ofLength", "^Cycle").to<int64_t>()) {}
 
     CycleGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
-                   std::map<std::string, Parser<UniqueAppendable>> parsers,
+                   const std::map<std::string, Parser<UniqueAppendable>>& parsers,
                    int64_t ofLength)
         : _ofLength{ofLength},
           _cache{generateCache(
@@ -1176,7 +1182,7 @@ private:
     static bsoncxx::array::value generateCache(
         const Node& node,
         GeneratorArgs generatorArgs,
-        std::map<std::string, Parser<UniqueAppendable>> parsers,
+        const std::map<std::string, Parser<UniqueAppendable>>& parsers,
         int64_t size) {
         bsoncxx::builder::basic::array builder{};
         auto valueGen = valueGenerator<false, UniqueAppendable>(node, generatorArgs, parsers);
@@ -1202,13 +1208,13 @@ class RepeatGenerator : public Appendable {
 public:
     RepeatGenerator(const Node& node,
                     GeneratorArgs generatorArgs,
-                    std::map<std::string, Parser<UniqueAppendable>> parsers)
+                    const std::map<std::string, Parser<UniqueAppendable>>& parsers)
         : RepeatGenerator(
               node, generatorArgs, parsers, extract(node, "count", "^Repeat").to<int64_t>()) {}
 
     RepeatGenerator(const Node& node,
                     GeneratorArgs generatorArgs,
-                    std::map<std::string, Parser<UniqueAppendable>> parsers,
+                    const std::map<std::string, Parser<UniqueAppendable>>& parsers,
                     int64_t numRepeats)
         : _numRepeats{numRepeats},
           _repeatCounter{0},
@@ -1253,7 +1259,7 @@ class ArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
     ArrayGenerator(const Node& node,
                    GeneratorArgs generatorArgs,
-                   std::map<std::string, Parser<UniqueAppendable>> parsers)
+                   const std::map<std::string, Parser<UniqueAppendable>>& parsers)
         : _rng{generatorArgs.rng},
           _node{node},
           _generatorArgs{generatorArgs},
@@ -1272,7 +1278,7 @@ public:
 private:
     DefaultRandom& _rng;
     const Node& _node;
-    const GeneratorArgs& _generatorArgs;
+    const GeneratorArgs _generatorArgs;
     const UniqueAppendable _valueGen;
     const UniqueGenerator<int64_t> _nTimesGen;
 };
@@ -1329,10 +1335,10 @@ public:
     };
     ObjectGenerator(const Node& node,
                     GeneratorArgs generatorArgs,
-                    std::map<std::string, Parser<UniqueAppendable>> parsers)
+                    const std::map<std::string, Parser<UniqueAppendable>>& parsers)
         : _rng{generatorArgs.rng},
           _node{node},
-          _generatorArgs{generatorArgs},
+          _generatorArgs{std::move(generatorArgs)},
           _keyGen{stringGenerator(node["havingKeys"], generatorArgs)},
           _valueGen{
               valueGenerator<false, UniqueAppendable>(node["andValues"], generatorArgs, parsers)},
@@ -1365,7 +1371,7 @@ public:
 private:
     DefaultRandom& _rng;
     const Node& _node;
-    const GeneratorArgs& _generatorArgs;
+    const GeneratorArgs _generatorArgs;
     const UniqueGenerator<std::string> _keyGen;
     const UniqueAppendable _valueGen;
     const UniqueGenerator<int64_t> _nTimesGen;
@@ -1396,7 +1402,7 @@ private:
 class TwoDWalkGenerator : public Generator<bsoncxx::array::value> {
 public:
     TwoDWalkGenerator(const Node& node, GeneratorArgs generatorArgs)
-        : _rng(generatorArgs.rng),
+        : _rng{generatorArgs.rng},
           _docsPerSeries{extract(node, "docsPerSeries", "TwoDWalk").maybe<int64_t>().value()},
           _distPerDoc{extract(node, "distPerDoc", "TwoDWalk").maybe<double>().value()},
           _genX{
@@ -1406,7 +1412,8 @@ public:
           _genY{
               extract(node, "minY", "TwoDWalk").maybe<double>().value(),
               extract(node, "maxY", "TwoDWalk").maybe<double>().value(),
-          } {}
+          },
+    _x{}, _y{}, _vx{}, _vy{} {}
 
     bsoncxx::array::value evaluate() override {
         if (_numGenerated % _docsPerSeries == 0) {
@@ -1992,7 +1999,7 @@ int64_t parseStringToMillis(const std::string& datetime) {
             date_stream.imbue(format);
             boost::local_time::local_date_time local_date{boost::local_time::not_a_date_time};
             if (date_stream >> local_date) {
-                return (local_date.utc_time() - epoch).total_milliseconds();
+                return (local_date.utc_time() - epoch()).total_milliseconds();
             }
         }
     }
@@ -2003,7 +2010,7 @@ int64_t parseStringToMillis(const std::string& datetime) {
         auto msg = "Invalid Dateformat '" + datetime + "'";
         BOOST_THROW_EXCEPTION(InvalidDateFormat{msg});
     }
-};
+}
 
 /**
  * @private
@@ -2100,7 +2107,7 @@ UniqueGenerator<int64_t> dateGenerator(const Node& node,
     }
 
     // No value, get the appropriate default.
-    auto millis = (defaultTime - epoch).total_milliseconds();
+    auto millis = (defaultTime - epoch()).total_milliseconds();
     return std::make_unique<ConstantAppender<int64_t>>(millis);
 }
 }  // namespace
