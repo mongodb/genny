@@ -16,4 +16,4 @@ progressbar==2.5
 
 numpy==1.23.5
 
-numexpr==2.8.1
+numexpr==2.8.4
