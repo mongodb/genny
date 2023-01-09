@@ -568,6 +568,7 @@ def auto_tasks(ctx: click.Context, tasks: str, workload_repo: str):
     auto_tasks.main(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        tasks_filter=tasks,
         workload_root=workload_repo,
     )
 

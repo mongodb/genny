@@ -82,6 +82,12 @@ class BaseTestClass(unittest.TestCase):
         assert then_writes, yaml_output
 
 
+TIMEOUT_COMMAND = {
+    "command": "timeout.update",
+    "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
+}
+
+
 def expansions_mock(exp_vars) -> MockFile:
     yaml_conts = {"build_variant": "some-build-variant", "execution": "0"}
     yaml_conts.update(exp_vars)
@@ -114,7 +120,9 @@ class AutoTasksTests(BaseTestClass):
             yaml_conts={},
         )
         multi_modified_genny = MockFile(
-            base_name="src/genny/src/workloads/src/Multi.yml", modified=True, yaml_conts=auto_run,
+            base_name="src/genny/src/workloads/src/Multi.yml",
+            modified=True,
+            yaml_conts=auto_run,
         )
         multi_modified_other = MockFile(
             base_name="src/other/src/workloads/src/MultiOther.yml",

@@ -5,12 +5,14 @@ Generates evergreen tasks based on the current state of the repo.
 import glob
 import os
 import re
-from typing import NamedTuple, List, Optional, Set, Dict, Any
+from typing import NamedTuple, List, Optional, Set, Dict, Any, Union
 import yaml
 import structlog
+import subprocess
 
 SLOG = structlog.get_logger(__name__)
-
+TASK_GENERATOR_VERSION = "v1.0"
+EXPANSIONS_FILE = "expansions.yml"
 
 #
 # The classes are listed here in dependency order to avoid having to quote typenames.
@@ -279,7 +281,11 @@ class Repo:
     def all_workloads(self) -> List[Workload]:
         all_files = self.lister.all_workload_files()
         return [
-            Workload(workspace_root=self.workspace_root, file_path=fpath, reader=self.reader,)
+            Workload(
+                workspace_root=self.workspace_root,
+                file_path=fpath,
+                reader=self.reader,
+            )
             for fpath in all_files
         ]
 
@@ -293,12 +299,18 @@ class Repo:
         # Double list-comprehensions always read backward to me :(
         return [task for workload in self.all_workloads() for task in workload.all_tasks()]
 
-    def generate_dsi_tasks(self, op: CLIOperation) -> List[DsiTask]:
+    def generate_dsi_tasks(
+        self, op: CLIOperation, modified: bool = False, variant: Optional[str] = None
+    ) -> List[DsiTask]:
         """
         Generates list DSI Task objects that represents the schema that DSI expects to generate Evergreen Task file.
         """
         dsi_tasks = []
         tasks = self.tasks(op)
+        modified_files = set()
+        if modified == True:
+            modified_files = get_modified_workload_files(op.workload_root)
+            SLOG.info("Modified files", modified_files)
         for task in tasks:
             variants = []
             if task.workload.auto_run_info is None:
@@ -318,9 +330,23 @@ class Repo:
             }
             if task.bootstrap_key:
                 bootstrap_vars[task.bootstrap_key] = task.bootstrap_value
-            dsi_tasks.append(
-                DsiTask(name=task.name, runs_on_variants=variants, bootstrap_vars=bootstrap_vars)
-            )
+
+            valid_task = False
+            SLOG.info(bootstrap_vars["auto_workload_path"])
+            if modified and bootstrap_vars["auto_workload_path"] in modified_files:
+                valid_task = True
+            elif variant is not None and variant in variants:
+                valid_task = True
+            elif variant is None and modified is False:
+                valid_task = True
+
+            if valid_task == True:
+                dsi_tasks.append(
+                    DsiTask(
+                        name=task.name, runs_on_variants=variants, bootstrap_vars=bootstrap_vars
+                    )
+                )
+
         return dsi_tasks
 
 
@@ -366,18 +392,77 @@ class ConfigWriter:
                     )
         return out_text
 
-    def _get_dsi_task_dict(self, tasks: List[DsiTask]) -> List[Dict[str, Any]]:
+    def _get_dsi_task_dict(
+        self, tasks: List[DsiTask]
+    ) -> Dict[str, Union[List[Dict[str, Any]], str]]:
         """Converts DSITask object to a dict to facilitate YAML dump."""
         all_tasks = []
         for task in tasks:
             all_tasks.append(dict(task._asdict()))
-        return all_tasks
+        return {"version": TASK_GENERATOR_VERSION, "tasks": all_tasks}
 
 
-def main(genny_repo_root: str, workspace_root: str, workload_root: Optional[str] = None) -> None:
+class ExpansionsConfig:
+    def __init__(self, workspace_root: str) -> None:
+        self.execution: Optional[int] = None
+        self.build_variant: Optional[str] = None
+        expansions_output = self.load(workspace_root)
+        if "execution" in expansions_output:
+            self.execution = int(expansions_output["execution"])
+        if "build_variant" in expansions_output:
+            self.build_variant = expansions_output["build_variant"]
+
+    def load(self, workspace_root: str) -> dict:
+        """
+        :param workspace_root: effective cwd
+        :param path: path relative to workspace_root
+        :return: deserialized yaml file
+        """
+        joined = os.path.join(workspace_root, EXPANSIONS_FILE)
+        if not os.path.exists(joined):
+            raise Exception(f"File {joined} not found.")
+        with open(joined) as handle:
+            return yaml.safe_load(handle)
+
+
+def get_modified_workload_files(workload_root: str) -> Set[str]:
+    """Relies on git to find files in src/workloads modified versus origin/master"""
+    command = (
+        "git diff --name-only --diff-filter=AMR " "$(git merge-base HEAD origin) -- src/workloads/"
+    )
+    modified_workloads = set()
+    old_cwd = os.getcwd()
+    try:
+        os.chdir(workload_root)
+        result: subprocess.CompletedProcess = subprocess.run(
+            command, shell=True, check=True, text=True, capture_output=True, bufsize=0
+        )
+        if result.returncode != 0:
+            SLOG.fatal("Failed to compare workload directory to origin.", *command)
+            raise RuntimeError(
+                "Failed to compare workload directory to origin: "
+                "stdout: {result.stdout} stderr: {result.stderr}"
+            )
+        lines = result.stdout.strip().split("\n")
+        modified_workloads.update(
+            {os.path.join("./src/genny/", line) for line in lines if line.endswith(".yml")}
+        )
+    finally:
+        os.chdir(old_cwd)
+    return modified_workloads
+
+
+def main(
+    genny_repo_root: str,
+    tasks_filter: str,
+    workspace_root: str,
+    workload_root: Optional[str] = None,
+) -> None:
     reader = YamlReader()
     op = CLIOperation(
-        genny_repo_root=genny_repo_root, workspace_root=workspace_root, workload_root=workload_root,
+        genny_repo_root=genny_repo_root,
+        workspace_root=workspace_root,
+        workload_root=workload_root,
     )
     lister = WorkloadLister(
         workspace_root=workspace_root,
@@ -386,7 +471,14 @@ def main(genny_repo_root: str, workspace_root: str, workload_root: Optional[str]
         workload_root=workload_root,
     )
     repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
-    tasks = repo.generate_dsi_tasks(op=op)
+    variant = None
+    modified = False
+    if tasks_filter == "variant_tasks":
+        expansions = ExpansionsConfig(workspace_root)
+        variant = expansions.build_variant
+    elif tasks_filter == "patch_tasks":
+        modified = True
+    tasks = repo.generate_dsi_tasks(op=op, modified=modified, variant=variant)
 
     writer = ConfigWriter(op)
     writer.write(tasks)
