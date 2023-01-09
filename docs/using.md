@@ -32,8 +32,7 @@
     6.  [Creating an Actor](#org7e6c6bd)
     7.  [Enabling Client-Side Field Level Encryption](#org627591d)
 5.  [Creating a new Genny based workload repository](#creating-a-new-genny-based-workload-repository)
-6.  [Developing a new DSI Task files generator for your custom workload](#org3aaae9z)
-7.  [Pitfalls](#org3aaae9e)
+6.  [Pitfalls](#org3aaae9e)
     1.  [pipe creation failed (24): Too many open files](#orga7ab911)
     2.  [Actor integration tests fail locally](#orgb084b49)
     3.  [The Loader agent requires thread count set on both Actor and phase level](#org97681a9)
@@ -934,49 +933,6 @@ $HOME/new-workload-repo
 3. `dsi/run-from-dsi` is the task generator script required by DSI in all workload repositories. This file requires no changes if the repository host has genny workloads. This shell script calls `./run-genny auto-tasks` to generate DSI tasks for all the workloads in the current repository. 
 4. Genny workloads yamls can live in `src/workload/docs` or any directory inside `src/workload`.
 
-<a id="org3aaae9z"></a>
-# Developing a new DSI Task files generator for your custom workload
-
-There could be a case when users have to develop a workload that is not genny based and would require them to build their custom DSI tasks generator.
-
-Here is an overview of how task generation works
-
-- DSI looks for a task generator executable in a workload repository under `$WORKLOAD_REPO/dsi/run-from-dsi`. 
-- On triggering tasks scheduling using `./run-dsi schedule_tasks` command, DSI executes the task generator for all workload repositories. 
-- The generated DSI tasks files will be under `$WORKSPACE_ROOT/build/DSITasks/`.
-- DSI then combines these Tasks and converts them to a single Evergreen tasks file stored in `$WORKSPACE_ROOT/build/TaskJSON/Tasks.json`.
-
-## Fundamental Rules to follow for a DSI task generator:
-- DSI Task generator file should be `$WORKLOAD_REPO/dsi/run-from-dsi`. 
-- `$WORKLOAD_REPO/dsi/run-from-dsi` can be a shell script or any other executable that creates a YAML DSI task file in the `$WORKSPACE_ROOT/build/DSITasks/` directory.
-- The task file name format should be `DsiTasks-<workload_name>.yml`. For example - the task filename for `genny` will be `DsiTasks-genny.yml`.
-- The tasks YAML file should follow the YAML schema described in [DSI Tasks file YAML schema](#org3aaae9f)
-
-<a id="org3aaae9f"></a>
-### DSI Tasks file YAML schema
-
-```
-# DSI Task file is list of Task records
-
-# Here is an individual task record
--   name: task_name # This will be the evergreen task name
-    runs_on_variants: # list of build variants that this task can run on.
-    - build-variant-1
-    - build-variant-2
-    - build-variant-3
-    bootstrap_vars: # Use this section to update bootstrap.yml for the task. Here we override test_control, auto_workload_path and mongodb_setup in boostrap.yml
-        test_control: union_with
-        auto_workload_path: ./src/common/src/workloads/query/UnionWith.yml
-        mongodb_setup: replica
-# This is an example second task
--   name: ycsb_like_queryable_encrypt1_cfdefault
-    runs_on_variants:
-    - single-replica-fle
-    - replica-all-feature-flags
-    bootstrap_vars:
-        test_control: ycsb_like_queryable_encrypt1_cfdefault
-        auto_workload_path: ./src/common/src/workloads/encrypted/YCSBLikeQueryableEncrypt1Cfdefault.yml
-```
 <a id="org3aaae9e"></a>
 
 # Pitfalls
