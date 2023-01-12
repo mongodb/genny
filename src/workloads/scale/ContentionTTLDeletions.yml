@@ -114,7 +114,7 @@ Actors:
 - Name: UpdateOtherColl
   Type: CrudActor
   Database: *db
-  Threads: &numThreads 50
+  Threads: &numThreads 256
   Phases:
     OnlyActiveInPhases:
       Active: [3]
@@ -149,7 +149,7 @@ Actors:
 - Name: InsertOtherCollSmall
   Type: CrudActor
   Database: *db
-  Threads: &halfThreads 25
+  Threads: &halfThreads 128
   Phases:
     OnlyActiveInPhases:
       Active: [3]
@@ -181,7 +181,7 @@ Actors:
 - Name: InsertTTLColl-Small
   Type: CrudActor
   Database: *db
-  Threads: 300
+  Threads: 512
   Phases:
     OnlyActiveInPhases:
       Active: [3]
@@ -197,7 +197,7 @@ Actors:
 - Name: InsertTTLColl-Large
   Type: CrudActor
   Database: *db
-  Threads: 300
+  Threads: 512
   Phases:
     OnlyActiveInPhases:
       Active: [3]
