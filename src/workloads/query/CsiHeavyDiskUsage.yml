@@ -40,7 +40,7 @@ GlobalDefaults:
 
   LoadThreads: &loadThreads 8
   SampleSize: &sampleSize 1000
-  Batches: &batches 50 # Per Thread
+  Batches: &batches 50  # Per Thread
 
   ColumnStoreIndexSpec: &ColumnStoreIndexSpec
     key: {$**: "columnstore"}
@@ -53,7 +53,7 @@ GlobalDefaults:
     Collection: *coll
     Repeat: 1
     InsertBatchSize: 1000
-    Batches: 50 # Per Thread
+    Batches: 50  # Per Thread
 
 ActorTemplates:
 # We want to be able to compare results from the same test between the runs in presence of different
@@ -69,7 +69,7 @@ ActorTemplates:
     Threads: *loadThreads
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}] # do not run by default
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]  # do not run by default
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           InsertBatchSize: *sampleSize
