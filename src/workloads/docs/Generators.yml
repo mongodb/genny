@@ -307,13 +307,13 @@ Actors:
             # A list of {string, count} pairs.
             # An item will be pulled from a random bucket and its count will be decremented. If all buckets are empty, the generator throws an error.
             #
-            freqmap: { ^TakeRandomStringFromFrequencyMap: { from: [ "string1":1, "string2":2 ] } }
+            freqmap: { ^TakeRandomStringFromFrequencyMap: { from: { "string1":100, "string2":200 } } }
 
             # TakeRandomStringFromFrequencyMapSingleton keep singletons shared frequency maps shared across threads.
             # This can be used to ensure the distribution across threads matches exactly. This is important if you want a single value for given thread,
             # but use multiple threads to load the data.
             # Maps are identified by their "id" are shared.
-            freqmap_singleton: { ^TakeRandomStringFromFrequencyMapSingleton: { id: "some_string", from: [ "string1":1, "string2":2 ] } }
+            freqmap_singleton: { ^TakeRandomStringFromFrequencyMapSingleton: { id: "some_string", from: { "string3":100, "string4":200 } } }
 
 
   # 10% of the findOnes will introduce a 60-second sleep.
