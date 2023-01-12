@@ -1,4 +1,5 @@
 *.d
+*.DS_Store
 
 # clion
 .idea

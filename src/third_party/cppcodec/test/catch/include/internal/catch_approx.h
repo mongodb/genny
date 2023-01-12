@@ -11,7 +11,6 @@
 #include "catch_tostring.h"
 
 #include <type_traits>
-#include <stdexcept>
 
 namespace Catch {
 namespace Detail {
@@ -19,6 +18,12 @@ namespace Detail {
     class Approx {
     private:
         bool equalityComparisonImpl(double other) const;
+        // Validates the new margin (margin >= 0)
+        // out-of-line to avoid including stdexcept in the header
+        void setMargin(double margin);
+        // Validates the new epsilon (0 < epsilon < 1)
+        // out-of-line to avoid including stdexcept in the header
+        void setEpsilon(double epsilon);
 
     public:
         explicit Approx ( double value );
@@ -28,11 +33,11 @@ namespace Detail {
         Approx operator-() const;
 
         template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
-        Approx operator()( T const& value ) {
+        Approx operator()( T const& value ) const {
             Approx approx( static_cast<double>(value) );
-            approx.epsilon( m_epsilon );
-            approx.margin( m_margin );
-            approx.scale( m_scale );
+            approx.m_epsilon = m_epsilon;
+            approx.m_margin = m_margin;
+            approx.m_scale = m_scale;
             return approx;
         }
 
@@ -85,27 +90,14 @@ namespace Detail {
         template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         Approx& epsilon( T const& newEpsilon ) {
             double epsilonAsDouble = static_cast<double>(newEpsilon);
-            if( epsilonAsDouble < 0 || epsilonAsDouble > 1.0 ) {
-                throw std::domain_error
-                    (   "Invalid Approx::epsilon: " +
-                        Catch::Detail::stringify( epsilonAsDouble ) +
-                        ", Approx::epsilon has to be between 0 and 1" );
-            }
-            m_epsilon = epsilonAsDouble;
+            setEpsilon(epsilonAsDouble);
             return *this;
         }
 
         template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         Approx& margin( T const& newMargin ) {
             double marginAsDouble = static_cast<double>(newMargin);
-            if( marginAsDouble < 0 ) {
-                throw std::domain_error
-                    (   "Invalid Approx::margin: " +
-                         Catch::Detail::stringify( marginAsDouble ) +
-                         ", Approx::Margin has to be non-negative." );
-
-            }
-            m_margin = marginAsDouble;
+            setMargin(marginAsDouble);
             return *this;
         }
 
@@ -124,7 +116,7 @@ namespace Detail {
         double m_value;
     };
 } // end namespace Detail
-    
+
 namespace literals {
     Detail::Approx operator "" _a(long double val);
     Detail::Approx operator "" _a(unsigned long long val);

@@ -24,6 +24,7 @@ Description: |
 # 	"choose" : 12,
 # 	"join" : "This is a joined string",
 # 	"ip" : "77.220.130.163",
+# 	"location" : [17.31871956875809, -3.062558894823418],
 # 	"actorNum" : NumberLong(1),
 # 	"actorString" : "1",
 # 	"airportDataSet" : "KSC"
@@ -122,6 +123,21 @@ Actors:
             # Generate a random IP Address. In the future this will support a netmask and prefix
             # options to narrow the range of IP addresses. Every IP address is equally likely.
             ip: {^IP: {}}
+
+            # Generate a random 2D coordinate pair [x, y] intended to resemble a moving object.
+            #
+            # The object moves 0.1 units between events, and after 100 events the series resets
+            # to a new random location, to represent a different moving object. The random starting
+            # locations are within the rectangle x=[-50, +50], y=[-30, +30], but once the object starts
+            # moving it's not constrained to be within that region.
+            location: {^TwoDWalk: {
+              docsPerSeries: 100,
+              minX: -50,
+              maxX: +50,
+              minY: -30,
+              maxY: +30,
+              distPerDoc: 0.1,
+            }}
 
             # Generate the actor ID as a numbers. This will be constant for a given actor, but
             # unique across actors

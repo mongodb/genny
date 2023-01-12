@@ -11,9 +11,12 @@
 #include <grpcpp/impl/codegen/channel_interface.h>
 #include <grpcpp/impl/codegen/client_unary_call.h>
 #include <grpcpp/impl/codegen/client_callback.h>
-#include <grpcpp/impl/codegen/method_handler_impl.h>
+#include <grpcpp/impl/codegen/message_allocator.h>
+#include <grpcpp/impl/codegen/method_handler.h>
 #include <grpcpp/impl/codegen/rpc_service_method.h>
 #include <grpcpp/impl/codegen/server_callback.h>
+#include <grpcpp/impl/codegen/server_callback_handlers.h>
+#include <grpcpp/impl/codegen/server_context.h>
 #include <grpcpp/impl/codegen/service_type.h>
 #include <grpcpp/impl/codegen/sync_stream.h>
 namespace poplar {
@@ -39,558 +42,558 @@ static const char* PoplarMetricsRecorder_method_names[] = {
 
 std::unique_ptr< PoplarMetricsRecorder::Stub> PoplarMetricsRecorder::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
   (void)options;
-  std::unique_ptr< PoplarMetricsRecorder::Stub> stub(new PoplarMetricsRecorder::Stub(channel));
+  std::unique_ptr< PoplarMetricsRecorder::Stub> stub(new PoplarMetricsRecorder::Stub(channel, options));
   return stub;
 }
 
-PoplarMetricsRecorder::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
-  : channel_(channel), rpcmethod_CreateRecorder_(PoplarMetricsRecorder_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_CloseRecorder_(PoplarMetricsRecorder_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_BeginEvent_(PoplarMetricsRecorder_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_ResetEvent_(PoplarMetricsRecorder_method_names[3], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_EndEvent_(PoplarMetricsRecorder_method_names[4], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SetID_(PoplarMetricsRecorder_method_names[5], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SetTime_(PoplarMetricsRecorder_method_names[6], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SetDuration_(PoplarMetricsRecorder_method_names[7], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SetTotalDuration_(PoplarMetricsRecorder_method_names[8], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SetState_(PoplarMetricsRecorder_method_names[9], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SetWorkers_(PoplarMetricsRecorder_method_names[10], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SetFailed_(PoplarMetricsRecorder_method_names[11], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_IncOps_(PoplarMetricsRecorder_method_names[12], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_IncSize_(PoplarMetricsRecorder_method_names[13], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_IncError_(PoplarMetricsRecorder_method_names[14], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_IncIterations_(PoplarMetricsRecorder_method_names[15], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+PoplarMetricsRecorder::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
+  : channel_(channel), rpcmethod_CreateRecorder_(PoplarMetricsRecorder_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_CloseRecorder_(PoplarMetricsRecorder_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_BeginEvent_(PoplarMetricsRecorder_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_ResetEvent_(PoplarMetricsRecorder_method_names[3], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_EndEvent_(PoplarMetricsRecorder_method_names[4], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetID_(PoplarMetricsRecorder_method_names[5], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetTime_(PoplarMetricsRecorder_method_names[6], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetDuration_(PoplarMetricsRecorder_method_names[7], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetTotalDuration_(PoplarMetricsRecorder_method_names[8], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetState_(PoplarMetricsRecorder_method_names[9], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetWorkers_(PoplarMetricsRecorder_method_names[10], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetFailed_(PoplarMetricsRecorder_method_names[11], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_IncOps_(PoplarMetricsRecorder_method_names[12], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_IncSize_(PoplarMetricsRecorder_method_names[13], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_IncError_(PoplarMetricsRecorder_method_names[14], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_IncIterations_(PoplarMetricsRecorder_method_names[15], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status PoplarMetricsRecorder::Stub::CreateRecorder(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_CreateRecorder_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::CreateOptions, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_CreateRecorder_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::CreateRecorder(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_CreateRecorder_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::CreateRecorder(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::CreateOptions, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CreateRecorder_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::CreateRecorder(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_CreateRecorder_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::CreateRecorder(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_CreateRecorder_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::CreateRecorder(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_CreateRecorder_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncCreateRecorderRaw(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_CreateRecorder_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::CreateRecorder(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CreateRecorder_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncCreateRecorderRaw(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_CreateRecorder_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::CreateOptions, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_CreateRecorder_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncCreateRecorderRaw(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncCreateRecorderRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::CloseRecorder(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_CloseRecorder_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_CloseRecorder_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::CloseRecorder(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_CloseRecorder_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::CloseRecorder(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CloseRecorder_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::CloseRecorder(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_CloseRecorder_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::CloseRecorder(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_CloseRecorder_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::CloseRecorder(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_CloseRecorder_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncCloseRecorderRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_CloseRecorder_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::CloseRecorder(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CloseRecorder_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncCloseRecorderRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_CloseRecorder_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::PoplarID, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_CloseRecorder_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncCloseRecorderRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncCloseRecorderRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::BeginEvent(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_BeginEvent_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_BeginEvent_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::BeginEvent(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_BeginEvent_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::BeginEvent(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_BeginEvent_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::BeginEvent(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_BeginEvent_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::BeginEvent(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_BeginEvent_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::BeginEvent(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_BeginEvent_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncBeginEventRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_BeginEvent_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::BeginEvent(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_BeginEvent_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncBeginEventRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_BeginEvent_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::PoplarID, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_BeginEvent_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncBeginEventRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncBeginEventRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::ResetEvent(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_ResetEvent_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_ResetEvent_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::ResetEvent(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_ResetEvent_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::ResetEvent(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_ResetEvent_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::ResetEvent(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_ResetEvent_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::ResetEvent(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_ResetEvent_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::ResetEvent(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_ResetEvent_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncResetEventRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_ResetEvent_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::ResetEvent(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_ResetEvent_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncResetEventRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_ResetEvent_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::PoplarID, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_ResetEvent_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncResetEventRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncResetEventRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::EndEvent(::grpc::ClientContext* context, const ::poplar::EventSendDuration& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_EndEvent_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::EventSendDuration, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_EndEvent_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::EndEvent(::grpc::ClientContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_EndEvent_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::EndEvent(::grpc::ClientContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::EventSendDuration, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_EndEvent_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::EndEvent(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_EndEvent_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::EndEvent(::grpc::ClientContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_EndEvent_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::EndEvent(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_EndEvent_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncEndEventRaw(::grpc::ClientContext* context, const ::poplar::EventSendDuration& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_EndEvent_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::EndEvent(::grpc::ClientContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_EndEvent_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncEndEventRaw(::grpc::ClientContext* context, const ::poplar::EventSendDuration& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_EndEvent_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::EventSendDuration, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_EndEvent_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncEndEventRaw(::grpc::ClientContext* context, const ::poplar::EventSendDuration& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncEndEventRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::SetID(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_SetID_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SetID_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetID(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetID_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::SetID(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetID_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetID(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetID_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetID(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetID_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetID(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetID_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetIDRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetID_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::SetID(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetID_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncSetIDRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetID_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::EventSendInt, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SetID_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetIDRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSetIDRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::SetTime(::grpc::ClientContext* context, const ::poplar::EventSendTime& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_SetTime_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::EventSendTime, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SetTime_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetTime(::grpc::ClientContext* context, const ::poplar::EventSendTime* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetTime_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::SetTime(::grpc::ClientContext* context, const ::poplar::EventSendTime* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::EventSendTime, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetTime_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetTime(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetTime_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetTime(::grpc::ClientContext* context, const ::poplar::EventSendTime* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetTime_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetTime(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetTime_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetTimeRaw(::grpc::ClientContext* context, const ::poplar::EventSendTime& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetTime_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::SetTime(::grpc::ClientContext* context, const ::poplar::EventSendTime* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetTime_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncSetTimeRaw(::grpc::ClientContext* context, const ::poplar::EventSendTime& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetTime_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::EventSendTime, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SetTime_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetTimeRaw(::grpc::ClientContext* context, const ::poplar::EventSendTime& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSetTimeRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::SetDuration(::grpc::ClientContext* context, const ::poplar::EventSendDuration& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_SetDuration_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::EventSendDuration, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SetDuration_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetDuration(::grpc::ClientContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetDuration_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::SetDuration(::grpc::ClientContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::EventSendDuration, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetDuration_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetDuration(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetDuration_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetDuration(::grpc::ClientContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetDuration_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetDuration(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetDuration_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetDurationRaw(::grpc::ClientContext* context, const ::poplar::EventSendDuration& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetDuration_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::SetDuration(::grpc::ClientContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetDuration_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncSetDurationRaw(::grpc::ClientContext* context, const ::poplar::EventSendDuration& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetDuration_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::EventSendDuration, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SetDuration_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetDurationRaw(::grpc::ClientContext* context, const ::poplar::EventSendDuration& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSetDurationRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::SetTotalDuration(::grpc::ClientContext* context, const ::poplar::EventSendDuration& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_SetTotalDuration_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::EventSendDuration, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SetTotalDuration_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetTotalDuration(::grpc::ClientContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetTotalDuration_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::SetTotalDuration(::grpc::ClientContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::EventSendDuration, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetTotalDuration_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetTotalDuration(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetTotalDuration_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetTotalDuration(::grpc::ClientContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetTotalDuration_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetTotalDuration(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetTotalDuration_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetTotalDurationRaw(::grpc::ClientContext* context, const ::poplar::EventSendDuration& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetTotalDuration_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::SetTotalDuration(::grpc::ClientContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetTotalDuration_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncSetTotalDurationRaw(::grpc::ClientContext* context, const ::poplar::EventSendDuration& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetTotalDuration_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::EventSendDuration, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SetTotalDuration_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetTotalDurationRaw(::grpc::ClientContext* context, const ::poplar::EventSendDuration& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSetTotalDurationRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::SetState(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_SetState_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SetState_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetState(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetState_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::SetState(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetState_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetState(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetState_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetState(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetState_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetState(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetState_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetStateRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetState_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::SetState(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetState_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncSetStateRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetState_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::EventSendInt, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SetState_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetStateRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSetStateRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::SetWorkers(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_SetWorkers_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SetWorkers_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetWorkers(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetWorkers_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::SetWorkers(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetWorkers_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetWorkers(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetWorkers_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetWorkers(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetWorkers_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetWorkers(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetWorkers_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetWorkersRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetWorkers_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::SetWorkers(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetWorkers_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncSetWorkersRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetWorkers_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::EventSendInt, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SetWorkers_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetWorkersRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSetWorkersRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::SetFailed(::grpc::ClientContext* context, const ::poplar::EventSendBool& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_SetFailed_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::EventSendBool, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SetFailed_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetFailed(::grpc::ClientContext* context, const ::poplar::EventSendBool* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetFailed_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::SetFailed(::grpc::ClientContext* context, const ::poplar::EventSendBool* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::EventSendBool, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetFailed_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::SetFailed(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetFailed_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetFailed(::grpc::ClientContext* context, const ::poplar::EventSendBool* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetFailed_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::SetFailed(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_SetFailed_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetFailedRaw(::grpc::ClientContext* context, const ::poplar::EventSendBool& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetFailed_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::SetFailed(::grpc::ClientContext* context, const ::poplar::EventSendBool* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetFailed_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncSetFailedRaw(::grpc::ClientContext* context, const ::poplar::EventSendBool& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SetFailed_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::EventSendBool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SetFailed_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncSetFailedRaw(::grpc::ClientContext* context, const ::poplar::EventSendBool& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSetFailedRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::IncOps(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_IncOps_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_IncOps_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::IncOps(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_IncOps_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::IncOps(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_IncOps_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::IncOps(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_IncOps_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::IncOps(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_IncOps_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::IncOps(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_IncOps_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncIncOpsRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_IncOps_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::IncOps(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_IncOps_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncIncOpsRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_IncOps_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::EventSendInt, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_IncOps_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncIncOpsRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncIncOpsRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::IncSize(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_IncSize_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_IncSize_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::IncSize(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_IncSize_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::IncSize(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_IncSize_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::IncSize(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_IncSize_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::IncSize(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_IncSize_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::IncSize(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_IncSize_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncIncSizeRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_IncSize_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::IncSize(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_IncSize_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncIncSizeRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_IncSize_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::EventSendInt, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_IncSize_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncIncSizeRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncIncSizeRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::IncError(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_IncError_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_IncError_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::IncError(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_IncError_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::IncError(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_IncError_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::IncError(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_IncError_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::IncError(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_IncError_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::IncError(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_IncError_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncIncErrorRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_IncError_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::IncError(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_IncError_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncIncErrorRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_IncError_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::EventSendInt, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_IncError_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncIncErrorRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncIncErrorRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsRecorder::Stub::IncIterations(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_IncIterations_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_IncIterations_, context, request, response);
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::IncIterations(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_IncIterations_, context, request, response, std::move(f));
+void PoplarMetricsRecorder::Stub::async::IncIterations(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_IncIterations_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsRecorder::Stub::experimental_async::IncIterations(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_IncIterations_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::IncIterations(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_IncIterations_, context, request, response, reactor);
-}
-
-void PoplarMetricsRecorder::Stub::experimental_async::IncIterations(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_IncIterations_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncIncIterationsRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_IncIterations_, context, request, true);
+void PoplarMetricsRecorder::Stub::async::IncIterations(::grpc::ClientContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_IncIterations_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::PrepareAsyncIncIterationsRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_IncIterations_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::EventSendInt, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_IncIterations_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsRecorder::Stub::AsyncIncIterationsRaw(::grpc::ClientContext* context, const ::poplar::EventSendInt& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncIncIterationsRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 PoplarMetricsRecorder::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[0],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::CreateOptions, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::CreateRecorder), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::CreateOptions, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::CreateOptions* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->CreateRecorder(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[1],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::PoplarID, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::CloseRecorder), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::PoplarID* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->CloseRecorder(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[2],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::PoplarID, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::BeginEvent), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::PoplarID* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->BeginEvent(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[3],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::PoplarID, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::ResetEvent), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::PoplarID* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->ResetEvent(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[4],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendDuration, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::EndEvent), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendDuration, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::EventSendDuration* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->EndEvent(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[5],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::SetID), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::EventSendInt* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->SetID(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[6],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendTime, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::SetTime), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendTime, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::EventSendTime* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->SetTime(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[7],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendDuration, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::SetDuration), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendDuration, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::EventSendDuration* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->SetDuration(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[8],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendDuration, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::SetTotalDuration), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendDuration, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::EventSendDuration* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->SetTotalDuration(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[9],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::SetState), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::EventSendInt* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->SetState(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[10],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::SetWorkers), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::EventSendInt* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->SetWorkers(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[11],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendBool, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::SetFailed), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendBool, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::EventSendBool* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->SetFailed(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[12],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::IncOps), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::EventSendInt* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->IncOps(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[13],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::IncSize), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::EventSendInt* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->IncSize(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[14],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::IncError), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::EventSendInt* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->IncError(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsRecorder_method_names[15],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsRecorder::Service::IncIterations), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsRecorder::Service, ::poplar::EventSendInt, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsRecorder::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::EventSendInt* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->IncIterations(ctx, req, resp);
+             }, this)));
 }
 
 PoplarMetricsRecorder::Service::~Service() {

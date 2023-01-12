@@ -56,14 +56,14 @@ TEST_CASE_METHOD(MongoTestFixture,
         # Insert 40 new documents (batches=2 * batchSize=10 * threads=2), each with a 'y' field.
         - Name: SamplingLoader
           Type: SamplingLoader
+          Database: test
+          Collection: sampling_loader_test
+          SampleSize: 5
+          Pipeline: [{$set: {y: "SamplingLoader wuz here"}}]
           Threads: 2
           Phases:
           - Repeat: 1
-            Database: test
-            Collection: sampling_loader_test
-            SampleSize: 5
             InsertBatchSize: 10
-            Pipeline: [{$set: {y: "SamplingLoader wuz here"}}]
             Batches: 2
 
         Metrics:
@@ -80,11 +80,6 @@ TEST_CASE_METHOD(MongoTestFixture,
             REQUIRE(collection.count_documents(bsoncxx::document::view()) == 5);
             genny::ActorHelper ah(nodes.root(), 2 /* 2 threads for samplers */);
             ah.run();
-
-            // We can't make many reliable assertions on the output data, since each thread is
-            // acting independently, and (as mentioned in src/workloads/docs/SamplingLoader.yml) one
-            // thread may read another's inserted documents in its sample. So, we'll just assert
-            // the following:
 
             // There should still be only 5 distinct values of 'x'.
             mongocxx::pipeline pipe;

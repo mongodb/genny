@@ -5,6 +5,31 @@
  *  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 
+#include <type_traits>
+
+// Setup for #1403 -- look for global overloads of operator << for classes
+// in a different namespace.
+#include <ostream>
+
+namespace foo {
+    struct helper_1403 {
+        bool operator==(helper_1403) const { return true; }
+    };
+}
+
+namespace bar {
+    template <typename... Ts>
+    struct TypeList {};
+}
+
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wmissing-declarations"
+#endif
+std::ostream& operator<<(std::ostream& out, foo::helper_1403 const&) {
+    return out << "[1403 helper]";
+}
+///////////////////////////////
+
 #include "catch.hpp"
 
 #include <cstring>
@@ -154,4 +179,91 @@ namespace { namespace CompilationTests {
         SUCCEED();
     }
 
+    TEST_CASE("#1403", "[compilation]") {
+        ::foo::helper_1403 h1, h2;
+        REQUIRE(h1 == h2);
+    }
+
+    TEST_CASE("Optionally static assertions", "[compilation]") {
+        STATIC_REQUIRE( std::is_void<void>::value );
+        STATIC_REQUIRE_FALSE( std::is_void<int>::value );
+    }
+
+    TEST_CASE("#1548", "[compilation]") {
+        using namespace bar;
+        REQUIRE(std::is_same<TypeList<int>, TypeList<int>>::value);
+    }
+
+    // #925
+    using signal_t = void (*) (void*);
+
+    struct TestClass {
+        signal_t testMethod_uponComplete_arg = nullptr;
+    };
+
+    namespace utility {
+        inline static void synchronizing_callback( void * ) { }
+    }
+
+#if defined (_MSC_VER)
+#pragma warning(push)
+// The function pointer comparison below triggers warning because of
+// calling conventions
+#pragma warning(disable:4244)
+#endif
+    TEST_CASE("#925: comparing function pointer to function address failed to compile", "[!nonportable]" ) {
+        TestClass test;
+        REQUIRE(utility::synchronizing_callback != test.testMethod_uponComplete_arg);
+    }
+#if defined (_MSC_VER)
+#pragma warning(pop)
+#endif
+
+    TEST_CASE( "#1027: Bitfields can be captured" ) {
+        struct Y {
+            uint32_t v : 1;
+        };
+        Y y{ 0 };
+        REQUIRE( y.v == 0 );
+        REQUIRE( 0 == y.v );
+    }
+
+    TEST_CASE("Lambdas in assertions") {
+        REQUIRE([]() { return true; }());
+    }
+
 }} // namespace CompilationTests
+
+namespace {
+    struct HasBitOperators {
+        int value;
+
+        friend HasBitOperators operator| (HasBitOperators lhs, HasBitOperators rhs) {
+            return { lhs.value | rhs.value };
+        }
+        friend HasBitOperators operator& (HasBitOperators lhs, HasBitOperators rhs) {
+            return { lhs.value & rhs.value };
+        }
+        friend HasBitOperators operator^ (HasBitOperators lhs, HasBitOperators rhs) {
+            return { lhs.value ^ rhs.value };
+        }
+        explicit operator bool() const {
+            return !!value;
+        }
+
+        friend std::ostream& operator<<(std::ostream& out, HasBitOperators val) {
+            out << "Val: " << val.value;
+            return out;
+        }
+    };
+}
+
+TEST_CASE("Assertion macros support bit operators and bool conversions", "[compilation][bitops]") {
+    HasBitOperators lhs{ 1 }, rhs{ 2 };
+    REQUIRE(lhs | rhs);
+    REQUIRE_FALSE(lhs & rhs);
+    REQUIRE(HasBitOperators{ 1 } & HasBitOperators{ 1 });
+    REQUIRE(lhs ^ rhs);
+    REQUIRE_FALSE(lhs ^ lhs);
+}
+

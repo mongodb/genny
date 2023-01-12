@@ -99,7 +99,11 @@ TIMEOUT_COMMAND = {
 def expansions_mock(exp_vars) -> MockFile:
     yaml_conts = {"build_variant": "some-build-variant", "execution": "0"}
     yaml_conts.update(exp_vars)
-    return MockFile(base_name="expansions.yml", modified=False, yaml_conts=yaml_conts,)
+    return MockFile(
+        base_name="expansions.yml",
+        modified=False,
+        yaml_conts=yaml_conts,
+    )
 
 
 class AutoTasksTests(BaseTestClass):
@@ -515,7 +519,10 @@ class AutoTasksTests(BaseTestClass):
                 },
                 {
                     "When": {"mongodb_setup": {"$eq": ["matches", "matches", "matches2"]}},
-                    "ThenRun": [{"mongodb_setup": "e"}, {"mongodb_setup": "f"},],
+                    "ThenRun": [
+                        {"mongodb_setup": "e"},
+                        {"mongodb_setup": "f"},
+                    ],
                 },
             ]
         }

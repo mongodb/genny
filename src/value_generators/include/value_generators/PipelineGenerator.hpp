@@ -29,16 +29,30 @@ namespace genny {
 struct PipelineGenerator {
     PipelineGenerator() = default;
 
-    PipelineGenerator(const Node& node, PhaseContext& context, ActorId id) {
-        if (!node.isSequence()) {
-            BOOST_THROW_EXCEPTION(InvalidConfigurationException("'Pipeline' must be an array"));
+    PipelineGenerator(const Node& node, ActorContext& context) {
+        assertIsArray(node);
+        for (auto&& [_, stageNode] : node) {
+            // The '1' here is a lie, but we don't necessarily have an actor ID yet in this
+            // scenario.
+            stageGenerators.push_back(stageNode.to<DocumentGenerator>(context, 1));
         }
+    }
+
+    PipelineGenerator(const Node& node, PhaseContext& context, ActorId id) {
+        assertIsArray(node);
         for (auto&& [_, stageNode] : node) {
             stageGenerators.push_back(stageNode.to<DocumentGenerator>(context, id));
         }
     }
 
     std::vector<DocumentGenerator> stageGenerators;
+
+private:
+    void assertIsArray(const Node& node) {
+        if (!node.isSequence()) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException("'Pipeline' must be an array"));
+        }
+    }
 };
 
 }  // namespace genny

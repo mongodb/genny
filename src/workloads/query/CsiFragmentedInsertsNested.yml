@@ -92,15 +92,15 @@ ActorTemplates:
   Config:
     Name: {^Parameter: {Name: "Name", Default: "Insert"}}
     Type: SamplingLoader
+    Database: *db
+    Collection: *coll
+    SampleSize: *sampleSize
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Database: *db
-          Collection: *coll
-          SampleSize: *sampleSize
           InsertBatchSize: *sampleSize
           Repeat: {^Parameter: {Name: "Repeats", Default: 1}}
           Batches: {^Parameter: {Name: "Batches", Default: 500}}

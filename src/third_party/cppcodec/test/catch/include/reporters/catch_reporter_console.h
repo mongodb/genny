@@ -32,6 +32,8 @@ namespace Catch {
 
         void noMatchingTestCases(std::string const& spec) override;
 
+        void reportInvalidArguments(std::string const&arg) override;
+
         void assertionStarting(AssertionInfo const&) override;
 
         bool assertionEnded(AssertionStats const& _assertionStats) override;
@@ -39,14 +41,17 @@ namespace Catch {
         void sectionStarting(SectionInfo const& _sectionInfo) override;
         void sectionEnded(SectionStats const& _sectionStats) override;
 
-
+#if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
+        void benchmarkPreparing(std::string const& name) override;
         void benchmarkStarting(BenchmarkInfo const& info) override;
-        void benchmarkEnded(BenchmarkStats const& stats) override;
+        void benchmarkEnded(BenchmarkStats<> const& stats) override;
+        void benchmarkFailed(std::string const& error) override;
+#endif // CATCH_CONFIG_ENABLE_BENCHMARKING
 
         void testCaseEnded(TestCaseStats const& _testCaseStats) override;
         void testGroupEnded(TestGroupStats const& _testGroupStats) override;
         void testRunEnded(TestRunStats const& _testRunStats) override;
-
+        void testRunStarting(TestRunInfo const& _testRunInfo) override;
     private:
 
         void lazyPrint();
@@ -69,6 +74,7 @@ namespace Catch {
 
         void printTotalsDivider(Totals const& totals);
         void printSummaryDivider();
+        void printTestFilters();
 
     private:
         bool m_headerPrinted = false;

@@ -13,12 +13,12 @@ pushd "$(dirname "$0")" >/dev/null
 popd >/dev/null
 
 
-if [ -d "/opt/mongodbtoolchain/v3/bin" ]; then
-    export PATH="/opt/mongodbtoolchain/v3/bin:$PATH"
+if [ -d "/opt/mongodbtoolchain/v4/bin" ]; then
+    export PATH="/opt/mongodbtoolchain/v4/bin:$PATH"
 fi
 
-if [ -d "/Applications/Xcode10.1.app" ]; then
-    export DEVELOPER_DIR="/Applications/Xcode10.1.app"
+if [ -d "/Applications/Xcode.app" ]; then
+    export DEVELOPER_DIR="/Applications/Xcode.app"
 fi
 
 _HAVE_PRINTED_DIAGNOSTICS=
@@ -80,7 +80,7 @@ fi
 
 if ! python3 -c 'import sys; sys.exit(1 if "Python3.framework" in sys.prefix else 0)' >/dev/null 2>&1; then
     actual_prefix=$(python3 -c 'import sys; print(sys.prefix)')
-    echo >&2 "The python built into macOS Catalania is known to be problematic."
+    echo >&2 "The python built into macOS Catalina is known to be problematic."
     echo >&2 "It complains with 'architecture not supported' during setup."
     echo >&2 "Detected system prefix: $actual_prefix"
     echo >&2 ""
@@ -112,9 +112,9 @@ if ! _pip --version >/dev/null 2>&1; then
 fi
 
 
-# Check for genny-setup-done-v3 which we create at the end of setup.
+# Check for genny-setup-done-v4 which we create at the end of setup.
 # This prevents half-setup environments.
-if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v3" ]]; then
+if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v4" ]]; then
     rm -rf "${GENNY_REPO_ROOT:?}/${_genny_venv}"
 
     python3 -m venv "${GENNY_REPO_ROOT}/${_genny_venv}"
@@ -134,7 +134,7 @@ if [[ ! -d "${GENNY_REPO_ROOT}/${_genny_venv}" || ! -e "${GENNY_REPO_ROOT}/${_ge
     # (Don't use the sha for now but might in the future to determine
     # if we need to run pip install again or something.)
     pushd "${GENNY_REPO_ROOT}" >/dev/null
-        git rev-parse HEAD > "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v3"
+        git rev-parse HEAD > "${GENNY_REPO_ROOT}/${_genny_venv}/genny-setup-done-v4"
     popd >/dev/null
 fi
 

@@ -14,7 +14,7 @@
 
 #include <iostream>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <gennylib/v1/PoolManager.hpp>
 
@@ -45,7 +45,7 @@ TEST_CASE("EncryptionOptions with invalid fields") {
         genny::NodeSource ns{encryptionOpts, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionOptions(ns.root()); }(),
-            Catch::Matches("Invalid key 'KeyVaultDatabase': Tried to access node that doesn't "
+            Catch::Matchers::Matches("Invalid key 'KeyVaultDatabase': Tried to access node that doesn't "
                            "exist. On node with path '/KeyVaultDatabase': "));
     }
     SECTION("EncryptionOptions without KeyVaultDatabase") {
@@ -56,7 +56,7 @@ TEST_CASE("EncryptionOptions with invalid fields") {
         genny::NodeSource ns{encryptionOpts, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionOptions(ns.root()); }(),
-            Catch::Matches("Invalid key 'KeyVaultCollection': Tried to access node that doesn't "
+            Catch::Matchers::Matches("Invalid key 'KeyVaultCollection': Tried to access node that doesn't "
                            "exist. On node with path '/KeyVaultCollection': "));
     }
     SECTION("EncryptionOptions with empty KeyVaultCollection") {
@@ -68,7 +68,7 @@ TEST_CASE("EncryptionOptions with invalid fields") {
         genny::NodeSource ns{encryptionOpts, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionOptions(ns.root()); }(),
-            Catch::Matches("'EncryptionOptions' requires a non-empty 'KeyVaultCollection' name"));
+            Catch::Matchers::Matches("'EncryptionOptions' requires a non-empty 'KeyVaultCollection' name"));
     }
     SECTION("EncryptionOptions with empty KeyVaultDatabase") {
         std::string encryptionOpts = R"({
@@ -79,7 +79,7 @@ TEST_CASE("EncryptionOptions with invalid fields") {
         genny::NodeSource ns{encryptionOpts, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionOptions(ns.root()); }(),
-            Catch::Matches("'EncryptionOptions' requires a non-empty 'KeyVaultDatabase' name"));
+            Catch::Matchers::Matches("'EncryptionOptions' requires a non-empty 'KeyVaultDatabase' name"));
     }
     SECTION("EncryptionOptions with non-sequence EncryptedCollections") {
         std::string encryptionOpts = R"({
@@ -90,7 +90,7 @@ TEST_CASE("EncryptionOptions with invalid fields") {
         genny::NodeSource ns{encryptionOpts, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionOptions(ns.root()); }(),
-            Catch::Matches(
+            Catch::Matchers::Matches(
                 "'EncryptionOptions' requires an 'EncryptedCollections' node of sequence type"));
     }
 }
@@ -102,7 +102,7 @@ TEST_CASE("EncryptedCollections with invalid fields") {
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
-            Catch::Matches("'Encryption.EncryptedCollections' node must be of sequence type"));
+            Catch::Matchers::Matches("'Encryption.EncryptedCollections' node must be of sequence type"));
     }
     SECTION("EncryptedCollections with duplicate namespaces") {
         std::string encryptedColls = R"({
@@ -120,7 +120,7 @@ TEST_CASE("EncryptedCollections with invalid fields") {
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
-            Catch::Matches(
+            Catch::Matchers::Matches(
                 "Collection with namespace 'foo.bar' already exists in 'EncryptedCollections'"));
     }
     SECTION("EncryptedCollections with invalid EncryptionType") {
@@ -136,7 +136,7 @@ TEST_CASE("EncryptedCollections with invalid fields") {
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
-            Catch::Matches("'EncryptedCollections.0' has an invalid 'EncryptionType' value of "
+            Catch::Matchers::Matches("'EncryptedCollections.0' has an invalid 'EncryptionType' value of "
                            "'unencrypted'. Valid values are 'fle' and 'queryable'."));
     }
     SECTION("EncryptedCollections entry with missing Database key") {
@@ -151,7 +151,7 @@ TEST_CASE("EncryptedCollections with invalid fields") {
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
-            Catch::Matches(
+            Catch::Matchers::Matches(
                 "Invalid key 'Database': Tried to access node that doesn't "
                 "exist. On node with path '/Encryption/EncryptedCollections/0/Database': "));
     }
@@ -167,7 +167,7 @@ TEST_CASE("EncryptedCollections with invalid fields") {
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
-            Catch::Matches(
+            Catch::Matchers::Matches(
                 "Invalid key 'Collection': Tried to access node that doesn't "
                 "exist. On node with path '/Encryption/EncryptedCollections/0/Collection': "));
     }
@@ -184,7 +184,7 @@ TEST_CASE("EncryptedCollections with invalid fields") {
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
-            Catch::Matches("'EncryptedCollection' requires a non-empty 'Database' name."));
+            Catch::Matchers::Matches("'EncryptedCollection' requires a non-empty 'Database' name."));
     }
     SECTION("EncryptedCollections entry with empty Collection key") {
         std::string encryptedColls = R"({
@@ -199,7 +199,7 @@ TEST_CASE("EncryptedCollections with invalid fields") {
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
-            Catch::Matches("'EncryptedCollection' requires a non-empty 'Collection' name."));
+            Catch::Matchers::Matches("'EncryptedCollection' requires a non-empty 'Collection' name."));
     }
     SECTION("EncryptedCollections entry with non-map type FLEEncryptedFields") {
         std::string encryptedColls = R"({
@@ -214,7 +214,7 @@ TEST_CASE("EncryptedCollections with invalid fields") {
         })";
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
-                            Catch::Matches("'FLEEncryptedFields' node must be of map type"));
+                            Catch::Matchers::Matches("'FLEEncryptedFields' node must be of map type"));
     }
     SECTION("EncryptedCollections entry with non-map type QueryableEncryptedFields") {
         std::string encryptedColls = R"({
@@ -229,7 +229,7 @@ TEST_CASE("EncryptedCollections with invalid fields") {
         })";
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
-                            Catch::Matches("'QueryableEncryptedFields' node must be of map type"));
+                            Catch::Matchers::Matches("'QueryableEncryptedFields' node must be of map type"));
     }
 }
 TEST_CASE("(FLE|Queryable)EncryptedFields with invalid fields") {
@@ -274,7 +274,7 @@ TEST_CASE("(FLE|Queryable)EncryptedFields with invalid fields") {
                 genny::NodeSource ns{encryptedColls, ""};
                 REQUIRE_THROWS_WITH(
                     [&]() { EncryptionManager(ns.root(), true); }(),
-                    Catch::Matches("Field path \"" + path + "\" is not a valid path"));
+                    Catch::Matchers::Matches("Field path \"" + path + "\" is not a valid path"));
             }
         }
     }
@@ -290,11 +290,11 @@ TEST_CASE("(FLE|Queryable)EncryptedFields with invalid fields") {
             "Invalid key 'type': Tried to access node that doesn't exist. On node with path "
             "'/Encryption/EncryptedCollections/0/FLEEncryptedFields/field1/type': ";
         REQUIRE_THROWS_WITH([&]() { EncryptionManager(fleNs.root(), true); }(),
-                            Catch::Matches(errmsg));
+                            Catch::Matchers::Matches(errmsg));
 
         replace_str(errmsg, "FLE", "Queryable");
         REQUIRE_THROWS_WITH([&]() { EncryptionManager(qeNs.root(), true); }(),
-                            Catch::Matches(errmsg));
+                            Catch::Matchers::Matches(errmsg));
     }
     SECTION("(FLE|Queryable)EncryptedFields entry with empty keyId") {
 
@@ -309,7 +309,7 @@ TEST_CASE("(FLE|Queryable)EncryptedFields with invalid fields") {
             genny::NodeSource ns{yaml, ""};
             REQUIRE_THROWS_WITH(
                 [&]() { EncryptionManager(ns.root(), true); }(),
-                Catch::Matches("'EncryptedField' has an invalid 'keyId' value of ''. "
+                Catch::Matchers::Matches("'EncryptedField' has an invalid 'keyId' value of ''. "
                                "Value must be a UUID string."));
         }
     }
@@ -319,7 +319,7 @@ TEST_CASE("(FLE|Queryable)EncryptedFields with invalid fields") {
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
-            Catch::Matches(
+            Catch::Matchers::Matches(
                 "Invalid key 'algorithm': Tried to access node that doesn't "
                 "exist. On node with path "
                 "'/Encryption/EncryptedCollections/0/FLEEncryptedFields/field1/algorithm': "));
@@ -330,7 +330,7 @@ TEST_CASE("(FLE|Queryable)EncryptedFields with invalid fields") {
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
-            Catch::Matches("'field1' has an invalid 'algorithm' value of 'equality'. "
+            Catch::Matchers::Matches("'field1' has an invalid 'algorithm' value of 'equality'. "
                            "Valid values are 'random' and 'deterministic'."));
     }
     SECTION("QueryableEncryptedFields entry with invalid queries type") {
@@ -339,7 +339,7 @@ TEST_CASE("(FLE|Queryable)EncryptedFields with invalid fields") {
             R"(QueryableEncryptedFields: { field1: { type: "string", queries: "equality" }})");
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
-                            Catch::Matches("'queries' node must be of sequence or map type"));
+                            Catch::Matchers::Matches("'queries' node must be of sequence or map type"));
     }
     SECTION("QueryableEncryptedFields queries with missing queryType") {
         const std::string inputTemplate = generateYaml(
@@ -363,7 +363,7 @@ TEST_CASE("(FLE|Queryable)EncryptedFields with invalid fields") {
             replace_str(errmsg, "<PATH>", path);
             genny::NodeSource ns{encryptedColls, ""};
             REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
-                                Catch::Matches(errmsg));
+                                Catch::Matchers::Matches(errmsg));
         }
     }
     SECTION("QueryableEncryptedFields queries sequence with non-map element") {
@@ -373,7 +373,7 @@ TEST_CASE("(FLE|Queryable)EncryptedFields with invalid fields") {
         genny::NodeSource ns{encryptedColls, ""};
         REQUIRE_THROWS_WITH(
             [&]() { EncryptionManager(ns.root(), true); }(),
-            Catch::Matches("Each value in the 'queries' array must be of map type"));
+            Catch::Matchers::Matches("Each value in the 'queries' array must be of map type"));
     }
 }
 TEST_CASE("No CryptSharedLibPath when UseCryptSharedLib is true") {
@@ -386,13 +386,13 @@ TEST_CASE("No CryptSharedLibPath when UseCryptSharedLib is true") {
             R"({Encryption: { UseCryptSharedLib: true, CryptSharedLibPath: "" }})";
         genny::NodeSource ns{encryption, ""};
         REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
-                            Catch::Matches(errmsg));
+                            Catch::Matchers::Matches(errmsg));
     }
     SECTION("CryptSharedLibPath is absent") {
         std::string encryption = R"({Encryption: { UseCryptSharedLib: true }})";
         genny::NodeSource ns{encryption, ""};
         REQUIRE_THROWS_WITH([&]() { EncryptionManager(ns.root(), true); }(),
-                            Catch::Matches(errmsg));
+                            Catch::Matchers::Matches(errmsg));
     }
 }
 TEST_CASE("EncryptionOptions with non-existing namespace") {
@@ -409,7 +409,7 @@ TEST_CASE("EncryptionOptions with non-existing namespace") {
 
     REQUIRE_THROWS_WITH(
         [&]() { mgr.createEncryptionContext(kSourceUri, EncryptionOptions(optsNs.root())); }(),
-        Catch::Matches("No encrypted collection schema found with namespace 'foo.collection'"));
+        Catch::Matchers::Matches("No encrypted collection schema found with namespace 'foo.collection'"));
 }
 TEST_CASE("createEncryptionContext with empty EncryptionOptions creates empty EncryptionContext") {
     std::string encryptedColls = R"({ Encryption: { EncryptedCollections: [] }})";
