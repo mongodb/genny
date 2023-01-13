@@ -128,7 +128,9 @@ class AutoTasksTests(BaseTestClass):
             ]
         }
         multi_modified_genny = MockFile(
-            base_name="src/genny/src/workloads/src/Multi.yml", modified=True, yaml_conts=auto_run,
+            base_name="src/genny/src/workloads/src/Multi.yml",
+            modified=True,
+            yaml_conts=auto_run,
         )
         multi_modified_other = MockFile(
             base_name="src/other/src/workloads/src/MultiOther.yml",

@@ -302,33 +302,71 @@ class Workload:
             then_run = block.then_run
             # All When conditions must be true. We set okay: False if any single one is not true.
             okay = True
+
+            comparisonOperators = {"$gt", "$gte", "$lt", "$lte"}
+
             for key, condition in when.items():
                 if len(condition) != 1:
                     raise ValueError(
                         f"Need exactly one condition per key in When block."
                         f" Got key ${key} with condition ${condition}."
                     )
-                if "$eq" in condition:
-                    acceptable_values = condition["$eq"]
+                operator, value = next(condition.items())
+                if operator == "$eq":
+                    acceptable_values = value
                     if not isinstance(acceptable_values, list):
                         acceptable_values = [acceptable_values]
                     if not build.has(key, acceptable_values):
                         okay = False
-                elif "$neq" in condition:
-                    unacceptable_values = condition["$neq"]
+                elif operator == "$neq":
+                    unacceptable_values = value
                     if not isinstance(unacceptable_values, list):
                         unacceptable_values = [unacceptable_values]
                     if build.has(key, unacceptable_values):
                         okay = False
+                elif operator in comparisonOperators:
+                    if key not in build.conts:
+                        okay = False
+                    else:
+                        build_value = build.conts[key]
+                        if not _compare(operator, build_value, value):
+                            okay = False
                 else:
                     raise ValueError(
-                        f"The only supported operators are $eq and $neq. Got ${condition.keys()}"
+                        f"The only supported operators are $eq, $neq, $gte, $lte, $gt, $lte. Got ${operator}"
                     )
 
             if okay:
                 tasks += self.generate_requested_tasks(then_run)
 
         return self._dedup_task(tasks)
+   
+    @staticmethod
+    def _extract_major_minor_version_tuple(branch_name):
+        """
+        Tries to extract major and minor version from branch name.
+        Version branch names are formated 'v<major version>.<minor version>'
+        Example: v4.0, v5.3, v6.2
+
+        :return: Tuple (major version, minor version) or None if input is not a version branch name
+        """
+        if not isinstance(branch_name, str):
+            return None
+        re.compile("^v(\d+).(\d+_$")
+        
+    @staticmethod
+    def _compare(operator: str, lhs, rhs) -> bool:
+        if operator == "$gt":
+            return lhs > rhs
+        if operator == "$gte":
+            return lhs >= rhs
+        if operator == "$lt":
+            return lhs < rhs
+        if operator == "$lte":
+            return lhs <= rhs
+        raise ValueError(
+            f"The only supported comparison operators are $gte, $lte, $gt, $lte. Got  ${operator}"
+        )
 
     @staticmethod
     def _dedup_task(tasks: List[GeneratedTask]) -> List[GeneratedTask]:
