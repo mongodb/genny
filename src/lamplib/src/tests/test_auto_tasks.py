@@ -503,6 +503,62 @@ class AutoTasksTests(BaseTestClass):
         then_writes_tasks = {}
         self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)
 
+    def test_variant_tasks_5(self):
+        """
+        Test comparison expressions and custom comparison for versions
+        """
+        expansions = expansions_mock({"mongodb_setup": "matches-1", "branch_name": "v4.2"})
+        given_files = [
+            expansions,
+            MockFile(
+                base_name="src/workloads/src/CompareMongodbSetup",
+                modified=False,
+                yaml_conts={
+                    "AutoRun": [
+                        {
+                            "When": {
+                                "mongodb_setup": {"$gt": "matches-0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "a"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "mongodb_setup": {"$gt": "matches-1"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "b"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "mongodb_setup": {"$gte": "matches-0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "c"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "mongodb_setup": {"$gte": "matches-1"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "d"},
+                            ],
+                        },
+                    ]
+                },
+            ),
+        ]
+        then_writes_tasks = {
+            "tasks": [
+                {"name": "compare_mongodb_setup_a"},
+                {"name": "compare_mongodb_setup_c"},
+            ]
+        }
+        self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)
+
     def test_patch_tasks(self):
         """patch_tasks is just variant_tasks for only modified files."""
 

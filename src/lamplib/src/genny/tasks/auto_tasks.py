@@ -311,7 +311,7 @@ class Workload:
                         f"Need exactly one condition per key in When block."
                         f" Got key ${key} with condition ${condition}."
                     )
-                operator, value = next(condition.items())
+                operator, value = list(condition.items())[0]
                 if operator == "$eq":
                     acceptable_values = value
                     if not isinstance(acceptable_values, list):
@@ -329,7 +329,12 @@ class Workload:
                         okay = False
                     else:
                         build_value = build.conts[key]
-                        if not _compare(operator, build_value, value):
+                        build_version = self._extract_major_minor_version_tuple(build_value)
+                        value_version = self._extract_major_minor_version_tuple(value)
+                        if build_version is not None and value_version is not None:
+                            build_value = build_version
+                            value = value_version
+                        if not self._compare(operator, build_value, value):
                             okay = False
                 else:
                     raise ValueError(
@@ -340,7 +345,7 @@ class Workload:
                 tasks += self.generate_requested_tasks(then_run)
 
         return self._dedup_task(tasks)
-   
+
     @staticmethod
     def _extract_major_minor_version_tuple(branch_name):
         """
@@ -352,17 +357,22 @@ class Workload:
         """
         if not isinstance(branch_name, str):
             return None
-        re.compile("^v(\d+).(\d+_$")
-        
+
+        match = re.match("\Av(\d+).(\d+)\Z", branch_name)
+        if match:
+            return match.group(1, 2)
+        else:
+            return None
+
     @staticmethod
     def _compare(operator: str, lhs, rhs) -> bool:
         if operator == "$gt":
             return lhs > rhs
-        if operator == "$gte":
+        elif operator == "$gte":
             return lhs >= rhs
-        if operator == "$lt":
+        elif operator == "$lt":
             return lhs < rhs
-        if operator == "$lte":
+        elif operator == "$lte":
             return lhs <= rhs
         raise ValueError(
             f"The only supported comparison operators are $gte, $lte, $gt, $lte. Got  ${operator}"
