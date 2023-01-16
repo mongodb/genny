@@ -29,35 +29,15 @@ LargeDoc: &LargeDoc
   expireDate: {^Date: "1970-01-01"}
 
 Actors:
-- Name: Setup
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: &NumPhases 3
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationName: AdminCommand
-          OperationCommand:
-            setParameter: 1
-            ttlMonitorSleepSecs: 1
-        - OperationName: AdminCommand
-          OperationCommand:
-            setParameter: 1
-            # Reduce tickets to force contention.
-            storageEngineConcurrentWriteTransactions: 32
-        SleepAfter: 60 seconds  # Wait 60 seconds so that the new ttl sleep config is active.
-
-- Name: InsertData
+# Perform the inital collection creation separate from changing the server parameters to reduce
+# noise in each phase.
+- Name: CreateTTLCollection
   Type: Loader
   Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [1]
-      NopInPhasesUpTo: *NumPhases
+      NopInPhasesUpTo: &NumPhases 3
       PhaseConfig:
         Repeat: 1
         Database: &db test
@@ -71,7 +51,7 @@ Actors:
           options: {expireAfterSeconds: 0}
         - keys: {numField: 1}
 
-- Name: CreateIndexes
+- Name: CreateIndexesOtherColl
   Type: RunCommand
   Threads: 1
   Phases:
@@ -82,34 +62,36 @@ Actors:
         Repeat: 1
         Database: *db
         Operations:
-        - OperationMetricsName: CreateNumFieldIndex
-          OperationName: RunCommand
+        - OperationName: RunCommand
           OperationCommand:
             createIndexes: &otherColl otherColl
             indexes:
-            - key:
-                numField: 1
-              name: numField
-        - OperationMetricsName: CreateStringFieldIndex
-          OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *otherColl
-            indexes:
-            - key:
-                a: 1
-              name: string
+            - key: {numField: 1}
+              name: numField_1
+            - key: {a: 1}
+              name: a_1
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Database: *db
+- Name: ConfigureParameters
+  Type: AdminCommand
   Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [2]
       NopInPhasesUpTo: *NumPhases
       PhaseConfig:
-        Threads: 1
         Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            ttlMonitorSleepSecs: 1
+        - OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            # Reduce tickets to force contention.
+            storageEngineConcurrentWriteTransactions: 32
+        SleepAfter: 60 seconds  # Wait 60 seconds for the new configurations to establish.
 
 - Name: UpdateOtherColl
   Type: CrudActor
