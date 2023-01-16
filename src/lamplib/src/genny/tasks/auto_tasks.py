@@ -303,8 +303,6 @@ class Workload:
             # All When conditions must be true. We set okay: False if any single one is not true.
             okay = True
 
-            comparisonOperators = {"$gt", "$gte", "$lt", "$lte"}
-
             for key, condition in when.items():
                 if len(condition) != 1:
                     raise ValueError(
@@ -324,7 +322,7 @@ class Workload:
                         unacceptable_values = [unacceptable_values]
                     if build.has(key, unacceptable_values):
                         okay = False
-                elif operator in comparisonOperators:
+                elif self._is_comparison_operator(operator):
                     if key not in build.conts:
                         okay = False
                     else:
@@ -363,6 +361,11 @@ class Workload:
             return match.group(1, 2)
         else:
             return None
+
+    COMPARISON_OPERATORS = {"$gt", "$gte", "$lt", "$lte"}
+
+    def _is_comparison_operator(self, operator: str):
+        return operator in COMPARISON_OPERATORS
 
     @staticmethod
     def _compare(operator: str, lhs, rhs) -> bool:
