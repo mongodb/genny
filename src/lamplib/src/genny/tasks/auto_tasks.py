@@ -378,7 +378,7 @@ class Workload:
         elif operator == "$lte":
             return lhs <= rhs
         raise ValueError(
-            f"The only supported comparison operators are $gte, $lte, $gt, $lte. Got  ${operator}"
+            f"The only supported comparison operators are $gte, $lte, $gt, $lte. Got ${operator}"
         )
 
     @staticmethod
