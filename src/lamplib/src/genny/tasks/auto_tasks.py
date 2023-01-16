@@ -365,7 +365,7 @@ class Workload:
     _COMPARISON_OPERATORS = {"$gt", "$gte", "$lt", "$lte"}
 
     def _is_comparison_operator(self, operator: str):
-        return operator in _COMPARISON_OPERATORS
+        return operator in self._COMPARISON_OPERATORS
 
     @staticmethod
     def _compare(operator: str, lhs, rhs) -> bool:
