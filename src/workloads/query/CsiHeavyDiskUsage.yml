@@ -6,19 +6,18 @@ Description: |
   workload itself has no expectations as far as the size or schema of the data are concerned but it
   is only useful when being run against larger datasets to actually generate heavy disk IO.
 
-  The purpose of this workload is to compare the insert performance with columnar indexes to inserts
-  without them.
-   - "Default" indexes present - a set of indexes that are typically present on the target dataset,
-     those that would be useful for the typical query workloads. These indexes should be created
-     prior to running the workload.
-   - Only a column store index. A column store index isn't expected to realistically replace all
-     other indexes in production, but it could replace some and knowing it's relative performance
-     cost could help make that decision.
+  The purpose of this workload is to compare the insert performance in the following two situations:
+   - "Default" indexes are present - a set of indexes that are typically present on the target
+     dataset, those that would be useful for the typical query workloads. These indexes should be
+    created prior to running the workload.
+   - Only a column store index is present. A column store index isn't expected to realistically
+     replace all other indexes in production, but it could replace some and knowing its relative
+     performance cost could help make that decision.
 
   The workload consists of the following phases and actors:
-   - Measure bulk inserting with the default indexes (SamplingLoader)
+   - Measure bulk insertion with the default indexes (SamplingLoader)
    - Drop all non-_id indexes and build the column store index (RunCommand Actor)
-   - Measure bulk inserting again (SamplingLoader)
+   - Measure bulk insertion again (SamplingLoader)
 
 Keywords:
 - columnstore
@@ -42,18 +41,11 @@ GlobalDefaults:
   SampleSize: &sampleSize 1000
   Batches: &batches 50  # Per Thread
 
-  ColumnStoreIndexSpec: &ColumnStoreIndexSpec
+  ColumnStoreIndexSpec: &columnStoreIndexSpec
     key: {$**: "columnstore"}
     name: "columnstore"
 
   MaxPhases: &maxPhases 5
-
-  SamplingLoaderPhaseConfig: &SamplingLoaderPhaseConfig
-    Database: *db
-    Collection: *coll
-    Repeat: 1
-    InsertBatchSize: 1000
-    Batches: 50  # Per Thread
 
 ActorTemplates:
 # We want to be able to compare results from the same test between the runs in presence of different
@@ -136,7 +128,7 @@ Actors:
           OperationCommand:
             createIndexes: *coll
             indexes:
-            - *ColumnStoreIndexSpec
+            - *columnStoreIndexSpec
 
 - ActorFromTemplate:
     TemplateName: InsertFromSample
