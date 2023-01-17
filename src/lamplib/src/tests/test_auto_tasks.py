@@ -627,6 +627,22 @@ class AutoTasksTests(BaseTestClass):
                                 {"mongodb_setup": "lte_less_major"},
                             ],
                         },
+                        {
+                            "When": {
+                                "branch_name": {"$lt": "v10.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lt_two_digits_major"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lt": "v4.10"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lt_two_digits_minor"},
+                            ],
+                        },
                     ]
                 },
             ),
@@ -726,6 +742,8 @@ class AutoTasksTests(BaseTestClass):
                 {"name": "compare_branch_name_gte_greater"},
                 {"name": "compare_branch_name_gte_greater_major"},
                 {"name": "compare_branch_name_lt_less"},
+                {"name": "compare_branch_name_lt_two_digits_major"},
+                {"name": "compare_branch_name_lt_two_digits_minor"},
                 {"name": "compare_branch_name_lte_equal"},
                 {"name": "compare_branch_name_lte_less"},
                 {"name": "compare_branch_name_lte_less_major"},
@@ -735,6 +753,62 @@ class AutoTasksTests(BaseTestClass):
                 {"name": "compare_mongodb_setup_lt_less"},
                 {"name": "compare_mongodb_setup_lte_equal"},
                 {"name": "compare_mongodb_setup_lte_less"},
+            ]
+        }
+        self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)
+
+    def test_variant_tasks_6(self):
+        """
+        Test custom comparison for main branches
+        """
+        expansions = expansions_mock({"mongodb_setup": "matches", "branch_name": "main"})
+        given_files = [
+            expansions,
+            MockFile(
+                base_name="src/workloads/src/CompareBranchName",
+                modified=False,
+                yaml_conts={
+                    "AutoRun": [
+                        {
+                            "When": {
+                                "branch_name": {"$gt": "v6.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gt"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$gte": "v6.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gte"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lt": "v6.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lt"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lte": "v6.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lte"},
+                            ],
+                        },
+                    ]
+                },
+            ),
+        ]
+        then_writes_tasks = {
+            "tasks": [
+                {"name": "compare_branch_name_gt"},
+                {"name": "compare_branch_name_gte"},
             ]
         }
         self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)

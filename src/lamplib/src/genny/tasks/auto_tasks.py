@@ -344,8 +344,10 @@ class Workload:
 
         return self._dedup_task(tasks)
 
-    @staticmethod
-    def _extract_major_minor_version_tuple(branch_name):
+    _MAIN_BRANCHES = {"master", "main", "production"}
+    _MAX_VERSION = (9999, 9999)
+
+    def _extract_major_minor_version_tuple(self, branch_name):
         """
         Tries to extract major and minor version from branch name.
         Version branch names are formated 'v<major version>.<minor version>'
@@ -356,9 +358,12 @@ class Workload:
         if not isinstance(branch_name, str):
             return None
 
-        match = re.match("\Av(\d+).(\d+)\Z", branch_name)
+        if branch_name in self._MAIN_BRANCHES:
+            return self._MAX_VERSION
+
+        match = re.match(r"\Av(\d+).(\d+)\Z", branch_name)
         if match:
-            return match.group(1, 2)
+            return tuple(int(v) for v in match.group(1, 2))
         else:
             return None
 
