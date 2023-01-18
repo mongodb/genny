@@ -618,7 +618,7 @@ public:
         }
 
         for (const auto&& [k, v] : node["from"]) {
-            _map.push_back(v.key(), static_cast<size_t>(v.maybe<std::int64_t>().value()));
+            _map.push_back(v.key(), v.to<std::size_t>());
         }
     }
 
@@ -635,7 +635,7 @@ public:
 
 private:
     DefaultRandom& _rng;
-    FrequencyMap _map;
+    v1::FrequencyMap _map;
 };
 
 /**
@@ -1386,7 +1386,7 @@ protected:
     std::vector<UniqueGenerator<bsoncxx::array::value>> _parts;
 };
 
-/** 
+/**
  * `{^Object: {withNEntries: 10, havingKeys: {^Foo}, andValues: {^Bar}, allowDuplicateKeys: bool}`
  */
 class ObjectGenerator : public Generator<bsoncxx::document::value> {

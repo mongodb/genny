@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#ifndef HEADER_0BC4D6BC_FC92_4F1C_BAEA_26A633807830_INCLUDE
+#define HEADER_0BC4D6BC_FC92_4F1C_BAEA_26A633807830_INCLUDE
 
 #include <cstdint>
 #include <exception>
@@ -21,7 +22,7 @@
 #include <string>
 #include <vector>
 
-namespace genny {
+namespace genny::v1 {
 
 /**
  * Genny frequency map. A list of pairs <string, count>
@@ -85,4 +86,6 @@ private:
     std::vector<std::pair<std::string, uint64_t>> _list;
 };
 
-}  // namespace genny
+}  // namespace genny::v1
+
+#endif

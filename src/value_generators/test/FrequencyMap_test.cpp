@@ -26,7 +26,7 @@ namespace {
 TEST_CASE("genny frequencyMap") {
 
     SECTION("Basic") {
-        FrequencyMap map;
+        v1::FrequencyMap map;
 
         // Load Map
         map.push_back("a", 1);
