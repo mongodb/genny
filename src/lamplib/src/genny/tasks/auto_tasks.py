@@ -302,33 +302,89 @@ class Workload:
             then_run = block.then_run
             # All When conditions must be true. We set okay: False if any single one is not true.
             okay = True
+
             for key, condition in when.items():
                 if len(condition) != 1:
                     raise ValueError(
                         f"Need exactly one condition per key in When block."
                         f" Got key ${key} with condition ${condition}."
                     )
-                if "$eq" in condition:
-                    acceptable_values = condition["$eq"]
+                operator, value = list(condition.items())[0]
+                if operator == "$eq":
+                    acceptable_values = value
                     if not isinstance(acceptable_values, list):
                         acceptable_values = [acceptable_values]
                     if not build.has(key, acceptable_values):
                         okay = False
-                elif "$neq" in condition:
-                    unacceptable_values = condition["$neq"]
+                elif operator == "$neq":
+                    unacceptable_values = value
                     if not isinstance(unacceptable_values, list):
                         unacceptable_values = [unacceptable_values]
                     if build.has(key, unacceptable_values):
                         okay = False
+                elif self._is_comparison_operator(operator):
+                    if key not in build.conts:
+                        okay = False
+                    else:
+                        build_value = build.conts[key]
+                        build_version = self._extract_major_minor_version_tuple(build_value)
+                        value_version = self._extract_major_minor_version_tuple(value)
+                        if build_version is not None and value_version is not None:
+                            build_value = build_version
+                            value = value_version
+                        if not self._compare(operator, build_value, value):
+                            okay = False
                 else:
                     raise ValueError(
-                        f"The only supported operators are $eq and $neq. Got ${condition.keys()}"
+                        f"The only supported operators are $eq, $neq, $gte, $lte, $gt, $lte. Got ${operator}"
                     )
 
             if okay:
                 tasks += self.generate_requested_tasks(then_run)
 
         return self._dedup_task(tasks)
+
+    _MAIN_BRANCHES = {"master", "main", "production"}
+    _MAX_VERSION = (9999, 9999)
+
+    def _extract_major_minor_version_tuple(self, branch_name):
+        """
+        Tries to extract major and minor version from branch name.
+        Version branch names are formated 'v<major version>.<minor version>'
+        Example: v4.0, v5.3, v6.2
+
+        :return: Tuple (major version, minor version) or None if input is not a version branch name
+        """
+        if not isinstance(branch_name, str):
+            return None
+
+        if branch_name in self._MAIN_BRANCHES:
+            return self._MAX_VERSION
+
+        match = re.match(r"\Av(\d+).(\d+)\Z", branch_name)
+        if match:
+            return tuple(int(v) for v in match.group(1, 2))
+        else:
+            return None
+
+    _COMPARISON_OPERATORS = {"$gt", "$gte", "$lt", "$lte"}
+
+    def _is_comparison_operator(self, operator: str):
+        return operator in self._COMPARISON_OPERATORS
+
+    @staticmethod
+    def _compare(operator: str, lhs, rhs) -> bool:
+        if operator == "$gt":
+            return lhs > rhs
+        elif operator == "$gte":
+            return lhs >= rhs
+        elif operator == "$lt":
+            return lhs < rhs
+        elif operator == "$lte":
+            return lhs <= rhs
+        raise ValueError(
+            f"The only supported comparison operators are $gte, $lte, $gt, $lte. Got ${operator}"
+        )
 
     @staticmethod
     def _dedup_task(tasks: List[GeneratedTask]) -> List[GeneratedTask]:

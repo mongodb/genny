@@ -128,7 +128,9 @@ class AutoTasksTests(BaseTestClass):
             ]
         }
         multi_modified_genny = MockFile(
-            base_name="src/genny/src/workloads/src/Multi.yml", modified=True, yaml_conts=auto_run,
+            base_name="src/genny/src/workloads/src/Multi.yml",
+            modified=True,
+            yaml_conts=auto_run,
         )
         multi_modified_other = MockFile(
             base_name="src/other/src/workloads/src/MultiOther.yml",
@@ -499,6 +501,316 @@ class AutoTasksTests(BaseTestClass):
             ),
         ]
         then_writes_tasks = {}
+        self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)
+
+    def test_variant_tasks_5(self):
+        """
+        Test comparison expressions and custom comparison for versions
+        """
+        expansions = expansions_mock({"mongodb_setup": "matches-1", "branch_name": "v4.2"})
+        given_files = [
+            expansions,
+            MockFile(
+                base_name="src/workloads/src/CompareBranchName",
+                modified=False,
+                yaml_conts={
+                    "AutoRun": [
+                        {
+                            "When": {
+                                "branch_name": {"$gt": "v4.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gt_greater"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$gt": "v4.2"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gt_equal"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$gte": "v4.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gte_greater"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$gte": "v4.2"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gte_equal"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$gte": "v4.3"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gte_less"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$gte": "v3.2"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gte_greater_major"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$gte": "v5.2"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gte_less_major"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lt": "v4.3"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lt_less"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lt": "v4.2"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lt_equal"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lte": "v4.3"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lte_less"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lte": "v4.2"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lte_equal"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lte": "v4.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lte_greater"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lte": "v3.2"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lte_greater_major"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lte": "v5.2"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lte_less_major"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lt": "v10.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lt_two_digits_major"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lt": "v4.10"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lt_two_digits_minor"},
+                            ],
+                        },
+                    ]
+                },
+            ),
+            MockFile(
+                base_name="src/workloads/src/CompareMongodbSetup",
+                modified=False,
+                yaml_conts={
+                    "AutoRun": [
+                        {
+                            "When": {
+                                "mongodb_setup": {"$gt": "matches-0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gt_greater"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "mongodb_setup": {"$gt": "matches-1"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gt_equal"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "mongodb_setup": {"$gte": "matches-0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gte_greater"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "mongodb_setup": {"$gte": "matches-1"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gte_equal"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "mongodb_setup": {"$gte": "matches-2"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gte_less"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "mongodb_setup": {"$lt": "matches-2"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lt_less"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "mongodb_setup": {"$lt": "matches-1"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lt_equal"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "mongodb_setup": {"$lte": "matches-2"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lte_less"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "mongodb_setup": {"$lte": "matches-1"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lte_equal"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "mongodb_setup": {"$lte": "matches-0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lte_greater"},
+                            ],
+                        },
+                    ]
+                },
+            ),
+        ]
+        then_writes_tasks = {
+            "tasks": [
+                {"name": "compare_branch_name_gt_greater"},
+                {"name": "compare_branch_name_gte_equal"},
+                {"name": "compare_branch_name_gte_greater"},
+                {"name": "compare_branch_name_gte_greater_major"},
+                {"name": "compare_branch_name_lt_less"},
+                {"name": "compare_branch_name_lt_two_digits_major"},
+                {"name": "compare_branch_name_lt_two_digits_minor"},
+                {"name": "compare_branch_name_lte_equal"},
+                {"name": "compare_branch_name_lte_less"},
+                {"name": "compare_branch_name_lte_less_major"},
+                {"name": "compare_mongodb_setup_gt_greater"},
+                {"name": "compare_mongodb_setup_gte_equal"},
+                {"name": "compare_mongodb_setup_gte_greater"},
+                {"name": "compare_mongodb_setup_lt_less"},
+                {"name": "compare_mongodb_setup_lte_equal"},
+                {"name": "compare_mongodb_setup_lte_less"},
+            ]
+        }
+        self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)
+
+    def test_variant_tasks_6(self):
+        """
+        Test custom comparison for main branches
+        """
+        expansions = expansions_mock({"mongodb_setup": "matches", "branch_name": "main"})
+        given_files = [
+            expansions,
+            MockFile(
+                base_name="src/workloads/src/CompareBranchName",
+                modified=False,
+                yaml_conts={
+                    "AutoRun": [
+                        {
+                            "When": {
+                                "branch_name": {"$gt": "v6.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gt"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$gte": "v6.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gte"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lt": "v6.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lt"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lte": "v6.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lte"},
+                            ],
+                        },
+                    ]
+                },
+            ),
+        ]
+        then_writes_tasks = {
+            "tasks": [
+                {"name": "compare_branch_name_gt"},
+                {"name": "compare_branch_name_gte"},
+            ]
+        }
         self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)
 
     def test_patch_tasks(self):
