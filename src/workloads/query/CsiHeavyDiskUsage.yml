@@ -6,18 +6,19 @@ Description: |
   workload itself has no expectations as far as the size or schema of the data are concerned but it
   is only useful when being run against larger datasets to actually generate heavy disk IO.
 
+  Because the workload is targeting large external datasets, it's expected that they would need long
+  setup time. To avoid setting up twice, we run two, essentially independent, experiments one after
+  anoter. We don't expect the internal state of WiredTiger to matter as the experiments involve
+  different indexes, and the inserts into the rowstore itself are ammortized over the large number
+  of batches in each experiment.
+
   The purpose of this workload is to compare the insert performance in the following two situations:
    - "Default" indexes are present - a set of indexes that are typically present on the target
      dataset, those that would be useful for the typical query workloads. These indexes should be
-    created prior to running the workload.
+     created prior to running the workload.
    - Only a column store index is present. A column store index isn't expected to realistically
      replace all other indexes in production, but it could replace some and knowing its relative
      performance cost could help make that decision.
-
-  The workload consists of the following phases and actors:
-   - Measure bulk insertion with the default indexes (SamplingLoader)
-   - Drop all non-_id indexes and build the column store index (RunCommand Actor)
-   - Measure bulk insertion again (SamplingLoader)
 
 Keywords:
 - columnstore
