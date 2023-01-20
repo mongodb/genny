@@ -12,6 +12,11 @@ Description: |
   To learn more about partitions, please check out the docs here:
   https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/
 
+GlobalDefaults:
+  # The limit ensures that the entire result set fits in an entire batch. That way we can use
+  # the 'RunCommand' actor without abandoning open cursors.
+  Limit: &limit 100
+
 Actors:
 - Name: InsertData
   Type: Loader
@@ -22,7 +27,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 10000
-    BatchSize: &batchSize 100
+    BatchSize: 100
     Document:
       part1: {^Choose: {from: [1, 2, 3, 4]}}
       part2: {^Choose: {from: [1, 2, 3, 4]}}
@@ -99,16 +104,19 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            output: {
-              numeric: {
-                $locf: "$numeric"}
+        pipeline: [
+          {
+            $setWindowFields: {
+              sortBy: {_id: 1},
+              output: {
+                numeric: {
+                  $locf: "$numeric"}
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -141,16 +149,19 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            output: {
-              randomType: {
-                $locf: "$randomType"}
+        pipeline: [
+          {
+            $setWindowFields: {
+              sortBy: {_id: 1},
+              output: {
+                randomType: {
+                  $locf: "$randomType"}
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -183,20 +194,23 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            output: {
-              numeric: {
-                $locf: "$numeric"},
-              string: {
-                $locf: "$string"},
-              date: {
-                $locf: "$date"}
+        pipeline: [
+          {
+            $setWindowFields: {
+              sortBy: {_id: 1},
+              output: {
+                numeric: {
+                  $locf: "$numeric"},
+                string: {
+                  $locf: "$string"},
+                date: {
+                  $locf: "$date"}
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -229,17 +243,20 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            partitionBy: "$part1",
-            output: {
-              date: {
-                $locf: "$date"}
+        pipeline: [
+          {
+            $setWindowFields: {
+              sortBy: {_id: 1},
+              partitionBy: "$part1",
+              output: {
+                date: {
+                  $locf: "$date"}
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
         allowDiskUse: true
   - Nop: true
   - Nop: true
@@ -273,17 +290,20 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            partitionBy: "$part1",
-            output: {
-              randomType: {
-                $locf: "$randomType"}
+        pipeline: [
+          {
+            $setWindowFields: {
+              sortBy: {_id: 1},
+              partitionBy: "$part1",
+              output: {
+                randomType: {
+                  $locf: "$randomType"}
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
         allowDiskUse: true
   - Nop: true
   - Nop: true
@@ -317,21 +337,24 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            partitionBy: "$part1",
-            output: {
-              randomType: {
-                $locf: "$randomType"},
-              string: {
-                $locf: "$string"},
-              date: {
-                $locf: "$date"}
+        pipeline: [
+          {
+            $setWindowFields: {
+              sortBy: {_id: 1},
+              partitionBy: "$part1",
+              output: {
+                randomType: {
+                  $locf: "$randomType"},
+                string: {
+                  $locf: "$string"},
+                date: {
+                  $locf: "$date"}
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
         allowDiskUse: true
   - Nop: true
   - Nop: true
@@ -365,17 +388,20 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            partitionBy: {part1: "$part1", part2: "$part2"},
-            output: {
-              string: {
-                $locf: "$string"}
+        pipeline: [
+          {
+            $setWindowFields: {
+              sortBy: {_id: 1},
+              partitionBy: {part1: "$part1", part2: "$part2"},
+              output: {
+                string: {
+                  $locf: "$string"}
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
         allowDiskUse: true
   - Nop: true
   - Nop: true
@@ -409,17 +435,20 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            partitionBy: {part1: "$part1", part2: "$part2"},
-            output: {
-              randomType: {
-                $locf: "$randomType"}
+        pipeline: [
+          {
+            $setWindowFields: {
+              sortBy: {_id: 1},
+              partitionBy: {part1: "$part1", part2: "$part2"},
+              output: {
+                randomType: {
+                  $locf: "$randomType"}
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
         allowDiskUse: true
   - Nop: true
   - Nop: true
@@ -453,21 +482,24 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
-        pipeline: [{
-          $setWindowFields: {
-            sortBy: {_id: 1},
-            partitionBy: {part1: "$part1", part2: "$part2"},
-            output: {
-              randomType: {
-                $locf: "$randomType"},
-              string: {
-                $locf: "$string"},
-              date: {
-                $locf: "$date"}
+        pipeline: [
+          {
+            $setWindowFields: {
+              sortBy: {_id: 1},
+              partitionBy: {part1: "$part1", part2: "$part2"},
+              output: {
+                randomType: {
+                  $locf: "$randomType"},
+                string: {
+                  $locf: "$string"},
+                date: {
+                  $locf: "$date"}
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
         allowDiskUse: true
 
 AutoRun:
