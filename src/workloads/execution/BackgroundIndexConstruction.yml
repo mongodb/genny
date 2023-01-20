@@ -31,7 +31,7 @@ SmallDoc: &SmallDoc
 NumPhases: &NumPhases 4
 
 Actors:
-# Phase 1: Insert enough data to ensure than an index build on each field spills to disk with a
+# Phase 0: Insert enough data to ensure than an index build on each field spills to disk with a
 # memory limit of 100MB.
 - Name: LoadSmallData
   Type: Loader
@@ -82,7 +82,7 @@ Actors:
             - key: {numField: 1}
               name: numField_1
 
-# Phase 2: Lower the memory limit for spilling to disk so that it occurs more often. Also lower tickets to emulate an overloaded server.
+# Phase 1: Lower the memory limit for spilling to disk so that it occurs more often. Also lower tickets to emulate an overloaded server.
 - Name: Setup
   Type: RunCommand
   Threads: 1
@@ -104,7 +104,7 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 3: Quiesce the system
+# Phase 2: Quiesce the system
 - Name: QuiesceActor
   Type: QuiesceActor
   # Using multiple threads will result in an error.
@@ -117,7 +117,7 @@ Actors:
   - *Nop
   - *Nop
 
-# Phases 4, 5: Build indexes on a collection that has no concurrent writes and a collection with concurrent writes.
+# Phases 3, 4: Build indexes on a collection that has no concurrent writes and a collection with concurrent writes.
 - Name: IndexCollection
   Type: RunCommand
   Threads: 1
@@ -125,8 +125,8 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  # Build an index on an integer field.
-  - Repeat: &numRepetitions 5  # Repeat 5 times to get more stable times
+  # Build an index on a collection with a noisy neighbor.
+  - Repeat: &numRepetitions 5  # Repeat 5 times to get more stable latencies
     Database: *db
     Operations:
     - OperationMetricsName: CreateIndex
