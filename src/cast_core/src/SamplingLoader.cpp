@@ -144,13 +144,13 @@ void genny::actor::SamplingLoader::run() {
                     _collection.insert_many(batchOfDocs,
                                             mongocxx::options::insert{}.ordered(false));
                     individualOpCtx.success();
-                    totalOpCtx.success();
                 } catch (const mongocxx::operation_exception& x) {
                     individualOpCtx.failure();
                     totalOpCtx.failure();
                     BOOST_THROW_EXCEPTION(x);
                 }
             }
+            totalOpCtx.success();
             BOOST_LOG_TRIVIAL(debug) << "Finished SamplingLoader";
         }
     }
