@@ -46,6 +46,7 @@ GlobalDefaults:
     {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
   # Only used for generating the Document padding.
   RandomStringLength: &RandomStringLength 6
+  RandomStringValue: &RandomStringValue {^FastRandomString: {length: *RandomStringLength, alphabet: "0123456789"}}
 
   #### Document Size Specifications ####
 
@@ -59,13 +60,13 @@ GlobalDefaults:
       andValues: {target_size: *TargetDocumentSizeBytes_1KB, id_length: 22, field_count: 7, field_length: 8, value_length: *RandomStringLength, padding_field: 14}
   # Insert same document for both default and with secondary indexes to remove one variable.
   DocumentToInsert_1KB: &DocumentToInsert_1KB
-    a: &rs_1KB {^FastRandomString: {length: *RandomStringLength, alphabet: "0123456789"}}
-    b: *rs_1KB
-    c: *rs_1KB
-    d: *rs_1KB
-    e: *rs_1KB
-    f: *rs_1KB
-    g: *rs_1KB  # up to field_count fields
+    a: *RandomStringValue
+    b: *RandomStringValue
+    c: *RandomStringValue
+    d: *RandomStringValue
+    e: *RandomStringValue
+    f: *RandomStringValue
+    g: *RandomStringValue  # up to field_count fields
     padding: {^FastRandomString: {length: *DocumentPaddingSizeBytes_1KB}}
 
   # __________  10MB Specifcations __________
@@ -78,13 +79,13 @@ GlobalDefaults:
       andValues: {target_size: *TargetDocumentSizeBytes_10MB, id_length: 22, field_count: 7, field_length: 8, value_length: *RandomStringLength, padding_field: 14}
   # Insert same document for both default and with secondary indexes to remove one variable.
   DocumentToInsert_10MB: &DocumentToInsert_10MB
-    a: &rs_10MB {^FastRandomString: {length: *RandomStringLength, alphabet: "0123456789"}}
-    b: *rs_10MB
-    c: *rs_10MB
-    d: *rs_10MB
-    e: *rs_10MB
-    f: *rs_10MB
-    g: *rs_10MB  # up to field_count fields
+    a: *RandomStringValue
+    b: *RandomStringValue
+    c: *RandomStringValue
+    d: *RandomStringValue
+    e: *RandomStringValue
+    f: *RandomStringValue
+    g: *RandomStringValue  # up to field_count fields
     padding: {^FastRandomString: {length: *DocumentPaddingSizeBytes_10MB}}
 
 ActorTemplates:
