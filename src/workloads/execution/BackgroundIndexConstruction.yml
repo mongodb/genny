@@ -37,17 +37,17 @@ Actors:
   Type: Loader
   Threads: 1
   Phases:
-  - Repeat: 1
-    Database: &db test
-    Threads: 1
-    CollectionCount: &CollCount 1
-    DocumentCount: 10_000_000
-    BatchSize: 1000
-    Document: *SmallDoc
-  - &Nop {Nop: true}
-  - *Nop
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: &db test
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 10_000_000
+        BatchSize: 1000
+        Document: *SmallDoc
 
 - Name: InsertIntoOtherColl
   Type: MonotonicSingleLoader
@@ -87,22 +87,22 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationName: AdminCommand
-      OperationCommand:
-        setParameter: 1
-        storageEngineConcurrentWriteTransactions: 32
-    - OperationMetricsName: LimitIndexBuildMemoryUsageCommand
-      OperationName: RunCommand
-      OperationCommand:
-        setParameter: 1
-        maxIndexBuildMemoryUsageMegabytes: 100
-  - *Nop
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            storageEngineConcurrentWriteTransactions: 32
+        - OperationMetricsName: LimitIndexBuildMemoryUsageCommand
+          OperationName: RunCommand
+          OperationCommand:
+            setParameter: 1
+            maxIndexBuildMemoryUsageMegabytes: 100
 
 # Phase 2: Quiesce the system
 - Name: QuiesceActor
@@ -111,11 +111,11 @@ Actors:
   Threads: 1
   Database: *db
   Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
 
 # Phases 3, 4: Build indexes on a collection that has no concurrent writes and a collection with concurrent writes.
 - Name: IndexCollection
