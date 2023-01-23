@@ -189,7 +189,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: InitializeDatabase
     TemplateParameters:
-      Name: InitializeDatabase0_1K
+      Name: InitializeDatabase0_1KB
       OnlyActiveInPhases: 2
 
 # Phase 3: Populate for First Round of Deletes without Concurrent Writes.
