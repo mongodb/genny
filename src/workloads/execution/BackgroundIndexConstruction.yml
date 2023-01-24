@@ -122,7 +122,7 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
+  - &Nop {Nop: true}
   - *Nop
   - *Nop
   # Build an index on a collection with a noisy neighbor.
