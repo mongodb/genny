@@ -2,8 +2,10 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: >
   Deletes a range of documents using the DELETE query exec stage both in isolation and while
-  performing writes on another collection. Tests deletes on documents of size ~1KB then deletes on
-  documents of ~10MB.
+  performing writes on another collection. Introduces secondary indexes on the collection where the
+  mass deletion is issued to measure the impact of additional work per document deletion on
+  concurrent write latency. Tests deletes on documents of size ~1KB then deletes on documents of
+  ~10MB.
 
 Keywords:
 - RunCommand
