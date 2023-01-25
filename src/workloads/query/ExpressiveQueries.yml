@@ -130,7 +130,7 @@ Actors:
   - *Nop
 
 - Name: RunQueries
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -138,12 +138,12 @@ Actors:
   - Repeat: 100
     Duration: 5 minutes
     Database: *DB
+    Collection: Collection0
     Operations:
     - OperationMetricsName: QueryNoProjectionNoIndex
-      OperationName: RunCommand
+      OperationName: find
       OperationCommand:
-        find: Collection0
-        filter: &filter {
+        Filter: &filter {
           gender: "Female",
           dob: {
             # Currently, using generator is the only way to generate date value with the appropriate BSON type.
@@ -162,25 +162,25 @@ Actors:
   - Repeat: 100
     Duration: 5 minutes
     Database: *DB
+    Collection: Collection0
     Operations:
     - OperationMetricsName: QueryWithProjectionNoIndex
-      OperationName: RunCommand
+      OperationName: find
       OperationCommand:
-        find: Collection0
-        filter: *filter
-        projection: &projection {_id: 0, firstname: 1, lastname: 1, dob: 1}
+        Filter: *filter
+        Projection: &projection {_id: 0, firstname: 1, lastname: 1, dob: 1}
   - *Nop
   - *Nop
   - Repeat: 1000  # This query is very fast, so we need to run it more times than others.
     Duration: 5 minutes
     Database: *DB
+    Collection: Collection0
     Operations:
     - OperationMetricsName: QueryWithProjectionWithIndex
-      OperationName: RunCommand
+      OperationName: find
       OperationCommand:
-        find: Collection0
-        filter: *filter
-        projection: *projection
+        Filter: *filter
+        Projection: *projection
 
 AutoRun:
 - When:
