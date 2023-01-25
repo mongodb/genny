@@ -26,8 +26,8 @@ Actors:
     Database: &db test
     Threads: 1
     CollectionCount: 1
-    # Through trial and error, it seems 60k documents, when divided into 12 partitions, does not spill,
-    # but divided into fewer partitions (10 partitions), does spill.
+    # Given that document size is between 10kB and 20kB, 60k documents, when divided into 12 partitions, does not spill,
+    # but divided into fewer partitions (5 partitions), does spill.
     DocumentCount: 60000
     BatchSize: &batchSize 1000
     Document:
@@ -57,10 +57,10 @@ Actors:
             q: {},
             u: [
               {$set: {
-                ten_indexed: {$mod: ["$_id", 10]},
-                ten_unindexed: {$mod: ["$_id", 10]},
-                twelve_indexed: {$mod: ["$_id", 12]},
-                twelve_unindexed: {$mod: ["$_id", 12]},
+                spill_indexed: {$mod: ["$_id", 5]},
+                spill_unindexed: {$mod: ["$_id", 5]},
+                not_spill_indexed: {$mod: ["$_id", 12]},
+                not_spill_unindexed: {$mod: ["$_id", 12]},
               }},
             ],
             multi: true,
@@ -71,31 +71,31 @@ Actors:
       OperationCommand:
         createIndexes: Collection0
         indexes: [
-          {key: {ten_indexed: 1}, name: "ten_indexed_1"},
-          {key: {twelve_indexed: 1}, name: "twelve_indexed_1"},
+          {key: {spill_indexed: 1}, name: "spill_indexed_1"},
+          {key: {not_spill_indexed: 1}, name: "not_spill_indexed_1"},
         ]
   - Nop: true
 
 - Name: SetWindowFieldsUnbounded
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
   - Nop: true
   - Repeat: 10
     Database: *db
+    Collection: Collection0
     Operations:
 
     # Nothing spills:
     # - $sort is indexed
     # - partitions are small enough to fit in memory
     - OperationMetricsName: NothingSpills
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {$setWindowFields: {
-            partitionBy: "$twelve_indexed",
+            partitionBy: "$not_spill_indexed",
             output: {
               total: {$sum: "$int"}
             }
@@ -104,21 +104,22 @@ Actors:
             partitionKey: 1,
             percentage: {$divide: ["$int", "$total"]},
             keepString: {$type: "$string"},
-          }}
-        ]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+          }},
+          {$limit: *batchSize}
+         ]
+        Options:
+          BatchSize: *batchSize
+          AllowDiskUse: true
 
     # Only the sort spills:
     # - $sort is not indexed
     # - partitions are small enough to fit in memory
     - OperationMetricsName: SortSpills
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {$setWindowFields: {
-            partitionBy: "$twelve_unindexed",
+            partitionBy: "$not_spill_unindexed",
             output: {
               total: {$sum: "$int"}
             }
@@ -127,21 +128,22 @@ Actors:
             partitionKey: 1,
             percentage: {$divide: ["$int", "$total"]},
             keepString: {$type: "$string"},
-          }}
-        ]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+          }},
+          {$limit: *batchSize}
+          ]
+        Options:
+          BatchSize: *batchSize
+          AllowDiskUse: true
 
     # Only the partitioning spills:
     # - $sort is indexed
     # - partitions are too big to fit in memory
     - OperationMetricsName: PartitionSpills
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {$setWindowFields: {
-            partitionBy: "$ten_indexed",
+            partitionBy: "$spill_indexed",
             output: {
               total: {$sum: "$int"}
             }
@@ -150,21 +152,22 @@ Actors:
             partitionKey: 1,
             percentage: {$divide: ["$int", "$total"]},
             keepString: {$type: "$string"},
-          }}
-        ]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+          }},
+          {$limit: *batchSize}
+         ]
+        Options:
+          BatchSize: *batchSize
+          AllowDiskUse: true
 
     # Both operations spill:
     # - $sort is not indexed
     # - partitions are too big to fit in memory
     - OperationMetricsName: BothSpill
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {$setWindowFields: {
-            partitionBy: "$ten_unindexed",
+            partitionBy: "$spill_unindexed",
             output: {
               total: {$sum: "$int"}
             }
@@ -173,10 +176,12 @@ Actors:
             partitionKey: 1,
             percentage: {$divide: ["$int", "$total"]},
             keepString: {$type: "$string"},
-          }}
-        ]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+          }},
+          {$limit: *batchSize}
+         ]
+        Options:
+          BatchSize: *batchSize
+          AllowDiskUse: true
 
 AutoRun:
 - When:
