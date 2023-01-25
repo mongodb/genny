@@ -11,7 +11,7 @@ GlobalDefaults:
   Collection: &Collection Collection0
   DocumentCount: &DocumentCount 100
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 3
+  MaxPhases: &MaxPhases 6
 
 Actors:
 # Clear any pre-existing collection state.
@@ -67,5 +67,62 @@ Actors:
           - Metric: documents
             GT: 4
             LT: 50
+
+- Name: CrudWriterExample
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 10
+        Collection: *Collection
+        Operations:
+        - OperationName: insertMany
+          OperationMetricsName: InsertLargeString
+          OperationCommand:
+            Documents:
+            - {str: {^FastRandomString: {length: 1024}}}
+
+# Make sure that the "LargeStringInserts" workload wrote the expected amount of data.
+- Name: ValidateLargeStringInserts
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationMetricsName: LargeStringBytes
+          OperationCommand:
+            Filter: {str: {$ne: null}}
+          PostCondition:
           - Metric: bytes
-            EQ: 100
+            GT: 10000
+
+- Name: AATest
+  Type: AssertiveActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Message: Test message
+        Actual:
+          aggregate: *Collection
+          pipeline: [{$project: {size: {$bsonSize: "$$ROOT"}}}, {$group: {_id: null, totalSize: {$sum: "$size"}}}, {$project: {passed: {$gt: ["$totalSize", 15000]}}}]
+          cursor: {}
+        Expected:
+          aggregate: 1
+          pipeline: [{$documents: [{passed: true}]}]
+          cursor: {}
