@@ -716,3 +716,216 @@ Tests:
             Pipeline: {$group: {_id: "$a", sum: {$sum: "$b"}}}
     Error: |
       .*'Pipeline' must be an array.*
+
+  - Description: Find command that fulfills EQ post-condition executes as expected.
+    Operations:
+      - OperationName: insertMany
+        OperationCommand:
+          Documents:
+            - { a: 1 }
+            - { a: 1 }
+            - { b: 1 }
+      - OperationName: find
+        OperationCommand:
+          Filter: { a : 1 }
+        PostCondition:
+          - Metric: documents
+            EQ: 2
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 2
+      - Filter: {b: 1}
+        Count: 1
+
+  - Description: Unfulfilled EQ post-condition results in error.
+    Operations:
+      - OperationName: insertMany
+        OperationCommand:
+          Documents:
+            - { a: 1 }
+            - { a: 1 }
+            - { b: 1 }
+      - OperationName: find
+        OperationCommand:
+          Filter: { a : 1 }
+        PostCondition:
+          - Metric: documents
+            EQ: 5
+    Error: |
+      .*post-condition not granted.*
+
+  - Description: Find command that fulfills range post-condition executes as expected.
+    Operations:
+      - OperationName: insertMany
+        OperationCommand:
+          Documents:
+            - { a: 1 }
+            - { a: 1 }
+            - { b: 1 }
+      - OperationName: find
+        OperationCommand:
+          Filter: { a : 1 }
+        PostCondition:
+          - Metric: bytes
+            GT: 50
+            LT: 100
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 2
+      - Filter: {b: 1}
+        Count: 1
+
+  - Description: Unfulfilled range post-condition results in error.
+    Operations:
+      - OperationName: insertMany
+        OperationCommand:
+          Documents:
+            - { a: 1 }
+            - { a: 1 }
+            - { b: 1 }
+      - OperationName: find
+        OperationCommand:
+          Filter: { b : 1 }
+        PostCondition:
+          - Metric: bytes
+            GT: 50
+            LT: 100
+    Error: |
+      .*post-condition not granted.*
+
+  - Description: Find command that fulfills multiple post-conditions executes as expected.
+    Operations:
+      - OperationName: insertMany
+        OperationCommand:
+          Documents:
+            - { a: 1 }
+            - { a: 1 }
+            - { b: 1 }
+      - OperationName: find
+        OperationCommand:
+          Filter: { a : 1 }
+        PostCondition:
+          - Metric: documents
+            EQ: 2
+          - Metric: bytes
+            GT: 50
+            LT: 100
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 2
+      - Filter: {b: 1}
+        Count: 1
+
+  - Description: One unfulfilled post-condition out of multiple expected post-conditions results in error.
+    Operations:
+      - OperationName: insertMany
+        OperationCommand:
+          Documents:
+            - { a: 1 }
+            - { a: 1 }
+            - { b: 1 }
+      - OperationName: find
+        OperationCommand:
+          Filter: { a : 1 }
+        PostCondition:
+          - Metric: documents
+            EQ: 2
+          - Metric: bytes
+            GT: 500
+    Error: |
+      .*post-condition not granted.*
+
+  - Description: Multiple insert commands fulfilling their post-conditions all execute as expected.
+    Operations:
+      - OperationName: insertMany
+        OperationCommand:
+          Documents:
+            - { a: 1 }
+            - { a: 1 }
+            - { b: 1 }
+        PostCondition:
+          - Metric: documents
+            EQ: 3
+      - OperationName: insertMany
+        OperationCommand:
+          Documents:
+            - { b: 1 }
+            - { b: 1 }
+            - { c: 1 }
+        PostCondition:
+          - Metric: documents
+            EQ: 3
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 2
+      - Filter: {b: 1}
+        Count: 3
+      - Filter: {c: 1}
+        Count: 1
+
+  - Description: BulkWrite post-condition applies to sum of constituent write operations.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: deleteOne
+              Filter: { a: 1 }
+            - WriteCommand: insertOne
+              Document: { a: 2 }
+        PostCondition:
+          - Metric: documents
+            EQ: 3
+    OutcomeData:
+      - {a: 2}
+
+  - Description: Operations with transactions execute as expected, withTransaction metric values are 0.
+    Operations:
+      - OperationName: withTransaction
+        OperationCommand:
+          OperationsInTransaction:
+            - OperationName: insertOne
+              OperationCommand:
+                Document: {a: 100}
+            - OperationName: findOneAndReplace
+              OperationCommand:
+                Filter: {a: 100}
+                Replacement: {a: 30}
+              PostCondition:
+                - Metric: documents
+                  EQ: 1
+        PostCondition:
+          - Metric: documents
+            EQ: 0
+          - Metric: bytes
+            EQ: 0
+    OutcomeCounts:
+      - Filter: {a: 100}
+        Count: 0
+      - Filter: {a: 30}
+        Count: 1
+    AssertNumTransactionsCommitted: 0
+
+  - Description: Unfulfilled post-condition within transaction results in error.
+    Operations:
+      - OperationName: withTransaction
+        OperationCommand:
+          OperationsInTransaction:
+            - OperationName: insertOne
+              OperationCommand:
+                Document: {a: 100}
+            - OperationName: findOneAndReplace
+              OperationCommand:
+                Filter: {a: 100}
+                Replacement: {a: 30}
+              PostCondition:
+                - Metric: documents
+                  GT: 100
+        PostCondition:
+          - Metric: documents
+            EQ: 0
+          - Metric: bytes
+            EQ: 0
+    Error: |
+      .*post-condition not granted.*
