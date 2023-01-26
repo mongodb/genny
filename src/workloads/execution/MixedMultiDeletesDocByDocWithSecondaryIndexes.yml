@@ -38,5 +38,8 @@ AutoRun:
       - replica
     branch_name:
       $neq:
+      - v4.2
+      - v4.4
+      - v5.0
       # 6.0 Does not have the 'batchUserMultiDeletes' server parameter.
       - v6.0
