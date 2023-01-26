@@ -14,7 +14,8 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 10000
+      maxPoolSize: 2000
+      socketTimeoutMS: 1_200_000  # = 20 minutes
 
 SmallDoc: &SmallDoc
   a: {^FastRandomString: {length: 123}}
