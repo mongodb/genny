@@ -88,9 +88,9 @@ struct PostCondition {
                 throw std::logic_error("impossible");
             }();
 
-            if (!req.predicate.evaluateFn(observedValue, req.requiredValue)) {
+            if (!req.relation.evaluateFn(observedValue, req.requiredValue)) {
                 BOOST_LOG_TRIVIAL(error)
-                    << "Expected metric " << req.predicate.symbol << " " << req.requiredValue
+                    << "Expected metric " << req.relation.symbol << " " << req.requiredValue
                     << " but actual value was " << observedValue << ".";
                 BOOST_THROW_EXCEPTION(
                     PostConditionException("Operation post-condition not granted."));
@@ -119,7 +119,7 @@ private:
         const Relation& relation;
         long long requiredValue;
 
-        Requirement(MetricRequirement metric, const Predicate& predicate, long long requiredValue)
+        Requirement(MetricRequirement metric, const Relation& relation, long long requiredValue)
             : metric(metric), relation(relation), requiredValue(requiredValue) {}
     };
 
@@ -147,7 +147,7 @@ private:
         MetricRequirement metric;
         if (!metricName) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                "'PostCondition' expects a 'Metric' field of string type."))
+                "'PostCondition' expects a 'Metric' field of string type."));
         } else if (metricName == documentMetric) {
             metric = MetricRequirement::kNumDocuments;
         } else if (metricName == bytesMetric) {
