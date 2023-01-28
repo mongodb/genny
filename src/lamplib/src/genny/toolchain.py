@@ -227,6 +227,15 @@ class ToolchainDownloader(Downloader):
             )
         )
 
+    def _fetch_and_install_impl(self) -> None:
+        super()._fetch_and_install_impl()
+        # Symlink to handle that vcpkg's OpenSSL is hardcoded to '/etc/ssl',
+        # which doesn't work an Amazon Linux 2.
+        # OpenSSL needs to find the root certificate bundle for it to
+        # recognize our Let's Encrypt certificate for dsitest.org
+        if self._os_family == "Linux" and not os.path.exists("/etc/ssl/cert.pem"):
+            os.symlink("/etc/pki/tls/cert.pem", "/etc/ssl/cert.pem")
+
     def _can_ignore(self):
         # If the toolchain dir is outdated, or we ignore the toolchain version.
         return os.path.exists(self.result_dir) and (
