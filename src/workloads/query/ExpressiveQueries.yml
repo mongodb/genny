@@ -168,7 +168,8 @@ Actors:
       OperationName: find
       OperationCommand:
         Filter: *filter
-        Projection: &projection {_id: 0, firstname: 1, lastname: 1, dob: 1}
+        Options:
+          Projection: &projection {_id: 0, firstname: 1, lastname: 1, dob: 1}
   - *Nop
   - *Nop
   - Repeat: 1000  # This query is very fast, so we need to run it more times than others.
@@ -180,7 +181,8 @@ Actors:
       OperationName: find
       OperationCommand:
         Filter: *filter
-        Projection: *projection
+        Options:
+          Projection: *projection
 
 AutoRun:
 - When:
