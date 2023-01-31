@@ -47,7 +47,7 @@ Actors:
 - Name: LongLivedWriter
   Type: MultiCollectionUpdate
   Threads: 100
-  GlobalRate: 100 in 1 second
+  GlobalRate: 100 per 1 second
   Phases:
   - {Nop: true}
   - Duration: 3 minutes
