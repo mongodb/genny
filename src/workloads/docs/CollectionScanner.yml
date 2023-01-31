@@ -13,7 +13,7 @@ Actors:
     Database: cold
     CollectionCount: 6
     Threads: 1
-    DocumentCount: 2e5
+    DocumentCount: 200000
     BatchSize: 100000
     Document:
       a: {^RandomString: { length: 100 }}
@@ -21,7 +21,7 @@ Actors:
     Database: hot
     CollectionCount: 6
     Threads: 1
-    DocumentCount: 2e5
+    DocumentCount: 200000
     BatchSize: 100000
     Document:
       a: {^RandomString: { length: 100 }}
