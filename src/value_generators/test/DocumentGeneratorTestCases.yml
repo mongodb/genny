@@ -1395,3 +1395,11 @@ Tests:
         - foo : v2
         - foo : v3
         - foo : v3
+
+  - Name: StringCastTest
+    GivenTemplate:
+        foo:
+          - !!str "1.0"
+    ThenReturns:
+        - foo:
+          - "1.0"
