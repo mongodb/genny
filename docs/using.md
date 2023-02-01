@@ -575,11 +575,11 @@ A few notes on the syntax:
 -   `When` blocks can evaluate multiple conditions. All conditions must be true to schedule the task.
 -   `When` supports `$eq`, `$neq`, `$gte`, `$gt`, `$lte` and `$lt`.
 -   `$eq` and `$neq` can accept either a scalar or list of values.
--   `$gte`, `$gt`, `$lte` and `$lt` accept only scalar values.
+-   `$gte`, `$gt`, `$lte` and `$lt` can accept only scalar values.
 -   For a list of values, `$eq` evaluates to true if it is equal to at least one.
 -   For a list of values, `$neq` evaluates to true if it is equal to none of the values.
 -   `$gte`, `$gt`, `$lte` and `$lt` use either regular comparison or version comparison.
--   Version comparison is used when both arguments are version strings. Version strings are formatted
+-   Version comparison is used when both arguments are version strings. Version strings have format
     `vA.B` where `A` and `B` are integer numbers. To compare to version string, first `A` values are
     compared and only if they are equal, `B` values are compared.
 -   Special strings `master` and `main` are also considered version strings which are greater
