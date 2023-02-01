@@ -122,13 +122,16 @@ def summarize_diffed_data(args, actor_name, metrics_of_interest):
         sorted_res = sorted(diffed_readings)
         if is_measured_in_nanoseconds(metric_name):
             metric_name += " (measured in nanoseconds, displayed in milliseconds)"
+
+
         results[metric_name] = {
             "count": len(diffed_readings),
             "average": round(statistics.mean(diffed_readings), 1),
             "median": round(statistics.median_grouped(diffed_readings), 1),
-            "mode": round(statistics.mode(diffed_readings), 1),
+            "multimode": [round(x, 1) for x in statistics.multimode(diffed_readings)],
             "stddev": round(statistics.stdev(diffed_readings), 1) if len(diffed_readings) > 1 else None,
             "[min, max]": [round(sorted_res[0], 1), round(sorted_res[-1], 1)],
+            "percentiles": [(p+1, round(x,2)) for p, x in enumerate(statistics.quantiles(diffed_readings, n=20))],
             "sorted_raw_data": sorted_res
         }
         if args.verbose:
@@ -244,26 +247,40 @@ def print_histogram_bucket(prefix, global_max, bucket_min, bucket_max, end_brack
     # [10      ,12      ): **
     # ....
     max_digits = math.ceil(math.log(global_max, 10))
-    bound_fmt = "%" + str(max_digits) + "d"
-    fmt_string = "%s[" + bound_fmt + "," + bound_fmt + "%s: %s\t(%d)"
+    bound_fmt = "%" + str(max_digits) + ".3e"
+    fmt_string = "%s[" + bound_fmt + "," + bound_fmt + "%s: (%10d) %s"
     print(fmt_string %
           (
               prefix,
-              round(bucket_min),
-              round(bucket_max),
+              bucket_min,
+              bucket_max,
               end_bracket,
+              n_items,
               stars,
-              n_items
           ))
 
 
-def print_histogram(data_points, n_buckets, prefix=""):
+def print_histogram(data_points, n_buckets, prefix="", exponential=False):
     n_buckets = min(len(data_points), n_buckets)
     # 'processed' must be sorted.
     min_v, max_v = data_points[0], data_points[-1]
     step = (max_v - min_v) / n_buckets
-    split_points = [min_v + step *
-                    i for i in range(n_buckets)] + [data_points[-1]]
+
+    split_points = []
+    if exponential:
+        # [1ns,... 1usec, 1msec... -> 1s),
+        split_points = []
+        mag = 1
+        n_decades = 3
+        n_decade_steps = 30
+        for _ in range(n_decades):
+            decade_steps = [math.pow(10, 1.0 * x / n_decade_steps) for x in range(n_decade_steps)]
+            for x in decade_steps:
+                split_points.append(mag * x)
+            mag *= 10
+    else:
+        split_points = [min_v + step *
+                        i for i in range(n_buckets)] + [data_points[-1]]
 
     data_idx = 0
     # One more split point than we have buckets. e.g. 11 splits means 10 buckets.
@@ -281,8 +298,9 @@ def print_histogram(data_points, n_buckets, prefix=""):
             n_items += (len(data_points) - data_idx)
 
         # Some workloads record thousands or more readings - don't want to print that many stars.
-        max_stars = 60
-        stars = "*"*max_stars + "..." if (n_items > max_stars) else "*"*n_items
+        max_stars = 150
+        lgn = 0 if n_items == 0 else max_stars / 6.0 * math.log10(n_items)
+        stars = "*"*max_stars + "..." if (lgn > max_stars) else "*"*int(lgn)
 
         print_histogram_bucket(
             prefix,
@@ -305,7 +323,9 @@ def pretty_print_summary(args, summary, prefix=""):
     if not args.hideHistograms and "sorted_raw_data" in summary:
         print("%shistogram:" % prefix)
         print_histogram(summary["sorted_raw_data"],
-                        args.nHistogramBuckets, prefix + "\t")
+                        args.nHistogramBuckets,
+                        prefix + "\t",
+                        True)
 
 
 def extract_actor_name(actor_file):
