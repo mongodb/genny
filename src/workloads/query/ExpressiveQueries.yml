@@ -25,7 +25,7 @@ Actors:
     Database: &DB test
     MultipleThreadsPerCollection: true
     CollectionCount: 1  # Collection name will be Collection0, this is not configurable.
-    DocumentCount: 1000000
+    DocumentCount: 1e6
     BatchSize: 1000
     Document:
       region: {^RandomInt: {min: 0, max: 1999}}
