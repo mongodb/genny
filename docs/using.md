@@ -541,8 +541,8 @@ AutoRun:
       - replica-noflowcontrol
     branch_name:
       $neq:
-      - v4.0
-      - v4.2
+      - v6.1
+      $gte: v5.0
   ThenRun:
   - infrastructure_provisioning: foo
   - infrastructure_provisioning: bar
@@ -550,8 +550,9 @@ AutoRun:
 ```
 
 In this case, it looks in the `bootstrap.yml` of `test_workload`, checks if `mongodb_setup`
-is either `replica` or `replica-noflowcontrol`, and also if `branch_name` is neither `v4.0` nor `v4.2`.
-If both conditions are true, then we schedule several tasks. Let's say the workload name is
+is either `replica` or `replica-noflowcontrol`, and also if `branch_name` is not `v6.1` and also is
+greater or equal to `v5.0`.
+If all conditions are true, then we schedule several tasks. Let's say the workload name is
 `DemoWorkload`, 3 tasks are scheduled - `demo_workload_foo`, `demo_workload_bar`, and `demo_workload_baz`.
 The first task is passed in the bootstrap value `infrastructure_provisioning: foo`, the second
 is passed in `infrastructure_provisioning: bar` and the third `arbitrary_key: baz`.
@@ -572,9 +573,17 @@ A few notes on the syntax:
 
 -   Supports multiple `When`/`ThenRun` blocks per `AutoRun`. Each are evaluated independently.
 -   `When` blocks can evaluate multiple conditions. All conditions must be true to schedule the task.
--   `When` supports `$eq` and `$neq`. Both can accept either a scalar or list of values.
+-   `When` supports `$eq`, `$neq`, `$gte`, `$gt`, `$lte` and `$lt`.
+-   `$eq` and `$neq` can accept either a scalar or list of values.
+-   `$gte`, `$gt`, `$lte` and `$lt` can accept only scalar values.
 -   For a list of values, `$eq` evaluates to true if it is equal to at least one.
 -   For a list of values, `$neq` evaluates to true if it is equal to none of the values.
+-   `$gte`, `$gt`, `$lte` and `$lt` use either regular comparison or version comparison.
+-   Version comparison is used when both arguments are version strings. Version strings have format
+    `vA.B` where `A` and `B` are integers. When comparing two version strings, first `A` values are
+    compared and only if they are equal, `B` values are compared.
+-   Special strings `master` and `main` are also considered version strings which are greater
+    than all other version strings.
 -   `ThenRun` blocks are optional.
     -   ****Most usecases do not need to use ThenRun****
     -   If you do use `ThenRun`, please be judicious. If you have a task that is scheduled when
