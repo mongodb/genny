@@ -21,8 +21,8 @@ Actors:
     Database: hot
     CollectionCount: 6
     Threads: 1
-    DocumentCount: 200000
-    BatchSize: 100000
+    DocumentCount: 2e5
+    BatchSize: 1e5
     Document:
       a: {^RandomString: { length: 100 }}
     FindOptions:
