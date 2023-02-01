@@ -580,10 +580,10 @@ A few notes on the syntax:
 -   For a list of values, `$neq` evaluates to true if it is equal to none of the values.
 -   `$gte`, `$gt`, `$lte` and `$lt` use either regular comparison or version comparison.
 -   Version comparison is used when both arguments are version strings. Version strings have format
-    `vA.B` where `A` and `B` are integer numbers. To compare to version string, first `A` values are
+    `vA.B` where `A` and `B` are integers. When comparing two version strings, first `A` values are
     compared and only if they are equal, `B` values are compared.
 -   Special strings `master` and `main` are also considered version strings which are greater
-    than numbered version strings.
+    than all other version strings.
 -   `ThenRun` blocks are optional.
     -   ****Most usecases do not need to use ThenRun****
     -   If you do use `ThenRun`, please be judicious. If you have a task that is scheduled when
