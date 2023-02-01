@@ -1607,7 +1607,7 @@ Out valueGenerator(const Node& node,
         return std::make_unique<ConstantAppender<bsoncxx::types::b_null>>();
     }
     if (node.isScalar()) {
-        if (node.tag() != "!") {
+        if (node.tag() != "tag:yaml.org,2002:str") {
             try {
                 return std::make_unique<ConstantAppender<int32_t>>(node.to<int32_t>());
             } catch (const InvalidConversionException& e) {
