@@ -247,17 +247,7 @@ def print_histogram_bucket(prefix, global_max, bucket_min, bucket_max, end_brack
     # [10      ,12      ): **
     # ....
     max_digits = math.ceil(math.log(global_max, 10))
-    bound_fmt = "%" + str(max_digits) + ".3e"
-    fmt_string = "%s[" + bound_fmt + "," + bound_fmt + "%s: (%10d) %s"
-    print(fmt_string %
-          (
-              prefix,
-              bucket_min,
-              bucket_max,
-              end_bracket,
-              n_items,
-              stars,
-          ))
+    print(f"{prefix}[{bucket_min:{max_digits}.3e}, {bucket_max:{max_digits}.3e} {end_bracket}: ({n_items:9}) {stars}")
 
 
 def print_histogram(data_points, n_buckets, prefix="", exponential=False):
@@ -268,7 +258,7 @@ def print_histogram(data_points, n_buckets, prefix="", exponential=False):
 
     split_points = []
     if exponential:
-        # [1ns,... 1usec, 1msec... -> 1s),
+        # [1ns..., 10ns..., 100ns..., 1usec, 1msec... -> 1s),
         split_points = []
         mag = 1
         n_decades = 3
@@ -299,7 +289,7 @@ def print_histogram(data_points, n_buckets, prefix="", exponential=False):
 
         # Some workloads record thousands or more readings - don't want to print that many stars.
         max_stars = 150
-        lgn = 0 if n_items == 0 else max_stars / 6.0 * math.log10(n_items)
+        lgn = (-1 if n_items == 0 else max_stars / 6.0 * math.log10(n_items)) + 1
         stars = "*"*max_stars + "..." if (lgn > max_stars) else "*"*int(lgn)
 
         print_histogram_bucket(
