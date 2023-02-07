@@ -186,8 +186,7 @@ class ToolchainDownloader(Downloader):
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
 
-    # TODO: Replace this with a non-patch build
-    TOOLCHAIN_BUILD_ID = "b563d3ba01a8b1a4fa4249e9eb0ad5c9bc11816b_22_12_12_21_24_44"
+    TOOLCHAIN_BUILD_ID = "ae2e01a2da9996a364cf01ecafd90c1f4d893829_23_02_06_21_45_41"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
     TOOLCHAIN_ROOT = "/data/mci"
 
