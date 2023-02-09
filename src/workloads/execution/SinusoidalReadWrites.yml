@@ -1,0 +1,126 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: |
+  This workload attempts to create a sinusoidal distribution of reads/writes to test
+  the behavior of execution control when the load on the system changes over time.
+
+  We do this with two actors, one for writes and one for reads. Though the actors
+  run concurrently, we use the sleep functionality to effectively stop work on one
+  actor while the other reaches its peak. When then alternate for a couple repetitions.
+
+  In this workload, we try to ensure that reads and writes do not overlap much.
+Keywords:
+- sinusoidal
+- execution control
+- insertMany
+- find
+- CrudActor
+
+dbname: &dbname mixed_sinusoidal
+DocumentCount: &NumDocs 5000
+CollectionCount: &NumColls 1
+
+NumPhases: &NumPhases 2
+Document: &doc
+  a: {^RandomInt: {min: 0, max: *NumDocs}}
+  b: {^RandomString: {length: 16}}
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 5100
+
+ActorTemplates:
+- TemplateName: WritesActorWithSleepTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: WritesActorWithSleep}}
+    Type: CrudActor
+    Database: *dbname
+    Threads: {^Parameter: {Name: "Threads", Default: 1000}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Duration: 3 minutes
+          SleepAfter: 1.5 minutes
+          Repeat: 3
+          CollectionCount: *NumColls
+          Operations:
+          - OperationName: insertOne
+            OperationMetricsName: WriteDocs
+            OperationCommand:
+              Document: *doc
+            ThrowOnFailure: false
+- TemplateName: ReadsActorWithSleepTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: ReadsActorWithSleep}}
+    Type: CrudActor
+    Database: *dbname
+    Threads: {^Parameter: {Name: "Threads", Default: 1000}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          SleepBefore: 1.5 minutes
+          Duration: 3 minutes
+          Repeat: 3
+          CollectionCount: *NumColls
+          Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
+            OperationMetricsName: ReadDocs
+            ThrowOnFailure: false
+Actors:
+- Name: Setup
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        # Have 5k documents ready at start
+        Repeat: 1
+        BatchSize: 100
+        Threads: 1
+        DocumentCount: *NumDocs
+        Database: *dbname
+        CollectionCount: *NumColls
+        Document: *doc
+        Indexes:
+        - keys: {a: 1}
+
+- ActorFromTemplate:
+    TemplateName: WritesActorWithSleepTemplate
+    TemplateParameters:
+      Name: {^Parameter: {Name: "WritingName", Default: WritingActor_50_50}}
+      Threads: {^Parameter: {Name: "WritingThreads", Default: 2500}}
+      ActivePhases: [1]
+
+- ActorFromTemplate:
+    TemplateName: ReadsActorWithSleepTemplate
+    TemplateParameters:
+      Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
+      Threads: {^Parameter: {Name: "ReadingThreads", Default: 2500}}
+      ActivePhases: [1]
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.2
+      - v4.4
+      - v5.0
+      - v5.1
+      - v5.2
+      - v5.3
+      - v6.0
+      - v6.1
+      - v6.2
+      - v6.3
