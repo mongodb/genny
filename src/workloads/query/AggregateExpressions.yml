@@ -42,7 +42,7 @@ Actors:
 
 - Name: InsertData
   Type: Loader
-  Threads: 1
+  Threads: 4
   Phases:
     OnlyActiveInPhases:
       Active: [1]
@@ -50,7 +50,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
         Database: *Database
-        Threads: 1
+        MultipleThreadsPerCollection: true
         CollectionCount: 1
         DocumentCount: *DocumentCount
         BatchSize: 1000
