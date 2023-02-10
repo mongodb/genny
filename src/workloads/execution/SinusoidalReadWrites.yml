@@ -42,7 +42,7 @@ ActorTemplates:
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
           Duration: 3 minutes
-          SleepAfter: 1.5 minutes
+          SleepAfter: 90 seconds
           Repeat: 3
           CollectionCount: *NumColls
           Operations:
@@ -62,7 +62,7 @@ ActorTemplates:
         Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
-          SleepBefore: 1.5 minutes
+          SleepBefore: 90 seconds
           Duration: 3 minutes
           Repeat: 3
           CollectionCount: *NumColls
@@ -120,7 +120,3 @@ AutoRun:
       - v5.1
       - v5.2
       - v5.3
-      - v6.0
-      - v6.1
-      - v6.2
-      - v6.3
