@@ -39,11 +39,10 @@ def _create_compile_environment(
 
     else:
         # For cmake and ctest
-        cmake_bin_relative_dir = {
-            "linux": "downloads/tools/cmake-3.24.0-linux/cmake-3.24.0-linux-x86_64/bin",
-            "osx": "downloads/tools/cmake-3.24.0-osx/cmake-3.24.0-macos-universal/CMake.app/Contents/bin",
-        }[triplet_os]
-        paths.insert(0, os.path.join(toolchain_dir, cmake_bin_relative_dir))
+        if triplet_os == "linux":
+            # Only use bundled cmake on Linux because bundled cmake doesn't work on OS X due to integrity checks.
+            # It's easier just to ask users to "brew install cmake"
+            paths.insert(0, os.path.join(toolchain_dir, "downloads/tools/cmake-3.24.0-linux/cmake-3.24.0-linux-x86_64/bin"))
 
         # For ninja
         ninja_bin_dir = os.path.join(
@@ -188,7 +187,6 @@ class ToolchainDownloader(Downloader):
 
     TOOLCHAIN_BUILD_ID = "ae2e01a2da9996a364cf01ecafd90c1f4d893829_23_02_06_21_45_41"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
-    TOOLCHAIN_ROOT = "/data/mci"
 
     def __init__(
         self,
@@ -199,12 +197,15 @@ class ToolchainDownloader(Downloader):
         triplet_arch: str,
         ignore_toolchain_version: bool,
     ):
+        # Install the toolchain in /opt on OS X so we don't have to ask users
+        # to do crazy things to get "/data" to work
+        toolchain_root = "/opt/data/mci" if os_family == "Darwin" else "/data/mci"
         super().__init__(
             genny_repo_root=genny_repo_root,
             workspace_root=workspace_root,
             os_family=os_family,
             linux_distro=linux_distro,
-            install_dir=ToolchainDownloader.TOOLCHAIN_ROOT,
+            install_dir=toolchain_root,
             name="gennytoolchain",
         )
         self.ignore_toolchain_version = ignore_toolchain_version

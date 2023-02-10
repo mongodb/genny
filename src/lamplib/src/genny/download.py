@@ -100,19 +100,6 @@ class Downloader:
             )
             okay = False
 
-        if not okay and platform.mac_ver()[0]:
-            release_triplet = platform.mac_ver()[0].split(".")
-            minor_ver = int(release_triplet[1])
-            if 12 <= minor_ver < 15:
-                SLOG.info(
-                    "On versions of MacOS between 10.12 and 10.14, "
-                    "you have to disable System Integrity Protection first. "
-                    "See https://apple.stackexchange.com/a/208481 for instructions",
-                    macos_minor_version=minor_ver,
-                )
-            if minor_ver >= 15:
-                SLOG.info(_macos_install_instructions(self._name))
-
         return okay
 
     def _fetch_and_install_impl(self) -> None:
@@ -148,77 +135,3 @@ class Downloader:
 
     def _can_ignore(self):
         raise NotImplementedError
-
-
-# Instructions derived from https://github.com/NixOS/nix/issues/2925#issuecomment-539570232
-def _macos_install_instructions(name):
-    return rf"""
-
-😲 You must create the parent directory {name} for the genny toolchain.
-   You are on On MacOS Catalina or later, so use use the synthetic.conf method.
-
-We wish we didn't have to do this.
-
-1️⃣  Step 1 1️⃣
-Run the followng command
-
-    echo 'data' | sudo tee -a /etc/synthetic.conf
-
-
-2️⃣  Step 2 2️⃣
-
-    🚨🚨 Restart your system before continuing. 🚨🚨
-                Really. Don't skip this.
-
-Once restarted, run the lamp command again to show this message again.
-
-
-3️⃣  Step 3 3️⃣
-Determine which of your local disks is the "synthesized" APFS volume.
-Run `diskutil list` and look for the line with "(synthesized)".
-
-For example:
-
-    $ diskutil list
-    /dev/disk0 (internal, physical):
-       #:                       TYPE NAME                    SIZE       IDENTIFIER
-       0:      GUID_partition_scheme                        *1.0 TB     disk0
-       1:                        EFI EFI                     314.6 MB   disk0s1
-       2:                 Apple_APFS Container disk1         1.0 TB     disk0s2
-
-    /dev/disk1 (synthesized): 💥💥💥
-       #:                       TYPE NAME                    SIZE       IDENTIFIER
-       0:      APFS Container Scheme -                      +1.0 TB     disk1
-                                     Physical Store disk0s2
-       1:                APFS Volume Macintosh HD            11.0 GB    disk1s1
-       2:                APFS Volume Macintosh HD - Data     519.6 GB   disk1s2
-       3:                APFS Volume Preboot                 82.3 MB    disk1s3
-       4:                APFS Volume Recovery                528.5 MB   disk1s4
-       5:                APFS Volume VM                      5.4 GB     disk1s5
-
-    /dev/disk2 (disk image):
-       #:                       TYPE NAME                    SIZE       IDENTIFIER
-       0:      GUID_partition_scheme                        +1.9 TB     disk2
-       1:                        EFI EFI                     209.7 MB   disk2s1
-       2:                  Apple_HFS Time Machine Backups    1.9 TB     disk2s2
-
-In this example, the synthesized disk is disk1. Use that in Step 4.
-
-4️⃣  Step 4 4️⃣
-Then run the following commands:
-
-    Did you *actually* restart your computer after running Step 1?
-        This won't work if you didn't.
-    Replace disk1 with the synthesized disk from Step 3 if necessary.
-
-    $ sudo diskutil apfs addVolume disk1 APFSX Data -mountpoint /data 
-    $ sudo diskutil enableOwnership /data 
-    $ sudo chflags hidden /data 
-    $ echo \LABEL=Data /data apfs rw\ | sudo tee -a /etc/fstab 
-    $ mkdir /data/mci
-
-👯‍♂️🧞‍♀️ Back to real life 🧞‍♂️👯
-Re-run the lamp command to download and setup the genny toolchain and build genny.
-
-
-☝️ There are some steps you have to before you can build and run genny. Scroll up. ☝️"""
