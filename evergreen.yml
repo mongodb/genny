@@ -279,6 +279,8 @@ functions:
   ##
   f_compile:
   - command: subprocess.exec
+    env:
+      GENNY_TOOLCHAIN_DIR: /data/mci
     params:
       binary: ./src/genny/run-genny
       args:

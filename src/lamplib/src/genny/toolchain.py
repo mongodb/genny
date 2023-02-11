@@ -197,9 +197,13 @@ class ToolchainDownloader(Downloader):
         triplet_arch: str,
         ignore_toolchain_version: bool,
     ):
-        # Install the toolchain in /opt on OS X so we don't have to ask users
-        # to do crazy things to get "/data" to work
-        toolchain_root = "/opt/data/mci" if os_family == "Darwin" else "/data/mci"
+        if "GENNY_TOOLCHAIN_ROOT" in os.environ:
+            toolchain_root = os.environ["GENNY_TOOLCHAIN_ROOT"]
+        else:
+            # Install the toolchain in /opt on OS X so we don't have to ask users
+            # to do crazy things to get "/data" to work
+            toolchain_root = "/opt/data/mci" if os_family == "Darwin" else "/data/mci"
+
         super().__init__(
             genny_repo_root=genny_repo_root,
             workspace_root=workspace_root,
