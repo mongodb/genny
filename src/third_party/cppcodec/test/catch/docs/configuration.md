@@ -3,15 +3,20 @@
 
 **Contents**<br>
 [main()/ implementation](#main-implementation)<br>
+[Reporter / Listener interfaces](#reporter--listener-interfaces)<br>
 [Prefixing Catch macros](#prefixing-catch-macros)<br>
 [Terminal colour](#terminal-colour)<br>
 [Console width](#console-width)<br>
 [stdout](#stdout)<br>
 [Fallback stringifier](#fallback-stringifier)<br>
 [Default reporter](#default-reporter)<br>
+[C++11 toggles](#c11-toggles)<br>
+[C++17 toggles](#c17-toggles)<br>
 [Other toggles](#other-toggles)<br>
 [Windows header clutter](#windows-header-clutter)<br>
 [Enabling stringification](#enabling-stringification)<br>
+[Disabling exceptions](#disabling-exceptions)<br>
+[Overriding Catch's debug break (`-b`)](#overriding-catchs-debug-break--b)<br>
 
 Catch is designed to "just work" as much as possible. For most people the only configuration needed is telling Catch which source file should host all the implementation code (```CATCH_CONFIG_MAIN```).
 
@@ -19,12 +24,12 @@ Nonetheless there are still some occasions where finer control is needed. For th
 
 ## main()/ implementation
 
-	CATCH_CONFIG_MAIN	// Designates this as implementation file and defines main()
-	CATCH_CONFIG_RUNNER	// Designates this as implementation file
+    CATCH_CONFIG_MAIN      // Designates this as implementation file and defines main()
+    CATCH_CONFIG_RUNNER    // Designates this as implementation file
 
 Although Catch is header only it still, internally, maintains a distinction between interface headers and headers that contain implementation. Only one source file in your test project should compile the implementation headers and this is controlled through the use of one of these macros - one of these identifiers should be defined before including Catch in *exactly one implementation file in your project*.
 
-# Reporter / Listener interfaces
+## Reporter / Listener interfaces
 
     CATCH_CONFIG_EXTERNAL_INTERFACES  // Brings in necessary headers for Reporter/Listener implementation
 
@@ -34,16 +39,16 @@ Implied by both `CATCH_CONFIG_MAIN` and `CATCH_CONFIG_RUNNER`.
 
 ## Prefixing Catch macros
 
-	CATCH_CONFIG_PREFIX_ALL
+    CATCH_CONFIG_PREFIX_ALL
 
 To keep test code clean and uncluttered Catch uses short macro names (e.g. ```TEST_CASE``` and ```REQUIRE```). Occasionally these may conflict with identifiers from platform headers or the system under test. In this case the above identifier can be defined. This will cause all the Catch user macros to be prefixed with ```CATCH_``` (e.g. ```CATCH_TEST_CASE``` and ```CATCH_REQUIRE```).
 
 
 ## Terminal colour
 
-	CATCH_CONFIG_COLOUR_NONE	// completely disables all text colouring
-	CATCH_CONFIG_COLOUR_WINDOWS	// forces the Win32 console API to be used
-	CATCH_CONFIG_COLOUR_ANSI	// forces ANSI colour codes to be used
+    CATCH_CONFIG_COLOUR_NONE      // completely disables all text colouring
+    CATCH_CONFIG_COLOUR_WINDOWS   // forces the Win32 console API to be used
+    CATCH_CONFIG_COLOUR_ANSI      // forces ANSI colour codes to be used
 
 Yes, I am English, so I will continue to spell "colour" with a 'u'.
 
@@ -57,14 +62,14 @@ Typically you should place the ```#define``` before #including "catch.hpp" in yo
 
 ## Console width
 
-	CATCH_CONFIG_CONSOLE_WIDTH = x // where x is a number
+    CATCH_CONFIG_CONSOLE_WIDTH = x // where x is a number
 
 Catch formats output intended for the console to fit within a fixed number of characters. This is especially important as indentation is used extensively and uncontrolled line wraps break this.
 By default a console width of 80 is assumed but this can be controlled by defining the above identifier to be a different value.
 
 ## stdout
 
-	CATCH_CONFIG_NOSTDOUT
+    CATCH_CONFIG_NOSTDOUT
 
 To support platforms that do not provide `std::cout`, `std::cerr` and
 `std::clog`, Catch does not usem the directly, but rather calls
@@ -85,7 +90,7 @@ them yourself, their signatures are:
 By default, when Catch's stringification machinery has to stringify
 a type that does not specialize `StringMaker`, does not overload `operator<<`,
 is not an enumeration and is not a range, it uses `"{?}"`. This can be
-overriden by defining `CATCH_CONFIG_FALLBACK_STRINGIFIER` to name of a
+overridden by defining `CATCH_CONFIG_FALLBACK_STRINGIFIER` to name of a
 function that should perform the stringification instead.
 
 All types that do not provide `StringMaker` specialization or `operator<<`
@@ -123,6 +128,12 @@ Catch's selection, by defining either `CATCH_CONFIG_CPP11_TO_STRING` or
 ## C++17 toggles
 
     CATCH_CONFIG_CPP17_UNCAUGHT_EXCEPTIONS  // Use std::uncaught_exceptions instead of std::uncaught_exception
+    CATCH_CONFIG_CPP17_STRING_VIEW          // Override std::string_view support detection(Catch provides a StringMaker specialization by default)
+    CATCH_CONFIG_CPP17_VARIANT              // Override std::variant support detection (checked by CATCH_CONFIG_ENABLE_VARIANT_STRINGMAKER)
+    CATCH_CONFIG_CPP17_OPTIONAL             // Override std::optional support detection (checked by CATCH_CONFIG_ENABLE_OPTIONAL_STRINGMAKER)
+    CATCH_CONFIG_CPP17_BYTE                 // Override std::byte support detection (Catch provides a StringMaker specialization by default)
+
+> `CATCH_CONFIG_CPP17_STRING_VIEW` was [introduced](https://github.com/catchorg/Catch2/issues/1376) in Catch 2.4.1.
 
 Catch contains basic compiler/standard detection and attempts to use
 some C++17 features whenever appropriate. This automatic detection
@@ -143,6 +154,12 @@ by using `_NO_` in the macro, e.g. `CATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS`.
     CATCH_CONFIG_DISABLE                    // Disables assertions and test case registration
     CATCH_CONFIG_WCHAR                      // Enables use of wchart_t
     CATCH_CONFIG_EXPERIMENTAL_REDIRECT      // Enables the new (experimental) way of capturing stdout/stderr
+    CATCH_CONFIG_ENABLE_BENCHMARKING        // Enables the integrated benchmarking features (has a significant effect on compilation speed)
+    CATCH_CONFIG_USE_ASYNC                  // Force parallel statistical processing of samples during benchmarking
+    CATCH_CONFIG_ANDROID_LOGWRITE           // Use android's logging system for debug output
+    CATCH_CONFIG_GLOBAL_NEXTAFTER           // Use nextafter{,f,l} instead of std::nextafter
+
+> [`CATCH_CONFIG_ANDROID_LOGWRITE`](https://github.com/catchorg/Catch2/issues/1743) and [`CATCH_CONFIG_GLOBAL_NEXTAFTER`](https://github.com/catchorg/Catch2/pull/1739) were introduced in Catch 2.10.0
 
 Currently Catch enables `CATCH_CONFIG_WINDOWS_SEH` only when compiled with MSVC, because some versions of MinGW do not have the necessary Win32 API support.
 
@@ -194,10 +211,63 @@ On Windows Catch includes `windows.h`. To minimize global namespace clutter in t
 
 By default, Catch does not stringify some types from the standard library. This is done to avoid dragging in various standard library headers by default. However, Catch does contain these and can be configured to provide them, using these macros:
 
-    CATCH_CONFIG_ENABLE_PAIR_STRINGMAKER    // Provide StringMaker specialization for std::pair
-    CATCH_CONFIG_ENABLE_TUPLE_STRINGMAKER   // Provide StringMaker specialization for std::tuple
-    CATCH_CONFIG_ENABLE_CHRONO_STRINGMAKER  // Provide StringMaker specialization for std::chrono::duration, std::chrono::timepoint
-    CATCH_CONFIG_ENABLE_ALL_STRINGMAKERS    // Defines all of the above
+    CATCH_CONFIG_ENABLE_PAIR_STRINGMAKER     // Provide StringMaker specialization for std::pair
+    CATCH_CONFIG_ENABLE_TUPLE_STRINGMAKER    // Provide StringMaker specialization for std::tuple
+    CATCH_CONFIG_ENABLE_CHRONO_STRINGMAKER   // Provide StringMaker specialization for std::chrono::duration, std::chrono::timepoint
+    CATCH_CONFIG_ENABLE_VARIANT_STRINGMAKER  // Provide StringMaker specialization for std::variant, std::monostate (on C++17)
+    CATCH_CONFIG_ENABLE_OPTIONAL_STRINGMAKER // Provide StringMaker specialization for std::optional (on C++17)
+    CATCH_CONFIG_ENABLE_ALL_STRINGMAKERS     // Defines all of the above
+
+> `CATCH_CONFIG_ENABLE_VARIANT_STRINGMAKER` was [introduced](https://github.com/catchorg/Catch2/issues/1380) in Catch 2.4.1.
+
+> `CATCH_CONFIG_ENABLE_OPTIONAL_STRINGMAKER` was [introduced](https://github.com/catchorg/Catch2/issues/1510) in Catch 2.6.0.
+
+## Disabling exceptions
+
+> Introduced in Catch 2.4.0.
+
+By default, Catch2 uses exceptions to signal errors and to abort tests
+when an assertion from the `REQUIRE` family of assertions fails. We also
+provide an experimental support for disabling exceptions. Catch2 should
+automatically detect when it is compiled with exceptions disabled, but
+it can be forced to compile without exceptions by defining
+
+    CATCH_CONFIG_DISABLE_EXCEPTIONS
+
+Note that when using Catch2 without exceptions, there are 2 major
+limitations:
+
+1) If there is an error that would normally be signalled by an exception,
+the exception's message will instead be written to `Catch::cerr` and
+`std::terminate` will be called.
+2) If an assertion from the `REQUIRE` family of macros fails,
+`std::terminate` will be called after the active reporter returns.
+
+
+There is also a customization point for the exact behaviour of what
+happens instead of exception being thrown. To use it, define
+
+    CATCH_CONFIG_DISABLE_EXCEPTIONS_CUSTOM_HANDLER
+
+and provide a definition for this function:
+
+```cpp
+namespace Catch {
+    [[noreturn]]
+    void throw_exception(std::exception const&);
+}
+```
+
+## Overriding Catch's debug break (`-b`)
+
+> [Introduced](https://github.com/catchorg/Catch2/pull/1846) in Catch 2.11.2.
+
+You can override Catch2's break-into-debugger code by defining the
+`CATCH_BREAK_INTO_DEBUGGER()` macro. This can be used if e.g. Catch2 does
+not know your platform, or your platform is misdetected.
+
+The macro will be used as is, that is, `CATCH_BREAK_INTO_DEBUGGER();`
+must compile and must break into debugger.
 
 
 ---

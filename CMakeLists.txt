@@ -37,6 +37,7 @@ if(${GENNY_BUILD_FLAT})
 endif()
 
 find_package(Threads REQUIRED)
+find_package(Catch2 3 REQUIRED)
 
 # Grab OpenSSL right away
 include(GetSsl)

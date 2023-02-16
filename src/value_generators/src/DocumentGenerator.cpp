@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <mutex>
 #include <value_generators/DocumentGenerator.hpp>
+#include <value_generators/FrequencyMap.hpp>
 
+#include <cmath>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -21,7 +24,6 @@
 #include <map>
 #include <sstream>
 #include <unordered_map>
-#include <cmath>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/date_time.hpp>
@@ -57,7 +59,7 @@ private:
     // Number of distinct elements in the distribution.
     IntType _n;
 
-    // This implementation is based on https://cse.usf.edu/~kchriste/tools/genzipf.c, 
+    // This implementation is based on https://cse.usf.edu/~kchriste/tools/genzipf.c,
     // it uses the inverse transform sampling method for generating random numbers.
     // This method is not the most accurate and efficient for heavy tailed distributions,
     // but is sufficient for our current purposes as we're not doing any numerical analysis.
@@ -499,7 +501,7 @@ public:
     ZipfianInt64Generator(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng},
           _id{generatorArgs.actorId},
-          _distribution{extract(node, "alpha", "zipfian").to<double>(), 
+          _distribution{extract(node, "alpha", "zipfian").to<double>(),
                         intGenerator(extract(node, "n", "zipfian"), generatorArgs)->evaluate()} {}
 
     int64_t evaluate() override {
@@ -516,9 +518,13 @@ private:
 // by JoinGenerator today. See ChooseStringGenerator.
 class ChooseGenerator : public Appendable {
 public:
-    // constructore defined at bottom of the file to use other symbol
+    // constructor defined at bottom of the file to use other symbol
     ChooseGenerator(const Node& node, GeneratorArgs generatorArgs);
     Appendable& choose() {
+        if (_deterministic) {
+            ++_elemNumber;
+            return *_choices[_elemNumber % _choices.size()];
+        }
         // Pick a random number between 0 and sum(weights)
         // Pick value based on that.
         auto distribution = boost::random::discrete_distribution(_weights);
@@ -537,6 +543,8 @@ protected:
     ActorId _id;
     std::vector<UniqueAppendable> _choices;
     std::vector<int64_t> _weights;
+    int32_t _elemNumber;
+    bool _deterministic;
 };
 
 // This is a a more specific version of ChooseGenerator that produces strings. It is only used
@@ -545,6 +553,11 @@ class ChooseStringGenerator : public Generator<std::string> {
 public:
     ChooseStringGenerator(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng}, _id{generatorArgs.actorId} {
+        if (node["deterministic"] && node["weights"]) {
+            std::stringstream msg;
+            msg << "Invalid Syntax for choose: cannot have both 'deterministic' and 'weights'";
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
         if (!node["from"].isSequence()) {
             std::stringstream msg;
             msg << "Malformed node for choose from array. Not a sequence " << node;
@@ -561,8 +574,19 @@ public:
             // If not passed in, give each choice equal weight
             _weights.assign(_choices.size(), 1);
         }
+        if (node["deterministic"]) {
+            _deterministic = node["deterministic"].maybe<bool>().value_or(false);
+        } else {
+            _deterministic = false;
+        }
+        _elemNumber = -1;
     }
+
     std::string evaluate() override {
+        if (_deterministic) {
+            ++_elemNumber;
+            return (_choices[_elemNumber % _choices.size()]->evaluate());
+        }
         // Pick a random number between 0 and sum(weights)
         // Pick value based on that.
         auto distribution = boost::random::discrete_distribution(_weights);
@@ -574,7 +598,83 @@ protected:
     ActorId _id;
     std::vector<UniqueGenerator<std::string>> _choices;
     std::vector<int64_t> _weights;
+    int32_t _elemNumber;
+    bool _deterministic;
 };
+
+/**
+ * FrequencyMaps
+ * A list of {string, count} pairs.
+ * An item will be pulled from a random bucket and its count will be decremented. If all buckets are
+ * empty, the generator throws an error.
+ */
+class FrequencyMapGenerator : public Generator<std::string> {
+public:
+    FrequencyMapGenerator(const Node& node, GeneratorArgs generatorArgs) : _rng{generatorArgs.rng} {
+        if (!node["from"].isMap()) {
+            std::stringstream msg;
+            msg << "Malformed node for 'TakeRandomStringFromFrequencyMap' from a map " << node;
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
+
+        for (const auto&& [k, v] : node["from"]) {
+            _map.push_back(v.key(), v.to<std::size_t>());
+        }
+    }
+
+    std::string evaluate() override {
+        if (_map.size() == 1) {
+            return _map.take(0);
+        }
+
+        // Pick a random number between 0 and _map.size() inclusive
+        auto distribution = boost::random::uniform_int_distribution<size_t>(0, _map.size() - 1);
+        auto value = distribution(_rng);
+        return _map.take(value);
+    };
+
+private:
+    DefaultRandom& _rng;
+    v1::FrequencyMap _map;
+};
+
+/**
+ * Singleton FrequencyMaps
+ * Keep singletons shared frequency maps shared across threads.
+ * This can be used to ensure the distribution across threads matches exactly. This is important if
+ * you want a single value for given thread, but use multiple threads to load the data. Maps are
+ * identified by their "id" are shared.
+ */
+class FrequencyMapSingletonGenerator : public Generator<std::string> {
+public:
+    FrequencyMapSingletonGenerator(const Node& node, GeneratorArgs generatorArgs) {
+        _id = node["id"].maybe<std::string>().value();
+
+        // Keep a singleton of these generators by id
+        {
+            std::lock_guard<std::mutex> lck(_mutex);
+
+            if (_generators.count(_id) == 0) {
+                FrequencyMapGenerator gen(node, generatorArgs);
+                _generators.insert({_id, gen});
+            }
+        }
+    }
+
+    std::string evaluate() override {
+        std::lock_guard<std::mutex> lck(_mutex);
+        return _generators.at(_id).evaluate();
+    };
+
+private:
+    std::string _id;
+
+    static std::unordered_map<std::string, FrequencyMapGenerator> _generators;
+    static std::mutex _mutex;
+};
+
+std::unordered_map<std::string, FrequencyMapGenerator> FrequencyMapSingletonGenerator::_generators;
+std::mutex FrequencyMapSingletonGenerator::_mutex;
 
 class IPGenerator : public Generator<std::string> {
 public:
@@ -1003,8 +1103,8 @@ public:
     }
 };
 
-// The following formats also cover "%Y-%m-%d". Timezones require local_time_input_facet AND local_date_time
-// see https://www.boost.org/doc/libs/1_75_0/doc/html/date_time/date_time_io.html.
+// The following formats also cover "%Y-%m-%d". Timezones require local_time_input_facet AND
+// local_date_time see https://www.boost.org/doc/libs/1_75_0/doc/html/date_time/date_time_io.html.
 // We strive to use smart pointers where possible. In this case this is not possible
 // but not a huge deal as these objects are statically allocated.
 const static auto formats = {
@@ -1286,9 +1386,23 @@ protected:
     std::vector<UniqueGenerator<bsoncxx::array::value>> _parts;
 };
 
-/** `{^Object: {withNEntries: 10, havingKeys: {^Foo}, andValues: {^Bar}}` */
+/**
+ * `{^Object: {withNEntries: 10, havingKeys: {^Foo}, andValues: {^Bar}, allowDuplicateKeys: bool}`
+ */
 class ObjectGenerator : public Generator<bsoncxx::document::value> {
 public:
+    enum class OnDuplicatedKeys {
+        // BSON supports objects with duplicated keys and in some cases we might want to test such
+        // scenarios. Allowing to insert duplicated keys is faster than tracking them, so in the
+        // cases when duplicates are impossible (or unlikely and don't affect the test), this option
+        // is also a good choice.
+        insert = 0,
+        // The configuration to skip duplicated keys tracks already inserted keys and never inserts
+        // duplicates. This means that the resulting object might have fewer keys than specified in
+        // 'withNEntries' setting.
+        skip,
+        // TODO: "retry" option, that is, regenerate the key until get a unique one.
+    };
     ObjectGenerator(const Node& node,
                     GeneratorArgs generatorArgs,
                     std::map<std::string, Parser<UniqueAppendable>> parsers)
@@ -1298,13 +1412,28 @@ public:
           _keyGen{stringGenerator(node["havingKeys"], generatorArgs)},
           _valueGen{
               valueGenerator<false, UniqueAppendable>(node["andValues"], generatorArgs, parsers)},
-          _nTimesGen{intGenerator(extract(node, "withNEntries", "^Object"), generatorArgs)} {}
+          _nTimesGen{intGenerator(extract(node, "withNEntries", "^Object"), generatorArgs)} {
+            const auto duplicatedKeys = _node["duplicatedKeys"].to<std::string>();
+            if (duplicatedKeys == "insert") {
+                _onDuplicatedKeys = OnDuplicatedKeys::insert;
+            } else if (duplicatedKeys == "skip") {
+                _onDuplicatedKeys = OnDuplicatedKeys::skip;
+            } else {
+                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                    "Unknown value for 'duplicatedKeys'"));
+            }
+          }
 
     bsoncxx::document::value evaluate() override {
         bsoncxx::builder::basic::document builder;
         auto times = _nTimesGen->evaluate();
+
+        std::unordered_set<std::string> usedKeys;
         for (int i = 0; i < times; ++i) {
-            _valueGen->append(_keyGen->evaluate(), builder);
+            auto key = _keyGen->evaluate();
+            if (_onDuplicatedKeys == OnDuplicatedKeys::insert || usedKeys.insert(key).second) {
+                _valueGen->append(key, builder);
+            }
         }
         return builder.extract();
     }
@@ -1316,6 +1445,7 @@ private:
     const UniqueGenerator<std::string> _keyGen;
     const UniqueAppendable _valueGen;
     const UniqueGenerator<int64_t> _nTimesGen;
+    OnDuplicatedKeys _onDuplicatedKeys;
 };
 
 
@@ -1477,7 +1607,7 @@ Out valueGenerator(const Node& node,
         return std::make_unique<ConstantAppender<bsoncxx::types::b_null>>();
     }
     if (node.isScalar()) {
-        if (node.tag() != "!") {
+        if (node.tag() != "tag:yaml.org,2002:str") {
             try {
                 return std::make_unique<ConstantAppender<int32_t>>(node.to<int32_t>());
             } catch (const InvalidConversionException& e) {
@@ -1537,6 +1667,14 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^Choose",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<ChooseGenerator>(node, generatorArgs);
+     }},
+    {"^TakeRandomStringFromFrequencyMap",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<FrequencyMapGenerator>(node, generatorArgs);
+     }},
+    {"^TakeRandomStringFromFrequencyMapSingleton",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<FrequencyMapSingletonGenerator>(node, generatorArgs);
      }},
     {"^IP",
      [](const Node& node, GeneratorArgs generatorArgs) {
@@ -1665,7 +1803,7 @@ UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
  */
 //
 // We need this additional lookup function because we do "double-dispatch"
-// for ^RandomDouble. So doubleOperand determines if we're looking at 
+// for ^RandomDouble. So doubleOperand determines if we're looking at
 // ^RandomDouble or a constant. If we're looking at ^RandomDouble
 // it dispatches to here to determine which doubleGenerator to use.
 //
@@ -1833,6 +1971,14 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ChooseStringGenerator>(node, generatorArgs);
          }},
+        {"^TakeRandomStringFromFrequencyMap",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<FrequencyMapGenerator>(node, generatorArgs);
+         }},
+        {"^TakeRandomStringFromFrequencyMapSingleton",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<FrequencyMapSingletonGenerator>(node, generatorArgs);
+         }},
         {"^IP",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<IPGenerator>(node, generatorArgs);
@@ -1899,6 +2045,11 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         msg << "Malformed node for choose from array. Not a sequence " << node;
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
     }
+    if (node["deterministic"] && node["weights"]) {
+        std::stringstream msg;
+        msg << "Invalid Syntax for choose: cannot have both 'deterministic' and 'weights'";
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+    }
     for (const auto&& [k, v] : node["from"]) {
         _choices.push_back(valueGenerator<false, UniqueAppendable>(v, generatorArgs, allParsers));
     }
@@ -1910,6 +2061,12 @@ ChooseGenerator::ChooseGenerator(const Node& node, GeneratorArgs generatorArgs)
         // If not passed in, give each choice equal weight
         _weights.assign(_choices.size(), 1);
     }
+    if (node["deterministic"]) {
+        _deterministic = node["deterministic"].maybe<bool>().value_or(false);
+    } else {
+        _deterministic = false;
+    }
+    _elemNumber = -1;
 }
 
 /**

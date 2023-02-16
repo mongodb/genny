@@ -8,6 +8,7 @@
 #include "catch_test_case_tracker.h"
 
 #include "catch_enforce.h"
+#include "catch_string_manip.h"
 
 #include <algorithm>
 #include <cassert>
@@ -31,11 +32,6 @@ namespace TestCaseTracking {
 
     ITracker::~ITracker() = default;
 
-
-    TrackerContext& TrackerContext::instance() {
-        static TrackerContext s_instance;
-        return s_instance;
-    }
 
     ITracker& TrackerContext::startRun() {
         m_rootTracker = std::make_shared<SectionTracker>( NameAndLocation( "{root}", CATCH_INTERNAL_LINEINFO ), *this, nullptr );
@@ -69,23 +65,12 @@ namespace TestCaseTracking {
     }
 
 
-
-    TrackerBase::TrackerHasName::TrackerHasName( NameAndLocation const& nameAndLocation ) : m_nameAndLocation( nameAndLocation ) {}
-    bool TrackerBase::TrackerHasName::operator ()( ITrackerPtr const& tracker ) const {
-        return
-            tracker->nameAndLocation().location == m_nameAndLocation.location &&
-            tracker->nameAndLocation().name == m_nameAndLocation.name;
-    }
-
-    TrackerBase::TrackerBase( NameAndLocation const& nameAndLocation, TrackerContext& ctx, ITracker* parent )
-    :   m_nameAndLocation( nameAndLocation ),
+    TrackerBase::TrackerBase( NameAndLocation const& nameAndLocation, TrackerContext& ctx, ITracker* parent ):
+        ITracker(nameAndLocation),
         m_ctx( ctx ),
         m_parent( parent )
     {}
 
-    NameAndLocation const& TrackerBase::nameAndLocation() const {
-        return m_nameAndLocation;
-    }
     bool TrackerBase::isComplete() const {
         return m_runState == CompletedSuccessfully || m_runState == Failed;
     }
@@ -105,7 +90,12 @@ namespace TestCaseTracking {
     }
 
     ITrackerPtr TrackerBase::findChild( NameAndLocation const& nameAndLocation ) {
-        auto it = std::find_if( m_children.begin(), m_children.end(), TrackerHasName( nameAndLocation ) );
+        auto it = std::find_if( m_children.begin(), m_children.end(),
+            [&nameAndLocation]( ITrackerPtr const& tracker ){
+                return
+                    tracker->nameAndLocation().location == nameAndLocation.location &&
+                    tracker->nameAndLocation().name == nameAndLocation.name;
+            } );
         return( it != m_children.end() )
             ? *it
             : nullptr;
@@ -124,7 +114,7 @@ namespace TestCaseTracking {
     }
 
     bool TrackerBase::isSectionTracker() const { return false; }
-    bool TrackerBase::isIndexTracker() const { return false; }
+    bool TrackerBase::isGeneratorTracker() const { return false; }
 
     void TrackerBase::open() {
         m_runState = Executing;
@@ -147,7 +137,7 @@ namespace TestCaseTracking {
                 m_runState = CompletedSuccessfully;
                 break;
             case ExecutingChildren:
-                if( m_children.empty() || m_children.back()->isComplete() )
+                if( std::all_of(m_children.begin(), m_children.end(), [](ITrackerPtr const& t){ return t->isComplete(); }) )
                     m_runState = CompletedSuccessfully;
                 break;
 
@@ -182,7 +172,8 @@ namespace TestCaseTracking {
     }
 
     SectionTracker::SectionTracker( NameAndLocation const& nameAndLocation, TrackerContext& ctx, ITracker* parent )
-    :   TrackerBase( nameAndLocation, ctx, parent )
+    :   TrackerBase( nameAndLocation, ctx, parent ),
+        m_trimmed_name(trim(nameAndLocation.name))
     {
         if( parent ) {
             while( !parent->isSectionTracker() )
@@ -191,6 +182,17 @@ namespace TestCaseTracking {
             SectionTracker& parentSection = static_cast<SectionTracker&>( *parent );
             addNextFilters( parentSection.m_filters );
         }
+    }
+
+    bool SectionTracker::isComplete() const {
+        bool complete = true;
+
+        if (m_filters.empty()
+            || m_filters[0] == ""
+            || std::find(m_filters.begin(), m_filters.end(), m_trimmed_name) != m_filters.end()) {
+            complete = TrackerBase::isComplete();
+        }
+        return complete;
     }
 
     bool SectionTracker::isSectionTracker() const { return true; }
@@ -214,63 +216,29 @@ namespace TestCaseTracking {
     }
 
     void SectionTracker::tryOpen() {
-        if( !isComplete() && (m_filters.empty() || m_filters[0].empty() ||  m_filters[0] == m_nameAndLocation.name ) )
+        if( !isComplete() )
             open();
     }
 
     void SectionTracker::addInitialFilters( std::vector<std::string> const& filters ) {
         if( !filters.empty() ) {
-            m_filters.push_back(""); // Root - should never be consulted
-            m_filters.push_back(""); // Test Case - not a section filter
+            m_filters.reserve( m_filters.size() + filters.size() + 2 );
+            m_filters.emplace_back(""); // Root - should never be consulted
+            m_filters.emplace_back(""); // Test Case - not a section filter
             m_filters.insert( m_filters.end(), filters.begin(), filters.end() );
         }
     }
     void SectionTracker::addNextFilters( std::vector<std::string> const& filters ) {
         if( filters.size() > 1 )
-            m_filters.insert( m_filters.end(), ++filters.begin(), filters.end() );
+            m_filters.insert( m_filters.end(), filters.begin()+1, filters.end() );
     }
 
-    IndexTracker::IndexTracker( NameAndLocation const& nameAndLocation, TrackerContext& ctx, ITracker* parent, int size )
-    :   TrackerBase( nameAndLocation, ctx, parent ),
-        m_size( size )
-    {}
-
-    bool IndexTracker::isIndexTracker() const { return true; }
-
-    IndexTracker& IndexTracker::acquire( TrackerContext& ctx, NameAndLocation const& nameAndLocation, int size ) {
-        std::shared_ptr<IndexTracker> tracker;
-
-        ITracker& currentTracker = ctx.currentTracker();
-        if( ITrackerPtr childTracker = currentTracker.findChild( nameAndLocation ) ) {
-            assert( childTracker );
-            assert( childTracker->isIndexTracker() );
-            tracker = std::static_pointer_cast<IndexTracker>( childTracker );
-        }
-        else {
-            tracker = std::make_shared<IndexTracker>( nameAndLocation, ctx, &currentTracker, size );
-            currentTracker.addChild( tracker );
-        }
-
-        if( !ctx.completedCycle() && !tracker->isComplete() ) {
-            if( tracker->m_runState != ExecutingChildren && tracker->m_runState != NeedsAnotherRun )
-                tracker->moveNext();
-            tracker->open();
-        }
-
-        return *tracker;
+    std::vector<std::string> const& SectionTracker::getFilters() const {
+        return m_filters;
     }
 
-    int IndexTracker::index() const { return m_index; }
-
-    void IndexTracker::moveNext() {
-        m_index++;
-        m_children.clear();
-    }
-
-    void IndexTracker::close() {
-        TrackerBase::close();
-        if( m_runState == CompletedSuccessfully && m_index < m_size-1 )
-            m_runState = Executing;
+    std::string const& SectionTracker::trimmedName() const {
+        return m_trimmed_name;
     }
 
 } // namespace TestCaseTracking
@@ -278,7 +246,6 @@ namespace TestCaseTracking {
 using TestCaseTracking::ITracker;
 using TestCaseTracking::TrackerContext;
 using TestCaseTracking::SectionTracker;
-using TestCaseTracking::IndexTracker;
 
 } // namespace Catch
 

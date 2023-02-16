@@ -22,6 +22,10 @@
 #include <string>
 #include <cstdint>
 
+// We need a dummy global operator<< so we can bring it into Catch namespace later
+struct Catch_global_namespace_dummy {};
+std::ostream& operator<<(std::ostream&, Catch_global_namespace_dummy);
+
 namespace Catch {
 
     struct CaseSensitive { enum Choice {
@@ -48,12 +52,12 @@ namespace Catch {
             line( _line )
         {}
 
-        SourceLineInfo( SourceLineInfo const& other )        = default;
-        SourceLineInfo( SourceLineInfo && )                  = default;
-        SourceLineInfo& operator = ( SourceLineInfo const& ) = default;
-        SourceLineInfo& operator = ( SourceLineInfo && )     = default;
+        SourceLineInfo( SourceLineInfo const& other )            = default;
+        SourceLineInfo& operator = ( SourceLineInfo const& )     = default;
+        SourceLineInfo( SourceLineInfo&& )              noexcept = default;
+        SourceLineInfo& operator = ( SourceLineInfo&& ) noexcept = default;
 
-        bool empty() const noexcept;
+        bool empty() const noexcept { return file[0] == '\0'; }
         bool operator == ( SourceLineInfo const& other ) const noexcept;
         bool operator < ( SourceLineInfo const& other ) const noexcept;
 
@@ -62,6 +66,11 @@ namespace Catch {
     };
 
     std::ostream& operator << ( std::ostream& os, SourceLineInfo const& info );
+
+    // Bring in operator<< from global namespace into Catch namespace
+    // This is necessary because the overload of operator<< above makes
+    // lookup stop at namespace Catch
+    using ::operator<<;
 
     // Use this in variadic streaming macros to allow
     //    >> +StreamEndStop

@@ -10,10 +10,12 @@
 
 #include "catch_capture.hpp"
 #include "catch_matchers.h"
+#include "catch_matchers_exception.hpp"
 #include "catch_matchers_floating.h"
 #include "catch_matchers_generic.hpp"
 #include "catch_matchers_string.h"
 #include "catch_matchers_vector.h"
+#include "catch_stringref.h"
 
 namespace Catch {
 
@@ -23,7 +25,7 @@ namespace Catch {
         MatcherT m_matcher;
         StringRef m_matcherString;
     public:
-        MatchExpr( ArgT const& arg, MatcherT const& matcher, StringRef matcherString )
+        MatchExpr( ArgT const& arg, MatcherT const& matcher, StringRef const& matcherString )
         :   ITransientExpression{ true, matcher.match( arg ) },
             m_arg( arg ),
             m_matcher( matcher ),
@@ -42,10 +44,10 @@ namespace Catch {
 
     using StringMatcher = Matchers::Impl::MatcherBase<std::string>;
 
-    void handleExceptionMatchExpr( AssertionHandler& handler, StringMatcher const& matcher, StringRef matcherString  );
+    void handleExceptionMatchExpr( AssertionHandler& handler, StringMatcher const& matcher, StringRef const& matcherString  );
 
     template<typename ArgT, typename MatcherT>
-    auto makeMatchExpr( ArgT const& arg, MatcherT const& matcher, StringRef matcherString  ) -> MatchExpr<ArgT, MatcherT> {
+    auto makeMatchExpr( ArgT const& arg, MatcherT const& matcher, StringRef const& matcherString  ) -> MatchExpr<ArgT, MatcherT> {
         return MatchExpr<ArgT, MatcherT>( arg, matcher, matcherString );
     }
 
@@ -55,9 +57,9 @@ namespace Catch {
 ///////////////////////////////////////////////////////////////////////////////
 #define INTERNAL_CHECK_THAT( macroName, matcher, resultDisposition, arg ) \
     do { \
-        Catch::AssertionHandler catchAssertionHandler( macroName, CATCH_INTERNAL_LINEINFO, CATCH_INTERNAL_STRINGIFY(arg) ", " CATCH_INTERNAL_STRINGIFY(matcher), resultDisposition ); \
+        Catch::AssertionHandler catchAssertionHandler( macroName##_catch_sr, CATCH_INTERNAL_LINEINFO, CATCH_INTERNAL_STRINGIFY(arg) ", " CATCH_INTERNAL_STRINGIFY(matcher), resultDisposition ); \
         INTERNAL_CATCH_TRY { \
-            catchAssertionHandler.handleExpr( Catch::makeMatchExpr( arg, matcher, #matcher ) ); \
+            catchAssertionHandler.handleExpr( Catch::makeMatchExpr( arg, matcher, #matcher##_catch_sr ) ); \
         } INTERNAL_CATCH_CATCH( catchAssertionHandler ) \
         INTERNAL_CATCH_REACT( catchAssertionHandler ) \
     } while( false )
@@ -66,14 +68,14 @@ namespace Catch {
 ///////////////////////////////////////////////////////////////////////////////
 #define INTERNAL_CATCH_THROWS_MATCHES( macroName, exceptionType, resultDisposition, matcher, ... ) \
     do { \
-        Catch::AssertionHandler catchAssertionHandler( macroName, CATCH_INTERNAL_LINEINFO, CATCH_INTERNAL_STRINGIFY(__VA_ARGS__) ", " CATCH_INTERNAL_STRINGIFY(exceptionType) ", " CATCH_INTERNAL_STRINGIFY(matcher), resultDisposition ); \
+        Catch::AssertionHandler catchAssertionHandler( macroName##_catch_sr, CATCH_INTERNAL_LINEINFO, CATCH_INTERNAL_STRINGIFY(__VA_ARGS__) ", " CATCH_INTERNAL_STRINGIFY(exceptionType) ", " CATCH_INTERNAL_STRINGIFY(matcher), resultDisposition ); \
         if( catchAssertionHandler.allowThrows() ) \
             try { \
                 static_cast<void>(__VA_ARGS__ ); \
                 catchAssertionHandler.handleUnexpectedExceptionNotThrown(); \
             } \
             catch( exceptionType const& ex ) { \
-                catchAssertionHandler.handleExpr( Catch::makeMatchExpr( ex, matcher, #matcher ) ); \
+                catchAssertionHandler.handleExpr( Catch::makeMatchExpr( ex, matcher, #matcher##_catch_sr ) ); \
             } \
             catch( ... ) { \
                 catchAssertionHandler.handleUnexpectedInflightException(); \

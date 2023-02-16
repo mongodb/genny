@@ -295,7 +295,7 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerGenerateCollectionNames", "
 
             // Invalid generate collection names config with missing count.
             REQUIRE_THROWS_WITH(testOneActor(config2, 5, ""),
-                                Catch::Contains("CollectionCount must be greater than 0 when GenerateCollectionNames is true"));
+                                Catch::Matchers::ContainsSubstring("CollectionCount must be greater than 0 when GenerateCollectionNames is true"));
 
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);

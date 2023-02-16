@@ -9,7 +9,6 @@
 #define TWOBLUECUBES_CATCH_INTERFACES_TESTCASE_H_INCLUDED
 
 #include <vector>
-#include <memory>
 
 namespace Catch {
 
@@ -20,8 +19,6 @@ namespace Catch {
         virtual ~ITestInvoker();
     };
 
-    using ITestCasePtr = std::shared_ptr<ITestInvoker>;
-
     class TestCase;
     struct IConfig;
 
@@ -31,6 +28,7 @@ namespace Catch {
         virtual std::vector<TestCase> const& getAllTestsSorted( IConfig const& config ) const = 0;
     };
 
+    bool isThrowSafe( TestCase const& testCase, IConfig const& config );
     bool matchTest( TestCase const& testCase, TestSpec const& testSpec, IConfig const& config );
     std::vector<TestCase> filterTests( std::vector<TestCase> const& testCases, TestSpec const& testSpec, IConfig const& config );
     std::vector<TestCase> const& getAllTestCasesSorted( IConfig const& config );

@@ -11,9 +11,12 @@
 #include <grpcpp/impl/codegen/channel_interface.h>
 #include <grpcpp/impl/codegen/client_unary_call.h>
 #include <grpcpp/impl/codegen/client_callback.h>
-#include <grpcpp/impl/codegen/method_handler_impl.h>
+#include <grpcpp/impl/codegen/message_allocator.h>
+#include <grpcpp/impl/codegen/method_handler.h>
 #include <grpcpp/impl/codegen/rpc_service_method.h>
 #include <grpcpp/impl/codegen/server_callback.h>
+#include <grpcpp/impl/codegen/server_callback_handlers.h>
+#include <grpcpp/impl/codegen/server_context.h>
 #include <grpcpp/impl/codegen/service_type.h>
 #include <grpcpp/impl/codegen/sync_stream.h>
 namespace poplar {
@@ -28,184 +31,184 @@ static const char* PoplarMetricsCollector_method_names[] = {
 
 std::unique_ptr< PoplarMetricsCollector::Stub> PoplarMetricsCollector::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
   (void)options;
-  std::unique_ptr< PoplarMetricsCollector::Stub> stub(new PoplarMetricsCollector::Stub(channel));
+  std::unique_ptr< PoplarMetricsCollector::Stub> stub(new PoplarMetricsCollector::Stub(channel, options));
   return stub;
 }
 
-PoplarMetricsCollector::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
-  : channel_(channel), rpcmethod_CreateCollector_(PoplarMetricsCollector_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_CloseCollector_(PoplarMetricsCollector_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_ResetSample_(PoplarMetricsCollector_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_FlushSample_(PoplarMetricsCollector_method_names[3], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_Add_(PoplarMetricsCollector_method_names[4], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+PoplarMetricsCollector::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
+  : channel_(channel), rpcmethod_CreateCollector_(PoplarMetricsCollector_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_CloseCollector_(PoplarMetricsCollector_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_ResetSample_(PoplarMetricsCollector_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_FlushSample_(PoplarMetricsCollector_method_names[3], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_Add_(PoplarMetricsCollector_method_names[4], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status PoplarMetricsCollector::Stub::CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_CreateCollector_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::CreateOptions, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_CreateCollector_, context, request, response);
 }
 
-void PoplarMetricsCollector::Stub::experimental_async::CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_CreateCollector_, context, request, response, std::move(f));
+void PoplarMetricsCollector::Stub::async::CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::CreateOptions, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CreateCollector_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsCollector::Stub::experimental_async::CreateCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_CreateCollector_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsCollector::Stub::experimental_async::CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_CreateCollector_, context, request, response, reactor);
-}
-
-void PoplarMetricsCollector::Stub::experimental_async::CreateCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_CreateCollector_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::AsyncCreateCollectorRaw(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_CreateCollector_, context, request, true);
+void PoplarMetricsCollector::Stub::async::CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CreateCollector_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::PrepareAsyncCreateCollectorRaw(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_CreateCollector_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::CreateOptions, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_CreateCollector_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::AsyncCreateCollectorRaw(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncCreateCollectorRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsCollector::Stub::CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_CloseCollector_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_CloseCollector_, context, request, response);
 }
 
-void PoplarMetricsCollector::Stub::experimental_async::CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_CloseCollector_, context, request, response, std::move(f));
+void PoplarMetricsCollector::Stub::async::CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CloseCollector_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsCollector::Stub::experimental_async::CloseCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_CloseCollector_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsCollector::Stub::experimental_async::CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_CloseCollector_, context, request, response, reactor);
-}
-
-void PoplarMetricsCollector::Stub::experimental_async::CloseCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_CloseCollector_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::AsyncCloseCollectorRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_CloseCollector_, context, request, true);
+void PoplarMetricsCollector::Stub::async::CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CloseCollector_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::PrepareAsyncCloseCollectorRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_CloseCollector_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::PoplarID, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_CloseCollector_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::AsyncCloseCollectorRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncCloseCollectorRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsCollector::Stub::ResetSample(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_ResetSample_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_ResetSample_, context, request, response);
 }
 
-void PoplarMetricsCollector::Stub::experimental_async::ResetSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_ResetSample_, context, request, response, std::move(f));
+void PoplarMetricsCollector::Stub::async::ResetSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_ResetSample_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsCollector::Stub::experimental_async::ResetSample(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_ResetSample_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsCollector::Stub::experimental_async::ResetSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_ResetSample_, context, request, response, reactor);
-}
-
-void PoplarMetricsCollector::Stub::experimental_async::ResetSample(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_ResetSample_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::AsyncResetSampleRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_ResetSample_, context, request, true);
+void PoplarMetricsCollector::Stub::async::ResetSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_ResetSample_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::PrepareAsyncResetSampleRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_ResetSample_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::PoplarID, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_ResetSample_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::AsyncResetSampleRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncResetSampleRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsCollector::Stub::FlushSample(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_FlushSample_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_FlushSample_, context, request, response);
 }
 
-void PoplarMetricsCollector::Stub::experimental_async::FlushSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_FlushSample_, context, request, response, std::move(f));
+void PoplarMetricsCollector::Stub::async::FlushSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_FlushSample_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsCollector::Stub::experimental_async::FlushSample(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_FlushSample_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsCollector::Stub::experimental_async::FlushSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_FlushSample_, context, request, response, reactor);
-}
-
-void PoplarMetricsCollector::Stub::experimental_async::FlushSample(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_FlushSample_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::AsyncFlushSampleRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_FlushSample_, context, request, true);
+void PoplarMetricsCollector::Stub::async::FlushSample(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_FlushSample_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::PrepareAsyncFlushSampleRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_FlushSample_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::PoplarID, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_FlushSample_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::AsyncFlushSampleRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncFlushSampleRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 ::grpc::Status PoplarMetricsCollector::Stub::Add(::grpc::ClientContext* context, const ::poplar::IntervalSummary& request, ::poplar::PoplarResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Add_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall< ::poplar::IntervalSummary, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_Add_, context, request, response);
 }
 
-void PoplarMetricsCollector::Stub::experimental_async::Add(::grpc::ClientContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Add_, context, request, response, std::move(f));
+void PoplarMetricsCollector::Stub::async::Add(::grpc::ClientContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::poplar::IntervalSummary, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_Add_, context, request, response, std::move(f));
 }
 
-void PoplarMetricsCollector::Stub::experimental_async::Add(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Add_, context, request, response, std::move(f));
-}
-
-void PoplarMetricsCollector::Stub::experimental_async::Add(::grpc::ClientContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Add_, context, request, response, reactor);
-}
-
-void PoplarMetricsCollector::Stub::experimental_async::Add(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Add_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::AsyncAddRaw(::grpc::ClientContext* context, const ::poplar::IntervalSummary& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_Add_, context, request, true);
+void PoplarMetricsCollector::Stub::async::Add(::grpc::ClientContext* context, const ::poplar::IntervalSummary* request, ::poplar::PoplarResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_Add_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::PrepareAsyncAddRaw(::grpc::ClientContext* context, const ::poplar::IntervalSummary& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_Add_, context, request, false);
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::poplar::PoplarResponse, ::poplar::IntervalSummary, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_Add_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarMetricsCollector::Stub::AsyncAddRaw(::grpc::ClientContext* context, const ::poplar::IntervalSummary& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncAddRaw(context, request, cq);
+  result->StartCall();
+  return result;
 }
 
 PoplarMetricsCollector::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsCollector_method_names[0],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsCollector::Service, ::poplar::CreateOptions, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsCollector::Service::CreateCollector), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsCollector::Service, ::poplar::CreateOptions, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsCollector::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::CreateOptions* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->CreateCollector(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsCollector_method_names[1],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsCollector::Service, ::poplar::PoplarID, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsCollector::Service::CloseCollector), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsCollector::Service, ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsCollector::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::PoplarID* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->CloseCollector(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsCollector_method_names[2],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsCollector::Service, ::poplar::PoplarID, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsCollector::Service::ResetSample), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsCollector::Service, ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsCollector::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::PoplarID* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->ResetSample(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsCollector_method_names[3],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsCollector::Service, ::poplar::PoplarID, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsCollector::Service::FlushSample), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsCollector::Service, ::poplar::PoplarID, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsCollector::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::PoplarID* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->FlushSample(ctx, req, resp);
+             }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarMetricsCollector_method_names[4],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< PoplarMetricsCollector::Service, ::poplar::IntervalSummary, ::poplar::PoplarResponse>(
-          std::mem_fn(&PoplarMetricsCollector::Service::Add), this)));
+      new ::grpc::internal::RpcMethodHandler< PoplarMetricsCollector::Service, ::poplar::IntervalSummary, ::poplar::PoplarResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](PoplarMetricsCollector::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::poplar::IntervalSummary* req,
+             ::poplar::PoplarResponse* resp) {
+               return service->Add(ctx, req, resp);
+             }, this)));
 }
 
 PoplarMetricsCollector::Service::~Service() {

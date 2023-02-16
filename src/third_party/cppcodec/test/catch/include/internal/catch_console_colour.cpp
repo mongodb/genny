@@ -34,7 +34,7 @@ namespace Catch {
         };
 
         struct NoColourImpl : IColourImpl {
-            void use( Colour::Code ) {}
+            void use( Colour::Code ) override {}
 
             static IColourImpl* instance() {
                 static NoColourImpl s_instance;
@@ -69,7 +69,7 @@ namespace {
             originalBackgroundAttributes = csbiInfo.wAttributes & ~( FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY );
         }
 
-        virtual void use( Colour::Code _colourCode ) override {
+        void use( Colour::Code _colourCode ) override {
             switch( _colourCode ) {
                 case Colour::None:      return setTextAttribute( originalForegroundAttributes );
                 case Colour::White:     return setTextAttribute( FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE );
@@ -121,7 +121,10 @@ namespace {
 
 #elif defined( CATCH_CONFIG_COLOUR_ANSI ) //////////////////////////////////////
 
-#include <unistd.h>
+#if defined( CATCH_PLATFORM_LINUX ) || defined( CATCH_PLATFORM_MAC )
+#    define CATCH_INTERNAL_HAS_ISATTY
+#    include <unistd.h>
+#endif
 
 namespace Catch {
 namespace {
@@ -132,7 +135,7 @@ namespace {
     // https://github.com/philsquared/Catch/pull/131
     class PosixColourImpl : public IColourImpl {
     public:
-        virtual void use( Colour::Code _colourCode ) override {
+        void use( Colour::Code _colourCode ) override {
             switch( _colourCode ) {
                 case Colour::None:
                 case Colour::White:     return setColour( "[0m" );
@@ -160,16 +163,18 @@ namespace {
 
     private:
         void setColour( const char* _escapeCode ) {
-            Catch::cout() << '\033' << _escapeCode;
+            getCurrentContext().getConfig()->stream()
+                << '\033' << _escapeCode;
         }
     };
 
     bool useColourOnPlatform() {
         return
-#ifdef CATCH_PLATFORM_MAC
+#if defined(CATCH_PLATFORM_MAC) || defined(CATCH_PLATFORM_IPHONE)
             !isDebuggerActive() &&
 #endif
-#if !(defined(__DJGPP__) && defined(__STRICT_ANSI__))
+#if defined( CATCH_INTERNAL_HAS_ISATTY ) && \
+    !( defined( __DJGPP__ ) && defined( __STRICT_ANSI__ ) )
             isatty(STDOUT_FILENO)
 #else
             false
@@ -207,13 +212,13 @@ namespace Catch {
 namespace Catch {
 
     Colour::Colour( Code _colourCode ) { use( _colourCode ); }
-    Colour::Colour( Colour&& rhs ) noexcept {
-        m_moved = rhs.m_moved;
-        rhs.m_moved = true;
+    Colour::Colour( Colour&& other ) noexcept {
+        m_moved = other.m_moved;
+        other.m_moved = true;
     }
-    Colour& Colour::operator=( Colour&& rhs ) noexcept {
-        m_moved = rhs.m_moved;
-        rhs.m_moved  = true;
+    Colour& Colour::operator=( Colour&& other ) noexcept {
+        m_moved = other.m_moved;
+        other.m_moved  = true;
         return *this;
     }
 
@@ -221,7 +226,13 @@ namespace Catch {
 
     void Colour::use( Code _colourCode ) {
         static IColourImpl* impl = platformColourInstance();
-        impl->use( _colourCode );
+        // Strictly speaking, this cannot possibly happen.
+        // However, under some conditions it does happen (see #1626),
+        // and this change is small enough that we can let practicality
+        // triumph over purity in this case.
+        if (impl != nullptr) {
+            impl->use( _colourCode );
+        }
     }
 
     std::ostream& operator << ( std::ostream& os, Colour const& ) {

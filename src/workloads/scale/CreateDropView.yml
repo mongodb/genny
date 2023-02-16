@@ -53,13 +53,11 @@ Actors:
     Database: *dbname
     Operations:
     - OperationMetricsName: CreateViewMetric
-      OperationIsQuiet: true
       OperationName: RunCommand
       OperationCommand:
         {create: myView, viewOn: Collection0, pipeline: [{$match: {id: {$lt: 10}}}]}
     - OperationName: RunCommand
       OperationMetricsName: DropViewMetric
-      OperationIsQuiet: true
       OperationCommand:
         drop: myView
   - Nop: true

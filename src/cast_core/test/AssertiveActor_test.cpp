@@ -95,7 +95,7 @@ public:
         try {
             genny::ActorHelper ah = setupAssertActor(actorName, ignoreFields);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            INFO("Assert passed")
+            INFO("Assert passed");
         } catch (const genny::actor::FailedAssertionException& e) {
             // Did not expect assert to reach here.
             auto diagInfo = boost::diagnostic_information(e);

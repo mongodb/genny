@@ -19,7 +19,6 @@ Actors:
     Database: test
     Operations:
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         insert: myCollection
         documents: &Doc [{a: {^FastRandomString: {length: 1000}}}]
@@ -31,7 +30,6 @@ Actors:
     Database: test
     Operations:
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         insert: myCollection
         documents: *Doc
@@ -43,7 +41,6 @@ Actors:
     Database: test
     Operations:
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         insert: myCollection
         documents: *Doc
@@ -55,7 +52,6 @@ Actors:
     Database: test
     Operations:
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         insert: myCollection
         documents: *Doc

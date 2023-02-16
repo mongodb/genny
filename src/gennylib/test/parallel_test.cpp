@@ -26,7 +26,7 @@
 #include <testlib/helpers.hpp>
 
 using namespace genny;
-using Catch::Matchers::Contains;
+using Catch::Matchers::ContainsSubstring;
 
 TEST_CASE("Parallel runner runs op") {
     std::vector<int> integers = {1, 2, 3, 4, 5};
@@ -56,5 +56,5 @@ TEST_CASE("Parallel runner reraises exceptions") {
                        throw std::logic_error("This should be reraised.");
                    });
     };
-    REQUIRE_THROWS_WITH(test(), Contains("This should be reraised."));
+    REQUIRE_THROWS_WITH(test(), ContainsSubstring("This should be reraised."));
 }

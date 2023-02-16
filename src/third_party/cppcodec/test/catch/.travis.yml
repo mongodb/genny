@@ -1,5 +1,4 @@
 language: cpp
-sudo: false
 
 branches:
   except:
@@ -10,8 +9,8 @@ common_sources: &all_sources
   - llvm-toolchain-trusty
   - llvm-toolchain-trusty-3.9
   - llvm-toolchain-trusty-4.0
-  - llvm-toolchain-trusty-5.0
-  - llvm-toolchain-trusty-6.0
+  - llvm-toolchain-xenial-5.0
+  - llvm-toolchain-xenial-6.0
 
 matrix:
   include:
@@ -61,6 +60,7 @@ matrix:
       env: COMPILER='clang++-4.0'
 
     - os: linux
+      dist: xenial
       compiler: clang
       addons:
           apt:
@@ -69,6 +69,7 @@ matrix:
       env: COMPILER='clang++-5.0'
 
     - os: linux
+      dist: xenial
       compiler: clang
       addons:
           apt:
@@ -154,6 +155,7 @@ matrix:
       env: COMPILER='clang++-4.0' CPP14=1
 
     - os: linux
+      dist: xenial
       compiler: clang
       addons:
           apt:
@@ -162,6 +164,7 @@ matrix:
       env: COMPILER='clang++-5.0' CPP14=1
 
     - os: linux
+      dist: xenial
       compiler: clang
       addons:
           apt:
@@ -219,7 +222,7 @@ matrix:
         apt:
           sources: *all_sources
           packages: ['lcov', 'g++-7']
-      env: COMPILER='g++-7' CPP14=1 EXAMPLES=1 COVERAGE=1
+      env: COMPILER='g++-7' CPP14=1 EXAMPLES=1 COVERAGE=1 EXTRAS=1
 
     - os: linux
       compiler: clang
@@ -229,7 +232,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty
-      env: COMPILER='clang++-3.8' EXAMPLES=1 COVERAGE=1
+      env: COMPILER='clang++-3.8' EXAMPLES=1 COVERAGE=1 EXTRAS=1
 
     - os: linux
       compiler: gcc
@@ -237,19 +240,57 @@ matrix:
         apt:
           sources: *all_sources
           packages: ['valgrind', 'lcov', 'g++-7']
-      env: COMPILER='g++-7' CPP14=1 VALGRIND=1      
-      
+      env: COMPILER='g++-7' CPP14=1 VALGRIND=1
+
     - os: osx
       osx_image: xcode9.1
       compiler: clang
-      env: COMPILER='clang++' CPP14=1 EXAMPLES=1 COVERAGE=1
+      env: COMPILER='clang++' CPP14=1 EXAMPLES=1 COVERAGE=1 EXTRAS=1
+
+    # 7/ C++17 builds
+    - os: linux
+      compiler: gcc
+      addons: *gcc7
+      env: COMPILER='g++-7' CPP17=1
+
+    - os: linux
+      compiler: gcc
+      addons: *gcc7
+      env: COMPILER='g++-7' EXAMPLES=1 COVERAGE=1 EXTRAS=1 CPP17=1
+
+    - os: linux
+      dist: xenial
+      compiler: clang
+      addons:
+          apt:
+              sources: *all_sources
+              packages: ['clang-5.0']
+      env: COMPILER='clang++-5.0' CPP17=1
+
+    - os: linux
+      dist: xenial
+      compiler: clang
+      addons:
+          apt:
+              sources: *all_sources
+              packages: ['clang-6.0', 'libstdc++-8-dev']
+      env: COMPILER='clang++-6.0' CPP17=1
+
+    - os: linux
+      dist: xenial
+      compiler: clang
+      addons:
+          apt:
+              sources: *all_sources
+              packages: ['clang-6.0', 'libstdc++-8-dev']
+      env: COMPILER='clang++-6.0' CPP17=1 EXAMPLES=1 COVERAGE=1 EXTRAS=1
 
 install:
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
   - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      CMAKE_URL="http://www.cmake.org/files/v3.5/cmake-3.5.2-Linux-x86_64.tar.gz"
+      CMAKE_URL="http://cmake.org/files/v3.8/cmake-3.8.2-Linux-x86_64.tar.gz"
       mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
       export PATH=${DEPS_DIR}/cmake/bin:${PATH}
     elif [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
@@ -262,10 +303,19 @@ before_script:
   # Regenerate single header file, so it is tested in the examples...
   - python scripts/generateSingleHeader.py
 
+  - |
+    if [[ ${CPP17} -eq 1 ]]; then
+      export CPP_STANDARD=17
+    elif [[ ${CPP14} -eq 1 ]]; then
+      export CPP_STANDARD=14
+    else
+      export CPP_STANDARD=11
+    fi
+
     # Use Debug builds for running Valgrind and building examples
-  - cmake -H. -BBuild-Debug -DCMAKE_BUILD_TYPE=Debug -Wdev -DUSE_CPP14=${CPP14} -DCATCH_USE_VALGRIND=${VALGRIND} -DCATCH_BUILD_EXAMPLES=${EXAMPLES} -DCATCH_ENABLE_COVERAGE=${COVERAGE}
+  - cmake -H. -BBuild-Debug -DCMAKE_BUILD_TYPE=Debug -Wdev -DCATCH_USE_VALGRIND=${VALGRIND} -DCATCH_BUILD_EXAMPLES=${EXAMPLES} -DCATCH_ENABLE_COVERAGE=${COVERAGE} -DCATCH_BUILD_EXTRA_TESTS=${EXTRAS} -DCMAKE_CXX_STANDARD=${CPP_STANDARD} -DCMAKE_CXX_STANDARD_REQUIRED=On -DCMAKE_CXX_EXTENSIONS=OFF
     # Don't bother with release build for coverage build
-  - cmake -H. -BBuild-Release -DCMAKE_BUILD_TYPE=Release -Wdev -DUSE_CPP14=${CPP14}
+  - cmake -H. -BBuild-Release -DCMAKE_BUILD_TYPE=Release -Wdev -DCMAKE_CXX_STANDARD=${CPP_STANDARD} -DCMAKE_CXX_STANDARD_REQUIRED=On -DCMAKE_CXX_EXTENSIONS=OFF
 
 
 script:

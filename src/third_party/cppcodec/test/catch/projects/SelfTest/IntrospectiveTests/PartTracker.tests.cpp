@@ -8,21 +8,6 @@
 #include "internal/catch_suppress_warnings.h"
 #include "internal/catch_test_case_tracker.h"
 
-
-namespace Catch
-{
-    class LocalContext {
-
-    public:
-        TrackerContext& operator()() const {
-            return TrackerContext::instance();
-        }
-    };
-
-} // namespace Catch
-
-// -------------------
-
 #include "catch.hpp"
 
 using namespace Catch;
@@ -173,154 +158,96 @@ TEST_CASE( "Tracker" ) {
         testCase.close();
         REQUIRE( testCase.isComplete() );
     }
+}
 
-    SECTION( "start a generator" ) {
-        IndexTracker& g1 = IndexTracker::acquire( ctx, makeNAL( "G1" ), 2 );
-        REQUIRE( g1.isOpen() );
-        REQUIRE( g1.index() == 0 );
+static bool previouslyRun = false;
+static bool previouslyRunNested = false;
 
-        REQUIRE( g1.isComplete() == false );
-        REQUIRE( s1.isComplete() == false );
+TEST_CASE( "#1394", "[.][approvals][tracker]" ) {
+    // -- Don't re-run after specified section is done
+    REQUIRE(previouslyRun == false);
 
-        SECTION( "close outer section" )
-        {
-            s1.close();
-            REQUIRE( s1.isComplete() == false );
-            testCase.close();
-            REQUIRE( testCase.isSuccessfullyCompleted() == false );
-
-            SECTION( "Re-enter for second generation" ) {
-                ctx.startCycle();
-                ITracker& testCase2 = SectionTracker::acquire( ctx, makeNAL( "Testcase" ) );
-                REQUIRE( testCase2.isOpen() );
-
-                ITracker& s1b = SectionTracker::acquire( ctx, makeNAL( "S1" ) );
-                REQUIRE( s1b.isOpen() );
-
-
-                IndexTracker& g1b = IndexTracker::acquire( ctx, makeNAL( "G1" ), 2 );
-                REQUIRE( g1b.isOpen() );
-                REQUIRE( g1b.index() == 1 );
-
-                REQUIRE( s1.isComplete() == false );
-
-                s1b.close();
-                REQUIRE( s1b.isComplete() );
-                REQUIRE( g1b.isComplete() );
-                testCase2.close();
-                REQUIRE( testCase2.isComplete() );
-            }
-        }
-        SECTION( "Start a new inner section" ) {
-            ITracker& s2 = SectionTracker::acquire( ctx, makeNAL( "S2" ) );
-            REQUIRE( s2.isOpen() );
-
-            s2.close();
-            REQUIRE( s2.isComplete() );
-
-            s1.close();
-            REQUIRE( s1.isComplete() == false );
-
-            testCase.close();
-            REQUIRE( testCase.isComplete() == false );
-
-            SECTION( "Re-enter for second generation" ) {
-                ctx.startCycle();
-                ITracker& testCase2 = SectionTracker::acquire( ctx, makeNAL( "Testcase" ) );
-                REQUIRE( testCase2.isOpen() );
-
-                ITracker& s1b = SectionTracker::acquire( ctx, makeNAL( "S1" ) );
-                REQUIRE( s1b.isOpen() );
-
-                // generator - next value
-                IndexTracker& g1b = IndexTracker::acquire( ctx, makeNAL( "G1" ), 2 );
-                REQUIRE( g1b.isOpen() );
-                REQUIRE( g1b.index() == 1 );
-
-                // inner section again
-                ITracker& s2b = SectionTracker::acquire( ctx, makeNAL( "S2" ) );
-                REQUIRE( s2b.isOpen() );
-
-                s2b.close();
-                REQUIRE( s2b.isComplete() );
-
-                s1b.close();
-                REQUIRE( g1b.isComplete() );
-                REQUIRE( s1b.isComplete() );
-
-                testCase2.close();
-                REQUIRE( testCase2.isComplete() );
-            }
-        }
-
-        SECTION( "Fail an inner section" ) {
-            ITracker& s2 = SectionTracker::acquire( ctx, makeNAL( "S2" ) );
-            REQUIRE( s2.isOpen() );
-
-            s2.fail();
-            REQUIRE( s2.isComplete() );
-            REQUIRE( s2.isSuccessfullyCompleted() == false );
-
-            s1.close();
-            REQUIRE( s1.isComplete() == false );
-
-            testCase.close();
-            REQUIRE( testCase.isComplete() == false );
-
-            SECTION( "Re-enter for second generation" ) {
-                ctx.startCycle();
-                ITracker& testCase2 = SectionTracker::acquire( ctx, makeNAL( "Testcase" ) );
-                REQUIRE( testCase2.isOpen() );
-
-                ITracker& s1b = SectionTracker::acquire( ctx, makeNAL( "S1" ) );
-                REQUIRE( s1b.isOpen() );
-
-                // generator - still same value
-                IndexTracker& g1b = IndexTracker::acquire( ctx, makeNAL( "G1" ), 2 );
-                REQUIRE( g1b.isOpen() );
-                REQUIRE( g1b.index() == 0 );
-
-                // inner section again - this time won't open
-                ITracker& s2b = SectionTracker::acquire( ctx, makeNAL( "S2" ) );
-                REQUIRE( s2b.isOpen() == false );
-
-                s1b.close();
-                REQUIRE( g1b.isComplete() == false );
-                REQUIRE( s1b.isComplete() == false );
-
-                testCase2.close();
-                REQUIRE( testCase2.isComplete() == false );
-
-                // Another cycle - now should complete
-                ctx.startCycle();
-                ITracker& testCase3 = SectionTracker::acquire( ctx, makeNAL( "Testcase" ) );
-                REQUIRE( testCase3.isOpen() );
-
-                ITracker& s1c = SectionTracker::acquire( ctx, makeNAL( "S1" ) );
-                REQUIRE( s1c.isOpen() );
-
-                // generator - now next value
-                IndexTracker& g1c = IndexTracker::acquire( ctx, makeNAL( "G1" ), 2 );
-                REQUIRE( g1c.isOpen() );
-                REQUIRE( g1c.index() == 1 );
-
-                // inner section - now should open again
-                ITracker& s2c = SectionTracker::acquire( ctx, makeNAL( "S2" ) );
-                REQUIRE( s2c.isOpen() );
-
-                s2c.close();
-                REQUIRE( s2c.isComplete() );
-
-                s1c.close();
-                REQUIRE( g1c.isComplete() );
-                REQUIRE( s1c.isComplete() );
-
-                testCase3.close();
-                REQUIRE( testCase3.isComplete() );
-            }
-        }
-        // !TBD"
-        //   nested generator
-        //   two sections within a generator
+    SECTION( "RunSection" ) {
+        previouslyRun = true;
     }
+    SECTION( "SkipSection" ) {
+        // cause an error if this section is called because it shouldn't be
+        REQUIRE(1 == 0);
+    }
+}
+
+TEST_CASE( "#1394 nested", "[.][approvals][tracker]" ) {
+    REQUIRE(previouslyRunNested == false);
+
+    SECTION( "NestedRunSection" ) {
+        SECTION( "s1" ) {
+            previouslyRunNested = true;
+        }
+    }
+    SECTION( "NestedSkipSection" ) {
+        // cause an error if this section is called because it shouldn't be
+        REQUIRE(1 == 0);
+    }
+}
+
+// Selecting a "not last" section inside a test case via -c "section" would
+// previously only run the first subsection, instead of running all of them.
+// This allows us to check that `"#1670 regression check" -c A` leads to
+// 2 successful assertions.
+TEST_CASE("#1670 regression check", "[.approvals][tracker]") {
+    SECTION("A") {
+        SECTION("1") SUCCEED();
+        SECTION("2") SUCCEED();
+    }
+    SECTION("B") {
+        SECTION("1") SUCCEED();
+        SECTION("2") SUCCEED();
+    }
+}
+
+// #1938 required a rework on how generator tracking works, so that `GENERATE`
+// supports being sandwiched between two `SECTION`s. The following tests check
+// various other scenarios through checking output in approval tests.
+TEST_CASE("#1938 - GENERATE after a section", "[.][regression][generators]") {
+    SECTION("A") {
+        SUCCEED("A");
+    }
+    auto m = GENERATE(1, 2, 3);
+    SECTION("B") {
+        REQUIRE(m);
+    }
+}
+
+TEST_CASE("#1938 - flat generate", "[.][regression][generators]") {
+    auto m = GENERATE(1, 2, 3);
+    REQUIRE(m);
+}
+
+TEST_CASE("#1938 - nested generate", "[.][regression][generators]") {
+    auto m = GENERATE(1, 2, 3);
+    auto n = GENERATE(1, 2, 3);
+    REQUIRE(m);
+    REQUIRE(n);
+}
+
+TEST_CASE("#1938 - mixed sections and generates", "[.][regression][generators]") {
+    auto i = GENERATE(1, 2);
+    SECTION("A") {
+        SUCCEED("A");
+    }
+    auto j = GENERATE(3, 4);
+    SECTION("B") {
+        SUCCEED("B");
+    }
+    auto k = GENERATE(5, 6);
+    CAPTURE(i, j, k);
+    SUCCEED();
+}
+
+TEST_CASE("#1938 - Section followed by flat generate", "[.][regression][generators]") {
+    SECTION("A") {
+        REQUIRE(1);
+    }
+    auto m = GENERATE(2, 3);
+    REQUIRE(m);
 }

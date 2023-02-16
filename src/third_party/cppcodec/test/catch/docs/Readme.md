@@ -12,6 +12,9 @@ Writing tests:
 * [Test fixtures](test-fixtures.md#top)
 * [Reporters](reporters.md#top)
 * [Event Listeners](event-listeners.md#top)
+* [Data Generators](generators.md#top)
+* [Other macros](other-macros.md#top)
+* [Micro benchmarking](benchmarks.md#top)
 
 Fine tuning:
 * [Supplying your own main()](own-main.md#top)
@@ -32,5 +35,7 @@ FAQ:
 Other:
 * [Why Catch?](why-catch.md#top)
 * [Open Source Projects using Catch](opensource-users.md#top)
+* [Commercial Projects using Catch](commercial-users.md#top)
 * [Contributing](contributing.md#top)
 * [Release Notes](release-notes.md#top)
+* [Deprecations and incoming changes](deprecations.md#top)
