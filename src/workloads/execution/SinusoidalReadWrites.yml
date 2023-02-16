@@ -4,9 +4,10 @@ Description: |
   This workload attempts to create a sinusoidal distribution of reads/writes to test
   the behavior of execution control when the load on the system changes over time.
 
-  We do this with two actors, one for writes and one for reads. Though the actors
-  run concurrently, we use the sleep functionality to effectively stop work on one
-  actor while the other reaches its peak. When then alternate for a couple repetitions.
+  We do this with two actors, one for writes and one for reads and spawn 5000 client
+  threads. Though the actors run concurrently, we use the sleep functionality
+  to effectively stop work on one actor while the other reaches its peak. We then
+  alternate for a couple repetitions.
 
   In this workload, we try to ensure that reads and writes do not overlap much.
 Keywords:
