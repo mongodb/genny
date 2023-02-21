@@ -108,8 +108,8 @@ Actors:
 
  AutoRun:
  - When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - single-replica-classic-query-engine
-      - single-replica-sbe
+     mongodb_setup:
+       $eq:
+       - replica
+       - single-replica-classic-query-engine
+       - single-replica-sbe
