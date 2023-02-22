@@ -197,12 +197,12 @@ class ToolchainDownloader(Downloader):
         triplet_arch: str,
         ignore_toolchain_version: bool,
     ):
-        if "GENNY_TOOLCHAIN_ROOT" in os.environ:
-            toolchain_root = os.environ["GENNY_TOOLCHAIN_ROOT"]
-        else:
-            # Install the toolchain in /opt on OS X so we don't have to ask users
-            # to do crazy things to get "/data" to work
-            toolchain_root = "/opt/data/mci" if os_family == "Darwin" else "/data/mci"
+        running_in_evergreen = "EVR_TASK_ID" in os.environ
+
+        # Install the toolchain in /opt on OS X on dev laptp[s] so we don't 
+        # have to ask users to do crazy things to get "/data" to work. 
+        # Evergreen OS X machines don't have this problem
+        toolchain_root = "/opt/data/mci" if os_family == "Darwin" and not running_in_evergreen else "/data/mci"
 
         super().__init__(
             genny_repo_root=genny_repo_root,
