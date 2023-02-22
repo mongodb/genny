@@ -18,12 +18,18 @@ Ensure you have a suitable platform. Genny supports the following platforms:
 ## Operating System setup
 Install the dependencies tools for your OS.
 
+Note that the root directory is `/data/mci` on Linux but
+`/opt/data/mci` on macOS. This is because `/data/mci` is
+the base working directory for evergreen builds, but
+macOS makes it very hard to add new root folders, so
+we end up using a different directory only for macOS
+
 ### Ubuntu
 ```sh
 sudo apt install build-essential
 
 # Ensure /data/mci exists and is owned by you
-sudo mkdir -p data/mci
+sudo mkdir -p /data/mci
 sudo chown $USER /data/mci
 ```
 

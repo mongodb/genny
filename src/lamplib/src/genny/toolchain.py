@@ -42,7 +42,13 @@ def _create_compile_environment(
         if triplet_os == "linux":
             # Only use bundled cmake on Linux because bundled cmake doesn't work on OS X due to integrity checks.
             # It's easier just to ask users to "brew install cmake"
-            paths.insert(0, os.path.join(toolchain_dir, "downloads/tools/cmake-3.24.0-linux/cmake-3.24.0-linux-x86_64/bin"))
+            paths.insert(
+                0,
+                os.path.join(
+                    toolchain_dir,
+                    "downloads/tools/cmake-3.24.0-linux/cmake-3.24.0-linux-x86_64/bin",
+                ),
+            )
 
         # For ninja
         ninja_bin_dir = os.path.join(
@@ -203,10 +209,12 @@ class ToolchainDownloader(Downloader):
         else:
             running_in_evergreen = False
 
-        # Install the toolchain in /opt on OS X on dev laptp[s] so we don't 
-        # have to ask users to do crazy things to get "/data" to work. 
+        # Install the toolchain in /opt on OS X on dev laptp[s] so we don't
+        # have to ask users to do crazy things to get "/data" to work.
         # Evergreen OS X machines don't have this problem
-        toolchain_root = "/opt/data/mci" if os_family == "Darwin" and not running_in_evergreen else "/data/mci"
+        toolchain_root = (
+            "/opt/data/mci" if os_family == "Darwin" and not running_in_evergreen else "/data/mci"
+        )
 
         super().__init__(
             genny_repo_root=genny_repo_root,
