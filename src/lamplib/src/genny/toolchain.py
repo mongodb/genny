@@ -203,11 +203,7 @@ class ToolchainDownloader(Downloader):
         triplet_arch: str,
         ignore_toolchain_version: bool,
     ):
-        expansions_path = os.path.join(workspace_root, "expansions.yml")
-        if os.path.exists(expansions_path):
-            running_in_evergreen = "task_id" in yaml.safe_load(expansions_path)
-        else:
-            running_in_evergreen = False
+        running_in_evergreen = "EVR_TASK_ID" in os.environ
 
         # Install the toolchain in /opt on OS X on dev laptp[s] so we don't
         # have to ask users to do crazy things to get "/data" to work.
