@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <set>
+#include <filesystem>
 #include <sstream>
 
 #include <mongocxx/instance.hpp>
@@ -27,6 +28,8 @@
 #include <gennylib/v1/Sleeper.hpp>
 #include <metrics/metrics.hpp>
 
+#include <boost/algorithm/string.hpp>
+using namespace boost::algorithm;
 
 namespace genny {
 
@@ -43,7 +46,8 @@ WorkloadContext::WorkloadContext(const Node& node,
       _orchestrator{&orchestrator},
       _rateLimiters{10},
       _poolManager{apmCallback, dryRun},
-      _workloadPath{node.key()} {
+      _workloadPath{node.key()} ,
+      _coordinator{"./pipe.to", "./pipe.from"} {
     std::set<std::string> validSchemaVersions{"2018-07-01"};
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept
@@ -90,6 +94,10 @@ WorkloadContext::WorkloadContext(const Node& node,
                    });
 
     _actors = std::move(bucket.extractItems());
+    this->_orchestrator->addPrePhaseStartHook(
+        [&](const Orchestrator*orchestrator, PhaseNumber phase) { this->_coordinator.onPhaseStart(phase); });
+    this->_orchestrator->addPostPhaseStopHook(
+        [&](const Orchestrator*orchestrator, PhaseNumber phase) { this->_coordinator.onPhaseStop(phase); });
     _done = true;
 }
 
@@ -134,7 +142,7 @@ GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name, cons
 
     // Reset the rate-limiter at the start of every Phase
     this->_orchestrator->addPrePhaseStartHook(
-        [rl](const Orchestrator*) { rl->resetLastEmptied(); });
+        [rl](const Orchestrator*, PhaseNumber phase) { rl->resetLastEmptied(); });
     return rl;
 }
 
@@ -205,4 +213,44 @@ bool PhaseContext::isNop() const {
     auto& nop = (*this)["Nop"];
     return nop.maybe<bool>().value_or(false);
 }
+
+bool is_fifo(const char *path) {
+    std::error_code ec;
+    bool res = std::filesystem::is_fifo(path, ec);
+    // Failure here doesn't matter, if the file is missing then
+    // this is being run directly so there is no one to coordinate with.
+    if (ec.value() != 0) {
+        BOOST_LOG_TRIVIAL(debug) << "is_fifo('" << path << "')" << ec.message();
+    }
+    return res;
+}
+
+ExternalPhaseCoordinator::ExternalPhaseCoordinator(std::string out_pipe,std::string in_pipe) : m_out_pipe(out_pipe), m_in_pipe(in_pipe){
+    m_fifo = is_fifo(out_pipe.c_str());
+    BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator('" << out_pipe << "', '" << in_pipe << "') --> " << m_fifo;
+    if (m_fifo) {
+        m_ofs.open(out_pipe.c_str());
+    }
+}
+void ExternalPhaseCoordinator::_onPhase(std::string message, PhaseNumber phase){
+    BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase('" << message << "'," << phase << "') start";
+    if (m_fifo) {
+        m_ofs << "{ \"message\": \"" << message << "\",\"phase\":" <<  phase << "}" << std::endl << std::flush;
+
+        // The file open will block until there is a writer.
+        BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::_onPhase('"  << message << "'," << phase << ") waiting ";
+        std::fstream ifs( m_in_pipe.c_str());
+        std::string line;
+        std::getline(ifs, line);
+        BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::_onPhase '" << line << "'";
+    }
+    BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase('" << message << "'," << phase << "') end";
+}
+void ExternalPhaseCoordinator::onPhaseStart(PhaseNumber phase){
+    _onPhase("Beginning phase", phase);
+}
+void ExternalPhaseCoordinator::onPhaseStop(PhaseNumber phase){
+    _onPhase("Ended phase", phase);
+}
+
 }  // namespace genny

@@ -18,6 +18,7 @@
 #include <cassert>
 #include <map>
 #include <memory>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <type_traits>
@@ -91,6 +92,46 @@ protected:
 }  // namespace v1
 
 class WorkloadContext;
+
+class ExternalPhaseCoordinator;
+using namespace std::literals::chrono_literals;
+
+class ExternalPhaseCoordinator {
+public:
+    /**
+     */
+    ExternalPhaseCoordinator(std::string out_pipe = "", std::string in_pipe = "");
+
+    // no copy or move
+    ExternalPhaseCoordinator(ExternalPhaseCoordinator&) = delete;
+    void operator=(ExternalPhaseCoordinator&) = delete;
+    ExternalPhaseCoordinator(ExternalPhaseCoordinator&&) = delete;
+    void operator=(ExternalPhaseCoordinator&&) = delete;
+
+    /**
+     * Handle onPhaseStart.
+     *
+     * @param phase
+     *   the phase number about to start.
+     */
+    void onPhaseStart(PhaseNumber phase);
+
+    /**
+     * Handle onPhaseStop.
+     *
+     * @param phase
+     *   the phase number about to stop.
+     */
+    void onPhaseStop(PhaseNumber phase);
+
+private:
+    void _onPhase(std::string message, PhaseNumber phase);
+
+    mutable std::string m_out_pipe;
+    mutable std::string m_in_pipe;
+    mutable std::fstream m_ofs;
+    mutable bool m_fifo;
+};
 
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
@@ -306,6 +347,7 @@ private:
     std::mutex _limiterLock;
 
     std::string _workloadPath;
+    ExternalPhaseCoordinator _coordinator;
 };
 
 // For some reason need to decl this; see impl below
