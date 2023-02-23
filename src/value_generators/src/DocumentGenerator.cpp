@@ -622,15 +622,19 @@ public:
         }
     }
 
-    std::string evaluate() override {
+    std::string evaluateWithRng(DefaultRandom& rng) {
         if (_map.size() == 1) {
             return _map.take(0);
         }
 
         // Pick a random number between 0 and _map.size() inclusive
         auto distribution = boost::random::uniform_int_distribution<size_t>(0, _map.size() - 1);
-        auto value = distribution(_rng);
+        auto value = distribution(rng);
         return _map.take(value);
+    }
+
+    std::string evaluate() override {
+      return evaluateWithRng(_rng);
     };
 
 private:
@@ -647,7 +651,7 @@ private:
  */
 class FrequencyMapSingletonGenerator : public Generator<std::string> {
 public:
-    FrequencyMapSingletonGenerator(const Node& node, GeneratorArgs generatorArgs) {
+    FrequencyMapSingletonGenerator(const Node& node, GeneratorArgs generatorArgs) : _rng{generatorArgs.rng} {
         _id = node["id"].maybe<std::string>().value();
 
         // Keep a singleton of these generators by id
@@ -663,11 +667,12 @@ public:
 
     std::string evaluate() override {
         std::lock_guard<std::mutex> lck(_mutex);
-        return _generators.at(_id).evaluate();
+        return _generators.at(_id).evaluateWithRng(_rng);
     };
 
 private:
     std::string _id;
+    DefaultRandom& _rng;
 
     static std::unordered_map<std::string, FrequencyMapGenerator> _generators;
     static std::mutex _mutex;
