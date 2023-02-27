@@ -12,7 +12,7 @@ GlobalDefaults:
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
   DocumentCount: &docCount 10000
-  MaxPhases: &MaxPhases 5
+  MaxPhases: &MaxPhases 4
 
 ValueGenerators:
 - &Key {^FastRandomString: {length: 6, alphabet: "0123456789"}}
@@ -32,55 +32,55 @@ ValueGenerators:
 }}
 
 Actors:
-- Name: RecreateCollection
+- Name: InitCollectionAndDropPlanCache
   Type: RunCommand
   Threads: 1
   Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            drop: *Collection
-        - OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *Collection
-            indexes:
-            - key:
-                a: 1
-              name: a_1
-            - key:
-                b: 1
-              name: b_1
-            - key:
-                c: 1
-              name: c_1
-
-- Name: DisablePlanCache
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Operations:
-        - OperationName: AdminCommand
-          OperationCommand:
-            setParameter: 1
-            internalQueryDisablePlanCache: true
+  - Repeat: 1
+    Database: *Database
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *Collection
+        indexes:
+        - key:
+            a: 1
+          name: a_1
+        - key:
+            b: 1
+          name: b_1
+        - key:
+            c: 1
+          name: c_1
+  - &Nop {Nop: true}
+  - Blocking: None
+    Database: *Database
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        planCacheClear: *Collection
+  - Blocking: None
+    Database: *Database
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        planCacheClear: *Collection
+  - Blocking: None
+    Database: *Database
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        planCacheClear: *Collection
 
 - Name: Insert
   Type: Loader
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [2]
+      Active: [1]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -99,10 +99,9 @@ Actors:
   Database: *Database
   Threads: 4
   Phases:
-  - &Nop {Nop: true}
   - *Nop
   - *Nop
-  - Duration: 1 minute
+  - Repeat: 2000
     Collection: *Collection
     Operations:
     - OperationName: find
@@ -113,7 +112,7 @@ Actors:
           b: *NonSelectiveQuery,
           c: *NonSelectiveQuery
         }
-  - Duration: 1 minute
+  - Repeat: 2000
     Collection: *Collection
     Operations:
     - OperationName: find
@@ -124,7 +123,7 @@ Actors:
           b: *SelectiveQuery,
           c: *NonSelectiveQuery
         }
-  - Duration: 1 minute
+  - Repeat: 2000
     Collection: *Collection
     Operations:
     - OperationName: find
