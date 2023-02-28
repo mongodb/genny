@@ -4,7 +4,7 @@ Description: |
   This workload attempts to create a sinusoidal distribution of reads/writes to test
   the behavior of execution control when the load on the system changes over time.
 
-  We do this with two actors, one for writes and one for reads and spawn 5000 client
+  We do this with two actors, one for writes and one for reads and spawn 500 client
   threads. Though the actors run concurrently, we use the sleep functionality
   to effectively stop work on one actor while the other reaches its peak. We then
   alternate for a couple repetitions.
@@ -28,7 +28,7 @@ Document: &doc
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 5100
+      maxPoolSize: 55
 
 ActorTemplates:
 - TemplateName: WritesActorWithSleepTemplate
@@ -36,7 +36,7 @@ ActorTemplates:
     Name: {^Parameter: {Name: "Name", Default: WritesActorWithSleep}}
     Type: CrudActor
     Database: *dbname
-    Threads: {^Parameter: {Name: "Threads", Default: 1000}}
+    Threads: {^Parameter: {Name: "Threads", Default: 100}}
     Phases:
       OnlyActiveInPhases:
         Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
@@ -57,7 +57,7 @@ ActorTemplates:
     Name: {^Parameter: {Name: "Name", Default: ReadsActorWithSleep}}
     Type: CrudActor
     Database: *dbname
-    Threads: {^Parameter: {Name: "Threads", Default: 1000}}
+    Threads: {^Parameter: {Name: "Threads", Default: 100}}
     Phases:
       OnlyActiveInPhases:
         Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
@@ -97,14 +97,14 @@ Actors:
     TemplateName: WritesActorWithSleepTemplate
     TemplateParameters:
       Name: {^Parameter: {Name: "WritingName", Default: WritingActor_50_50}}
-      Threads: {^Parameter: {Name: "WritingThreads", Default: 2500}}
+      Threads: {^Parameter: {Name: "WritingThreads", Default: 500}}
       ActivePhases: [1]
 
 - ActorFromTemplate:
     TemplateName: ReadsActorWithSleepTemplate
     TemplateParameters:
       Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
-      Threads: {^Parameter: {Name: "ReadingThreads", Default: 2500}}
+      Threads: {^Parameter: {Name: "ReadingThreads", Default: 500}}
       ActivePhases: [1]
 
 AutoRun:
