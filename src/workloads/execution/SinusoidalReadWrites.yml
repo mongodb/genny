@@ -28,7 +28,7 @@ Document: &doc
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 550
+      maxPoolSize: 1000
 
 ActorTemplates:
 - TemplateName: WritesActorWithSleepTemplate
