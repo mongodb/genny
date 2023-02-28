@@ -39,8 +39,8 @@ Actors:
             c: 1
           name: c_1
   - &Nop {Nop: true}
-  # We repeatedly clear plan cache while executing find commands to ensure that multiplannin happens
-  # often as we are measuring multiplanner performance
+  # We repeatedly clear plan cache while executing find commands to ensure that multi planning
+  # happens more often.
   - &ClearPlanCacheRepeatedly
     Blocking: None
     Database: *Database
