@@ -14,23 +14,6 @@ GlobalDefaults:
   DocumentCount: &docCount 10000
   MaxPhases: &MaxPhases 4
 
-ValueGenerators:
-- &Key {^FastRandomString: {length: 6, alphabet: "0123456789"}}
-- &SmallKey {^Join: {array: ["1", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}
-- &BigKey {^Join: {array: ["8", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}
-- &SelectiveQuery {^Choose: {
-  from: [
-    {$gte: *BigKey},
-    {$lte: *SmallKey}
-  ]
-}}
-- &NonSelectiveQuery {^Choose: {
-  from: [
-    {$gte: *SmallKey},
-    {$lte: *BigKey}
-  ]
-}}
-
 Actors:
 - Name: InitCollectionAndDropPlanCache
   Type: RunCommand
@@ -56,24 +39,17 @@ Actors:
             c: 1
           name: c_1
   - &Nop {Nop: true}
-  - Blocking: None
+  # We repeatedly clear plan cache while executing find commands to ensure that multiplannin happens
+  # often as we are measuring multiplanner performance
+  - &ClearPlanCacheRepeatedly
+    Blocking: None
     Database: *Database
     Operations:
     - OperationName: RunCommand
       OperationCommand:
         planCacheClear: *Collection
-  - Blocking: None
-    Database: *Database
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        planCacheClear: *Collection
-  - Blocking: None
-    Database: *Database
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        planCacheClear: *Collection
+  - *ClearPlanCacheRepeatedly
+  - *ClearPlanCacheRepeatedly
 
 - Name: Insert
   Type: Loader
@@ -90,11 +66,11 @@ Actors:
         DocumentCount: *docCount
         BatchSize: 1000
         Document:
-          a: *Key
+          a: &Key {^FastRandomString: {length: 6, alphabet: "0123456789"}}
           b: *Key
           c: *Key
 
-- Name: Lookup
+- Name: FindWithMultiplanning
   Type: CrudActor
   Database: *Database
   Threads: 4
@@ -105,18 +81,32 @@ Actors:
     Collection: *Collection
     Operations:
     - OperationName: find
-      OperationMetricsName: FindWithMostSelectiveA
+      OperationMetricsName: MostSelectiveA
       OperationCommand:
         Filter: {
-          a: *SelectiveQuery,
-          b: *NonSelectiveQuery,
+          a: &SelectiveQuery {^Choose: {
+            from: [
+              {$gte: &BigKey {^Join: {array: [
+                "8",
+                {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}},
+              {$lte: &SmallKey {^Join: {array: [
+                "1",
+                {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}}
+            ]
+          }},
+          b: &NonSelectiveQuery {^Choose: {
+            from: [
+              {$gte: *SmallKey},
+              {$lte: *BigKey}
+            ]
+          }},
           c: *NonSelectiveQuery
         }
   - Repeat: 2000
     Collection: *Collection
     Operations:
     - OperationName: find
-      OperationMetricsName: FindWithMostSelectiveB
+      OperationMetricsName: MostSelectiveB
       OperationCommand:
         Filter: {
           a: *NonSelectiveQuery,
@@ -127,7 +117,7 @@ Actors:
     Collection: *Collection
     Operations:
     - OperationName: find
-      OperationMetricsName: FindWithMostSelectiveC
+      OperationMetricsName: MostSelectiveC
       OperationCommand:
         Filter: {
           a: *NonSelectiveQuery,
@@ -139,10 +129,8 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - standalone
-      - standalone-all-feature-flags
-      - replica
-      - replica-all-feature-flags
-    branch_name:
-      $gte: v7.0
+        - standalone
+        - standalone-all-feature-flags
+        - standalone-classic-query-engine
+        - standalone-sbe
 
