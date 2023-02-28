@@ -18,7 +18,7 @@ Keywords:
 - CrudActor
 
 dbname: &dbname mixed_sinusoidal
-DocumentCount: &NumDocs 5000
+DocumentCount: &NumDocs 500
 CollectionCount: &NumColls 1
 
 NumPhases: &NumPhases 2
@@ -42,9 +42,9 @@ ActorTemplates:
         Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
-          Duration: 3 minutes
-          SleepAfter: 90 seconds
-          Repeat: 3
+          Duration: 1 minute
+          SleepAfter: 30 seconds
+          Repeat: 6
           CollectionCount: *NumColls
           Operations:
           - OperationName: insertOne
@@ -63,9 +63,9 @@ ActorTemplates:
         Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
-          SleepBefore: 90 seconds
-          Duration: 3 minutes
-          Repeat: 3
+          SleepBefore: 30 seconds
+          Duration: 1 minute
+          Repeat: 6
           CollectionCount: *NumColls
           Operations:
           - OperationName: find
@@ -82,7 +82,7 @@ Actors:
       Active: [0]
       NopInPhasesUpTo: *NumPhases
       PhaseConfig:
-        # Have 5k documents ready at start
+        # Have 500 documents ready at start
         Repeat: 1
         BatchSize: 100
         Threads: 1
