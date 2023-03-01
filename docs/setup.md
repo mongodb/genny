@@ -2,50 +2,103 @@
 
 Here're the steps to get Genny up and running locally:
 
-0.  Ensure you have a suitable platform. Genny supports the following platforms:
-    - Ubuntu 20.04, 18.04, 16.04
+## Prerequisites
+
+Ensure you have a suitable platform. Genny supports the following platforms:
+    - Ubuntu 22.04, 20.04, 18.04
     - Arch Linux
-    - RHEL 8, 7, 6.2
-    - Amazon Linux 2
-    - macOS
+    - RHEL 8, 7
+    - Amazon Linux 2 (x64 or arm64)
+    - macOS 11.0 or higher
 
     If you attempt to install Genny on an unsupported platform, compile isn't
     guaranteed to succeed. If you would like to add support for a platform,
-    please file a `TIG` ticket.
+    please file an `EVG` ticket.
 
-1.  Install the development tools for your OS.
+## Operating System setup
+Install the dependencies tools for your OS.
 
-    -   Ubuntu 18.04/20.04: `sudo apt install build-essential`
-    -   Red Hat/CentOS 7/Amazon Linux 2:
-        `sudo yum groupinstall "Development Tools"`
-    -   Arch: `apk add bash clang gcc musl-dev linux-headers`
-    -   macOS: `xcode-select --install`
-    -   Windows: <https://visualstudio.microsoft.com/>
+Note that the root directory is `/data/mci` on Linux but
+`/opt/data/mci` on macOS. This is because `/data/mci` is
+the base working directory for evergreen builds, but
+macOS makes it very hard to add new root folders, so
+we end up using a different directory only for macOS
 
-2.  Make sure you have a C++17 compatible compiler and Python 3.7 or newer.
-    The ones from mongodbtoolchain v3 are safe bets if you're
-    unsure. (mongodbtoolchain is internal to MongoDB).
+### Ubuntu
+```sh
+sudo apt install build-essential
 
-3.  `./run-genny install -d [ubuntu1804|ubuntu2004|ubuntu1604|archlinux|rhel8|rhel70|rhel62|amazon2|not-linux]`
+# Ensure /data/mci exists and is owned by you
+sudo mkdir -p /data/mci
+sudo chown $USER /data/mci
+```
 
-    This command downloads Genny's toolchain, compiles Genny, creates its
-    virtualenv, and installs Genny to `dist/`. You can rerun this command
-    at any time to rebuild Genny. If your OS isn't the supported, please let us know in
-    `#workload-generation` slack or on GitHub.
+### Red Hat/CentOS 7/Amazon Linux 2
+```sh
+sudo yum groupinstall "Development Tools"
 
-    Note that the `--linux-distro` argument is not needed on macOS.
+# Ensure /data/mci exists and is owned by you
+sudo mkdir -p data/mci
+sudo chown $USER /data/mci
+```
+### Arch
 
-    You can also specify `--build-system make` if you prefer to build
-    using `make` rather than `ninja`. Building using `make` may make
-    some IDEs happier.
+```sh
+apk add bash clang gcc musl-dev linux-headers
 
-    If you get python errors, ensure you have a modern version of python3.
-    On a Mac, run `brew install python3` (assuming you have [homebrew installed](https://brew.sh/))
-    and then restart your shell.
+# Ensure /data/mci exists and is owned by you
+sudo mkdir -p data/mci
+sudo chown $USER /data/mci
+```
 
-    This command expects that the /data/mci directory exists, and that you have write access
-    to it. It will error otherwise.
-    
+### macOS
+
+Ensure you have installed [Homebrew](https://brew.sh/)
+
+```sh
+
+xcode-select --install
+brew install zstd
+
+# Necessary because the cmake in vcpkg is unsigned and can't be copied between machines
+brew install cmake
+
+# You may also install python3 using pyenv
+brew install python3
+
+# Ensure /opt/data/mci exists and is owned by you
+sudo mkdir -p /opt/data/mci
+sudo chown $USER /opt/data/mci
+
+```
+
+### Windows
+
+<https://visualstudio.microsoft.com/>
+
+### All Operating Systems
+
+Make sure you have a C++17 compatible compiler and Python 3.7 or newer.
+The ones from mongodbtoolchain v4 are safe bets if you're
+unsure. (mongodbtoolchain is internal to MongoDB).
+
+
+## Run the installer
+```sh
+./run-genny install -d [ubuntu1804|ubuntu2004|ubuntu1604|archlinux|rhel8|rhel70|rhel62|amazon2|not-linux]
+```
+
+This command downloads Genny's toolchain, compiles Genny, creates its
+virtualenv, and installs Genny to `dist/`. You can rerun this command
+at any time to rebuild Genny. If your OS isn't the supported, please let us know in
+`#workload-generation` slack or on GitHub.
+
+Note that the `--linux-distro` argument is not needed on macOS.
+
+You can also specify `--build-system make` if you prefer to build
+using `make` rather than `ninja`. Building using `make` may make
+some IDEs happier.
+
 ### Errors Mentioning zstd
 There is currently a leak in Genny's toolchain requiring zstd to be installed.
 If the `./run-genny install` phase above errors mentioning this, you may need to install it separately.
