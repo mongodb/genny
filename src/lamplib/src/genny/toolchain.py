@@ -203,7 +203,7 @@ class ToolchainDownloader(Downloader):
         triplet_arch: str,
         ignore_toolchain_version: bool,
     ):
-        running_in_evergreen = "IN_EVERGREEN" in os.environ
+        running_in_evergreen = "EVR_TASK_ID" in os.environ
 
         # Install the toolchain in /opt on OS X on dev laptp[s] so we don't
         # have to ask users to do crazy things to get "/data" to work.
