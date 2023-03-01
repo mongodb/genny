@@ -91,12 +91,12 @@ struct Loader::PhaseConfig {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(ss.str()));
             }
             uint numThreads = totalThreads / collectionCount;
-            numDocuments = context["DocumentCount"].to<int64_t>() / numThreads;
+            numDocuments = context["DocumentCount"].to<IntegerSpec>() / numThreads;
             if (thread / collectionCount == 0) {
                 // The first thread for each collection:
                 //   1. Picks up any extra documents left over by the division.
                 //   2. Is responsible for creating the indexes.
-                numDocuments += context["DocumentCount"].to<uint>() % numThreads;
+                numDocuments += context["DocumentCount"].to<IntegerSpec>() % numThreads;
                 createIndexes();
             }
         } else {

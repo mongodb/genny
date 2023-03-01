@@ -14,6 +14,7 @@
 
 #include <cast_core/actors/CrudActor.hpp>
 #include <cast_core/actors/OptionsConversion.hpp>
+#include <cast_core/helpers/pipeline_helpers.hpp>
 
 #include <chrono>
 #include <memory>
@@ -34,6 +35,7 @@
 #include <gennylib/conventions.hpp>
 #include <value_generators/DefaultRandom.hpp>
 #include <value_generators/DocumentGenerator.hpp>
+#include <value_generators/PipelineGenerator.hpp>
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
@@ -634,13 +636,19 @@ struct FindOperation : public BaseOperation {
           _collection{std::move(collection)},
           _operation{operation},
           _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {
-        if (opNode["Options"]) {
-            _options = opNode["Options"].to<mongocxx::options::find>();
+        if (const auto& options = opNode["Options"]; options) {
+            _options = options.to<mongocxx::options::find>();
+            if (options["Projection"]) {
+                _projection.emplace(options["Projection"].to<DocumentGenerator>(context, id));
+            }
         }
     }
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filter();
+        if (_projection) {
+            _options.projection(_projection.value()());
+        }
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto cursor = (_onSession) ? _collection.find(session, filter.view(), _options)
                                        : _collection.find(filter.view(), _options);
@@ -658,6 +666,7 @@ private:
     mongocxx::collection _collection;
     mongocxx::options::find _options;
     DocumentGenerator _filter;
+    std::optional<DocumentGenerator> _projection;
     metrics::Operation _operation;
 };
 
@@ -673,13 +682,27 @@ struct FindOneOperation : public BaseOperation {
           _collection{std::move(collection)},
           _operation{operation},
           _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {
-        if (opNode["Options"]) {
-            _options = opNode["Options"].to<mongocxx::options::find>();
+        if (const auto& options = opNode["Options"]; options) {
+            _options = options.to<mongocxx::options::find>();
+            if (options["Projection"]) {
+                _projection.emplace(options["Projection"].to<DocumentGenerator>(context, id));
+            }
+            if (options["Limit"]) {
+                BOOST_THROW_EXCEPTION(
+                    InvalidConfigurationException("Cannot specify 'limit' to 'findOne' operation"));
+            }
+            if (options["BatchSize"]) {
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "Cannot specify 'batchSize' to 'findOne' operation"));
+            }
         }
     }
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filter();
+        if (_projection) {
+            _options.projection(_projection.value()());
+        }
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession) ? _collection.find_one(session, filter.view(), _options)
                                        : _collection.find_one(filter.view(), _options);
@@ -696,6 +719,45 @@ private:
     mongocxx::collection _collection;
     mongocxx::options::find _options;
     DocumentGenerator _filter;
+    std::optional<DocumentGenerator> _projection;
+    metrics::Operation _operation;
+};
+
+struct AggregateOperation : public BaseOperation {
+    AggregateOperation(const Node& opNode,
+                       bool onSession,
+                       mongocxx::collection collection,
+                       metrics::Operation operation,
+                       PhaseContext& context,
+                       ActorId id)
+        : BaseOperation(context, opNode),
+          _onSession{onSession},
+          _collection{std::move(collection)},
+          _operation{operation},
+          _pipelineGenerator{opNode["Pipeline"].to<PipelineGenerator>(context, id)} {
+        if (opNode["Options"]) {
+            _options = opNode["Options"].to<mongocxx::options::aggregate>();
+        }
+    }
+
+    void run(mongocxx::client_session& session) override {
+        auto pipeline = pipeline_helpers::makePipeline(_pipelineGenerator);
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto cursor = _onSession ? _collection.aggregate(session, pipeline, _options)
+                                     : _collection.aggregate(pipeline, _options);
+            for (auto&& doc : cursor) {
+                ctx.addDocuments(1);
+                ctx.addBytes(doc.length());
+            }
+            return pipeline_helpers::copyPipelineToDocument(pipeline);
+        });
+    }
+
+private:
+    bool _onSession;
+    mongocxx::collection _collection;
+    mongocxx::options::aggregate _options;
+    PipelineGenerator _pipelineGenerator;
     metrics::Operation _operation;
 };
 
@@ -1109,6 +1171,7 @@ private:
 std::unordered_map<std::string, OpCallback&> getOpConstructors() {
     // Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
     std::unordered_map<std::string, OpCallback&> opConstructors = {
+        {"aggregate", baseCallback<BaseOperation, OpCallback, AggregateOperation>},
         {"bulkWrite", baseCallback<BaseOperation, OpCallback, BulkWriteOperation>},
         {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
         {"estimatedDocumentCount",
@@ -1152,7 +1215,11 @@ class Delay {
 public:
     Delay(const Node& node, GeneratorArgs args)
         : numberGenerator{makeDoubleGenerator(node["^TimeSpec"]["value"], args)} {
-        auto unitString = node["^TimeSpec"]["units"].maybe<std::string>().value_or("seconds");
+        if (!node["^TimeSpec"]["unit"]) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "Each TimeSpec needs a unit declaration."));
+        }
+        auto unitString = node["^TimeSpec"]["unit"].to<std::string>();
 
         // Use string::find here so plurals get parsed correctly.
         if (unitString.find("nanosecond") == 0) {

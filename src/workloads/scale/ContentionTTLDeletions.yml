@@ -2,8 +2,8 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
 Description: |
   This workload tests the impact of background TTL deletions in a heavily modified collection with
-  extreme ticket contention. This test does not quiesce between phases as we want the TTL deleter
-  to be constantly running.
+  concurrent crud operations on a second collection to simulate extreme ticket contention.
+
 Keywords:
 - ttl
 - stress
@@ -14,43 +14,70 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 260
+      maxPoolSize: 2000
+      socketTimeoutMS: 1_200_000  # = 20 minutes
 
-NumPhases: &NumPhases 6
+SmallDoc: &SmallDoc
+  a: {^FastRandomString: {length: 123}}
+  numField: {^RandomInt: {min: 0, max: 1000}}
+  counter: 0
+  expireDate: {^Date: "1970-01-01"}
 
-Document: &generatedDoc
-  expireDate: {^Date: "1970-01-01"}  # Instantly expire the document
-  y: 999
-  b: "Arbitrary string with 45 different characters"
-
-ActorTemplates:
-- TemplateName: WritesActorTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: WritesActor}}
-    Type: CrudActor
-    Database: &db test
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Duration: {^Parameter: {Name: "Duration", Default: 3 minutes}}
-          CollectionCount: &NumColls 1
-          Operations:
-          - OperationName: insertMany
-            OperationCommand:
-              Documents:  # Insert 1 document at a time
-              - *generatedDoc
-
+LargeDoc: &LargeDoc
+  a: {^FastRandomString: {length: 67890}}
+  numField: {^RandomInt: {min: 0, max: 1000}}
+  counter: 0
+  expireDate: {^Date: "1970-01-01"}
 
 Actors:
-- Name: Setup
-  Type: AdminCommand
+# Perform the inital collection creation separate from changing the server parameters to reduce
+# noise in each phase.
+- Name: CreateTTLCollection
+  Type: Loader
   Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [1]
+      NopInPhasesUpTo: &NumPhases 3
+      PhaseConfig:
+        Repeat: 1
+        Database: &db test
+        Threads: 1
+        CollectionCount: &NumColls 1
+        DocumentCount: 1
+        BatchSize: 1
+        Document: *SmallDoc
+        Indexes:
+        - keys: {expireDate: 1}
+          options: {expireAfterSeconds: 0}
+        - keys: {numField: 1}
+
+- Name: CreateIndexesOtherColl
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            createIndexes: &otherColl otherColl
+            indexes:
+            - key: {numField: 1}
+              name: numField_1
+            - key: {a: 1}
+              name: a_1
+
+- Name: ConfigureParameters
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
       NopInPhasesUpTo: *NumPhases
       PhaseConfig:
         Repeat: 1
@@ -63,43 +90,120 @@ Actors:
         - OperationName: AdminCommand
           OperationCommand:
             setParameter: 1
-            # Reduce tickets to the minimum allowed to force contention.
-            storageEngineConcurrentWriteTransactions: 5
-        SleepAfter: 60 seconds  # Wait 60 seconds so that the new ttl sleep config is active.
+            # Reduce tickets to force contention.
+            storageEngineConcurrentWriteTransactions: 32
+        SleepAfter: 60 seconds  # Wait 60 seconds for the new configurations to establish.
 
-- Name: InsertData
-  Type: Loader
-  Threads: 1
+- Name: UpdateOtherColl
+  Type: CrudActor
+  Database: *db
+  Threads: &numThreads 256
   Phases:
     OnlyActiveInPhases:
-      Active: [2]
+      Active: [3]
       NopInPhasesUpTo: *NumPhases
       PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Threads: 1
-        CollectionCount: *NumColls
-        DocumentCount: 200_000  # Add an initial set of documents. This will reduce noise in the next phases
-        BatchSize: 10_000
-        Document: *generatedDoc
-        Indexes:
-        - keys: {expireDate: 1}
-          options: {expireAfterSeconds: 0}
+        Duration: &phaseDuration 10 minutes
+        Collection: *otherColl
+        Operations:
+        - OperationName: updateOne
+          OperationCommand:
+            Filter: &filter
+              numField: {^RandomInt: {min: 0, max: 1000}}
+            Update:
+              $inc: {counter: 1}
 
-# We do not perform a quiesce between phases as it would allow the TTL deleter to catch up. We want
-# it to constantly be running for this workload.
-- ActorFromTemplate:
-    TemplateName: WritesActorTemplate
-    TemplateParameters:
-      Name: Writes_256_Thread
-      Threads: 256
-      ActivePhases: [3]
-      Duration: 10 minutes
+- Name: RemoveOtherColl
+  Type: CrudActor
+  Database: *db
+  Threads: *numThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Duration: *phaseDuration
+        Collection: *otherColl
+        Operations:
+        - OperationName: deleteOne
+          OperationCommand:
+            Filter: *filter
+
+- Name: InsertOtherCollSmall
+  Type: CrudActor
+  Database: *db
+  Threads: &halfThreads 128
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Duration: *phaseDuration
+        Collection: *otherColl
+        Operations:
+        - OperationName: insertOne
+          OperationCommand:
+            Document: *SmallDoc
+
+- Name: InsertOtherCollLarge
+  Type: CrudActor
+  Database: *db
+  Threads: *halfThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Duration: *phaseDuration
+        Collection: *otherColl
+        Operations:
+        - OperationName: insertOne
+          OperationCommand:
+            Document: *LargeDoc
+
+- Name: InsertTTLColl-Small
+  Type: CrudActor
+  Database: *db
+  Threads: 512
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Duration: *phaseDuration
+        Collection: Collection0
+        Operations:
+        - OperationName: insertOne
+          OperationCommand:
+            Document: *SmallDoc
+
+- Name: InsertTTLColl-Large
+  Type: CrudActor
+  Database: *db
+  Threads: 512
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Duration: *phaseDuration
+        Collection: Collection0
+        Operations:
+        - OperationName: insertOne
+          OperationCommand:
+            Document: *LargeDoc
+
 AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - standalone
-      - standalone-all-feature-flags
-      - replica
-      - replica-all-feature-flags
+      - single-replica
+      - single-replica-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.2
+      - v4.4
+      - v5.0
+    infrastructure_provisioning:
+      $neq:
+      - graviton-single-lite.2022-11  # Instance runs out of memory and crashes

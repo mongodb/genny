@@ -15,6 +15,7 @@
 #include "catch_interfaces_registry_hub.h"
 #include "catch_capture_matchers.h"
 #include "catch_run_context.h"
+#include "catch_enforce.h"
 
 namespace Catch {
 
@@ -52,7 +53,7 @@ namespace Catch {
     }
 
     AssertionHandler::AssertionHandler
-        (   StringRef macroName,
+        (   StringRef const& macroName,
             SourceLineInfo const& lineInfo,
             StringRef capturedExpression,
             ResultDisposition::Flags resultDisposition )
@@ -81,8 +82,13 @@ namespace Catch {
             // (To go back to the test and change execution, jump over the throw, next)
             CATCH_BREAK_INTO_DEBUGGER();
         }
-        if( m_reaction.shouldThrow )
+        if (m_reaction.shouldThrow) {
+#if !defined(CATCH_CONFIG_DISABLE_EXCEPTIONS)
             throw Catch::TestFailureException();
+#else
+            CATCH_ERROR( "Test failure requires aborting test!" );
+#endif
+        }
     }
     void AssertionHandler::setCompleted() {
         m_completed = true;
@@ -109,7 +115,7 @@ namespace Catch {
 
     // This is the overload that takes a string and infers the Equals matcher from it
     // The more general overload, that takes any string matcher, is in catch_capture_matchers.cpp
-    void handleExceptionMatchExpr( AssertionHandler& handler, std::string const& str, StringRef matcherString  ) {
+    void handleExceptionMatchExpr( AssertionHandler& handler, std::string const& str, StringRef const& matcherString  ) {
         handleExceptionMatchExpr( handler, Matchers::Equals( str ), matcherString );
     }
 

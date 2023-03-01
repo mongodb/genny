@@ -13,6 +13,10 @@ Keywords:
 - change event application
 - CEA
 
+EnvironmentDetails:
+  MongosyncConnectionURIs:
+  - http://localhost:27182
+
 Clients:
   Default:
     QueryOptions:
@@ -21,17 +25,37 @@ Clients:
 ScriptsPath: &scriptsPath ./MongosyncScripts.yml
 
 Actors:
-- Name: Mongosync
-  Type: ExternalScriptRunner
+
+- Name: SetupSharding
+  Type: AdminCommand
   Threads: 1
   Phases:
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: SetupShardKey
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: ShardCollection
+  - &nop {Nop: true}
+  - *nop
+  - *nop
+  - *nop
+  - *nop
+  - *nop
+
+- Name: Mongosync
+  Type: Python
+  Threads: 1
+  Phases:
+  - *nop
+  - *nop
   - LoadConfig:
       Path: *scriptsPath
       Key: StartMongosync
   - LoadConfig:
       Path: *scriptsPath
       Key: PollForCEA
-  - &nop {Nop: true}
+  - *nop
   - LoadConfig:
       Path: *scriptsPath
       Key: DrainWrites
@@ -48,21 +72,11 @@ Actors:
   Phases:
   - *nop
   - *nop
-  - Repeat: 1
-    BatchSize: 100
-    Threads: 1
-    DocumentCount: 1000000
-    Database: db
-
-    # Note the document shape and number of collections doesn't
-    # really matter here and we are generally just testing the
-    # max throughput mongosync can achieve with an unbounded
-    # insert workload
-    CollectionCount: 1
-    Document:
-      a: {^RandomInt: {min: 0, max: 1000000}}
-      b: {^RandomString: {length: 8}}
-      c: {^RandomString: {length: 20}}
+  - *nop
+  - *nop
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: InsertShortTestData
   - *nop
   - *nop
   - *nop

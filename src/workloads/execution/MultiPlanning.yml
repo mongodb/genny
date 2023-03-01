@@ -1,0 +1,129 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: >
+ Create collection with multiple indexes and run queries with different selectivity on different
+ indexes to test how efficiently multi planning can choose the most selective index.
+
+Keywords:
+- indexes
+
+Actors:
+- Name: InitCollectionAndDropPlanCache
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &Database test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: &Collection Collection0
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *Collection
+        indexes:
+        - key:
+            a: 1
+          name: a_1
+        - key:
+            b: 1
+          name: b_1
+        - key:
+            c: 1
+          name: c_1
+  - &Nop {Nop: true}
+  # We repeatedly clear plan cache while executing find commands to ensure that multi planning
+  # happens more often.
+  - &ClearPlanCacheRepeatedly
+    Blocking: None
+    Database: *Database
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        planCacheClear: *Collection
+  - *ClearPlanCacheRepeatedly
+  - *ClearPlanCacheRepeatedly
+
+- Name: Insert
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: 4
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 10000
+        BatchSize: 1000
+        Document:
+          a: &Key {^FastRandomString: {length: 6, alphabet: "0123456789"}}
+          b: *Key
+          c: *Key
+
+- Name: FindWithMultiplanning
+  Type: CrudActor
+  Database: *Database
+  Threads: 4
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 2000
+    Collection: *Collection
+    Operations:
+    - OperationName: find
+      OperationMetricsName: MostSelectiveA
+      OperationCommand:
+        Filter: {
+          a: &SelectiveQuery {^Choose: {
+            from: [
+              {$gte: &BigKey {^Join: {array: [
+                "8",
+                {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}},
+              {$lte: &SmallKey {^Join: {array: [
+                "1",
+                {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}}
+            ]
+          }},
+          b: &NonSelectiveQuery {^Choose: {
+            from: [
+              {$gte: *SmallKey},
+              {$lte: *BigKey}
+            ]
+          }},
+          c: *NonSelectiveQuery
+        }
+  - Repeat: 2000
+    Collection: *Collection
+    Operations:
+    - OperationName: find
+      OperationMetricsName: MostSelectiveB
+      OperationCommand:
+        Filter: {
+          a: *NonSelectiveQuery,
+          b: *SelectiveQuery,
+          c: *NonSelectiveQuery
+        }
+  - Repeat: 2000
+    Collection: *Collection
+    Operations:
+    - OperationName: find
+      OperationMetricsName: MostSelectiveC
+      OperationCommand:
+        Filter: {
+          a: *NonSelectiveQuery,
+          b: *SelectiveQuery,
+          c: *NonSelectiveQuery
+        }
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+        - standalone
+        - standalone-all-feature-flags
+        - standalone-classic-query-engine
+        - standalone-sbe
+

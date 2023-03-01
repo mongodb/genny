@@ -26,5 +26,8 @@ def main_canaries_runner(
         cmd = [path, *canary_args]
 
         run_command(
-            cmd=cmd, capture=False, check=True, cwd=workspace_root,
+            cmd=cmd,
+            capture=False,
+            check=True,
+            cwd=workspace_root,
         )

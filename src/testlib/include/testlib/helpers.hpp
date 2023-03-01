@@ -15,7 +15,7 @@
 #ifndef HEADER_E501BBB0_810A_4185_96B2_60CE322C4B78_INCLUDED
 #define HEADER_E501BBB0_810A_4185_96B2_60CE322C4B78_INCLUDED
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <string>
 
@@ -64,7 +64,7 @@ inline void dropAllDatabases(Client& client) {
 }
 
 // The matcher class
-class MultiLineRegexMatch : public Catch::MatcherBase<std::string> {
+class MultiLineRegexMatch : public Catch::Matchers::MatcherBase<std::string> {
     std::string regex;
 
 public:

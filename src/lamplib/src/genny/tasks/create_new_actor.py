@@ -8,5 +8,8 @@ def run_create_new_actor(genny_repo_root: str, actor_name: str):
         genny_repo_root, "src", "lamplib", "src", "genny", "tasks", "create-new-actor.sh"
     )
     cmd_runner.run_command(
-        cmd=[path, actor_name], cwd=genny_repo_root, capture=False, check=True,
+        cmd=[path, actor_name],
+        cwd=genny_repo_root,
+        capture=False,
+        check=True,
     )

@@ -8,11 +8,11 @@ When enough changes have accumulated, it is time to release new version of Catch
 These steps are necessary and have to be performed before each new release. They serve to make sure that the new release is correct and linked-to from the standard places.
 
 
-### Approval testing
+### Testing
 
-Catch's releases are primarily validated against output from previous release, stored in `projects/SelfTest/Baselines`. To validate current sources, build the SelfTest binary and pass it to the `approvalTests.py` script: `approvalTests.py <path/to/SelfTest>`.
-
-There should be no differences, as Approval tests should be updated when changes to Catch are made, but if there are, then they need to be manually reviewed and either approved (using `approve.py`) or Catch requires other fixes.
+All of the tests are currently run in our CI setup based on TravisCI and
+AppVeyor. As long as the last commit tested green, the release can
+proceed.
 
 
 ### Incrementing version number
@@ -27,12 +27,12 @@ version numbers everywhere and pushing the new version to Wandbox.
 
 ### Release notes
 
-Once a release is ready, release notes need to be written. They should summarize changes done since last release. For rough idea of expected notes see previous releases. Once written, release notes should be placed in `docs/release-notes.md`.
+Once a release is ready, release notes need to be written. They should summarize changes done since last release. For rough idea of expected notes see previous releases. Once written, release notes should be added to `docs/release-notes.md`.
 
 
 ### Commit and push update to GitHub
 
-After version number is incremented, single-include header is regenerated and release notes are updated, changes should be commited and pushed to GitHub.
+After version number is incremented, single-include header is regenerated and release notes are updated, changes should be committed and pushed to GitHub.
 
 
 ### Release on GitHub
@@ -42,12 +42,32 @@ Tag version and release title should be same as the new version,
 description should contain the release notes for the current release.
 Single header version of `catch.hpp` *needs* to be attached as a binary,
 as that is where the official download link links to. Preferably
-it should use linux line endings. All non-bundled reporters (Automake,
-TAP, TeamCity) should also be attached as binaries, as they are dependent
-on a specific version of the single-include header.
+it should use linux line endings. All non-bundled reporters (Automake, TAP,
+TeamCity, SonarQube) should also be attached as binaries, as they might be
+dependent on a specific version of the single-include header.
 
+Since 2.5.0, the release tag and the "binaries" (headers) should be PGP
+signed.
 
-## Optional steps
+#### Signing a tag
 
-Because Catch's [vcpkg](https://github.com/Microsoft/vcpkg) port updates
-itself automagically, there are no optional steps at this time.
+To create a signed tag, use `git tag -s <VERSION>`, where `<VERSION>`
+is the version being released, e.g. `git tag -s v2.6.0`.
+
+Use the version name as the short message and the release notes as
+the body (long) message.
+
+#### Signing the headers
+
+This will create ASCII-armored signatures for the headers that are
+uploaded to the GitHub release:
+
+```
+$ gpg2 --armor --output catch.hpp.asc --detach-sig catch.hpp
+$ gpg2 --armor --output catch_reporter_automake.hpp.asc --detach-sig catch_reporter_automake.hpp
+$ gpg2 --armor --output catch_reporter_teamcity.hpp.asc --detach-sig catch_reporter_teamcity.hpp
+$ gpg2 --armor --output catch_reporter_tap.hpp.asc --detach-sig catch_reporter_tap.hpp
+$ gpg2 --armor --output catch_reporter_sonarqube.hpp.asc --detach-sig catch_reporter_sonarqube.hpp
+```
+
+_GPG does not support signing multiple files in single invocation._

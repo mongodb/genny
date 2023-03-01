@@ -8,6 +8,7 @@
 #ifndef TWOBLUECUBES_CATCH_REPORTER_BASES_HPP_INCLUDED
 #define TWOBLUECUBES_CATCH_REPORTER_BASES_HPP_INCLUDED
 
+#include "../internal/catch_enforce.h"
 #include "../internal/catch_interfaces_reporter.h"
 
 #include <algorithm>
@@ -24,6 +25,11 @@ namespace Catch {
     // Returns double formatted as %.3f (format expected on output)
     std::string getFormattedDuration( double duration );
 
+    //! Should the reporter show
+    bool shouldShowDuration( IConfig const& config, double duration );
+
+    std::string serializeFilters( std::vector<std::string> const& container );
+
     template<typename DerivedT>
     struct StreamingReporterBase : IStreamingReporter {
 
@@ -33,7 +39,7 @@ namespace Catch {
         {
             m_reporterPrefs.shouldRedirectStdOut = false;
             if( !DerivedT::getSupportedVerbosities().count( m_config->verbosity() ) )
-                throw std::domain_error( "Verbosity level not supported by this reporter" );
+                CATCH_ERROR( "Verbosity level not supported by this reporter" );
         }
 
         ReporterPreferences getPreferences() const override {
@@ -48,9 +54,12 @@ namespace Catch {
 
         void noMatchingTestCases(std::string const&) override {}
 
+        void reportInvalidArguments(std::string const&) override {}
+
         void testRunStarting(TestRunInfo const& _testRunInfo) override {
             currentTestRunInfo = _testRunInfo;
         }
+
         void testGroupStarting(GroupInfo const& _groupInfo) override {
             currentGroupInfo = _groupInfo;
         }
@@ -148,7 +157,7 @@ namespace Catch {
         {
             m_reporterPrefs.shouldRedirectStdOut = false;
             if( !DerivedT::getSupportedVerbosities().count( m_config->verbosity() ) )
-                throw std::domain_error( "Verbosity level not supported by this reporter" );
+                CATCH_ERROR( "Verbosity level not supported by this reporter" );
         }
         ~CumulativeReporterBase() override = default;
 
@@ -216,7 +225,7 @@ namespace Catch {
             node->children.push_back(m_rootSection);
             m_testCases.push_back(node);
             m_rootSection.reset();
-        
+
             assert(m_deepestSection);
             m_deepestSection->stdOut = testCaseStats.stdOut;
             m_deepestSection->stdErr = testCaseStats.stdErr;
@@ -264,6 +273,8 @@ namespace Catch {
 
     struct TestEventListenerBase : StreamingReporterBase<TestEventListenerBase> {
         TestEventListenerBase( ReporterConfig const& _config );
+
+        static std::set<Verbosity> getSupportedVerbosities();
 
         void assertionStarting(AssertionInfo const&) override;
         bool assertionEnded(AssertionStats const&) override;

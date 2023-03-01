@@ -19,23 +19,12 @@ Actors:
     Database: test
     Operations:
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         insert: myCollection
         documents: &Doc [{a: {^FastRandomString: {length: 1000}}}]
         writeConcern: {w: majority}
   - &Nop {Nop: true}
-  - &Insert_W1_JTrue
-    MetricsName: Insert_W1_JTrue
-    Duration: 30 seconds
-    Database: test
-    Operations:
-    - OperationName: RunCommand
-      OperationIsQuiet: true
-      OperationCommand:
-        insert: myCollection
-        documents: *Doc
-        writeConcern: {w: 1, j: true}
+  - *Nop
   - *Nop
   - &Insert_WMajority_JFalse
     MetricsName: Insert_WMajority_JFalse
@@ -43,23 +32,12 @@ Actors:
     Database: test
     Operations:
     - OperationName: RunCommand
-      OperationIsQuiet: true
       OperationCommand:
         insert: myCollection
         documents: *Doc
         writeConcern: {w: majority, j: false}
   - *Nop
-  - &Insert_W1
-    MetricsName: Insert_W1
-    Duration: 30 seconds
-    Database: test
-    Operations:
-    - OperationName: RunCommand
-      OperationIsQuiet: true
-      OperationCommand:
-        insert: myCollection
-        documents: *Doc
-        writeConcern: {w: 1}
+  - *Nop
   - *Nop
   - Phase: 8..39
     Nop: true
@@ -72,11 +50,11 @@ Actors:
     Nop: true
   - *Insert_WMajority
   - *Nop
-  - *Insert_W1_JTrue
+  - *Nop
   - *Nop
   - *Insert_WMajority_JFalse
   - *Nop
-  - *Insert_W1
+  - *Nop
   - *Nop
   - Phase: 16..39
     Nop: true
@@ -89,11 +67,11 @@ Actors:
     Nop: true
   - *Insert_WMajority
   - *Nop
-  - *Insert_W1_JTrue
+  - *Nop
   - *Nop
   - *Insert_WMajority_JFalse
   - *Nop
-  - *Insert_W1
+  - *Nop
   - *Nop
   - Phase: 24..39
     Nop: true
@@ -106,11 +84,11 @@ Actors:
     Nop: true
   - *Insert_WMajority
   - *Nop
-  - *Insert_W1_JTrue
+  - *Nop
   - *Nop
   - *Insert_WMajority_JFalse
   - *Nop
-  - *Insert_W1
+  - *Nop
   - *Nop
   - Phase: 32..39
     Nop: true
@@ -123,11 +101,11 @@ Actors:
     Nop: true
   - *Insert_WMajority
   - *Nop
-  - *Insert_W1_JTrue
+  - *Nop
   - *Nop
   - *Insert_WMajority_JFalse
   - *Nop
-  - *Insert_W1
+  - *Nop
   - *Nop
 
 - Name: CleanUp

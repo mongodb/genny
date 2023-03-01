@@ -3,10 +3,32 @@ import os
 import shutil
 import platform
 import urllib.request
+import progressbar
 
 from genny.cmd_runner import run_command
 
 SLOG = structlog.get_logger(__name__)
+
+
+class ProgressBar:
+    """
+    A simple progress bar to show while downloading the toolkit tarball. Useful to let the user know that the
+     application hasn't frozen.
+    """
+
+    def __init__(self):
+        self.bar = None
+
+    def __call__(self, block_num, block_size, total_size):
+        if not self.bar:
+            self.bar = progressbar.ProgressBar(maxval=total_size)
+            self.bar.start()
+
+        downloaded = block_num * block_size
+        if downloaded < total_size:
+            self.bar.update(downloaded)
+        else:
+            self.bar.finish()
 
 
 class Downloader:
@@ -100,7 +122,8 @@ class Downloader:
         # else:
         url = self._get_url()
         SLOG.debug("Downloading", name=self._name, url=url)
-        urllib.request.urlretrieve(url, tarball)
+        print(f"Downloading {url} to {tarball}")
+        urllib.request.urlretrieve(url, tarball, ProgressBar())
         SLOG.debug("Finished Downloading", name=self._name, tarball=tarball)
 
         SLOG.debug("Extracting", name=self._name, into=self.result_dir)
@@ -129,7 +152,7 @@ class Downloader:
 
 # Instructions derived from https://github.com/NixOS/nix/issues/2925#issuecomment-539570232
 def _macos_install_instructions(name):
-    return fr"""
+    return rf"""
 
 😲 You must create the parent directory {name} for the genny toolchain.
    You are on On MacOS Catalina or later, so use use the synthetic.conf method.

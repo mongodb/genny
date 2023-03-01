@@ -1,3 +1,5 @@
+import errno
+import socket
 import os
 import shutil
 import subprocess
@@ -32,7 +34,7 @@ def _get_poplar_args(genny_repo_root: str, workspace_root: str):
     Returns the argument list used to create the Poplar gRPC process.
 
     If we are in the root of the genny repo, use the local executable.
-    Otherwise we search the PATH.
+    Otherwise, we search the PATH.
     """
     curator = _find_curator(genny_repo_root=genny_repo_root, workspace_root=workspace_root)
     if curator is None:
@@ -144,7 +146,24 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
             raise OSError("Failed to start Poplar.")
         try:
             os.chdir(prior_cwd)
-            time.sleep(0.5)  # sleep to let curator get started. This is a heuristic.
+            connected = False
+            for i in range(10):
+                time.sleep(0.2)  # sleep to let curator get started. This is a heuristic.
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                try:
+                    sock.connect(("127.0.0.1", 2288))
+                    # If we didn't throw an exception, then we successfully connected
+                    connected = True
+                    break
+                except socket.error as socket_error:
+                    if socket_error.errno != errno.ECONNREFUSED:
+                        # We expect to get connection refused if poplar is not up yet.
+                        # If we get something else, bail
+                        raise socket_error
+                finally:
+                    sock.close()
+            if not connected:
+                raise OSError(f"Poplar not listening on port 2288")
             yield poplar
         finally:
             try:
@@ -183,6 +202,23 @@ class CuratorDownloader(Downloader):
     # https://evergreen.mongodb.com/waterfall/curator
 
     CURATOR_VERSION = "3df28d2514d4c4de7c903d027e43f3ee48bf8ec1"
+    ARM_CURATOR_VERSION = "965d53845fd1987ddbf04a937ff625f3c243dee3"
+
+    SPECIAL_CURATOR_VERSIONS = {
+        "arm": ARM_CURATOR_VERSION,
+    }
+
+    DISTRO_MAPPING = {
+        "archlinux": "linux-amd64",
+        "amazon2": "rhel70",
+        "rhel8": "rhel70",
+        "rhel62": "rhel70",
+        "ubuntu2004": "rhel70",
+        "ubuntu2204": "rhel70",
+        "amazon2_arm64": "arm",
+        "ubuntu2004_arm64": "arm",
+        "ubuntu2204_arm64": "arm",
+    }
 
     def __init__(
         self,
@@ -204,20 +240,25 @@ class CuratorDownloader(Downloader):
         if self._os_family == "Darwin":
             self._curator_distro = "macos"
 
+        # Note that this checks a substring. We could replace this check by finding all the valid
+        # ubuntu versions and putting their names in DISTRO_MAPPING
         if "ubuntu" in self._linux_distro:
             self._curator_distro = "ubuntu"
 
-        if self._linux_distro == "archlinux":
-            self._curator_distro = "linux-amd64"
-
-        if self._linux_distro in ("amazon2", "rhel8", "rhel62"):
-            self._curator_distro = "rhel70"
+        self._curator_distro = CuratorDownloader.DISTRO_MAPPING.get(
+            self._linux_distro, self._curator_distro
+        )
 
     def _get_url(self):
+        # Check if we need a special curator version for the distro. Otherwise use the default
+        # CURATOR_VERSION
+        version = CuratorDownloader.SPECIAL_CURATOR_VERSIONS.get(
+            self._curator_distro, CuratorDownloader.CURATOR_VERSION
+        )
         return (
             "https://s3.amazonaws.com/boxes.10gen.com/build/curator/"
             "curator-dist-{distro}-{build}.tar.gz".format(
-                distro=self._curator_distro, build=CuratorDownloader.CURATOR_VERSION
+                distro=self._curator_distro, build=version
             )
         )
 
@@ -228,7 +269,9 @@ class CuratorDownloader(Downloader):
         if curator is None:
             return False
         res: RunCommandOutput = run_command(
-            cmd=[curator, "-v"], check=True, cwd=self._workspace_root,
+            cmd=[curator, "-v"],
+            check=True,
+            cwd=self._workspace_root,
         )
         installed_version = "".join(res.stdout).strip()
         wanted_version = f"curator version {CuratorDownloader.CURATOR_VERSION}"

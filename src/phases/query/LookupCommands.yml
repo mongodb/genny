@@ -1,0 +1,150 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  Defines common configurations for 'LookupSBEPushdown' and 'LookupSBEPushdownMisc' workloads.
+
+# Defines value generators.
+
+# Generates a random integer value from 1 to 'card' parameter of which the default is 9500.
+RandIntUpToTemplate: &RandIntUpTo {^RandomInt: {min: 1, max: {^Parameter: {Name: "card", Default: 9500}}}}
+# Generates a monotonically increasing integer value from 1 to 'card' parameter of which the default
+# is 9500.
+IncIntTemplate: &IncInt {^Inc: {start: 1}}
+# Generates a random 32bit integer value.
+Rand32BitIntGen: &Rand32BitInt {^RandomInt: {min: 0, max: 2147483647}}
+# Generates a random string of which the length is 10 - 80.
+RandomShortStringGen: &RandShortStr {^FastRandomString: {length: {^RandomInt: {min: 10, max: 80}}}}
+# Generates a random string of which the length is 480 - 960.
+RandMediumStrGen: &RandMediumStr {^FastRandomString: {length: {^RandomInt: {min: 480, max: 960}}}}
+
+# The small document template for a local collection. Random values are generated for 'int_key' and
+# 'str_key' fields since local collections would have much more documents than foreign collections
+# and it's highly probable that all possible values are generated for the join key.
+LocalSmallDocTemplate:
+  int_key: *RandIntUpTo
+  str_key:
+    ^FormatString:
+      format: "%010d"
+      withArgs: [*RandIntUpTo]
+  data1: *Rand32BitInt
+  data2: *Rand32BitInt
+  payload: *RandShortStr
+
+# The large document template for a local collection. The same comment applies to 'int_key' and
+# 'str_key' fields as 'LocalSmallDocTemplate'.
+LocalLargeDocTemplate:
+  int_key: *RandIntUpTo
+  str_key:
+    ^FormatString:
+      format: "%010d"
+      withArgs: [*RandIntUpTo]
+  data1: *Rand32BitInt
+  data2: *Rand32BitInt
+  data3: *Rand32BitInt
+  data4: *Rand32BitInt
+  payload1: *RandShortStr
+  payload2: *RandMediumStr
+
+# The document template for a foreign collections. Monotonically increasing values are generated
+# for 'int_key' / 'str_key' / 'doc_key.int' fields so that every possible values for the range are
+# guaranteed to be generated. But random values are generated for 'arr_key' since the array will
+# 5 elements which is likely to make it possible to generate all possible values.
+ForeignSmallDocTemplate:
+  int_key: *IncInt
+  str_key:
+    ^FormatString:
+      format: "%010d"
+      withArgs: [*IncInt]
+  doc_key: {int: *IncInt, arr: {^Array: {of: *RandIntUpTo, number: 5}}}
+  arr_key: {^Array: {of: *RandIntUpTo, number: 5}}
+  data1: *Rand32BitInt
+
+# The document template for both local and foreign collections in NLJ Lookups. The doc contains
+# scalar, single element array, 8 elements array, simple object and nested object.
+LargeComplexDocTemplate:
+  int_key1: &RandInt0To1k {^RandomInt: {min: 0, max: 1000}}
+  int_key2: {^RandomInt: {min: 2000, max: 12000}}
+  arr1: [*RandInt0To1k]
+  arr8: {^Array: {of: *RandInt0To1k, number: 8}}
+  obj1: {int_key: *RandInt0To1k}
+  obj4: {obj3: {obj2: {obj1: {int_key: *RandInt0To1k}}}}
+
+# The command template for HJ lookups. Note that 'allowDiskUse' is true.
+HJLookupCmdTemplate:
+  aggregate: {^Parameter: {Name: "l", Default: "local"}}
+  pipeline:
+    [
+      {$lookup: {
+        from: {^Parameter: {Name: "f", Default: "foreign"}},
+        localField: {^Parameter: {Name: "lk", Default: "int_key"}},
+        foreignField: {^Parameter: {Name: "k", Default: "int_key"}},
+        as: "joined"
+      }},
+    ]
+  allowDiskUse: true
+  cursor: {batchSize: 2000}
+
+# The command template for double NLJ lookups. Note that 'allowDiskUse' is true.
+NLJDoubleLookupCmdTemplate:
+  aggregate: {^Parameter: {Name: "l", Default: "local"}}
+  pipeline:
+    [
+      {$lookup: {
+        from: {^Parameter: {Name: "f", Default: "foreign"}},
+        localField: {^Parameter: {Name: "lk1", Default: "int_key"}},
+        foreignField: {^Parameter: {Name: "k1", Default: "int_key"}},
+        as: "joined1"
+      }},
+      {$lookup: {
+        from: {^Parameter: {Name: "f", Default: "foreign"}},
+        localField: {^Parameter: {Name: "lk2", Default: "str_key"}},
+        foreignField: {^Parameter: {Name: "k2", Default: "str_key"}},
+        as: "joined2"
+      }},
+    ]
+  allowDiskUse: false
+  cursor: {batchSize: 2000}
+
+# The command template for triple NLJ lookups. Note that 'allowDiskUse' is true.
+NLJTripleLookupCmdTemplate:
+  aggregate: {^Parameter: {Name: "l", Default: "local"}}
+  pipeline:
+    [
+      {$lookup: {
+        from: {^Parameter: {Name: "f1", Default: "foreign"}},
+        localField: {^Parameter: {Name: "lk1", Default: "int_key"}},
+        foreignField: {^Parameter: {Name: "k1", Default: "int_key"}},
+        as: "joined1"
+      }},
+      {$lookup: {
+        from: {^Parameter: {Name: "f2", Default: "foreign"}},
+        localField: {^Parameter: {Name: "lk2", Default: "str_key"}},
+        foreignField: {^Parameter: {Name: "k2", Default: "str_key"}},
+        as: "joined2"
+      }},
+      {$lookup: {
+        from: {^Parameter: {Name: "f3", Default: "foreign"}},
+        localField: {^Parameter: {Name: "lk3", Default: "int_key"}},
+        foreignField: {^Parameter: {Name: "k3", Default: "arr_key"}},
+        as: "joined3"
+      }},
+    ]
+  allowDiskUse: false
+  cursor: {batchSize: 2000}
+
+# The command template for NLJ lookups. Note that 'allowDiskUse' is false. This command template
+# can be used for INLJ lookups too since INLJ lookups depend on the existence of index on the join
+# field.
+NLJLookupCmdTemplate:
+  aggregate: {^Parameter: {Name: "l", Default: "local"}}
+  pipeline:
+    [
+      {$lookup: {
+        from: {^Parameter: {Name: "f", Default: "foreign"}},
+        localField: {^Parameter: {Name: "lk", Default: "int_key"}},
+        foreignField: {^Parameter: {Name: "k", Default: "int_key"}},
+        as: "joined"
+      }},
+    ]
+  allowDiskUse: false
+  cursor: {batchSize: 2000}

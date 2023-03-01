@@ -46,7 +46,20 @@ def cli(ctx: click.Context, verbose: bool) -> None:
     "--linux-distro",
     required=False,
     default="not-linux",
-    type=click.Choice(["ubuntu1804", "ubuntu2004", "rhel8", "rhel70", "amazon2", "not-linux",]),
+    type=click.Choice(
+        [
+            "ubuntu1804",
+            "ubuntu2004",
+            "ubuntu2004_arm64",
+            "ubuntu2204",
+            "ubuntu2204_arm64",
+            "rhel8",
+            "rhel70",
+            "amazon2",
+            "amazon2_arm64",
+            "not-linux",
+        ]
+    ),
     help=(
         "Specify the linux distro you're on; if your system isn't available,"
         " please contact us at #workload-generation. The not-linux value is useful on macOS."
@@ -122,7 +135,8 @@ def cmake_compile_install(
 
 
 @cli.command(
-    "evaluate", help=("Evaluate the YAML workload file with minimal validation."),
+    "evaluate",
+    help=("Evaluate the YAML workload file with minimal validation."),
 )
 @click.argument("workload_path")
 @click.option(
@@ -173,7 +187,8 @@ def evaluate(
 
 
 @cli.command(
-    "export", help=("Export the given FTDC file to CSV."),
+    "export",
+    help=("Export the given FTDC file to CSV."),
 )
 @click.argument("ftdc_path")
 @click.option(
@@ -196,7 +211,8 @@ def evaluate(ctx: click.Context, ftdc_path: str, output):
 
 
 @cli.command(
-    "translate", help=("Translate the given genny workload directory to t2 ftdc."),
+    "translate",
+    help=("Translate the given genny workload directory to t2 ftdc."),
 )
 @click.argument("ftdc_path")
 @click.option(
@@ -219,7 +235,8 @@ def translate(ctx: click.Context, ftdc_path: str, output):
 
 
 @cli.command(
-    name="clean", help="Resets output and venv directories to clean checkout state.",
+    name="clean",
+    help="Resets output and venv directories to clean checkout state.",
 )
 @click.pass_context
 def clean(ctx: click.Context) -> None:
@@ -230,7 +247,11 @@ def clean(ctx: click.Context) -> None:
 
 @cli.command(name="cmake-test", help="Run genny's C++ unit tests.")
 @click.option(
-    "-g", "--regex", required=False, default=None, help=("Regex to match against tests."),
+    "-g",
+    "--regex",
+    required=False,
+    default=None,
+    help=("Regex to match against tests."),
 )
 @click.option(
     "-r",
@@ -267,7 +288,8 @@ def benchmark_test(ctx: click.Context) -> None:
 
 
 @cli.command(
-    name="workload", help=("Actually run a workload and place results in `build/WorkloadOutput`."),
+    name="workload",
+    help=("Actually run a workload and place results in `build/WorkloadOutput`."),
 )
 @click.argument("workload_yaml", nargs=-1)
 @click.option(
@@ -357,7 +379,11 @@ def workload(
     ),
 )
 @click.option(
-    "-w", "--workload", required=False, default=None, help=("Workload to dry-run."),
+    "-w",
+    "--workload",
+    required=False,
+    default=None,
+    help=("Workload to dry-run."),
 )
 @click.pass_context
 def dry_run_workloads(ctx: click.Context, workload: str):
@@ -402,7 +428,11 @@ def canaries(ctx: click.Context, canary_args: List[str]):
 @click.option(
     "--mongo-dir",
     type=click.Path(
-        exists=False, file_okay=False, dir_okay=True, writable=True, resolve_path=True,
+        exists=False,
+        file_okay=False,
+        dir_okay=True,
+        writable=True,
+        resolve_path=True,
     ),
     required=False,
     default=None,
@@ -462,12 +492,14 @@ def create_new_actor(ctx: click.Context, actor_name: str):
     from genny.tasks import create_new_actor
 
     create_new_actor.run_create_new_actor(
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], actor_name=actor_name,
+        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        actor_name=actor_name,
     )
 
 
 @cli.command(
-    "generate-uuid-tag", help=("Generate a random UUID tag for headers."),
+    "generate-uuid-tag",
+    help=("Generate a random UUID tag for headers."),
 )
 @click.pass_context
 def generate_uuid_tag(ctx: click.Context):
@@ -518,7 +550,9 @@ def lint_yaml(ctx: click.Context):
     ),
 )
 @click.option(
-    "--tasks", required=True, type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks"]),
+    "--tasks",
+    required=True,
+    type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks"]),
 )
 @click.pass_context
 def auto_tasks(ctx: click.Context, tasks: str):

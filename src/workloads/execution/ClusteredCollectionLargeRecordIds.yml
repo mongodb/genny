@@ -19,5 +19,10 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - replica
       - replica-all-feature-flags
       - shard-lite-all-feature-flags
+    branch_name:
+      $gte: v5.3
