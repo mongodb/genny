@@ -38,9 +38,32 @@ Actors:
     TemplateName: PingTemplate
     TemplateParameters:
       Name: MultiThreadPingRateLimited
-      Threads: 64
-      Rate: 1000 per 1 second
+      Threads: 4
       Active: [1]
+- ActorFromTemplate:
+    TemplateName: PingTemplate
+    TemplateParameters:
+      Name: MultiThreadPingRateLimited
+      Threads: 8
+      Active: [2]
+- ActorFromTemplate:
+    TemplateName: PingTemplate
+    TemplateParameters:
+      Name: MultiThreadPingRateLimited
+      Threads: 16
+      Active: [3]
+- ActorFromTemplate:
+    TemplateName: PingTemplate
+    TemplateParameters:
+      Name: MultiThreadPingRateLimited
+      Threads: 32
+      Active: [4]
+- ActorFromTemplate:
+    TemplateName: PingTemplate
+    TemplateParameters:
+      Name: MultiThreadPingRateLimited
+      Threads: 64
+      Active: [5]
 AutoRun:
 - When:
     mongodb_setup:
