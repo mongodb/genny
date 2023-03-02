@@ -8,7 +8,7 @@ Clients:
     QueryOptions:
       maxPoolSize: 500
 
-MaxPhases: &MaxPhases 1
+MaxPhases: &MaxPhases 4
 ActorTemplates:
 - TemplateName: PingTemplate
   Config:
@@ -45,25 +45,25 @@ Actors:
     TemplateParameters:
       Name: EightThreadsPingRateLimited
       Threads: 8
-      Active: [1]
+      Active: [2]
 - ActorFromTemplate:
     TemplateName: PingTemplate
     TemplateParameters:
       Name: SixteenThreadsPingRateLimited
       Threads: 16
-      Active: [1]
+      Active: [3]
 - ActorFromTemplate:
     TemplateName: PingTemplate
     TemplateParameters:
       Name: ThirtyTwoThreadsPingRateLimited
       Threads: 32
-      Active: [1]
+      Active: [4]
 - ActorFromTemplate:
     TemplateName: PingTemplate
     TemplateParameters:
       Name: SixtyFourThreadsPingRateLimited
       Threads: 64
-      Active: [1]
+      Active: [5]
 AutoRun:
 - When:
     mongodb_setup:
