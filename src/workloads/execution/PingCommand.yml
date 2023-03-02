@@ -8,7 +8,7 @@ Clients:
     QueryOptions:
       maxPoolSize: 500
 
-MaxPhases: &MaxPhases 4
+MaxPhases: &MaxPhases 5
 ActorTemplates:
 - TemplateName: PingTemplate
   Config:
