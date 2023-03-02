@@ -37,31 +37,31 @@ Actors:
 - ActorFromTemplate:
     TemplateName: PingTemplate
     TemplateParameters:
-      Name: MultiThreadPingRateLimited
+      Name: FourThreadsPingRateLimited
       Threads: 4
       Active: [1]
 - ActorFromTemplate:
     TemplateName: PingTemplate
     TemplateParameters:
-      Name: MultiThreadPingRateLimited
+      Name: EightThreadsPingRateLimited
       Threads: 8
       Active: [2]
 - ActorFromTemplate:
     TemplateName: PingTemplate
     TemplateParameters:
-      Name: MultiThreadPingRateLimited
+      Name: SixteenThreadsPingRateLimited
       Threads: 16
       Active: [3]
 - ActorFromTemplate:
     TemplateName: PingTemplate
     TemplateParameters:
-      Name: MultiThreadPingRateLimited
+      Name: ThirtyTwoThreadsPingRateLimited
       Threads: 32
       Active: [4]
 - ActorFromTemplate:
     TemplateName: PingTemplate
     TemplateParameters:
-      Name: MultiThreadPingRateLimited
+      Name: SixtyFourThreadsPingRateLimited
       Threads: 64
       Active: [5]
 AutoRun:
