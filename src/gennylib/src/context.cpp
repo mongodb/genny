@@ -47,7 +47,7 @@ WorkloadContext::WorkloadContext(const Node& node,
       _rateLimiters{10},
       _poolManager{apmCallback, dryRun},
       _workloadPath{node.key()} ,
-      _coordinator{"./pipe.to", "./pipe.from"} {
+      _coordinator{"./build/Genny.out", "./build/Genny.in"} {
     std::set<std::string> validSchemaVersions{"2018-07-01"};
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept
@@ -227,7 +227,7 @@ bool is_fifo(const char *path) {
 
 ExternalPhaseCoordinator::ExternalPhaseCoordinator(std::string out_pipe,std::string in_pipe) : m_out_pipe(out_pipe), m_in_pipe(in_pipe){
     m_fifo = is_fifo(out_pipe.c_str());
-    BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator('" << out_pipe << "', '" << in_pipe << "') --> " << m_fifo;
+    BOOST_LOG_TRIVIAL(info) << "ExternalPhaseCoordinator('" << out_pipe << "', '" << in_pipe << "') --> " << m_fifo;
     if (m_fifo) {
         m_ofs.open(out_pipe.c_str());
     }
