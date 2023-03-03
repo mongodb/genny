@@ -100,5 +100,6 @@ AutoRun:
       - replica
       - shard-lite
       - shard-lite-all-feature-flags
+      - single-replica
       - single-replica-classic-query-engine
       - single-replica-sbe
