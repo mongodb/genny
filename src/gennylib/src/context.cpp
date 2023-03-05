@@ -235,7 +235,7 @@ ExternalPhaseCoordinator::ExternalPhaseCoordinator(std::string out_pipe,std::str
 void ExternalPhaseCoordinator::_onPhase(std::string message, PhaseNumber phase){
     BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase('" << message << "'," << phase << "') start";
     if (m_fifo) {
-        m_ofs << "{ \"message\": \"" << message << "\",\"phase\":" <<  phase << "}" << std::endl << std::flush;
+        m_ofs << "{ \"message\": \"" << message << "\",\"phase\":" <<  phase << ",\"request\":" <<  1 << "}" << std::endl << std::flush;
 
         // The file open will block until there is a writer.
         BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::_onPhase('"  << message << "'," << phase << ") waiting ";
