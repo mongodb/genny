@@ -47,7 +47,7 @@ WorkloadContext::WorkloadContext(const Node& node,
       _rateLimiters{10},
       _poolManager{apmCallback, dryRun},
       _workloadPath{node.key()} ,
-      _coordinator{"./build/Genny.out", "./build/Genny.in"} {
+      _coordinator{"./build/fifos/workload_client.0/Genny.out","./build/fifos/workload_client.0/Genny.in"} {
     std::set<std::string> validSchemaVersions{"2018-07-01"};
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept
