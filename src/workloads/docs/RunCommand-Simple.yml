@@ -5,7 +5,7 @@ Description: |
   to execute a command against the server.
 
 Actors:
-- Name: ServerStatusInsertFind
+- Name: ServerStatusInsert
   Type: RunCommand
   Threads: 1
   Phases:
@@ -20,14 +20,6 @@ Actors:
       OperationCommand:
         insert: myCollection
         documents: [{name: {^RandomString: {length: {^RandomInt: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]
-    - OperationMetricsName: Find
-      OperationCommand:
-        find: restaurants
-        filter: {rating: {$gte: 9}, cuisine: italian}
-        projection: {name: 1, rating: 1, address: 1}
-        sort: {name: 1}
-        limit: 5
-      OperationName: RunCommand
 
 AutoRun:
 - When:
