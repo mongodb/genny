@@ -10,12 +10,16 @@ from genny import toolchain
 SLOG = structlog.get_logger(__name__)
 
 
-def _sanitizer_flags(sanitizer: str = None):
+def _sanitizer_flags(sanitizer: str, genny_repo_root: str):
     if sanitizer is None:
         return []
 
     if sanitizer == "asan":
-        return ["-DCMAKE_CXX_FLAGS=-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g"]
+        cmake_cxx_flags = " ".join([
+            "-DCMAKE_CXX_FLAGS=-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g",
+            "-mllvm -asan-use-private-alias=1", # suppress false odr-violation, clang only
+            f"-fsanitize-blacklist={genny_repo_root}/asan.ignorelist"]) # ignore existing ASAN issues.
+        return [cmake_cxx_flags, "-DCMAKE_CXX_COMPILER=clang++"]
     elif sanitizer == "tsan":
         return ["-DCMAKE_CXX_FLAGS=-pthread -fsanitize=thread -g -O1"]
     elif sanitizer == "ubsan":
@@ -72,7 +76,7 @@ def cmake(
         f"-DVCPKG_TARGET_TRIPLET={toolchain_info.triplet_arch}-{toolchain_info.triplet_os}",
     ]
 
-    cmake_cmd += _sanitizer_flags(sanitizer)
+    cmake_cmd += _sanitizer_flags(sanitizer, genny_repo_root)
 
     cmake_cmd += cmake_args
 
