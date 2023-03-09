@@ -38,7 +38,7 @@ sudo chown $USER /data/mci
 sudo yum groupinstall "Development Tools"
 
 # Ensure /data/mci exists and is owned by you
-sudo mkdir -p data/mci
+sudo mkdir -p /data/mci
 sudo chown $USER /data/mci
 ```
 ### Arch
@@ -47,7 +47,7 @@ sudo chown $USER /data/mci
 apk add bash clang gcc musl-dev linux-headers
 
 # Ensure /data/mci exists and is owned by you
-sudo mkdir -p data/mci
+sudo mkdir -p /data/mci
 sudo chown $USER /data/mci
 ```
 
