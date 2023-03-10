@@ -18,6 +18,7 @@
 #include <set>
 #include <filesystem>
 #include <sstream>
+#include <boost/algorithm/string.hpp>
 
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
@@ -47,7 +48,7 @@ WorkloadContext::WorkloadContext(const Node& node,
       _rateLimiters{10},
       _poolManager{apmCallback, dryRun},
       _workloadPath{node.key()} ,
-      _coordinator{"./build/fifos/workload_client.0/Genny.out","./build/fifos/workload_client.0/Genny.in"} {
+      _coordinator{"",4400} {
     std::set<std::string> validSchemaVersions{"2018-07-01"};
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept
@@ -214,43 +215,54 @@ bool PhaseContext::isNop() const {
     return nop.maybe<bool>().value_or(false);
 }
 
-bool is_fifo(const char *path) {
-    std::error_code ec;
-    bool res = std::filesystem::is_fifo(path, ec);
-    // Failure here doesn't matter, if the file is missing then
-    // this is being run directly so there is no one to coordinate with.
-    if (ec.value() != 0) {
-        BOOST_LOG_TRIVIAL(debug) << "is_fifo('" << path << "')" << ec.message();
+int connect(std::string ipaddress, int port) {
+    struct sockaddr_in addr = {0};
+    addr.sin_addr.s_addr = INADDR_ANY;
+    if (!ipaddress.empty()) {
+        addr.sin_addr.s_addr = inet_addr(ipaddress.c_str());
     }
-    return res;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons( port );
+
+    int sd = socket(AF_INET, SOCK_STREAM, 0);
+    if(connect(sd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        BOOST_LOG_TRIVIAL(warning) << "connect('" << ipaddress << "',"
+                                   << port << "') failed --> '"<< ::strerror(errno) << "'";
+        return -1;
+    }
+    return sd;
 }
 
-ExternalPhaseCoordinator::ExternalPhaseCoordinator(std::string out_pipe,std::string in_pipe) : m_out_pipe(out_pipe), m_in_pipe(in_pipe){
-    m_fifo = is_fifo(out_pipe.c_str());
-    BOOST_LOG_TRIVIAL(info) << "ExternalPhaseCoordinator('" << out_pipe << "', '" << in_pipe << "') --> " << m_fifo;
-    if (m_fifo) {
-        m_ofs.open(out_pipe.c_str());
-    }
+ExternalPhaseCoordinator::ExternalPhaseCoordinator(std::string host, int port) :
+      m_host(host), m_port(port), m_socket(connect(host, port)){
+    BOOST_LOG_TRIVIAL(info) << "ExternalPhaseCoordinator::ExternalPhaseCoordinator('"
+                            << m_host << "'," << m_port << "') --> " << m_socket;
 }
-void ExternalPhaseCoordinator::_onPhase(std::string message, PhaseNumber phase){
-    BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase('" << message << "'," << phase << "') start";
-    if (m_fifo) {
-        m_ofs << "{ \"message\": \"" << message << "\",\"phase\":" <<  phase << ",\"request\":" <<  1 << "}" << std::endl << std::flush;
-
-        // The file open will block until there is a writer.
-        BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::_onPhase('"  << message << "'," << phase << ") waiting ";
-        std::fstream ifs( m_in_pipe.c_str());
-        std::string line;
-        std::getline(ifs, line);
-        BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::_onPhase '" << line << "'";
+void ExternalPhaseCoordinator::_onPhase(std::string event){
+    BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase('" << event << "') start";
+    if(m_socket > 0) {
+        write(m_socket, event.c_str(), event.length());
+        char buf[1024];
+        bzero(buf, sizeof(buf));
+        int rval = read(m_socket, buf, 1024);
+        std::string response(buf);
+        boost::trim(response);
+        BOOST_LOG_TRIVIAL(info) << "ExternalPhaseCoordinator::onPhase' read '"
+                                 << response << "' " << rval ;
     }
-    BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase('" << message << "'," << phase << "') end";
+    BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase('" << event << "') end";
 }
 void ExternalPhaseCoordinator::onPhaseStart(PhaseNumber phase){
-    _onPhase("Beginning phase", phase);
+    std::stringstream event;
+    event << R"({ "message": ")" << "Beginning phase" << R"(","phase":)"
+          <<  phase << R"(,"request":)" <<  1 << "}" << std::endl;
+    _onPhase(event.str());
 }
 void ExternalPhaseCoordinator::onPhaseStop(PhaseNumber phase){
-    _onPhase("Ended phase", phase);
+    std::stringstream event;
+    event << R"({ "message": ")" << "Ended phase" << R"(","phase":)"
+          <<  phase << R"(,"request":)" <<  1 << "}" << std::endl;
+    _onPhase(event.str());
 }
 
 }  // namespace genny

@@ -25,6 +25,15 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <arpa/inet.h>
 
 #include <boost/log/trivial.hpp>
 #include <boost/noncopyable.hpp>
@@ -99,14 +108,31 @@ using namespace std::literals::chrono_literals;
 class ExternalPhaseCoordinator {
 public:
     /**
+     * Create an ExternalPhaseCoordinator.
+     *
+     * This class attempts to connect to the ipaddress:post. If connect fails then the coordinator
+     * behaves as a noop sink for any messages and returns immediately.
+     *
+     * @param idaddress
+     * The ip address to connect to. An empty address corresponds to INADDR_ANY. At the moment
+     * only ip addresses are supported
+     * @param port
+     * The port to connect to.
+     *
      */
-    ExternalPhaseCoordinator(std::string out_pipe = "", std::string in_pipe = "");
+    ExternalPhaseCoordinator(std::string ipaddress, int port);
 
     // no copy or move
     ExternalPhaseCoordinator(ExternalPhaseCoordinator&) = delete;
     void operator=(ExternalPhaseCoordinator&) = delete;
     ExternalPhaseCoordinator(ExternalPhaseCoordinator&&) = delete;
     void operator=(ExternalPhaseCoordinator&&) = delete;
+
+    ~ExternalPhaseCoordinator(){
+        if (m_socket > 0) {
+            close(m_socket);
+        };
+    }
 
     /**
      * Handle onPhaseStart.
@@ -125,12 +151,11 @@ public:
     void onPhaseStop(PhaseNumber phase);
 
 private:
-    void _onPhase(std::string message, PhaseNumber phase);
+    void _onPhase(std::string message);
 
-    mutable std::string m_out_pipe;
-    mutable std::string m_in_pipe;
-    mutable std::fstream m_ofs;
-    mutable bool m_fifo;
+    std::string m_host;
+    int m_port;
+    int m_socket;
 };
 
 /**
