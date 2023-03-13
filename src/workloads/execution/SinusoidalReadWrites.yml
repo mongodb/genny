@@ -9,6 +9,9 @@ Description: |
   to effectively stop work on one actor while the other reaches its peak. We then
   alternate for a couple repetitions.
 
+  Simultaneously, we will run the TTL monitor in the background to test that it
+  is deprioritized when the system is under load.
+
   In this workload, we try to ensure that reads and writes do not overlap much.
 Keywords:
 - sinusoidal
@@ -16,19 +19,26 @@ Keywords:
 - insertMany
 - find
 - CrudActor
+- ttl
 
 dbname: &dbname mixed_sinusoidal
 DocumentCount: &NumDocs 500
 CollectionCount: &NumColls 1
 
-NumPhases: &NumPhases 2
+NumPhases: &NumPhases 3
+
 Document: &doc
   a: {^RandomInt: {min: 0, max: *NumDocs}}
   b: {^RandomString: {length: 16}}
+
+ExpiredDocument: &expiredDoc
+  expireDate: {^Date: "1970-01-01"} # Instantly expire the document
+  x: 999
+
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 1001
+      maxPoolSize: 1002
 
 ActorTemplates:
 - TemplateName: WritesActorWithSleepTemplate
@@ -47,10 +57,12 @@ ActorTemplates:
           Repeat: 6
           CollectionCount: *NumColls
           Operations:
-          - OperationName: insertOne
+          - OperationName: insertMany
             OperationMetricsName: WriteDocs
             OperationCommand:
-              Document: *doc
+              Documents: # insert regular and expired docs
+              - *doc
+              - *expiredDoc
             ThrowOnFailure: false
 - TemplateName: ReadsActorWithSleepTemplate
   Config:
@@ -75,37 +87,56 @@ ActorTemplates:
             ThrowOnFailure: false
 Actors:
 - Name: Setup
-  Type: Loader
+  Type: AdminCommand
   Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [0]
       NopInPhasesUpTo: *NumPhases
       PhaseConfig:
-        # Have 500 documents ready at start
         Repeat: 1
-        BatchSize: 100
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            ttlMonitorSleepSecs: 1
+        SleepAfter: 60 seconds  # Wait 60 seconds so that the new ttl sleep config is active.
+
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        # Add a large set of expired documents at start to make sure TLL monitor doesn't catch up in future phases.
+        Repeat: 1
+        BatchSize: 10_000
         Threads: 1
-        DocumentCount: *NumDocs
+        DocumentCount: 200_000
         Database: *dbname
         CollectionCount: *NumColls
-        Document: *doc
+        Document: *expiredDoc
         Indexes:
-        - keys: {a: 1}
+        - keys: {expireDate: 1}
+          options: {expireAfterSeconds: 0}
 
 - ActorFromTemplate:
     TemplateName: WritesActorWithSleepTemplate
     TemplateParameters:
       Name: {^Parameter: {Name: "WritingName", Default: WritingActor_50_50}}
       Threads: {^Parameter: {Name: "WritingThreads", Default: 500}}
-      ActivePhases: [1]
+      ActivePhases: [2]
 
 - ActorFromTemplate:
     TemplateName: ReadsActorWithSleepTemplate
     TemplateParameters:
       Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
       Threads: {^Parameter: {Name: "ReadingThreads", Default: 500}}
-      ActivePhases: [1]
+      ActivePhases: [2]
 
 AutoRun:
 - When:
