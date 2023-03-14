@@ -129,7 +129,7 @@ public:
     void operator=(ExternalPhaseCoordinator&&) = delete;
 
     ~ExternalPhaseCoordinator(){
-        if (m_socket > 0) {
+        if (m_socket >= 0) {
             close(m_socket);
         };
     }

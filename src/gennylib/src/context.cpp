@@ -215,6 +215,8 @@ bool PhaseContext::isNop() const {
     return nop.maybe<bool>().value_or(false);
 }
 
+// Connect to the specified IP Address (use INADDR_ANY if the IP is blank) and port. If the connect
+// succeeds then the socket is returned, otherwise return -1.
 int connect(std::string ipaddress, int port) {
     struct sockaddr_in addr = {0};
     addr.sin_addr.s_addr = INADDR_ANY;
@@ -240,7 +242,7 @@ ExternalPhaseCoordinator::ExternalPhaseCoordinator(std::string host, int port) :
 }
 void ExternalPhaseCoordinator::_onPhase(std::string event){
     BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase('" << event << "') start";
-    if(m_socket > 0) {
+    if(m_socket >= 0) {
         write(m_socket, event.c_str(), event.length());
         char buf[1024];
         bzero(buf, sizeof(buf));

@@ -136,8 +136,12 @@ private:
 
     State state = State::PhaseEnded;
 
-    std::vector<OrchestratorCB> _prePhaseHooks;
-    std::vector<OrchestratorCB> _postPhaseHooks;
+    // These hooks fire just before the current phase starts. The phase number in the invocation is the
+    // phase that is about to start, so 0, 1, 2 ... etc.
+    std::vector<OrchestratorCB> _prePhaseStartHooks;
+    // These hooks fire just after the current phase stops. The phase number in the invocation is the
+    // phase that just completed, so 0, 1, 2 ... etc.
+    std::vector<OrchestratorCB> _postPhaseStopHooks;
 };
 
 }  // namespace genny
