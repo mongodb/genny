@@ -216,7 +216,7 @@ bool PhaseContext::isNop() const {
 }
 
 // Connect to the specified IP Address (use INADDR_ANY if the IP is blank) and port. If the connect
-// succeeds then the socket is returned, otherwise return -1.
+// call succeeds then the socket is returned, otherwise return -1.
 int connect(std::string ipaddress, int port) {
     struct sockaddr_in addr = {0};
     addr.sin_addr.s_addr = INADDR_ANY;
@@ -235,6 +235,8 @@ int connect(std::string ipaddress, int port) {
     return sd;
 }
 
+// Note: this constructor calls connect to ensure that the socket connection is acquired before the
+// instance is available to use.
 ExternalPhaseCoordinator::ExternalPhaseCoordinator(std::string host, int port) :
       m_host(host), m_port(port), m_socket(connect(host, port)){
     BOOST_LOG_TRIVIAL(info) << "ExternalPhaseCoordinator::ExternalPhaseCoordinator('"
@@ -249,7 +251,7 @@ void ExternalPhaseCoordinator::_onPhase(std::string event){
         int rval = read(m_socket, buf, 1024);
         std::string response(buf);
         boost::trim(response);
-        BOOST_LOG_TRIVIAL(info) << "ExternalPhaseCoordinator::onPhase' read '"
+        BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase' read '"
                                  << response << "' " << rval ;
     }
     BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase('" << event << "') end";

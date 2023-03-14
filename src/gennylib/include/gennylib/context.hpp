@@ -153,9 +153,9 @@ public:
 private:
     void _onPhase(std::string message);
 
-    std::string m_host;
-    int m_port;
-    int m_socket;
+    const std::string m_host;
+    const int m_port;
+    const int m_socket;
 };
 
 /**
