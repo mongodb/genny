@@ -97,6 +97,7 @@ Actors:
         - OperationName: AdminCommand
           OperationCommand:
             setParameter: 1
+            storageEngineConcurrencyAdjustmentAlgorithm: ""
             storageEngineConcurrentWriteTransactions: 32
         - OperationMetricsName: LimitIndexBuildMemoryUsageCommand
           OperationName: RunCommand
