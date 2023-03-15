@@ -67,4 +67,26 @@ Actors:
 AutoRun:
 - When:
     mongodb_setup:
-      $eq: standalone
+      $eq:
+      - replica
+      - replica-tls-disabled
+      - replica-telemetry
+      - replica-ssl
+      - replica-noflowcontrol
+      - replica-maintenance-events
+      - replica-last-lts-fcv
+      - replica-last-continuous-fcv
+      - replica-flowcontrol
+      - replica-delay-mixed
+      - replica-auth
+      - replica-auth-cluster-delay
+      - replica-audit
+      - replica-all-feature-flags
+      - replica-2node
+      - replica-2node-fcbis
+      - replica-1dayhistory-15gbwtcache
+      - shard
+      - shard-telemetry
+      - shard-single
+      - shard-single-stress
+      - shard-longevity
