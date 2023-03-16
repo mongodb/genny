@@ -29,7 +29,7 @@ using SteadyClock = std::chrono::steady_clock;
 
 class Orchestrator;
 
-using OrchestratorCB = std::function<void(const Orchestrator*)>;
+using OrchestratorCB = std::function<void(const Orchestrator*, const PhaseNumber)>;
 
 /**
  * Responsible for the synchronization of actors
@@ -98,6 +98,7 @@ public:
     void abort();
 
     void addPrePhaseStartHook(const OrchestratorCB& f);
+    void addPostPhaseStopHook(const OrchestratorCB& f);
 
     /**
      * @return whether the workload should continue running. This is true as long as
@@ -135,7 +136,12 @@ private:
 
     State state = State::PhaseEnded;
 
-    std::vector<OrchestratorCB> _prePhaseHooks;
+    // These hooks fire just before the current phase starts. The phase number in the invocation is the
+    // phase that is about to start, so 0, 1, 2 ... etc.
+    std::vector<OrchestratorCB> _prePhaseStartHooks;
+    // These hooks fire just after the current phase stops. The phase number in the invocation is the
+    // phase that just completed, so 0, 1, 2 ... etc.
+    std::vector<OrchestratorCB> _postPhaseStopHooks;
 };
 
 }  // namespace genny

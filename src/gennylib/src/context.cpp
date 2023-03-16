@@ -16,7 +16,9 @@
 
 #include <memory>
 #include <set>
+#include <filesystem>
 #include <sstream>
+#include <boost/algorithm/string.hpp>
 
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
@@ -27,6 +29,8 @@
 #include <gennylib/v1/Sleeper.hpp>
 #include <metrics/metrics.hpp>
 
+#include <boost/algorithm/string.hpp>
+using namespace boost::algorithm;
 
 namespace genny {
 
@@ -43,7 +47,8 @@ WorkloadContext::WorkloadContext(const Node& node,
       _orchestrator{&orchestrator},
       _rateLimiters{10},
       _poolManager{apmCallback, dryRun},
-      _workloadPath{node.key()} {
+      _workloadPath{node.key()} ,
+      _coordinator{"",4400} {
     std::set<std::string> validSchemaVersions{"2018-07-01"};
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept
@@ -90,6 +95,10 @@ WorkloadContext::WorkloadContext(const Node& node,
                    });
 
     _actors = std::move(bucket.extractItems());
+    this->_orchestrator->addPrePhaseStartHook(
+        [&](const Orchestrator*orchestrator, PhaseNumber phase) { this->_coordinator.onPhaseStart(phase); });
+    this->_orchestrator->addPostPhaseStopHook(
+        [&](const Orchestrator*orchestrator, PhaseNumber phase) { this->_coordinator.onPhaseStop(phase); });
     _done = true;
 }
 
@@ -134,7 +143,7 @@ GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name, cons
 
     // Reset the rate-limiter at the start of every Phase
     this->_orchestrator->addPrePhaseStartHook(
-        [rl](const Orchestrator*) { rl->resetLastEmptied(); });
+        [rl](const Orchestrator*, PhaseNumber phase) { rl->resetLastEmptied(); });
     return rl;
 }
 
@@ -205,4 +214,59 @@ bool PhaseContext::isNop() const {
     auto& nop = (*this)["Nop"];
     return nop.maybe<bool>().value_or(false);
 }
+
+// Connect to the specified IP Address (use INADDR_ANY if the IP is blank) and port. If the connect
+// call succeeds then the socket is returned, otherwise return -1.
+int connect(std::string ipaddress, int port) {
+    struct sockaddr_in addr = {0};
+    addr.sin_addr.s_addr = INADDR_ANY;
+    if (!ipaddress.empty()) {
+        addr.sin_addr.s_addr = inet_addr(ipaddress.c_str());
+    }
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons( port );
+
+    int sd = socket(AF_INET, SOCK_STREAM, 0);
+    if(connect(sd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        BOOST_LOG_TRIVIAL(warning) << "connect('" << ipaddress << "',"
+                                   << port << "') failed --> '"<< ::strerror(errno) << "'";
+        return -1;
+    }
+    return sd;
+}
+
+// Note: this constructor calls connect to ensure that the socket connection is acquired before the
+// instance is available to use.
+ExternalPhaseCoordinator::ExternalPhaseCoordinator(std::string host, int port) :
+      m_host(host), m_port(port), m_socket(connect(host, port)){
+    BOOST_LOG_TRIVIAL(info) << "ExternalPhaseCoordinator::ExternalPhaseCoordinator('"
+                            << m_host << "'," << m_port << "') --> " << m_socket;
+}
+void ExternalPhaseCoordinator::_onPhase(std::string event){
+    BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase('" << event << "') start";
+    if(m_socket >= 0) {
+        write(m_socket, event.c_str(), event.length());
+        char buf[1024];
+        bzero(buf, sizeof(buf));
+        int rval = read(m_socket, buf, 1024);
+        std::string response(buf);
+        boost::trim(response);
+        BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase' read '"
+                                 << response << "' " << rval ;
+    }
+    BOOST_LOG_TRIVIAL(debug) << "ExternalPhaseCoordinator::onPhase('" << event << "') end";
+}
+void ExternalPhaseCoordinator::onPhaseStart(PhaseNumber phase){
+    std::stringstream event;
+    event << R"({ "message": ")" << "Beginning phase" << R"(","phase":)"
+          <<  phase << R"(,"request":)" <<  1 << "}" << std::endl;
+    _onPhase(event.str());
+}
+void ExternalPhaseCoordinator::onPhaseStop(PhaseNumber phase){
+    std::stringstream event;
+    event << R"({ "message": ")" << "Ended phase" << R"(","phase":)"
+          <<  phase << R"(,"request":)" <<  1 << "}" << std::endl;
+    _onPhase(event.str());
+}
+
 }  // namespace genny

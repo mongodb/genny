@@ -18,12 +18,22 @@
 #include <cassert>
 #include <map>
 #include <memory>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <arpa/inet.h>
 
 #include <boost/log/trivial.hpp>
 #include <boost/noncopyable.hpp>
@@ -91,6 +101,62 @@ protected:
 }  // namespace v1
 
 class WorkloadContext;
+
+class ExternalPhaseCoordinator;
+using namespace std::literals::chrono_literals;
+
+class ExternalPhaseCoordinator {
+public:
+    /**
+     * Create an ExternalPhaseCoordinator.
+     *
+     * This class attempts to connect to the ipaddress:post. If connect fails then the coordinator
+     * behaves as a noop sink for any messages and returns immediately.
+     *
+     * @param idaddress
+     * The ip address to connect to. An empty address corresponds to INADDR_ANY. At the moment
+     * only ip addresses are supported
+     * @param port
+     * The port to connect to.
+     *
+     */
+    ExternalPhaseCoordinator(std::string ipaddress, int port);
+
+    // no copy or move
+    ExternalPhaseCoordinator(ExternalPhaseCoordinator&) = delete;
+    void operator=(ExternalPhaseCoordinator&) = delete;
+    ExternalPhaseCoordinator(ExternalPhaseCoordinator&&) = delete;
+    void operator=(ExternalPhaseCoordinator&&) = delete;
+
+    ~ExternalPhaseCoordinator(){
+        if (m_socket >= 0) {
+            close(m_socket);
+        };
+    }
+
+    /**
+     * Handle onPhaseStart.
+     *
+     * @param phase
+     *   the phase number about to start.
+     */
+    void onPhaseStart(PhaseNumber phase);
+
+    /**
+     * Handle onPhaseStop.
+     *
+     * @param phase
+     *   the phase number about to stop.
+     */
+    void onPhaseStop(PhaseNumber phase);
+
+private:
+    void _onPhase(std::string message);
+
+    const std::string m_host;
+    const int m_port;
+    const int m_socket;
+};
 
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
@@ -306,6 +372,7 @@ private:
     std::mutex _limiterLock;
 
     std::string _workloadPath;
+    ExternalPhaseCoordinator _coordinator;
 };
 
 // For some reason need to decl this; see impl below
