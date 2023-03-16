@@ -14,7 +14,7 @@ ActorTemplates:
   Config:
     Name: {^Parameter: {Name: "Name", Default: "TwoThreadPing"}}
     Type: RunCommand
-    Threads: {^Parameter: {Name: "Threads", Default: 2}}
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
         Active: {^Parameter: {Name: "Active", Default: [0]}}
@@ -37,56 +37,13 @@ Actors:
 - ActorFromTemplate:
     TemplateName: PingTemplate
     TemplateParameters:
-      Name: FourThreadsPingRateLimited
-      Threads: 4
-      Active: [1]
-- ActorFromTemplate:
-    TemplateName: PingTemplate
-    TemplateParameters:
-      Name: EightThreadsPingRateLimited
-      Threads: 8
-      Active: [2]
-- ActorFromTemplate:
-    TemplateName: PingTemplate
-    TemplateParameters:
-      Name: SixteenThreadsPingRateLimited
-      Threads: 16
-      Active: [3]
-- ActorFromTemplate:
-    TemplateName: PingTemplate
-    TemplateParameters:
       Name: ThirtyTwoThreadsPingRateLimited
       Threads: 32
       Active: [4]
-- ActorFromTemplate:
-    TemplateName: PingTemplate
-    TemplateParameters:
-      Name: SixtyFourThreadsPingRateLimited
-      Threads: 64
-      Active: [5]
+
 AutoRun:
 - When:
     mongodb_setup:
       $eq:
       - replica
-      - replica-tls-disabled
-      - replica-telemetry
-      - replica-ssl
-      - replica-noflowcontrol
-      - replica-maintenance-events
-      - replica-last-lts-fcv
-      - replica-last-continuous-fcv
-      - replica-flowcontrol
-      - replica-delay-mixed
-      - replica-auth
-      - replica-auth-cluster-delay
-      - replica-audit
-      - replica-all-feature-flags
-      - replica-2node
-      - replica-2node-fcbis
-      - replica-1dayhistory-15gbwtcache
-      - shard
-      - shard-telemetry
-      - shard-single
-      - shard-single-stress
-      - shard-longevity
+      - standalone
