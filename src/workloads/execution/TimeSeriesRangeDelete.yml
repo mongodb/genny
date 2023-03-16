@@ -1,0 +1,113 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+Description: |
+  This test establishes a baseline for time-based range deletes on time-series collections.
+
+  We insert 1000 independent series with 100 buckets in each series, and each bucket has 100
+  documents. The documents inserted have the same timestamps, with different meta values.
+
+  Then we delete data that spans across three buckets for each series, causing two partial-bucket 
+  deletions and one full-bucket deletion.
+
+GlobalDefaults:
+  dbname: &db test
+  coll: &coll Collection0
+  bucketsColl: &bucketsColl system.buckets.Collection0
+  batchSize: &batchSize 30000
+  nop: &Nop {Nop: true}
+
+Actors:
+- Name: CreateTimeSeriesCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *db
+    Operation:
+      OperationMetricsName: CreateTimeSeriesCollection
+      OperationName: RunCommand
+      OperationCommand:
+        {create: *coll, timeseries: {timeField: "t", metaField: "sensorId"}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *coll
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10000000
+    BatchSize: *batchSize
+    Document:
+      t: {^Repeat: {count: 1000, fromGenerator: {^IncDate: {start: "2023-01-01", step: 36000}}}}
+      sensorId: {^Cycle: {ofLength: 1000, fromGenerator: {^Inc: {start: 0}}}}
+      score: {^RandomDouble: {min: 0, max: 1}}
+      temperature: {^RandomInt: {min: 0, max: 100}}
+      humidity: {^RandomDouble: {min: 0, max: 1}}
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+
+- Name: RangeDelete
+  Type: CrudActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Collection: *coll
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: deleteMany
+          Filter:
+            {
+              $and: [
+                {t: {$gte: {^Date: "2023-01-01T10:30:00"}}},
+                {t: {$lt: {^Date: "2023-01-01T12:30:00"}}}
+              ]
+            }
+  - *Nop
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      # TODO (PERF-3922): Enable on these variants.
+      # - shard-lite
+      # - replica
+      # - shard-lite-all-feature-flags
+      - replica-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.2
+      - v4.4
+      - v5.0
+      - v6.0
+      - v6.3
