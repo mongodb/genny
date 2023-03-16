@@ -39,7 +39,7 @@ Actors:
     TemplateParameters:
       Name: ThirtyTwoThreadsPingRateLimited
       Threads: 32
-      Active: [4]
+      Active: [1]
 
 AutoRun:
 - When:
