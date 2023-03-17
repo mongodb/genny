@@ -4,15 +4,23 @@ Description: |
   This test establishes a baseline for time-based range deletes on time-series collections.
 
   We insert 1000 independent series with 100 buckets in each series, and each bucket has 100
-  documents. The documents inserted have the same timestamps, with different meta values.
+  documents.
 
-  Then we delete data that spans across three buckets for each series, causing two partial-bucket 
-  deletions and one full-bucket deletion.
+  The buckets have meta fields with values from 0 to 999, each of which has 100 measurements with
+  timestamps within an hour with 36-second intervals. For example, in a bucket, the measurements
+  look like:
+  {t: 2023-01-01T5:00:00, m: 42, ...},
+  {t: 2023-01-01T5:00:36, m: 42, ...},
+  ...
+  {t: 2023-01-01T5:59:24, m: 42, ...}
+
+  Then we delete data that spans across three buckets for each series, causing two partial-bucket
+  deletions and one full-bucket deletion. This tests the use case of data correction where the
+  application deletes data within some time ranges.
 
 GlobalDefaults:
   dbname: &db test
   coll: &coll Collection0
-  bucketsColl: &bucketsColl system.buckets.Collection0
   batchSize: &batchSize 30000
   nop: &Nop {Nop: true}
 
@@ -85,6 +93,8 @@ Actors:
     - OperationName: bulkWrite
       OperationCommand:
         WriteOperations:
+        # Removes all measurements between 2023-01-01T10:30:00 and 2023-01-01T12:30:00 for all
+        # series.
         - WriteCommand: deleteMany
           Filter:
             {
