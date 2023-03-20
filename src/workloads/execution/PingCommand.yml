@@ -10,6 +10,7 @@ Clients:
 
 GlobalDefaults:
   MaxPhases: &MaxPhases 2
+  dbname: &dbname admin
 
 ActorTemplates:
 - TemplateName: PingTemplate
@@ -24,7 +25,7 @@ ActorTemplates:
         PhaseConfig:
           Duration: {^Parameter: {Name: "Duration", Default: "60 seconds"}}
           GlobalRate: {^Parameter: {Name: "Rate", Default: "100 per 1 second"}}
-          Database: admin
+          Database: *dbname
           Operations:
           - OperationName: RunCommand
             OperationIsQuiet: true
@@ -47,7 +48,7 @@ Actors:
 - Name: QuiescePhase
   Type: QuiesceActor
   Threads: 1
-  Database: admin
+  Database: *dbname
   Phases:
     OnlyActiveInPhases:
       Active: [1]
