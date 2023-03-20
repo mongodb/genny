@@ -7,6 +7,7 @@ Clients:
   Default:
     QueryOptions:
       maxPoolSize: 500
+
 GlobalDefaults:
   MaxPhases: &MaxPhases 2
 
@@ -35,6 +36,14 @@ Actors:
     TemplateName: PingTemplate
     TemplateParameters:
       Name: OneThreadPingRateLimited
+
+- ActorFromTemplate:
+    TemplateName: PingTemplate
+    TemplateParameters:
+      Name: ThirtyTwoThreadsPingRateLimited
+      Threads: 32
+      Active: [2]
+
 - Name: QuiescePhase
   Type: QuiesceActor
   Threads: 1
@@ -45,12 +54,6 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
-- ActorFromTemplate:
-    TemplateName: PingTemplate
-    TemplateParameters:
-      Name: ThirtyTwoThreadsPingRateLimited
-      Threads: 32
-      Active: [2]
 
 AutoRun:
 - When:
