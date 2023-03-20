@@ -21,6 +21,9 @@ Description: |
 GlobalDefaults:
   dbname: &db test
   coll: &coll Collection0
+  nSensors: &nSensors 1000
+  nBucketsPerSensor: &nBucketsPerSensor 100
+  nMeasurementsPerBucket: &nMeasurementsPerBucket 100
   nop: &Nop {Nop: true}
   MaxPhases: &MaxPhases 4
 
@@ -38,7 +41,11 @@ Actors:
         Operation:
           OperationName: RunCommand
           OperationCommand:
-            {create: *coll, timeseries: {timeField: "t", metaField: "sensorId"}}
+            # Each bucket holds data within one hour time span.
+            {
+              create: *coll,
+              timeseries: {timeField: "t", metaField: "sensorId", granularity: "seconds"}
+            }
 
 - Name: InsertData
   Type: Loader
@@ -53,11 +60,26 @@ Actors:
         Collection: *coll
         Threads: 1
         CollectionCount: 1
-        DocumentCount: 10_000_000
+        DocumentCount:
+          ^NumExpr:
+            withExpression: "nSensors * nBucketsPerSensor * nMeasurementsPerBucket"
+            andValues: {
+              nSensors: *nSensors,
+              nBucketsPerSensor: *nBucketsPerSensor,
+              nMeasurementsPerBucket: *nMeasurementsPerBucket
+            }
         BatchSize: 30000
         Document:
-          t: {^Repeat: {count: 1000, fromGenerator: {^IncDate: {start: "2023-01-01", step: 36000}}}}
-          sensorId: {^Cycle: {ofLength: 1000, fromGenerator: {^Inc: {start: 0}}}}
+          # This generates data that look like:
+          # [2023-01-01T00:00:00 * 1000, 2023-01-01T00:00:36 * 1000, ...]
+          t:
+            {
+              ^Repeat:
+                {count: *nSensors, fromGenerator: {^IncDate: {start: "2023-01-01", step: 36000}}}
+            }
+          # This generates data that look like:
+          # [0, 1, ... 999, 0, 1, ..., 999, ...]
+          sensorId: {^Cycle: {ofLength: *nSensors, fromGenerator: {^Inc: {start: 0}}}}
           score: {^RandomDouble: {min: 0, max: 1}}
           temperature: {^RandomInt: {min: 0, max: 100}}
           humidity: {^RandomDouble: {min: 0, max: 1}}
