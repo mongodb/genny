@@ -21,7 +21,6 @@ Description: |
 GlobalDefaults:
   dbname: &db test
   coll: &coll Collection0
-  batchSize: &batchSize 30000
   nop: &Nop {Nop: true}
 
 Actors:
@@ -29,81 +28,90 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  - Repeat: 1
-    Database: *db
-    Operation:
-      OperationMetricsName: CreateTimeSeriesCollection
-      OperationName: RunCommand
-      OperationCommand:
-        {create: *coll, timeseries: {timeField: "t", metaField: "sensorId"}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Database: test
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        drop: *coll
+  OnlyActiveInPhases:
+    Active: [0]
+    NopInPhasesUpTo: *MaxPhases
+    PhaseConfig:
+      Repeat: 1
+      Database: *db
+      Operation:
+        OperationName: RunCommand
+        OperationCommand:
+          {create: *coll, timeseries: {timeField: "t", metaField: "sensorId"}}
 
 - Name: InsertData
   Type: Loader
   Threads: 1
   Phases:
-  - *Nop
-  - Repeat: 1
-    Database: *db
-    Collection: *coll
-    Threads: 1
-    CollectionCount: 1
-    DocumentCount: 10000000
-    BatchSize: *batchSize
-    Document:
-      t: {^Repeat: {count: 1000, fromGenerator: {^IncDate: {start: "2023-01-01", step: 36000}}}}
-      sensorId: {^Cycle: {ofLength: 1000, fromGenerator: {^Inc: {start: 0}}}}
-      score: {^RandomDouble: {min: 0, max: 1}}
-      temperature: {^RandomInt: {min: 0, max: 100}}
-      humidity: {^RandomDouble: {min: 0, max: 1}}
-  - *Nop
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 10_000_000
+        BatchSize: 30000
+        Document:
+          t: {^Repeat: {count: 1000, fromGenerator: {^IncDate: {start: "2023-01-01", step: 36000}}}}
+          sensorId: {^Cycle: {ofLength: 1000, fromGenerator: {^Inc: {start: 0}}}}
+          score: {^RandomDouble: {min: 0, max: 1}}
+          temperature: {^RandomInt: {min: 0, max: 100}}
+          humidity: {^RandomDouble: {min: 0, max: 1}}
 
 - Name: Quiesce
   Type: QuiesceActor
   Threads: 1
   Database: *db
   Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
+  OnlyActiveInPhases:
+    Active: [2]
+    NopInPhasesUpTo: *MaxPhases
+    PhaseConfig:
+    Repeat: 1
 
 - Name: RangeDelete
   Type: CrudActor
   Threads: 1
   Database: *db
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Collection: *coll
-    Operations:
-    - OperationName: bulkWrite
-      OperationCommand:
-        WriteOperations:
-        # Removes all measurements between 2023-01-01T10:30:00 and 2023-01-01T12:30:00 for all
-        # series.
-        - WriteCommand: deleteMany
-          Filter:
-            {
-              $and: [
-                {t: {$gte: {^Date: "2023-01-01T10:30:00"}}},
-                {t: {$lt: {^Date: "2023-01-01T12:30:00"}}}
-              ]
-            }
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *coll
+        Operation:
+          OperationName: bulkWrite
+          OperationCommand:
+            WriteOperations:
+            # Removes all measurements between 2023-01-01T10:30:00 and 2023-01-01T12:30:00 for all
+            # series.
+            - WriteCommand: deleteMany
+              Filter:
+                {
+                  $and: [
+                    {t: {$gte: {^Date: "2023-01-01T10:30:00"}}},
+                    {t: {$lt: {^Date: "2023-01-01T12:30:00"}}}
+                  ]
+                }
+
+- Name: CleanUp
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  OnlyActiveInPhases:
+    Active: [4]
+    NopInPhasesUpTo: *MaxPhases
+    PhaseConfig:
+      Repeat: 1
+      Database: *db
+      Operation:
+        OperationName: RunCommand
+        OperationCommand:
+          drop: *coll
 
 AutoRun:
 - When:
