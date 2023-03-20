@@ -80,6 +80,7 @@ Actors:
           date1: &date {^RandomDate: {min: "2021-01-01T00:00:02.000Z", max: "2054-01-01T00:00:10.000Z"}}
           date2: *date
           randomType: {^Choose: {from: [*integer, *double, *date, *string, *array, null], weights: [1, 1, 1, 1, 1, 1]}}
+          timezone1: "America/New_York"
 
 # Phase 2: Ensure all data is synced to disk.
 - Name: Quiesce
@@ -644,6 +645,33 @@ Actors:
       active: [63]
       operationMetricsName: AggExpressionRange
       Pipeline: [{$project: {range: { $range: ["$zero", "$posInt"]}}}]
+
+- ExpresssionYear:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionYear
+      active: [64]
+      operationMetricsName: AggExpressionYear
+      Pipeline: [{$project: {year: { $year: {date: "$date1"}}}}]
+
+- ExpresssionYearConstTimezone:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpresssionYearConstTimezone
+      active: [65]
+      operationMetricsName: AggExpresssionYearConstTimezone
+      Pipeline: [{$project: {year: { $year: {date: "$date1", timezone: "America/New_York"}}}}]
+
+- ExpressionYearVariableTimezone:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionYearVariableTimezone
+      active: [66]
+      operationMetricsName: AggExpressionYearVariableTimezone
+      Pipeline: [{$project: {year: { $year: {date: "$date1", timezone: "$timezone1"}}}}]
 
 AutoRun:
 - When:
