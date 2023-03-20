@@ -15,7 +15,7 @@ GlobalDefaults:
 ActorTemplates:
 - TemplateName: PingTemplate
   Config:
-    Name: {^Parameter: {Name: "Name", Default: "TwoThreadPing"}}
+    Name: {^Parameter: {Name: "Name", Default: "OneThreadPingRateLimited"}}
     Type: RunCommand
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
@@ -35,8 +35,6 @@ ActorTemplates:
 Actors:
 - ActorFromTemplate:
     TemplateName: PingTemplate
-    TemplateParameters:
-      Name: OneThreadPingRateLimited
 
 - ActorFromTemplate:
     TemplateName: PingTemplate
