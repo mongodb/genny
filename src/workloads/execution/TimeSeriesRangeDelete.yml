@@ -22,6 +22,7 @@ GlobalDefaults:
   dbname: &db test
   coll: &coll Collection0
   nop: &Nop {Nop: true}
+  MaxPhases: &MaxPhases 4
 
 Actors:
 - Name: CreateTimeSeriesCollection
