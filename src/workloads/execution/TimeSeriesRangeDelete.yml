@@ -29,16 +29,16 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  OnlyActiveInPhases:
-    Active: [0]
-    NopInPhasesUpTo: *MaxPhases
-    PhaseConfig:
-      Repeat: 1
-      Database: *db
-      Operation:
-        OperationName: RunCommand
-        OperationCommand:
-          {create: *coll, timeseries: {timeField: "t", metaField: "sensorId"}}
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operation:
+          OperationName: RunCommand
+          OperationCommand:
+            {create: *coll, timeseries: {timeField: "t", metaField: "sensorId"}}
 
 - Name: InsertData
   Type: Loader
@@ -67,11 +67,11 @@ Actors:
   Threads: 1
   Database: *db
   Phases:
-  OnlyActiveInPhases:
-    Active: [2]
-    NopInPhasesUpTo: *MaxPhases
-    PhaseConfig:
-    Repeat: 1
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
 
 - Name: RangeDelete
   Type: CrudActor
@@ -103,16 +103,16 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  OnlyActiveInPhases:
-    Active: [4]
-    NopInPhasesUpTo: *MaxPhases
-    PhaseConfig:
-      Repeat: 1
-      Database: *db
-      Operation:
-        OperationName: RunCommand
-        OperationCommand:
-          drop: *coll
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operation:
+          OperationName: RunCommand
+          OperationCommand:
+            drop: *coll
 
 AutoRun:
 - When:
