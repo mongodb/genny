@@ -8,7 +8,7 @@ Clients:
     QueryOptions:
       maxPoolSize: 500
 
-MaxPhases: &MaxPhases 1
+MaxPhases: &MaxPhases 2
 ActorTemplates:
 - TemplateName: PingTemplate
   Config:
@@ -20,7 +20,7 @@ ActorTemplates:
         Active: {^Parameter: {Name: "Active", Default: [0]}}
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
-          Duration: {^Parameter: {Name: "Duration", Default: "30 seconds"}}
+          Duration: {^Parameter: {Name: "Duration", Default: "60 seconds"}}
           GlobalRate: {^Parameter: {Name: "Rate", Default: "100 per 1 second"}}
           Database: admin
           Operations:
@@ -33,13 +33,23 @@ Actors:
 - ActorFromTemplate:
     TemplateName: PingTemplate
     TemplateParameters:
-      Name: TwoThreadsPingRateLimited
+      Name: OneThreadPingRateLimited
+- Name: QuiescePhase
+  Type: QuiesceActor
+  Threads: 1
+  Database: admin
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
 - ActorFromTemplate:
     TemplateName: PingTemplate
     TemplateParameters:
       Name: ThirtyTwoThreadsPingRateLimited
       Threads: 32
-      Active: [1]
+      Active: [2]
 
 AutoRun:
 - When:
