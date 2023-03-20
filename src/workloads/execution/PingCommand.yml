@@ -35,6 +35,8 @@ ActorTemplates:
 Actors:
 - ActorFromTemplate:
     TemplateName: PingTemplate
+    TemplateParameters:
+      Name: OneThreadPingRateLimited
 
 - ActorFromTemplate:
     TemplateName: PingTemplate
