@@ -6,6 +6,10 @@ Description: |
   the null value with either the last non-nullish value (in case of $locf)
   or the interpolated value (in case of $linearFill).
 
+GlobalDefaults:
+  # The limit ensures that the entire result set fits in an entire batch. That way we can use
+  # the 'RunCommand' actor without abandoning open cursors.
+  Limit: &limit 100
 
 Actors:
 - Name: CreateTimeSeriesCollection
@@ -63,7 +67,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 10000
-    BatchSize: &batchSize 100
+    BatchSize: 100
     Document:
       part1: {^Choose: {from: [1, 2, 3, 4]}}
       part2: {^Choose: {from: [1, 2, 3, 4]}}
@@ -108,16 +112,19 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
-        pipeline: [{
-          $fill: {
-            sortBy: {timestamp: 1},
-            output: {
-              numeric: {
-                method: "locf"}
+        pipeline: [
+          {
+            $fill: {
+              sortBy: {timestamp: 1},
+              output: {
+                numeric: {
+                  method: "locf"}
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -144,16 +151,19 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
-        pipeline: [{
-          $fill: {
-            sortBy: {timestamp: 1},
-            output: {
-              numeric: {
-                method: "linear"}
+        pipeline: [
+          {
+            $fill: {
+              sortBy: {timestamp: 1},
+              output: {
+                numeric: {
+                  method: "linear"}
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -180,19 +190,22 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
-        pipeline: [{
-          $fill: {
-            partitionBy: {part1: "$part1", part2: "$part2"},
-            sortBy: {timestamp: 1},
-            output: {
-              numeric: {
-                method: "locf"},
-              string: {
-                method: "locf"},
+        pipeline: [
+          {
+            $fill: {
+              partitionBy: {part1: "$part1", part2: "$part2"},
+              sortBy: {timestamp: 1},
+              output: {
+                numeric: {
+                  method: "locf"},
+                string: {
+                  method: "locf"},
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -219,19 +232,22 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
-        pipeline: [{
-          $fill: {
-            partitionBy: {part1: "$part1", part2: "$part2"},
-            sortBy: {timestamp: 1},
-            output: {
-              numeric: {
-                method: "linear"},
-              double: {
-                method: "linear"},
+        pipeline: [
+          {
+            $fill: {
+              partitionBy: {part1: "$part1", part2: "$part2"},
+              sortBy: {timestamp: 1},
+              output: {
+                numeric: {
+                  method: "linear"},
+                double: {
+                  method: "linear"},
+              }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
   - Nop: true
   - Nop: true
 
@@ -258,22 +274,25 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
-        pipeline: [{
-          $fill: {
-            partitionBy: {part1: "$part1", part2: "$part2"},
-            sortBy: {timestamp: 1},
-            output: {
-              numeric: {
-                method: "linear"},
-              double: {
-                method: "linear"},
-              string: {
-                method: "locf"
+        pipeline: [
+          {
+            $fill: {
+              partitionBy: {part1: "$part1", part2: "$part2"},
+              sortBy: {timestamp: 1},
+              output: {
+                numeric: {
+                  method: "linear"},
+                double: {
+                  method: "linear"},
+                string: {
+                  method: "locf"
+                }
               }
             }
-          }
-        }]
-        cursor: {batchSize: *batchSize}
+          },
+          {$limit: *limit}
+        ]
+        cursor: {}
 
 AutoRun:
 - When:
