@@ -28,8 +28,9 @@ CollectionCount: &NumColls 1
 NumPhases: &NumPhases 3
 
 Document: &doc
-  a: {^RandomInt: {min: 0, max: *NumDocs}}
-  b: {^RandomString: {length: 16}}
+  a: {^RandomInt: {min: 0, max: 100000}}
+  b: {^RandomString: {length: 1000}}
+  c: 0
 
 ExpiredDocument: &expiredDoc
   expireDate: {^Date: "1970-01-01"} # Instantly expire the document
@@ -38,7 +39,7 @@ ExpiredDocument: &expiredDoc
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 1002
+      maxPoolSize: 1503
 
 ActorTemplates:
 - TemplateName: WritesActorWithSleepTemplate
@@ -53,7 +54,6 @@ ActorTemplates:
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
           Duration: 1 minute
-          SleepAfter: 30 seconds
           Repeat: 6
           CollectionCount: *NumColls
           Operations:
@@ -62,8 +62,40 @@ ActorTemplates:
             OperationCommand:
               Documents: # insert regular and expired docs
               - *doc
+              - *doc
+              - *doc
+              - *doc
+              - *doc
+              - *expiredDoc
+              - *expiredDoc
+              - *expiredDoc
+              - *expiredDoc
               - *expiredDoc
             ThrowOnFailure: false
+
+- TemplateName: UpdatesActorWithSleepTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: UpdatesActorWithSleep}}
+    Type: CrudActor
+    Database: *dbname
+    Threads: {^Parameter: {Name: "Threads", Default: 100}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          SleepBefore: 1 minute
+          Duration: 2 minutes
+          Repeat: 6
+          CollectionCount: *NumColls
+          Operations:
+          - OperationName: updateMany
+            OperationCommand:
+              Filter: {a: {$gt: {^RandomInt: { min: 0, max: 100000}}}}
+              Update: {$set: {c: { ^RandomInt: { min: 0, max: 100000 }}}}
+            OperationMetricsName: UpdateDocs
+            ThrowOnFailure: false
+
 - TemplateName: ReadsActorWithSleepTemplate
   Config:
     Name: {^Parameter: {Name: "Name", Default: ReadsActorWithSleep}}
@@ -76,15 +108,16 @@ ActorTemplates:
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
           SleepBefore: 30 seconds
-          Duration: 1 minute
+          Duration: 90 seconds
           Repeat: 6
           CollectionCount: *NumColls
           Operations:
           - OperationName: find
             OperationCommand:
-              Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
+              Filter: {a: {^RandomInt: { min: 0, max: 100000}}}
             OperationMetricsName: ReadDocs
             ThrowOnFailure: false
+
 Actors:
 - Name: Setup
   Type: AdminCommand
@@ -104,7 +137,7 @@ Actors:
         SleepAfter: 60 seconds  # Wait 60 seconds so that the new ttl sleep config is active.
 
 
-- Name: InsertData
+- Name: InsertTTLData
   Type: Loader
   Threads: 1
   Phases:
@@ -124,11 +157,37 @@ Actors:
         - keys: {expireDate: 1}
           options: {expireAfterSeconds: 0}
 
+- Name: InsertUpdateData
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        # Add a large number of regular documents with an index on 'a'
+        Repeat: 1
+        BatchSize: 10_000
+        Threads: 1
+        DocumentCount: 100_000
+        Database: *dbname
+        CollectionCount: *NumColls
+        Document: *doc
+        Indexes:
+         - keys: {a: 1, c: 1}
+
 - ActorFromTemplate:
     TemplateName: WritesActorWithSleepTemplate
     TemplateParameters:
       Name: {^Parameter: {Name: "WritingName", Default: WritingActor_50_50}}
       Threads: {^Parameter: {Name: "WritingThreads", Default: 500}}
+      ActivePhases: [2]
+
+- ActorFromTemplate:
+    TemplateName: UpdatesActorWithSleepTemplate
+    TemplateParameters:
+      Name: {^Parameter: {Name: "UpdatingName", Default: UpdatesActor_50_50}}
+      Threads: {^Parameter: {Name: "UpdatingThreads", Default: 500}}
       ActivePhases: [2]
 
 - ActorFromTemplate:
