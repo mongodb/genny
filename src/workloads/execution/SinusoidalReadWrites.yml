@@ -39,7 +39,7 @@ ExpiredDocument: &expiredDoc
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 1503
+      maxPoolSize: 303
 
 ActorTemplates:
 - TemplateName: WritesActorWithSleepTemplate
@@ -54,7 +54,6 @@ ActorTemplates:
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
           Duration: 1 minute
-          Repeat: 6
           CollectionCount: *NumColls
           Operations:
           - OperationName: insertMany
@@ -86,13 +85,12 @@ ActorTemplates:
         PhaseConfig:
           SleepBefore: 1 minute
           Duration: 2 minutes
-          Repeat: 6
           CollectionCount: *NumColls
           Operations:
           - OperationName: updateMany
             OperationCommand:
-              Filter: {a: {$gt: {^RandomInt: { min: 0, max: 100000}}}}
-              Update: {$set: {c: { ^RandomInt: { min: 0, max: 100000 }}}}
+              Filter: {a: {$gt: 50000}}
+              Update: {$set: {c: {^RandomInt: {min: 0, max: 100000}}}}
             OperationMetricsName: UpdateDocs
             ThrowOnFailure: false
 
@@ -109,12 +107,11 @@ ActorTemplates:
         PhaseConfig:
           SleepBefore: 30 seconds
           Duration: 90 seconds
-          Repeat: 6
           CollectionCount: *NumColls
           Operations:
           - OperationName: find
             OperationCommand:
-              Filter: {a: {^RandomInt: { min: 0, max: 100000}}}
+              Filter: {a: {^RandomInt: {min: 0, max: 100000}}}
             OperationMetricsName: ReadDocs
             ThrowOnFailure: false
 
@@ -169,7 +166,7 @@ Actors:
         Repeat: 1
         BatchSize: 10_000
         Threads: 1
-        DocumentCount: 100_000
+        DocumentCount: 10_000
         Database: *dbname
         CollectionCount: *NumColls
         Document: *doc
@@ -180,21 +177,21 @@ Actors:
     TemplateName: WritesActorWithSleepTemplate
     TemplateParameters:
       Name: {^Parameter: {Name: "WritingName", Default: WritingActor_50_50}}
-      Threads: {^Parameter: {Name: "WritingThreads", Default: 500}}
+      Threads: {^Parameter: {Name: "WritingThreads", Default: 100}}
       ActivePhases: [2]
 
 - ActorFromTemplate:
     TemplateName: UpdatesActorWithSleepTemplate
     TemplateParameters:
       Name: {^Parameter: {Name: "UpdatingName", Default: UpdatesActor_50_50}}
-      Threads: {^Parameter: {Name: "UpdatingThreads", Default: 500}}
+      Threads: {^Parameter: {Name: "UpdatingThreads", Default: 100}}
       ActivePhases: [2]
 
 - ActorFromTemplate:
     TemplateName: ReadsActorWithSleepTemplate
     TemplateParameters:
       Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
-      Threads: {^Parameter: {Name: "ReadingThreads", Default: 500}}
+      Threads: {^Parameter: {Name: "ReadingThreads", Default: 100}}
       ActivePhases: [2]
 
 AutoRun:
