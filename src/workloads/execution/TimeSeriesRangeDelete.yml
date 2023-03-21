@@ -3,11 +3,11 @@ Owner: "@mongodb/server-execution"
 Description: |
   This test establishes a baseline for time-based range deletes on time-series collections.
 
-  We have 1000 independent sensors which will each have 100 buckets, and each bucket has 100 
+  We have 1000 independent sensors which will each have 100 buckets, and each bucket has 100
   measurements.
 
-  The buckets have the meta field, 'sensorId', with values from 0 to 999, each of which has 100 
-  measurements with timestamps within an hour with 36-second intervals. For example, in a bucket, 
+  The buckets have the meta field, 'sensorId', with values from 0 to 999, each of which has 100
+  measurements with timestamps within an hour with 36-second intervals. For example, in a bucket,
   the measurements look like:
   {t: 2023-01-01T5:00:00, m: 42, ...},
   {t: 2023-01-01T5:00:36, m: 42, ...},
