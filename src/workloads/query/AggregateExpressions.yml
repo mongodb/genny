@@ -21,7 +21,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 10
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 83
+  MaxPhases: &MaxPhases 96
 
 Actors:
 # Clear any pre-existing collection state.
@@ -73,6 +73,7 @@ Actors:
           preDeterminedString: {^Choose: {from: ["one", "two", "three"], weights: [1, 1, 1]}}
           array: &array [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
           array2: *array
+          array3: [{^Repeat: {count: 10, fromGenerator: {k: "key", v: "value"}}}]
           nestedObj: {int: *integer, array: *array}
           double: &double {^RandomDouble: {distribution: normal, mean: 50, sigma: 13}}
           doubleBounded: {^RandomDouble: {min: -1, max: 1}}
@@ -664,12 +665,21 @@ Actors:
       operationMetricsName: AggExpressionYearTimezone
       Pipeline: [{$project: {year: { $year: {date: "$date1", timezone: "$timezone1"}}}}]
 
+- ExpressionYearConstTimezone:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionYearConstTimezone
+      active: [66]
+      operationMetricsName: AggExpressionYearConstTimezone
+      Pipeline: [{$project: {year: { $year: {date: "$date1", timezone: "$America/New_York"}}}}]
+
 - ExpresssionMonth:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: ExpresssionMonth
-      active: [66]
+      active: [67]
       operationMetricsName: AggExpresssionMonth
       Pipeline: [{$project: {month: { $month: {date: "$date1"}}}}]
 
@@ -678,16 +688,25 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: ExpressionMonthTimezone
-      active: [67]
+      active: [68]
       operationMetricsName: AggExpressionMonthTimezone
       Pipeline: [{$project: {month: { $month: {date: "$date1", timezone: "$timezone1"}}}}]
+
+- ExpressionMonthConstTimezone:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionMonthConstTimezone
+      active: [69]
+      operationMetricsName: AggExpressionMonthConstTimezone
+      Pipeline: [{$project: {month: { $month: {date: "$date1", timezone: "$America/New_York"}}}}]
 
 - ExpresssionHour:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: ExpresssionHour
-      active: [68]
+      active: [70]
       operationMetricsName: AggExpresssionHour
       Pipeline: [{$project: {hour: { $hour: {date: "$date1"}}}}]
 
@@ -696,16 +715,25 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: ExpressionHourTimezone
-      active: [69]
+      active: [71]
       operationMetricsName: AggExpressionHourTimezone
       Pipeline: [{$project: {hour: { $hour: {date: "$date1", timezone: "$timezone1"}}}}]
+
+- ExpressionHourConstTimezone:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionHourConstTimezone
+      active: [72]
+      operationMetricsName: AggExpressionHourConstTimezone
+      Pipeline: [{$project: {hour: { $hour: {date: "$date1", timezone: "$America/New_York"}}}}]
 
 - ExpresssionMinute:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: ExpresssionMinute
-      active: [70]
+      active: [73]
       operationMetricsName: AggExpresssionMinute
       Pipeline: [{$project: {minute: { $minute: {date: "$date1"}}}}]
 
@@ -714,16 +742,25 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: ExpressionMinuteTimezone
-      active: [71]
+      active: [74]
       operationMetricsName: AggExpressionMinuteTimezone
       Pipeline: [{$project: {minute: { $minute: {date: "$date1", timezone: "$timezone1"}}}}]
+
+- ExpressionMinuteConstTimezone:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionMinuteConstTimezone
+      active: [75]
+      operationMetricsName: AggExpressionMinuteConstTimezone
+      Pipeline: [{$project: {minute: { $minute: {date: "$date1", timezone: "$America/New_York"}}}}]
 
 - ExpresssionSecond:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: ExpresssionSecond
-      active: [72]
+      active: [76]
       operationMetricsName: AggExpresssionSecond
       Pipeline: [{$project: {second: { $second: {date: "$date1"}}}}]
 
@@ -732,16 +769,25 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: ExpressionSecondTimezone
-      active: [73]
+      active: [77]
       operationMetricsName: AggExpressionSecondTimezone
       Pipeline: [{$project: {second: { $second: {date: "$date1", timezone: "$timezone1"}}}}]
+
+- ExpressionSecondConstTimezone:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionSecondConstTimezone
+      active: [78]
+      operationMetricsName: AggExpressionSecondConstTimezone
+      Pipeline: [{$project: {second: { $second: {date: "$date1", timezone: "$America/New_York"}}}}]
 
 - ExpresssionMillisecond:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: ExpresssionMillisecond
-      active: [74]
+      active: [79]
       operationMetricsName: AggExpresssionMillisecond
       Pipeline: [{$project: {millisecond: { $millisecond: {date: "$date1"}}}}]
 
@@ -750,16 +796,25 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: ExpressionMillisecondTimezone
-      active: [75]
+      active: [80]
       operationMetricsName: AggExpressionMillisecondTimezone
       Pipeline: [{$project: {millisecond: { $millisecond: {date: "$date1", timezone: "$timezone1"}}}}]
+
+- ExpressionMillisecondConstTimezone:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionMillisecondConstTimezone
+      active: [81]
+      operationMetricsName: AggExpressionMillisecondConstTimezone
+      Pipeline: [{$project: {millisecond: { $millisecond: {date: "$date1", timezone: "$America/New_York"}}}}]
 
 - ExpresssionWeek:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: ExpresssionWeek
-      active: [76]
+      active: [82]
       operationMetricsName: AggExpresssionWeek
       Pipeline: [{$project: {week: { $week: {date: "$date1"}}}}]
 
@@ -768,16 +823,25 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: ExpressionTimezone
-      active: [77]
+      active: [83]
       operationMetricsName: AggExpressionTimezone
       Pipeline: [{$project: {week: { $week: {date: "$date1", timezone: "$timezone1"}}}}]
+
+- ExpressionWeekConstTimezone:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionWeekConstTimezone
+      active: [84]
+      operationMetricsName: AggExpressionWeekConstTimezone
+      Pipeline: [{$project: {week: { $week: {date: "$date1", timezone: "$America/New_York"}}}}]
 
 - ExpresssionISOWeekYear:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: ExpresssionISOWeekYear
-      active: [78]
+      active: [85]
       operationMetricsName: AggExpresssionISOWeekYear
       Pipeline: [{$project: {isoWeekYear: { $isoWeekYear: {date: "$date1"}}}}]
 
@@ -786,16 +850,25 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: ExpresssionISOWeekYearTimezone
-      active: [79]
+      active: [86]
       operationMetricsName: AggExpresssionISOWeekYearTimezone
       Pipeline: [{$project: {isoWeekYear: { $isoWeekYear: {date: "$date1", timezone: "$timezone1"}}}}]
+
+- ExpresssionISOWeekYearConstTimezone:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpresssionISOWeekYearConstTimezone
+      active: [87]
+      operationMetricsName: AggExpresssionISOWeekYearConstTimezone
+      Pipeline: [{$project: {isoWeekYear: { $isoWeekYear: {date: "$date1", timezone: "$America/New_York"}}}}]
 
 - ExpresssionISODayOfWeek:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: ExpresssionISODayOfWeek
-      active: [80]
+      active: [88]
       operationMetricsName: AggExpresssionISODayOfWeek
       Pipeline: [{$project: {isoDayOfWeek: { $isoDayOfWeek: {date: "$date1"}}}}]
 
@@ -804,16 +877,25 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: ExpresssionISODayOfWeekTimezone
-      active: [81]
+      active: [89]
       operationMetricsName: AggExpresssionISODayOfWeekTimezone
       Pipeline: [{$project: {isoDayOfWeek: { $isoDayOfWeek: {date: "$date1", timezone: "$timezone1"}}}}]
+
+- ExpresssionISODayOfWeekConstTimezone:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpresssionISODayOfWeekConstTimezone
+      active: [90]
+      operationMetricsName: AggExpresssionISODayOfWeekConstTimezone
+      Pipeline: [{$project: {isoDayOfWeek: { $isoDayOfWeek: {date: "$date1", timezone: "$America/New_York"}}}}]
 
 - ExpresssionISOWeek:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: ExpresssionISOWeek
-      active: [82]
+      active: [91]
       operationMetricsName: AggExpresssionISOWeek
       Pipeline: [{$project: {isoWeek: { $isoWeek: {date: "$date1"}}}}]
 
@@ -822,25 +904,34 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: ExpresssionISOWeekTimezone
-      active: [83]
+      active: [92]
       operationMetricsName: AggExpresssionISOWeekTimezone
       Pipeline: [{$project: {isoWeek: { $isoWeek: {date: "$date1", timezone: "$timezone1"}}}}]
+
+- ExpresssionISOWeekConstTimezone:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpresssionISOWeekConstTimezone
+      active: [93]
+      operationMetricsName: AggExpresssionISOWeekConstTimezone
+      Pipeline: [{$project: {isoWeek: { $isoWeek: {date: "$date1", timezone: "$America/New_York"}}}}]
 
 - ExpressionArrayToObject:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: ExpressionArrayToObject
-      active: [83]
+      active: [94]
       operationMetricsName: AggExpressionArrayToObject
-      Pipeline: [{$project: {object: { $arrayToObject: "$array"}}}]
+      Pipeline: [{$project: {object: { $arrayToObject: "$array3"}}}]
 
 - ExpressionObjectToArray:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: ExpressionObjectToArray
-      active: [83]
+      active: [95]
       operationMetricsName: AggExpressionObjectToArray
       Pipeline: [{$project: {array: { $objectToArray: "$nestedObj"}}}]
 
@@ -849,7 +940,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: ExpressionRound
-      active: [83]
+      active: [96]
       operationMetricsName: AggExpressionRound
       Pipeline: [{$project: {round: { $round: ["$double", 1]}}}]
 
