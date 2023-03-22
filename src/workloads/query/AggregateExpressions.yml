@@ -826,6 +826,33 @@ Actors:
       operationMetricsName: AggExpresssionISOWeekTimezone
       Pipeline: [{$project: {isoWeek: { $isoWeek: {date: "$date1", timezone: "$timezone1"}}}}]
 
+- ExpressionArrayToObject:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionArrayToObject
+      active: [83]
+      operationMetricsName: AggExpressionArrayToObject
+      Pipeline: [{$project: {object: { $arrayToObject: "$array"}}}]
+
+- ExpressionObjectToArray:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionObjectToArray
+      active: [83]
+      operationMetricsName: AggExpressionObjectToArray
+      Pipeline: [{$project: {array: { $objectToArray: "$nestedObj"}}}]
+
+- ExpressionRound:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionRound
+      active: [83]
+      operationMetricsName: AggExpressionRound
+      Pipeline: [{$project: {round: { $round: ["$double", 1]}}}]
+
 AutoRun:
 - When:
     mongodb_setup:
