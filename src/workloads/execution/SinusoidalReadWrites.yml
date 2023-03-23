@@ -87,9 +87,9 @@ ActorTemplates:
           Duration: 2 minutes
           CollectionCount: *NumColls
           Operations:
-          - OperationName: updateMany
+          - OperationName: updateOne
             OperationCommand:
-              Filter: {a: {$gt: 50000}}
+              Filter: {a: {^RandomInt: {min: 0, max: 100000}}}
               Update: {$set: {c: {^RandomInt: {min: 0, max: 100000}}}}
             OperationMetricsName: UpdateDocs
             ThrowOnFailure: false
