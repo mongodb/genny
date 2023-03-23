@@ -82,6 +82,17 @@ struct CommitLatency::PhaseConfig {
     }
 };
 
+::int64_t get_total(bsoncxx::document::view &doc) {
+    auto total = doc["total"];
+    if (total && total.type() == bsoncxx::type::k_int32){
+        return total.get_int32();
+    }
+    if (total && total.type() == bsoncxx::type::k_int64){
+        return total.get_int64();
+    }
+    return -1L;
+}
+
 void CommitLatency::run() {
     using namespace bsoncxx::builder::stream;
 
@@ -162,7 +173,8 @@ void CommitLatency::run() {
             // exact value of the metric is therefore uninteresting, it's only significant
             // whether it is zero or non-zero.
             for (auto doc : cursor) {
-                if (doc["total"].get_int64() != 200) {
+                auto total = get_total(doc);
+                if (total != 200) {
                     ctx.addErrors(1);
                 }
             }
