@@ -39,7 +39,7 @@ ExpiredDocument: &expiredDoc
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 303
+      maxPoolSize: 403
 
 ActorTemplates:
 - TemplateName: WritesActorWithSleepTemplate
@@ -53,7 +53,8 @@ ActorTemplates:
         Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
-          Duration: 1 minute
+          SleepBefore: 10 seconds
+          Repeat: 3
           CollectionCount: *NumColls
           Operations:
           - OperationName: insertMany
@@ -72,28 +73,6 @@ ActorTemplates:
               - *expiredDoc
             ThrowOnFailure: false
 
-- TemplateName: UpdatesActorWithSleepTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: UpdatesActorWithSleep}}
-    Type: CrudActor
-    Database: *dbname
-    Threads: {^Parameter: {Name: "Threads", Default: 100}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          SleepBefore: 1 minute
-          Duration: 2 minutes
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: {a: {^RandomInt: {min: 0, max: 100000}}}
-              Update: {$set: {c: {^RandomInt: {min: 0, max: 100000}}}}
-            OperationMetricsName: UpdateDocs
-            ThrowOnFailure: false
-
 - TemplateName: ReadsActorWithSleepTemplate
   Config:
     Name: {^Parameter: {Name: "Name", Default: ReadsActorWithSleep}}
@@ -105,14 +84,36 @@ ActorTemplates:
         Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
-          SleepBefore: 30 seconds
-          Duration: 90 seconds
+          SleepBefore: 15 seconds
+          Repeat: 3
           CollectionCount: *NumColls
           Operations:
           - OperationName: find
             OperationCommand:
               Filter: {a: {^RandomInt: {min: 0, max: 100000}}}
             OperationMetricsName: ReadDocs
+            ThrowOnFailure: false
+
+- TemplateName: UpdatesActorWithSleepTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: UpdatesActorWithSleep}}
+    Type: CrudActor
+    Database: *dbname
+    Threads: {^Parameter: {Name: "Threads", Default: 100}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          SleepBefore: 20 seconds
+          Repeat: 3
+          CollectionCount: *NumColls
+          Operations:
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {a: {^RandomInt: {min: 0, max: 100000}}}
+              Update: {$set: {c: {^RandomInt: {min: 0, max: 100000}}}}
+            OperationMetricsName: UpdateDocs
             ThrowOnFailure: false
 
 Actors:
@@ -162,7 +163,7 @@ Actors:
       Active: [1]
       NopInPhasesUpTo: *NumPhases
       PhaseConfig:
-        # Add a large number of regular documents with an index on 'a'
+        # Add a large number of regular documents with an index on 'a' and 'c'
         Repeat: 1
         BatchSize: 10_000
         Threads: 1
@@ -181,17 +182,17 @@ Actors:
       ActivePhases: [2]
 
 - ActorFromTemplate:
+    TemplateName: ReadsActorWithSleepTemplate
+    TemplateParameters:
+      Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
+      Threads: {^Parameter: {Name: "ReadingThreads", Default: 200}}
+      ActivePhases: [2]
+
+- ActorFromTemplate:
     TemplateName: UpdatesActorWithSleepTemplate
     TemplateParameters:
       Name: {^Parameter: {Name: "UpdatingName", Default: UpdatesActor_50_50}}
       Threads: {^Parameter: {Name: "UpdatingThreads", Default: 100}}
-      ActivePhases: [2]
-
-- ActorFromTemplate:
-    TemplateName: ReadsActorWithSleepTemplate
-    TemplateParameters:
-      Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
-      Threads: {^Parameter: {Name: "ReadingThreads", Default: 100}}
       ActivePhases: [2]
 
 AutoRun:
