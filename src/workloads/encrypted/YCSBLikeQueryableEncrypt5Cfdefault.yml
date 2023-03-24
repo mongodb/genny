@@ -42,6 +42,7 @@ LoadConfig:
     Field3Value: *100unique_values
     Field4Value: *100unique_values
 
+# TODO PERF-3954: Re-enable this test.
 # AutoRun:
 # - When:
 #     mongodb_setup:

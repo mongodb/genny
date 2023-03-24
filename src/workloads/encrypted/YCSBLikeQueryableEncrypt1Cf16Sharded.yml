@@ -33,6 +33,7 @@ LoadConfig:
     Namespace: genny_qebench.testcoll
     ClientName: EncryptedPool
 
+# TODO PERF-3954: Re-enable this test.
 # AutoRun:
 # - When:
 #     mongodb_setup:

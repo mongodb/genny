@@ -37,6 +37,7 @@ LoadConfig:
     ClientName: EncryptedPool
     ShardCollectionPhase: {Nop: true}
 
+# TODO PERF-3954: Re-enable this test.
 # AutoRun:
 # - When:
 #     mongodb_setup:
