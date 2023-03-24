@@ -92,6 +92,14 @@ def start(workload_yaml):
 def poll_for_cea(workload_yaml):
     poll(workload_yaml, lambda x: x != "change event application", "info")
 
+@cli.command(
+    "poll_for_commit_point",
+    help=("Wait till all the instances canCommit = true and lagTimeSeconds < 120"),
+)
+@click.argument("workload_yaml", nargs=1)
+def poll_for_commit_point(workload_yaml):
+    poll(workload_yaml, lambda x: bool(x) == False, "canCommit") or poll(workload_yaml, lambda x: int(x) > 120, "lagTimeSeconds")
+
 
 @cli.command(
     "drain_writes",
