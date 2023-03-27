@@ -37,17 +37,18 @@ LoadConfig:
     ClientName: EncryptedPool
     ShardCollectionPhase: {Nop: true}
 
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - single-replica-fle
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v6.0
-      - v6.1
-      - v6.2
+# TODO PERF-3954: Re-enable this test.
+# AutoRun:
+# - When:
+#     mongodb_setup:
+#       $eq:
+#       - single-replica-fle
+#     branch_name:
+#       $neq:
+#       - v4.0
+#       - v4.2
+#       - v4.4
+#       - v5.0
+#       - v6.0
+#       - v6.1
+#       - v6.2
