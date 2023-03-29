@@ -118,7 +118,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - atlas
-      - atlas-like-replica
+      - atlas-like-replica.2022-10
       - replica
     branch_name:
       $neq:
