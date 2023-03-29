@@ -76,6 +76,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - atlas
+      - atlas-like-replica
       - replica
       - replica-noflowcontrol
       - replica-1dayhistory-15gbwtcache

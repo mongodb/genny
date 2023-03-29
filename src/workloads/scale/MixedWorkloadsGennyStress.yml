@@ -222,3 +222,4 @@ AutoRun:
       $eq:
       - atlas
       - replica
+      - atlas-like-replica

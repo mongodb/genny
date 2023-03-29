@@ -27,6 +27,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - atlas
+      - atlas-like-replica
       - replica
       - single-replica
       - standalone

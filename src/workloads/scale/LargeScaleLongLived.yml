@@ -88,6 +88,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - atlas
+      - atlas-like-replica
       - replica
       - replica-all-feature-flags
       - shard
