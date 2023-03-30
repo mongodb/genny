@@ -42,6 +42,8 @@ Actors:
   - *nop
   - *nop
   - *nop
+  - *nop
+  - *nop
 
 - Name: Mongosync
   Type: Python
@@ -55,7 +57,13 @@ Actors:
   - LoadConfig:
       Path: *scriptsPath
       Key: PollForCEA
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: PauseMongosync
   - *nop
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: ResumeMongosync
   - LoadConfig:
       Path: *scriptsPath
       Key: DrainWrites
@@ -74,9 +82,11 @@ Actors:
   - *nop
   - *nop
   - *nop
+  - *nop
   - LoadConfig:
       Path: *scriptsPath
       Key: InsertShortTestData
+  - *nop
   - *nop
   - *nop
   - *nop

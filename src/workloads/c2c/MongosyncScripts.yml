@@ -18,6 +18,18 @@ StartMongosync:
   Endpoint: start
   MetricsName: StartMongosync
 
+PauseMongosync:
+  Repeat: 1
+  Module: mongosync_actor
+  Endpoint: pause
+  MetricsName: PauseMongosync
+
+ResumeMongosync:
+  Repeat: 1
+  Module: mongosync_actor
+  Endpoint: resume
+  MetricsName: ResumeMongosync
+
 PollForCEA:
   Repeat: 1
   Module: mongosync_actor
