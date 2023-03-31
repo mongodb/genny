@@ -1,7 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-execution"
 Description: |
-  Run tests for $percentile setWindowFields over various window sizes.
+  Run tests for $percentile window functions over various bounded window sizes with two different percentile values. 
+  Bounded window functions use a different implementation than the $percentile accumulator by using an accurate algorithm. 
+  This workload is to compare the speed of this implementation over different window sizes and percentiles to $min.
+
 Keywords:
 - setWindowFields
 - percentile
@@ -50,6 +53,7 @@ ActorTemplates:
             _id: {^Inc: {start: 0}}
             data: {^Parameter: {Name: "Data", Default: 0}}
             partitionKey: {^RandomInt: {min: 1, max: 5}}
+
 - TemplateName: ComputePercentile
   Config:
     Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
@@ -60,13 +64,13 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: 100
+          Repeat: 10
           Database: *db
           Collection: *coll
           Operations:
           - OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: { sortBy: { _id: 1 }, output: { p: { $percentile: { p: [0.9], input: "$data", algorithm: "approximate" }, window: { documents: {^Parameter: {Name: "D", Default: [-10, 10]}} } }}}}]
+              Pipeline: [{$setWindowFields: { sortBy: { _id: 1 }, output: { p: { $percentile: { p: {^Parameter: {Name: "P", Default: [0.99]}}, input: "$data", algorithm: "approximate" }, window: { documents: {^Parameter: {Name: "D", Default: [-10, 10]}} } }}}}]
               allowDiskUse: true
 
 - TemplateName: ComputeMin
@@ -79,13 +83,13 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: 100
+          Repeat: 10
           Database: *db
           Collection: *coll
           Operations:
           - OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {sortBy: { _id: 1 }, output: { p: { $min: "$data", window: { documents:  {^Parameter: {Name: "D", Default: [-10, 10]}} } }}}}]
+              Pipeline: [{$setWindowFields: {sortBy: { _id: 1 }, output: { p: { $min: "$data", window: { documents: {^Parameter: {Name: "D", Default: [-10, 10]}} } }}}}]
               allowDiskUse: true
 
 Actors:
@@ -99,6 +103,13 @@ Actors:
     TemplateName: ComputePercentile
     TemplateParameters:
       Name: "percentile_bounded"
+      OnlyActiveInPhase: 1
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_bounded_middle_p"
+      P: [0.6]
       OnlyActiveInPhase: 2
 
 - ActorFromTemplate:
@@ -109,14 +120,22 @@ Actors:
       OnlyActiveInPhase: 3
 
 - ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_cumulative_middle_p"
+      D: [0, "unbounded"]
+      P: [0.6]
+      OnlyActiveInPhase: 4
+
+- ActorFromTemplate:
     TemplateName: ComputeMin
     TemplateParameters:
       Name: "min_bounded"
-      OnlyActiveInPhase: 4
+      OnlyActiveInPhase: 5
 
 - ActorFromTemplate:
     TemplateName: ComputeMin
     TemplateParameters:
       Name: "min_cumulative"
       D: [0, "unbounded"]
-      OnlyActiveInPhase: 5
+      OnlyActiveInPhase: 6
