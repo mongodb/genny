@@ -128,5 +128,24 @@ def wait_for_commit(workload_yaml):
     poll(workload_yaml, lambda x: x != "COMMITTED", "state")
 
 
+@cli.command(
+    "pause",
+    help=("Pause the migration"),
+)
+@click.argument("workload_yaml", nargs=1)
+def commit(workload_yaml):
+    change_state(workload_yaml, "/api/v1/pause", {})
+
+
+@cli.command(
+    "resume",
+    help=("Resume the migration"),
+)
+@click.argument("workload_yaml", nargs=1)
+def commit(workload_yaml):
+    change_state(workload_yaml, "/api/v1/resume", {})
+
+
+
 if __name__ == "__main__":
     cli()
