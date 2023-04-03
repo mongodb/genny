@@ -23,14 +23,10 @@ AutoRun:
       - v6.0
 
 GlobalDefaults:
-  MaxPhases: &maxPhases 10
+  MaxPhases: &maxPhases 14
   Database: &db percentiles
-
-  # The Loader actor creates collections named "Collection<N>" where N corresponds to the thread's
-  # number. We'll use a single collection, created by a single thread, so it becomes 'Collection0'.
   Collection: &coll Collection0
   DocumentCount: &docCount 100000
-  Dist: &dist {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}}
 
 ActorTemplates:
 - TemplateName: CreateDataset
@@ -52,7 +48,6 @@ ActorTemplates:
           Document:
             _id: {^Inc: {start: 0}}
             data: {^Parameter: {Name: "Data", Default: 0}}
-            partitionKey: {^RandomInt: {min: 1, max: 5}}
 
 - TemplateName: ComputePercentile
   Config:
@@ -97,7 +92,7 @@ Actors:
     TemplateName: CreateDataset
     TemplateParameters:
       OnlyActiveInPhase: 0
-      Data: *dist
+      Data: {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}}
 
 - ActorFromTemplate:
     TemplateName: ComputePercentile
@@ -115,27 +110,79 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
-      Name: "percentile_cumulative"
-      D: [0, "unbounded"]
+      Name: "percentile_bounded_low_p"
+      P: [0.05]
       OnlyActiveInPhase: 3
 
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
-      Name: "percentile_cumulative_middle_p"
+      Name: "percentile_bounded_multiple_p"
+      P: [0.05, 0.2, 0.99]
+      OnlyActiveInPhase: 4
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_large_window"
+      D: [0, "unbounded"]
+      OnlyActiveInPhase: 5
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_large_window_middle_p"
       D: [0, "unbounded"]
       P: [0.6]
+      OnlyActiveInPhase: 6
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_large_window_low_p"
+      D: [0, "unbounded"]
+      P: [0.05]
       OnlyActiveInPhase: 4
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_large_window_multiple_p"
+      D: [0, "unbounded"]
+      P: [0.05, 0.2, 0.99]
+      OnlyActiveInPhase: 7
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_use_t-digest"
+      D: ["unbounded", "current"]
+      OnlyActiveInPhase: 8
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_use_t-digest_middle_p"
+      D: ["unbounded", "current"]
+      P: [0.6]
+      OnlyActiveInPhase: 9
 
 - ActorFromTemplate:
     TemplateName: ComputeMin
     TemplateParameters:
       Name: "min_bounded"
-      OnlyActiveInPhase: 5
+      OnlyActiveInPhase: 10
+
+- ActorFromTemplate:
+    TemplateName: ComputeMin
+    TemplateParameters:
+      Name: "min_large_window"
+      D: [0, "unbounded"]
+      OnlyActiveInPhase: 11
 
 - ActorFromTemplate:
     TemplateName: ComputeMin
     TemplateParameters:
       Name: "min_cumulative"
-      D: [0, "unbounded"]
-      OnlyActiveInPhase: 6
+      D: ["unbounded", "current"]
+      OnlyActiveInPhase: 12
