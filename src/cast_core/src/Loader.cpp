@@ -126,6 +126,11 @@ struct Loader::PhaseConfig {
 
 void genny::actor::Loader::run() {
     for (auto&& config : _loop) {
+        if (!config.isNop()) {
+            // Warm up the connection to the database
+            auto ping = builder::stream::document{} << "ping" << 1 << builder::stream::finalize;
+            config->database.run_command(ping.view());
+        }
         for (auto&& _ : config) {
             for (uint i = config->collectionOffset;
                  i < config->collectionOffset + config->numCollections;
