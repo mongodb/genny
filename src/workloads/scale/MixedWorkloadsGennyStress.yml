@@ -142,6 +142,10 @@ ActorTemplates:
               Filter: *filter
 
 Actors:
+#
+## Reduce the log level to avoid creating log files
+## of serveral GB
+#
 - Name: LogLevel
   Type: RunCommand
   Threads: 1
