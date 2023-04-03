@@ -23,6 +23,11 @@ GlobalDefaults:
   Threads: &Threads 1
   MaxPhases: &MaxPhases 97
 
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
 Actors:
 # Clear any pre-existing collection state.
 - Name: ClearCollection
