@@ -238,3 +238,4 @@ AutoRun:
       $eq:
       - atlas
       - replica
+      - atlas-like-replica.2022-10
