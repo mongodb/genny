@@ -1,0 +1,222 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  This workload sends bursts of finds that use large $ins while running
+  a low rate update workload.  The workload causes high CPU load as the server
+  becomes bottlenecked on tcmalloc spinlocks during the find operations.
+  Improvements or regressions in this aspect of the allocator should
+  be measurable by the average CPU usage during this test as well as
+  the latency of the find operations.
+  In this workload, large arrays of random strings are generated to use
+  for the $in queries.  To avoid a CPU bottleneck on the workload client,
+  it uses a ^Once generator to generate the arrays once during initialization.
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 20000
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: largeins
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: 1000
+    BatchSize: 1000
+    Indexes:
+    - keys: {hash : 1, key : 1, string1 : 1, string2 : 1}
+    - keys: {key: 1}
+    Document:
+      _id: {^Inc: {start: 0}}
+      hash: &randomString {^RandomString: {length: 22}}
+      key: *randomString
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+
+- Name: FindLargeIn_1
+  Type: CrudActor
+  Threads: 1
+  Database: largeins
+  Phases:
+  - {Nop: true}
+  - Name: FindLargeIn
+    Duration: 2 minutes
+    # GlobalRate: 1000 per 15 seconds
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter:
+          hash:
+            $in: &arrayGenerator {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString, number: 20000}}}}
+          key:
+            $in: *arrayGenerator
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+
+- Name: FindLargeIn_4
+  Type: CrudActor
+  Threads: 4
+  Database: largeins
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Name: FindLargeIn
+    Duration: 2 minutes
+    # GlobalRate: 1000 per 15 seconds
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter:
+          hash:
+            $in: *arrayGenerator
+          key:
+            $in: *arrayGenerator
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+
+- Name: FindLargeIn_16
+  Type: CrudActor
+  Threads: 16
+  Database: largeins
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - Name: FindLargeIn
+    Duration: 2 minutes
+    # GlobalRate: 1000 per 15 seconds
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter:
+          hash:
+            $in: *arrayGenerator
+          key:
+            $in: *arrayGenerator
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+
+- Name: FindLargeIn_64
+  Type: CrudActor
+  Threads: 64
+  Database: largeins
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - Name: FindLargeIn
+    Duration: 2 minutes
+    # GlobalRate: 1000 per 15 seconds
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter:
+          hash:
+            $in: *arrayGenerator
+          key:
+            $in: *arrayGenerator
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+
+- Name: FindLargeIn_256
+  Type: CrudActor
+  Threads: 256
+  Database: largeins
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - Name: FindLargeIn
+    Duration: 2 minutes
+    # GlobalRate: 1000 per 15 seconds
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter:
+          hash:
+            $in: *arrayGenerator
+          key:
+            $in: *arrayGenerator
+  - {Nop: true}
+  - {Nop: true}
+
+- Name: FindLargeIn_1024
+  Type: CrudActor
+  Threads: 1024
+  Database: largeins
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - Name: FindLargeIn
+    Duration: 2 minutes
+    # GlobalRate: 1000 per 15 seconds
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter:
+          hash:
+            $in: *arrayGenerator
+          key:
+            $in: *arrayGenerator
+  - {Nop: true}
+    
+- Name: FindLargeIn_2048
+  Type: CrudActor
+  Threads: 2048
+  Database: largeins
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - Name: FindLargeIn
+    Duration: 2 minutes
+    # GlobalRate: 1000 per 15 seconds
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter:
+          hash:
+            $in: *arrayGenerator
+          key:
+            $in: *arrayGenerator
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq: replica
