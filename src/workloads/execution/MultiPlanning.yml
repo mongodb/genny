@@ -17,9 +17,6 @@ Actors:
     Operations:
     - OperationName: RunCommand
       OperationCommand:
-        drop: &Collection Collection0
-    - OperationName: RunCommand
-      OperationCommand:
         createIndexes: *Collection
         indexes:
         - key:
