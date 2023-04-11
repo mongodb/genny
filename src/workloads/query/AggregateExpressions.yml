@@ -21,7 +21,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 10
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 97
+  MaxPhases: &MaxPhases 98
 
 Clients:
   Default:
@@ -959,6 +959,15 @@ Actors:
       active: [97]
       operationMetricsName: AggExpressionRound
       Pipeline: [{$project: {round: { $round: ["$double", 1]}}}]
+
+- ExpressionArray:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionArray
+      active: [98]
+      operationMetricsName: AggExpressionArray
+      Pipeline: [{$project: {array: ["$int", "$string", "$double", "$nestedObj", "$array", "$array2"]}}]
 
 AutoRun:
 - When:
