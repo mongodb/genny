@@ -29,7 +29,8 @@ GlobalDefaults:
   # The Loader actor creates collections named "Collection<N>" where N corresponds to the thread's
   # number. We'll use a single collection, created by a single thread, so it becomes 'Collection0'.
   Collection: &coll Collection0
-  DocumentCount: &docCount 1e6
+
+  DocumentCount: &docCount 1e7
 
 ActorTemplates:
 - TemplateName: CreateDataset
@@ -52,6 +53,8 @@ ActorTemplates:
             _id: {^Inc: {start: 0}}
             data: {^Parameter: {Name: "Data", Default: 0}}
 
+# The specific percentile and the number of them doesn't affect t-digest much as it spends most time
+# creating the representation of the inputs that is suitable for computing _any_ percentile.
 - TemplateName: ComputePercentile
   Config:
     Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
@@ -62,7 +65,7 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: 100
+          Repeat: 20
           Database: *db
           Collection: *coll
           Operations:
@@ -71,13 +74,16 @@ ActorTemplates:
               Pipeline: [
                 {$group: {
                   _id: null,
-                  p: {$percentile: {p: [0.9], input: "$data", algorithm: "approximate" }}
-                }}
+                  p: {$percentile: {p: [0.01, 0.5, 0.99], input: "$data", method: "approximate" }}
+                }},
               ]
 
+# During development of $percentile we compared its performance to $min and $minN. We don't need to
+# keep running the tests for these but we'd like to keep the templates around for reference and ease
+# of rerunning the local experiments if needed in the future.
 - TemplateName: ComputeMinN
   Config:
-    Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
+    Name: {^Parameter: {Name: "Name", Default: "ComputeMinN"}}
     Type: CrudActor
     Threads: 1
     Phases:
@@ -85,7 +91,7 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: 100
+          Repeat: 20
           Database: *db
           Collection: *coll
           Operations:
@@ -95,7 +101,7 @@ ActorTemplates:
 
 - TemplateName: ComputeMin
   Config:
-    Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
+    Name: {^Parameter: {Name: "Name", Default: "ComputeMin"}}
     Type: CrudActor
     Threads: 1
     Phases:
@@ -103,7 +109,7 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: 100
+          Repeat: 20
           Database: *db
           Collection: *coll
           Operations:
@@ -111,11 +117,11 @@ ActorTemplates:
             OperationCommand:
               Pipeline: [{$group: { _id: null, p: {$min: "$data"}}}]
 
-# 0, 10, 20, 30, 40, 50 - create dataset
+# *0 - create dataset
 # *1 - warm up or quiese but they don't seem to affect the numbers, so we are not doing either
-# 2, 12, 22, 32, 42, 52 - compute percentile
+# *2 - compute percentiles
 # [*3-*8] - compute something else on this dataset if so desired
-# 9, 19, 29, 39, 49, 59 - drop the dataset
+# *9 - drop the dataset
 
 Actors:
 - Name: DropCollection
@@ -157,18 +163,6 @@ Actors:
       OnlyActiveInPhase: 12
 
 - ActorFromTemplate:
-    TemplateName: ComputeMin
-    TemplateParameters:
-      Name: "normal_min"
-      OnlyActiveInPhase: 13
-
-- ActorFromTemplate:
-    TemplateName: ComputeMinN
-    TemplateParameters:
-      Name: "normal_minN"
-      OnlyActiveInPhase: 14
-
-- ActorFromTemplate:
     TemplateName: CreateDataset
     TemplateParameters:
       OnlyActiveInPhase: 20
@@ -204,23 +198,26 @@ Actors:
       Name: "weibull_percentile"
       OnlyActiveInPhase: 42
 
+# A mix of various distributions, including many duplicated values.
 - ActorFromTemplate:
     TemplateName: CreateDataset
     TemplateParameters:
       OnlyActiveInPhase: 50
       Data: {^Choose: {
         from: [
-          {^RandomInt: {distribution: uniform, min: 0, max: 10000}},
           {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}},
           {^RandomDouble: {distribution: exponential, lambda: 1.0}},
           {^RandomDouble: {distribution: uniform, min: 0.0, max: 100.0}},
+          {^RandomDouble: {distribution: weibull, a: 1.0, b: 0.5}},
+          # on 1e7 docs this will produce duplicates, including in the tails of other distributions
+          {^RandomInt: {distribution: uniform, min: 0, max: 1000}},
         ]
       }}
 
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
-      Name: "dupes_percentile"
+      Name: "mixed_percentile"
       OnlyActiveInPhase: 52
 
 
