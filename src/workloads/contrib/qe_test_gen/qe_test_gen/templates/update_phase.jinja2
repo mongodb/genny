@@ -1,0 +1,45 @@
+- Repeat: <<iterationsPerThread>>
+  Collection: {^Parameter: {Name: "Collection", Default: "<<collectionName>>"}}
+  MetricsName: "update"
+  InitialStates:
+    {% for query in ctx.queries %}
+    {% set outer_loop = loop %}
+    {% for update in ctx.updates %}
+    - State: State_<<outer_loop.index>>_<<loop.index>>
+      Weight: 1
+    {% endfor %}
+    {% endfor %}
+  StateTransitions: &transitions
+    {% for query in ctx.queries %}
+    {% set outer_loop = loop %}
+    {% for update in ctx.updates %}
+    - To: "State_<<outer_loop.index>>_<<loop.index>>"
+      Weight: 1
+      SleepBefore: {^TimeSpec: {value: 0}}
+    {% endfor %}
+    {% endfor %}
+  States:
+  {% for query in ctx.queries %}
+  {% set outer_loop = loop %}
+  {% for update in ctx.updates %}
+    - Name: State_<<outer_loop.index>>_<<loop.index>>
+      Operations:
+        - OperationName: updateOne
+          OperationMetricsName: updates
+          OperationCommand:
+            Filter:
+              {% if query[1] is string %}
+              <<query[0]>> : <<query[1]>>
+              {% else %}
+              <<query[0]>> :  { ^Choose: { from: <<query[1]>> } }
+              {% endif %}
+            Update:
+              $set:
+                {% if update[1] is string %}
+                <<update[0]>> : <<update[1]>>
+                {% else %}
+                <<update[0]>> :  { ^Choose: { from: <<update[1]>> } }
+                {% endif %}
+      Transitions: *transitions
+  {% endfor %}
+  {% endfor %}

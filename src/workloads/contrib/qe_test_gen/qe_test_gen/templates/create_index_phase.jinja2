@@ -1,0 +1,9 @@
+- Repeat: 1
+  Collection: {^Parameter: {Name: "Collection", Default: "<<collectionName>>"}}
+  MetricsName: "createIndex"
+  Operations:
+  - OperationName: createIndex
+    OperationCommand:
+      Keys:
+        <<ctx.field>>: 1
+      IndexOptions: {}
