@@ -5,6 +5,15 @@ Description: |
   clients to simulate an extreme case of overload in the server. Both reads and writes happen
   at the same time in balanced fashion.
 
+  The metrics to monitor are:
+    * ErrorsTotal / ErrorRate: The total number of errors and rate of errors encountered by the workload. Networking
+      errors are not unexpected in general and they should be recoverable. This work load strives to provide a test to
+      allow us to measure the scale of networking errors in a stressful test and prove if the networking becomes more
+      stable (with lower total errors and a lower error rate).
+    * The Operation latency (more specifically the Latency90thPercentile to Latency99thPercentile metrics)
+    * The Operation Throughput
+    * "ss connections active": the number of connections.
+
 Keywords:
 - scale
 - insertMany
@@ -36,6 +45,7 @@ ActorTemplates:
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
           Duration: 3 minutes
+          RecordFailure: true
           CollectionCount: *NumColls
           Operations:
           - OperationName: insertOne
@@ -55,6 +65,7 @@ ActorTemplates:
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
           Duration: 3 minutes
+          RecordFailure: true
           CollectionCount: *NumColls
           Operations:
           - OperationName: find
