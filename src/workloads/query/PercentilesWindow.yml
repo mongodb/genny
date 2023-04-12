@@ -1,0 +1,177 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-integration"
+Description: |
+  This tests $percentile window functions over various bounded window sizes. Bounded window
+  functions use a different implementation (an accurate algorithm) than the $percentile accumulator,
+  which uses an approximate algorithm. Therefore, we need to  compare both implementations over
+  different sized windows. We test a few cases:
+  1. Small removable windows ([-10, 10])
+  2. Large removable windows ([0, "unbounded"])
+  3. Cumulative windows that will use the approximate algorithm (["unbounded", 0])
+  4. Small range windows ([-10, 10])
+  5. Large range windows ([0, "unbounded"])
+  6. Cumulative range windows that will use the approximate algorithm (["unbounded", 0])
+  We compare the speed of $percentile over these windows with another window function ($min).
+  We do not test different percentile values here, since those are tested in a benchmark file, and
+  do not show significant differences.
+
+Keywords:
+- setWindowFields
+- percentile
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v6.0
+
+GlobalDefaults:
+  MaxPhases: &maxPhases 14
+  Database: &db percentiles
+  Collection: &coll Collection0
+
+ActorTemplates:
+- TemplateName: ComputePercentile
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 10
+          Database: *db
+          Collection: *coll
+          Operations:
+          - OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$setWindowFields: { sortBy: { sort: 1 }, output: { p: { $percentile: { p: [0.75], input: "$data", method: "approximate" }, window: {^Parameter: {Name: "Documents", Default: {documents: [-10, 10]}} }}}}}]
+
+- TemplateName: ComputeMin
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 10
+          Database: *db
+          Collection: *coll
+          Operations:
+          - OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$setWindowFields: {sortBy: { sort: 1 }, output: { p: { $min: "$data", window: { ^Parameter: {Name: "Documents", Default: {documents: [-10, 10]}} } }}}}]
+
+Actors:
+- Name: CreateDataset
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Threads: 1
+        Repeat: 1
+        Database: *db
+        CollectionCount: 1
+        DocumentCount: 100000
+        BatchSize: 1000
+        Document:
+          _id: {^Inc: {start: 0}}
+          data: {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}}
+          sort: {^RandomInt: {distribution: uniform, min: 0, max: 10000}}
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_small_window"
+      OnlyActiveInPhase: 1
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_large_window"
+      Documents: { documents: [0, "unbounded"]}
+      OnlyActiveInPhase: 2
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_cumulative_t_digest"
+      Documents: { documents: ["unbounded", 0]}
+      OnlyActiveInPhase: 3
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_small_range_window"
+      Documents: { range: [-10, 10]}
+      OnlyActiveInPhase: 4
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_large_range_window"
+      Documents: { range: [0, "unbounded"]}
+      OnlyActiveInPhase: 5
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_range_use_t_digest"
+      Documents: { range: ["unbounded", 0]}
+      OnlyActiveInPhase: 6
+
+- ActorFromTemplate:
+    TemplateName: ComputeMin
+    TemplateParameters:
+      Name: "min_small_window"
+      OnlyActiveInPhase: 7
+
+- ActorFromTemplate:
+    TemplateName: ComputeMin
+    TemplateParameters:
+      Name: "min_large_window"
+      Documents: { documents: [0, "unbounded"] }
+      OnlyActiveInPhase: 8
+
+- ActorFromTemplate:
+    TemplateName: ComputeMin
+    TemplateParameters:
+      Name: "min_cumulative"
+      Documents: { documents: ["unbounded", 0] }
+      OnlyActiveInPhase: 9
+
+- ActorFromTemplate:
+    TemplateName: ComputeMin
+    TemplateParameters:
+      Name: "min_small_range_window"
+      Documents: { range: [-10, 10]}
+      OnlyActiveInPhase: 10
+
+- ActorFromTemplate:
+    TemplateName: ComputeMin
+    TemplateParameters:
+      Name: "min_large_range_window"
+      Documents: { range: [0, "unbounded"]}
+      OnlyActiveInPhase: 11
+
+- ActorFromTemplate:
+    TemplateName: ComputeMin
+    TemplateParameters:
+      Name: "mine_range_cumulative"
+      Documents: { range: ["unbounded", 0]}
+      OnlyActiveInPhase: 12
