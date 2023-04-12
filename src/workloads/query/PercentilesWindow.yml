@@ -1,10 +1,17 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-execution"
 Description: |
-  Run tests for $percentile window functions over various bounded window sizes.
-  Bounded window functions use a different implementation than the $percentile accumulator by using an accurate algorithm.
-  This workload is to compare the speed of this implementation over different window sizes with the t-digest implementation,
-  and with the $min window function.
+  This tests $percentile window functions over various bounded window sizes. Bounded window functions use a different implementation (an accurate algorithm)
+  than the $percentile accumulator, which uses an approximate algorithm. Therefore, we need to compare both implementations over different sized windows. We test
+  a few cases:
+  1. Small removable windows ([-10, 10])
+  2. Large removable windows ([0, "unbounded"])
+  3. Cumulative windows that will use the approximate algorithm (["unbounded", 0])
+  4. Small range windows ([-10, 10])
+  5. Large range windows ([0, "unbounded"])
+  6. Cumulative range windows that will use the approximate algorithm (["unbounded", 0])
+  We compare the speed of $percentile over these windows with another window function ($min).
+  We do not test different percentile values here, since those are tested in a benchmark file, and do not show significant differences.
 
 Keywords:
 - setWindowFields

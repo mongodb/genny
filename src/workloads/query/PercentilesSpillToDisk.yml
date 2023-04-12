@@ -1,10 +1,13 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: "@mongodb/query-integration"
 Description: |
-  Run tests for $percentile window functions over various bounded window sizes with different percentile values.
-  Bounded window functions use a different implementation than the $percentile accumulator by using an accurate algorithm.
-  This workload is to compare the speed of this implementation over different window sizes with the t-digest implementation,
-  and with the $min window function.
+  This tests $percentile window functions with different partitions and indexes to test its behavior when it spills to disk. There are a few cases to consider
+  1. Nothing spills.
+  2. Only the $_internalSetWindowsFields will spill, which in this case would be the $percentile window function. 
+  3. Both the $sort and $_internalSetWindowsFields spill.
+  There is a workload in SetWindowFieldsUnbounded.yml that handles the case if only the $sort spills, and since there is no unique behavior for $percentile in
+  this case, it was not tested in this file. We can use an index to control whether or not the $sort will spill, and we change the size of the partition to control
+  whether or not the $_internalSetWindowsFields will spill.
 
 Keywords:
 - setWindowFields
@@ -25,7 +28,7 @@ AutoRun:
       - v6.0
 
 GlobalDefaults:
-  MaxPhases: &maxPhases 11
+  MaxPhases: &maxPhases 8
   Database: &db percentiles
   Collection: &coll Collection0
 
@@ -147,6 +150,6 @@ Actors:
     TemplateName: ComputePercentile
     TemplateParameters:
       Name: "no_spill"
-      OnlyActiveInPhase: 5
+      OnlyActiveInPhase: 4
       Partition: "$not_spill_indexed"
       Disk: false
