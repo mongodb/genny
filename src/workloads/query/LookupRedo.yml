@@ -1,0 +1,376 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of $lookup where either the local or foreign collection is
+  sharded. When both collections are unsharded, the pipeline should be moved to the
+  LookupWithOnlyUnshardedColls workload, so the query can be tested on replica sets as well. We may
+  want to compare results across the two files, so the loading stage (and some queries) should be
+  kept as similar as possible.
+  Note: this workload runs only on sharded clusters.
+  The workload consists of the following phases:
+    1. Creating empty sharded collections distributed across all shards in the cluster.
+    2. Populating collections with data.
+    3. Fsync.
+    4. Running $lookups. This includes but is not limited to cases where the top-level pipelines are
+       targeted and untargeted, the subpipelines are targeted and untargeted, and the subpipelines
+       have cacheable prefixes.
+GlobalDefaults:
+  ShardedColl0: &ShardedColl0 Collection0
+  ShardedColl1: &ShardedColl1 Collection1
+  UnshardedColl2: &UnshardedColl2 Collection2
+
+Actors:
+- Name: CreateShardedCollections
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    # Shard Collection0 and Collection1 using hashed sharding to ensure that the chunks are evenly
+    # distributed across the shards.
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: &Database test
+    - OperationMetricsName: ShardLocalCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0
+        key: {shardKey: hashed}
+        numInitialChunks: &NumChunks 6
+    - OperationMetricsName: ShardForeignCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection1
+        key: {shardKey: hashed}
+        numInitialChunks: *NumChunks
+    # Disable the balancer so that it can't skew results while the $lookups are running.
+    - OperationMetricsName: DisableBalancer
+      OperationName: AdminCommand
+      OperationCommand:
+        balancerStop: 1
+  - Phase: 1..12
+    Nop: true
+
+- Name: LoadInitialData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - &Nop {Nop: true}
+  - Repeat: 1
+    BatchSize: 3000
+    Threads: 1
+    DocumentCount: &NumDocs 3000
+    Database: *Database
+    CollectionCount: 3    # Loader will populate 'Collection0', 'Collection1' and 'Collection2'.
+    Document:
+      shardKey: {^RandomInt: {min: 1, max: 100}}
+      smallInt: {^RandomInt: {min: 1, max: 10}}
+      int: {^RandomInt: {min: 1, max: 100}}
+      str: {^RandomString: {length: 100}}
+  - Phase: 2..12
+    Nop: true
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: admin
+  Phases:
+  - Phase: 0..1
+    Nop: true
+  - Repeat: 1
+  - Phase: 3..12
+    Nop: true
+
+- Name: RunLookups
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - Phase: 0..2
+    Nop: true
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: TargetedLookupShardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *ShardedColl0
+        pipeline:
+          [
+            {$lookup: {
+              from: *ShardedColl1,
+              localField: "shardKey",
+              foreignField: "shardKey",
+              as: "joined"
+            }},
+            {$project: {str: 0, "joined.str": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+  - Phase: 4..12
+    Nop: true
+  
+- Name: RunLookups
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - Phase: 0..3
+    Nop: true
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: UntargetedLookupShardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *ShardedColl0
+        pipeline:
+          [
+            {$lookup: {
+              from: *ShardedColl1,
+              localField: "int",
+              foreignField: "int",
+              as: "joined"
+            }},
+            {$project: {str: 0, "joined.str": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+  - Phase: 5..12
+    Nop: true
+
+- Name: RunLookupsUntargetedLookupShardedToUnsharded
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - Phase: 0..4
+    Nop: true
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: UntargetedLookupShardedToUnsharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *ShardedColl0
+        pipeline:
+          [
+            {$lookup: {
+              from: *UnshardedColl2,
+              localField: "int",
+              foreignField: "int",
+              as: "joined"
+            }},
+            {$project: {str: 0, "joined.str": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+  - Phase: 6..12
+    Nop: true
+
+- Name: RunLookupsUntargetedLookupUnshardedToSharded
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - Phase: 0..5
+    Nop: true
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: UntargetedLookupUnshardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *UnshardedColl2
+        pipeline:
+          [
+            {$lookup: {
+              from: *ShardedColl1,
+              localField: "int",
+              foreignField: "int",
+              as: "joined"
+            }},
+            {$project: {str: 0, "joined.str": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+  - Phase: 7..12
+    Nop: true
+
+- Name: RunLookupsTargetedLookupUnshardedToSharded
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - Phase: 0..6
+    Nop: true
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: TargetedLookupUnshardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *UnshardedColl2
+        pipeline:
+          [
+            {$lookup: {
+              from: *ShardedColl1,
+              localField: "shardKey",
+              foreignField: "shardKey",
+              as: "joined"
+            }},
+            {$project: {str: 0, "joined.str": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+  - Phase: 8..12
+    Nop: true
+
+- Name: RunLookupsLookupWithCachedPrefixShardedToSharded
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - Phase: 0..7
+    Nop: true
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: LookupWithCachedPrefixShardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *ShardedColl0
+        pipeline:
+          [{
+            $lookup: {
+              from: *ShardedColl1,
+              let: {localInt: "$int"},
+              pipeline: [
+                {$group: {_id: {$sum: ["$int", 1]}}},
+                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
+              ],
+              as: joined
+            }
+          },
+           {$project: {str: 0, "joined.str": 0}}]
+        cursor: {batchSize: *NumDocs}
+  - Phase: 9..12
+    Nop: true
+
+- Name: RunLookupsLookupWithCachedPrefixUnshardedToSharded
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - Phase: 0..8
+    Nop: true
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: LookupWithCachedPrefixUnshardedToSharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *UnshardedColl2
+        pipeline:
+          [{
+            $lookup: {
+              from: *ShardedColl1,
+              let: {localInt: "$int"},
+              pipeline: [
+                {$group: {_id: {$sum: ["$int", 1]}}},
+                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
+              ],
+              as: joined
+            }
+          },
+           {$project: {str: 0, "joined.str": 0}}]
+        cursor: {batchSize: *NumDocs}
+  - Phase: 10..12
+    Nop: true
+
+- Name: RunLookupsLookupWithCachedPrefixShardedToUnsharded
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - Phase: 0..9
+    Nop: true
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: LookupWithCachedPrefixShardedToUnsharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *ShardedColl0
+        pipeline:
+          [{
+            $lookup: {
+              from: *UnshardedColl2,
+              let: {localInt: "$int"},
+              pipeline: [
+                {$group: {_id: {$sum: ["$int", 1]}}},
+                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
+              ],
+              as: joined
+            }
+          },
+           {$project: {str: 0, "joined.str": 0}}]
+        cursor: {batchSize: *NumDocs}
+  - Phase: 11..12
+    Nop: true
+
+- Name: RunLookupsLookupMatchAllShardsShardedToUnsharded
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - Phase: 0..10
+    Nop: true
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: LookupMatchAllShardsShardedToUnsharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *ShardedColl0
+        pipeline:
+          [
+            {$match: {int: {$lte: 4}}},
+            {$lookup: {
+              from: *UnshardedColl2,
+              let: {smallInt0: "$smallInt"},
+              pipeline: [{$match: {$expr: {$eq: ["$$smallInt0", "$smallInt"]}}}],
+              as: "joined"
+            }},
+            {$project: {str: 0, "joined.str": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+  - Phase: 12..12
+    Nop: true
+
+- Name: RunLookupsLookupMatchSomeShardsShardedToUnsharded
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - Phase: 0..11
+    Nop: true
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: LookupMatchSomeShardsShardedToUnsharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *ShardedColl0
+        pipeline:
+          [
+            {$match: {shardKey: {$lte: 4}}},
+            {$lookup: {
+              from: *UnshardedColl2,
+              let: {smallInt0: "$smallInt"},
+              pipeline: [{$match: {$expr: {$eq: ["$$smallInt0", "$smallInt"]}}}],
+              as: "joined"
+            }},
+            {$project: {str: 0, "joined.str": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+
+AutoRun:
+- When:
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+    mongodb_setup:
+      $eq:
+      - shard-lite
+      - shard-lite-all-feature-flags
