@@ -116,18 +116,10 @@ Actors:
         LogEvery: 5 minutes
         Blocking: None
 
-# TODO PERF-3954: Re-enable this test.
-# AutoRun:
-# - When:
-#     mongodb_setup:
-#       $eq:
-#       - shard-lite-fle
-#     branch_name:
-#       $neq:
-#       - v4.0
-#       - v4.2
-#       - v4.4
-#       - v5.0
-#       - v6.0
-#       - v6.1
-#       - v6.2
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard-lite-fle
+    branch_name:
+      $gte: v7.0
