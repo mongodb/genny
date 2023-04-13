@@ -14,7 +14,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 10
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 3
+  MaxPhases: &MaxPhases 6
   nop: &Nop {Nop: true}
   dbname: &db test
 
@@ -65,6 +65,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
+# Different Query Shapes.
 - Name: SimpleFind
   Type: CrudActor
   Threads: 1
@@ -81,7 +82,7 @@ Actors:
           OperationCommand:
             Filter: {a: 1}
 
-- Name: SimpleFindMultiple
+- Name: FindMultiple
   Type: CrudActor
   Threads: 1
   Database: *Database
@@ -97,7 +98,7 @@ Actors:
           OperationCommand:
             Filter: {a: 1, b: 2}
 
-- Name: SimpleFindGt
+- Name: FindGt
   Type: CrudActor
   Threads: 1
   Database: *Database
@@ -113,7 +114,7 @@ Actors:
           OperationCommand:
             Filter: {b: {$gt: 4}}
 
-- Name: SimpleFindInSingleArr
+- Name: FindInSingleArr
   Type: CrudActor
   Threads: 1
   Database: *Database
@@ -129,7 +130,7 @@ Actors:
           OperationCommand:
             Filter: {a: {$in: [2]}}
 
-- Name: SimpleFindInArray
+- Name: FindInArray
   Type: CrudActor
   Threads: 1
   Database: *Database
@@ -145,7 +146,7 @@ Actors:
           OperationCommand:
             Filter: {string: {$in: ["hello", "hi", "bye"]}}
 
-- Name: SimpleFindBool
+- Name: FindBool
   Type: CrudActor
   Threads: 1
   Database: *Database
@@ -161,7 +162,7 @@ Actors:
           OperationCommand:
             Filter: {a: false}
 
-- Name: SimpleFindExists
+- Name: FindExists
   Type: CrudActor
   Threads: 1
   Database: *Database
@@ -177,7 +178,7 @@ Actors:
           OperationCommand:
             Filter: {a: {$exists: true}}
 
-- Name: SimpleFindNotExists
+- Name: FindNotExists
   Type: CrudActor
   Threads: 1
   Database: *Database
@@ -193,7 +194,7 @@ Actors:
           OperationCommand:
             Filter: {a: {$not: {$exists: true}}}
 
-- Name: SimpleFindLtGt
+- Name: FindLtGt
   Type: CrudActor
   Threads: 1
   Database: *Database
@@ -209,15 +210,790 @@ Actors:
           OperationCommand:
             Filter: {b: {$lt: 6}, a: {$gt: 4}}
 
+- Name: AggMatchGroup
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$match: {a: 42}}, {$group: {_id: "$b", sum: {$sum: "$a"}}}]
+
+- Name: AggCondGte
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {number: {$cond: [{$gte: ["$a", 250]}, 30, 20]}}}]
+
+- Name: AggToLowerStr
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: { $toLower: "$string"}}}]
+
+- Name: AggToLowerArr
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggGetField
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$match: {$expr: {$lt: [{$getField: {$literal: "$a"}}, 30]}}}]
+
+# Same Query Shape.
+# Performed around average when run alongside different query shapes.
+- Name: FindExists1
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists2
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists3
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists4
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists5
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists6
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists7
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists8
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists9
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists10
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists11
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists12
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists13
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+- Name: FindExists14
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$exists: true}}
+
+# Performed slower when run with the different query shapes.
+- Name: AggToLowerArr1
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr2
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr3
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr4
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr5
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr6
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr7
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr8
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr9
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr10
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr11
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr12
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr13
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+- Name: AggToLowerArr14
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: PipelineWithoutOptions
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline: [{$project: {item: {$toLower: ["$string"]}}}]
+
+# Performed on the faster side when run with different query shaped queries.
+- Name: SimpleFind1
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind2
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind3
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind4
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind5
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind6
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind7
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind8
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind9
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind10
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind11
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind12
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind13
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
+- Name: SimpleFind14
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 1}
+
 AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - replica
-      - replica-all-feature-flags
+      - standalone-all-feature-flags
     branch_name:
       $neq:
       - v4.0
       - v4.2
       - v4.4
       - v5.0
+      - v6.0
