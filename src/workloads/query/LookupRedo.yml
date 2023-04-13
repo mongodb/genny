@@ -18,6 +18,7 @@ GlobalDefaults:
   ShardedColl0: &ShardedColl0 Collection0
   ShardedColl1: &ShardedColl1 Collection1
   UnshardedColl2: &UnshardedColl2 Collection2
+  UnshardedColl3: &UnshardedColl3 Collection3
 
 Actors:
 - Name: CreateShardedCollections
@@ -50,7 +51,7 @@ Actors:
       OperationName: AdminCommand
       OperationCommand:
         balancerStop: 1
-  - Phase: 1..12
+  - Phase: 1..14
     Nop: true
 
 - Name: LoadInitialData
@@ -63,13 +64,13 @@ Actors:
     Threads: 1
     DocumentCount: &NumDocs 3000
     Database: *Database
-    CollectionCount: 3    # Loader will populate 'Collection0', 'Collection1' and 'Collection2'.
+    CollectionCount: 4    # Loader will populate 'Collection0' through 'Collection3'.
     Document:
       shardKey: {^RandomInt: {min: 1, max: 100}}
       smallInt: {^RandomInt: {min: 1, max: 10}}
       int: {^RandomInt: {min: 1, max: 100}}
       str: {^RandomString: {length: 100}}
-  - Phase: 2..12
+  - Phase: 2..14
     Nop: true
 
 - Name: Quiesce
@@ -80,10 +81,10 @@ Actors:
   - Phase: 0..1
     Nop: true
   - Repeat: 1
-  - Phase: 3..12
+  - Phase: 3..14
     Nop: true
 
-- Name: RunLookups
+- Name: RunLookups1
   Type: RunCommand
   Database: *Database
   Phases:
@@ -107,10 +108,10 @@ Actors:
             {$project: {str: 0, "joined.str": 0}}
           ]
         cursor: {batchSize: *NumDocs}
-  - Phase: 4..12
+  - Phase: 4..14
     Nop: true
   
-- Name: RunLookups
+- Name: RunLookups2
   Type: RunCommand
   Database: *Database
   Phases:
@@ -134,10 +135,10 @@ Actors:
             {$project: {str: 0, "joined.str": 0}}
           ]
         cursor: {batchSize: *NumDocs}
-  - Phase: 5..12
+  - Phase: 5..14
     Nop: true
 
-- Name: RunLookupsUntargetedLookupShardedToUnsharded
+- Name: RunLookups3
   Type: RunCommand
   Database: *Database
   Phases:
@@ -161,10 +162,10 @@ Actors:
             {$project: {str: 0, "joined.str": 0}}
           ]
         cursor: {batchSize: *NumDocs}
-  - Phase: 6..12
+  - Phase: 6..14
     Nop: true
 
-- Name: RunLookupsUntargetedLookupUnshardedToSharded
+- Name: RunLookups4
   Type: RunCommand
   Database: *Database
   Phases:
@@ -188,10 +189,10 @@ Actors:
             {$project: {str: 0, "joined.str": 0}}
           ]
         cursor: {batchSize: *NumDocs}
-  - Phase: 7..12
+  - Phase: 7..14
     Nop: true
 
-- Name: RunLookupsTargetedLookupUnshardedToSharded
+- Name: RunLookups5
   Type: RunCommand
   Database: *Database
   Phases:
@@ -215,10 +216,10 @@ Actors:
             {$project: {str: 0, "joined.str": 0}}
           ]
         cursor: {batchSize: *NumDocs}
-  - Phase: 8..12
+  - Phase: 8..14
     Nop: true
 
-- Name: RunLookupsLookupWithCachedPrefixShardedToSharded
+- Name: RunLookups6
   Type: RunCommand
   Database: *Database
   Phases:
@@ -245,10 +246,10 @@ Actors:
           },
            {$project: {str: 0, "joined.str": 0}}]
         cursor: {batchSize: *NumDocs}
-  - Phase: 9..12
+  - Phase: 9..14
     Nop: true
 
-- Name: RunLookupsLookupWithCachedPrefixUnshardedToSharded
+- Name: RunLookups7
   Type: RunCommand
   Database: *Database
   Phases:
@@ -275,10 +276,10 @@ Actors:
           },
            {$project: {str: 0, "joined.str": 0}}]
         cursor: {batchSize: *NumDocs}
-  - Phase: 10..12
+  - Phase: 10..14
     Nop: true
 
-- Name: RunLookupsLookupWithCachedPrefixShardedToUnsharded
+- Name: RunLookups8
   Type: RunCommand
   Database: *Database
   Phases:
@@ -305,10 +306,10 @@ Actors:
           },
            {$project: {str: 0, "joined.str": 0}}]
         cursor: {batchSize: *NumDocs}
-  - Phase: 11..12
+  - Phase: 11..14
     Nop: true
 
-- Name: RunLookupsLookupMatchAllShardsShardedToUnsharded
+- Name: RunLookups9
   Type: RunCommand
   Database: *Database
   Phases:
@@ -333,10 +334,10 @@ Actors:
             {$project: {str: 0, "joined.str": 0}}
           ]
         cursor: {batchSize: *NumDocs}
-  - Phase: 12..12
+  - Phase: 12..14
     Nop: true
 
-- Name: RunLookupsLookupMatchSomeShardsShardedToUnsharded
+- Name: RunLookups10
   Type: RunCommand
   Database: *Database
   Phases:
@@ -360,6 +361,63 @@ Actors:
             }},
             {$project: {str: 0, "joined.str": 0}}
           ]
+        cursor: {batchSize: *NumDocs}
+  - Phase: 13..14
+    Nop: true
+
+- Name: RunLookups11
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - Phase: 0..12
+    Nop: true
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: UntargetedLookupUnshardedToUnsharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *UnshardedColl3
+        pipeline:
+          [
+            {$lookup: {
+              from: *UnshardedColl2,
+              localField: "int",
+              foreignField: "int",
+              as: "joined"
+            }},
+            {$project: {str: 0, "joined.str": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+  - Phase: 14..14
+    Nop: true
+
+- Name: RunLookups12
+  Type: RunCommand
+  Database: *Database
+  Phases:
+  - Phase: 0..13
+    Nop: true
+  - Repeat: 10
+    Database: *Database
+    Operations:
+    - OperationMetricsName: LookupWithCachedPrefixUnshardedToUnsharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *UnshardedColl3
+        pipeline:
+          [{
+            $lookup: {
+              from: *UnshardedColl2,
+              let: {localInt: "$int"},
+              pipeline: [
+                {$group: {_id: {$sum: ["$int", 1]}}},
+                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
+              ],
+              as: joined
+            }
+          },
+           {$project: {str: 0, "joined.str": 0}}]
         cursor: {batchSize: *NumDocs}
 
 AutoRun:
