@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: "@mongodb/query-integration"
 Description: |
   Run tests for $percentile accumulator over various data distributions. We create a new collection
   for each distribution as putting the fields into the same document might be impacted by how much
@@ -52,6 +52,8 @@ ActorTemplates:
           Document:
             _id: {^Inc: {start: 0}}
             data: {^Parameter: {Name: "Data", Default: 0}}
+            # We will use this field as our group key to test having ~500 groups (10,000 documents divided over 20 keys).
+            group: {^RandomInt: {min: 1, max: 20}}
 
 # The specific percentile and the number of them doesn't affect t-digest much as it spends most time
 # creating the representation of the inputs that is suitable for computing _any_ percentile.
@@ -73,7 +75,7 @@ ActorTemplates:
             OperationCommand:
               Pipeline: [
                 {$group: {
-                  _id: null,
+                  _id: {^Parameter: {Name: "Group", Default: null}},
                   p: {$percentile: {p: [0.01, 0.5, 0.99], input: "$data", method: "approximate" }}
                 }},
               ]
@@ -97,7 +99,12 @@ ActorTemplates:
           Operations:
           - OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$group: {_id: null, p: {$minN: {n: 5000, input: "$data"}}}}]
+              Pipeline: [
+                {$group: {
+                  _id: {^Parameter: {Name: "Group", Default: null}},
+                  p: {$minN: {n: 5000, input: "$data"}}
+                }},
+              ]
 
 - TemplateName: ComputeMin
   Config:
@@ -115,12 +122,18 @@ ActorTemplates:
           Operations:
           - OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$group: { _id: null, p: {$min: "$data"}}}]
+              Pipeline: [
+                {$group: {
+                  _id: {^Parameter: {Name: "Group", Default: null}},
+                  p: {$min: "$data"}
+                }},
+              ]
 
 # *0 - create dataset
 # *1 - warm up or quiese but they don't seem to affect the numbers, so we are not doing either
 # *2 - compute percentiles
-# [*3-*8] - compute something else on this dataset if so desired
+# *3 - compute percentiles with ~500 groups
+# [*4-*8] - compute something else on this dataset if so desired
 # *9 - drop the dataset
 
 Actors:
@@ -151,6 +164,13 @@ Actors:
       OnlyActiveInPhase: 2
 
 - ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "uniform_percentile_multi_groups"
+      Group: "$group"
+      OnlyActiveInPhase: 3
+
+- ActorFromTemplate:
     TemplateName: CreateDataset
     TemplateParameters:
       OnlyActiveInPhase: 10
@@ -161,6 +181,13 @@ Actors:
     TemplateParameters:
       Name: "normal_percentile"
       OnlyActiveInPhase: 12
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "normal_percentile_multi_groups"
+      Group: "$group"
+      OnlyActiveInPhase: 13
 
 - ActorFromTemplate:
     TemplateName: CreateDataset
@@ -175,6 +202,13 @@ Actors:
       OnlyActiveInPhase: 22
 
 - ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "exponential_percentile_multi_groups"
+      Group: "$group"
+      OnlyActiveInPhase: 23
+
+- ActorFromTemplate:
     TemplateName: CreateDataset
     TemplateParameters:
       OnlyActiveInPhase: 30
@@ -187,6 +221,13 @@ Actors:
       OnlyActiveInPhase: 32
 
 - ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "extreme_percentile_multi_groups"
+      Group: "$group"
+      OnlyActiveInPhase: 33
+
+- ActorFromTemplate:
     TemplateName: CreateDataset
     TemplateParameters:
       OnlyActiveInPhase: 40
@@ -197,6 +238,13 @@ Actors:
     TemplateParameters:
       Name: "weibull_percentile"
       OnlyActiveInPhase: 42
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "weibull_percentile_multi_groups"
+      Group: "$group"
+      OnlyActiveInPhase: 43
 
 # A mix of various distributions, including many duplicated values.
 - ActorFromTemplate:
@@ -219,5 +267,12 @@ Actors:
     TemplateParameters:
       Name: "mixed_percentile"
       OnlyActiveInPhase: 52
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "mixed_percentile_multi_groups"
+      Group: "$group"
+      OnlyActiveInPhase: 53
 
 
