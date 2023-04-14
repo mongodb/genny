@@ -89,7 +89,9 @@ Actors:
           _id: {^Inc: {start: 0}}
           # This data field is what we calculate the percentiles of.
           data: {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}}
-          # This string pads the doc size out to around 10KB.
+          # This string pads the doc size out to around 10KB. Since spilling occurs in '$_internalSetWindowFields'
+          # and spills full documents, even though 'string' is not used in the $percentile window function, this
+          # field will increase the document size to trigger a spill.
           string: &string {^RandomString: {length: 10000}}
           # We will use the fields below to create approximately even partitions.
           spill_indexed: {^Choose: {from: [1, 2]}}
