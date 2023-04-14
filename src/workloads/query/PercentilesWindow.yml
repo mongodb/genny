@@ -3,8 +3,8 @@ Owner: "@mongodb/query-integration"
 Description: |
   This tests $percentile window functions over various bounded window sizes. Bounded window
   functions use a different implementation (an accurate algorithm) than the $percentile accumulator,
-  which uses an approximate algorithm. Therefore, we need to  compare both implementations over
-  different sized windows. We test a few cases:
+  which uses an approximate algorithm. Therefore, we need to measure computing percentiles over
+  differently sized windows. We test a few cases:
   1. Small removable windows ([-500, 500])
   2. Large removable windows ([0, "unbounded"])
   3. Cumulative windows that will use the approximate algorithm (["unbounded", 0])
@@ -96,7 +96,7 @@ ActorTemplates:
                   output: {
                     p: {
                       $minN: {n: 1000, input: "$data" },
-                      window: { ^Parameter: {Name: "Documents", Default: {documents: [-500, 500]}}
+                      window: { ^Parameter: {Name: "Documents", Default: null}
                       }}
                   }}
               }]
@@ -127,6 +127,7 @@ Actors:
     TemplateName: ComputePercentile
     TemplateParameters:
       Name: "percentile_small_window"
+      Documents: {documents: [-500, 500]}
       OnlyActiveInPhase: 1
 
 - ActorFromTemplate:
@@ -151,23 +152,37 @@ Actors:
     TemplateName: ComputePercentile
     TemplateParameters:
       Name: "percentile_small_range_window"
-      # If the unit was larger than 'day' we would have nearly all the documents in every window,
+      # If the unit was larger than 'hour' we would have nearly all the documents in every window,
       # which would not test having a smaller bounded window.
-      Documents: { range: [-500, 500], unit: "day"}
+      Documents: { range: [-500, 500], unit: "hour"}
       OnlyActiveInPhase: 4
 
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
       Name: "percentile_large_range_window"
-      # We want to test larger windows, so we increase the unit to 'month'.
-      Documents: { range: [0, "unbounded"], unit: "month"}
+      Documents: { range: [0, "unbounded"], unit: "year"}
       OnlyActiveInPhase: 5
+
+# Run the same test as above with a tighter 'unit', changing the frequency of adding/removing values.
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_large_range_window"
+      Documents: { range: [0, "unbounded"], unit: "day"}
+      OnlyActiveInPhase: 6
 
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
       Name: "percentile_range_use_t_digest"
-      # We want to test larger windows, so we increase the unit to 'month'.
-      Documents: { range: ["unbounded", 0], unit: "month"}
-      OnlyActiveInPhase: 6
+      Documents: { range: ["unbounded", 0], unit: "year"}
+      OnlyActiveInPhase: 7
+
+# Run the same test as above with a tighter 'unit', changing the frequency of adding/removing values.
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "percentile_range_use_t_digest"
+      Documents: { range: ["unbounded", 0], unit: "day"}
+      OnlyActiveInPhase: 8

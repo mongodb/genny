@@ -77,7 +77,7 @@ ActorTemplates:
           BatchSize: 1000
           Document:
             _id: {^Inc: {start: 0}}
-            x: {^Parameter: {Name: "Data", Default: 0}}
+            data: {^Parameter: {Name: "Data", Default: 0}}
 
 - TemplateName: ComputePercentile
   Config:
@@ -99,7 +99,7 @@ ActorTemplates:
                 {$project: {
                   p: {$percentile: {
                     p: {^Parameter: {Name: "P", Default: [0.5]}},
-                    input: {^Parameter: {Name: "Input", Default: "$x"}},
+                    input: {^Parameter: {Name: "Input", Default: "$data"}},
                     method: "approximate"
                   }}
                 }}
@@ -124,7 +124,7 @@ ActorTemplates:
           Operations:
           - OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$project: {p: {$min: {^Parameter: {Name: "Input", Default: "$x"}}}}}]
+              Pipeline: [{$project: {p: {$min: {^Parameter: {Name: "Input", Default: "$data"}}}}}]
 
 # We did not warm up or run a quiese actor since they don't seem to affect the numbers.
 # *0 - create dataset
@@ -284,42 +284,33 @@ Actors:
       Name: "array_10_percentile_many100"
       P: *percentiles100
 
-# Create a dataset with a scalar field
-- ActorFromTemplate:
-    TemplateName: CreateDataset
-    TemplateParameters:
-      OnlyActiveInPhase: 50
-      Data: *dist
-
-# Update each document in the dataset to include 9 more fields.
-- Name: InsertFields
-  Type: CrudActor
+# Create a dataset with 10 scalar fields.
+- Name: CreateScalarArrayDataset
+  Type: Loader
   Database: *db
   Phases:
     OnlyActiveInPhases:
-      Active: [51]
+      Active: [50]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Repeat: 1
         Threads: 1
-        Collection: *coll
-        Operations:
-        - OperationName: updateMany
-          OperationCommand:
-            Filter: {}
-            Update: {
-              $set: {
-                a: *dist,
-                b: *dist,
-                c: *dist,
-                d: *dist,
-                e: *dist,
-                f: *dist,
-                g: *dist,
-                y: *dist,
-                z: *dist,
-              }
-            }
+        Database: *db
+        CollectionCount: 1
+        DocumentCount: *docCount
+        BatchSize: 1000
+        Document:
+          _id: {^Inc: {start: 0}}
+          a: *dist
+          b: *dist
+          c: *dist
+          d: *dist
+          e: *dist
+          f: *dist
+          g: *dist
+          x: *dist
+          y: *dist
+          z: *dist
 
 # Compute the percentiles across the 10 scalar fields.
 - ActorFromTemplate:

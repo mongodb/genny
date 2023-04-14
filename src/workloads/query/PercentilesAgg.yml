@@ -167,6 +167,7 @@ Actors:
     TemplateName: ComputePercentile
     TemplateParameters:
       Name: "normal_percentile"
+      GroupBy: null
       OnlyActiveInPhase: 2
 
 - ActorFromTemplate:
@@ -196,6 +197,7 @@ Actors:
     TemplateName: ComputePercentile
     TemplateParameters:
       Name: "mixed_percentile"
+      GroupBy: null
       OnlyActiveInPhase: 12
 
 - ActorFromTemplate:
