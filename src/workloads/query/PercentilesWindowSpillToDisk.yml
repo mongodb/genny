@@ -22,6 +22,8 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-sbe
     branch_name:
       $neq:
       - v4.0

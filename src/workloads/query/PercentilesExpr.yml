@@ -2,7 +2,7 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-integration"
 Description: |
   Run tests for $percentile expression over variously sized input arrays. We create a new collection
-  for each distribution as putting the fields into the same document might be impacted by how much
+  for each array size as putting the fields into the same document might be impacted by how much
   bson needs to be parsed to access the field but we want to make sure we compare apples to apples.
 
 Keywords:
@@ -14,6 +14,8 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-sbe
     branch_name:
       $neq:
       - v4.0
@@ -23,7 +25,7 @@ AutoRun:
       - v6.0
 
 GlobalDefaults:
-  MaxPhases: &maxPhases 40
+  MaxPhases: &maxPhases 50
   Database: &db percentiles
 
   # The Loader actor creates collections named "Collection<N>" where N corresponds to the thread's
@@ -76,8 +78,6 @@ ActorTemplates:
           Document:
             _id: {^Inc: {start: 0}}
             x: {^Parameter: {Name: "Data", Default: 0}}
-            y: {^Parameter: {Name: "Data", Default: 0}}
-            z: {^Parameter: {Name: "Data", Default: 0}}
 
 - TemplateName: ComputePercentile
   Config:
@@ -105,6 +105,9 @@ ActorTemplates:
                 }}
               ]
 
+# During development of $percentile we compared its performance to $min. We don't need to
+# keep running the tests for these but we'd like to keep the templates around for reference and ease
+# of rerunning the local experiments if needed in the future.
 - TemplateName: ComputeMin
   Config:
     Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
@@ -128,11 +131,9 @@ ActorTemplates:
 # *1 - compute a single percentile
 # *2 - compute 20 percentiles
 # *3 - compute 100 percentiles
-# *4 - compute min
-# 5 - compute min over an array of fields. This will only return not null with scalar fields.
-# 6-8 - compute percentile over an array of fields. This will only return not null with scalar fields.
-# [*5-*8] - compute something else on this dataset if so desired
+# [*4-*8] - compute something else on this dataset if so desired
 # *9 - drop the dataset (we need this as otherwise the loader would add to the existing collection)
+# 50-54 - update the documents and compute percentiles across an array of scalars.
 
 Actors:
 - Name: DropCollection
@@ -141,7 +142,7 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [9, 19, 29, 39]
+      Active: [9, 19, 29, 39, 49, 59]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Repeat: 1
@@ -177,42 +178,6 @@ Actors:
       OnlyActiveInPhase: 3
 
 - ActorFromTemplate:
-    TemplateName: ComputeMin
-    TemplateParameters:
-      Name: "scalar_min"
-      OnlyActiveInPhase: 4
-
-- ActorFromTemplate:
-    TemplateName: ComputeMin
-    TemplateParameters:
-      Name: "scalar_min"
-      Input: ["$x", "$y", "$z"]
-      OnlyActiveInPhase: 5
-
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "percentile_scalar_fields_single"
-      Input: ["$x", "$y", "$z"]
-      OnlyActiveInPhase: 6
-
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "percentile_scalar_fields_many20"
-      Input: ["$x", "$y", "$z"]
-      P: *percentiles20
-      OnlyActiveInPhase: 7
-
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "percentile_scalar_fields_many100"
-      Input: ["$x", "$y", "$z"]
-      P: *percentiles100
-      OnlyActiveInPhase: 8
-
-- ActorFromTemplate:
     TemplateName: CreateDataset
     TemplateParameters:
       OnlyActiveInPhase: 10
@@ -237,12 +202,6 @@ Actors:
       Name: "array_100_percentile_many100"
       P: *percentiles100
       OnlyActiveInPhase: 13
-
-- ActorFromTemplate:
-    TemplateName: ComputeMin
-    TemplateParameters:
-      Name: "array_100_min"
-      OnlyActiveInPhase: 14
 
 - ActorFromTemplate:
     TemplateName: CreateDataset
@@ -271,12 +230,6 @@ Actors:
       OnlyActiveInPhase: 23
 
 - ActorFromTemplate:
-    TemplateName: ComputeMin
-    TemplateParameters:
-      Name: "array_1000_min"
-      OnlyActiveInPhase: 24
-
-- ActorFromTemplate:
     TemplateName: CreateDataset
     TemplateParameters:
       OnlyActiveInPhase: 30
@@ -302,12 +255,92 @@ Actors:
       P: *percentiles100
       OnlyActiveInPhase: 33
 
+# The next phases will test computing percentiles over an array of different scalar fields.
+# We will create a dataset with a field with 10 elements and compare computing a percentile
+# for a single field that has an array of 10 elements versus across computing a percentile
+# across 10 scalar fields.
 - ActorFromTemplate:
-    TemplateName: ComputeMin
+    TemplateName: CreateDataset
     TemplateParameters:
-      Name: "array_10000_min"
-      OnlyActiveInPhase: 34
+      OnlyActiveInPhase: 40
+      Data: {^Array: {of: *dist, number: 10}}
 
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "array_10_percentile_single"
+      OnlyActiveInPhase: 41
 
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "array_10_percentile_many20"
+      P: *percentiles20
+      OnlyActiveInPhase: 42
 
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "array_10_percentile_many100"
+      P: *percentiles100
 
+# Create a dataset with a scalar field
+- ActorFromTemplate:
+    TemplateName: CreateDataset
+    TemplateParameters:
+      OnlyActiveInPhase: 50
+      Data: *dist
+
+# Update each document in the dataset to include 9 more fields.
+- Name: InsertFields
+  Type: CrudActor
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [51]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *coll
+        Operations:
+        - OperationName: updateMany
+          OperationCommand:
+            Filter: {}
+            Update: {
+              $set: {
+                a: *dist,
+                b: *dist,
+                c: *dist,
+                d: *dist,
+                e: *dist,
+                f: *dist,
+                g: *dist,
+                y: *dist,
+                z: *dist,
+              }
+            }
+
+# Compute the percentiles across the 10 scalar fields.
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "scalar_fields_percentile_single"
+      Input: ["$x", "$a", "$b", "$c", "$d", "$e", "$f", "$g", "$y", "$z"]
+      OnlyActiveInPhase: 52
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "scalar_fields_percentile_many20"
+      P: *percentiles20
+      Input: ["$x", "$a", "$b", "$c", "$d", "$e", "$f", "$g", "$y", "$z"]
+      OnlyActiveInPhase: 53
+
+- ActorFromTemplate:
+    TemplateName: ComputePercentile
+    TemplateParameters:
+      Name: "scalar_fields_percentile_many100"
+      Input: ["$x", "$a", "$b", "$c", "$d", "$e", "$f", "$g", "$y", "$z"]
+      P: *percentiles100
+      OnlyActiveInPhase: 54
