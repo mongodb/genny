@@ -133,7 +133,6 @@ ActorTemplates:
 # *3 - compute 100 percentiles
 # [*4-*8] - compute something else on this dataset if so desired
 # *9 - drop the dataset (we need this as otherwise the loader would add to the existing collection)
-# 50-54 - update the documents and compute percentiles across an array of scalars.
 
 Actors:
 - Name: DropCollection
@@ -287,14 +286,15 @@ Actors:
 # Create a dataset with 10 scalar fields.
 - Name: CreateScalarArrayDataset
   Type: Loader
+  Threads: 1
   Database: *db
   Phases:
     OnlyActiveInPhases:
       Active: [50]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
-        Repeat: 1
         Threads: 1
+        Repeat: 1
         Database: *db
         CollectionCount: 1
         DocumentCount: *docCount
@@ -318,7 +318,7 @@ Actors:
     TemplateParameters:
       Name: "scalar_fields_percentile_single"
       Input: ["$x", "$a", "$b", "$c", "$d", "$e", "$f", "$g", "$y", "$z"]
-      OnlyActiveInPhase: 52
+      OnlyActiveInPhase: 51
 
 - ActorFromTemplate:
     TemplateName: ComputePercentile
@@ -326,7 +326,7 @@ Actors:
       Name: "scalar_fields_percentile_many20"
       P: *percentiles20
       Input: ["$x", "$a", "$b", "$c", "$d", "$e", "$f", "$g", "$y", "$z"]
-      OnlyActiveInPhase: 53
+      OnlyActiveInPhase: 52
 
 - ActorFromTemplate:
     TemplateName: ComputePercentile
@@ -334,4 +334,4 @@ Actors:
       Name: "scalar_fields_percentile_many100"
       Input: ["$x", "$a", "$b", "$c", "$d", "$e", "$f", "$g", "$y", "$z"]
       P: *percentiles100
-      OnlyActiveInPhase: 54
+      OnlyActiveInPhase: 53
