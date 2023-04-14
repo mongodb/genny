@@ -25,7 +25,7 @@ AutoRun:
       - v6.0
 
 GlobalDefaults:
-  MaxPhases: &maxPhases 50
+  MaxPhases: &maxPhases 60
   Database: &db percentiles
 
   # The Loader actor creates collections named "Collection<N>" where N corresponds to the thread's
