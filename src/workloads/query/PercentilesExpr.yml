@@ -282,6 +282,7 @@ Actors:
     TemplateParameters:
       Name: "array_10_percentile_many100"
       P: *percentiles100
+      OnlyActiveInPhase: 43
 
 # Create a dataset with 10 scalar fields.
 - Name: CreateScalarArrayDataset

@@ -168,7 +168,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
-      Name: "percentile_large_range_window"
+      Name: "percentile_large_range_window_day"
       Documents: { range: [0, "unbounded"], unit: "day"}
       OnlyActiveInPhase: 6
 
@@ -183,6 +183,6 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
-      Name: "percentile_range_use_t_digest"
+      Name: "percentile_range_use_t_digest_day"
       Documents: { range: ["unbounded", 0], unit: "day"}
       OnlyActiveInPhase: 8
