@@ -98,32 +98,16 @@ Actors:
           spill_unindexed: {^Choose: {from: [1, 2]}}
           not_spill_indexed: {^Choose: {
             from: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]}}
-
-- Name: CreateIndexes
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *coll
-            indexes: [
-              {key: {not_spill_indexed: 1}, name: "not_spill_indexed_1"},
-              {key: {spill_indexed: 1}, name: "spill_indexed_1"},
-            ]
+        Indexes:
+        - keys: {not_spill_indexed: 1}
+        - keys: {spill_indexed: 1}
 
 # Both the $sort and the $_internalSetWindowFields will spill.
 # The partitions are too large to fit in memory and the $sort is not indexed.
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
-      OnlyActiveInPhase: 2
+      OnlyActiveInPhase: 1
       Name: "percentile_sort_spill"
       Partition: "$spill_unindexed"
       Sort: {spill_unindexed: 1}
@@ -133,7 +117,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
-      OnlyActiveInPhase: 3
+      OnlyActiveInPhase: 2
       Name: "only_percentile_spill"
       Partition: "$spill_indexed"
       Sort: {spill_indexed: 1}
@@ -144,6 +128,6 @@ Actors:
     TemplateName: ComputePercentile
     TemplateParameters:
       Name: "no_spill"
-      OnlyActiveInPhase: 4
+      OnlyActiveInPhase: 3
       Partition: "$not_spill_indexed"
       Disk: false

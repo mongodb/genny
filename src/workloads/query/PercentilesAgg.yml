@@ -36,7 +36,7 @@ GlobalDefaults:
   # number. We'll use a single collection, created by a single thread, so it becomes 'Collection0'.
   Collection: &coll Collection0
 
-  DocumentCount: &docCount 1e7
+  DocumentCount: &docCount 1e6
 
 ActorTemplates:
 - TemplateName: CreateDataset
@@ -188,7 +188,7 @@ Actors:
           {^RandomDouble: {distribution: exponential, lambda: 1.0}},
           {^RandomDouble: {distribution: uniform, min: 0.0, max: 100.0}},
           {^RandomDouble: {distribution: weibull, a: 1.0, b: 0.5}},
-          # on 1e7 docs this will produce duplicates, including in the tails of other distributions
+          # on 1e6 docs this will produce duplicates, including in the tails of other distributions
           {^RandomInt: {distribution: uniform, min: 0, max: 1000}},
         ]
       }}
