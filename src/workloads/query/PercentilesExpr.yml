@@ -302,16 +302,16 @@ Actors:
         BatchSize: 1000
         Document:
           _id: {^Inc: {start: 0}}
-          a: *dist
-          b: *dist
-          c: *dist
-          d: *dist
-          e: *dist
-          f: *dist
-          g: *dist
-          x: *dist
-          y: *dist
-          z: *dist
+          a0: *dist
+          a1: *dist
+          a2: *dist
+          a3: *dist
+          a4: *dist
+          a5: *dist
+          a6: *dist
+          a7: *dist
+          a8: *dist
+          a9: *dist
 
 # Compute the percentiles across the 10 scalar fields.
 - ActorFromTemplate:

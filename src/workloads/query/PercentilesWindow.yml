@@ -5,12 +5,12 @@ Description: |
   functions use a different implementation (an accurate algorithm) than the $percentile accumulator,
   which uses an approximate algorithm. Therefore, we need to measure computing percentiles over
   differently sized windows. We test a few cases:
-  1. Small removable windows ([-500, 500])
-  2. Large removable windows ([0, "unbounded"])
-  3. Cumulative windows that will use the approximate algorithm (["unbounded", 0])
-  4. Small range windows ([-500, 500])
-  5. Large range windows ([0, "unbounded"])
-  6. Cumulative range windows that will use the approximate algorithm (["unbounded", 0])
+  1. Small document-based removable windows
+  2. Large document-based removable windows
+  3. Non-removable document-based window (will use an approximate algorithm).
+  4. Small range-based removable windows
+  5. Large range-based removable windows
+  6. Non-removable range-based window (will use an approximate algorithm).
 
   We compare the speed of $percentile over these windows with $minN.
   We do not test different percentile values here, since those are tested in a micro-benchmark, and
@@ -140,7 +140,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
-      Name: "percentile_cumulative_t_digest"
+      Name: "percentile_tdigest"
       Documents: { documents: ["unbounded", 0]}
       OnlyActiveInPhase: 3
 
@@ -175,7 +175,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
-      Name: "percentile_range_use_t_digest"
+      Name: "percentile_range_tdigest"
       Documents: { range: ["unbounded", 0], unit: "year"}
       OnlyActiveInPhase: 7
 
@@ -183,6 +183,6 @@ Actors:
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
-      Name: "percentile_range_use_t_digest_day"
+      Name: "percentile_range_tdigest_day"
       Documents: { range: ["unbounded", 0], unit: "day"}
       OnlyActiveInPhase: 8
