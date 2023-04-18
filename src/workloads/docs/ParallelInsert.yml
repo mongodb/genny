@@ -122,43 +122,43 @@ Actors:
         drop: myCollection
         writeConcern: {w: majority}
   - *Nop
-  - *DropCollection
+  - *Nop
   - *Nop
   - *DropCollection
   - *Nop
-  - *DropCollection
+  - *Nop
   - *Nop
   - *DropCollection
   - *Nop
-  - *DropCollection
+  - *Nop
   - *Nop
   - *DropCollection
   - *Nop
-  - *DropCollection
+  - *Nop
   - *Nop
   - *DropCollection
   - *Nop
-  - *DropCollection
+  - *Nop
   - *Nop
   - *DropCollection
   - *Nop
-  - *DropCollection
+  - *Nop
   - *Nop
   - *DropCollection
   - *Nop
-  - *DropCollection
+  - *Nop
   - *Nop
   - *DropCollection
   - *Nop
-  - *DropCollection
+  - *Nop
   - *Nop
   - *DropCollection
   - *Nop
-  - *DropCollection
+  - *Nop
   - *Nop
   - *DropCollection
   - *Nop
-  - *DropCollection
+  - *Nop
 
 AutoRun:
 - When:
