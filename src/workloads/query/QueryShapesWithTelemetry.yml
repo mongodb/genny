@@ -118,3 +118,12 @@ Actors:
            [{a1: 1, a2: 1, x0: {$exists: false}}]
         }
       OnlyActiveInPhase: 4
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-all-feature-flags
+    branch_name:
+      $gte:
+      - v7.0
