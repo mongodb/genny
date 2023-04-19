@@ -31,7 +31,7 @@ ActorTemplates:
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: *Repeat
@@ -98,10 +98,10 @@ Actors:
       Threads: 32
       Filter:
         {$and:
-           [{^Object: {
-             withNEntries: 3,
-             havingKeys: {^Join: {array: ["a", {^Choose: {from: ["1", "2", {^RandomString: {length: 10}}], deterministic: true}}], sep: ""}},
-             andValues: {^Choose: {from: [1, 1, {$exists: false}], deterministic: true}},
+           [{a1: 1}, {a2: 1}, {^Object: {
+             withNEntries: 1,
+             havingKeys: {^RandomString: {length: 10}},
+             andValues: {$exists: false},
              duplicatedKeys: skip
            }}]
         }
@@ -115,7 +115,7 @@ Actors:
       Threads: 32
       Filter: 
         {$and:
-           [{a1: 1, a2: 1, x0: {$exists: false}}]
+           [{a1: 1}, {a2: 1}, {x0: {$exists: false}}]
         }
       OnlyActiveInPhase: 4
 
@@ -124,6 +124,3 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone-all-feature-flags
-    branch_name:
-      $gte:
-      - v7.0
