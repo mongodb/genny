@@ -90,13 +90,14 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-# 32 threads with distinct query shapes
+# 32 threads with distinct query shapes.
 - ActorFromTemplate:
     TemplateName: ComputeFindQuery
     TemplateParameters:
       Name: "AlternatingShapes"
       Threads: 32
       Filter:
+        # Will find around 0.005 * 0.005 * 1e6 = 2.5 documents.
         {$and:
            [{a1: 1}, {a2: 1}, {^Object: {
              withNEntries: 1,
@@ -107,13 +108,14 @@ Actors:
         }
       OnlyActiveInPhase: 3
 
-# 32 threads with the same query shape
+# 32 threads with the same query shape.
 - ActorFromTemplate:
     TemplateName: ComputeFindQuery
     TemplateParameters:
       Name: "OneShape"
       Threads: 32
       Filter: 
+        # Will find around 0.005 * 0.005 * 1e6 = 2.5 documents.
         {$and:
            [{a1: 1}, {a2: 1}, {x0: {$exists: false}}]
         }
