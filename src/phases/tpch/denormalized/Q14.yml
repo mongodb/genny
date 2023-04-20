@@ -15,8 +15,8 @@ TPCHDenormalizedQuery14Aggregation: &TPCHDenormalizedQuery14Aggregation
       {$addFields: {lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE"}},
       {$unwind: "$lineitem"},
       {$match: {$and: [
-        {$expr: {$gte: ["$lineitem.l_shipdate", {$dateFromString: {dateString: *query14Date}}]}},
-        {$expr: {$lt: ["$lineitem.l_shipdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query14Date}}, unit: "month", amount: 1}}]}}]}},
+        {$expr: {$gte: ["$lineitem.l_shipdate", {^date: *query14Date}]}},
+        {$expr: {$lt: ["$lineitem.l_shipdate", {$dateAdd: {startDate: {^date: *query14Date}, unit: "month", amount: 1}}]}}]}},
       {$lookup: {from: "part", localField: "lineitem.l_partkey", foreignField: "p_partkey", as: "part"}},
       {$unwind: "$part"},
       {$group: {_id: {}, promo_price_total: {$sum: {$cond: {if: {$cond: {if: {$regexMatch: {input: "$part.p_type", regex: "^PROMO.*$", options: "si"}}, then: 1, else: 0}}, then: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]}, else: 0}}}, price_total: {$sum: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]}}}}, {$project: {_id: 0, promo_revenue: {$multiply: [100.0, {$divide: ["$promo_price_total", "$price_total"]}]}}}

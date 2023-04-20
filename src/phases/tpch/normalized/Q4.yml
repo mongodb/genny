@@ -13,8 +13,8 @@ TPCHNormalizedQuery4Aggregation: &TPCHNormalizedQuery4Aggregation
     [
       {$match: {
         $and: [
-          {$expr: {$gte: ["$o_orderdate", {$dateFromString: {dateString: *query4Date}}]}},
-          {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query4Date}}, unit: "month", amount: 3}}]}}]}},
+          {$expr: {$gte: ["$o_orderdate", {^date: *query4Date}]}},
+          {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {^date: *query4Date}, unit: "month", amount: 3}}]}}]}},
       {$lookup: {
         from: "lineitem",
         localField: "o_orderkey",

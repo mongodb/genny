@@ -25,8 +25,8 @@ TPCHNormalizedQuery20Aggregation: &TPCHNormalizedQuery20Aggregation
       {$lookup: {from: "lineitem", localField: "partsupp.ps_partkey", foreignField: "l_partkey", let: {s_suppkey: "$s_suppkey"}, as: "lineitem", pipeline: [
         {$match: {$and: [
           {$expr: {$eq: ["$$s_suppkey", "$l_suppkey"]}},
-          {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: *query20Date}}]}},
-          {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query20Date}}, unit: "year", amount: 1}}]}}]}},
+          {$expr: {$gte: ["$l_shipdate", {^date: *query20Date}]}},
+          {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {^date: *query20Date}, unit: "year", amount: 1}}]}}]}},
         {$group: {_id: {}, quantity: {$sum: "$l_quantity"}}},
         {$project: {_id: 0, quantity: {$multiply: ["$quantity", 0.5]}}}]}},
       {$unwind: "$lineitem"},

@@ -13,8 +13,8 @@ TPCHDenormalizedQuery10Aggregation: &TPCHDenormalizedQuery10Aggregation
     [
       {$unwind: "$orders"},
       {$match: {$and: [
-        {$expr: {$gte: ["$orders.o_orderdate", {$dateFromString: {dateString: *query10Date}}]}},
-        {$expr: {$lt: ["$orders.o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query10Date}}, unit: "month", amount: 3}}]}}]}},
+        {$expr: {$gte: ["$orders.o_orderdate", {^date: *query10Date}]}},
+        {$expr: {$lt: ["$orders.o_orderdate", {$dateAdd: {startDate: {^date: *query10Date}, unit: "month", amount: 3}}]}}]}},
       {$addFields: {lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE"}},
       {$unwind: "$lineitem"},
       {$match: {"lineitem.l_returnflag": "R"}},

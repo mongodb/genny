@@ -12,8 +12,8 @@ TPCHNormalizedQuery10Aggregation: &TPCHNormalizedQuery10Aggregation
   pipeline:
     [
       {$match: {$and: [
-        {$expr: {$gte: ["$o_orderdate", {$dateFromString: {dateString: *query10Date}}]}},
-        {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query10Date}}, unit: "month", amount: 3}}]}}]}},
+        {$expr: {$gte: ["$o_orderdate", {^date: *query10Date}]}},
+        {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {^date: *query10Date}, unit: "month", amount: 3}}]}}]}},
       {$lookup: {from: "lineitem", localField: "o_orderkey", foreignField: "l_orderkey", as: "lineitem", pipeline: [
         {$match: {l_returnflag: "R"}}]}},
       {$unwind: "$lineitem"},

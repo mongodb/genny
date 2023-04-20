@@ -17,8 +17,8 @@ TPCHDenormalizedQuery8Aggregation: &TPCHDenormalizedQuery8Aggregation
       {$match: {"nation.region.r_name": {$eq: *query8Region}}},
       {$unwind: "$orders"},
       {$match: {$and: [
-        {$expr: {$lte: ["$orders.o_orderdate", {$dateFromString: {dateString: "1996-12-31"}}]}},
-        {$expr: {$gte: ["$orders.o_orderdate", {$dateFromString: {dateString: "1995-01-01"}}]}}]}},
+        {$expr: {$lte: ["$orders.o_orderdate", {^date: "1996-12-31"}]}},
+        {$expr: {$gte: ["$orders.o_orderdate", {^date: "1995-01-01"}]}}]}},
       {$unwind: "$orders.lineitem"},
       {$lookup: {from: "supplier", localField: "orders.lineitem.l_suppkey", foreignField: "s_suppkey", as: "supplier"}},
       {$unwind: "$supplier"},

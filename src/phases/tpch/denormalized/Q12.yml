@@ -21,8 +21,8 @@ TPCHDenormalizedQuery12Aggregation: &TPCHDenormalizedQuery12Aggregation
         {$or: [{"lineitem.l_shipmode": *query12ShipMode1}, {"lineitem.l_shipmode": *query12ShipMode2}]},
         {$expr: {$lt: ["$lineitem.l_commitdate", "$lineitem.l_receiptdate"]}},
         {$expr: {$lt: ["$lineitem.l_shipdate", "$lineitem.l_commitdate"]}},
-        {$expr: {$gte: ["$lineitem.l_receiptdate", {$dateFromString: {dateString: *query12Date}}]}},
-        {$expr: {$lt: ["$lineitem.l_receiptdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query12Date}}, unit: "year", amount: 1}}]}}]}},
+        {$expr: {$gte: ["$lineitem.l_receiptdate", {^date: *query12Date}]}},
+        {$expr: {$lt: ["$lineitem.l_receiptdate", {$dateAdd: {startDate: {^date: *query12Date}, unit: "year", amount: 1}}]}}]}},
       {$group: {_id: "$lineitem.l_shipmode", high_line_count: {$sum: {$cond: {if: {$or: [{$eq: ["$orders.o_orderpriority", "1-URGENT"]}, {$eq: ["$orders.o_orderpriority", "2-HIGH"]}]}, then: 1, else: 0}}}, low_line_count: {$sum: {$cond: {if: {$and: [{$ne: ["$orders.o_orderpriority", "1-URGENT"]}, {$ne: ["$orders.o_orderpriority", "2-HIGH"]}]}, then: 1, else: 0}}}}},
       {$project: {_id: 0, l_shipmode: "$_id", high_line_count: 1, low_line_count: 1}},
       {$sort: {l_shipmode: 1}}

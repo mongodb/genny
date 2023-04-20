@@ -24,11 +24,11 @@ TPCHDenormalizedQuery15CreateView: &TPCHDenormalizedQuery15CreateView
           {$replaceWith: "$lineitem"},
           {$match: {
             $and: [
-              {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: *query15Date}}]}},
+              {$expr: {$gte: ["$l_shipdate", {^date: *query15Date}]}},
               {$expr: {
                 $lt: [
                   "$l_shipdate",
-                  {$dateAdd: {startDate: {$dateFromString: {dateString: *query15Date}}, unit: "month", amount: 3}}
+                  {$dateAdd: {startDate: {^date: *query15Date}, unit: "month", amount: 3}}
                 ]}}]}},
           {$group: {
             _id: "$l_suppkey",

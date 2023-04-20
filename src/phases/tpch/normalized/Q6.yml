@@ -15,8 +15,8 @@ TPCHNormalizedQuery6Aggregation: &TPCHNormalizedQuery6Aggregation
   pipeline:
     [
       {$match: {$and: [
-        {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: *query6Date}}]}},
-        {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query6Date}}, unit: "year", amount: 1}}]}},
+        {$expr: {$gte: ["$l_shipdate", {^date: *query6Date}]}},
+        {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {^date: *query6Date}, unit: "year", amount: 1}}]}},
         {$expr: {$gte: ["$l_discount", {$subtract: [*query6Discount, 0.01]}]}},
         {$expr: {$lte: ["$l_discount", {$add: [*query6Discount, 0.011]}]}},
         {$expr: {$lt: ["$l_quantity", *query6Quantity]}}]}},
