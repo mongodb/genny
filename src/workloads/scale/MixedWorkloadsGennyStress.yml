@@ -150,12 +150,12 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  - &nop {Nop: true}
   - Repeat: 1
     Database: admin
     Operations:
     - OperationName: RunCommand
       OperationCommand: { profile: 0, slowms: 1000, sampleRate: 0.1 }
+  - &nop {Nop: true}
   - *nop
 
 - Name: Setup
