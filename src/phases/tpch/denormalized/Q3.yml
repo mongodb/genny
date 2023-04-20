@@ -15,9 +15,9 @@ TPCHDenormalizedQuery3Aggregation: &TPCHDenormalizedQuery3Aggregation
     [
       {$match: {$expr: {$eq: ["$c_mktsegment", *query3Segment]}}},
       {$unwind: "$orders"},
-      {$match: {$expr: {$lt: ["$orders.o_orderdate", {^date: *query3Date}]}}},
+      {$match: {$expr: {$lt: ["$orders.o_orderdate", {^Date: *query3Date}]}}},
       {$unwind: "$orders.lineitem"},
-      {$match: {$expr: {$gt: ["$orders.lineitem.l_shipdate", {^date: *query3Date}]}}},
+      {$match: {$expr: {$gt: ["$orders.lineitem.l_shipdate", {^Date: *query3Date}]}}},
       {$group: {
         _id: {l_orderkey: "$orders.lineitem.l_orderkey", o_orderdate: "$orders.o_orderdate", o_shippriority: "$orders.o_shippriority"},
         revenue: {$sum: {$multiply: ["$orders.lineitem.l_extendedprice", {$subtract: [1, "$orders.lineitem.l_discount"]}]}}}},

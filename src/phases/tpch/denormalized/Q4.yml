@@ -13,8 +13,8 @@ TPCHDenormalizedQuery4Aggregation: &TPCHDenormalizedQuery4Aggregation
     [
       {$unwind: "$orders"},
       {$match: {$and: [
-        {$expr: {$gte: ["$orders.o_orderdate", {^date: *query4Date}]}},
-        {$expr: {$lt: ["$orders.o_orderdate", {$dateAdd: {startDate: {^date: *query4Date}, unit: "month", amount: 3}}]}},
+        {$expr: {$gte: ["$orders.o_orderdate", {^Date: *query4Date}]}},
+        {$expr: {$lt: ["$orders.o_orderdate", {$dateAdd: {startDate: {^Date: *query4Date}, unit: "month", amount: 3}}]}},
         {$expr: {$gt: [{$size: {$filter: {input: "$orders.lineitem", cond: {$lt: ["$$this.l_commitdate", "$$this.l_receiptdate"]}}}}, 0]}}]}},
       {$group: {_id: "$orders.o_orderpriority", order_count: {$count: {}}}},
       {$project: {_id: 0, o_orderpriority: "$_id", order_count: 1}},

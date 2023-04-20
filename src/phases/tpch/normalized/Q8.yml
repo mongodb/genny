@@ -24,8 +24,8 @@ TPCHNormalizedQuery8Aggregation: &TPCHNormalizedQuery8Aggregation
       {$lookup: {from: "orders", localField: "lineitem.l_orderkey", foreignField: "o_orderkey", as: "orders"}},
       {$unwind: "$orders"},
       {$match: {$and: [
-        {$expr: {$lte: ["$orders.o_orderdate", {^date: "1996-12-31"}]}},
-        {$expr: {$gte: ["$orders.o_orderdate", {^date: "1995-01-01"}]}}]}},
+        {$expr: {$lte: ["$orders.o_orderdate", {^Date: "1996-12-31"}]}},
+        {$expr: {$gte: ["$orders.o_orderdate", {^Date: "1995-01-01"}]}}]}},
       {$lookup: {from: "customer", localField: "orders.o_custkey", foreignField: "c_custkey", as: "customer"}},
       {$unwind: "$customer"},
       {$lookup: {from: "nation", localField: "customer.c_nationkey", foreignField: "n_nationkey", as: "n1"}},

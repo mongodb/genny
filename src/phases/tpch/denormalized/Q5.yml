@@ -15,8 +15,8 @@ TPCHDenormalizedQuery5Aggregation: &TPCHDenormalizedQuery5Aggregation
       {$match: {"nation.region.r_name": *query5Region}},
       {$unwind: "$orders"},
       {$match: {$and: [
-        {$expr: {$gte: ["$orders.o_orderdate", {^date: *query5Date}]}},
-        {$expr: {$lt: ["$orders.o_orderdate", {$dateAdd: {startDate: {^date: *query5Date}, unit: "year", amount: 1}}]}}]}},
+        {$expr: {$gte: ["$orders.o_orderdate", {^Date: *query5Date}]}},
+        {$expr: {$lt: ["$orders.o_orderdate", {$dateAdd: {startDate: {^Date: *query5Date}, unit: "year", amount: 1}}]}}]}},
       {$unwind: "$orders.lineitem"},
       {$lookup: {from: "supplier", as: "supplier", localField: "orders.lineitem.l_suppkey", foreignField: "s_suppkey", let: {c_nationkey: "$nation.n_nationkey"}, pipeline: [
         {$match: {$expr: {$eq: ["$nation.n_nationkey", "$$c_nationkey"]}}}]}},
