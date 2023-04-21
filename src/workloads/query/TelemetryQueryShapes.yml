@@ -1,7 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests performance of telemetry with different query shapes.
+  This workload runs queries concurrently with both the same and different query shape.
+  This was designed to stress telemetry collection, but the workload doesn't actually enable telemetry.
+  It can be run with and without telemetry for comparison.
 
 KeyWords:
 - telemetry
@@ -40,7 +42,7 @@ ActorTemplates:
           Operations:
           - OperationName: find
             OperationCommand:
-              Filter: {^Parameter: {Name: "Filter", Default: {a: 1, b: 2, x0: {$exists: false}}}}
+              Filter: {^Parameter: {Name: "Filter", Default: {a1: 1, a2: 2, x0: {$exists: false}}}}
 
 Actors:
 # Clear any pre-existing collection state.
@@ -115,6 +117,8 @@ Actors:
       Name: "OneShape"
       Threads: 32
       Filter: 
+        # This can be simplified to {a1: 1, a2: 2, x0: {$exists: false}} but we are keeping
+        # it the same as the actor with oscillating shapes to rule out performance impact there.
         # Will find around 0.005 * 0.005 * 1e6 = 2.5 documents.
         {$and:
            [{a1: 1}, {a2: 1}, {^Object: {
