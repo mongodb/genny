@@ -19,7 +19,7 @@ TPCHDenormalizedQuery20Aggregation: &TPCHDenormalizedQuery20Aggregation
       {$addFields: {quantity: {$multiply: ["$quantity", 0.5]}}},
       {$unwind: "$lineitem"},
       {$match: {$and: [
-        {$expr: {$gte: ["$lineitem.l_shipdate", {^Date: *query20Dat}]}},
+        {$expr: {$gte: ["$lineitem.l_shipdate", {^Date: *query20Date}]}},
         {$expr: {$lt: ["$lineitem.l_shipdate", {$dateAdd: {startDate: {^Date: *query20Date}, unit: "year", amount: 1}}]}}]}},
       {$lookup: {from: "partsupp", as: "partsupp", localField: "lineitem.l_partkey", foreignField: "ps_partkey", let: {l_suppkey: "$lineitem.l_suppkey", quantity: "$quantity"}, pipeline: [
         {$match: {$and: [{$expr: {$eq: ["$$l_suppkey", "$ps_suppkey"]}}, {$expr: {$gt: ["$ps_availqty", "$$quantity"]}}]}}]}},
