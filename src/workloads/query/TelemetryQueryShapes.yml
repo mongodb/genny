@@ -117,7 +117,12 @@ Actors:
       Filter: 
         # Will find around 0.005 * 0.005 * 1e6 = 2.5 documents.
         {$and:
-           [{a1: 1}, {a2: 1}, {x0: {$exists: false}}]
+           [{a1: 1}, {a2: 1}, {^Object: {
+             withNEntries: 1,
+             havingKeys: "x0",
+             andValues: {$exists: false},
+             duplicatedKeys: skip
+           }}]
         }
       OnlyActiveInPhase: 4
 
