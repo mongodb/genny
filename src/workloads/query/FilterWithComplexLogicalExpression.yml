@@ -688,6 +688,7 @@ AutoRun:
       - standalone-all-feature-flags
       - standalone-classic-query-engine
       - standalone-sbe
+      - standalone-telemetry
     branch_name:
       $neq:
       - v4.0
