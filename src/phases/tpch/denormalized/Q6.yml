@@ -19,8 +19,8 @@ TPCHDenormalizedQuery6Aggregation: &TPCHDenormalizedQuery6Aggregation
       {$unwind: "$lineitem"},
       {$replaceWith: "$lineitem"},
       {$match: {$and: [
-        {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: *query6Date}}]}},
-        {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query6Date}}, unit: "year", amount: 1}}]}},
+        {$expr: {$gte: ["$l_shipdate", {^Date: *query6Date}]}},
+        {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {^Date: *query6Date}, unit: "year", amount: 1}}]}},
         {$expr: {$gte: ["$l_discount", {$subtract: [*query6Discount, 0.01]}]}},
         {$expr: {$lte: ["$l_discount", {$add: [*query6Discount, 0.011]}]}},
         {$expr: {$lt: ["$l_quantity", *query6Quantity]}}]}},

@@ -16,8 +16,8 @@ TPCHDenormalizedQuery7Aggregation: &TPCHDenormalizedQuery7Aggregation
       {$addFields: {lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE"}},
       {$unwind: "$lineitem"},
       {$match: {$and: [
-        {$expr: {$gte: ["$lineitem.l_shipdate", {$dateFromString: {dateString: "1995-01-01"}}]}},
-        {$expr: {$lte: ["$lineitem.l_shipdate", {$dateFromString: {dateString: "1996-12-31"}}]}}]}},
+        {$expr: {$gte: ["$lineitem.l_shipdate", {^Date: "1995-01-01"}]}},
+        {$expr: {$lte: ["$lineitem.l_shipdate", {^Date: "1996-12-31"}]}}]}},
       {$lookup: {from: "supplier", localField: "lineitem.l_suppkey", foreignField: "s_suppkey", as: "supplier"}},
       {$unwind: "$supplier"},
       {$match: {$or: [
