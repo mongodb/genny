@@ -19,7 +19,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 1000
   Threads: &Threads 32
-  MaxPhases: &MaxPhases 6
+  MaxPhases: &MaxPhases 4
   nop: &Nop {Nop: true}
   dbname: &db test
 
