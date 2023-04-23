@@ -554,13 +554,14 @@ def lint_yaml(ctx: click.Context):
     required=True,
     type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks"]),
 )
+@click.option('--no-activate', is_flag=True, default=False, help="Generated tasks should not be immediately run by evergreen.")
 @click.pass_context
-def auto_tasks(ctx: click.Context, tasks: str):
+def auto_tasks(ctx: click.Context, tasks: str, no_activate: bool):
     from genny.tasks import auto_tasks
 
     auto_tasks.main(
         mode_name=tasks,
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        no_activate=no_activate,
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
     )
 

@@ -53,12 +53,11 @@ class BaseTestClass(unittest.TestCase):
         shutil.rmtree(self.workspace_root)
 
     def assert_result(
-        self, given_files: List[MockFile], and_mode: str, then_writes: dict, to_file: str
+        self, given_files: List[MockFile], and_mode: str, then_writes: dict, to_file: str, no_activate: bool = False
     ):
         # Create "dumb" mocks.
         lister: WorkloadLister = MagicMock(name="lister", spec=WorkloadLister, instance=True)
         reader: YamlReader = MockReader(given_files)
-        genny_repo_root = os.path.join(self.workspace_root, "/src/genny")
         # Make them smarter.
         lister.all_workload_files.return_value = [
             v.base_name
@@ -75,7 +74,7 @@ class BaseTestClass(unittest.TestCase):
         # And send them off into the world.
         build = CurrentBuildInfo(reader, workspace_root=self.workspace_root)
         op = CLIOperation.create(
-            and_mode, reader, genny_repo_root=genny_repo_root, workspace_root=self.workspace_root
+            and_mode, no_activate, reader, workspace_root=self.workspace_root
         )
         repo = Repo(lister, reader, workspace_root=self.workspace_root)
         tasks = repo.tasks(op, build)
@@ -310,12 +309,12 @@ class AutoTasksTests(BaseTestClass):
                         "priority": 5,
                     },
                 ],
-                "timeout": 64800,
+                "exec_timeout_secs": 64800,
             },
             to_file="./build/TaskJSON/Tasks.json",
         )
 
-    def run_test_variant_tasks(self, given_files, then_writes_tasks):
+    def run_test_variant_tasks(self, given_files, then_writes_tasks, no_activate=False):
         then_writes = {"buildvariants": [{"name": "some-build-variant"}]}
         then_writes["buildvariants"][0].update(then_writes_tasks)
         self.assert_result(
@@ -323,6 +322,7 @@ class AutoTasksTests(BaseTestClass):
             and_mode="variant_tasks",
             then_writes=then_writes,
             to_file="./build/TaskJSON/Tasks.json",
+            no_activate=no_activate,
         )
 
     def test_variant_tasks_1(self):
@@ -813,6 +813,62 @@ class AutoTasksTests(BaseTestClass):
         }
         self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks)
 
+    def test_no_activate_variant_tasks(self):
+        """
+        Test custom comparison for main branches
+        """
+        expansions = expansions_mock({"mongodb_setup": "matches", "branch_name": "main"})
+        given_files = [
+            expansions,
+            MockFile(
+                base_name="src/workloads/src/CompareBranchName",
+                modified=False,
+                yaml_conts={
+                    "AutoRun": [
+                        {
+                            "When": {
+                                "branch_name": {"$gt": "v6.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gt"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$gte": "v6.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "gte"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lt": "v6.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lt"},
+                            ],
+                        },
+                        {
+                            "When": {
+                                "branch_name": {"$lte": "v6.0"},
+                            },
+                            "ThenRun": [
+                                {"mongodb_setup": "lte"},
+                            ],
+                        },
+                    ]
+                },
+            ),
+        ]
+        then_writes_tasks = {
+            "tasks": [
+                {"name": "compare_branch_name_gt", "activate": False},
+                {"name": "compare_branch_name_gte", "activate": False},
+            ]
+        }
+        self.run_test_variant_tasks(given_files=given_files, then_writes_tasks=then_writes_tasks, no_activate=True)
+
     def test_patch_tasks(self):
         """patch_tasks is just variant_tasks for only modified files."""
 
@@ -917,12 +973,12 @@ def test_dry_run_all_tasks():
             build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
             op = CLIOperation.create(
                 mode_name="all_tasks",
+                no_activate=False,
                 reader=reader,
-                genny_repo_root=genny_repo_root,
                 workspace_root=workspace_root,
             )
             lister = WorkloadLister(
-                workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader
+                workspace_root=workspace_root, reader=reader
             )
             repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
             tasks = repo.tasks(op=op, build=build)
