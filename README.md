@@ -4,7 +4,7 @@ Genny
 =====
 
 Genny is a workload-generator with first-class support for
-time-series data-collection of operations running against MongoDB.
+time-series data-collection of operations running against MongoDB. 
 
 `./run-genny --help`
 
