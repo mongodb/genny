@@ -137,3 +137,4 @@ AutoRun:
       - standalone
       - standalone-classic-query-engine
       - standalone-sbe
+      - standalone-telemetry

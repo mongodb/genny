@@ -265,6 +265,7 @@ AutoRun:
       - standalone
       - standalone-classic-query-engine
       - standalone-sbe
+      - standalone-telemetry
     branch_name:
       $neq:
       - v4.0
