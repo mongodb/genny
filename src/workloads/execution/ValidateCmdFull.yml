@@ -13,7 +13,7 @@ Keywords:
 LoadConfig:
   Path: "../../phases/execution/ValidateCmd.yml"
   Parameters:
-    FullValidation: false
+    FullValidation: true
 
 AutoRun:
 - When:
