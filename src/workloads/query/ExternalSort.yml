@@ -104,6 +104,7 @@ AutoRun:
       $eq:
       - standalone
       - standalone-classic-query-engine
+      - standalone-sampling-bonsai
       - standalone-sbe
     branch_name:
       $neq:

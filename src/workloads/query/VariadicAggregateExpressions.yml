@@ -602,6 +602,7 @@ AutoRun:
       - standalone
       - standalone-all-feature-flags
       - standalone-classic-query-engine
+      - standalone-sampling-bonsai
       - standalone-sbe
     branch_name:
       $neq:

@@ -28,4 +28,5 @@ AutoRun:
       - standalone
       - standalone-classic-query-engine
       - standalone-dsi-integration-test
+      - standalone-sampling-bonsai
       - standalone-sbe
