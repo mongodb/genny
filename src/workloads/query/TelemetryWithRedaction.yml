@@ -16,9 +16,7 @@ GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
   DocumentCount: &DocumentCount 1e6
-  Repeat: &Repeat 1000
-  Threads: &Threads 32
-  MaxPhases: &MaxPhases 6
+  MaxPhases: &MaxPhases 7
   nop: &Nop {Nop: true}
   dbname: &db test
   binDataGen: &binDataGen {^BinData: {numBytes: 32}}
@@ -28,13 +26,14 @@ ActorTemplates:
   Config:
     Name: {^Parameter: {Name: "Name", Default: "TelemetryAggregation"}}
     Type: AdminCommand
-    Threads: 1
+    Threads: 32
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
-          Repeat: 1000
+          Duration: 1 minute
+          SleepBefore: 5 seconds
           Database: admin
           Operations:
           - OperationMetricsName: TelemetryWithRedactionMetrics
@@ -55,14 +54,14 @@ Actors:
 - Name: ClearCollection
   Type: CrudActor
   Database: *Database
-  Threads: *Threads
+  Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [0]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
-        Threads: *Threads
+        Threads: 1
         Collection: *Collection
         Operations:
         - OperationName: drop
@@ -100,26 +99,24 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-# Run some commands so that telemetry is collected.
-- Name: AggregationCommand
+- Name: FindCommand
   Type: CrudActor
-  Threads: 1
+  Threads: 32
+  Database: *Database
   Phases:
     OnlyActiveInPhases:
       Active: [3]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Repeat: 1000
-        Database: *Database
+        Duration: 1 minute
         Collection: *Collection
         Operations:
-        - OperationMetricsName: PipelineWithoutOptions
-          OperationName: aggregate
+        - OperationName: find
           OperationCommand:
-            Pipeline: [{$match: {a: 42}}, {$group: {_id: "$b", sum: {$sum: "$a"}}}]
+            Filter: {string: {$in: ["hello", "hi", "bye"]}}
 
-- Name: FindCommand
-  Type: CrudActor
+- Name: Quiesce
+  Type: QuiesceActor
   Threads: 1
   Database: *Database
   Phases:
@@ -127,7 +124,18 @@ Actors:
       Active: [4]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Repeat: 1000
+        Repeat: 1
+
+- Name: FindCommandWithRedaction
+  Type: CrudActor
+  Threads: 32
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
         Collection: *Collection
         Operations:
         - OperationName: find
@@ -142,13 +150,40 @@ Actors:
       redactIdentifiers: true
       OnlyActiveInPhase: 5
 
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+
+- Name: FindCommandWithoutRedaction
+  Type: CrudActor
+  Threads: 32
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1000
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {string: {$in: ["hello", "hi", "bye"]}}
+
 # Telemetry without redaction.
 - ActorFromTemplate:
     TemplateName: TelemetryAggregation
     TemplateParameters:
       Name: "TelemetryAggregationWithoutRedaction"
       redactIdentifiers: false
-      OnlyActiveInPhase: 6
+      OnlyActiveInPhase: 7
 
 AutoRun:
 - When:

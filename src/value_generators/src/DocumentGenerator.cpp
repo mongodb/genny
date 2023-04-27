@@ -1178,9 +1178,15 @@ private:
 class BinDataGenerator : public Generator<bsoncxx::types::b_binary> {
 public:
     BinDataGenerator(const Node& node, GeneratorArgs generatorArgs)
-        : _node{node} {}
+        : _node{node} {
+            _binData = genRandBinData();
+        }
 
     bsoncxx::types::b_binary evaluate() override {
+        return _binData;
+    }
+
+    bsoncxx::types::b_binary genRandBinData() {
         int64_t numBytes = _node["numBytes"].maybe<int64_t>().value_or(32);
         uint8_t bytesArr[numBytes];
         for (int i = 0; i < numBytes; i++) {
@@ -1192,6 +1198,7 @@ public:
     }
 
 private:
+    bsoncxx::types::b_binary _binData;
     const Node& _node;
 };
 
