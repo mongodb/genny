@@ -35,79 +35,73 @@ Actors:
   - *Nop
 
 - Name: SlidingWindows
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
   - *Nop
   - Repeat: 10
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: MovingAvgPositionBased
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {avg: {$avg: "$temp", window: {documents: [-5, 5]}}}}}]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: MovingAvgTimeBased
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {avg: {$avg: "$temp", window: {range: [-1, 0], unit: "hour"}}}}}]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: MinPositionBased
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {min: {$min: "$temp", window: {documents: [-5, 5]}}}}}]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: MinTimeBased
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {min: {$min: "$temp", window: {range: [-1, 0], unit: "hour"}}}}}]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExpMovingAvgSmallN
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {ema: {$expMovingAvg: {input: "$temp", N: 10}}}}}]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExpMovingAvgLargeN
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {ema: {$expMovingAvg: {input: "$temp", N: 500}}}}}]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: DerivativeSmallWindow
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
@@ -116,10 +110,9 @@ Actors:
               window: {documents: [-10, 0]}}}}}]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: DerivativeLargeWindow
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
