@@ -92,7 +92,7 @@ Actors:
   - Nop: true
 
 - Name: LocfNumericWithoutPartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -101,10 +101,9 @@ Actors:
     Database: *db
     Operations:
     - OperationMetricsName: TestNumericWithoutPartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {
             $setWindowFields: {
               sortBy: {_id: 1},
@@ -135,7 +134,7 @@ Actors:
   - Nop: true
 
 - Name: LocfRandomTypeWithoutPartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -146,10 +145,9 @@ Actors:
     Database: *db
     Operations:
     - OperationMetricsName: TestRandomTypeWithoutPartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {
             $setWindowFields: {
               sortBy: {_id: 1},
@@ -178,7 +176,7 @@ Actors:
   - Nop: true
 
 - Name: LocfMultipleOutputWithoutPartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -191,10 +189,9 @@ Actors:
     Database: *db
     Operations:
     - OperationMetricsName: TestMultipleOutputWithoutPartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {
             $setWindowFields: {
               sortBy: {_id: 1},
@@ -225,7 +222,7 @@ Actors:
   - Nop: true
 
 - Name: LocfDateWithSinglePartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -240,10 +237,9 @@ Actors:
     Database: *db
     Operations:
     - OperationMetricsName: TestDateWithSinglePartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {
             $setWindowFields: {
               sortBy: {_id: 1},
@@ -270,7 +266,7 @@ Actors:
   - Nop: true
 
 - Name: LocfRandomTypeWithSinglePartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -287,10 +283,9 @@ Actors:
     Database: *db
     Operations:
     - OperationMetricsName: TestRandomTypeWithSinglePartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {
             $setWindowFields: {
               sortBy: {_id: 1},
@@ -315,7 +310,7 @@ Actors:
   - Nop: true
 
 - Name: LocfMultipleOutputWithSinglePartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -334,10 +329,9 @@ Actors:
     Database: *db
     Operations:
     - OperationMetricsName: TestMultipleOutputWithSinglePartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {
             $setWindowFields: {
               sortBy: {_id: 1},
@@ -364,7 +358,7 @@ Actors:
   - Nop: true
 
 - Name: LocfStringWithMultiplePartitions
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -385,10 +379,9 @@ Actors:
     Database: *db
     Operations:
     - OperationMetricsName: TestStringWithMultiplePartitions
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {
             $setWindowFields: {
               sortBy: {_id: 1},
@@ -409,7 +402,7 @@ Actors:
   - Nop: true
 
 - Name: LocfRandomTypeWithMultiplePartitions
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -432,10 +425,9 @@ Actors:
     Database: *db
     Operations:
     - OperationMetricsName: TestRandomTypeWithMultiplePartitions
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {
             $setWindowFields: {
               sortBy: {_id: 1},
@@ -454,7 +446,7 @@ Actors:
   - Nop: true
 
 - Name: LocfMultipleOutputWithMultiplePartitions
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -479,10 +471,9 @@ Actors:
     Database: *db
     Operations:
     - OperationMetricsName: TestMultipleOutputWithMultiplePartitions
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           {
             $setWindowFields: {
               sortBy: {_id: 1},
