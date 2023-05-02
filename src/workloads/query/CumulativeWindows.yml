@@ -43,19 +43,19 @@ Actors:
   - Nop: true
 
 - Name: CumulativeWindows
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
   - Nop: true
   - Repeat: 10
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: Sum
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -69,10 +69,9 @@ Actors:
           }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: Avg
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -86,10 +85,9 @@ Actors:
           }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: StdDevPop
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -103,10 +101,9 @@ Actors:
           }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: StdDevSamp
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -120,10 +117,9 @@ Actors:
           }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: CovPop
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -137,10 +133,9 @@ Actors:
           }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: CovSamp
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline:
+        Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
