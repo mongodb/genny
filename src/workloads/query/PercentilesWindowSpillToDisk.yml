@@ -31,6 +31,8 @@ AutoRun:
       - v4.4
       - v5.0
       - v6.0
+      - v6.1
+      - v6.3
 
 GlobalDefaults:
   MaxPhases: &maxPhases 8
