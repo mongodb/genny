@@ -99,6 +99,7 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestNumericWithoutPartition
       OperationName: aggregate
@@ -143,6 +144,7 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestRandomTypeWithoutPartition
       OperationName: aggregate
@@ -187,6 +189,7 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestMultipleOutputWithoutPartition
       OperationName: aggregate
@@ -235,6 +238,7 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestDateWithSinglePartition
       OperationName: aggregate
@@ -281,6 +285,7 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestRandomTypeWithSinglePartition
       OperationName: aggregate
@@ -327,6 +332,7 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestMultipleOutputWithSinglePartition
       OperationName: aggregate
@@ -377,6 +383,7 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestStringWithMultiplePartitions
       OperationName: aggregate
@@ -423,6 +430,7 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestRandomTypeWithMultiplePartitions
       OperationName: aggregate
@@ -469,6 +477,7 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestMultipleOutputWithMultiplePartitions
       OperationName: aggregate
