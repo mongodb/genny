@@ -24,3 +24,9 @@ CreateGennyTargets(
     TEST_DEPENDS    testlib
     EXECUTABLE      genny_core
 )
+
+# For boost::stacktrace
+# Reference: https://github.com/boostorg/stacktrace/issues/88
+if(UNIX OR APPLE OR MINGW)
+  add_compile_definitions(_GNU_SOURCE)
+endif()
