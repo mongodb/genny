@@ -29,7 +29,7 @@ AutoRun:
       - standalone-sbe
     branch_name:
       $gte:
-      - v7.0
+        v7.0
 
 GlobalDefaults:
   MaxPhases: &maxPhases 10
