@@ -187,7 +187,8 @@ class ToolchainDownloader(Downloader):
     # Old UI: https://evergreen.mongodb.com/waterfall/genny-toolchain
     # New UI: https://spruce.mongodb.com/commits/genny-toolchain
     #
-    # Find a compile task (for any build variant) and modify the URL:
+    # Find a compile task (for any build variant) and modify the URL. 
+    # For example:
     # https://spruce.mongodb.com/task/genny_toolchain_archlinux_t_compile_82eb7c32ad09726f3ef0ddc8d7f24a18b03d9644_21_11_23_16_37_21
     # =>                                                                  82eb7c32ad09726f3ef0ddc8d7f24a18b03d9644_21_11_23_16_37_21
     # https://spruce.mongodb.com/task/genny_toolchain_macos_1100_arm64_t_compile_patch_87457e6fec1d98f270c84d915f83bec53554ecee_6451d23fc9ec4441c9ce233d_23_05_03_03_17_20
