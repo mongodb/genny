@@ -11,7 +11,7 @@ TPCHNormalizedQuery1Aggregation: &TPCHNormalizedQuery1Aggregation
   aggregate: lineitem
   pipeline:
     [
-      {$match: {$expr: {$lte: ["$l_shipdate", {$dateAdd: {startDate: {$dateFromString: {dateString: "1998-12-01"}}, unit: "day", amount: *query1Delta}}]}}},
+      {$match: {$expr: {$lte: ["$l_shipdate", {$dateAdd: {startDate: {^Date: "1998-12-01"}, unit: "day", amount: *query1Delta}}]}}},
       {$group: {
         _id: {l_returnflag: "$l_returnflag", l_linestatus: "$l_linestatus"},
         sum_qty: {$sum: "$l_quantity"},

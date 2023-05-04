@@ -33,17 +33,18 @@ LoadConfig:
     Namespace: genny_qebench.testcoll
     ClientName: EncryptedPool
 
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - shard-lite-fle
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v6.0
-      - v6.1
-      - v6.2
+# TODO PERF-3954: Re-enable this test.
+# AutoRun:
+# - When:
+#     mongodb_setup:
+#       $eq:
+#       - shard-lite-fle
+#     branch_name:
+#       $neq:
+#       - v4.0
+#       - v4.2
+#       - v4.4
+#       - v5.0
+#       - v6.0
+#       - v6.1
+#       - v6.2

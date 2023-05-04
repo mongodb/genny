@@ -13,11 +13,11 @@ TPCHNormalizedQuery14Aggregation: &TPCHNormalizedQuery14Aggregation
     [
       {$match: {
         $and: [
-          {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: *query14Date}}]}},
+          {$expr: {$gte: ["$l_shipdate", {^Date: *query14Date}]}},
           {$expr: {
             $lt: [
               "$l_shipdate",
-              {$dateAdd: {startDate: {$dateFromString: {dateString: *query14Date}}, unit: "month", amount: 1}}]}}]}},
+              {$dateAdd: {startDate: {^Date: *query14Date}, unit: "month", amount: 1}}]}}]}},
       {$lookup: {from: "part", localField: "l_partkey", foreignField: "p_partkey", as: "part"}},
       {$unwind: "$part"},
       {$group: {

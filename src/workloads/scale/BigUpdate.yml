@@ -128,6 +128,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - atlas
+      - atlas-like-replica.2022-10
       - replica
       - replica-1dayhistory-15gbwtcache
       - replica-all-feature-flags
@@ -137,3 +138,4 @@ AutoRun:
       - standalone-classic-query-engine
       - standalone-sampling-bonsai
       - standalone-sbe
+      - standalone-telemetry

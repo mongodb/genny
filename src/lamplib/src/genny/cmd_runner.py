@@ -28,6 +28,10 @@ def run_command(
     uuid = str(uuid4())[:8]
     SLOG.debug("Running command", uuid=uuid, cwd=cwd, command=" ".join(shlex.quote(x) for x in cmd))
 
+    genny_repo_root = os.environ.get("GENNY_REPO_ROOT", None)
+    assert genny_repo_root, "Code error: env GENNY_REPO_ROOT not set"
+    env["LSAN_OPTIONS"] = f"suppressions={genny_repo_root}/lsan.ignorelist"
+
     success = False
 
     old_cwd = os.getcwd()

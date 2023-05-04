@@ -2,6 +2,7 @@
 # You may need to pip install some of the imports below if you don't have them already
 
 import os
+import numpy as np
 import re
 import subprocess
 import statistics
@@ -122,17 +123,23 @@ def summarize_diffed_data(args, actor_name, metrics_of_interest):
         sorted_res = sorted(diffed_readings)
         if is_measured_in_nanoseconds(metric_name):
             metric_name += " (measured in nanoseconds, displayed in milliseconds)"
+
+        def rnd(number):
+            """Round a number to 4 significant digits, without going to scientific notation."""
+            return np.format_float_positional(
+                number, precision=4, unique=False, fractional=False, trim='k')
+
         results[metric_name] = {
             "count": len(diffed_readings),
-            "average": round(statistics.mean(diffed_readings), 1),
-            "median": round(statistics.median_grouped(diffed_readings), 1),
-            "mode": round(statistics.mode(diffed_readings), 1),
-            "stddev": round(statistics.stdev(diffed_readings), 1) if len(diffed_readings) > 1 else None,
-            "[min, max]": [round(sorted_res[0], 1), round(sorted_res[-1], 1)],
+            "average": rnd(statistics.mean(diffed_readings)),
+            "median": rnd(statistics.median_grouped(diffed_readings)),
+            "mode": rnd(statistics.mode(diffed_readings)),
+            "stddev": rnd(statistics.stdev(diffed_readings)) if len(diffed_readings) > 1 else None,
+            "[min, max]": [rnd(sorted_res[0]), rnd(sorted_res[-1])],
             "sorted_raw_data": sorted_res
         }
         if args.verbose:
-            print("Summared", metric_name)
+            print("Summarized", metric_name)
             pretty_print_summary(args, results[metric_name], "\t")
     return results
 

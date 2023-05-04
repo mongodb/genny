@@ -91,8 +91,7 @@ Actors:
           OperationCommand:
             setParameter: 1
             # Reduce tickets to force contention.
-            storageEngineConcurrencyAdjustmentAlgorithm: ""
-            storageEngineConcurrentWriteTransactions: 32
+            throughputProbingMaxConcurrency: 32
         SleepAfter: 60 seconds  # Wait 60 seconds for the new configurations to establish.
 
 - Name: UpdateOtherColl

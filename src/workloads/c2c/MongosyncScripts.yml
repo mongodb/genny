@@ -18,11 +18,30 @@ StartMongosync:
   Endpoint: start
   MetricsName: StartMongosync
 
+PauseMongosync:
+  Repeat: 1
+  Module: mongosync_actor
+  Endpoint: pause
+  MetricsName: PauseMongosync
+
+ResumeMongosync:
+  Repeat: 1
+  Module: mongosync_actor
+  Endpoint: resume
+  MetricsName: ResumeMongosync
+
 PollForCEA:
   Repeat: 1
   Module: mongosync_actor
   Endpoint: poll_for_cea
   MetricsName: PollForCEA
+
+# Keep poll until canCommit = true and lagTimeSeconds < 120
+PollForCommitPoint:
+  Repeat: 1
+  Module: mongosync_actor
+  Endpoint: poll_for_commit_point
+  MetricsName: PollForCommitPoint
 
 DrainWrites:
   Repeat: 1

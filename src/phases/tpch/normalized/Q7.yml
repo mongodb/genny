@@ -17,8 +17,8 @@ TPCHNormalizedQuery7Aggregation: &TPCHNormalizedQuery7Aggregation
       {$unwind: "$n1"},
       {$lookup: {from: "lineitem", localField: "s_suppkey", foreignField: "l_suppkey", as: "lineitem", pipeline: [
         {$match: {$and: [
-          {$expr: {$gte: ["$l_shipdate", {$dateFromString: {dateString: "1995-01-01"}}]}},
-          {$expr: {$lte: ["$l_shipdate", {$dateFromString: {dateString: "1996-12-31"}}]}}]}}]}},
+          {$expr: {$gte: ["$l_shipdate", {^Date: "1995-01-01"}]}},
+          {$expr: {$lte: ["$l_shipdate", {^Date: "1996-12-31"}]}}]}}]}},
       {$unwind: "$lineitem"},
       {$lookup: {from: "orders", localField: "lineitem.l_orderkey", foreignField: "o_orderkey", as: "orders"}},
       {$unwind: "$orders"},

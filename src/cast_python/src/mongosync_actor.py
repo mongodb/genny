@@ -92,6 +92,14 @@ def start(workload_yaml):
 def poll_for_cea(workload_yaml):
     poll(workload_yaml, lambda x: x != "change event application", "info")
 
+@cli.command(
+    "poll_for_commit_point",
+    help=("Wait till all the instances canCommit = true and lagTimeSeconds < 120"),
+)
+@click.argument("workload_yaml", nargs=1)
+def poll_for_commit_point(workload_yaml):
+    poll(workload_yaml, lambda x: bool(x) == False, "canCommit") or poll(workload_yaml, lambda x: int(x) > 120, "lagTimeSeconds")
+
 
 @cli.command(
     "drain_writes",
@@ -118,6 +126,25 @@ def commit(workload_yaml):
 @click.argument("workload_yaml", nargs=1)
 def wait_for_commit(workload_yaml):
     poll(workload_yaml, lambda x: x != "COMMITTED", "state")
+
+
+@cli.command(
+    "pause",
+    help=("Pause the migration"),
+)
+@click.argument("workload_yaml", nargs=1)
+def commit(workload_yaml):
+    change_state(workload_yaml, "/api/v1/pause", {})
+
+
+@cli.command(
+    "resume",
+    help=("Resume the migration"),
+)
+@click.argument("workload_yaml", nargs=1)
+def commit(workload_yaml):
+    change_state(workload_yaml, "/api/v1/resume", {})
+
 
 
 if __name__ == "__main__":

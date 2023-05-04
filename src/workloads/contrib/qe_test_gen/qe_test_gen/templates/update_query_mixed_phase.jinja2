@@ -1,0 +1,31 @@
+- Repeat: <<ctx.iterationsPerThread>>
+  Collection: {^Parameter: {Name: "Collection", Default: "<<collectionName>>"}}
+  MetricsName: "FSM"
+  InitialStates:
+    - State: Query
+      Weight: <<ctx.readRatio>>
+    - State: Update
+      Weight: <<ctx.updateRatio>>
+  StateTransitions: &transitions
+    - To: Query
+      Weight: <<ctx.readRatio>>
+      SleepBefore: {^TimeSpec: {value: 0, unit: seconds}}
+    - To: Update
+      Weight: <<ctx.updateRatio>>
+      SleepBefore: {^TimeSpec: {value: 0, unit: seconds}}
+  States:
+    - Name: Query
+      Operations:
+        - OperationName: find
+          OperationMetricsName: query
+          OperationCommand:
+            Filter: {<<ctx.field_name>>: <<ctx.targetter>>}
+      Transitions: *transitions
+    - Name: Update
+      Operations:
+        - OperationName: updateOne
+          OperationMetricsName: update
+          OperationCommand:
+            Filter: {<<ctx.field_name>>: <<ctx.targetter>>}
+            Update: {$set: {<<ctx.field_name>>: <<ctx.targetter>>}}
+      Transitions: *transitions

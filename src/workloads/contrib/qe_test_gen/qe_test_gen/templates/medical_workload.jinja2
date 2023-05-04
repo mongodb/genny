@@ -1,0 +1,69 @@
+{% macro ingest(phase) %}
+{% with ctx = phase.context() %}
+{% include phase.generate() %}
+{% endwith %}
+{% endmacro %}
+{% macro X(snippet) %}
+<<snippet>>
+{% endmacro %}
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+  Models the Queryable Encryption acceptance criteria workloads
+
+{% if encryptedFields %}
+Encryption:
+  UseCryptSharedLib: true
+  CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so
+  EncryptedCollections:
+  - Database: genny_qebench2
+    Collection: <<collectionName>>
+    EncryptionType: queryable
+
+    QueryableEncryptedFields:
+    {% for field in encryptedFields %}
+      <<field.field_name>>: { type: "string", queries: [{queryType: "equality", contention: <<field.contention_factor>> }] }
+    {% endfor %}
+{% endif %}
+
+Clients:
+  EncryptedPool:
+    QueryOptions:
+      maxPoolSize: 400
+{% if encryptedFields %}
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_qebench2.<<collectionName>>
+{% endif %}
+
+
+Actors:
+  - Name: InsertActor
+    Type: CrudActor
+    Threads: <<threadCount>>
+    Database: genny_qebench2
+    ClientName: EncryptedPool
+    Phases:
+    {% for phase in phases %}
+    << ingest(phase) | indent >>
+    {% endfor %}
+  
+  - Name: LoggingActor0
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      - Phase: 0..<<maxPhase>>
+        LogEvery: 5 minutes
+        Blocking: None
+
+{% if shouldAutoRun %}
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard-lite-fle
+    branch_name:
+      $gte: v7.0
+{% endif %}

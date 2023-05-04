@@ -374,7 +374,9 @@ struct convert<mongocxx::read_concern> {
  * Convert between YAML and genny::PhaseRange
  *
  * The YAML syntax accepts "[genny::Integer]..[genny::Integer]".
- * This is used to stipulate repeating a phase N number of times
+ * This lets a Workload author specify that the same action should be repeated over multiple Phases.
+ * For example, "Phase: 1..3" means the action will run in phase 1, 2, and 3.
+ * Introduced in TIG-1202.
  */
 template <>
 struct convert<genny::PhaseRangeSpec> {

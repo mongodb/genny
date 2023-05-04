@@ -2,9 +2,17 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
   This workload was created to reproduce issues discovered during sharded stress testing. The workload can cause
-  low performance, spikes in latency and excessive connection creation (on mongos processes). The metrics to look at
-  for this workload are the latencies and more specifically the Latency90thPercentile to Latency99thPercentile metrics.
+  low performance, spikes in latency and excessive connection creation (on mongos processes).
 
+  The main metrics to monitor are:
+    * ErrorsTotal / ErrorRate: The total number of errors and rate of errors encountered by the workload. Networking
+      errors are not unexpected in general and they should be recoverable. This work load strives to provide a test to
+      allow us to measure the scale of networking errors in a stressful test and prove if the networking becomes more
+      stable (with lower total errors and a lower error rate).
+    * The Operation latency (more specifically the Latency90thPercentile to Latency99thPercentile metrics)
+    * The Operation Throughput
+    * "ss connections active": the number of connections.
+  
   The workload performs the following steps:
     - Phase 0
       - Upsert a Single Document in the collection
@@ -72,6 +80,7 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *GlobalConnectionDuration
+        RecordFailure: true
         Collection: *Collection
         Operations:
         - OperationName: find
