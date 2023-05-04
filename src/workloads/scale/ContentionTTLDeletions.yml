@@ -200,10 +200,7 @@ AutoRun:
       - single-replica
       - single-replica-all-feature-flags
     branch_name:
-      $neq:
-      - v4.2
-      - v4.4
-      - v5.0
+      $gte: v7.0
     infrastructure_provisioning:
       $neq:
       - graviton-single-lite.2022-11  # Instance runs out of memory and crashes
