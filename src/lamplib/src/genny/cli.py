@@ -199,7 +199,7 @@ def evaluate(
     help=("Filepath where the output CSV will be written. Will write to stdout by default."),
 )
 @click.pass_context
-def evaluate(ctx: click.Context, ftdc_path: str, output):
+def export_ftdc_to_csv(ctx: click.Context, ftdc_path: str, output):
     from genny.curator import export
 
     export(
