@@ -37,12 +37,17 @@ Actors:
       OperationCommand:
         shardCollection: *Namespace
         key: {x: 1}
-    - OperationMetricsName: MoveRange
+    - OperationMetricsName: Split
       OperationName: AdminCommand
       OperationCommand:
-        moveRange: *Namespace
-        min: {x: 5}
-        toShard: "rs1"
+        split: *Namespace
+        middle: {x: 5}
+    - OperationMetricsName: MoveChunk
+      OperationName: AdminCommand
+      OperationCommand:
+        moveChunk: *Namespace
+        find: {x: 6}
+        to: "rs1"
   - *Nop
   - *Nop
 
