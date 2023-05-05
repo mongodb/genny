@@ -329,6 +329,8 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
+      - atlas
+      - replica
       - standalone
       - standalone-all-feature-flags
       - standalone-classic-query-engine
