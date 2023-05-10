@@ -29,7 +29,7 @@ ActorTemplates:
     Threads: 32
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Duration: 1 minute
