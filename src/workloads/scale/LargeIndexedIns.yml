@@ -66,4 +66,6 @@ AutoRun:
       - replica
       - single-replica
       - single-replica-classic-query-engine
+      # TODO PERF-4127: Uncomment this build variant after fixing the system failure.
+      # - single-replica-sampling-bonsai
       - single-replica-sbe

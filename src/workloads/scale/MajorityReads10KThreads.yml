@@ -24,4 +24,5 @@ AutoRun:
       - replica-all-feature-flags
       - single-replica
       - single-replica-classic-query-engine
+      - single-replica-sampling-bonsai
       - single-replica-sbe

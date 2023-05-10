@@ -132,6 +132,7 @@ AutoRun:
       - standalone
       - standalone-all-feature-flags
       - standalone-classic-query-engine
+      - standalone-sampling-bonsai
       - standalone-sbe
       - standalone-telemetry
     branch_name:

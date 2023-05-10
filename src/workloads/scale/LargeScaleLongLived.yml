@@ -96,5 +96,6 @@ AutoRun:
       - single-replica-15gbwtcache
       - standalone
       - standalone-classic-query-engine
+      - standalone-sampling-bonsai
       - standalone-sbe
       - standalone-telemetry
