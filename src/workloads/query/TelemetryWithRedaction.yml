@@ -43,8 +43,8 @@ ActorTemplates:
               pipeline: [
                 {
                   $telemetry: {
-                    redactIdentifiers: {^Parameter: {Name: "redactIdentifiers", Default: false}},
-                    redactionKey: *binDataGen
+                    applyHmacToIdentifiers: {^Parameter: {Name: "applyHmacToIdentifiers", Default: false}},
+                    hmacKey: *binDataGen
                   }
                 }
               ]
@@ -180,7 +180,7 @@ Actors:
     TemplateName: TelemetryAggregation
     TemplateParameters:
       Name: "TelemetryAggregationWithRedaction"
-      redactIdentifiers: true
+      applyHmacToIdentifiers: true
       OnlyActiveInPhase: 6
 
 - Name: Quiesce
@@ -223,7 +223,7 @@ Actors:
     TemplateName: TelemetryAggregation
     TemplateParameters:
       Name: "TelemetryAggregationWithoutRedaction"
-      redactIdentifiers: false
+      applyHmacToIdentifiers: false
       OnlyActiveInPhase: 8
 
 AutoRun:
