@@ -1,8 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This test exercises the behavior of $_internalBoundedSort. Each type of test is run two ways, using
-  a blocking sort and a bounded sort. Each test is run 50 times.
+  This test exercises the behavior of $_internalBoundedSort.
   Test Overview:
   - A time-series collection is created, and 100k docs are inserted.
   - We run a sort on the time field.
@@ -12,8 +11,8 @@ Description: |
   - We create an index on {meta: 1, time: 1} for the following tests. We run a match on meta, and
     sort on time, matching 5k documents. Then we run the same test but only match 10 documents. The
     meta time index is dropped.
-  - 500k more documents are inserted for spilling tests. A sort on time is run, where the blocking
-    version is forced to spill and the bounded sort does not.
+  - 500k more documents are inserted for spilling tests. A sort on time is run, where the bounded
+    sort should not spill.
 
 
 GlobalDefaults:
@@ -29,7 +28,6 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
   - Repeat: 1
     Database: *db
     Operation:
@@ -37,7 +35,6 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         {create: &coll Collection0, timeseries: {timeField: "t", metaField: "m"}}
-  - *Nop
   - Repeat: 1
     Database: *db
     Operations:
@@ -66,24 +63,11 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
 
 - Name: IndexCollection
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -126,8 +110,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
   - Repeat: 1
     Database: *db
     Operations:
@@ -140,10 +122,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -152,11 +130,6 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
   - Repeat: 1
   - *Nop
   - *Nop
@@ -175,20 +148,13 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
   - Repeat: 1
-  - *Nop
-  - *Nop
-  - *Nop
   - *Nop
 
 - Name: InsertData
   Type: Loader
   Threads: 1
   Phases:
-  - *Nop
-  - *Nop
   - *Nop
   - Repeat: 1
     Database: *db
@@ -200,9 +166,6 @@ Actors:
     Document:
       t: {^IncDate: {start: "2022-01-01", step: 400}}
       m: {^RandomInt: {min: 0, max: 1000}}
-  - *Nop
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -236,8 +199,6 @@ Actors:
       m: 1002
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
   - Repeat: 1
     Database: *db
     Collection: *coll
@@ -252,9 +213,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
 
 - Name: Queries
   Type: RunCommand
@@ -263,15 +221,10 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
   - Repeat: &numQueryRuns 50
     Database: *db
     Operations:
-    - OperationMetricsName: SortQueryBlockingSort
+    - OperationMetricsName: SortQueryBoundedSort
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
@@ -282,7 +235,7 @@ Actors:
   - Repeat: *numQueryRuns
     Database: *db
     Operations:
-    - OperationMetricsName: DescendingSortWithDescendingIndexQueryBlockingSort
+    - OperationMetricsName: DescendingSortWithDescendingIndexQueryBoundedSort
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
@@ -294,7 +247,7 @@ Actors:
   - Repeat: *numQueryRuns
     Database: *db
     Operations:
-    - OperationMetricsName: TimeToFirstResultQueryBlockingSort
+    - OperationMetricsName: TimeToFirstResultQueryBoundedSort
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
@@ -306,7 +259,7 @@ Actors:
   - Repeat: *numQueryRuns
     Database: *db
     Operations:
-    - OperationMetricsName: MetaPointPredicateTimeSortBlockingSort
+    - OperationMetricsName: MetaPointPredicateTimeSortBoundedSort
       OperationName: RunCommand
       OperationCommand:
         explain:
@@ -323,7 +276,7 @@ Actors:
   - Repeat: *numQueryRuns
     Database: *db
     Operations:
-    - OperationMetricsName: SelectiveMetaPointPredicateTimeSortBlockingSort
+    - OperationMetricsName: SelectiveMetaPointPredicateTimeSortBoundedSort
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
@@ -334,40 +287,6 @@ Actors:
           {$skip: 1e10}
         ]
         cursor: {batchSize: *batchSize}
-  # Compound key for $_internalBoundedSort is not implemented yet.
-  # - Repeat: *numQueryRuns
-  #   Database: *db
-  #   Operations:
-  #   - OperationMetricsName: MetaSortTimeSortBlockingSort
-  #     OperationName: RunCommand
-  #     OperationCommand:
-  #       aggregate: *coll
-  #       pipeline: [{$sort: {m: 1, t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
-  #       cursor: {batchSize: *batchSize}
-  # - Repeat: *numQueryRuns
-  #   Database: *db
-  #   Operations:
-  #   - OperationMetricsName: MetaSortTimeSortBoundedSorter
-  #     OperationName: RunCommand
-  #     OperationCommand:
-  #       aggregate: system.buckets.Collection0
-  #       pipeline: [{$sort: {meta: 1, "control.min.t": 1}},
-  #                   {$_internalUnpackBucket: {
-  #                     exclude: [],
-  #                     timeField: "t",
-  #                     metaField: "m",
-  #                     bucketMaxSpanSeconds: 3600,
-  #                     assumeNoMixedSchemaData: true
-  #                     }
-  #                   },
-  #                   {$_internalBoundedSort: {
-  #                           sortKey: {m: 1, t: 1},
-  #                           bound: {base: "min"},
-  #                       }
-  #                   }, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
-  #       cursor: {batchSize: *batchSize}
-  - *Nop
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
@@ -375,16 +294,12 @@ Actors:
   - Repeat: *numQueryRuns
     Database: *db
     Operations:
-    - OperationMetricsName: SpillVsNoSpillSortQueryBlockingSort
+    - OperationMetricsName: SpillVsNoSpillSortQueryBoundedSort
       OperationName: RunCommand
       OperationCommand:
         aggregate: *coll
         pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
         cursor: {batchSize: *batchSize}
-        allowDiskUse: true
-  - *Nop
-  - *Nop
-  - *Nop
 
 AutoRun:
 - When:
