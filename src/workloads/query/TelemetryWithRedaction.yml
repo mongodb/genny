@@ -16,7 +16,7 @@ GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
   DocumentCount: &DocumentCount 1e6
-  MaxPhases: &MaxPhases 7
+  MaxPhases: &MaxPhases 8
   nop: &Nop {Nop: true}
   dbname: &db test
   binDataGen: &binDataGen {^BinData: {numBytes: 32}}
@@ -41,23 +41,39 @@ ActorTemplates:
             OperationCommand:
               aggregate: 1
               pipeline: [
-                      {
-                        $telemetry: {
-                          redactIdentifiers: {^Parameter: {Name: "redactIdentifiers", Default: false}},
-                          redactionKey: *binDataGen
-                        }
-                      }
-                    ]
+                {
+                  $telemetry: {
+                    redactIdentifiers: {^Parameter: {Name: "redactIdentifiers", Default: false}},
+                    redactionKey: *binDataGen
+                  }
+                }
+              ]
               cursor: {}
 
 Actors:
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            internalQueryConfigureTelemetryCacheSize: 250MB
+
 - Name: ClearCollection
   Type: CrudActor
   Database: *Database
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [0]
+      Active: [1]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -71,7 +87,7 @@ Actors:
   Threads: 4
   Phases:
     OnlyActiveInPhases:
-      Active: [1]
+      Active: [2]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -94,7 +110,7 @@ Actors:
   Database: *Database
   Phases:
     OnlyActiveInPhases:
-      Active: [2]
+      Active: [3]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -105,7 +121,7 @@ Actors:
   Database: *Database
   Phases:
     OnlyActiveInPhases:
-      Active: [3]
+      Active: [4]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: 1 minute
@@ -113,7 +129,16 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: {string: {$in: ["hello", "hi", "bye"]}}
+            # This will create a find command with a random number of fields from 3 to 350, to create varying query shapes and sizes.
+            Filter:
+              {$and:
+                [{a1: 1}, {a2: 1}, {^Object: {
+                  withNEntries: {^RandomInt: {min: 1, max: 350}},
+                  havingKeys: {^RandomString: {length: 10}},
+                  andValues: {$exists: false},
+                  duplicatedKeys: skip
+                }}]
+              }
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -121,18 +146,18 @@ Actors:
   Database: *Database
   Phases:
     OnlyActiveInPhases:
-      Active: [4]
+      Active: [5]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
 
-- Name: FindCommandWithRedaction
+- Name: FindConcurrentlyWithTelemetryWithRedaction
   Type: CrudActor
   Threads: 32
   Database: *Database
   Phases:
     OnlyActiveInPhases:
-      Active: [5]
+      Active: [6]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: 1 minute
@@ -140,7 +165,15 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: {string: {$in: ["hello", "hi", "bye"]}}
+            Filter:
+              {$and:
+                [{a1: 1}, {a2: 1}, {^Object: {
+                  withNEntries: {^RandomInt: {min: 1, max: 350}},
+                  havingKeys: {^RandomString: {length: 10}},
+                  andValues: {$exists: false},
+                  duplicatedKeys: skip
+                }}]
+              }
 
 # Telemetry with redaction.
 - ActorFromTemplate:
@@ -148,7 +181,7 @@ Actors:
     TemplateParameters:
       Name: "TelemetryAggregationWithRedaction"
       redactIdentifiers: true
-      OnlyActiveInPhase: 5
+      OnlyActiveInPhase: 6
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -156,26 +189,34 @@ Actors:
   Database: *Database
   Phases:
     OnlyActiveInPhases:
-      Active: [6]
+      Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
 
-- Name: FindCommandWithoutRedaction
+- Name: FindConcurrentlyWithTelemetryWithoutRedaction
   Type: CrudActor
   Threads: 32
   Database: *Database
   Phases:
     OnlyActiveInPhases:
-      Active: [7]
+      Active: [8]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Repeat: 1000
+        Duration: 1 minute
         Collection: *Collection
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: {string: {$in: ["hello", "hi", "bye"]}}
+            Filter:
+              {$and:
+                [{a1: 1}, {a2: 1}, {^Object: {
+                  withNEntries: {^RandomInt: {min: 1, max: 350}},
+                  havingKeys: {^RandomString: {length: 10}},
+                  andValues: {$exists: false},
+                  duplicatedKeys: skip
+                }}]
+              }
 
 # Telemetry without redaction.
 - ActorFromTemplate:
@@ -183,7 +224,7 @@ Actors:
     TemplateParameters:
       Name: "TelemetryAggregationWithoutRedaction"
       redactIdentifiers: false
-      OnlyActiveInPhase: 7
+      OnlyActiveInPhase: 8
 
 AutoRun:
 - When:
