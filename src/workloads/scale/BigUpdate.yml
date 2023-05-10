@@ -132,6 +132,7 @@ AutoRun:
       - replica
       - replica-1dayhistory-15gbwtcache
       - replica-all-feature-flags
+      - replica-disable-execution-control
       - replica-noflowcontrol
       - single-replica
       - standalone
