@@ -114,6 +114,9 @@ public:
     CollectionHandle(mongocxx::client* client, std::string database, std::string collection)
         : _client(client), _database(std::move(database)), _collection(std::move(collection)) {}
 
+    CollectionHandle(CollectionHandle&) = default;
+    CollectionHandle& operator=(CollectionHandle&) = default;
+
     CollectionHandle(CollectionHandle&&) = default;
     CollectionHandle& operator=(CollectionHandle&&) = default;
 
@@ -463,6 +466,16 @@ C baseCallback = [](const Node& opNode,
     return std::make_unique<O>(opNode, onSession, collection.collection(), operation, context, id);
 };
 
+template <class P, class C, class O>
+C collectionHandleCallback = [](const Node& opNode,
+                    bool onSession,
+                    CollectionHandle collection,
+                    metrics::Operation operation,
+                    PhaseContext& context,
+                    ActorId id) -> std::unique_ptr<P> {
+    return std::make_unique<O>(opNode, onSession, collection, operation, context, id);
+};
+
 // Maps the WriteCommand name to the constructor of the designated Operation struct.
 std::unordered_map<std::string, WriteOpCallback&> bulkWriteConstructors = {
     {"insertOne", baseCallback<WriteOperation, WriteOpCallback, InsertOneOperation>},
@@ -494,13 +507,14 @@ struct BulkWriteOperation : public BaseOperation {
 
     BulkWriteOperation(const Node& opNode,
                        bool onSession,
-                       mongocxx::collection collection,
+                       CollectionHandle collectionHandle,
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
         : BaseOperation(context, opNode),
           _onSession{onSession},
-          _collection{std::move(collection)},
+          _collectionHandle{std::move(collectionHandle)},
+          _collection{_collectionHandle.collection()},
           _operation{operation} {
         auto& writeOpsYaml = opNode["WriteOperations"];
         if (!writeOpsYaml.isSequence()) {
@@ -526,7 +540,7 @@ struct BulkWriteOperation : public BaseOperation {
         auto& yamlCommand = writeOp["OperationCommand"];
         bool onSession = yamlCommand["OnSession"].maybe<bool>().value_or(_onSession);
         _writeOps.push_back(
-            createWriteOp(writeOp, onSession, _collection, _operation, context, id));
+            createWriteOp(writeOp, onSession, _collectionHandle, _operation, context, id));
     }
 
     void run(mongocxx::client_session& session) override {
@@ -556,6 +570,7 @@ struct BulkWriteOperation : public BaseOperation {
 private:
     std::vector<std::unique_ptr<WriteOperation>> _writeOps;
     bool _onSession;
+    CollectionHandle _collectionHandle;
     mongocxx::collection _collection;
     mongocxx::options::bulk_write _options;
     metrics::Operation _operation;
@@ -1049,18 +1064,6 @@ private:
  */
 
 struct WithTransactionOperation : public BaseOperation {
-    static std::unique_ptr<WithTransactionOperation> WithTransactionCallback(
-        const Node& opNode,
-        bool onSession,
-        CollectionHandle collectionHandle,
-        metrics::Operation operation,
-        PhaseContext& context,
-        ActorId id) {
-        return std::make_unique<WithTransactionOperation>(
-            opNode, onSession, std::move(collectionHandle), operation, context, id);
-    }
-
-
     WithTransactionOperation(const Node& opNode,
                              bool onSession,
                              CollectionHandle collectionHandle,
@@ -1219,7 +1222,7 @@ std::unordered_map<std::string, OpCallback&> getOpConstructors() {
     // Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
     std::unordered_map<std::string, OpCallback&> opConstructors = {
         {"aggregate", baseCallback<BaseOperation, OpCallback, AggregateOperation>},
-        {"bulkWrite", baseCallback<BaseOperation, OpCallback, BulkWriteOperation>},
+        {"bulkWrite", collectionHandleCallback<BaseOperation, OpCallback, BulkWriteOperation>},
         {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
         {"estimatedDocumentCount",
          baseCallback<BaseOperation, OpCallback, EstimatedDocumentCountOperation>},
@@ -1232,7 +1235,7 @@ std::unordered_map<std::string, OpCallback&> getOpConstructors() {
         {"insertMany", baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
         {"startTransaction", baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
         {"commitTransaction", baseCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
-        {"withTransaction", baseCallback<BaseOperation, OpCallback, WithTransactionOperation>},
+        {"withTransaction", collectionHandleCallback<BaseOperation, OpCallback, WithTransactionOperation>},
         {"setReadConcern", baseCallback<BaseOperation, OpCallback, SetReadConcernOperation>},
         {"drop", baseCallback<BaseOperation, OpCallback, DropOperation>},
         {"insertOne", baseCallback<BaseOperation, OpCallback, InsertOneOperation>},
@@ -1561,7 +1564,7 @@ struct CrudActor::PhaseConfig {
                                                 ActorId id) const {
         std::string database = node["Database"].maybe<std::string>().value_or(dbName);
         std::string collection = node["Collection"].maybe<std::string>().value_or(name);
-        CollectionHandle collectionHandle(&client, std::move(database), std::move(collection));
+        CollectionHandle collectionHandle(&*client, std::move(database), std::move(collection));
 
         auto& yamlCommand = node["OperationCommand"];
         auto opName = node["OperationName"].to<std::string>();
