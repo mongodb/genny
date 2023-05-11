@@ -136,3 +136,4 @@ AutoRun:
       $eq:
       - standalone-all-feature-flags
       - standalone-telemetry
+      - standalone
