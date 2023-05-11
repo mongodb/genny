@@ -114,12 +114,6 @@ public:
     CollectionHandle(mongocxx::client* client, std::string database, std::string collection)
         : _client(client), _database(std::move(database)), _collection(std::move(collection)) {}
 
-    CollectionHandle(CollectionHandle&) = default;
-    CollectionHandle& operator=(CollectionHandle&) = default;
-
-    CollectionHandle(CollectionHandle&&) = default;
-    CollectionHandle& operator=(CollectionHandle&&) = default;
-
     mongocxx::collection collection() {
         return (*_client)[_database][_collection];
     }
