@@ -109,12 +109,38 @@ struct BaseOperation {
     virtual ~BaseOperation() = default;
 };
 
-using OpCallback = std::function<std::unique_ptr<BaseOperation>(const Node&,
-                                                                bool,
-                                                                mongocxx::collection,
-                                                                metrics::Operation,
-                                                                PhaseContext& context,
-                                                                ActorId id)>;
+class CollectionHandle {
+public:
+    CollectionHandle(mongocxx::client* client, std::string database, std::string collection)
+        : _client(client), _database(std::move(database)), _collection(std::move(collection)) {}
+
+    CollectionHandle(CollectionHandle&&) = default;
+    CollectionHandle& operator=(CollectionHandle&&) = default;
+
+    mongocxx::collection collection() {
+        return (*_client)[_database][_collection];
+    }
+
+    mongocxx::client* client() {
+        return _client;
+    }
+
+    const std::string& databaseName() const {
+        return _database;
+    }
+
+    const std::string& collectionName() const {
+        return _collection;
+    }
+
+private:
+    mongocxx::client* _client;
+    std::string _database;
+    std::string _collection;
+};
+
+using OpCallback = std::function<std::unique_ptr<BaseOperation>(
+    const Node&, bool, CollectionHandle, metrics::Operation, PhaseContext& context, ActorId id)>;
 
 std::unordered_map<std::string, OpCallback&> getOpConstructors();
 
@@ -125,7 +151,7 @@ struct WriteOperation : public BaseOperation {
 };
 
 using WriteOpCallback = std::function<std::unique_ptr<WriteOperation>(
-    const Node&, bool, mongocxx::collection, metrics::Operation, PhaseContext&, ActorId)>;
+    const Node&, bool, CollectionHandle, metrics::Operation, PhaseContext&, ActorId)>;
 
 // Not technically "crud" but it was easy to add and made
 // a few of the tests easier to write (by allowing inserts
@@ -430,11 +456,11 @@ private:
 template <class P, class C, class O>
 C baseCallback = [](const Node& opNode,
                     bool onSession,
-                    mongocxx::collection collection,
+                    CollectionHandle collection,
                     metrics::Operation operation,
                     PhaseContext& context,
                     ActorId id) -> std::unique_ptr<P> {
-    return std::make_unique<O>(opNode, onSession, collection, operation, context, id);
+    return std::make_unique<O>(opNode, onSession, collection.collection(), operation, context, id);
 };
 
 // Maps the WriteCommand name to the constructor of the designated Operation struct.
@@ -1023,16 +1049,27 @@ private:
  */
 
 struct WithTransactionOperation : public BaseOperation {
+    static std::unique_ptr<WithTransactionOperation> WithTransactionCallback(
+        const Node& opNode,
+        bool onSession,
+        CollectionHandle collectionHandle,
+        metrics::Operation operation,
+        PhaseContext& context,
+        ActorId id) {
+        return std::make_unique<WithTransactionOperation>(
+            opNode, onSession, std::move(collectionHandle), operation, context, id);
+    }
+
 
     WithTransactionOperation(const Node& opNode,
                              bool onSession,
-                             mongocxx::collection collection,
+                             CollectionHandle collectionHandle,
                              metrics::Operation operation,
                              PhaseContext& context,
                              ActorId id)
         : BaseOperation(context, opNode),
           _onSession{onSession},
-          _collection{std::move(collection)},
+          _collectionHandle{std::move(collectionHandle)},
           _operation{operation} {
         auto& opsInTxn = opNode["OperationsInTransaction"];
         if (!opsInTxn.isSequence()) {
@@ -1069,6 +1106,14 @@ private:
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "Operation '" + opName + "' not supported inside a 'with_transaction' operation."));
         }
+
+        std::string database =
+            txnOp["Database"].maybe<std::string>().value_or(_collectionHandle.databaseName());
+        std::string collection =
+            txnOp["Collection"].maybe<std::string>().value_or(_collectionHandle.collectionName());
+        CollectionHandle opCollectionHandle(
+            _collectionHandle.client(), std::move(database), std::move(collection));
+
         auto opConstructors = getOpConstructors();
         auto opConstructor = opConstructors.find(opName);
         if (opConstructor == opConstructors.end()) {
@@ -1083,10 +1128,11 @@ private:
         // but doesn't assert the behavior.
         // Be careful when making changes around this code.
         bool onSession = yamlCommand["OnSession"].maybe<bool>().value_or(_onSession);
-        _txnOps.push_back(createOp(yamlCommand, onSession, _collection, _operation, context, id));
+        _txnOps.push_back(createOp(
+            yamlCommand, onSession, std::move(opCollectionHandle), _operation, context, id));
     }
 
-    mongocxx::collection _collection;
+    CollectionHandle _collectionHandle;
     bool _onSession;
     metrics::Operation _operation;
     mongocxx::options::transaction _options;
@@ -1217,8 +1263,8 @@ public:
     Delay(const Node& node, GeneratorArgs args)
         : numberGenerator{makeDoubleGenerator(node["^TimeSpec"]["value"], args)} {
         if (!node["^TimeSpec"]["unit"]) {
-            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                "Each TimeSpec needs a unit declaration."));
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("Each TimeSpec needs a unit declaration."));
         }
         auto unitString = node["^TimeSpec"]["unit"].to<std::string>();
 
@@ -1513,7 +1559,10 @@ struct CrudActor::PhaseConfig {
                                                 const std::string& name,
                                                 PhaseContext& phaseContext,
                                                 ActorId id) const {
-        auto collection = (*client)[dbName][name];
+        std::string database = node["Database"].maybe<std::string>().value_or(dbName);
+        std::string collection = node["Collection"].maybe<std::string>().value_or(name);
+        CollectionHandle collectionHandle(&client, std::move(database), std::move(collection));
+
         auto& yamlCommand = node["OperationCommand"];
         auto opName = node["OperationName"].to<std::string>();
         auto opMetricsName = node["OperationMetricsName"].maybe<std::string>().value_or(opName);
@@ -1547,7 +1596,7 @@ struct CrudActor::PhaseConfig {
 
             return opCreator(yamlCommand,
                              onSession,
-                             collection,
+                             std::move(collectionHandle),
                              phaseContext.actor().operation(stm.str(), id),
                              phaseContext,
                              id);
@@ -1555,7 +1604,7 @@ struct CrudActor::PhaseConfig {
 
         return opCreator(yamlCommand,
                          onSession,
-                         collection,
+                         std::move(collectionHandle),
                          perPhaseMetrics ? phaseContext.operation(opMetricsName, id)
                                          : phaseContext.actor().operation(opMetricsName, id),
                          phaseContext,

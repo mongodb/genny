@@ -46,6 +46,40 @@ Actors:
             # because OnSession is also present on withTransaction
             OnSession: true
   - Repeat: 1
-    Collection: test
-    Operation:
-      OperationName: drop
+    Collection: test1
+    Operations:
+    - OperationName: withTransaction
+      OperationCommand:
+        OnSession: true
+        ThrowOnFailure: false
+        RecordFailure: true
+        Options:
+          MaxCommitTime: 500 milliseconds
+        OperationsInTransaction:
+          - OperationName: insertOne
+            Collection: test2
+            OperationCommand:
+              Document: {overrideCollection: 1}
+          - OperationName: insertOne
+            Database: testdb2
+            OperationCommand:
+              Document: {overrideDatabase: 1}
+          - OperationName: insertOne
+            Database: testdb2
+            Collection: test2
+            OperationCommand:
+              Document: {overrideDatabase: 1, overrideCollection: 1}
+          - OperationName: insertOne
+            OperationCommand:
+              Document: {}
+    #- Repeat: 1
+    #Collection: test
+    #Operations:
+      #- OperationName: drop
+        #Collection: test2
+      #- OperationName: drop
+        #Database: testdb2
+      #- OperationName: drop
+        #Database: testdb2
+        #Collection: test2
+      #- OperationName: drop
