@@ -22,6 +22,7 @@ GlobalDefaults:
   index: &index
     keys: {numeric: 1}
   nop: &Nop {Nop: true}
+  maxPhases: &maxPhases 21
 
 Actors:
 - Name: CreateTimeSeriesCollection
@@ -128,28 +129,11 @@ Actors:
   Threads: 1
   Database: *db
   Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [2, 5, 8, 12, 15, 20]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Repeat: 1
 
 - Name: InsertData
   Type: Loader
