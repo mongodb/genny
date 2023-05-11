@@ -468,11 +468,11 @@ C baseCallback = [](const Node& opNode,
 
 template <class P, class C, class O>
 C collectionHandleCallback = [](const Node& opNode,
-                    bool onSession,
-                    CollectionHandle collection,
-                    metrics::Operation operation,
-                    PhaseContext& context,
-                    ActorId id) -> std::unique_ptr<P> {
+                                bool onSession,
+                                CollectionHandle collection,
+                                metrics::Operation operation,
+                                PhaseContext& context,
+                                ActorId id) -> std::unique_ptr<P> {
     return std::make_unique<O>(opNode, onSession, collection, operation, context, id);
 };
 
@@ -1235,7 +1235,8 @@ std::unordered_map<std::string, OpCallback&> getOpConstructors() {
         {"insertMany", baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
         {"startTransaction", baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
         {"commitTransaction", baseCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
-        {"withTransaction", collectionHandleCallback<BaseOperation, OpCallback, WithTransactionOperation>},
+        {"withTransaction",
+         collectionHandleCallback<BaseOperation, OpCallback, WithTransactionOperation>},
         {"setReadConcern", baseCallback<BaseOperation, OpCallback, SetReadConcernOperation>},
         {"drop", baseCallback<BaseOperation, OpCallback, DropOperation>},
         {"insertOne", baseCallback<BaseOperation, OpCallback, InsertOneOperation>},
