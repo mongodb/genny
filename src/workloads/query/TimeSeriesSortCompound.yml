@@ -88,8 +88,7 @@ Actors:
           {$skip: 1e10},
         ]
         cursor: {}
-        allowDiskUse: true
-
+        hint: {m: 1, t: 1}
   - *Nop
 
 AutoRun:
