@@ -82,6 +82,10 @@ Actors:
       shardKey: *shardKey
       counter: 0
       padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 # Guard against timeout for no output.
 - Name: LoggingActor
@@ -94,78 +98,6 @@ Actors:
       PhaseConfig:
         LogEvery: 15 minutes
         Blocking: None
-
-- Name: ShardedCollectionUpdate
-  Type: CrudActor
-  Threads: 16
-  Database: *Database0
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhase
-      PhaseConfig:
-        MetricsName: ShardedCollectionUpdate
-        Duration: 1 minute
-        Collection: Collection0
-        ThrowOnFailure: false  # Transactions are allowed to fail.
-        RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
-        Operations:
-        - OperationName: withTransaction
-          OperationCommand:
-            Options:
-              WriteConcern:
-                Level: majority
-                Journal: true
-              ReadConcern:
-                Level: snapshot
-              ReadPreference:
-                ReadMode: primaryPreferred
-                MaxStaleness: 1000 seconds
-            OperationsInTransaction:
-            - OperationName: updateOne
-              OperationCommand:
-                Filter: {shardKey: *shardKey}
-                Update: {$inc: {counter: 1}}
-            - OperationName: updateOne
-              OperationCommand:
-                Filter: {shardKey: *shardKey}
-                Update: {$inc: {counter: 1}}
-            - OperationName: updateOne
-              OperationCommand:
-                Filter: {shardKey: *shardKey}
-                Update: {$inc: {counter: 1}}
-            - OperationName: updateOne
-              OperationCommand:
-                Filter: {shardKey: *shardKey}
-                Update: {$inc: {counter: 1}}
-            - OperationName: updateOne
-              OperationCommand:
-                Filter: {shardKey: *shardKey}
-                Update: {$inc: {counter: 1}}
-            - OperationName: updateOne
-              OperationCommand:
-                Filter: {shardKey: *shardKey}
-                Update: {$inc: {counter: 1}}
-            - OperationName: updateOne
-              OperationCommand:
-                Filter: {shardKey: *shardKey}
-                Update: {$inc: {counter: 1}}
-            - OperationName: updateOne
-              OperationCommand:
-                Filter: {shardKey: *shardKey}
-                Update: {$inc: {counter: 1}}
-            - OperationName: updateOne
-              OperationCommand:
-                Filter: {shardKey: *shardKey}
-                Update: {$inc: {counter: 1}}
-            - OperationName: updateOne
-              OperationCommand:
-                Filter: {shardKey: *shardKey}
-                Update: {$inc: {counter: 1}}
-            - OperationName: updateOne
-              OperationCommand:
-                Filter: {shardKey: *shardKey}
-                Update: {$inc: {counter: 1}}
 
 - Name: Transactions
   Type: CrudActor
@@ -183,15 +115,6 @@ Actors:
       Operations:
       - OperationName: withTransaction
         OperationCommand:
-          Options:
-            WriteConcern:
-              Level: majority
-              Journal: true
-            ReadConcern:
-              Level: snapshot
-            ReadPreference:
-              ReadMode: primaryPreferred
-              MaxStaleness: 1000 seconds
           OperationsInTransaction:
           - OperationName: updateOne
             OperationCommand:
@@ -245,15 +168,6 @@ Actors:
       Operations:
       - OperationName: withTransaction
         OperationCommand:
-          Options:
-            WriteConcern:
-              Level: majority
-              Journal: true
-            ReadConcern:
-              Level: snapshot
-            ReadPreference:
-              ReadMode: primaryPreferred
-              MaxStaleness: 1000 seconds
           OperationsInTransaction:
           - OperationName: updateOne
             Collection: Collection0
@@ -318,15 +232,6 @@ Actors:
       Operations:
       - OperationName: withTransaction
         OperationCommand:
-          Options:
-            WriteConcern:
-              Level: majority
-              Journal: true
-            ReadConcern:
-              Level: snapshot
-            ReadPreference:
-              ReadMode: primaryPreferred
-              MaxStaleness: 1000 seconds
           OperationsInTransaction:
           - OperationName: updateOne
             Database: *Database0
@@ -391,15 +296,6 @@ Actors:
       Operations:
       - OperationName: withTransaction
         OperationCommand:
-          Options:
-            WriteConcern:
-              Level: majority
-              Journal: true
-            ReadConcern:
-              Level: snapshot
-            ReadPreference:
-              ReadMode: primaryPreferred
-              MaxStaleness: 1000 seconds
           OperationsInTransaction:
           - OperationName: updateOne
             Database: *Database0
