@@ -865,7 +865,7 @@ Tests:
             Filter: { a: 1 }
             Options:
               AwaitData: true
-    Error: | 
+    Error: |
       .*Cannot set 'awaitData' to true without also setting 'tailable' to true.*
 
   - Description: Test that an error is thrown when an invalid projection is specified in 'findOne'.
@@ -1018,3 +1018,45 @@ Tests:
             AwaitData: true
     Error: |
       .*Cannot set 'awaitData' to true without also setting 'tailable' to true.*
+
+  - Description: Test that overriding database and collection in operation description works.
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+        Collection: test2
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+        Database: testdb2
+        Collection: testOtherDb
+    ExpectedCollectionsExist:
+      test: false
+      test2: true
+      testOtherDb: false
+
+  - Description: Test that overriding database and collection inside WithTransaction works.
+    Operations:
+      - OperationName: withTransaction
+        Collection: test1
+        OperationCommand:
+          OperationsInTransaction:
+          - OperationName: insertOne
+            OperationCommand:
+              Document: { a: 1 }
+            Collection: test2
+          - OperationName: insertOne
+            OperationCommand:
+              Document: { a: 1 }
+            Collection: test3
+          - OperationName: insertOne
+            OperationCommand:
+              Document: { a: 1 }
+            Database: testdb2
+            Collection: testOtherDb
+    ExpectedCollectionsExist:
+      test: false
+      test1: false
+      test2: true
+      test3: true
+      testOtherDb: false

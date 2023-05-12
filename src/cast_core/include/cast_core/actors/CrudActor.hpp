@@ -39,8 +39,6 @@ namespace genny::actor {
  * Actors:
  * - Name: BulkWriteInTransaction
  *   Type: CrudActor
- *   Database:
- *   Type: CrudActor
  *   Database: testdb
  *   Phases:
  *   - Repeat: 1
