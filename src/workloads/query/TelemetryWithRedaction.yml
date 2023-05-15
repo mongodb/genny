@@ -64,6 +64,8 @@ Actors:
         Operations:
         - OperationName: AdminCommand
           OperationCommand:
+            # Configuring the telemetry store size to an arbitrary value which seems reasonable.
+            # This ensures that if run on different sized machines, the test will remain the same.
             setParameter: 1
             internalQueryConfigureTelemetryCacheSize: 250MB
 
