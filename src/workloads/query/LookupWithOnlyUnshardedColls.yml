@@ -43,19 +43,19 @@ Actors:
   - *Nop
 
 - Name: RunLookups
-  Type: CrudActor
+  Type: RunCommand
   Database: *Database
   Phases:
   - *Nop
   - *Nop
   - Repeat: 10
     Database: *Database
-    Collection: Collection0
     Operations:
     - OperationMetricsName: LookupWithCachedPrefixUnshardedToUnsharded
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline:
+        aggregate: Collection0
+        pipeline:
           [{
             $lookup: {
               from: Collection1,
@@ -70,9 +70,10 @@ Actors:
            {$project: {str: 0, "joined.str": 0}}]
         cursor: {batchSize: *NumDocs}
     - OperationMetricsName: LookupOneToFewUnshardedToUnsharded
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline:
+        aggregate: Collection0
+        pipeline:
           [
             {$match: {int: {$lte: 4}}},
             {$lookup: {
@@ -85,9 +86,10 @@ Actors:
           ]
         cursor: {batchSize: *NumDocs}
     - OperationMetricsName: LookupOneToManyUnshardedToUnsharded
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline:
+        aggregate: Collection0
+        pipeline:
           [
             {$match: {int: {$lte: 4}}},
             {$lookup: {

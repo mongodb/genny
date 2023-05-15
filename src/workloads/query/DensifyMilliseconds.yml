@@ -94,19 +94,19 @@ Actors:
   - *Nop
 
 - Name: DensifyMilliseconds
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
   - *Nop
   - Repeat: 10
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: FullSmallStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -118,9 +118,10 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: FullLargeStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -132,9 +133,10 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: FullByPartitionSmallStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -147,9 +149,10 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: FullByPartitionLargeStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -162,9 +165,10 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: PartitionedByPartitionSmallStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -177,9 +181,10 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: PartitionedByPartitionLargeStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -192,9 +197,10 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExplicitRangeSmallStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -206,9 +212,10 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExplicitRangeLargeStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -220,9 +227,10 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExplicitRangeByPartitionSmallStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -235,9 +243,10 @@ Actors:
         }]
         cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExplicitRangeByPartitionLargeStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],

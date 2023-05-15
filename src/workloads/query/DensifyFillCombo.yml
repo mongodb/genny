@@ -140,7 +140,7 @@ Actors:
   - *Nop
 
 - Name: DensifyTimestampFillWithoutPartition
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -151,12 +151,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: TestDensifyTimestampFillWithoutPartition
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [
+        aggregate: Collection0
+        pipeline: [
           $densify: {
             field: *field,
             range: {
@@ -183,7 +183,7 @@ Actors:
   - *Nop
 
 - Name: DensifyTimestampFillWithPartition
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -196,12 +196,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: TestDensifyTimestampFillWithPartition
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [
+        aggregate: Collection0
+        pipeline: [
           $densify: {
             field: *field,
             range: {
@@ -228,7 +228,7 @@ Actors:
   - *Nop
 
 - Name: DensifyNumericFillWithPartition
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -243,12 +243,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: TestDensifyNumericFillWithPartition
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [
+        aggregate: Collection0
+        pipeline: [
           $densify: {
             field: "numeric",
             range: {
@@ -272,7 +272,7 @@ Actors:
   - *Nop
 
 - Name: DensifyNumericLinearFillNumeric
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -289,12 +289,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: TestDensifyNumericLinearFillNumeric
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [
+        aggregate: Collection0
+        pipeline: [
           $densify: {
             field: "numeric",
             range: {
@@ -317,7 +317,7 @@ Actors:
   - *Nop
 
 - Name: DensifyTimestampFillArbitraryValue
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -336,12 +336,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: TestDensifyNumericFillArbitraryValue
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [
+        aggregate: Collection0
+        pipeline: [
           $densify: {
             field: "numeric",
             range: {
