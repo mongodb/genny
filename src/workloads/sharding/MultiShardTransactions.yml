@@ -129,7 +129,7 @@ Actors:
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             OperationCommand:
-              Filter: *RandomIdFilterNNNNNNNNNNNNNN
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             OperationCommand:
