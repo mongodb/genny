@@ -15,8 +15,6 @@ GlobalDefaults:
   NumChunks: &NumChunks 240
 
   ShardKeyValueMin: &ShardKeyValueMin 1
-  # We use 100x the number of chunks so that the $sample aggregation to choose the new split points
-  # has a wide range of distinct values to choose from. It could be even larger.
   ShardKeyValueMax: &ShardKeyValueMax 24_000
   MaxPhase: &MaxPhase 6
 
@@ -57,11 +55,39 @@ Actors:
             movePrimary: *Database1
             to: rs1
 
+- Name: CreateNonShardedIndex
+  Type: RunCommand
+  Phases:
+  - Repeat: 1
+    Database: *Database0
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection1
+        indexes:
+        - key: {shardKey: 1}
+          name: shardKey_1
+  - Repeat: 1
+    Database: *Database1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection1
+        indexes:
+        - key: {shardKey: 1}
+          name: shardKey_1
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+
 - Name: LoadInitialData
   Type: Loader
   Threads: 16
   Phases:
-  - &Nop {Nop: true}
+  - *Nop
   - Repeat: 1
     BatchSize: 1000
     DocumentCount: *DocumentCount
