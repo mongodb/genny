@@ -6,7 +6,6 @@ GlobalDefaults:
   Database0: &Database0 databaseForMultiShardTestingIndex0
   Database1: &Database1 databaseForMultiShardTestingIndex1
 
-
   # Note that the exact document size may exceed ApproxDocumentSize because of field names and other
   # fields in the document.
   ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
@@ -14,8 +13,6 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 100_000
   NumChunks: &NumChunks 240
 
-  ShardKeyValueMin: &ShardKeyValueMin 1
-  ShardKeyValueMax: &ShardKeyValueMax 24_000
   MaxPhase: &MaxPhase 6
 
 Actors:
@@ -39,12 +36,12 @@ Actors:
         - OperationName: AdminCommand
           OperationCommand:
             shardCollection: databaseForMultiShardTestingIndex0.Collection0
-            key: {shardKey: hashed}
+            key: {_id: hashed}
             numInitialChunks: *NumChunks
         - OperationName: AdminCommand
           OperationCommand:
             shardCollection: databaseForMultiShardTestingIndex1.Collection0
-            key: {shardKey: hashed}
+            key: {_id: hashed}
             numInitialChunks: *NumChunks
         - OperationName: AdminCommand
           OperationCommand:
@@ -55,75 +52,31 @@ Actors:
             movePrimary: *Database1
             to: rs1
 
-- Name: CreateNonShardedIndex
-  Type: RunCommand
-  Phases:
-  - Repeat: 1
-    Database: *Database0
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        createIndexes: Collection1
-        indexes:
-        - key: {shardKey: 1}
-          name: shardKey_1
-  - Repeat: 1
-    Database: *Database1
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        createIndexes: Collection1
-        indexes:
-        - key: {shardKey: 1}
-          name: shardKey_1
-  - &Nop {Nop: true}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-
 - Name: LoadInitialData
-  Type: Loader
-  Threads: 16
+  Type: MonotonicLoader
+  Threads: 4
   Phases:
-  - *Nop
+  - &Nop {Nop: true}
   - Repeat: 1
+    Threads: 4
     BatchSize: 1000
     DocumentCount: *DocumentCount
-    MultipleThreadsPerCollection: true
     CollectionCount: 2
     Database: *Database0
-    Document:
-      shardKey: &shardKey {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+    Document: &Document
       counter: 0
       padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
   - Repeat: 1
+    Threads: 4
     BatchSize: 1000
     DocumentCount: *DocumentCount
-    MultipleThreadsPerCollection: true
     CollectionCount: 2
     Database: *Database1
-    Document:
-      shardKey: *shardKey
-      counter: 0
-      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
+    Document: *Document
   - *Nop
   - *Nop
   - *Nop
   - *Nop
-
-# Guard against timeout for no output.
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1, 2]
-      NopInPhasesUpTo: *MaxPhase
-      PhaseConfig:
-        LogEvery: 15 minutes
-        Blocking: None
 
 - Name: Transactions
   Type: CrudActor
@@ -144,47 +97,47 @@ Actors:
           OperationsInTransaction:
           - OperationName: updateOne
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: &RandomIdFilter {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilterNNNNNNNNNNNNNN
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
     - MetricsName: ShardedAndNonShardedCollectionsUpdate
       Duration: 1 minute
@@ -198,57 +151,57 @@ Actors:
           - OperationName: updateOne
             Collection: Collection0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Collection: Collection0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Collection: Collection0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Collection: Collection0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Collection: Collection0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Collection: Collection0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Collection: Collection1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Collection: Collection1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Collection: Collection1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Collection: Collection1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Collection: Collection1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
     - MetricsName: DifferentDatabasesNonShardedCollectionsUpdate
       Duration: 1 minute
@@ -262,57 +215,57 @@ Actors:
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
     - MetricsName: DifferentDatabasesShardedCollectionsUpdate
       Duration: 1 minute
@@ -326,57 +279,57 @@ Actors:
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database1
             OperationCommand:
-              Filter: {shardKey: *shardKey}
+              Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
 
 AutoRun:
