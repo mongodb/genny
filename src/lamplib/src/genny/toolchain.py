@@ -100,7 +100,8 @@ def _compute_toolchain_info(
     ignore_toolchain_version: bool,
 ) -> ToolchainInfo:
     triplet_arch = "x64"
-    if linux_distro == "amazon2_arm64":
+    if len(linux_distro) > 6 and linux_distro[-6:] == "_arm64":
+        # assumes all arm64 linux distros have this suffix, e.g. 'ubuntu2204_arm64'
         triplet_arch = "arm64"
     if os_family == "Darwin":
         triplet_arch = "arm64" if platform.processor() == "arm" else "x64"
