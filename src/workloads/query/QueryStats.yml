@@ -36,10 +36,11 @@ ActorTemplates:
           SleepBefore: 5 seconds
           Database: admin
           Operations:
-          - OperationMetricsName: QueryStatsWithRedactionMetrics
+          - OperationMetricsName: QueryStatsWithHMACMetrics
             OperationName: AdminCommand
             OperationCommand:
               aggregate: 1
+              # TODO SERVER-77179: Update $queryStats parameters.
               pipeline: [
                 {
                   $queryStats: {
