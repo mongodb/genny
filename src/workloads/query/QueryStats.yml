@@ -1,10 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests performance of $telemetry with and without redaction.
+  This workload tests performance of $queryStats with and without applying HMAC.
 
 KeyWords:
-- telemetry
+- queryStats
 - redaction
 
 Clients:
@@ -22,9 +22,9 @@ GlobalDefaults:
   binDataGen: &binDataGen {^BinData: {numBytes: 32}}
 
 ActorTemplates:
-- TemplateName: TelemetryAggregation
+- TemplateName: QueryStatsAggregation
   Config:
-    Name: {^Parameter: {Name: "Name", Default: "TelemetryAggregation"}}
+    Name: {^Parameter: {Name: "Name", Default: "QueryStatsAggregation"}}
     Type: AdminCommand
     Threads: 32
     Phases:
@@ -36,13 +36,14 @@ ActorTemplates:
           SleepBefore: 5 seconds
           Database: admin
           Operations:
-          - OperationMetricsName: TelemetryWithRedactionMetrics
+          - OperationMetricsName: QueryStatsMetrics
             OperationName: AdminCommand
             OperationCommand:
               aggregate: 1
+              # TODO SERVER-77179: Update $queryStats parameters.
               pipeline: [
                 {
-                  $telemetry: {
+                  $queryStats: {
                     applyHmacToIdentifiers: {^Parameter: {Name: "applyHmacToIdentifiers", Default: false}},
                     hmacKey: *binDataGen
                   }
@@ -64,10 +65,10 @@ Actors:
         Operations:
         - OperationName: AdminCommand
           OperationCommand:
-            # Configuring the telemetry store size to an arbitrary value which seems reasonable.
+            # Configuring the queryStats store size to an arbitrary value which seems reasonable.
             # This ensures that if run on different sized machines, the test will remain the same.
             setParameter: 1
-            internalQueryConfigureTelemetryCacheSize: 250MB
+            internalQueryStatsCacheSize: 250MB
 
 - Name: ClearCollection
   Type: CrudActor
@@ -153,7 +154,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: FindConcurrentlyWithTelemetryWithRedaction
+- Name: FindConcurrentlyWithQueryStatsWithHMAC
   Type: CrudActor
   Threads: 32
   Database: *Database
@@ -177,11 +178,11 @@ Actors:
                 }}]
               }
 
-# Telemetry with redaction.
+# QueryStats with HMAC.
 - ActorFromTemplate:
-    TemplateName: TelemetryAggregation
+    TemplateName: QueryStatsAggregation
     TemplateParameters:
-      Name: "TelemetryAggregationWithRedaction"
+      Name: "QueryStatsAggregationWithHMAC"
       applyHmacToIdentifiers: true
       OnlyActiveInPhase: 6
 
@@ -196,7 +197,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: FindConcurrentlyWithTelemetryWithoutRedaction
+- Name: FindConcurrentlyWithQueryStatsWithoutHMAC
   Type: CrudActor
   Threads: 32
   Database: *Database
@@ -220,11 +221,11 @@ Actors:
                 }}]
               }
 
-# Telemetry without redaction.
+# QueryStats without HMAC.
 - ActorFromTemplate:
-    TemplateName: TelemetryAggregation
+    TemplateName: QueryStatsAggregation
     TemplateParameters:
-      Name: "TelemetryAggregationWithoutRedaction"
+      Name: "QueryStatsAggregationWithoutHMAC"
       applyHmacToIdentifiers: false
       OnlyActiveInPhase: 8
 
