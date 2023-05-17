@@ -153,7 +153,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: FindConcurrentlyWithQueryStatsWithRedaction
+- Name: FindConcurrentlyWithQueryStatsWithHMAC
   Type: CrudActor
   Threads: 32
   Database: *Database
@@ -177,11 +177,11 @@ Actors:
                 }}]
               }
 
-# QueryStats with redaction.
+# QueryStats with HMAC.
 - ActorFromTemplate:
     TemplateName: QueryStatsAggregation
     TemplateParameters:
-      Name: "QueryStatsAggregationWithRedaction"
+      Name: "QueryStatsAggregationWithHMAC"
       applyHmacToIdentifiers: true
       OnlyActiveInPhase: 6
 
@@ -196,7 +196,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: FindConcurrentlyWithQueryStatsWithoutRedaction
+- Name: FindConcurrentlyWithQueryStatsWithoutHMAC
   Type: CrudActor
   Threads: 32
   Database: *Database
@@ -220,11 +220,11 @@ Actors:
                 }}]
               }
 
-# QueryStats without redaction.
+# QueryStats without HMAC.
 - ActorFromTemplate:
     TemplateName: QueryStatsAggregation
     TemplateParameters:
-      Name: "QueryStatsAggregationWithoutRedaction"
+      Name: "QueryStatsAggregationWithoutHMAC"
       applyHmacToIdentifiers: false
       OnlyActiveInPhase: 8
 
