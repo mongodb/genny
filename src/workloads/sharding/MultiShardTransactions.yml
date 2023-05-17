@@ -135,10 +135,6 @@ Actors:
             OperationCommand:
               Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
     - MetricsName: ShardedAndNonShardedCollectionsUpdate
       Duration: 1 minute
       ThrowOnFailure: false  # Transactions are allowed to fail.
@@ -148,11 +144,6 @@ Actors:
       - OperationName: withTransaction
         OperationCommand:
           OperationsInTransaction:
-          - OperationName: updateOne
-            Collection: Collection0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Collection: Collection0
             OperationCommand:
@@ -238,11 +229,6 @@ Actors:
               Filter: *RandomIdFilter
               Update: {$inc: {counter: 1}}
           - OperationName: updateOne
-            Database: *Database0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
             Database: *Database1
             OperationCommand:
               Filter: *RandomIdFilter
@@ -276,11 +262,6 @@ Actors:
       - OperationName: withTransaction
         OperationCommand:
           OperationsInTransaction:
-          - OperationName: updateOne
-            Database: *Database0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
           - OperationName: updateOne
             Database: *Database0
             OperationCommand:
