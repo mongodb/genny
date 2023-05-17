@@ -24,6 +24,7 @@ CANNED_ARTIFACTS = {
     "rhel70": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-rhel70-6.0.0.tgz",
     "rhel8": "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/compile_artifacts/mongodb-linux-x86_64-rhel80-6.0.0.tgz",
     "ubuntu2204_arm64": "https://fastdl.mongodb.org/linux/mongodb-linux-aarch64-ubuntu2204-6.0.4.tgz",
+    "ubuntu2204": "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-6.0.4.tgz",
 }
 
 # We rely on catch2 to report test failures, but it doesn't always do so.
