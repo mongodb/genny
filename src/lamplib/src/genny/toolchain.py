@@ -100,7 +100,8 @@ def _compute_toolchain_info(
     ignore_toolchain_version: bool,
 ) -> ToolchainInfo:
     triplet_arch = "x64"
-    if linux_distro == "amazon2_arm64":
+    if len(linux_distro) > 6 and linux_distro[-6:] == "_arm64":
+        # assumes all arm64 linux distros have this suffix, e.g. 'ubuntu2204_arm64'
         triplet_arch = "arm64"
     if os_family == "Darwin":
         triplet_arch = "arm64" if platform.processor() == "arm" else "x64"
@@ -197,8 +198,8 @@ class ToolchainDownloader(Downloader):
     # =>                                                                         patch_87457e6fec1d98f270c84d915f83bec53554ecee_6451d23fc9ec4441c9ce233d_23_05_03_03_17_20
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
-    
-    TOOLCHAIN_BUILD_ID = "ae2e01a2da9996a364cf01ecafd90c1f4d893829_23_02_06_21_45_41"
+
+    TOOLCHAIN_BUILD_ID = "77d7b8df6042f53ef392097cde191b2bfef252cc_23_05_05_02_21_38"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
 
     def __init__(

@@ -70,7 +70,7 @@ Actors:
   - *Nop
 
 - Name: PointQueries
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -78,12 +78,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: PointQuery
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $match: {
             numeric: {^RandomInt: {min: 0, max: 259200}}
           }

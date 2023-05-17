@@ -110,7 +110,7 @@ Actors:
   - *Nop
 
 - Name: DensifyFullSmallStep
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -119,12 +119,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: FullSmallStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -148,7 +148,7 @@ Actors:
   - *Nop
 
 - Name: DensifyFullLargeStep
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -159,12 +159,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: FullLargeStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -186,7 +186,7 @@ Actors:
   - *Nop
 
 - Name: DensifyExplicitRangeSmallStep
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -199,12 +199,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: ExplicitRangeSmallStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -224,7 +224,7 @@ Actors:
   - *Nop
 
 - Name: DensifyExplicitRangeLargeStep
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -239,12 +239,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: ExplicitRangeLargeStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -262,7 +262,7 @@ Actors:
   - *Nop
 
 - Name: DensifyExplicitRangeByPartitionSmallStep
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -279,12 +279,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: ExplicitRangeByPartitionSmallStep
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -301,7 +301,7 @@ Actors:
   - *Nop
 
 - Name: DensifyExplicitRangeByPartitionLargeStep
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -320,12 +320,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: DensifyTimestamp
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -339,7 +339,7 @@ Actors:
   - *Nop
 
 - Name: DensifyTimestamp
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -360,12 +360,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: DensifyTimestamp
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [{
+        aggregate: Collection0
+        pipeline: [{
           $densify: {
             field: "timestamp",
             range: {

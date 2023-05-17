@@ -26,6 +26,7 @@
 #include <boost/log/expressions.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
+#include <boost/stacktrace.hpp>
 
 #include <yaml-cpp/yaml.h>
 
@@ -65,10 +66,13 @@ void runActor(Actor&& actor,
         actor->run();
     } catch (const boost::exception& x) {
         BOOST_LOG_TRIVIAL(error) << "Unexpected boost::exception: "
-                                 << boost::diagnostic_information(x, true);
+                                 << boost::diagnostic_information(x, true)
+                                 << boost::stacktrace::stacktrace();
         outcomeCode = driver::DefaultDriver::OutcomeCode::kBoostException;
     } catch (const std::exception& x) {
-        BOOST_LOG_TRIVIAL(error) << "Unexpected std::exception: " << x.what();
+        BOOST_LOG_TRIVIAL(error) << "Unexpected std::exception: " << x.what() << std::endl
+                                 << boost::diagnostic_information(x, true)
+                                 << boost::stacktrace::stacktrace();
         outcomeCode = driver::DefaultDriver::OutcomeCode::kStandardException;
     } catch (...) {
         BOOST_LOG_TRIVIAL(error) << "Unknown error";
@@ -281,9 +285,12 @@ DefaultDriver::OutcomeCode DefaultDriver::run(const DefaultDriver::ProgramOption
         return doRunLogic(options);
     } catch (const boost::exception& x) {
         BOOST_LOG_TRIVIAL(error) << "Caught boost::exception "
-                                 << boost::diagnostic_information(x, true);
+                                 << boost::diagnostic_information(x, true)
+                                 << boost::stacktrace::stacktrace();
     } catch (const std::exception& x) {
-        BOOST_LOG_TRIVIAL(error) << "Caught std::exception " << x.what();
+        BOOST_LOG_TRIVIAL(error) << "Caught std::exception " << x.what() << std::endl
+                                 << boost::diagnostic_information(x, true)
+                                 << boost::stacktrace::stacktrace();;
     }
     return DefaultDriver::OutcomeCode::kInternalException;
 }
