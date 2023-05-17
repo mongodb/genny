@@ -11,7 +11,6 @@ GlobalDefaults:
   ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
   ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
   DocumentCount: &DocumentCount 100_000
-  NumChunks: &NumChunks 240
 
   MaxPhase: &MaxPhase 6
 
@@ -37,12 +36,10 @@ Actors:
           OperationCommand:
             shardCollection: databaseForMultiShardTestingIndex0.Collection0
             key: {_id: hashed}
-            numInitialChunks: *NumChunks
         - OperationName: AdminCommand
           OperationCommand:
             shardCollection: databaseForMultiShardTestingIndex1.Collection0
             key: {_id: hashed}
-            numInitialChunks: *NumChunks
         - OperationName: AdminCommand
           OperationCommand:
             movePrimary: *Database0
