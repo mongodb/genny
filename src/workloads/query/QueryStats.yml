@@ -36,7 +36,7 @@ ActorTemplates:
           SleepBefore: 5 seconds
           Database: admin
           Operations:
-          - OperationMetricsName: QueryStatsWithHMACMetrics
+          - OperationMetricsName: QueryStatsMetrics
             OperationName: AdminCommand
             OperationCommand:
               aggregate: 1
