@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests performance of $queryStats with and without redaction.
+  This workload tests performance of $queryStats with and without applying HMAC.
 
 KeyWords:
 - queryStats
