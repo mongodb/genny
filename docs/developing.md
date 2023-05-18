@@ -77,11 +77,6 @@ The Actor tests use resmoke to set up a real MongoDB cluster and execute
 the test binary. The resmoke yaml config files that define the different
 cluster configurations are defined in `src/resmokeconfig`.
 
-```sh
-# Example:
-./run-genny resmoke-test --suites src/resmokeconfig/genny_sharded.yml
-```
-
 Each yaml configuration file will only run tests that are associated
 with their specific tags. (Eg. `genny_sharded.yml` will only run
 tests that have been tagged with the `[sharded]` tag.)
@@ -89,6 +84,48 @@ tests that have been tagged with the `[sharded]` tag.)
 When creating a new Actor, `./run-genny create-new-actor` will generate a new test case
 template to ensure the new Actor can run against different MongoDB topologies,
 please update the template as needed so it uses the newly-created Actor.
+
+Currently, the code to implement resmoke-test assumes that it will be run by
+Evergreen. Therefore, to run resmoke-test locally, some modifications must be made.
+The commands to make these modifications on MacOS and on Linux are detailed below.
+
+These commands assume that `git status` last output line is
+`nothing to commit, working tree clean`, and that the current working directory is
+`genny/` i.e. the root of the repo.
+
+#### MacOS:
+1. `mkdir -p data/db && sed -i '' '/mongos,/s/mongos,/mongos, "--dbpathPrefix", "data\/db"/' src/lamplib/src/genny/tasks/run_tests.py`
+2. `sed -i '' '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/{YML file you want to use}`
+```sh
+# Example:
+sed -i '' '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/genny_sharded.yml
+```
+3. If using genny_create_new_actor.yml: `./run-genny create-new-actor HelloWorldActor && sed -i '' '/REQUIRE(count == 101./s/101/100/' ./src/cast_core/test/HelloWorldActor_test.cpp`
+4. `./run-genny install -d not-linux`
+5. `./run-genny cmake-test` (Ignore the failed tests related to date & time, they're known to be flaky on MacOS ([EVG-19776](https://jira.mongodb.org/browse/EVG-19776)))
+6. `./run-genny resmoke-test --suites {full path to YML file}`
+```sh
+# Example:
+./run-genny resmoke-test --suites /Users/foo.bar/genny/src/resmokeconfig/genny_sharded.yml
+```
+7. Cleanup: `git restore . && git clean -fd` (you can do `git clean -fdn` to preview what will be cleaned)
+
+#### Linux:
+1. `mkdir -p data/db && sed -i '/mongos,/s/mongos,/mongos, "--dbpathPrefix", "data\/db"/' src/lamplib/src/genny/tasks/run_tests.py`
+2. `sed -i '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/{YML file you want to use}`
+```sh
+# Example:
+sed -i '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/genny_sharded.yml
+```
+3. If using genny_create_new_actor.yml: `./run-genny create-new-actor HelloWorldActor && sed -i '/REQUIRE(count == 101./s/101/100/' ./src/cast_core/test/HelloWorldActor_test.cpp `
+4. `./run-genny install -d {your distro}`
+5. `./run-genny cmake-test`
+6. `./run-genny resmoke-test --suites {full path to YML file}`
+```sh
+# Example:
+./run-genny resmoke-test --suites /home/ubuntu/genny/src/resmokeconfig/genny_sharded.yml
+```
+7. Cleanup: `git restore . && git clean -fd` (you can do `git clean -fdn` to preview what will be cleaned)
 
 
 ## Patch-Testing and Evergreen
