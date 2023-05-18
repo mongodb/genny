@@ -79,12 +79,12 @@ cluster configurations are defined in `src/resmokeconfig`.
 
 ```sh
 # Example:
-./run-genny resmoke-test --suites src/resmokeconfig/genny_standalone.yml
+./run-genny resmoke-test --suites src/resmokeconfig/genny_sharded.yml
 ```
 
 Each yaml configuration file will only run tests that are associated
-with their specific tags. (Eg. `genny_standalone.yml` will only run
-tests that have been tagged with the `[standalone]` tag.)
+with their specific tags. (Eg. `genny_sharded.yml` will only run
+tests that have been tagged with the `[sharded]` tag.)
 
 When creating a new Actor, `./run-genny create-new-actor` will generate a new test case
 template to ensure the new Actor can run against different MongoDB topologies,
