@@ -94,7 +94,7 @@ These commands assume that `git status` last output line is
 `genny/` i.e. the root of the repo.
 
 #### MacOS:
-1. `mkdir -p data/db && sed -i '' '/mongos,/s/mongos,/mongos, "--dbpathPrefix", "data\/db"/' src/lamplib/src/genny/tasks/run_tests.py`
+1. `mkdir -p data/db && sed -i '' '/mongos,/s!mongos,!mongos, "--dbpathPrefix", "data/db",!' src/lamplib/src/genny/tasks/run_tests.py`
 2. `sed -i '' '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/{YML file you want to use}`
 ```sh
 # Example:
@@ -111,7 +111,7 @@ sed -i '' '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test
 7. Cleanup: `git restore . && git clean -fd` (you can do `git clean -fdn` to preview what will be cleaned)
 
 #### Linux:
-1. `mkdir -p data/db && sed -i '/mongos,/s/mongos,/mongos, "--dbpathPrefix", "data\/db"/' src/lamplib/src/genny/tasks/run_tests.py`
+1. `mkdir -p data/db && sed -i '/mongos,/s!mongos,!mongos, "--dbpathPrefix", "data/db",!' src/lamplib/src/genny/tasks/run_tests.py`
 2. `sed -i '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/{YML file you want to use}`
 ```sh
 # Example:
