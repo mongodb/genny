@@ -2,11 +2,11 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
   This workload runs queries concurrently with both the same and different query shape.
-  This was designed to stress telemetry collection, but the workload doesn't actually enable telemetry.
-  It can be run with and without telemetry for comparison.
+  This was designed to stress queryStats collection, but the workload doesn't actually enable queryStats.
+  It can be run with and without queryStats for comparison.
 
 KeyWords:
-- telemetry
+- queryStats
 - query
 - shape
 
@@ -135,5 +135,5 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone-all-feature-flags
-      - standalone-telemetry
+      - standalone-query-stats
       - standalone
