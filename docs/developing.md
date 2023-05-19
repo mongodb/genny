@@ -96,54 +96,29 @@ These commands assume that `git status` last output line is
 Note: If you make any changes after having run `./run-genny install -d {your distro}`,
 please run that command again to compile your changes.
 
-#### MacOS:
-1. `mkdir -p data/db && sed -i '' '/mongos,/s!mongos,!mongos, "--dbpathPrefix", "data/db",!' src/lamplib/src/genny/tasks/run_tests.py`
-2. `sed -i '' '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/{YML file you want to use}`
+1. `mkdir -p data/db`
+2. `perl -i -pe 's!mongos,!mongos, "--dbpathPrefix", "data/db",!' src/lamplib/src/genny/tasks/run_tests.py`
+3. `perl -i -pe 's!../../src/genny!../..!' src/resmokeconfig/{YML file you want to use}`
    ```sh
    # Example:
-   sed -i '' '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/genny_sharded.yml
+   perl -i -pe 's!../../src/genny!../..!' src/resmokeconfig/genny_sharded.yml
    ```
-3. If using genny_create_new_actor.yml: `./run-genny create-new-actor SelfTestActor`. Fix the bug in the generated code, which is left as an exercise to ensure the reader understand the code.
+4. If using `genny_create_new_actor.yml`: `./run-genny create-new-actor SelfTestActor`.
+   Fix the bug in the generated code, which is left as an exercise to ensure the reader understand the code.
 	<details>
      <summary>But if you're short on time, click here for the cheat code</summary>
-     <pre><code>sed -i '' '/REQUIRE(count == 101./s/101/100/' ./src/cast_core/test/SelfTestActor_test.cpp</code></pre>
+     <pre><code>perl -i -pe 's!count == 101!count == 100!' ./src/cast_core/test/SelfTestActor_test.cpp</code></pre>
 	</details>
-4. The default Actor name used by genny_create_new_actor.yml is "SelfTestActor".
-	If you use another Actor name, please replace "SelfTestActor" in 
-	genny_create_new_actor.yml with that name.
-5. `./run-genny install -d not-linux`
-6. `./run-genny cmake-test` (Ignore the failed tests related to date & time, they're known to be flaky on MacOS ([EVG-19776](https://jira.mongodb.org/browse/EVG-19776)))
-7. `./run-genny resmoke-test --suites {full path to YML file}`
+5. The default Actor name used by `genny_create_new_actor.yml` is `SelfTestActor`. If you use another Actor name, please replace `SelfTestActor` in `genny_create_new_actor.yml` with that name: `perl -i -pe 's!SelfTestActor!{your Actor name}!' src/resmokeconfig/genny_create_new_actor.yml`
+6. `./run-genny install -d {your distro}`
+7. `./run-genny cmake-test` (MacOS: Ignore the failed tests related to date & time,
+   they're known to be flaky on MacOS ([EVG-19776](https://jira.mongodb.org/browse/EVG-19776)))
+8. `./run-genny resmoke-test --suites {full path to YML file}`
    ```sh
    # Example:
    ./run-genny resmoke-test --suites /Users/foo.bar/genny/src/resmokeconfig/genny_sharded.yml
    ```
-8.  Cleanup: `git restore . && git clean -fd` (you can do `git clean -fdn` to preview what will be cleaned)
-
-#### Linux:
-1. `mkdir -p data/db && sed -i '/mongos,/s!mongos,!mongos, "--dbpathPrefix", "data/db",!' src/lamplib/src/genny/tasks/run_tests.py`
-2. `sed -i '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/{YML file you want to use}`
-   ```sh
-   # Example:
-   sed -i '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/genny_sharded.yml
-   ```
-3. If using genny_create_new_actor.yml: `./run-genny create-new-actor SelfTestActor`. Fix the bug in the generated code, which is left as an exercise to ensure the reader understand the code.
-	<details>
-     <summary>But if you're short on time, click here for the cheat code</summary>
-     <pre><code>sed -i '/REQUIRE(count == 101./s/101/100/' ./src/cast_core/test/SelfTestActor_test.cpp</code></pre>
-	</details>
-4. The default Actor name used by genny_create_new_actor.yml is "SelfTestActor".
-	If you use another Actor name, please replace "SelfTestActor" in 
-	genny_create_new_actor.yml with that name.
-5. `./run-genny install -d {your distro}`
-6. `./run-genny cmake-test`
-7. `./run-genny resmoke-test --suites {full path to YML file}`
-   ```sh
-   # Example:
-   ./run-genny resmoke-test --suites /home/ubuntu/genny/src/resmokeconfig/genny_sharded.yml
-   ```
-8. Cleanup: `git restore . && git clean -fd` (you can do `git clean -fdn` to preview what will be cleaned)
-
+9.  Cleanup: `git restore . && git clean -fd` (you can do `git clean -fdn` to preview what will be cleaned)
 
 ## Patch-Testing and Evergreen
 
