@@ -93,6 +93,9 @@ These commands assume that `git status` last output line is
 `nothing to commit, working tree clean`, and that the current working directory is
 `genny/` i.e. the root of the repo.
 
+Note: If you make any changes after having run `./run-genny install -d {your distro}`,
+please run that command again to compile your changes.
+
 #### MacOS:
 1. `mkdir -p data/db && sed -i '' '/mongos,/s!mongos,!mongos, "--dbpathPrefix", "data/db",!' src/lamplib/src/genny/tasks/run_tests.py`
 2. `sed -i '' '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/{YML file you want to use}`
