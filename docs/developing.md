@@ -100,7 +100,11 @@ These commands assume that `git status` last output line is
    # Example:
    sed -i '' '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/genny_sharded.yml
    ```
-3. If using genny_create_new_actor.yml: `./run-genny create-new-actor HelloWorldActor && sed -i '' '/REQUIRE(count == 101./s/101/100/' ./src/cast_core/test/HelloWorldActor_test.cpp`
+3. If using genny_create_new_actor.yml: `./run-genny create-new-actor HelloWorldActor`. Fix the bug in the generated code, which is left as an exercise to ensure the reader understand the code. 
+	<details>
+     <summary>But if you're short on time, click here for the cheat code</summary>
+     <pre><code>sed -i '' '/REQUIRE(count == 101./s/101/100/' ./src/cast_core/test/HelloWorldActor_test.cpp</code></pre>
+	</details>
 4. `./run-genny install -d not-linux`
 5. `./run-genny cmake-test` (Ignore the failed tests related to date & time, they're known to be flaky on MacOS ([EVG-19776](https://jira.mongodb.org/browse/EVG-19776)))
 6. `./run-genny resmoke-test --suites {full path to YML file}`
@@ -117,7 +121,11 @@ These commands assume that `git status` last output line is
    # Example:
    sed -i '/program_executable/s!:.*$!: ../../build/src/cast_core/cast_core_test!' src/resmokeconfig/genny_sharded.yml
    ```
-3. If using genny_create_new_actor.yml: `./run-genny create-new-actor HelloWorldActor && sed -i '/REQUIRE(count == 101./s/101/100/' ./src/cast_core/test/HelloWorldActor_test.cpp `
+3. If using genny_create_new_actor.yml: `./run-genny create-new-actor HelloWorldActor`. Fix the bug in the generated code, which is left as an exercise to ensure the reader understand the code. 
+	<details>
+     <summary>But if you're short on time, click here for the cheat code</summary>
+     <pre><code>sed -i '/REQUIRE(count == 101./s/101/100/' ./src/cast_core/test/HelloWorldActor_test.cpp</code></pre>
+	</details>
 4. `./run-genny install -d {your distro}`
 5. `./run-genny cmake-test`
 6. `./run-genny resmoke-test --suites {full path to YML file}`
