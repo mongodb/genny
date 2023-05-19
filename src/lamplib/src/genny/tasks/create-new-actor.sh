@@ -619,22 +619,34 @@ git status --porcelain=v1 | sed 's/^/    /'
 
 cat << EOF
 
-Build and test ${actor_name} with the following command:
+To test ${actor_name} locally, first create the local test setup:
 
-    ./run-genny install
+    mkdir -p data/db
+    perl -i -pe 's!mongos,!mongos, "--dbpathPrefix", "data/db",!' src/lamplib/src/genny/tasks/run_tests.py
+    perl -i -pe 's!../../src/genny!../..!' src/resmokeconfig/genny_create_new_actor.yml
+    perl -i -pe 's!SelfTestActor!${actor_name}!' src/resmokeconfig/genny_create_new_actor.yml
+
+Then build ${actor_name} and run the tests themselves:
+
+    ./run-genny install -d {your distro}
     ./run-genny cmake-test
-    ./run-genny resmoke-test --suites src/resmokeconfig/genny_standalone.yml
+    ./run-genny resmoke-test --suites ${GENNY_REPO_ROOT}/src/resmokeconfig/genny_create_new_actor.yml
+
+The cmake-test is known to be flaky on MacOS (https://jira.mongodb.org/browse/EVG-19776).
 
 The resmoke-test will fail because there is a "hidden" bug in the generated
 integration-test-case that you are expected to find as a part of reading through
-the generated code.
+the generated code. After you've fixed the bug, please build ${actor_name}
+again before running cmake-test and resmoke-test.
+
+Remember to clean up the local test setup after you've finished testing:
+
+    rm -rf data/db
+    git restore src/lamplib/src/genny/tasks/run_tests.py
+    git restore src/resmokeconfig/genny_create_new_actor.yml
 
 Run your workload as follows:
 
-    ./run-genny workload -- run \\
-        --workload-file       ./src/workloads/docs/${actor_name}.yml \\
-        --metrics-format      csv \\
-        --metrics-output-file build/genny-metrics.csv \\
-        --mongo-uri           'mongodb://localhost:27017'
+    ./run-genny workload src/workloads/docs/${actor_name}.yml
 
 EOF
