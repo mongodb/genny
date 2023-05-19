@@ -234,4 +234,4 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone-all-feature-flags
-      - standalone-telemetry
+      - standalone-query-stats
