@@ -110,15 +110,16 @@ please run that command again to compile your changes.
      <pre><code>perl -i -pe 's!count == 101!count == 100!' ./src/cast_core/test/SelfTestActor_test.cpp</code></pre>
 	</details>
 5. The default Actor name used by `genny_create_new_actor.yml` is `SelfTestActor`. If you use another Actor name, please replace `SelfTestActor` in `genny_create_new_actor.yml` with that name: `perl -i -pe 's!SelfTestActor!{your Actor name}!' src/resmokeconfig/genny_create_new_actor.yml`
-6. `./run-genny install -d {your distro}`
-7. `./run-genny cmake-test` (MacOS: Ignore the failed tests related to date & time,
+6. `./run-genny clean`
+7. `./run-genny install -d {your distro}`
+8. `./run-genny cmake-test` (MacOS: Ignore the failed tests related to date & time,
    they're known to be flaky on MacOS ([EVG-19776](https://jira.mongodb.org/browse/EVG-19776)))
-8. `./run-genny resmoke-test --suites {full path to YML file}`
+9. `./run-genny resmoke-test --suites {full path to YML file}`
    ```sh
    # Example:
    ./run-genny resmoke-test --suites /Users/foo.bar/genny/src/resmokeconfig/genny_sharded.yml
    ```
-9.  Cleanup: `git restore . && git clean -fd` (you can do `git clean -fdn` to preview what will be cleaned)
+10. Cleanup: `git restore src/resmokeconfig/{YML file} src/lamplib/src/genny/tasks/run_tests.py && git clean -fd` (you can do `git clean -fdn` to preview what will be cleaned)
 
 ## Patch-Testing and Evergreen
 
