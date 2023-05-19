@@ -333,6 +333,7 @@ def resmoke_test(
         suites = os.path.join(genny_repo_root, "src", "resmokeconfig", "genny_create_new_actor.yml")
         checker_func = _check_create_new_actor_test_report(workspace_root=workspace_root)
     else:
+        suites = os.path.abspath(suites)
         checker_func = _nop_true
 
     resmoke_python, mongo_repo_path, bin_dir = _setup_resmoke(

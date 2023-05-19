@@ -114,10 +114,10 @@ please run that command again to compile your changes.
 7. `./run-genny install -d {your distro}`
 8. `./run-genny cmake-test` (MacOS: Ignore the failed tests related to date & time,
    they're known to be flaky on MacOS ([EVG-19776](https://jira.mongodb.org/browse/EVG-19776)))
-9. `./run-genny resmoke-test --suites {full path to YML file}`
+9. `./run-genny resmoke-test --suites {YML file}`
    ```sh
    # Example:
-   ./run-genny resmoke-test --suites /Users/foo.bar/genny/src/resmokeconfig/genny_sharded.yml
+   ./run-genny resmoke-test --suites src/resmokeconfig/genny_sharded.yml
    ```
 10. Cleanup: `git restore src/resmokeconfig/{YML file} src/lamplib/src/genny/tasks/run_tests.py && git clean -fd` (you can do `git clean -fdn` to preview what will be cleaned)
 
