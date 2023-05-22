@@ -77,19 +77,49 @@ The Actor tests use resmoke to set up a real MongoDB cluster and execute
 the test binary. The resmoke yaml config files that define the different
 cluster configurations are defined in `src/resmokeconfig`.
 
-```sh
-# Example:
-./run-genny resmoke-test --suites src/resmokeconfig/genny_standalone.yml
-```
-
 Each yaml configuration file will only run tests that are associated
-with their specific tags. (Eg. `genny_standalone.yml` will only run
-tests that have been tagged with the `[standalone]` tag.)
+with their specific tags. (Eg. `genny_sharded.yml` will only run
+tests that have been tagged with the `[sharded]` tag.)
 
 When creating a new Actor, `./run-genny create-new-actor` will generate a new test case
 template to ensure the new Actor can run against different MongoDB topologies,
 please update the template as needed so it uses the newly-created Actor.
 
+Currently, the code to implement resmoke-test assumes that it will be run by
+Evergreen. Therefore, to run resmoke-test locally, some modifications must be made.
+The commands to make these modifications on MacOS and on Linux are detailed below.
+
+These commands assume that `git status` last output line is
+`nothing to commit, working tree clean`, and that the current working directory is
+`genny/` i.e. the root of the repo.
+
+Note: If you make any changes after having run `./run-genny install -d {your distro}`,
+please run that command again to compile your changes.
+
+1. `mkdir -p data/db`
+2. `perl -i -pe 's!mongos,!mongos, "--dbpathPrefix", "data/db",!' src/lamplib/src/genny/tasks/run_tests.py`
+3. `perl -i -pe 's!../../src/genny!../..!' src/resmokeconfig/{YML file you want to use}`
+   ```sh
+   # Example:
+   perl -i -pe 's!../../src/genny!../..!' src/resmokeconfig/genny_sharded.yml
+   ```
+4. If using `genny_create_new_actor.yml`: `./run-genny create-new-actor SelfTestActor`.
+   Fix the bug in the generated code, which is left as an exercise to ensure the reader understand the code.
+	<details>
+     <summary>But if you're short on time, click here for the cheat code</summary>
+     <pre><code>perl -i -pe 's!count == 101!count == 100!' ./src/cast_core/test/SelfTestActor_test.cpp</code></pre>
+	</details>
+5. The default Actor name used by `genny_create_new_actor.yml` is `SelfTestActor`. If you use another Actor name, please replace `SelfTestActor` in `genny_create_new_actor.yml` with that name: `perl -i -pe 's!SelfTestActor!{your Actor name}!' src/resmokeconfig/genny_create_new_actor.yml`
+6. `./run-genny clean`
+7. `./run-genny install -d {your distro}`
+8. `./run-genny cmake-test` (MacOS: Ignore the failed tests related to date & time,
+   they're known to be flaky on MacOS ([EVG-19776](https://jira.mongodb.org/browse/EVG-19776)))
+9. `./run-genny resmoke-test --suites {YML file}`
+   ```sh
+   # Example:
+   ./run-genny resmoke-test --suites src/resmokeconfig/genny_sharded.yml
+   ```
+10. Cleanup: `git restore src/resmokeconfig/{YML file} src/lamplib/src/genny/tasks/run_tests.py && git clean -fd` (you can do `git clean -fdn` to preview what will be cleaned)
 
 ## Patch-Testing and Evergreen
 
