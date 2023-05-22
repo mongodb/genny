@@ -124,5 +124,5 @@ AutoRun:
         - standalone-classic-query-engine
         - standalone-sampling-bonsai
         - standalone-sbe
-        - standalone-telemetry
+        - standalone-query-stats
 

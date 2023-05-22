@@ -30,4 +30,4 @@ AutoRun:
       - standalone-dsi-integration-test
       - standalone-sampling-bonsai
       - standalone-sbe
-      - standalone-telemetry
+      - standalone-query-stats
