@@ -239,7 +239,12 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
 
 std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
     auto uriStr = makeUri();
-    BOOST_LOG_TRIVIAL(info) << "Constructing pool with MongoURI '" << uriStr << "'";
+
+    std::string password{*_config->get(OptionType::kAccessOption, "Password")};
+    _config->set(OptionType::kAccessOption, "Password", "[REDACTED]");
+    auto redactedUriStr = makeUri();
+    BOOST_LOG_TRIVIAL(info) << "Constructing pool with MongoURI '" << redactedUriStr << "'";
+    _config->set(OptionType::kAccessOption, "Password", password);
 
     auto uri = mongocxx::uri{uriStr};
 
