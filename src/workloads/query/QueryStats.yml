@@ -100,12 +100,11 @@ Actors:
         DocumentCount: *DocumentCount
         BatchSize: 1000
         Document:
-          a: &integer {^RandomInt: {min: -100, max: 100}}
-          b: *integer
+          a1: &integer {^RandomInt: {min: -100, max: 100}}
+          a2: *integer
           string: &string {^RandomString: {length: 5}}
         Indexes:
-          - keys: {a: 1, b: 1}
-          - keys: {string: 1}
+          - keys: {a1: 1, a2: 1}
 
 - Name: Quiesce
   Type: QuiesceActor
