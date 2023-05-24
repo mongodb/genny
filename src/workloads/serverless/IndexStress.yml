@@ -67,6 +67,7 @@ Actors:
       hash: &randomString1 {^RandomString: {length: 22}}
       key: *randomString1
   - {Nop: true}
+  - {Nop: true}
 
 - Name: FindLargeIndex1
   Type: CrudActor
@@ -88,6 +89,7 @@ Actors:
             $in: &arrayGenerator1 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString1, number: 20000}}}}
           key:
             $in: *arrayGenerator1
+  - {Nop: true}
 
 - Name: Update1
   Type: CrudActor
@@ -106,6 +108,18 @@ Actors:
         Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
         Update:
           $inc: {a: 1}
+  - {Nop: true}
+
+- Name: Wait1
+  Type: HelloWorld
+  ClientName: Client1
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Message: Waiting for 20 minutes for scaling events to complete...
+    Duration: 20 minutes
+    SleepAfter: 20 minutes
 
 - Name: Loader2
   Type: Loader
@@ -125,6 +139,7 @@ Actors:
       _id: {^Inc: {start: 0}}
       hash: &randomString2 {^RandomString: {length: 22}}
       key: *randomString2
+  - {Nop: true}
   - {Nop: true}
 
 - Name: FindLargeIndex2
@@ -147,6 +162,7 @@ Actors:
             $in: &arrayGenerator2 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString2, number: 20000}}}}
           key:
             $in: *arrayGenerator2
+  - {Nop: true}
 
 - Name: Update2
   Type: CrudActor
@@ -165,6 +181,18 @@ Actors:
         Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
         Update:
           $inc: {a: 1}
+  - {Nop: true}
+
+- Name: Wait2
+  Type: HelloWorld
+  ClientName: Client2
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Message: Waiting for 20 minutes for scaling events to complete...
+    Duration: 20 minutes
+    SleepAfter: 20 minutes
 
 - Name: Loader3
   Type: Loader
@@ -184,6 +212,7 @@ Actors:
       _id: {^Inc: {start: 0}}
       hash: &randomString3 {^RandomString: {length: 22}}
       key: *randomString3
+  - {Nop: true}
   - {Nop: true}
 
 - Name: FindLargeIndex3
@@ -206,6 +235,7 @@ Actors:
             $in: &arrayGenerator3 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString3, number: 20000}}}}
           key:
             $in: *arrayGenerator3
+  - {Nop: true}
 
 - Name: Update3
   Type: CrudActor
@@ -224,6 +254,18 @@ Actors:
         Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
         Update:
           $inc: {a: 1}
+  - {Nop: true}
+
+- Name: Wait3
+  Type: HelloWorld
+  ClientName: Client3
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Message: Waiting for 20 minutes for scaling events to complete...
+    Duration: 20 minutes
+    SleepAfter: 20 minutes
 
 - Name: Loader4
   Type: Loader
@@ -243,6 +285,7 @@ Actors:
       _id: {^Inc: {start: 0}}
       hash: &randomString4 {^RandomString: {length: 22}}
       key: *randomString4
+  - {Nop: true}
   - {Nop: true}
 
 - Name: FindLargeIndex4
@@ -265,6 +308,7 @@ Actors:
             $in: &arrayGenerator4 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString4, number: 20000}}}}
           key:
             $in: *arrayGenerator4
+  - {Nop: true}
 
 - Name: Update4
   Type: CrudActor
@@ -283,6 +327,18 @@ Actors:
         Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
         Update:
           $inc: {a: 1}
+  - {Nop: true}
+
+- Name: Wait4
+  Type: HelloWorld
+  ClientName: Client4
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Message: Waiting for 20 minutes for scaling events to complete...
+    Duration: 20 minutes
+    SleepAfter: 20 minutes
 
 - Name: Loader5
   Type: Loader
@@ -302,6 +358,7 @@ Actors:
       _id: {^Inc: {start: 0}}
       hash: &randomString5 {^RandomString: {length: 22}}
       key: *randomString5
+  - {Nop: true}
   - {Nop: true}
 
 - Name: FindLargeIndex5
@@ -324,6 +381,7 @@ Actors:
             $in: &arrayGenerator5 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString5, number: 20000}}}}
           key:
             $in: *arrayGenerator5
+  - {Nop: true}
 
 - Name: Update5
   Type: CrudActor
@@ -342,6 +400,18 @@ Actors:
         Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
         Update:
           $inc: {a: 1}
+  - {Nop: true}
+
+- Name: Wait5
+  Type: HelloWorld
+  ClientName: Client5
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Message: Waiting for 20 minutes for scaling events to complete...
+    Duration: 20 minutes
+    SleepAfter: 20 minutes
 
 - Name: Loader6
   Type: Loader
@@ -361,6 +431,7 @@ Actors:
       _id: {^Inc: {start: 0}}
       hash: &randomString6 {^RandomString: {length: 22}}
       key: *randomString6
+  - {Nop: true}
   - {Nop: true}
 
 - Name: FindLargeIndex6
@@ -383,6 +454,7 @@ Actors:
             $in: &arrayGenerator6 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString6, number: 20000}}}}
           key:
             $in: *arrayGenerator6
+  - {Nop: true}
 
 - Name: Update6
   Type: CrudActor
@@ -401,6 +473,18 @@ Actors:
         Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
         Update:
           $inc: {a: 1}
+  - {Nop: true}
+
+- Name: Wait6
+  Type: HelloWorld
+  ClientName: Client6
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Message: Waiting for 20 minutes for scaling events to complete...
+    Duration: 20 minutes
+    SleepAfter: 20 minutes
 
 - Name: Loader7
   Type: Loader
@@ -420,6 +504,7 @@ Actors:
       _id: {^Inc: {start: 0}}
       hash: &randomString7 {^RandomString: {length: 22}}
       key: *randomString7
+  - {Nop: true}
   - {Nop: true}
 
 - Name: FindLargeIndex7
@@ -442,6 +527,7 @@ Actors:
             $in: &arrayGenerator7 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString7, number: 20000}}}}
           key:
             $in: *arrayGenerator7
+  - {Nop: true}
 
 - Name: Update7
   Type: CrudActor
@@ -460,6 +546,18 @@ Actors:
         Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
         Update:
           $inc: {a: 1}
+  - {Nop: true}
+
+- Name: Wait7
+  Type: HelloWorld
+  ClientName: Client7
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Message: Waiting for 20 minutes for scaling events to complete...
+    Duration: 20 minutes
+    SleepAfter: 20 minutes
 
 - Name: Loader8
   Type: Loader
@@ -479,6 +577,7 @@ Actors:
       _id: {^Inc: {start: 0}}
       hash: &randomString8 {^RandomString: {length: 22}}
       key: *randomString8
+  - {Nop: true}
   - {Nop: true}
 
 - Name: FindLargeIndex8
@@ -501,6 +600,7 @@ Actors:
             $in: &arrayGenerator8 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString8, number: 20000}}}}
           key:
             $in: *arrayGenerator8
+  - {Nop: true}
 
 - Name: Update8
   Type: CrudActor
@@ -519,6 +619,18 @@ Actors:
         Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
         Update:
           $inc: {a: 1}
+  - {Nop: true}
+
+- Name: Wait8
+  Type: HelloWorld
+  ClientName: Client8
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Message: Waiting for 20 minutes for scaling events to complete...
+    Duration: 20 minutes
+    SleepAfter: 20 minutes
 
 - Name: Loader9
   Type: Loader
@@ -538,6 +650,7 @@ Actors:
       _id: {^Inc: {start: 0}}
       hash: &randomString9 {^RandomString: {length: 22}}
       key: *randomString9
+  - {Nop: true}
   - {Nop: true}
 
 - Name: FindLargeIndex9
@@ -560,6 +673,7 @@ Actors:
             $in: &arrayGenerator9 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString9, number: 20000}}}}
           key:
             $in: *arrayGenerator9
+  - {Nop: true}
 
 - Name: Update9
   Type: CrudActor
@@ -578,6 +692,18 @@ Actors:
         Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
         Update:
           $inc: {a: 1}
+  - {Nop: true}
+
+- Name: Wait9
+  Type: HelloWorld
+  ClientName: Client9
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Message: Waiting for 20 minutes for scaling events to complete...
+    Duration: 20 minutes
+    SleepAfter: 20 minutes
 
 - Name: Loader10
   Type: Loader
@@ -597,6 +723,7 @@ Actors:
       _id: {^Inc: {start: 0}}
       hash: &randomString10 {^RandomString: {length: 22}}
       key: *randomString10
+  - {Nop: true}
   - {Nop: true}
 
 - Name: FindLargeIndex10
@@ -619,6 +746,7 @@ Actors:
             $in: &arrayGenerator10 {^FixedGeneratedValue: {fromGenerator: {^Array: {of: *randomString10, number: 20000}}}}
           key:
             $in: *arrayGenerator10
+  - {Nop: true}
 
 - Name: Update10
   Type: CrudActor
@@ -637,3 +765,15 @@ Actors:
         Filter: {id: {^RandomInt: {min: 0, max: 1000}}}
         Update:
           $inc: {a: 1}
+  - {Nop: true}
+
+- Name: Wait10
+  Type: HelloWorld
+  ClientName: Client10
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Message: Waiting for 20 minutes for scaling events to complete...
+    Duration: 20 minutes
+    SleepAfter: 20 minutes
