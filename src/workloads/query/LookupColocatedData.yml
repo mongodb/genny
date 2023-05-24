@@ -363,5 +363,6 @@ AutoRun:
       - v5.0
     mongodb_setup:
       $eq:
+      - shard
       - shard-lite
       - shard-lite-all-feature-flags
