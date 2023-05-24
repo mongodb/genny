@@ -21,7 +21,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 10
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 98
+  MaxPhases: &MaxPhases 99
 
 Clients:
   Default:
@@ -949,7 +949,7 @@ Actors:
       name: ExpressionArrayToObject2
       active: [96]
       operationMetricsName: AggExpressionArrayToObject2
-      Pipeline: [{$project: {object: { $arrayToObject: "$array4"}}}] 
+      Pipeline: [{$project: {object: { $arrayToObject: "$array4"}}}]
 
 - ExpressionRound:
   LoadConfig:
@@ -968,6 +968,15 @@ Actors:
       active: [98]
       operationMetricsName: AggExpressionArray
       Pipeline: [{$project: {array: ["$int", "$string", "$double", "$nestedObj", "$array", "$array2"]}}]
+
+- ExpressionTrunc:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpressionTrunc
+      active: [99]
+      operationMetricsName: AggExpressionTrunc
+      Pipeline: [{$project: {trunc: { $trunc: ["$double", 1]}}}]
 
 AutoRun:
 - When:

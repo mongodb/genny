@@ -11,7 +11,7 @@ ExpressionTemplate:
   Phases:
     OnlyActiveInPhases:
       Active: {^Parameter: {Name: "active", Default: [0]}}
-      NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: 98}}
+      NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: 99}}
       PhaseConfig:
         Repeat: {^Parameter: {Name: "repeat", Default: 10}}
         Database: *db
