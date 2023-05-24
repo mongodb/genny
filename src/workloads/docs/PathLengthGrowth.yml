@@ -1,0 +1,71 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sys-perf"
+Description: |
+  This workload is meant to track path length growth and processor efficiency
+
+dbname: &dbname 10kDocs
+DocumentCount: &NumDocs 10000
+CollectionCount: &NumColls 1
+
+NumPhases: &NumPhases 3
+
+Document: &doc
+  a: {^RandomInt: {min: 0, max: *NumDocs}}
+  b: {^RandomString: {length: 16}}
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 10100
+
+Actors:
+- Name: Setup
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        # Insert 10k documents to our singular collection
+        Repeat: 1
+        BatchSize: 100
+        Threads: 1
+        DocumentCount: *NumDocs
+        Database: *dbname
+        CollectionCount: *NumColls
+        Document: *doc
+        Indexes:
+        - keys: {a: 1}
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+
+- TemplateName: ReadsActorTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: ReadsActor}}
+    Type: CrudActor
+    Database: *dbname
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "ActivePhases", Default: [2]}}
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Duration: 2 minutes
+          RecordFailure: true
+          CollectionCount: *NumColls
+          Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
+            OperationMetricsName: ReadDocs
+            ThrowOnFailure: false
