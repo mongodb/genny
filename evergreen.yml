@@ -90,6 +90,16 @@ buildvariants:
   tasks:
   - name: tg_compile
 
+- name: ubuntu2204
+  display_name: Ubuntu 22.04
+  modules: [mongo]
+  expansions:
+    distro: ubuntu2204
+  run_on:
+  - ubuntu2204-large
+  tasks:
+  - name: tg_compile
+
 - name: ubuntu1804
   display_name: Ubuntu 18.04
   modules: [mongo]
