@@ -26,7 +26,9 @@ ActorTemplates:
   Config:
     Name: {^Parameter: {Name: "Name", Default: "QueryStatsAggregation"}}
     Type: AdminCommand
-    Threads: 32
+    # TODO SERVER-76597 Consider a higher value here. Until then, using a high value could cause OOM
+    # issues.
+    Threads: 2
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
@@ -100,12 +102,11 @@ Actors:
         DocumentCount: *DocumentCount
         BatchSize: 1000
         Document:
-          a: &integer {^RandomInt: {min: -100, max: 100}}
-          b: *integer
+          a1: &integer {^RandomInt: {min: -100, max: 100}}
+          a2: *integer
           string: &string {^RandomString: {length: 5}}
         Indexes:
-          - keys: {a: 1, b: 1}
-          - keys: {string: 1}
+          - keys: {a1: 1, a2: 1}
 
 - Name: Quiesce
   Type: QuiesceActor
