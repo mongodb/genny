@@ -192,6 +192,7 @@ AutoRun:
       - single-replica
       - standalone
       - standalone-classic-query-engine
+      - standalone-heuristic-bonsai
       - standalone-sampling-bonsai
       - standalone-sbe
       - standalone-query-stats
