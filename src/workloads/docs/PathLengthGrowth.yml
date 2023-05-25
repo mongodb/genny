@@ -60,16 +60,16 @@ Actors:
         Indexes:
         - keys: {a: 1}
 
-# - Name: QuiescePhase
-#   Type: QuiesceActor
-#   Threads: 1
-#   Database: *dbname
-#   Phases:
-#     OnlyActiveInPhases:
-#       Active: [1]
-#       NopInPhasesUpTo: *NumPhases
-#       PhaseConfig:
-#         Repeat: 1
+- Name: QuiescePhase
+  Type: QuiesceActor
+  Threads: 1
+  Database: *dbname
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
 
 - ActorFromTemplate:
     TemplateName: ReadsActorTemplate
