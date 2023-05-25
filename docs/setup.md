@@ -85,7 +85,7 @@ unsure. (mongodbtoolchain is internal to MongoDB).
 
 ## Run the installer
 ```sh
-./run-genny install -d [ubuntu2204_arm64|ubuntu1804|ubuntu2004|ubuntu1604|archlinux|rhel8|rhel70|rhel62|amazon2|not-linux]
+./run-genny install -d [ubuntu2204_arm64|ubuntu2204|ubuntu2004|ubuntu1804|ubuntu1604|archlinux|rhel8|rhel70|rhel62|amazon2|not-linux]
 ```
 
 This command downloads Genny's toolchain, compiles Genny, creates its
