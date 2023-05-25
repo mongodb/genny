@@ -26,7 +26,7 @@ ActorTemplates:
   Config:
     Name: {^Parameter: {Name: "Name", Default: "QueryStatsAggregation"}}
     Type: AdminCommand
-    Threads: 32
+    Threads: 2
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
