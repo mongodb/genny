@@ -67,7 +67,7 @@ Actors:
       OperationCommand:
         Filter: {}
         Update: {$inc: {i: 1}}
-        Options:
+        OperationOptions:
           WriteConcern:
             Level: 1
 
