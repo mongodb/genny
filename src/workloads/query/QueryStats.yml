@@ -26,6 +26,8 @@ ActorTemplates:
   Config:
     Name: {^Parameter: {Name: "Name", Default: "QueryStatsAggregation"}}
     Type: AdminCommand
+    # TODO SERVER-76597 Consider a higher value here. Until then, using a high value could cause OOM
+    # issues.
     Threads: 2
     Phases:
       OnlyActiveInPhases:
