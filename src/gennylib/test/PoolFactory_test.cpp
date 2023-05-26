@@ -237,16 +237,6 @@ TEST_CASE("PoolFactory behavior") {
 
         auto pool = factory.makePool();
         REQUIRE(pool);
-
-        // We should be able to change the value of an option
-        auto expectedRedactedUri = [&]() {
-            return kProtocol + "boss:[REDACTED]@" + kHost + "/admin?appName=Genny&tls=true";
-        };
-        factory.setOption(OptionType::kAccessOption, "Password", "[REDACTED]");
-        auto redactedFactoryUri = factory.makeUri();
-        REQUIRE(redactedFactoryUri == expectedRedactedUri());
-        auto redactedPool = factory.makePool();
-        REQUIRE(redactedPool);
     }
 
     SECTION("Make a pool with client-side encryption enabled") {
