@@ -92,6 +92,7 @@ AutoRun:
       - replica
       - replica-all-feature-flags
       - shard
+      - shard-heuristic-bonsai
       - single-replica
       - single-replica-15gbwtcache
       - standalone

@@ -111,6 +111,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - shard
+      - shard-heuristic-bonsai
       - shard-lite
     branch_name:
       $neq:

@@ -315,6 +315,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - shard
+      - shard-heuristic-bonsai
       - shard-lite
       - shard-lite-all-feature-flags
     branch_name:
