@@ -129,11 +129,16 @@ def summarize_diffed_data(args, actor_name, metrics_of_interest):
             return np.format_float_positional(
                 number, precision=4, unique=False, fractional=False, trim='k')
 
+        try:
+            mode = rnd(statistics.mode(diffed_readings))
+        except statistics.StatisticsError:
+            mode = "N/A - multiple modes found. Try upgrading to python 3.8 which will return the first"
+
         results[metric_name] = {
             "count": len(diffed_readings),
             "average": rnd(statistics.mean(diffed_readings)),
             "median": rnd(statistics.median_grouped(diffed_readings)),
-            "mode": rnd(statistics.mode(diffed_readings)),
+            "mode": mode,
             "stddev": rnd(statistics.stdev(diffed_readings)) if len(diffed_readings) > 1 else None,
             "[min, max]": [rnd(sorted_res[0]), rnd(sorted_res[-1])],
             "sorted_raw_data": sorted_res

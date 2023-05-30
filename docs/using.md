@@ -1,5 +1,7 @@
+# Using Genny
+[go/using-genny](http://go/using-genny)
 
-# Table of Contents
+## Table of Contents
 
 1.  [Introduction](#orgf1f92f6)
 2.  [Getting Started and Building](#org35e6dff)
