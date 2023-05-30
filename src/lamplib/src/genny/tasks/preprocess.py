@@ -11,6 +11,7 @@ from omegaconf import OmegaConf
 import yaml
 import structlog
 import numexpr
+from typing import Union
 
 SLOG = structlog.get_logger(__name__)
 # Cannot be in the default config because yaml merges overwrite lists instead of appending.
@@ -187,16 +188,17 @@ class _WorkloadParser(object):
 
     def parse(
         self,
-        yaml_input,
-        default_uri,
-        source=YamlSource.File,
-        path="",
-        parse_mode=_ParseMode.Normal,
+        yaml_input: str,
+        default_uri: str,
+        source: YamlSource = YamlSource.File,
+        path: Union[Path, str] = "",
+        parse_mode: _ParseMode =_ParseMode.Normal,
     ):
         """Parse the yaml input, assumed to be a file by default."""
 
         if path == "":
             raise ParseException("Must specify path of original yaml for parser.")
+        path = Path(path)
 
         self._default_uri = default_uri
         with self._context.enter():
