@@ -27,6 +27,7 @@ Keywords:
 - deleteOne
 - delete
 - aggregate
+- scan
 
 dbname: &dbname mix
 DocumentCount: &NumDocs 1024
