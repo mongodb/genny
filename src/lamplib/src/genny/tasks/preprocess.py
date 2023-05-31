@@ -458,7 +458,7 @@ class _WorkloadParser(object):
             if len(load_config) != keysSeen:
                 msg = (
                     "Invalid keys for 'LoadConfig'. Please set 'Path' and if any, 'Parameters' in the YAML "
-                    f"file: {path} with the following content: {external}"
+                    f"file: {path} with the following content: {load_config}"
                 )
                 raise ParseException(msg)
 
