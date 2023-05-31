@@ -198,7 +198,7 @@ class _WorkloadParser(object):
 
         if path == "":
             raise ParseException("Must specify path of original yaml for parser.")
-        path = Path(path)
+        path = Path(path)  # Path("") is equivalent to Path("./")
 
         self._default_uri = default_uri
         with self._context.enter():
