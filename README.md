@@ -1,6 +1,6 @@
 <img src="https://user-images.githubusercontent.com/119094/67700512-75458380-f984-11e9-9b81-668ea220b9fa.jpg" align="right" height="282" width="320">
 
-Genny
+Genny 
 =====
 
 Genny is a workload-generator with first-class support for
