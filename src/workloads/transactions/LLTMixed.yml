@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
-Description: |
+Description: | 
   Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload.
   The intent here is to test multiple transactions contained within a singular transaction (long lived).
   The transactions are setup such that they cover a mixed set of operations (insert, query, update, remove).
