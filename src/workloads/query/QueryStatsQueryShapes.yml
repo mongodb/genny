@@ -136,5 +136,5 @@ AutoRun:
       $eq:
       - standalone-all-feature-flags
       - standalone-query-stats
-      - standalone-query-stats-random-rate-limit
+      - standalone-query-stats-small-rate-limit
       - standalone
