@@ -343,7 +343,7 @@ def benchmark_test(ctx: click.Context) -> None:
 @click.pass_context
 def workload(
     ctx: click.Context,
-    workload_yaml: str,
+    workload_yaml: tuple[str],
     mongo_uri: str,
     verbosity: str,
     override: str,
