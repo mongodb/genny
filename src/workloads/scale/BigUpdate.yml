@@ -141,4 +141,3 @@ AutoRun:
       - standalone-sampling-bonsai
       - standalone-sbe
       - standalone-query-stats
-      - standalone-query-stats-random-rate-limit
