@@ -454,7 +454,7 @@ Try using `python test_results_summary.py --help` for more options.
     ./run-genny workload -u [connection_uri] src/workloads/[workload_dir/workload_name.yml]
     ```
 
-4.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](./run-dsi onboarding  # introductory DSI command; see link above for details) for details:
+4.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](go/running-dsi-locally) for details:
     
 	```bash
 	./run-dsi onboarding  # introductory DSI command; see link above for details
