@@ -273,4 +273,5 @@ AutoRun:
       - atlas
       - replica
       - replica-disable-execution-control
+      - replica-disable-dep
       - atlas-like-replica.2022-10
