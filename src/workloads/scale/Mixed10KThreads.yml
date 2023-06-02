@@ -46,7 +46,7 @@ Actors:
 - Name: WritesActor
   Type: CrudActor
   Database: *dbname
-  Threads: 5000
+  Threads: {^Parameter: {Name: "WritingThreads", Default: 5000}}
   Phases:
     - {Nop: true}
     - Repeat: 1
@@ -70,7 +70,7 @@ Actors:
 - Name: ReadsActor
   Type: CrudActor
   Database: *dbname
-  Threads: 5000
+  Threads: {^Parameter: {Name: "ReadingThreads", Default: 5000}}
   Phases:
     - {Nop: true}
     - Repeat: 1

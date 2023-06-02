@@ -13,8 +13,8 @@ LoadConfig:
   Parameters:
     WritingName: WritingActor_90_10
     ReadingName: ReadingActor_90_10
-    WritingThreads: 1000
-    ReadingThreads: 9000
+    WritingThreads: 0
+    ReadingThreads: 10000
 
 AutoRun:
 - When:
