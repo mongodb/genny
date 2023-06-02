@@ -135,9 +135,9 @@ Actors:
               Update: {$inc: {counter: 1}}
     - MetricsName: ShardedAndNonShardedCollectionsUpdate
       Duration: 1 minute
-      Collection: Collection0
       ThrowOnFailure: false  # Transactions are allowed to fail.
       RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
+      Collection: Collection0
       Operations:
       - OperationName: withTransaction
         OperationCommand:
@@ -195,9 +195,9 @@ Actors:
               Update: {$inc: {counter: 1}}
     - MetricsName: DifferentDatabasesNonShardedCollectionsUpdate
       Duration: 1 minute
-      Collection: Collection1
       ThrowOnFailure: false  # Transactions are allowed to fail.
       RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
+      Collection: Collection1
       Operations:
       - OperationName: withTransaction
         OperationCommand:
@@ -255,9 +255,9 @@ Actors:
               Update: {$inc: {counter: 1}}
     - MetricsName: DifferentDatabasesShardedCollectionsUpdate
       Duration: 1 minute
-      Collection: Collection0
       ThrowOnFailure: false  # Transactions are allowed to fail.
       RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
+      Collection: Collection0
       Operations:
       - OperationName: withTransaction
         OperationCommand:
