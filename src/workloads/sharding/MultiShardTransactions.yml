@@ -86,6 +86,8 @@ Actors:
     - MetricsName: ShardedCollectionUpdate
       Duration: 1 minute
       Collection: Collection0
+      ThrowOnFailure: false  # Transactions are allowed to fail.
+      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
       Operations:
       - OperationName: withTransaction
         OperationCommand:
@@ -134,6 +136,8 @@ Actors:
     - MetricsName: ShardedAndNonShardedCollectionsUpdate
       Duration: 1 minute
       Collection: Collection0
+      ThrowOnFailure: false  # Transactions are allowed to fail.
+      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
       Operations:
       - OperationName: withTransaction
         OperationCommand:
@@ -192,6 +196,8 @@ Actors:
     - MetricsName: DifferentDatabasesNonShardedCollectionsUpdate
       Duration: 1 minute
       Collection: Collection1
+      ThrowOnFailure: false  # Transactions are allowed to fail.
+      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
       Operations:
       - OperationName: withTransaction
         OperationCommand:
@@ -250,6 +256,8 @@ Actors:
     - MetricsName: DifferentDatabasesShardedCollectionsUpdate
       Duration: 1 minute
       Collection: Collection0
+      ThrowOnFailure: false  # Transactions are allowed to fail.
+      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
       Operations:
       - OperationName: withTransaction
         OperationCommand:
