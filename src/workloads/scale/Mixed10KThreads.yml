@@ -97,3 +97,4 @@ AutoRun:
       $eq:
       - replica
       - replica-all-feature-flags
+      - replica-disable-execution-control
