@@ -1047,6 +1047,7 @@ private:
  *    Operations:
  *    - OperationName: withTransaction
  *      OperationCommand:
+ *        OnSession: true
  *        OperationsInTransaction:
  *          - OperationName: insertOne
  *            OperationCommand:

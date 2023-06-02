@@ -86,11 +86,10 @@ Actors:
     - MetricsName: ShardedCollectionUpdate
       Duration: 1 minute
       Collection: Collection0
-      ThrowOnFailure: false  # Transactions are allowed to fail.
-      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
       Operations:
       - OperationName: withTransaction
         OperationCommand:
+          OnSession: true
           OperationsInTransaction:
           - OperationName: updateOne
             OperationCommand:
@@ -134,12 +133,11 @@ Actors:
               Update: {$inc: {counter: 1}}
     - MetricsName: ShardedAndNonShardedCollectionsUpdate
       Duration: 1 minute
-      ThrowOnFailure: false  # Transactions are allowed to fail.
-      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
       Collection: Collection0
       Operations:
       - OperationName: withTransaction
         OperationCommand:
+          OnSession: true
           OperationsInTransaction:
           - OperationName: updateOne
             Collection: Collection0
@@ -193,12 +191,11 @@ Actors:
               Update: {$inc: {counter: 1}}
     - MetricsName: DifferentDatabasesNonShardedCollectionsUpdate
       Duration: 1 minute
-      ThrowOnFailure: false  # Transactions are allowed to fail.
-      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
       Collection: Collection1
       Operations:
       - OperationName: withTransaction
         OperationCommand:
+          OnSession: true
           OperationsInTransaction:
           - OperationName: updateOne
             Database: *Database0
@@ -252,12 +249,11 @@ Actors:
               Update: {$inc: {counter: 1}}
     - MetricsName: DifferentDatabasesShardedCollectionsUpdate
       Duration: 1 minute
-      ThrowOnFailure: false  # Transactions are allowed to fail.
-      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
       Collection: Collection0
       Operations:
       - OperationName: withTransaction
         OperationCommand:
+          OnSession: true
           OperationsInTransaction:
           - OperationName: updateOne
             Database: *Database0
