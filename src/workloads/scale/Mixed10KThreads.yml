@@ -5,15 +5,6 @@ Description: |
   clients to simulate an extreme case of overload in the server. Both reads and writes happen
   at the same time in balanced fashion.
 
-  The metrics to monitor are:
-    * ErrorsTotal / ErrorRate: The total number of errors and rate of errors encountered by the workload. Networking
-      errors are not unexpected in general and they should be recoverable. This work load strives to provide a test to
-      allow us to measure the scale of networking errors in a stressful test and prove if the networking becomes more
-      stable (with lower total errors and a lower error rate).
-    * The Operation latency (more specifically the Latency90thPercentile to Latency99thPercentile metrics)
-    * The Operation Throughput
-    * "ss connections active": the number of connections.
-
 Keywords:
 - scale
 - insertMany
@@ -32,47 +23,6 @@ Clients:
     QueryOptions:
       maxPoolSize: 10100
 
-ActorTemplates:
-- TemplateName: WritesActorTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: WritesActor}}
-    Type: CrudActor
-    Database: *dbname
-    Threads: {^Parameter: {Name: "Threads", Default: 1000}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Duration: 3 minutes
-          RecordFailure: true
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: insertOne
-            OperationMetricsName: WriteDocs
-            OperationCommand:
-              Document: *doc
-            ThrowOnFailure: false
-- TemplateName: ReadsActorTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: ReadsActor}}
-    Type: CrudActor
-    Database: *dbname
-    Threads: {^Parameter: {Name: "Threads", Default: 1000}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Duration: 3 minutes
-          RecordFailure: true
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
-            OperationMetricsName: ReadDocs
-            ThrowOnFailure: false
 Actors:
 - Name: Setup
   Type: Loader
@@ -93,19 +43,53 @@ Actors:
         Indexes:
         - keys: {a: 1}
 
-- ActorFromTemplate:
-    TemplateName: WritesActorTemplate
-    TemplateParameters:
-      Name: {^Parameter: {Name: "WritingName", Default: WritingActor_50_50}}
-      Threads: {^Parameter: {Name: "WritingThreads", Default: 5000}}
-      ActivePhases: [1]
+- Name: WritesActor
+  Type: CrudActor
+  Database: *dbname
+  Threads: 5000
+  Phases:
+    - {Nop: true}
+    - Repeat: 1
+      GlobalRate: 1 per 10 milliseconds
+      CollectionCount: *NumColls
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: WriteDocs
+        OperationCommand:
+          Document: *doc
+        ThrowOnFailure: false
+    - Duration: 3 minutes
+      CollectionCount: *NumColls
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: WriteDocs
+        OperationCommand:
+          Document: *doc
+        ThrowOnFailure: false
 
-- ActorFromTemplate:
-    TemplateName: ReadsActorTemplate
-    TemplateParameters:
-      Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
-      Threads: {^Parameter: {Name: "ReadingThreads", Default: 5000}}
-      ActivePhases: [1]
+- Name: ReadsActor
+  Type: CrudActor
+  Database: *dbname
+  Threads: 5000
+  Phases:
+    - {Nop: true}
+    - Repeat: 1
+      GlobalRate: 1 per 10 milliseconds
+      CollectionCount: *NumColls
+      Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
+        OperationMetricsName: ReadDocs
+        ThrowOnFailure: false
+    - Duration: 3 minutes
+      CollectionCount: *NumColls
+      Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
+        OperationMetricsName: ReadDocs
+        ThrowOnFailure: false
 
 AutoRun:
 - When:
