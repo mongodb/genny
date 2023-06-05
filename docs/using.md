@@ -514,7 +514,7 @@ Examples with these and other Actors can be found in [./src/workloads/docs](../s
 
 AutoRun is a utility to allow workload authors to determine scheduling of their workloads without having to commit to a separate repo. The utility is specifically designed for users who are using DSI through Evergreen. To use AutoRun, make sure your project has integrated DSI with Evergreen as explained [here](https://github.com/10gen/dsi/wiki/DSI-In-Evergreen).
 
-AutoRun searches in `./src/*/src/workloads` and assumes that all repos, including Genny itself, are checked out in `./src`.
+AutoRun searches in `[workspace]/src/*/src/workloads` and assumes that all workload repos, including Genny itself, are checked out in `[workspace]/src`.
 
 After performing the above integration, your Evergreen project should have a `schedule_variant_auto_tasks` task on each variant, which can be used to schedule all Genny workloads that are configured to run on this variant. There will also be the `schedule_patch_auto_tasks` task which will schedule any new or modified Genny workloads. If you want to run an unmodified workload, make a small edit (such as inserting whitespace) to force it to be picked up by that latter task.
 
