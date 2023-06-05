@@ -33,6 +33,7 @@ def dry_run_workload(
         "ParallelInsert.yml",
         "LoggingActorExample.yml",
         "Mixed10KThreads.yml",
+        "MixedWorkloadsGennyStressWithScans.yml",
         "MajorityReads10KThreads.yml",
         "MajorityWrites10KThreads.yml",
         "ConnectionPoolStress.yml",
