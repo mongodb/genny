@@ -26,7 +26,7 @@ GlobalDefaults:
 
   # Loader Config.
   LoadThreads: &LoadThreads 8
-  CollectionCount: &CollectionCount 8
+  CollectionCount: &CollectionCount 1
   LoadBatchSize: &LoadBatchSize 1000
 
   InitialDocumentCount: &InitialNumDocs 10000000
@@ -56,6 +56,7 @@ Actors:
         DocumentCount: *InitialNumDocs
         Indexes: *FirstIndex
         BatchSize: *LoadBatchSize
+        MutlipleThreadsPerCollection: true
 
 - Name: LoadWithOneIndex
   Type: Loader
@@ -73,6 +74,7 @@ Actors:
         DocumentCount: *SecondNumDocs
         Indexes: *MoreIndexes
         BatchSize: *LoadBatchSize
+        MutlipleThreadsPerCollection: true
 
 - Name: LoadWithTwoMoreIndexes
   Type: Loader
@@ -89,6 +91,7 @@ Actors:
         Document: *Doc
         DocumentCount: *FinalDocumentCount
         BatchSize: *LoadBatchSize
+        MutlipleThreadsPerCollection: true
 
 - Name: QuiescePhase
   Type: QuiesceActor

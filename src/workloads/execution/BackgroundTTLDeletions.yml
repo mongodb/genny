@@ -146,20 +146,19 @@ Actors:
     TemplateParameters:
       Name: Writes_8_Thread
       Threads: 8
-      CollectionCount: 8
       ActivePhases: [4]
-# - ActorFromTemplate:
-#     TemplateName: WritesActorTemplate
-#     TemplateParameters:
-#       Name: Writes_32_Thread
-#       Threads: 32
-#       ActivePhases: [5]
-# - ActorFromTemplate:
-#     TemplateName: WritesActorTemplate
-#     TemplateParameters:
-#       Name: Writes_128_Thread
-#       Threads: 128
-#       ActivePhases: [6]
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: Writes_32_Thread
+      Threads: 32
+      ActivePhases: [5]
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: Writes_128_Thread
+      Threads: 128
+      ActivePhases: [6]
 AutoRun:
 - When:
     mongodb_setup:

@@ -146,7 +146,6 @@ Actors:
     TemplateParameters:
       Name: Writes_8_Thread
       Threads: 8
-      CollectionCount: 8
       ActivePhases: [4]
 - ActorFromTemplate:
     TemplateName: WritesActorTemplate
