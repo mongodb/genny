@@ -91,6 +91,7 @@ Actors:
       Operations:
       - OperationName: withTransaction
         OperationCommand:
+          OnSession: true
           OperationsInTransaction:
           - OperationName: updateOne
             OperationCommand:
@@ -140,6 +141,7 @@ Actors:
       Operations:
       - OperationName: withTransaction
         OperationCommand:
+          OnSession: true
           OperationsInTransaction:
           - OperationName: updateOne
             Collection: Collection0
@@ -199,6 +201,7 @@ Actors:
       Operations:
       - OperationName: withTransaction
         OperationCommand:
+          OnSession: true
           OperationsInTransaction:
           - OperationName: updateOne
             Database: *Database0
@@ -258,6 +261,7 @@ Actors:
       Operations:
       - OperationName: withTransaction
         OperationCommand:
+          OnSession: true
           OperationsInTransaction:
           - OperationName: updateOne
             Database: *Database0
@@ -315,6 +319,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - shard
+      - shard-heuristic-bonsai
       - shard-lite
       - shard-lite-all-feature-flags
     branch_name:
