@@ -83,4 +83,4 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - replica-ipc-counters.2023-05
+      - replica-ipc-counters.2023-06
