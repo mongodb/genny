@@ -83,4 +83,4 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - standalone
+      - replica-ipc-counters
