@@ -47,7 +47,7 @@ def _get_poplar_args(genny_repo_root: str, workspace_root: str):
 
 
 def _get_export_args(
-    genny_repo_root: str, workspace_root: str, input_path: str, output_path: str = None
+    genny_repo_root: str, workspace_root: str, input_path: str, output_path: Optional[str] = None
 ):
     """
     Returns the argument list used to export ftdc files to csv.
@@ -67,7 +67,7 @@ def _get_export_args(
 
 
 def _get_translate_args(
-    genny_repo_root: str, workspace_root: str, input_path: str, output_path: str = None
+    genny_repo_root: str, workspace_root: str, input_path: str, output_path: Optional[str] = None
 ):
     """
     Returns the argument list used to export genny workload files to ftdc.
@@ -109,7 +109,7 @@ def _create_metrics():
     os.makedirs(_METRICS_PATH, exist_ok=True)
 
 
-def export(workspace_root: str, genny_repo_root: str, input_path: str, output_path: str = None):
+def export(workspace_root: str, genny_repo_root: str, input_path: str, output_path: Optional[str] = None):
     args = _get_export_args(
         workspace_root=workspace_root,
         genny_repo_root=genny_repo_root,
@@ -119,7 +119,7 @@ def export(workspace_root: str, genny_repo_root: str, input_path: str, output_pa
     subprocess.run(args, check=True)
 
 
-def translate(workspace_root: str, genny_repo_root: str, input_path: str, output_path: str = None):
+def translate(workspace_root: str, genny_repo_root: str, input_path: str, output_path: Optional[str] = None):
     args = _get_translate_args(
         workspace_root=workspace_root,
         genny_repo_root=genny_repo_root,
