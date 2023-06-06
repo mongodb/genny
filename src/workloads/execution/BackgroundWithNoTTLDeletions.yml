@@ -129,9 +129,9 @@ Actors:
         DocumentCount: 200_000  # Add an initial set of documents. This will reduce noise in the next phases
         BatchSize: 10_000
         Document: *generatedDoc
-        Indexes:
-        - keys: {expireDate: 1}
-          options: {expireAfterSeconds: 0}
+        # Indexes:
+        # - keys: {expireDate: 1}
+        #   options: {expireAfterSeconds: 0}
 
 # We do not perform a quiesce between phases as it would allow the TTL deleter to catch up. We want
 # it to constantly be running for this workload.
@@ -148,18 +148,18 @@ Actors:
       Threads: 8
       CollectionCount: 8
       ActivePhases: [4]
-# - ActorFromTemplate:
-#     TemplateName: WritesActorTemplate
-#     TemplateParameters:
-#       Name: Writes_32_Thread
-#       Threads: 32
-#       ActivePhases: [5]
-# - ActorFromTemplate:
-#     TemplateName: WritesActorTemplate
-#     TemplateParameters:
-#       Name: Writes_128_Thread
-#       Threads: 128
-#       ActivePhases: [6]
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: Writes_32_Thread
+      Threads: 32
+      ActivePhases: [5]
+- ActorFromTemplate:
+    TemplateName: WritesActorTemplate
+    TemplateParameters:
+      Name: Writes_128_Thread
+      Threads: 128
+      ActivePhases: [6]
 AutoRun:
 - When:
     mongodb_setup:
