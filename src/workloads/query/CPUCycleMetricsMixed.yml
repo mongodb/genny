@@ -1,0 +1,59 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sys-perf"
+Description: |
+  This workload is designed to insert a document, update it and then immediately delete it
+  (this is repeated 10k times). This is designed to help us calculate CPU cycle metrics when
+  utilizing the Linux 3-Node ReplSet CPU Cycle Metrics 2023-06 variant for a mixed workload
+
+dbname: &dbname 10kDocs
+CollectionCount: &NumColls 1
+
+NumPhases: &NumPhases 1
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 1000
+
+ActorTemplates:
+- TemplateName: InsertUpdateActorTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: InsertActor}}
+    Type: CrudActor
+    Database: *dbname
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "ActivePhases", Default: [0]}}
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 10000
+          RecordFailure: true
+          CollectionCount: *NumColls
+          Operation:
+            OperationName: bulkWrite
+            OperationCommand:
+              WriteOperations:
+              - WriteCommand: insertOne
+                Document: { a: 1 }
+              - WriteCommand: updateOne
+                Filter: { a: 1}
+                Update: { $set: { a: 5} }
+              - WriteCommand: deleteOne
+                Filter: { a: 5 }
+            OperationMetricsName: WriteDocs
+            ThrowOnFailure: false
+
+Actors:
+- ActorFromTemplate:
+    TemplateName: InsertUpdateActorTemplate
+    TemplateParameters:
+      Name: {^Parameter: {Name: "QueryName", Default: QueryActor}}
+      Threads: {^Parameter: {Name: "QueryThreads", Default: 1}}
+      ActivePhases: [0]
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica-ipc-counters.2023-06
