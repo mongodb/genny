@@ -41,7 +41,7 @@ ActorTemplates:
                 Update: { $set: { a: 5} }
               - WriteCommand: deleteOne
                 Filter: { a: 5 }
-            OperationMetricsName: WriteDocs
+            OperationMetricsName: MixedActor
             ThrowOnFailure: false
 
 Actors:
