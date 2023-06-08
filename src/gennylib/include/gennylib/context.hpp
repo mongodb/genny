@@ -583,15 +583,15 @@ public:
      * @return the parent workload context
      */
     WorkloadContext& workload() const {
-        return _actor->workload();
+        return this->_actor->workload();
     }
 
     ActorContext& actor() const {
-        return *_actor;
+        return *this->_actor;
     }
 
     SleepContext getSleepContext() const {
-        return SleepContext(_phaseNumber, this->actor().orchestrator());
+        return SleepContext(this->_phaseNumber, this->actor().orchestrator());
     }
 
     /**
@@ -610,14 +610,14 @@ public:
         if (auto metricsName = this->_node["MetricsName"].maybe<std::string>()) {
             stm << *metricsName;
         } else {
-            stm << defaultMetricsName << "." << _phaseNumber;
+            stm << defaultMetricsName << "." << this->_phaseNumber;
         }
 
         return this->workload()._registry.operation(
             this->_actor->operator[]("Name").to<std::string>(),
             stm.str(),
             id,
-            _phaseNumber,
+            this->_phaseNumber,
             internal);
     }
 
@@ -640,12 +640,12 @@ public:
             this->_actor->operator[]("Name").to<std::string>(),
             metricsName,
             id,
-            _phaseNumber,
+            this->_phaseNumber,
             internal);
     }
 
     const auto getPhaseNumber() const {
-        return _phaseNumber;
+        return this->_phaseNumber;
     }
 
 private:
