@@ -487,7 +487,7 @@ public:
      *
      *   - Operation: Cleanup
      *     # inherits `Collection: links` from parent,
-     *     # and `Phase: 3` is derived based on index
+     *     # and `Phase: 2` is derived based on index
      * ```
      *
      * This would result in 3 `PhaseContext` structures. Keys are inherited from the
