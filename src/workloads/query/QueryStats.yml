@@ -45,10 +45,7 @@ ActorTemplates:
               # TODO SERVER-77179: Update $queryStats parameters.
               pipeline: [
                 {
-                  $queryStats: {
-                    applyHmacToIdentifiers: {^Parameter: {Name: "applyHmacToIdentifiers", Default: false}},
-                    hmacKey: *binDataGen
-                  }
+                  $queryStats: {^Parameter: {Name: "queryStatsParameters", Default: {}}}
                 }
               ]
               cursor: {}
@@ -184,7 +181,7 @@ Actors:
     TemplateName: QueryStatsAggregation
     TemplateParameters:
       Name: "QueryStatsAggregationWithHMAC"
-      applyHmacToIdentifiers: true
+      queryStatsParameters: {transformIdentifiers: {algorithm: "hmac-sha-256", hmacKey: *binDataGen}}
       OnlyActiveInPhase: 6
 
 - Name: Quiesce
@@ -227,7 +224,7 @@ Actors:
     TemplateName: QueryStatsAggregation
     TemplateParameters:
       Name: "QueryStatsAggregationWithoutHMAC"
-      applyHmacToIdentifiers: false
+      queryStatsParameters: {}
       OnlyActiveInPhase: 8
 
 AutoRun:
