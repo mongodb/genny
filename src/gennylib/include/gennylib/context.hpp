@@ -519,6 +519,8 @@ public:
     /**
      * Convenience method for creating a metrics::Operation that's unique for this actor and thread.
      *
+     * If "MetricsIgnored" is specified for this actor, "__IGNORED__." will be prepended to metric name.
+     *
      * @param operationName the name of the operation being run.
      * @param id the id of this Actor.
      * @param internal whether this operation is Genny-internal.
