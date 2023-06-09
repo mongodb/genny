@@ -9,7 +9,7 @@ Description: |
     B. Populating collections with data.
     C. Fsync.
     D. Running $lookups. This includes pipelines using let/pipeline syntax, pipelines with
-       local/foreign field syntax, pipelines with different batch sizes, and pipelines run against
+       local/foreign field syntax, pipelines with different $limits, and pipelines run against
        sharded and unsharded colls.
 GlobalDefaults:
   UnshardedLocal: &UnshardedLocal UnshardedLocal
@@ -17,9 +17,9 @@ GlobalDefaults:
   ShardedLocalAllOnOneShard: &ShardedLocalAllOnOneShard ShardedLocalAllOnOneShard
   NumLocalDocs: &NumLocalDocs 15000
   LocalShardKey: &LocalShardKey localField
-  BatchSize1k: &BatchSize1k 1000
-  BatchSize5k: &BatchSize5k 5000
-  BatchSize15k: &BatchSize15k 15000 
+  Limit1k: &Limit1k 1000
+  Limit5k: &Limit5k 5000
+  Limit15k: &Limit15k 15000
   Database: &Database test
   NumPhases: &NumPhases 23
 
@@ -43,7 +43,8 @@ ActorTemplates:
           - OperationName: insertOne
             OperationCommand:
               Document:
-                *LocalShardKey: {^RandomString: {length: 10}}
+                # Set a large enough max so there are probably no duplicate keys.
+                *LocalShardKey: {^RandomInt: {min: 1, max: 20000}}
                 str: {^RandomString: {length: 100}}
                 smallInt: {^RandomInt: {min: 1, max: 10}}
                 mediumInt: {^RandomInt: {min: 1, max: 100}}
@@ -54,8 +55,8 @@ ActorTemplates:
 - TemplateName: SelfLookupLocalFieldForeignField
   Config:
     Name: RunLookup
-    Type: RunCommand
-    Database: *Database
+    Type: CrudActor
+    Threads: 1
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
@@ -63,12 +64,12 @@ ActorTemplates:
         PhaseConfig:
           Repeat: 10
           Database: *Database
+          Collection: {^Parameter: {Name: "Coll", Default: "localColl"}}
           Operations:
           - OperationMetricsName: {^Parameter: {Name: "MetricsName", Default: "Lookup"}}
-            OperationName: RunCommand
+            OperationName: aggregate
             OperationCommand:
-              aggregate: {^Parameter: {Name: "Coll", Default: "localColl"}}
-              pipeline:
+              Pipeline:
                 [
                   {$lookup: {
                     from: {^Parameter: {Name: "Coll", Default: "localColl"}},
@@ -76,16 +77,19 @@ ActorTemplates:
                     foreignField: "localField",
                     as: "joined"
                   }},
+                  {$limit:  {^Parameter: {Name: "Limit", Default: 101}}}
                 ]
-              cursor: {batchSize: {^Parameter: {Name: "BatchSize", Default: 101}}}
+              Options:
+                BatchSize: {^Parameter: {Name: "Limit", Default: 101}}
+                AllowDiskUse: true
 
 # Template for running a $lookup using let/pipeline (aka "expressive") syntax. For the reason
 # mentioned above, the local and foreign collections are the same.
 - TemplateName: SelfLookupLetPipeline
   Config:
     Name: RunLookup
-    Type: RunCommand
-    Database: *Database
+    Type: CrudActor
+    Threads: 1
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
@@ -93,12 +97,12 @@ ActorTemplates:
         PhaseConfig:
           Repeat: 10
           Database: *Database
+          Collection: {^Parameter: {Name: "Coll", Default: "localColl"}}
           Operations:
           - OperationMetricsName: {^Parameter: {Name: "MetricsName", Default: "Lookup"}}
-            OperationName: RunCommand
+            OperationName: aggregate
             OperationCommand:
-              aggregate: {^Parameter: {Name: "Coll", Default: "localColl"}}
-              pipeline:
+              Pipeline:
                 [
                   {$lookup: {
                     from: {^Parameter: {Name: "Coll", Default: "localColl"}},
@@ -112,8 +116,11 @@ ActorTemplates:
                     ],
                     as: "joined"
                   }},
+                  {$limit:  {^Parameter: {Name: "Limit", Default: 101}}}
                 ]
-              cursor: {batchSize: {^Parameter: {Name: "BatchSize", Default: 101}}}
+              Options:
+                BatchSize: {^Parameter: {Name: "Limit", Default: 101}}
+                AllowDiskUse: true
 
 Actors:
 - Name: CreateShardedCollections
@@ -209,7 +216,7 @@ Actors:
       OnlyActiveInPhase: 6
       MetricsName: UnshardedLocalFieldForeignField1k
       Coll: *UnshardedLocal
-      BatchSize: *BatchSize1k
+      Limit: *Limit1k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLocalFieldForeignField
@@ -217,7 +224,7 @@ Actors:
       OnlyActiveInPhase: 7
       MetricsName: UnshardedLocalFieldForeignField5k
       Coll: *UnshardedLocal
-      BatchSize: *BatchSize5k
+      Limit: *Limit5k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLocalFieldForeignField
@@ -225,7 +232,7 @@ Actors:
       OnlyActiveInPhase: 8
       MetricsName: UnshardedLocalFieldForeignField15k
       Coll: *UnshardedLocal
-      BatchSize: *BatchSize15k
+      Limit: *Limit15k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLetPipeline
@@ -233,7 +240,7 @@ Actors:
       OnlyActiveInPhase: 9
       MetricsName: UnshardedLetPipeline1k
       Coll: *UnshardedLocal
-      BatchSize: *BatchSize1k
+      Limit: *Limit1k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLetPipeline
@@ -241,7 +248,7 @@ Actors:
       OnlyActiveInPhase: 10
       MetricsName: UnshardedLetPipeline5k
       Coll: *UnshardedLocal
-      BatchSize: *BatchSize5k
+      Limit: *Limit5k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLetPipeline
@@ -249,7 +256,7 @@ Actors:
       OnlyActiveInPhase: 11
       MetricsName: UnshardedLetPipeline15k
       Coll: *UnshardedLocal
-      BatchSize: *BatchSize15k
+      Limit: *Limit15k
 
 #
 # Sharded, distributed
@@ -260,7 +267,7 @@ Actors:
       OnlyActiveInPhase: 12
       MetricsName: ShardedLocalFieldForeignField1k
       Coll: *ShardedLocal
-      BatchSize: *BatchSize1k
+      Limit: *Limit1k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLocalFieldForeignField
@@ -268,7 +275,7 @@ Actors:
       OnlyActiveInPhase: 13
       MetricsName: ShardedLocalFieldForeignField5k
       Coll: *ShardedLocal
-      BatchSize: *BatchSize5k
+      Limit: *Limit5k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLocalFieldForeignField
@@ -276,7 +283,7 @@ Actors:
       OnlyActiveInPhase: 14
       MetricsName: ShardedLocalFieldForeignField15k
       Coll: *ShardedLocal
-      BatchSize: *BatchSize15k
+      Limit: *Limit15k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLetPipeline
@@ -284,7 +291,7 @@ Actors:
       OnlyActiveInPhase: 15
       MetricsName: ShardedLetPipeline1k
       Coll: *ShardedLocal
-      BatchSize: *BatchSize1k
+      Limit: *Limit1k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLetPipeline
@@ -292,7 +299,7 @@ Actors:
       OnlyActiveInPhase: 16
       MetricsName: ShardedLetPipeline5k
       Coll: *ShardedLocal
-      BatchSize: *BatchSize5k
+      Limit: *Limit5k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLetPipeline
@@ -300,7 +307,7 @@ Actors:
       OnlyActiveInPhase: 17
       MetricsName: ShardedLetPipeline15k
       Coll: *ShardedLocal
-      BatchSize: *BatchSize15k
+      Limit: *Limit15k
 
 #
 # Sharded, all on same shard
@@ -311,7 +318,7 @@ Actors:
       OnlyActiveInPhase: 18
       MetricsName: ShardedAllOnOneShardLocalFieldForeignField1k
       Coll: *ShardedLocalAllOnOneShard
-      BatchSize: *BatchSize1k
+      Limit: *Limit1k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLocalFieldForeignField
@@ -319,7 +326,7 @@ Actors:
       OnlyActiveInPhase: 19
       MetricsName: ShardedAllOnOneShardLocalFieldForeignField5k
       Coll: *ShardedLocalAllOnOneShard
-      BatchSize: *BatchSize5k
+      Limit: *Limit5k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLocalFieldForeignField
@@ -327,7 +334,7 @@ Actors:
       OnlyActiveInPhase: 20
       MetricsName: ShardedAllOnOneShardLocalFieldForeignField15k
       Coll: *ShardedLocalAllOnOneShard
-      BatchSize: *BatchSize15k
+      Limit: *Limit15k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLetPipeline
@@ -335,7 +342,7 @@ Actors:
       OnlyActiveInPhase: 21
       MetricsName: ShardedAllOnOneShardLetPipeline1k
       Coll: *ShardedLocalAllOnOneShard
-      BatchSize: *BatchSize1k
+      Limit: *Limit1k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLetPipeline
@@ -343,7 +350,7 @@ Actors:
       OnlyActiveInPhase: 22
       MetricsName: ShardedAllOnOneShardLetPipeline5k
       Coll: *ShardedLocalAllOnOneShard
-      BatchSize: *BatchSize5k
+      Limit: *Limit5k
 
 - ActorFromTemplate:
     TemplateName: SelfLookupLetPipeline
@@ -351,7 +358,7 @@ Actors:
       OnlyActiveInPhase: 23
       MetricsName: ShardedAllOnOneShardLetPipeline15k
       Coll: *ShardedLocalAllOnOneShard
-      BatchSize: *BatchSize15k
+      Limit: *Limit15k
 
 AutoRun:
 - When:
