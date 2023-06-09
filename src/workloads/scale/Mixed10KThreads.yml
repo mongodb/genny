@@ -85,7 +85,7 @@ Actors:
     - Duration: 3 minutes
       CollectionCount: *NumColls
       Operations:
-      - OperationName: find
+      - OperationName: findOne
         OperationCommand:
           Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
         OperationMetricsName: ReadDocs
