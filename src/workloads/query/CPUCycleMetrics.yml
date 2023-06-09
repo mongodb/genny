@@ -63,7 +63,7 @@ Actors:
           OperationCommand:
             Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
           OperationMetricsName: ReadDocs
-          ThrowOnFailure: false
+          ThrowOnFailure: true
 
 AutoRun:
 - When:
