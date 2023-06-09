@@ -10,47 +10,32 @@ CollectionCount: &NumColls 1
 
 NumPhases: &NumPhases 1
 
-Clients:
-  Default:
-    QueryOptions:
-      maxPoolSize: 1000
-
-ActorTemplates:
-- TemplateName: InsertUpdateActorTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: InsertActor}}
-    Type: CrudActor
-    Database: *dbname
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [0]}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Repeat: 10000
-          RecordFailure: true
-          CollectionCount: *NumColls
-          Operation:
-            OperationName: bulkWrite
-            OperationCommand:
-              WriteOperations:
-              - WriteCommand: insertOne
-                Document: { a: 1 }
-              - WriteCommand: updateOne
-                Filter: { a: 1}
-                Update: { $set: { a: 5} }
-              - WriteCommand: deleteOne
-                Filter: { a: 5 }
-            OperationMetricsName: MixedActor
-            ThrowOnFailure: false
-
 Actors:
-- ActorFromTemplate:
-    TemplateName: InsertUpdateActorTemplate
-    TemplateParameters:
-      Name: {^Parameter: {Name: "QueryName", Default: QueryActor}}
-      Threads: {^Parameter: {Name: "QueryThreads", Default: 1}}
-      ActivePhases: [0]
+- Name: CrudActor
+  Type: CrudActor
+  Database: *dbname
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 10000
+        RecordFailure: true
+        CollectionCount: *NumColls
+        Operation:
+          OperationName: bulkWrite
+          OperationCommand:
+            WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: updateOne
+              Filter: { a: 1}
+              Update: { $set: { a: 5} }
+            - WriteCommand: deleteOne
+              Filter: { a: 5 }
+          OperationMetricsName: MixedActor
+          ThrowOnFailure: true
 
 AutoRun:
 - When:
