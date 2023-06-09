@@ -12,35 +12,8 @@ CollectionCount: &NumColls 1
 NumPhases: &NumPhases 3
 
 Document: &doc
-  a: {^RandomInt: {min: 0, max: *NumDocs}}
+  a: {^Inc : {}}
   b: {^RandomString: {length: 16}}
-
-Clients:
-  Default:
-    QueryOptions:
-      maxPoolSize: 1000
-
-ActorTemplates:
-- TemplateName: ReadsActorTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: ReadsActor}}
-    Type: CrudActor
-    Database: *dbname
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [2]}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Repeat: 10000
-          RecordFailure: true
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
-            OperationMetricsName: ReadDocs
-            ThrowOnFailure: false
 
 Actors:
 - Name: Setup
@@ -73,13 +46,24 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- ActorFromTemplate:
-    TemplateName: ReadsActorTemplate
-    TemplateParameters:
-      Name: {^Parameter: {Name: "QueryName", Default: QueryActor}}
-      Threads: {^Parameter: {Name: "QueryThreads", Default: 1}}
-      ActivePhases: [2]
-
+- Name: ReadsActor
+  Type: CrudActor
+  Database: *dbname
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 10000
+        RecordFailure: true
+        CollectionCount: *NumColls
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
+          OperationMetricsName: ReadDocs
+          ThrowOnFailure: false
 
 AutoRun:
 - When:
