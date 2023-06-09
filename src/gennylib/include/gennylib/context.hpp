@@ -524,8 +524,13 @@ public:
      * @param internal whether this operation is Genny-internal.
      */
     auto operation(const std::string& operationName, ActorId id, bool internal = false) const {
+        std::ostringstream stm;
+        if (this->_node["MetricsIgnored"].maybe<bool>()) {
+            stm << "__METRICS_IGNORED__.";
+        }
+        stm << operationName;
         return this->_workload->_registry.operation(
-            this->_node["Name"].to<std::string>(), operationName, id, std::nullopt, internal);
+            this->_node["Name"].to<std::string>(), stm.str(), id, std::nullopt, internal);
     }
 
 private:
