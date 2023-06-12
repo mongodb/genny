@@ -99,4 +99,5 @@ AutoRun:
       - replica-all-feature-flags
       - replica-ec-2
       - replica-ec-3
+      - replica-ec-4
       - replica-disable-execution-control
