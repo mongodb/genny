@@ -127,6 +127,189 @@ Actors:
               $derivative: {input: "$temp", unit: "second"},
               window: {documents: [-500, 0]}}}}}]
         cursor: {batchSize: *batchSize}
+    - OperationMetricsName: IntegralSmallWindow
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {integral: {
+              $integral: {input: "$temp", unit: "second"},
+              window: {documents: [-10, 0]}}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: IntegralLargeWindow
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {integral: {
+              $integral: {input: "$temp", unit: "second"},
+              window: {documents: [-500, 0]}}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: AddToSetSmallWindow
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {set: {
+              $addToSet: "$temp",
+              window: {documents: [-10, 0]}}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: AddToSetLargeWindow
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {set: {
+              $addToSet: "$temp",
+              window: {documents: [-500, 0]}}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: PushSmallWindow
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {docs: {
+              $push: "$temp",
+              window: {documents: [-10, 0]}}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: PushLargeWindow
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {docs: {
+              $push: "$temp",
+              window: {documents: [-500, 0]}}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: FirstSmallWindow
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {first: {
+              $first: "$temp",
+              window: {documents: [-10, 0]}}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: FirstLargeWindow
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {first: {
+              $first: "$temp",
+              window: {documents: [-500, 0]}}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: LastSmallWindow
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {last: {
+              $last: "$temp",
+              window: {documents: [0, 10]}}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: LastLargeWindow
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {last: {
+              $last: "$temp",
+              window: {documents: [0, 500]}}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: ShiftSmallWindow
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {shifted: {
+              $shift: {
+                  output: "$temp",
+                  by: 10,
+                  default: "Not available"
+               }}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: ShiftLargeWindow
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {shifted: {
+              $shift: {
+                  output: "$temp",
+                  by: 500,
+                  default: "Not available"
+               }}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: DocumentNumber
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {docNo: {
+              $documentNumber: {}}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: Rank
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {docNo: {
+              $rank: {}}}}}]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: DenseRank
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{$setWindowFields: {
+            partitionBy: "$partitionKey",
+            sortBy: {time: 1},
+            output: {docNo: {
+              $denseRank: {}}}}}]
+        cursor: {batchSize: *batchSize}
 
 AutoRun:
 - When:
