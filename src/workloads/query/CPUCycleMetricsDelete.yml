@@ -35,7 +35,7 @@ Actors:
           Indexes:
           - keys: {a: 1}
 
-  - Name: UpdateActor
+  - Name: DeleteActor
     Type: CrudActor
     Threads: 1
     Database: *dbname

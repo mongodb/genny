@@ -2,7 +2,7 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/sys-perf"
 Description: |
   This workload is designed to insert 10k documents into a single collection and then
-  perform exactly 10k reads. This is designed to help us calculate CPU cycle metrics
+  perform exactly 10k updates. This is designed to help us calculate CPU cycle metrics
   when utilizing the Linux 3-Node ReplSet CPU Cycle Metrics 2023-06 variant
 
 dbname: &dbname 10kDocs
@@ -53,8 +53,8 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: updates
             OperationCommand:
-                Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
-                Update: { $set: { ^RandomInt: { min: 0, max: *NumDocs } } }
+                Filter: { a: {^Inc : {}} }
+                Update: { $set: { b: {^RandomString: {length: 16}} } }
 
 AutoRun:
 - When:
