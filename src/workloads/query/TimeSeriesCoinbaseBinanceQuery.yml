@@ -117,7 +117,7 @@ Actors:
         Database: *Database
         Collection: *Collection
         Operations:
-        - OperationMetricsName: {^Parameter: {Name: "operationMetricsName", Default: OperationMetric}}
+        - OperationMetricsName: CoinbaseBinanceQuery
           OperationName: aggregate
           OperationCommand:
             Pipeline: [{$addFields:
