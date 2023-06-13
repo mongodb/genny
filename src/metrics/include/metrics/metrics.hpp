@@ -275,6 +275,10 @@ public:
         return _pathPrefix;
     }
 
+    void ignore(const std::string& metricName) {
+        _ignoredMetrics.emplace(metricName);
+    }
+
 private:
     std::string createName(const std::string& actorName,
                            const std::string& opName,
@@ -292,7 +296,16 @@ private:
         if (phase) {
             str << '.' << *phase;
         }
-        return str.str();
+
+        const auto& metricName = str.str();
+        if (_ignoredMetrics.count(metricName) == 1) {
+            str << ".__METRICS_IGNORED__";
+            const auto& ignoredMetricName = str.str();
+            BOOST_LOG_TRIVIAL(info) << "Marked metric as ignored: " << ignoredMetricName;
+            return ignoredMetricName;
+        }
+        BOOST_LOG_TRIVIAL(info) << "Recording metric: " << metricName;
+        return metricName;
     }
 
     // Must be a ptr to keep the registry moveable.
@@ -300,6 +313,7 @@ private:
     std::unique_ptr<GrpcClient> _grpcClient;
     OperationsMap _ops;
     MetricsFormat _format;
+    std::unordered_set<std::string> _ignoredMetrics;
     boost::filesystem::path _pathPrefix;
     boost::filesystem::path _internalPathPrefix;
 };

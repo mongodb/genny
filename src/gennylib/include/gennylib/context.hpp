@@ -519,20 +519,13 @@ public:
     /**
      * Convenience method for creating a metrics::Operation that's unique for this actor and thread.
      *
-     * If "MetricsIgnored" is specified for this actor, "__IGNORED__." will be prepended to metric name.
-     *
      * @param operationName the name of the operation being run.
      * @param id the id of this Actor.
      * @param internal whether this operation is Genny-internal.
      */
     auto operation(const std::string& operationName, ActorId id, bool internal = false) const {
-        std::ostringstream stm;
-        if (this->_node["MetricsIgnored"].maybe<bool>()) {
-            stm << "__METRICS_IGNORED__.";
-        }
-        stm << operationName;
         return this->_workload->_registry.operation(
-            this->_node["Name"].to<std::string>(), stm.str(), id, std::nullopt, internal);
+            this->_node["Name"].to<std::string>(), operationName, id, std::nullopt, internal);
     }
 
 private:
@@ -604,10 +597,8 @@ public:
     /**
      * Convenience method for creating a metrics::Operation that's unique for this phase and thread.
      *
-     * If "MetricsIgnored" is specified for a phase, "__IGNORED__." will be prepended to metric name.
-     *
-     * If "MetricsName" is specified for a phase, it is used for metric name;
-     * otherwise, "[defaultMetricsName].[phaseNumber]" is used.
+     * If "MetricsName" is specified for a phase, it is used.
+     * Otherwise "[defaultMetricsName].[phaseNumber]" is used.
      *
      * @param defaultMetricName the default name of the metric if "MetricsName" is not specified
      *                          for a phase in the workload YAML.
@@ -616,9 +607,6 @@ public:
      */
     auto operation(const std::string& defaultMetricsName, ActorId id, bool internal = false) const {
         std::ostringstream stm;
-        if (this->_node["MetricsIgnored"].maybe<bool>()) {
-            stm << "__METRICS_IGNORED__.";
-        }
         if (auto metricsName = this->_node["MetricsName"].maybe<std::string>()) {
             stm << *metricsName;
         } else {

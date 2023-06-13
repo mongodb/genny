@@ -78,6 +78,13 @@ WorkloadContext::WorkloadContext(const Node& node,
 
     _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
 
+    auto& ignoredMetrics = (*this)["IgnoredMetrics"];
+    if (ignoredMetrics && ignoredMetrics.isSequence()) {
+        for (const auto& [k, metric] : (*this)["IgnoredMetrics"]) {
+            _registry.ignore(metric.to<std::string>());
+        }
+    }
+
     _seedGenerator.seed((*this)["RandomSeed"].maybe<long>().value_or(RNG_SEED_BASE));
 
     // Make a bunch of actor contexts
