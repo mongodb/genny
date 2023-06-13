@@ -277,38 +277,15 @@ Actors:
                   default: "Not available"
                }}}}}]
         cursor: {batchSize: *batchSize}
-    - OperationMetricsName: DocumentNumber
+    - OperationMetricsName: MovingAvgPositionBasedWithComplexPartition
       OperationName: RunCommand
       OperationCommand:
         aggregate: Collection0
         pipeline:
           [{$setWindowFields: {
-            partitionBy: "$partitionKey",
+            partitionBy: {$mod: ["$partitionKey", 3]},
             sortBy: {time: 1},
-            output: {docNo: {
-              $documentNumber: {}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: Rank
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {docNo: {
-              $rank: {}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: DenseRank
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {docNo: {
-              $denseRank: {}}}}}]
+            output: {avg: {$avg: "$temp", window: {documents: [-5, 5]}}}}}]
         cursor: {batchSize: *batchSize}
 
 AutoRun:
