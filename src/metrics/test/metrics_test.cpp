@@ -472,20 +472,20 @@ TEST_CASE("Phases can set metrics") {
 
     SECTION("With MetricsName") {
         NodeSource yaml(R"(
-        SchemaVersion: 2018-07-01
-        Database: test
-        Actors:
-        - Name: MetricsNameTest
-          Type: HelloWorld
-          Threads: 1
-          Phases:
-          - Repeat: 1
-            MetricsName: Phase1Metrics
-
-        Metrics:
-          Format: cedar-csv
-          Path: build/genny-metrics
-        )",
+            SchemaVersion: 2018-07-01
+            Database: test
+            Actors:
+            - Name: MetricsNameTest
+              Type: HelloWorld
+              Threads: 1
+              Phases:
+              - Repeat: 1
+                MetricsName: Phase1Metrics
+    
+            Metrics:
+              Format: cedar-csv
+              Path: build/genny-metrics
+            )",
                         "");
 
         ActorHelper ah{yaml.root(), 1};
@@ -497,19 +497,19 @@ TEST_CASE("Phases can set metrics") {
 
     SECTION("With default metrics name") {
         NodeSource yaml(R"(
-    SchemaVersion: 2018-07-01
-    Database: test
-    Actors:
-    - Name: MetricsNameTest
-      Type: HelloWorld
-      Threads: 1
-      Phases:
-      - Repeat: 1
-
-    Metrics:
-      Format: cedar-csv
-      Path: build/genny-metrics
-    )",
+            SchemaVersion: 2018-07-01
+            Database: test
+            Actors:
+            - Name: MetricsNameTest
+              Type: HelloWorld
+              Threads: 1
+              Phases:
+              - Repeat: 1
+        
+            Metrics:
+              Format: cedar-csv
+              Path: build/genny-metrics
+            )",
                         "");
 
         ActorHelper ah{yaml.root(), 1};
