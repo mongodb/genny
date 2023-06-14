@@ -277,16 +277,6 @@ Actors:
                   default: "Not available"
                }}}}}]
         cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MovingAvgPositionBasedWithComplexPartition
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
-          [{$setWindowFields: {
-            partitionBy: {$mod: ["$partitionKey", 3]},
-            sortBy: {time: 1},
-            output: {avg: {$avg: "$temp", window: {documents: [-5, 5]}}}}}]
-        cursor: {batchSize: *batchSize}
 
 AutoRun:
 - When:
