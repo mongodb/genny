@@ -601,7 +601,7 @@ struct TakesInt {
 };
 
 struct AnotherInt : public TakesInt {
-    // need no-arg ctor to be able to do YAML::Node::as<>()
+    // need no-arg actor to be able to do YAML::Node::as<>()
     AnotherInt() : AnotherInt(0) {}
     AnotherInt(int x) : TakesInt(x) {}
 };
