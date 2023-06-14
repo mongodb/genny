@@ -481,7 +481,7 @@ TEST_CASE("Phases can set metrics") {
               Phases:
               - Repeat: 1
                 MetricsName: Phase1Metrics
-    
+
             Metrics:
               Format: cedar-csv
               Path: build/genny-metrics
@@ -505,7 +505,7 @@ TEST_CASE("Phases can set metrics") {
               Threads: 1
               Phases:
               - Repeat: 1
-        
+
             Metrics:
               Format: cedar-csv
               Path: build/genny-metrics
