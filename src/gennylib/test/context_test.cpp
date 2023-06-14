@@ -114,15 +114,15 @@ TEST_CASE("loads configuration okay") {
 
     SECTION("Valid YAML") {
         auto yaml = NodeSource(R"(
-SchemaVersion: 2018-07-01
-Clients:
-  Default:
-    URI: 'mongodb://localhost:27017'
-Actors:
-- Name: HelloWorld
-  Type: Nop
-  Count: 7
-        )",
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: 'mongodb://localhost:27017'
+            Actors:
+            - Name: HelloWorld
+              Type: Nop
+              Count: 7
+            )",
                                "");
 
         WorkloadContext w{yaml.root(), orchestrator, cast};
@@ -130,10 +130,14 @@ Actors:
     }
 
     SECTION("Invalid Schema Version") {
-        auto yaml = NodeSource(
-            "SchemaVersion: 2018-06-27\nClients: {Default: {URI: "
-            "'mongodb://localhost:27017'}}\nActors: []\n",
-            "");
+        auto yaml = NodeSource(R"(
+            SchemaVersion: 2018-06-27
+            Clients:
+              Default:
+                URI: 'mongodb://localhost:27017'
+            Actors: []
+            )",
+                               "");
 
         auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, cast); };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid Schema Version: 2018-06-27"));
@@ -242,28 +246,32 @@ Actors:
                 R"(Invalid key 'SchemaVersion': Tried to access node that doesn't exist. On node with path '/SchemaVersion': )"));
     }
     SECTION("No Actors") {
-        auto yaml = NodeSource(
-            "SchemaVersion: 2018-07-01\nClients: {Default: {URI: 'mongodb://localhost:27017'}}",
-            "");
+        auto yaml = NodeSource(R"(
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: 'mongodb://localhost:27017'
+            )",
+                               "");
         auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, cast); };
         test();
     }
 
     SECTION("Can call two actor producers") {
         NodeSource ns(R"(
-SchemaVersion: 2018-07-01
-Clients:
-  Default:
-    URI: 'mongodb://localhost:27017'
-Actors:
-- Name: One
-  Type: SomeList
-  SomeList: [100, 2, 3]
-- Name: Two
-  Type: Count
-  Count: 7
-  SomeList: [2]
-        )",
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: 'mongodb://localhost:27017'
+            Actors:
+            - Name: One
+              Type: SomeList
+              SomeList: [100, 2, 3]
+            - Name: Two
+              Type: Count
+              Count: 7
+              SomeList: [2]
+            )",
                       "");
 
         struct SomeListProducer : public ActorProducer {
@@ -346,29 +354,29 @@ void onContext(const NodeSource& yaml, std::function<void(ActorContext&)> op) {
 
 TEST_CASE("PhaseContexts constructed as expected") {
     NodeSource ns(R"(
-    SchemaVersion: 2018-07-01
-    Clients:
-      Default:
-        URI: 'mongodb://localhost:27017'
-    Actors:
-    - Name: HelloWorld
-      Type: Op
-      Foo: Bar
-      Foo2: Bar2
-      Phases:
-      - Operation: One
-        Foo: Baz
-      - Operation: Two
-        Phase: 2 # intentionally out of order for testing
-      - Operation: Three
-        Phase: 1 # intentionally out of order for testing
-        Extra: [1,2]
-      - Operation: Four
-        Phase: 3..5
-      - Operation: Five
-        Phase: 6..7
-        Foo2: Bar3
-    )",
+        SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: 'mongodb://localhost:27017'
+        Actors:
+        - Name: HelloWorld
+          Type: Op
+          Foo: Bar
+          Foo2: Bar2
+          Phases:
+          - Operation: One
+            Foo: Baz
+          - Operation: Two
+            Phase: 2 # intentionally out of order for testing
+          - Operation: Three
+            Phase: 1 # intentionally out of order for testing
+            Extra: [1,2]
+          - Operation: Four
+            Phase: 3..5
+          - Operation: Five
+            Phase: 6..7
+            Foo2: Bar3
+        )",
                   "");
 
     SECTION("Loads Phases") {
@@ -422,16 +430,16 @@ TEST_CASE("Duplicate Phase Numbers") {
 
     SECTION("Phase Number syntax") {
         NodeSource ns(R"(
-        SchemaVersion: 2018-07-01
-        Clients:
-          Default:
-            URI: 'mongodb://localhost:27017'
-        Actors:
-        - Type: Nop
-          Phases:
-          - Phase: 0
-          - Phase: 0
-        )",
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: 'mongodb://localhost:27017'
+            Actors:
+            - Type: Nop
+              Phases:
+              - Phase: 0
+              - Phase: 0
+            )",
                       "");
         auto& yaml = ns.root();
 
@@ -441,16 +449,16 @@ TEST_CASE("Duplicate Phase Numbers") {
 
     SECTION("PhaseRange syntax") {
         NodeSource ns(R"(
-        SchemaVersion: 2018-07-01
-        Clients:
-          Default:
-            URI: 'mongodb://localhost:27017'
-        Actors:
-        - Type: Nop
-          Phases:
-          - Phase: 0
-          - Phase: 0..11
-        )",
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: 'mongodb://localhost:27017'
+            Actors:
+            - Type: Nop
+              Phases:
+              - Phase: 0
+              - Phase: 0..11
+            )",
                       "");
         auto& yaml = ns.root();
 
@@ -461,14 +469,14 @@ TEST_CASE("Duplicate Phase Numbers") {
 
 TEST_CASE("No PhaseContexts") {
     NodeSource ns(R"(
-    SchemaVersion: 2018-07-01
-    Clients:
-      Default:
-        URI: 'mongodb://localhost:27017'
-    Actors:
-    - Name: HelloWorld
-      Type: Nop
-    )",
+        SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: 'mongodb://localhost:27017'
+        Actors:
+        - Name: HelloWorld
+          Type: Nop
+        )",
                   "");
 
     SECTION("Empty PhaseContexts") {
@@ -482,22 +490,22 @@ TEST_CASE("No PhaseContexts") {
 TEST_CASE("PhaseContexts constructed correctly with PhaseRange syntax") {
     SECTION("One Phase per block") {
         auto yaml = NodeSource(R"(
-        SchemaVersion: 2018-07-01
-        Clients:
-          Default:
-            URI: 'mongodb://localhost:27017'
-        Actors:
-        - Name: HelloWorld
-          Type: Nop
-        Phases:
-        - Phase: 0
-        - Phase: 1..4
-        - Phase: 5..5
-        - Phase: 6
-        - Phase: 7..1e1
-        - Phase: 11..11
-        - Phase: 12
-        )",
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: 'mongodb://localhost:27017'
+            Actors:
+            - Name: HelloWorld
+              Type: Nop
+              Phases:
+              - Phase: 0
+              - Phase: 1..4
+              - Phase: 5..5
+              - Phase: 6
+              - Phase: 7..1e1
+              - Phase: 11..11
+              - Phase: 12
+            )",
                                "");
 
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
@@ -630,13 +638,13 @@ struct convert<AnotherInt> {
 TEST_CASE("context getPlural") {
     auto createYaml = [](std::string actorYaml) -> NodeSource {
         auto doc = YAML::Load(R"(
-SchemaVersion: 2018-07-01
-Clients:
-  Default:
-    URI: 'mongodb://localhost:27017'
-Numbers: [1,2,3]
-Actors: [{}]
-)");
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: 'mongodb://localhost:27017'
+            Numbers: [1,2,3]
+            Actors: [{}]
+        )");
         auto actor = YAML::Load(actorYaml);
         actor["Type"] = "Op";
         doc["Actors"][0] = actor;
@@ -702,15 +710,15 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
     };
 
     auto yaml = NodeSource(R"(
-    SchemaVersion: 2018-07-01
-    Clients:
-      Default:
-        URI: 'mongodb://localhost:27017'
-    Database: test
-    Actors:
-    - Name: Actor1
-      Type: Bar
-    )",
+        SchemaVersion: 2018-07-01
+        Clients:
+          Default:
+            URI: 'mongodb://localhost:27017'
+        Database: test
+        Actors:
+        - Name: Actor1
+          Type: Bar
+        )",
                            "");
 
     SECTION("Incorrect type value inputted") {
