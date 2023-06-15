@@ -6,7 +6,7 @@ colorama==0.4.3
 structlog==20.1.0
 omegaconf==2.1.1
 PyYAML==5.1
-requests==2.21.0
+requests==2.31.0
 yamllint==1.15.0
 shrub.py==1.1.0
 black==22.10.0
