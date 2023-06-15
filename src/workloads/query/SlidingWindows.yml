@@ -24,6 +24,7 @@ Actors:
       temp: {^RandomDouble: {distribution: normal, mean: 145, sigma: 30.0}}
   - &Nop {Nop: true}
   - *Nop
+  - *Nop
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -32,6 +33,7 @@ Actors:
   Phases:
   - *Nop
   - Repeat: 1
+  - *Nop
   - *Nop
 
 - Name: SlidingWindows
@@ -127,6 +129,19 @@ Actors:
               $derivative: {input: "$temp", unit: "second"},
               window: {documents: [-500, 0]}}}}}]
         cursor: {batchSize: *batchSize}
+  - *Nop
+
+
+- Name: SlidingWindows
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 10
+    Database: *db
+    Operations:
     - OperationMetricsName: IntegralSmallWindow
       OperationName: RunCommand
       OperationCommand:
