@@ -153,12 +153,63 @@ Actors:
             }
           }]
         cursor: {batchSize: *batchSize}
+    - OperationMetricsName: DocumentNumber
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $setWindowFields: {
+              sortBy: {t: 1},
+              output: {
+                docNo: {
+                  $documentNumber: {}
+                }
+              }
+            }
+          }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: Rank
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $setWindowFields: {
+              sortBy: {t: 1},
+              output: {
+                rank: {
+                  $rank: {}
+                }
+              }
+            }
+          }]
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: DenseRank
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [{
+            $setWindowFields: {
+              sortBy: {t: 1},
+              output: {
+                denseRank: {
+                  $denseRank: {}
+                }
+              }
+            }
+          }]
+        cursor: {batchSize: *batchSize}
 
 AutoRun:
 - When:
     mongodb_setup:
       $eq:
       - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-sbe
       - replica
       - replica-all-feature-flags
       - shard-lite
