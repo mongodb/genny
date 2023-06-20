@@ -54,7 +54,7 @@ Actors:
       CollectionCount: *NumColls
       Operations:
       - OperationName: insertOne
-        OperationMetricsName: WriteDocs
+        OperationMetricsName: WriteDocsWarmup
         OperationCommand:
           Document: *doc
         ThrowOnFailure: false
@@ -63,7 +63,7 @@ Actors:
       CollectionCount: *NumColls
       Operations:
       - OperationName: insertOne
-        OperationMetricsName: WriteDocs
+        OperationMetricsName: WriteDocsMain
         OperationCommand:
           Document: *doc
         ThrowOnFailure: false
@@ -81,7 +81,7 @@ Actors:
       - OperationName: findOne
         OperationCommand:
           Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
-        OperationMetricsName: ReadDocs
+        OperationMetricsName: ReadDocsWarmup
         ThrowOnFailure: false
     - Duration: 3 minutes
       CollectionCount: *NumColls
@@ -89,7 +89,7 @@ Actors:
       - OperationName: findOne
         OperationCommand:
           Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
-        OperationMetricsName: ReadDocs
+        OperationMetricsName: ReadDocsMain
         ThrowOnFailure: false
 
 AutoRun:
