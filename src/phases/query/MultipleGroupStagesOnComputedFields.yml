@@ -21,8 +21,8 @@ InsertDataTemplate:
         DocumentCount: {^Parameter: {Name: "documentCount", Default: 1e6}}
         BatchSize: {^Parameter: {Name: "batchSize", Default: 3000}}
         Document:
-          # Since step = 15 ms and documentCount = 1,000,000, the first and last document would be 15,000,000 ms apart (roughly 4 days).
-          time: {^IncDate: {start: "2022-01-01", step: 15}}
+          # Since step = 350 ms and documentCount = 1,000,000, the first and last document would be 350,000,000 ms apart (roughly 4 days).
+          time: {^IncDate: {start: "2022-01-01", step: 350}}
           symbol: {^Cycle: {ofLength: {^Parameter: {Name: "numGroups", Default: 100}}, fromGenerator: {^RandomString: {length: 6}}}}
           price: {^RandomDouble: {min: 100.0, max: 1000.0}}
 
