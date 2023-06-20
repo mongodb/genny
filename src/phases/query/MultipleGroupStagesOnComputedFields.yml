@@ -21,7 +21,8 @@ InsertDataTemplate:
         DocumentCount: {^Parameter: {Name: "documentCount", Default: 1e6}}
         BatchSize: {^Parameter: {Name: "batchSize", Default: 3000}}
         Document:
-          time: {^IncDate: {start: {^Now: {}}, step: 1000}}
+          # Since step = 15 ms and documentCount = 1,000,000, the first and last document would be 15,000,000 ms apart (roughly 4 days).
+          time: {^IncDate: {start: "2022-01-01", step: 15}}
           symbol: {^Cycle: {ofLength: {^Parameter: {Name: "numGroups", Default: 100}}, fromGenerator: {^RandomString: {length: 6}}}}
           price: {^RandomDouble: {min: 100.0, max: 1000.0}}
 
@@ -43,7 +44,7 @@ QueryTemplate:
           OperationName: aggregate
           OperationCommand:
             Pipeline: [{$addFields:
-                          {"hourDiff": {$dateDiff: {"startDate": "$time", "endDate": "$$NOW", "unit": "hour"}}}},
+                          {"hourDiff": {$dateDiff: {"startDate": "$time", "endDate": {^Date: "2022-01-04"}, "unit": "hour"}}}},
                           {$match: {"hourDiff": {$lte: 24}}},
                           {$group:
                             {"_id" :
