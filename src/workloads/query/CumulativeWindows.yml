@@ -157,7 +157,7 @@ Actors:
         cursor: {batchSize: *batchSize}
   - Nop: true
 
- - Name: CumulativeWindows
+- Name: CumulativeWindows
   Type: RunCommand
   Threads: 1
   Phases:
