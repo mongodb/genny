@@ -240,17 +240,18 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
 std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
     auto uriStr = makeUri();
 
+    std::string username{*_config->get(OptionType::kAccessOption, "Username")};
     std::string password{*_config->get(OptionType::kAccessOption, "Password")};
-
-    auto redactedUriStr = password == ""
+    auto credentials = username + ':' + password + '@';
+    auto redactedCredentials = username + ':' + "[REDACTED]" + '@';
+    auto credPosition = uriStr.find(credentials);
+    auto redactedUriStr = credPosition == std::string::npos
                         ? uriStr
-                        : std::regex_replace(uriStr, std::regex(password), "[REDACTED]" );
+                        : uriStr.replace(credPosition, credentials.length(), redactedCredentials);
     BOOST_LOG_TRIVIAL(info) << "Constructing pool with MongoURI '" << redactedUriStr << "'";
 
     auto uri = mongocxx::uri{uriStr};
-
     auto poolOptions = makeOptions();
-
     return std::make_unique<mongocxx::pool>(uri, poolOptions);
 }
 
