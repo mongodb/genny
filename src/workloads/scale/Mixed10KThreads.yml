@@ -61,6 +61,7 @@ Actors:
       CollectionCount: *NumColls
       Operations:
       - OperationName: insertOne
+        OperationMetricsName: WriteDocs
         OperationCommand:
           Document: *doc
         ThrowOnFailure: false
@@ -83,6 +84,7 @@ Actors:
       CollectionCount: *NumColls
       Operations:
       - OperationName: findOne
+        OperationMetricsName: ReadDocs
         OperationCommand:
           Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
         ThrowOnFailure: false
