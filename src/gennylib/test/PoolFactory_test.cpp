@@ -237,6 +237,18 @@ TEST_CASE("PoolFactory behavior") {
 
         auto pool = factory.makePool();
         REQUIRE(pool);
+
+        // We should be able to change the value of an option.
+        // Also, PoolFactory should work with empty password.
+        auto expectedPassEmptyUri = [&]() {
+            return kProtocol + "boss:@" + kHost + "/admin?appName=Genny&tls=true";
+        };
+        factory.setOption(OptionType::kAccessOption, "Password", "");
+        auto passEmptyUri = factory.makeUri();
+        REQUIRE(passEmptyUri == expectedPassEmptyUri());
+
+        auto passEmptyPool = factory.makePool();
+        REQUIRE(passEmptyPool);
     }
 
     SECTION("Make a pool with client-side encryption enabled") {
