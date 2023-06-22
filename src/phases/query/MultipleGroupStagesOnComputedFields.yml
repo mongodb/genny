@@ -7,7 +7,7 @@ Description: |
 InsertDataTemplate:
   Name: InsertData
   Type: Loader
-  Threads: 4
+  Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: {^Parameter: {Name: "active", Default: [0]}}
@@ -21,8 +21,8 @@ InsertDataTemplate:
         DocumentCount: {^Parameter: {Name: "documentCount", Default: 1e6}}
         BatchSize: {^Parameter: {Name: "batchSize", Default: 3000}}
         Document:
-          # Since step = 350 ms and documentCount = 1,000,000, the first and last document would be 350,000,000 ms apart (roughly 4 days).
-          time: {^IncDate: {start: "2022-01-01", step: 350}}
+          # Since step = 349 ms and documentCount = 1,000,000, the first and last document would be 349,000,000 ms apart (roughly 4 days).
+          time: {^IncDate: {start: "2022-01-01", step: 349}}
           symbol: {^Cycle: {ofLength: {^Parameter: {Name: "numGroups", Default: 100}}, fromGenerator: {^RandomString: {length: 6}}}}
           price: {^RandomDouble: {min: 100.0, max: 1000.0}}
 
@@ -45,7 +45,7 @@ QueryTemplate:
           OperationCommand:
             Pipeline: [{$addFields:
                           {"hourDiff": {$dateDiff: {"startDate": "$time", "endDate": {^Date: "2022-01-04"}, "unit": "hour"}}}},
-                          {$match: {"hourDiff": {$lte: 24}}},
+                          {$match: {"hourDiff": {$lte: 12}}},
                           {$group:
                             {"_id" :
                               { "symbol" : "$symbol" ,
