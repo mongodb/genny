@@ -255,10 +255,6 @@ public:
     }
 
 private:
-    /*
-     * Actor count and phase number will be used in Poplar metrics. Right now they
-     * are unused.
-     */
     const std::string _actorName;
     const RegistryT<ClockSource>& _registry;
     const bool _useGrpc;
@@ -387,6 +383,7 @@ public:
     explicit OperationT(internals::OperationImpl<ClockSource>& op) : _op{std::addressof(op)} {}
 
     OperationContextT<ClockSource> start() {
+        BOOST_LOG_TRIVIAL(debug) << this->_op->getActorName() << " : " << this->_op->getOpName();
         return OperationContextT<ClockSource>{this->_op};
     }
 
@@ -465,7 +462,8 @@ public:
                 count_type errors = 0,
                 count_type number = 1,
                 count_type size = 0) {
-        _op->reportSynthetic(finished, duration, number, ops, size, errors, outcome);
+        BOOST_LOG_TRIVIAL(debug) << this->_op->getActorName() << " : " << this->_op->getOpName();
+        this->_op->reportSynthetic(finished, duration, number, ops, size, errors, outcome);
     }
 
 
