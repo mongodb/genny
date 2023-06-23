@@ -15,7 +15,6 @@ GlobalDefaults:
   Collection: &Collection Collection0
   DocumentCount: &DocumentCount 1e6
   NumGroups: &NumGroups 100
-  Repeat: &Repeat 10
   Threads: &Threads 1
   MaxPhases: &MaxPhases 5
 
@@ -71,7 +70,7 @@ Actors:
 
 - InsertData:
   LoadConfig:
-    Path: "../../phases/query/MultipleGroupStagesOnComputedFields.yml"
+    Path: "../../phases/query/GroupStagesOnComputedFields.yml"
     Key: InsertDataTemplate
     Parameters:
       active: [3]
@@ -92,17 +91,27 @@ Actors:
         Repeat: 1
         Threads: 1
 
-# Phase 5: Run Query
-- RunQuery:
+# Phase 5-7: Run Query
+- TimeSeriesGroupStagesOnComputedFields:
   LoadConfig:
-    Path: "../../phases/query/MultipleGroupStagesOnComputedFields.yml"
-    Key: QueryTemplate
+    Path: "./GroupStagesOnComputedFields.yml"
+    Key: MultipleGroupStagesOnComputedFields
     Parameters:
-      name: TimeSeriesMultipleGroupStagesOnComputedFields
       active: [5]
-      nopInPhasesUpTo: *MaxPhases
-      repeat: *Repeat
-      operationMetricsName: TimeSeriesMultipleGroupStagesOnComputedFields
+
+- TimeSeriesGroupStagesOnComputedFields:
+  LoadConfig:
+    Path: "./GroupStagesOnComputedFields.yml"
+    Key: GroupStageAfterMatchOnDateComputation
+    Parameters:
+      active: [6]
+
+- TimeSeriesGroupStagesOnComputedFields:
+  LoadConfig:
+    Path: "./GroupStagesOnComputedFields.yml"
+    Key: GroupStageAfterSortAndAddFields
+    Parameters:
+      active: [7]
 
 AutoRun:
 - When:

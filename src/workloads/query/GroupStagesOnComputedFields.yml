@@ -1,0 +1,176 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  The queries in this workload exercises group stage(s) after aggregation stages on computed date
+  fields.
+
+Keywords:
+- aggregate
+- sbe
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  DocumentCount: &DocumentCount 1e6
+  NumGroups: &NumGroups 100
+  Threads: &Threads 1
+  MaxPhases: &MaxPhases 5
+
+Actors:
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: *Threads
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+- InsertData:
+  LoadConfig:
+    Path: "../../phases/query/GroupStagesOnComputedFields.yml"
+    Key: InsertDataTemplate
+    Parameters:
+      active: [1]
+      nopInPhasesUpTo: *MaxPhases
+      documentCount: *DocumentCount
+      numGroups: *NumGroups
+
+# Phase 2: Ensure all data is synced to disk.
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+
+MultipleGroupStagesOnComputedFields:
+  LoadConfig: &loadConfig
+    Path: "../../phases/query/GroupStagesOnComputedFields.yml"
+    Key: QueryTemplate
+    Parameters:
+      name: MultipleGroupStagesOnComputedFields
+      active: {^Parameter: {Name: "active", Default: [3]}}
+      nopInPhasesUpTo: &NopInPhasesUpTo {^Parameter: {Name: "nopInPhasesUpTo", Default: *MaxPhases}}
+      pipeline: [{$addFields:
+                          {"hourDiff": {$dateDiff: {"startDate": "$time", "endDate": {^Date: "2022-01-04"}, "unit": "hour"}}}},
+                          {$match: {"hourDiff": {$lte: 12}}},
+                          {$group:
+                            {"_id" :
+                              { "symbol" : "$symbol" ,
+                                "time": { "$dateTrunc" : {"date": "$time", "unit": "minute", "binSize" : 60}}
+                              },
+                              "open" : {"$first" : "$price"},
+                              "close" : {"$last" : "$price"}}
+                          },
+                          {
+                              $addFields : {
+                                  "diffPercentage" : {$round : [{$multiply : [100, { $divide : [{$subtract : ["$close", "$open"]}, "$open"] }]}, 2]}
+                              }
+                          },
+                          {
+                            $group: {
+                                  "_id" : "$_id.time",
+                                  "topN": {
+                                      $topN: {
+                                          "output": ["$_id.symbol", "$diffPercentage", "$close"],
+                                          "sortBy" : { "diffPercentage" : -1 },
+                                          "n": 3
+                                      }
+                                  },
+                                  "bottomN": {
+                                      $bottomN: {
+                                          "output": ["$_id.symbol", "$diffPercentage", "$close"],
+                                          "sortBy" : { "diffPercentage" : 1 },
+                                          "n": 3
+                                      }
+                                  },
+                              }
+                          },
+                          {
+                              $sort : {
+                                  "_id" : -1
+                              }
+                          }]
+
+GroupStageAfterMatchOnDateComputation:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: GroupStageAfterMatchOnDateComputation
+      active: {^Parameter: {Name: "active", Default: [4]}}
+      nopInPhasesUpTo: *NopInPhasesUpTo
+      pipeline: [{$match: {
+                          "symbol": "string050",
+                          "time": {
+                            $gte: "2022-01-03"
+                          }
+                          }
+                  },
+                  {$group:
+                    {"_id" : {
+                        $dateTrunc: {
+                          "date": "$time",
+                          "unit": "day"
+                        }
+                      },
+                      "count" : {$sum: 1}
+                    }},
+                    {
+                      $sort : {
+                        "_id" : -1
+                      }
+                    }]
+
+GroupStageAfterSortAndAddFields:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: GroupAfterSortAndAddFields
+      active: {^Parameter: {Name: "active", Default: [5]}}
+      nopInPhasesUpTo: *NopInPhasesUpTo
+      pipeline: [{$sort: {"time": 1}},
+                 {$addFields: {
+                    "t": {$dateTrunc: {
+                    date: "$time",
+                    unit: "second",
+                    binSize
+                  }}
+                }},
+                {$group: {
+                    _id: "$t",
+                    sample: {$first: "$$ROOT"}
+                  }}
+                ]
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-classic-query-engine
+      - standalone-all-feature-flags
+      - standalone-sbe
+      - replica
+      - replica-all-feature-flags
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v5.1
+      - v5.2
+      - v5.3
