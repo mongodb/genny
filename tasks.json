@@ -1,0 +1,40 @@
+{
+    "functions": {
+        "echo-hi": {
+            "command": "shell.exec",
+            "params": {
+                "script": "echo hi"
+            }
+        }
+    },
+    "tasks": [
+        {
+            "commands": [
+                {
+                    "command": "git.get_project",
+                    "params": {
+                        "directory": "src"
+                    }
+                },
+                {
+                    "func": "echo-hi"
+                }
+            ],
+            "name": "test"
+        }
+    ],
+    "buildvariants": [
+        {
+            "tasks": [
+                {
+                    "name": "test"
+                }
+            ],
+            "display_name": "Ubuntu 20.04",
+            "run_on": [
+                "ubuntu1604-test"
+            ],
+            "name": "ubuntu2004"
+        }
+    ]
+}
