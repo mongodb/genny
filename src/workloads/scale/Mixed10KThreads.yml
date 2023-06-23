@@ -54,6 +54,7 @@ Actors:
       CollectionCount: *NumColls
       Operations:
       - OperationName: insertOne
+        OperationMetricsName: WriteDocs
         OperationCommand:
           Document: *doc
         ThrowOnFailure: false
@@ -76,14 +77,15 @@ Actors:
       GlobalRate: 1 per 10 milliseconds
       CollectionCount: *NumColls
       Operations:
-      - OperationName: findOne
+      - OperationName: find
+        OperationMetricsName: ReadDocs
         OperationCommand:
           Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
         ThrowOnFailure: false
     - Duration: 3 minutes
       CollectionCount: *NumColls
       Operations:
-      - OperationName: findOne
+      - OperationName: find
         OperationMetricsName: ReadDocs
         OperationCommand:
           Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
@@ -93,5 +95,4 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - replica
       - replica-all-feature-flags
