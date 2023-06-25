@@ -171,7 +171,7 @@ Actors:
       Name: IDHackOnSubID5Threads
       Threads: 5
       OnlyActiveInPhase: 15
-      Filter: {_id.id1: {$gt: 50, $lt: 100}}
+      Filter: {_id: {$gt: {_id1: 50, _id2: 50}, $lt: {_id1: 100, _id2: 100}}}
 
 - ActorFromTemplate:
     TemplateName: IDHACK
@@ -179,7 +179,7 @@ Actors:
       Name: IDHackOnSubID15Threads
       Threads: 15
       OnlyActiveInPhase: 16
-      Filter: {_id.id1: {$gt: 50, $lt: 100}}
+      Filter: {_id: {$gt: {_id1: 50, _id2: 50}, $lt: {_id1: 100, _id2: 100}}}
 
 - ActorFromTemplate:
     TemplateName: IDHACK
@@ -187,7 +187,7 @@ Actors:
       Name: IDHackOnSubID30Threads
       Threads: 30
       OnlyActiveInPhase: 17
-      Filter: {_id.id1: {$gt: 50, $lt: 100}}
+      Filter: {_id: {$gt: {_id1: 50, _id2: 50}, $lt: {_id1: 100, _id2: 100}}}
 
 - Name: LoadLargerDocs
   Type: Loader
@@ -215,7 +215,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: IDHACK
     TemplateParameters:
-      Name: IDHackOnLargeDocsThreads
+      Name: IDHackOnLargeDocs5Threads
       Threads: 5
       OnlyActiveInPhase: 21
       Filter: {_id: {$gt: 50, $lt: 100}}
@@ -223,7 +223,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: IDHACK
     TemplateParameters:
-      Name: IDHackOnLargeDocsThreads
+      Name: IDHackOnLargeDocs15Threads
       Threads: 15
       OnlyActiveInPhase: 22
       Filter: {_id: {$gt: 50, $lt: 100}}
