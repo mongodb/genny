@@ -13,46 +13,7 @@ GlobalDefaults:
   Collection: &Collection Collection0
   MaxPhases: &MaxPhases 5
 
-Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
-
-- InsertData:
-  LoadConfig:
-    Path: "../../phases/query/GroupStagesOnComputedFields.yml"
-    Key: InsertDataTemplate
-    Parameters:
-      active: [1]
-      nopInPhasesUpTo: *MaxPhases
-
-# Phase 2: Ensure all data is synced to disk.
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-
-# Phase 3-5: Run queries.
-MultipleGroupStagesOnComputedFields:
+MultipleGroupStagesOnComputedFields: &MultipleGroupStagesOnComputedFields
   LoadConfig: &loadConfig
     Path: "../../phases/query/GroupStagesOnComputedFields.yml"
     Key: QueryTemplate
@@ -101,7 +62,7 @@ MultipleGroupStagesOnComputedFields:
                               }
                           }]
 
-GroupStageAfterMatchOnDateComputation:
+GroupStageAfterMatchOnDateComputation: &GroupStageAfterMatchOnDateComputation
   LoadConfig:
     <<: *loadConfig
     Parameters:
@@ -130,7 +91,7 @@ GroupStageAfterMatchOnDateComputation:
                       }
                     }]
 
-GroupStageAfterSortAndAddFields:
+GroupStageAfterSortAndAddFields: &GroupStageAfterSortAndAddFields
   LoadConfig:
     <<: *loadConfig
     Parameters:
@@ -150,6 +111,49 @@ GroupStageAfterSortAndAddFields:
                     sample: {$first: "$$ROOT"}
                   }}
                 ]
+
+Actors:
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+- Name: InsertData
+  LoadConfig:
+    Path: "../../phases/query/GroupStagesOnComputedFields.yml"
+    Key: InsertDataTemplate
+    Parameters:
+      active: [1]
+      nopInPhasesUpTo: *MaxPhases
+
+# Phase 2: Ensure all data is synced to disk.
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+
+# Phase 3-5: Run queries.
+- *MultipleGroupStagesOnComputedFields
+- *GroupStageAfterMatchOnDateComputation
+- *GroupStageAfterSortAndAddFields
 
 AutoRun:
 - When:

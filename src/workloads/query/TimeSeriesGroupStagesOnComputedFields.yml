@@ -91,6 +91,7 @@ Actors:
     Path: "./GroupStagesOnComputedFields.yml"
     Key: MultipleGroupStagesOnComputedFields
     Parameters:
+      name: TimeSeriesMultipleGroupStagesOnComputedFields
       active: [5]
 
 - TimeSeriesGroupStageAfterMatchOnDateComputation:
@@ -98,6 +99,7 @@ Actors:
     Path: "./GroupStagesOnComputedFields.yml"
     Key: GroupStageAfterMatchOnDateComputation
     Parameters:
+      name: TimeSeriesGroupStageAfterMatchOnDateComputation
       active: [6]
 
 - TimeSeriesGroupStageAfterSortAndAddFields:
@@ -105,6 +107,7 @@ Actors:
     Path: "./GroupStagesOnComputedFields.yml"
     Key: GroupStageAfterSortAndAddFields
     Parameters:
+      name: TimeSeriesGroupStageAfterSortAndAddFields
       active: [7]
 
 AutoRun:
