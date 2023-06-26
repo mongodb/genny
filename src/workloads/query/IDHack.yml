@@ -34,7 +34,7 @@ ActorTemplates:
           Operations:
           - OperationName: find
             OperationCommand:
-              Filter: {^Parameter: {Name: "Filter", Default: {_id: {$gt: 50, $lt: 100}}}}
+              Filter: {^Parameter: {Name: "Filter", Default: {_id: {^RandomInt: {min: 0, max: 4799}}}}}
 
 Actors:
 # Clear the collection before adding documents with a different type of _id.
@@ -87,15 +87,14 @@ Actors:
       Name: IDHackOnIntID5Threads
       Threads: 5
       OnlyActiveInPhase: 3
-      Filter: {_id: {$gt: 50, $lt: 100}}
-
+      Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
 - ActorFromTemplate:
     TemplateName: IDHACK
     TemplateParameters:
       Name: IDHackOnIntID15Threads
       Threads: 15
       OnlyActiveInPhase: 4
-      Filter: {_id: {$gt: 50, $lt: 100}}
+      Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
 
 - ActorFromTemplate:
     TemplateName: IDHACK
@@ -103,7 +102,7 @@ Actors:
       Name: IDHackOnIntID30Threads
       Threads: 30
       OnlyActiveInPhase: 5
-      Filter: {_id: {$gt: 50, $lt: 100}}
+      Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
 
 - Name: LoadObjectIDs
   Type: Loader
@@ -128,7 +127,7 @@ Actors:
       Name: IDHackOnOID5Threads
       Threads: 5
       OnlyActiveInPhase: 9
-      Filter: {_id: {$gt: {^ObjectId: "475000000000000000000000"}, $lt: {^ObjectId: "480000000000000000000000"}}}
+      Filter: {_id: {^ObjectId: {^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 4799}}, {^RandomString: {length: 20, alphabet: b}}]}}}}
 
 - ActorFromTemplate:
     TemplateName: IDHACK
@@ -136,7 +135,7 @@ Actors:
       Name: IDHackOnOID15Threads
       Threads: 15
       OnlyActiveInPhase: 10
-      Filter: {_id: {$gt: {^ObjectId: "475000000000000000000000"}, $lt: {^ObjectId: "480000000000000000000000"}}}
+      Filter: {_id: {^ObjectId: {^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 4799}}, {^RandomString: {length: 20, alphabet: b}}]}}}}
 
 - ActorFromTemplate:
     TemplateName: IDHACK
@@ -144,7 +143,7 @@ Actors:
       Name: IDHackOnOID30Threads
       Threads: 30
       OnlyActiveInPhase: 11
-      Filter: {_id: {$gt: {^ObjectId: "475000000000000000000000"}, $lt: {^ObjectId: "480000000000000000000000"}}}
+      Filter: {_id: {^ObjectId: {^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 4799}}, {^RandomString: {length: 20, alphabet: b}}]}}}}
 
 - Name: LoadSubIDs
   Type: Loader
@@ -169,7 +168,7 @@ Actors:
       Name: IDHackOnSubID5Threads
       Threads: 5
       OnlyActiveInPhase: 15
-      Filter: {_id: {$gt: {_id1: 50, _id2: 50}, $lt: {_id1: 100, _id2: 100}}}
+      Filter: {_id: {_id1: {^RandomInt: {min: 0, max: 4799}}, _id2: {^RandomInt: {min: 0, max: 4799}}}}
 
 - ActorFromTemplate:
     TemplateName: IDHACK
@@ -177,7 +176,7 @@ Actors:
       Name: IDHackOnSubID15Threads
       Threads: 15
       OnlyActiveInPhase: 16
-      Filter: {_id: {$gt: {_id1: 50, _id2: 50}, $lt: {_id1: 100, _id2: 100}}}
+      Filter: {_id: {_id1: {^RandomInt: {min: 0, max: 4799}}, _id2: {^RandomInt: {min: 0, max: 4799}}}}
 
 - ActorFromTemplate:
     TemplateName: IDHACK
@@ -185,7 +184,7 @@ Actors:
       Name: IDHackOnSubID30Threads
       Threads: 30
       OnlyActiveInPhase: 17
-      Filter: {_id: {$gt: {_id1: 50, _id2: 50}, $lt: {_id1: 100, _id2: 100}}}
+      Filter: {_id: {_id1: {^RandomInt: {min: 0, max: 4799}}, _id2: {^RandomInt: {min: 0, max: 4799}}}}
 
 - Name: LoadLargerDocs
   Type: Loader
@@ -216,7 +215,7 @@ Actors:
       Name: IDHackOnLargeDocs5Threads
       Threads: 5
       OnlyActiveInPhase: 21
-      Filter: {_id: {$gt: 50, $lt: 100}}
+      Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
 
 - ActorFromTemplate:
     TemplateName: IDHACK
@@ -224,7 +223,7 @@ Actors:
       Name: IDHackOnLargeDocs15Threads
       Threads: 15
       OnlyActiveInPhase: 22
-      Filter: {_id: {$gt: 50, $lt: 100}}
+      Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
 
 - ActorFromTemplate:
     TemplateName: IDHACK
@@ -232,4 +231,4 @@ Actors:
       Name: IDHackLargeDocs30Threads
       Threads: 30
       OnlyActiveInPhase: 23
-      Filter: {_id: {$gt: 50, $lt: 100}}
+      Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
