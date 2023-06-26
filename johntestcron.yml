@@ -29,170 +29,6 @@ functions:
             make mod-tidy;
             [[ $? -eq 0 ]] && break;
           done
-  run-make:
-    command: subprocess.exec
-    params:
-      working_dir: evergreen
-      binary: make
-      args: ["${make_args|}", "${target}"]
-      include_expansions_in_env:
-        - AUTH_ENABLED
-        - GOROOT
-        - MONGO_CREDS_FILE
-        - RUN_TEST
-        - RUN_EC2_SPECIFIC_TESTS
-        - IS_DOCKER
-      env:
-        AWS_KEY: ${aws_key}
-        AWS_SECRET: ${aws_secret}
-        DEBUG_ENABLED: ${debug}
-        DOCKER_HOST: ${docker_host}
-        EVERGREEN_ALL: "true"
-        GOARCH: ${goarch}
-        GOOS: ${goos}
-        KARMA_REPORTER: junit
-        NODE_BIN_PATH: ${nodebin}
-        RACE_DETECTOR: ${race_detector}
-        SETTINGS_OVERRIDE: creds.yml
-        TEST_TIMEOUT: ${test_timeout}
-        TZ: ${tz}
-        VENDOR_PKG: "github.com/${trigger_repo_owner}/${trigger_repo_name}"
-        VENDOR_REVISION: ${trigger_revision}
-        XC_BUILD: ${xc_build}
-        NOTARY_CLIENT_URL: ${notary_client_url}
-        NOTARY_SERVER_URL: ${notary_server_url}
-        MACOS_NOTARY_KEY: ${notary_server_key}
-        MACOS_NOTARY_SECRET: ${notary_server_secret}
-        EVERGREEN_BUNDLE_ID: ${evergreen_bundle_id}
-        SIGN_MACOS: ${sign_macos}
-
-  setup-credentials:
-    command: subprocess.exec
-    type: setup
-    params:
-      silent: true
-      working_dir: evergreen
-      env:
-        GITHUB_TOKEN: ${github_token}
-        JIRA_SERVER: ${jiraserver}
-        CROWD_SERVER: ${crowdserver}
-        AWS_KEY: ${aws_key}
-        AWS_SECRET: ${aws_secret}
-        PARSER_PROJECT_S3_PREFIX: ${task_id}
-        JIRA_PRIVATE_KEY: ${jira_private_key}
-        JIRA_ACCESS_TOKEN: ${jira_access_token}
-        JIRA_TOKEN_SECRET: ${jira_token_secret}
-        JIRA_CONSUMER_KEY: ${jira_consumer_key}
-      command: bash scripts/setup-credentials.sh
-  setup-mongodb:
-    - command: subprocess.exec
-      type: setup
-      params:
-        env:
-          MONGODB_URL: ${mongodb_url}
-          MONGODB_DECOMPRESS: ${decompress}
-        working_dir: evergreen
-        command: make get-mongodb
-    - command: subprocess.exec
-      type: setup
-      params:
-        env:
-          MONGOSH_URL: ${mongosh_url}
-          MONGOSH_DECOMPRESS: ${mongosh_decompress|*decompress}
-        working_dir: evergreen
-        command: make get-mongosh
-    - command: subprocess.exec
-      type: setup
-      params:
-        background: true
-        working_dir: evergreen
-        command: make start-mongod
-        env:
-          AUTH_ENABLED: ${with_auth}
-    - command: subprocess.exec
-      type: setup
-      params:
-        working_dir: evergreen
-        command: make configure-mongod
-        env:
-          AUTH_ENABLED: ${with_auth}
-
-  setup-docker-host:
-    - command: host.create
-      type: setup
-      params:
-        distro: archlinux-parent
-        provider: ec2
-        retries: 3
-        scope: build
-        security_group_ids:
-          - sg-097bff6dd0d1d31d0
-    - command: host.list
-      type: setup
-      params:
-        wait: true
-        timeout_seconds: 900
-        num_hosts: 1
-        path: evergreen/spawned_hosts.json
-    - command: subprocess.exec
-      type: setup
-      params:
-        working_dir: evergreen
-        command: make parse-host-file
-        include_expansions_in_env: ["GOROOT"]
-        env:
-          HOST_FILE: spawned_hosts.json
-    - command: expansions.update
-      params:
-        file: evergreen/bin/expansions.yml
-
-  verify-agent-version-update:
-    - command: subprocess.exec
-      params:
-        working_dir: evergreen
-        binary: bash
-        args: ["scripts/verify-agent-version-update.sh"]
-        env:
-          BRANCH_NAME: ${branch_name}
-
-  verify-client-version-update:
-    - command: subprocess.exec
-      params:
-        working_dir: evergreen
-        binary: bash
-        args: ["scripts/verify-client-version-update.sh"]
-        env:
-          BRANCH_NAME: ${branch_name}
-
-  verify-merge-function-update:
-    - command: subprocess.exec
-      params:
-        working_dir: evergreen
-        binary: bash
-        args: ["scripts/verify-merge-function-update.sh"]
-        env:
-          BRANCH_NAME: ${branch_name}
-
-  attach-test-results:
-    - command: gotest.parse_files
-      type: system
-      params:
-        files:
-          - "evergreen/bin/output.*"
-    - command: attach.xunit_results
-      type: system
-      params:
-        files:
-          - "evergreen/bin/jstests/*.xml"
-  remove-test-results:
-    - command: shell.exec
-      type: system
-      params:
-        shell: bash
-        script: |
-          set -o xtrace
-          rm evergreen/bin/output.*
-          rm evergreen/bin/jstests/*.xml
 
 #######################################
 #                Tasks                #
@@ -201,10 +37,13 @@ functions:
 tasks:
   - name: testcron
     commands:
+      - command: git.get_project
+        params:
+          directory: src
       - command: generate.tasks
         params:
           files:
-            - tasks.json
+            - src/tasks.json
 
 #######################################
 #            Buildvariants            #
@@ -218,12 +57,6 @@ buildvariants:
     expansions:
       goos: linux
       goarch: amd64
-      nodebin: /opt/node/bin
-      GOROOT: /opt/golang/go1.20
-      RUN_EC2_SPECIFIC_TESTS: true
-      mongodb_url: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-6.0.6.tgz
-      mongosh_url: https://downloads.mongodb.com/compass/mongosh-1.9.0-linux-x64.tgz
-      notary_client_url: https://macos-notary-1628249594.s3.amazonaws.com/releases/client/v3.1.2/linux_amd64.zip
       sign_macos: true
     tasks:
       - name: "testcron"
