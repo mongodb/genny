@@ -3,7 +3,7 @@
         "echo-hi": {
             "command": "shell.exec",
             "params": {
-                "script": "echo hi"
+                "script": "echo hi2"
             }
         }
     },
