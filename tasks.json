@@ -42,15 +42,11 @@
             "tasks": [
                 {
                     "name": "test",
-                    "cron": "45 * * * *"
+                    "cron": "15 * * * *"
                 },
                 {
                     "name": "test2"
                 }
-            ],
-            "display_name": "Ubuntu 22.04",
-            "run_on": [
-                "ubuntu2204"
             ],
             "name": "ubuntu2204"
         }
