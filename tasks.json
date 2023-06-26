@@ -31,11 +31,12 @@
                     "name": "test"
                 }
             ],
-            "display_name": "Ubuntu 20.04",
+            "display_name": "Ubuntu 20.04 Cronned",
             "run_on": [
                 "ubuntu1604-test"
             ],
-            "name": "ubuntu2004"
+            "cron": "30 * * * *",
+            "name": "cronned"
         }
     ]
 }
