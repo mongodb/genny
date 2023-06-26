@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests performance IDHACK.
+  This workload tests performance of IDHACK.
 
 KeyWords:
 - IDHACK
@@ -15,8 +15,6 @@ GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
   DocumentCount: &DocumentCount 1e6
-  Repeat: &Repeat 50
-  Threads: &Threads 1
   MaxPhases: &MaxPhases 23
 
 ActorTemplates:
@@ -39,18 +37,18 @@ ActorTemplates:
               Filter: {^Parameter: {Name: "Filter", Default: {_id: {$gt: 50, $lt: 100}}}}
 
 Actors:
-# Clear any pre-existing collection state.
+# Clear the collection before adding documents with a different type of _id.
 - Name: ClearCollection
   Type: CrudActor
   Database: *Database
-  Threads: *Threads
+  Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [0, 6, 12, 18]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
-        Threads: *Threads
+        Threads: 1
         Collection: *Collection
         Operations:
         - OperationName: drop
