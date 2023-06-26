@@ -42,7 +42,7 @@
             "tasks": [
                 {
                     "name": "test",
-                    "cron": "30 * * * *",
+                    "cron": "45 * * * *"
                 },
                 {
                     "name": "test2"
