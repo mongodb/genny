@@ -221,13 +221,6 @@ public:
     }
 
     /**
-     * @return the name of the metric being collected.
-     */
-    [[nodiscard]] const std::string& getMetricName() const {
-        return _stream->getMetricName();
-    }
-
-    /**
      * @return the time series for the operation being run.
      */
     const EventSeries& getEvents() const {
