@@ -20,6 +20,7 @@
                     "func": "echo-hi"
                 }
             ],
+            "cron": "* * * *",
             "name": "test"
         }
     ],
