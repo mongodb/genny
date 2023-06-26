@@ -591,6 +591,13 @@ public:
         subscriber = thread;
     }
 
+    /**
+     * @return the name of the metric being collected.
+     */
+    [[nodiscard]] const std::string& getMetricName() const {
+        return _name;
+    }
+
     EventStream(const EventStream<ClockSource, StreamInterface>&) = delete;
     EventStream<ClockSource, StreamInterface>& operator=(
         const EventStream<ClockSource, StreamInterface>&) = delete;
