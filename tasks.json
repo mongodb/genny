@@ -21,6 +21,20 @@
                 }
             ],
             "name": "test"
+        },
+        {
+            "commands": [
+                {
+                    "command": "git.get_project",
+                    "params": {
+                        "directory": "src"
+                    }
+                },
+                {
+                    "func": "echo-hi"
+                }
+            ],
+            "name": "test2"
         }
     ],
     "buildvariants": [
@@ -29,6 +43,9 @@
                 {
                     "name": "test",
                     "cron": "30 * * * *",
+                },
+                {
+                    "name": "test2"
                 }
             ],
             "display_name": "Ubuntu 22.04",
