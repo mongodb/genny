@@ -13,12 +13,12 @@ InsertDataTemplate:
       Active: {^Parameter: {Name: "active", Default: [0]}}
       NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: 5}}
       PhaseConfig:
-        Repeat: 1
+        Repeat: {^Parameter: {Name: "repeat", Default: 1}}
         Database: {^Parameter: {Name: "database", Default: test}}
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
+        MultipleThreadsPerCollection: {^Parameter: {Name: "multipleThreadsPerCollection", Default: true}}
+        CollectionCount: {^Parameter: {Name: "collectionCount", Default: 1}}
         Collection: {^Parameter: {Name: "collection", Default: Collection0}}
-        DocumentCount: {^Parameter: {Name: "documentCount", Default: 1e3}}
+        DocumentCount: {^Parameter: {Name: "documentCount", Default: 1e6}}
         BatchSize: {^Parameter: {Name: "batchSize", Default: 3000}}
         Document:
           # Since step = 349 ms and documentCount = 1,000,000, the first and last document would be 349,000,000 ms apart (roughly 4 days).

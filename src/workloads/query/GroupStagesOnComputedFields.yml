@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  The queries in this workload exercises group stage(s) after aggregation stages on computed date
+  The queries in this workload exercise group stage(s) after aggregation stages on computed date
   fields.
 
 Keywords:
@@ -11,9 +11,6 @@ Keywords:
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
-  DocumentCount: &DocumentCount 1e6
-  NumGroups: &NumGroups 100
-  Threads: &Threads 1
   MaxPhases: &MaxPhases 5
 
 Actors:
@@ -21,14 +18,14 @@ Actors:
 - Name: ClearCollection
   Type: CrudActor
   Database: *Database
-  Threads: *Threads
+  Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [0]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
-        Threads: *Threads
+        Threads: 1
         Collection: *Collection
         Operations:
         - OperationName: drop
@@ -40,8 +37,6 @@ Actors:
     Parameters:
       active: [1]
       nopInPhasesUpTo: *MaxPhases
-      documentCount: *DocumentCount
-      numGroups: *NumGroups
 
 # Phase 2: Ensure all data is synced to disk.
 - Name: Quiesce
@@ -56,6 +51,7 @@ Actors:
         Repeat: 1
         Threads: 1
 
+# Phase 3-5: Run queries.
 MultipleGroupStagesOnComputedFields:
   LoadConfig: &loadConfig
     Path: "../../phases/query/GroupStagesOnComputedFields.yml"
