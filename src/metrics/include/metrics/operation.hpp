@@ -383,7 +383,7 @@ public:
     explicit OperationT(internals::OperationImpl<ClockSource>& op) : _op{std::addressof(op)} {}
 
     OperationContextT<ClockSource> start() {
-        BOOST_LOG_TRIVIAL(debug) << "Started collecting metric for operation "
+        BOOST_LOG_TRIVIAL(trace) << "Started collecting metric for operation "
                                  << this->_op->getOpName() << " of actor "
                                  << this->_op->getActorName();
         return OperationContextT<ClockSource>{this->_op};
@@ -464,7 +464,7 @@ public:
                 count_type errors = 0,
                 count_type number = 1,
                 count_type size = 0) {
-        BOOST_LOG_TRIVIAL(debug) << "Started collecting metric for operation "
+        BOOST_LOG_TRIVIAL(trace) << "Started collecting metric for operation "
                                  << this->_op->getOpName() << " of actor "
                                  << this->_op->getActorName();
         this->_op->reportSynthetic(finished, duration, number, ops, size, errors, outcome);
