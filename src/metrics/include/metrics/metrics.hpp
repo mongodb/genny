@@ -210,13 +210,18 @@ public:
         auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
         OperationsByType& opsByType = this->_ops[actorName];
         OperationsByThread& opsByThread = opsByType[opName];
+        auto name = createName(actorName, opName, phase, internal);
         if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
-            auto name = createName(actorName, opName, phase, internal);
             stream = _grpcClient->createStream(actorId, name, phase, pathPrefix);
         }
-        OperationImpl<ClockSource>& op =
-            opsByThread.try_emplace(actorId, std::move(actorName), *this, std::move(opName), stream)
-               .first->second;
+        OperationImpl<ClockSource>& op = opsByThread
+                                             .try_emplace(actorId,
+                                                          std::move(actorName),
+                                                          std::move(opName),
+                                                          std::move(name),
+                                                          *this,
+                                                          stream)
+                                             .first->second;
         return OperationT{op};
     }
 
@@ -232,21 +237,22 @@ public:
         OperationsByThread& opsByThread = opsByType[opName];
         auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
         StreamPtr stream = nullptr;
+        auto name = createName(actorName, opName, phase, internal);
         if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
-            auto name = createName(actorName, opName, phase, internal);
             stream = _grpcClient->createStream(actorId, name, phase, pathPrefix);
         }
-        OperationImpl<ClockSource>& op =
-            opsByThread
-                .try_emplace(
-                    actorId,
-                    std::move(actorName),
-                    *this,
-                    std::move(opName),
-                    stream,
-                    std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
-                        threshold, percentage))
-                .first->second;
+        auto op_threshold =
+            std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(threshold,
+                                                                                        percentage);
+        OperationImpl<ClockSource>& op = opsByThread
+                                             .try_emplace(actorId,
+                                                          std::move(actorName),
+                                                          std::move(opName),
+                                                          std::move(name),
+                                                          *this,
+                                                          stream,
+                                                          op_threshold)
+                                             .first->second;
         return OperationT{op};
     }
 

@@ -185,20 +185,21 @@ public:
         }
     };
 
-    using OptionalOperationThreshold = std::optional<OperationThreshold>;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
     using StreamPtr = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>*;
 
     OperationImpl(std::string actorName,
-                  const RegistryT<ClockSource>& registry,
                   std::string opName,
+                  std::string metricName,
+                  const RegistryT<ClockSource>& registry,
                   StreamPtr stream,
                   std::optional<OperationThreshold> threshold = std::nullopt)
         : _actorName(std::move(actorName)),
+          _opName(std::move(opName)),
+          _metricName{std::move(metricName)},
           _registry(registry),
           _useGrpc(registry.getFormat().useGrpc()),
           _useCsv(registry.getFormat().useCsv()),
-          _opName(std::move(opName)),
           _stream{stream},
           _threshold(threshold) {
         if (_useCsv) {
@@ -218,6 +219,13 @@ public:
      */
     [[nodiscard]] const std::string& getOpName() const {
         return _opName;
+    }
+
+    /**
+     * @return the name of the metric being collected.
+     */
+    [[nodiscard]] const std::string& getMetricName() const {
+        return _metricName;
     }
 
     /**
@@ -256,12 +264,13 @@ public:
 
 private:
     const std::string _actorName;
+    const std::string _opName;
+    const std::string _metricName;
     const RegistryT<ClockSource>& _registry;
     const bool _useGrpc;
     const bool _useCsv;
-    const std::string _opName;
     StreamPtr _stream;  // Streams are owned by the grpc client.
-    OptionalOperationThreshold _threshold;
+    std::optional<OperationThreshold> _threshold;
     std::unique_ptr<EventSeries> _events;
 };
 
@@ -383,11 +392,9 @@ public:
     explicit OperationT(internals::OperationImpl<ClockSource>& op) : _op{std::addressof(op)} {}
 
     OperationContextT<ClockSource> start() {
-        BOOST_LOG_TRIVIAL(trace) << "Started collecting metric for operation `"
-                                 << this->_op->getOpName()
-                                 << "` of actor `"
-                                 << this->_op->getActorName()
-                                 << "`";
+        BOOST_LOG_TRIVIAL(trace) << "Started collecting metric `" << this->_op->getMetricName()
+                                 << "` for operation `" << this->_op->getOpName() << "` of actor `"
+                                 << this->_op->getActorName() << "`";
         return OperationContextT<ClockSource>{this->_op};
     }
 
@@ -466,11 +473,9 @@ public:
                 count_type errors = 0,
                 count_type number = 1,
                 count_type size = 0) {
-        BOOST_LOG_TRIVIAL(trace) << "Started collecting metric for operation `"
-                                 << this->_op->getOpName()
-                                 << "` of actor `"
-                                 << this->_op->getActorName()
-                                 << "`";
+        BOOST_LOG_TRIVIAL(trace) << "Started collecting metric `" << this->_op->getMetricName()
+                                 << "` for operation `" << this->_op->getOpName() << "` of actor `"
+                                 << this->_op->getActorName() << "`";
         this->_op->reportSynthetic(finished, duration, number, ops, size, errors, outcome);
     }
 
