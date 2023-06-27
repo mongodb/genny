@@ -159,7 +159,7 @@ def summarize_readings(args, actor_name, metrics_of_interest, header, last_line)
     if "throughput" in args.metrics:
         if "counters.ops" in header and "timers.dur" in header:
             n_ops = float(last_line[header.index("counters.ops")])
-            elapsed_nanos = float(last_line[header.index("timers.dur")]) / float(header.index("gauges.workers"))
+            elapsed_nanos = float(last_line[header.index("timers.dur")])
             elapsed_seconds = elapsed_nanos / (1000.0 * 1000.0 * 1000.0)
             results["throughput"] = {
                 "ops": n_ops,
