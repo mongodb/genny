@@ -297,3 +297,11 @@ Actors:
       Threads: 256
       OnlyActiveInPhase: 31
       Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-all-feature-flags
+      - standalone-query-stats
+      - standalone
