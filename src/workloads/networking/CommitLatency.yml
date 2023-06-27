@@ -73,9 +73,6 @@ Actors:
   - *DropCollection
   - *Load
   - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
 
 
 - Name: CommitLatency
@@ -268,19 +265,6 @@ Actors:
       Level: available
     ReadPreference:
       ReadMode: secondary
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_wmajority_majority_sec_trx
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: majority
-    ReadConcern:
-      Level: snapshot
-    ReadPreference:
-      ReadMode: secondary
-    Transaction: true  # Implies Session
 
 AutoRun:
 - When:
