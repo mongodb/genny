@@ -61,7 +61,24 @@ Actors:
   - *DropCollection
   - *Load
   - *Nop
-
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
 
 
 - Name: CommitLatency
@@ -204,6 +221,80 @@ Actors:
       Level: snapshot
     ReadPreference:
       ReadMode: primary
+    Transaction: true  # Implies Session
+  - *Nop
+  - *Nop
+  - MetricsName: CommitLatency_w0_available
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
+    WriteConcern:
+      Level: 0
+    ReadConcern:
+      Level: available
+    ReadPreference:
+      ReadMode: primary
+  - *Nop
+  - *Nop
+  - MetricsName: CommitLatency_w1_available
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
+    WriteConcern:
+      Level: 1
+    ReadConcern:
+      Level: available
+    ReadPreference:
+      ReadMode: primary
+  - *Nop
+  - *Nop
+  - MetricsName: CommitLatency_w1_jtrue_available
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
+    WriteConcern:
+      Level: 1
+      Journal: true
+    ReadConcern:
+      Level: available
+    ReadPreference:
+      ReadMode: primary
+  - *Nop
+  - *Nop
+  - MetricsName: CommitLatency_w1_available_sec
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
+    WriteConcern:
+      Level: 1
+    ReadConcern:
+      Level: available
+    ReadPreference:
+      ReadMode: secondary
+  - *Nop
+  - *Nop
+  - MetricsName: CommitLatency_wmajority_linearizable_sec
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
+    WriteConcern:
+      Level: majority
+    ReadConcern:
+      Level: linearizable
+    ReadPreference:
+      ReadMode: secondary
+  - *Nop
+  - *Nop
+  - MetricsName: CommitLatency_wmajority_majority_sec_trx
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
+    WriteConcern:
+      Level: majority
+    ReadConcern:
+      Level: snapshot
+    ReadPreference:
+      ReadMode: secondary
     Transaction: true  # Implies Session
 
 AutoRun:
