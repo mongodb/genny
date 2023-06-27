@@ -9,13 +9,13 @@ KeyWords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 400
+      maxPoolSize: 2000
 
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
   DocumentCount: &DocumentCount 1e6
-  MaxPhases: &MaxPhases 23
+  MaxPhases: &MaxPhases 31
 
 ActorTemplates:
 - TemplateName: IDHACK
@@ -88,6 +88,7 @@ Actors:
       Threads: 5
       OnlyActiveInPhase: 3
       Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
+
 - ActorFromTemplate:
     TemplateName: IDHACK
     TemplateParameters:
@@ -102,6 +103,22 @@ Actors:
       Name: IDHackOnIntID30Threads
       Threads: 30
       OnlyActiveInPhase: 5
+      Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHackOnIntID128Threads
+      Threads: 128
+      OnlyActiveInPhase: 24
+      Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHackOnIntID256Threads
+      Threads: 256
+      OnlyActiveInPhase: 25
       Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
 
 - Name: LoadObjectIDs
@@ -145,6 +162,22 @@ Actors:
       OnlyActiveInPhase: 11
       Filter: {_id: {^ObjectId: {^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 4799}}, {^RandomString: {length: 20, alphabet: b}}]}}}}
 
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHackOnOID128Threads
+      Threads: 128
+      OnlyActiveInPhase: 26
+      Filter: {_id: {^ObjectId: {^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 4799}}, {^RandomString: {length: 20, alphabet: b}}]}}}}
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHackOnOID256Threads
+      Threads: 256
+      OnlyActiveInPhase: 27
+      Filter: {_id: {^ObjectId: {^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 4799}}, {^RandomString: {length: 20, alphabet: b}}]}}}}
+
 - Name: LoadSubIDs
   Type: Loader
   Threads: 1
@@ -184,6 +217,22 @@ Actors:
       Name: IDHackOnSubID30Threads
       Threads: 30
       OnlyActiveInPhase: 17
+      Filter: {_id: {_id1: {^RandomInt: {min: 0, max: 4799}}, _id2: {^RandomInt: {min: 0, max: 4799}}}}
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHackOnSubID128Threads
+      Threads: 128
+      OnlyActiveInPhase: 28
+      Filter: {_id: {_id1: {^RandomInt: {min: 0, max: 4799}}, _id2: {^RandomInt: {min: 0, max: 4799}}}}
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHackOnSubID256Threads
+      Threads: 256
+      OnlyActiveInPhase: 29
       Filter: {_id: {_id1: {^RandomInt: {min: 0, max: 4799}}, _id2: {^RandomInt: {min: 0, max: 4799}}}}
 
 - Name: LoadLargerDocs
@@ -231,4 +280,20 @@ Actors:
       Name: IDHackLargeDocs30Threads
       Threads: 30
       OnlyActiveInPhase: 23
+      Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHackLargeDocs128Threads
+      Threads: 128
+      OnlyActiveInPhase: 30
+      Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHackLargeDocs256Threads
+      Threads: 256
+      OnlyActiveInPhase: 31
       Filter: {_id: {^RandomInt: {min: 0, max: 4799}}}
