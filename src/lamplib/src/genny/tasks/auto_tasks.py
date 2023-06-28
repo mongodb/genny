@@ -70,9 +70,8 @@ class WorkloadLister:
     Separate from the Repo class for easier testing.
     """
 
-    def __init__(self, workspace_root: str, genny_repo_root: str, reader: YamlReader):
+    def __init__(self, workspace_root: str, reader: YamlReader):
         self.workspace_root = workspace_root
-        self.genny_repo_root = genny_repo_root
         self._expansions = None
         self.reader = reader
 
@@ -122,14 +121,14 @@ class CLIOperation(NamedTuple):
     """
 
     mode: OpName
+    no_activate: bool
     variant: Optional[str]
     execution: Optional[str]
-    genny_repo_root: str
     workspace_root: str
 
     @staticmethod
     def create(
-        mode_name: str, reader: YamlReader, genny_repo_root: str, workspace_root: str
+        mode_name: str, no_activate: bool, reader: YamlReader, workspace_root: str
     ) -> "CLIOperation":
         mode = OpName.ALL_TASKS
         variant = None
@@ -144,7 +143,7 @@ class CLIOperation(NamedTuple):
             mode = OpName.VARIANT_TASKS
             variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
         return CLIOperation(
-            mode, variant, execution, genny_repo_root=genny_repo_root, workspace_root=workspace_root
+            mode, no_activate, variant, execution, workspace_root=workspace_root
         )
 
 
@@ -552,14 +551,12 @@ class ConfigWriter:
                     )
         return config
 
-    @staticmethod
-    def variant_tasks(tasks: List[GeneratedTask], variant: str) -> Configuration:
+    def variant_tasks(self, tasks: List[GeneratedTask], variant: str) -> Configuration:
         c = Configuration()
-        c.variant(variant).tasks([TaskSpec(task.name) for task in tasks])
+        c.variant(variant).tasks([TaskSpec(task.name).activate(False if self.op.no_activate else None) for task in tasks])
         return c
 
-    @staticmethod
-    def all_tasks_modern(tasks: List[GeneratedTask]) -> Configuration:
+    def all_tasks_modern(self, tasks: List[GeneratedTask]) -> Configuration:
         c = Configuration()
         c.exec_timeout(64800)  # 18 hours
         for task in tasks:
@@ -572,6 +569,7 @@ class ConfigWriter:
 
             t = c.task(task.name)
             t.priority(5)
+            t.activate(False if self.op.no_activate else None)
             t.commands(
                 [
                     CommandDefinition()
@@ -583,17 +581,17 @@ class ConfigWriter:
         return c
 
 
-def main(mode_name: str, genny_repo_root: str, workspace_root: str) -> None:
+def main(mode_name: str, no_activate: bool, workspace_root: str) -> None:
     reader = YamlReader()
     build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
     op = CLIOperation.create(
         mode_name=mode_name,
+        no_activate=no_activate,
         reader=reader,
-        genny_repo_root=genny_repo_root,
         workspace_root=workspace_root,
     )
     lister = WorkloadLister(
-        workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader
+        workspace_root=workspace_root, reader=reader
     )
     repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
     tasks = repo.tasks(op=op, build=build)
