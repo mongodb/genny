@@ -62,6 +62,18 @@ Actors:
         drop: myView
   - Nop: true
 
+# Guard Against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1, 2, 3]
+      NopInPhasesUpTo: 3
+      PhaseConfig:
+        LogEvery: 10 seconds
+        Blocking: None
+
 AutoRun:
 - When:
     mongodb_setup:

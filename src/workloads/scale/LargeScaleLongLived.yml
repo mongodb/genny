@@ -101,3 +101,7 @@ AutoRun:
       - standalone-sampling-bonsai
       - standalone-sbe
       - standalone-query-stats
+    atlas_setup:
+      $neq:
+      - M10-repl
+      - M20-repl
