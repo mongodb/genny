@@ -274,3 +274,6 @@ AutoRun:
       - replica
       - replica-disable-execution-control
       - atlas-like-replica.2022-10
+    atlas_setup:
+      $neq:
+      - M30-repl
