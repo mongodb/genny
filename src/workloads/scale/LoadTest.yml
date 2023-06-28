@@ -120,6 +120,14 @@ AutoRun:
       - atlas
       - atlas-like-replica.2022-10
       - replica
+    atlas_setup:
+      $neq:
+      - M10-repl
+      - M20-repl
+      - M30-repl
+      - M30-repl-v5
+      - M30-repl-v6
+      - R40-repl
     branch_name:
       $neq:
       - v4.0
