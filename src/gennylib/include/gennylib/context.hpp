@@ -562,7 +562,9 @@ private:
 class PhaseContext final : public v1::HasNode {
 public:
     PhaseContext(const Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
-        : v1::HasNode{node}, _actor{std::addressof(actorContext)}, _phaseNumber(phaseNumber) {}
+        : v1::HasNode{node},
+          _actorContext{std::addressof(actorContext)},
+          _phaseNumber(phaseNumber) {}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
@@ -571,7 +573,7 @@ public:
     void operator=(PhaseContext&&) = delete;
 
     DefaultRandom& rng(ActorId id) {
-        return this->_actor->rng(id);
+        return this->_actorContext->rng(id);
     }
 
     /**
@@ -583,11 +585,11 @@ public:
      * @return the parent workload context
      */
     WorkloadContext& workload() const {
-        return this->_actor->workload();
+        return this->_actorContext->workload();
     }
 
     ActorContext& actor() const {
-        return *this->_actor;
+        return *this->_actorContext;
     }
 
     SleepContext getSleepContext() const {
@@ -614,7 +616,7 @@ public:
         }
 
         return this->workload()._registry.operation(
-            this->_actor->operator[]("Name").to<std::string>(),
+            this->_actorContext->operator[]("Name").to<std::string>(),
             stm.str(),
             id,
             this->_phaseNumber,
@@ -637,7 +639,7 @@ public:
     auto namedOperation(const std::string& metricsName, ActorId id, bool internal = false) const {
 
         return this->workload()._registry.operation(
-            this->_actor->operator[]("Name").to<std::string>(),
+            this->_actorContext->operator[]("Name").to<std::string>(),
             metricsName,
             id,
             this->_phaseNumber,
@@ -649,7 +651,7 @@ public:
     }
 
 private:
-    ActorContext* _actor;
+    ActorContext* _actorContext;
     const PhaseNumber _phaseNumber;
 };
 
