@@ -15,25 +15,25 @@
 #ifndef HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 #define HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 
+#include <arpa/inet.h>
 #include <cassert>
+#include <errno.h>
+#include <fstream>
 #include <map>
 #include <memory>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <type_traits>
-#include <typeinfo>
-#include <unordered_map>
-#include <vector>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <type_traits>
+#include <typeinfo>
 #include <unistd.h>
-#include <errno.h>
-#include <arpa/inet.h>
+#include <unordered_map>
+#include <vector>
 
 #include <boost/log/trivial.hpp>
 #include <boost/noncopyable.hpp>
@@ -128,7 +128,7 @@ public:
     ExternalPhaseCoordinator(ExternalPhaseCoordinator&&) = delete;
     void operator=(ExternalPhaseCoordinator&&) = delete;
 
-    ~ExternalPhaseCoordinator(){
+    ~ExternalPhaseCoordinator() {
         if (m_socket >= 0) {
             close(m_socket);
         };
@@ -626,10 +626,10 @@ public:
     /**
      * @brief [Experimental] Create a metrics::Operation with the specified name
      *
-     * The current operation() function will always return the same operation if MetricsName is specified.
-     * According to the HelloWorld actor, it seems not the expected behavior
-     * But it is too risky to change the behavior without thoroughly exam the impact
-     * Created TIG-4328 to track this work
+     * The current operation() function will always return the same operation if MetricsName is
+     * specified. According to the HelloWorld actor, it seems not the expected behavior But it is
+     * too risky to change the behavior without thoroughly exam the impact Created TIG-4328 to track
+     * this work
      *
      * @param metricsName name of the metric
      * @param id
