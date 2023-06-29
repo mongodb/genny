@@ -82,3 +82,6 @@ AutoRun:
       - replica
       - replica-noflowcontrol
       - replica-all-feature-flags
+    atlas_setup:
+      $neq:
+      - M30-repl
