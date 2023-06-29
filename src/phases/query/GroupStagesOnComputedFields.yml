@@ -43,5 +43,5 @@ QueryTemplate:
         - OperationMetricsName: *Name
           OperationName: aggregate
           OperationCommand:
-            Pipeline: {^Parameter: {Name: "pipeline", Default: []}}
+            Pipeline: {^Parameter: {Name: "pipeline", Default: ""}}
 

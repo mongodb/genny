@@ -94,12 +94,12 @@ Actors:
       name: TimeSeriesMultipleGroupStagesOnComputedFields
       active: [5]
 
-- TimeSeriesGroupStageAfterMatchOnDateComputation:
+- TimeSeriesGroupStageOnDateComputationAfterMatch:
   LoadConfig:
     Path: "./GroupStagesOnComputedFields.yml"
-    Key: GroupStageAfterMatchOnDateComputation
+    Key: GroupStageOnDateComputationAfterMatch
     Parameters:
-      name: TimeSeriesGroupStageAfterMatchOnDateComputation
+      name: TimeSeriesGroupStageOnDateComputationAfterMatch
       active: [6]
 
 - TimeSeriesGroupStageAfterSortAndAddFields:

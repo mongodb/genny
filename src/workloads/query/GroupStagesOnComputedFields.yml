@@ -50,7 +50,7 @@ MultipleGroupStagesOnComputedFields: &MultipleGroupStagesOnComputedFields
                                   "bottomN": {
                                       $bottomN: {
                                           "output": ["$_id.symbol", "$diffPercentage", "$close"],
-                                          "sortBy" : { "diffPercentage" : 1 },
+                                          "sortBy" : { "diffPercentage" : -1 },
                                           "n": 3
                                       }
                                   },
@@ -62,40 +62,43 @@ MultipleGroupStagesOnComputedFields: &MultipleGroupStagesOnComputedFields
                               }
                           }]
 
-GroupStageAfterMatchOnDateComputation: &GroupStageAfterMatchOnDateComputation
+GroupStageOnDateComputationAfterMatch: &GroupStageOnDateComputationAfterMatch
   LoadConfig:
     <<: *loadConfig
     Parameters:
-      name: GroupStageAfterMatchOnDateComputation
+      name: GroupStageOnDateComputationAfterMatch
       active: {^Parameter: {Name: "active", Default: [4]}}
       nopInPhasesUpTo: *NopInPhasesUpTo
-      pipeline: [{$match: {
-                          "symbol": "string050",
-                          "time": {
-                            $gte: "2022-01-03"
-                          }
-                          }
+      pipeline: [{
+                    $match: {
+                            "symbol": "string050",
+                            "time": {
+                              $gte: "2022-01-03"
+                            }
+                    }
                   },
-                  {$group:
-                    {"_id" : {
-                        $dateTrunc: {
-                          "date": "$time",
-                          "unit": "day"
-                        }
-                      },
-                      "count" : {$sum: 1}
-                    }},
-                    {
-                      $sort : {
-                        "_id" : -1
-                      }
-                    }]
+                  {
+                    $group: {
+                        "_id" : {
+                          $dateTrunc: {
+                            "date": "$time",
+                            "unit": "day"
+                          }
+                        },
+                        "count" : {$sum: 1}
+                    }
+                  },
+                  {
+                    $sort : {
+                      "_id" : -1
+                    }
+                  }]
 
 GroupStageAfterSortAndAddFields: &GroupStageAfterSortAndAddFields
   LoadConfig:
     <<: *loadConfig
     Parameters:
-      name: GroupAfterSortAndAddFields
+      name: GroupStageAfterSortAndAddFields
       active: {^Parameter: {Name: "active", Default: [5]}}
       nopInPhasesUpTo: *NopInPhasesUpTo
       pipeline: [{$sort: {"time": 1}},
@@ -152,7 +155,7 @@ Actors:
 
 # Phase 3-5: Run queries.
 - *MultipleGroupStagesOnComputedFields
-- *GroupStageAfterMatchOnDateComputation
+- *GroupStageOnDateComputationAfterMatch
 - *GroupStageAfterSortAndAddFields
 
 AutoRun:
