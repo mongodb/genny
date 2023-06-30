@@ -534,7 +534,7 @@ public:
      * @param internal whether this operation is Genny-internal.
      */
     auto operation(const std::string& operationName, ActorId id, bool internal = false) const {
-        BOOST_LOG_TRIVIAL(info) << "Constructing metrics::Operation for operation `" << operationName << "` of actor `" << this->actorInfo(id) << "` (done by ActorContext)";
+        BOOST_LOG_TRIVIAL(info) << "Constructing metrics::Operation for operation `" << operationName << "` of actor `" << this->actorInfo(id) << "` (via the actor's ActorContext, usually done by actor's constructor)";
 
         return this->_workload->_registry.operation(
             this->_node["Name"].to<std::string>(), operationName, id, std::nullopt, internal);
@@ -627,7 +627,7 @@ public:
             stm << defaultMetricsName << "." << _phaseNumber;
         }
 
-        BOOST_LOG_TRIVIAL(info) << "Constructing metrics::Operation for operation `" << stm.str() << "` of actor `" << this->_actor->actorInfo(id) << "` (done by PhaseContext for phase " << this->_phaseNumber << " within ActorContext)";
+        BOOST_LOG_TRIVIAL(info) << "Constructing metrics::Operation for operation `" << stm.str() << "` of actor `" << this->_actor->actorInfo(id) << "` (via the PhaseContext for phase " << this->_phaseNumber << " within the actor's ActorContext, usually done by actor's constructor)";
 
         return this->workload()._registry.operation(
             this->_actor->operator[]("Name").to<std::string>(),
@@ -651,7 +651,7 @@ public:
      * @return auto
      */
     auto namedOperation(const std::string& metricsName, ActorId id, bool internal = false) const {
-        BOOST_LOG_TRIVIAL(info) << "Constructing metrics::Operation for operation `" << metricsName << "` of actor `" << this->_actor->actorInfo(id) << "` (done by PhaseContext for phase " << this->_phaseNumber << " within ActorContext)";
+        BOOST_LOG_TRIVIAL(info) << "Constructing metrics::Operation for operation `" << metricsName << "` of actor `" << this->_actor->actorInfo(id) << "` (via the PhaseContext for phase " << this->_phaseNumber << " within the actor's ActorContext, usually done by actor's constructor)";
 
         return this->workload()._registry.operation(
             this->_actor->operator[]("Name").to<std::string>(),
