@@ -412,11 +412,14 @@ class ActorContext final : public v1::HasNode {
 public:
     ActorContext(const Node& node, WorkloadContext& workloadContext)
         : v1::HasNode{node}, _workload{&workloadContext}, _phaseContexts{} {
+        BOOST_LOG_TRIVIAL(info) << "Constructing ActorContext for actors named `" << (*this)["Name"].maybe<std::string>().value_or("no_name") << "` (done by WorkloadContext)";
+
         _phaseContexts = constructPhaseContexts(_node, this);
         auto threads = (*this)["Threads"].maybe<int>().value_or(1);
         _actorType = (*this)["Type"].maybe<std::string>().value_or("no_type");
         _actorName = (*this)["Name"].maybe<std::string>().value_or("no_name");
         _nextActorId = this->workload().claimActorIds(threads);
+        BOOST_LOG_TRIVIAL(info) << "Constructed ActorContext for actors named `" << this->_actorName << "`";
     }
 
     // no copy or move
@@ -438,6 +441,13 @@ public:
      */
     std::string actorInfo(ActorId id) const {
         return _actorType + "::" + _actorName + "::" + std::to_string(id);
+    }
+
+    /**
+     * @return string of actor name
+     */
+    std::string getActorName() const {
+        return _actorName;
     }
 
     /**
@@ -524,6 +534,8 @@ public:
      * @param internal whether this operation is Genny-internal.
      */
     auto operation(const std::string& operationName, ActorId id, bool internal = false) const {
+        BOOST_LOG_TRIVIAL(info) << "Constructing metrics::Operation for operation `" << operationName << "` of actor `" << this->actorInfo(id) << "` (done by ActorContext)";
+
         return this->_workload->_registry.operation(
             this->_node["Name"].to<std::string>(), operationName, id, std::nullopt, internal);
     }
@@ -562,7 +574,9 @@ private:
 class PhaseContext final : public v1::HasNode {
 public:
     PhaseContext(const Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
-        : v1::HasNode{node}, _actor{std::addressof(actorContext)}, _phaseNumber(phaseNumber) {}
+        : v1::HasNode{node}, _actor{std::addressof(actorContext)}, _phaseNumber(phaseNumber) {
+            BOOST_LOG_TRIVIAL(info) << "Constructed PhaseContext for phase " << this->_phaseNumber << " within (and done by) ActorContext for actors named `" << (*this->_actor)["Name"].maybe<std::string>().value_or("no_name") << "`";
+        }
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
@@ -613,6 +627,8 @@ public:
             stm << defaultMetricsName << "." << _phaseNumber;
         }
 
+        BOOST_LOG_TRIVIAL(info) << "Constructing metrics::Operation for operation `" << stm.str() << "` of actor `" << this->_actor->actorInfo(id) << "` (done by PhaseContext for phase " << this->_phaseNumber << " within ActorContext)";
+
         return this->workload()._registry.operation(
             this->_actor->operator[]("Name").to<std::string>(),
             stm.str(),
@@ -635,6 +651,7 @@ public:
      * @return auto
      */
     auto namedOperation(const std::string& metricsName, ActorId id, bool internal = false) const {
+        BOOST_LOG_TRIVIAL(info) << "Constructing metrics::Operation for operation `" << metricsName << "` of actor `" << this->_actor->actorInfo(id) << "` (done by PhaseContext for phase " << this->_phaseNumber << " within ActorContext)";
 
         return this->workload()._registry.operation(
             this->_actor->operator[]("Name").to<std::string>(),

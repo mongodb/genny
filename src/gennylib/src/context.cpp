@@ -49,6 +49,8 @@ WorkloadContext::WorkloadContext(const Node& node,
       _poolManager{apmCallback, dryRun},
       _workloadPath{node.key()} ,
       _coordinator{"",4400} {
+    BOOST_LOG_TRIVIAL(info) << "Constructing WorkloadContext for " << this->_workloadPath << " (done by DefaultDriver)";
+
     std::set<std::string> validSchemaVersions{"2018-07-01"};
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept
@@ -100,6 +102,8 @@ WorkloadContext::WorkloadContext(const Node& node,
     this->_orchestrator->addPostPhaseStopHook(
         [&](const Orchestrator*orchestrator, PhaseNumber phase) { this->_coordinator.onPhaseStop(phase); });
     _done = true;
+
+    BOOST_LOG_TRIVIAL(info) << "Constructed WorkloadContext for " << this->_workloadPath << " (done by DefaultDriver)";
 }
 
 ActorVector WorkloadContext::_constructActors(const Cast& cast,

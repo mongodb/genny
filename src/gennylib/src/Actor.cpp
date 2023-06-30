@@ -20,5 +20,7 @@
 
 namespace genny {
 Actor::Actor(ActorContext& context)
-    : _id{context.nextActorId()}, _actorInfo{context.actorInfo(_id)} {}
+    : _id{context.nextActorId()}, _actorInfo{context.actorInfo(_id)} {
+        BOOST_LOG_TRIVIAL(info) << "Constructed actor `" << this->_actorInfo << "` (done by WorkloadContext)";
+    }
 }  // namespace genny

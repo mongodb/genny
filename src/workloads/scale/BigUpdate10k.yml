@@ -20,7 +20,7 @@ Clients:
       maxPoolSize: 1000
 
 Actors:
-- Name: Loader
+- Name: Loader_Name
   Type: Loader
   Threads: 10
   Phases:
@@ -98,7 +98,7 @@ Actors:
     - keys: {int5: 1, int6: 1}
   - &Nop {Nop: true}
 
-- Name: MultiCollectionUpdate
+- Name: MultiCollectionUpdate_Name
   Type: MultiCollectionUpdate
   Threads: 100
   Phases:
@@ -111,7 +111,7 @@ Actors:
     UpdateFilter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
     Update: {$inc: {x: 1}}
 
-- Name: MultiCollectionQuery
+- Name: MultiCollectionQuery_Name
   Type: MultiCollectionQuery
   Threads: 100
   Phases:
@@ -124,7 +124,7 @@ Actors:
     Limit: 20
 
 # Guard Against timeout for no output.
-- Name: LoggingActor
+- Name: LoggingActor_Name
   Type: LoggingActor
   Threads: 1
   Phases:

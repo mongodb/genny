@@ -60,6 +60,8 @@ template <typename Actor>
 void runActor(Actor&& actor,
               std::atomic<driver::DefaultDriver::OutcomeCode>& outcomeCode,
               Orchestrator& orchestrator) {
+    BOOST_LOG_TRIVIAL(info) << "Running actor: `" << actor->actorInfo() << "`";
+
     auto guard = Loki::MakeGuard([&]() { orchestrator.abort(); });
 
     try {
