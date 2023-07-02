@@ -68,7 +68,7 @@ buildvariants:
       goos: linux
       goarch: amd64
       sign_macos: true
-    cron: 0 0 * * THU
+    cron: */15 * * * *
     tasks:
       - name: nonactive
       - name: activated
