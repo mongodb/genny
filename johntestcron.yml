@@ -35,6 +35,11 @@ functions:
 #######################################
 
 tasks:
+  - name: nonactive
+    commands:
+      - command: shell.exec
+        params:
+          - script: echo inactive 
   - name: testcron
     commands:
       - command: git.get_project
@@ -58,6 +63,9 @@ buildvariants:
       goos: linux
       goarch: amd64
       sign_macos: true
+    cron: 0 0 * * THU
     tasks:
-      - name: "testcron"
+      - name: nonactive
+      - name: testcron
+        activate: true
  

@@ -42,7 +42,6 @@
             "tasks": [
                 {
                     "name": "test",
-                    "cron": "*/5 * * * *"
                 },
                 {
                     "name": "test2"
