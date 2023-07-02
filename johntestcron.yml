@@ -29,12 +29,23 @@ functions:
             make mod-tidy;
             [[ $? -eq 0 ]] && break;
           done
+  echo-hi:
+    - command: shell.exec
+      params:
+        script: echo hi 
 
 #######################################
 #                Tasks                #
 #######################################
 
 tasks:
+  - name: test
+    commands: 
+      - func: echo-hi
+  - name: test2
+    commands: 
+      - func: echo-hi
+
   - name: nonactive
     commands:
       - command: shell.exec
