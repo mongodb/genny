@@ -53,7 +53,25 @@ tasks:
       - command: generate.tasks
         params:
           files:
-            - src/tasks.json
+            - src/activetasks.json
+  - name: testcron
+    commands:
+      - command: git.get_project
+        params:
+          directory: src
+      - command: generate.tasks
+        params:
+          files:
+            - src/nonactivetasks.json
+  - name: gentestcronexternal
+    commands:
+      - command: git.get_project
+        params:
+          directory: src
+      - command: generate.tasks
+        params:
+          files:
+            - src/externaltasks.json
 
 #######################################
 #            Buildvariants            #
@@ -64,10 +82,6 @@ buildvariants:
     run_on:
       - ubuntu2204-small
       - ubuntu2204-large
-    expansions:
-      goos: linux
-      goarch: amd64
-      sign_macos: true
     cron: */15 * * * *
     tasks:
       - name: nonactive
@@ -80,15 +94,24 @@ buildvariants:
     run_on:
       - ubuntu2204-small
       - ubuntu2204-large
-    expansions:
-      goos: linux
-      goarch: amd64
-      sign_macos: true
     cron: */15 * * * *
     tasks:
       - name: nonactive
-      - name: activated
-        activate: true
       - name: testcron
+        activate: true
+  - name: notactivatedexternalgen
+    display_name: Not Activated External Gen
+    run_on:
+      - ubuntu2204-small
+      - ubuntu2204-large
+    expansions:
+    cron: */15 * * * *
+  name: genfornotactivated
+    display_name: Gen For Not Activated
+    run_on:
+      - ubuntu2204-small
+      - ubuntu2204-large
+    tasks:
+      - name: gentestcronexternal
         activate: true
  

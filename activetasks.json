@@ -1,0 +1,53 @@
+{
+    "functions": {
+        "echo-hi": {
+            "command": "shell.exec",
+            "params": {
+                "script": "echo hi2"
+            }
+        }
+    },
+    "tasks": [
+        {
+            "commands": [
+                {
+                    "command": "git.get_project",
+                    "params": {
+                        "directory": "src"
+                    }
+                },
+                {
+                    "func": "echo-hi"
+                }
+            ],
+            "name": "test"
+        },
+        {
+            "commands": [
+                {
+                    "command": "git.get_project",
+                    "params": {
+                        "directory": "src"
+                    }
+                },
+                {
+                    "func": "echo-hi"
+                }
+            ],
+            "name": "test2"
+        }
+    ],
+    "buildvariants": [
+        {
+            "tasks": [
+                {
+                    "name": "test"
+                },
+                {
+                    "name": "test2"
+                }
+            ],
+            "name": "activatedvariant"
+        }
+    ]
+}
