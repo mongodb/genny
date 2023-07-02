@@ -40,6 +40,11 @@ tasks:
       - command: shell.exec
         params:
           script: echo inactive 
+  - name: activated
+    commands:
+      - command: shell.exec
+        params:
+          script: echo inactive 
   - name: testcron
     commands:
       - command: git.get_project
@@ -66,6 +71,8 @@ buildvariants:
     cron: 0 0 * * THU
     tasks:
       - name: nonactive
+      - name: activated
+        activate: true
       - name: testcron
         activate: true
  
