@@ -39,7 +39,7 @@ tasks:
     commands:
       - command: shell.exec
         params:
-          - script: echo inactive 
+          script: echo inactive 
   - name: testcron
     commands:
       - command: git.get_project
