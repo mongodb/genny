@@ -59,8 +59,24 @@ tasks:
 #            Buildvariants            #
 #######################################
 buildvariants:
-  - name: ubuntu2204
-    display_name: Ubuntu 22.04
+  - name: activatedvariant
+    display_name: Activated
+    run_on:
+      - ubuntu2204-small
+      - ubuntu2204-large
+    expansions:
+      goos: linux
+      goarch: amd64
+      sign_macos: true
+    cron: */15 * * * *
+    tasks:
+      - name: nonactive
+      - name: activated
+        activate: true
+      - name: testcron
+        activate: true
+  - name: notactivatedvariant
+    display_name: Not Activated
     run_on:
       - ubuntu2204-small
       - ubuntu2204-large
