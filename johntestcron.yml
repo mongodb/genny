@@ -45,7 +45,7 @@ tasks:
       - command: shell.exec
         params:
           script: echo inactive 
-  - name: testcron
+  - name: testcronactive
     commands:
       - command: git.get_project
         params:
@@ -54,7 +54,7 @@ tasks:
         params:
           files:
             - src/activetasks.json
-  - name: testcron
+  - name: testcronnonactive
     commands:
       - command: git.get_project
         params:
@@ -87,7 +87,7 @@ buildvariants:
       - name: nonactive
       - name: activated
         activate: true
-      - name: testcron
+      - name: testcronactive
         activate: true
   - name: notactivatedvariant
     display_name: Not Activated
@@ -97,16 +97,17 @@ buildvariants:
     cron: "*/15 * * * *"
     tasks:
       - name: nonactive
-      - name: testcron
+      - name: testcronnonactive
         activate: true
   - name: notactivatedexternalgen
     display_name: Not Activated External Gen
     run_on:
       - ubuntu2204-small
       - ubuntu2204-large
-    expansions:
+    tasks: 
+      - name: nonactive
     cron: "*/15 * * * *"
-  name: genfornotactivated
+  - name: genfornotactivated
     display_name: Gen For Not Activated
     run_on:
       - ubuntu2204-small
