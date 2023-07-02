@@ -1,0 +1,15 @@
+{
+    "buildvariants": [
+        {
+            "tasks": [
+                {
+                    "name": "test"
+                },
+                {
+                    "name": "test2"
+                }
+            ],
+            "name": "activatedexternalgen"
+        }
+    ]
+}

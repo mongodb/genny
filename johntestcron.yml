@@ -74,7 +74,7 @@ tasks:
         params:
           files:
             - src/nonactivetasks.json
-  - name: gentestcronexternal
+  - name: gennotactivatedexternal
     commands:
       - command: git.get_project
         params:
@@ -82,7 +82,17 @@ tasks:
       - command: generate.tasks
         params:
           files:
-            - src/externaltasks.json
+            - src/externalnotactivatedtasks.json
+  - name: genactivatedexternal
+    commands:
+      - command: git.get_project
+        params:
+          directory: src
+      - command: generate.tasks
+        params:
+          files:
+            - src/externalactivatedtasks.json
+
 
 #######################################
 #            Buildvariants            #
@@ -124,6 +134,23 @@ buildvariants:
       - ubuntu2204-small
       - ubuntu2204-large
     tasks:
-      - name: gentestcronexternal
+      - name: gennotactivatedexternal
         activate: true
- 
+  - name: activatedexternalgen
+    display_name: Activated External Gen
+    run_on:
+      - ubuntu2204-small
+      - ubuntu2204-large
+    tasks: 
+      - name: nonactive
+      - name: activated
+        activate: true
+    cron: "*/15 * * * *"
+  - name: genforactivated
+    display_name: Gen For Activated
+    run_on:
+      - ubuntu2204-small
+      - ubuntu2204-large
+    tasks:
+      - name: genactivatedexternal
+        activate: true
