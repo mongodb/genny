@@ -508,7 +508,7 @@ TEST_CASE("Actual Actor Example") {
     }
 }
 
-TEST_CASE("Actual Actor Example Timing") {
+TEST_CASE("Actual Actor Example IgnoredOnMacOs") {
 
     SECTION("SleepBefore and SleepAfter") {
         using namespace std::literals::chrono_literals;
