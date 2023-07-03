@@ -554,14 +554,20 @@ def lint_yaml(ctx: click.Context):
     required=True,
     type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks"]),
 )
+@click.option(
+    "--build-variant",
+    default=None,
+    help="Override the build variant to generate tasks for",
+)
 @click.pass_context
-def auto_tasks(ctx: click.Context, tasks: str):
+def auto_tasks(ctx: click.Context, tasks: str, build_variant: str | None):
     from genny.tasks import auto_tasks
 
     auto_tasks.main(
         mode_name=tasks,
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        build_variant=build_variant,
     )
 
 

@@ -41,6 +41,7 @@ class YamlReader:
         if not os.path.exists(joined):
             raise Exception(f"File {joined} not found.")
         with open(joined) as handle:
+            print(path)
             return yaml.safe_load(handle)
 
     # Really just here for easy mocking.
@@ -129,7 +130,7 @@ class CLIOperation(NamedTuple):
 
     @staticmethod
     def create(
-        mode_name: str, reader: YamlReader, genny_repo_root: str, workspace_root: str
+        mode_name: str, reader: YamlReader, genny_repo_root: str, workspace_root: str, build_variant: str | None
     ) -> "CLIOperation":
         mode = OpName.ALL_TASKS
         variant = None
@@ -139,10 +140,10 @@ class CLIOperation(NamedTuple):
             mode = OpName.ALL_TASKS
         if mode_name == "patch_tasks":
             mode = OpName.PATCH_TASKS
-            variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
+            variant = build_variant or reader.load(workspace_root, "expansions.yml")["build_variant"]
         if mode_name == "variant_tasks":
             mode = OpName.VARIANT_TASKS
-            variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
+            variant = build_variant or reader.load(workspace_root, "expansions.yml")["build_variant"]
         return CLIOperation(
             mode, variant, execution, genny_repo_root=genny_repo_root, workspace_root=workspace_root
         )
@@ -583,7 +584,7 @@ class ConfigWriter:
         return c
 
 
-def main(mode_name: str, genny_repo_root: str, workspace_root: str) -> None:
+def main(mode_name: str, genny_repo_root: str, workspace_root: str, build_variant: str | None = None) -> None:
     reader = YamlReader()
     build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
     op = CLIOperation.create(
@@ -591,6 +592,7 @@ def main(mode_name: str, genny_repo_root: str, workspace_root: str) -> None:
         reader=reader,
         genny_repo_root=genny_repo_root,
         workspace_root=workspace_root,
+        build_variant=build_variant,
     )
     lister = WorkloadLister(
         workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader
