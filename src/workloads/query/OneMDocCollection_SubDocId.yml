@@ -33,7 +33,7 @@ ActorTemplates:
           Operations:
           - OperationName: find
             OperationCommand:
-              Filter: {_id: {_id1: {^RandomInt: {min: 0, max: 999999}}, _id2: {^RandomInt: {min: 0, max: 999999}}}}
+              Filter: {_id: {_id1: {^RandomInt: {min: 0, max: 9999999}}, _id2: {^RandomInt: {min: 0, max: 9999999}}}}
 
 Actors:
 # Clear any pre-existing collection state.
@@ -64,10 +64,10 @@ Actors:
         Database: *Database
         MultipleThreadsPerCollection: true
         CollectionCount: 1
-        DocumentCount: 1000000
+        DocumentCount: 10000000
         BatchSize: 1000
         Document:
-          _id: {id1: {^Inc: {start: -200000, multiplier: 100000}}, id2: {^Inc: {start: -200000, multiplier: 100000}}}
+          _id: {id1: {^Inc: {start: -2000000, multiplier: 1000000}}, id2: {^Inc: {start: -2000000, multiplier: 1000000}}}
 
 - Name: Quiesce
   Type: QuiesceActor

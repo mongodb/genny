@@ -33,7 +33,7 @@ ActorTemplates:
           Operations:
           - OperationName: find
             OperationCommand:
-              Filter: {_id: {^RandomInt: {min: 0, max: 999999}}}
+              Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}
 
 Actors:
 # Clear any pre-existing collection state.
@@ -64,14 +64,14 @@ Actors:
         Database: *Database
         MultipleThreadsPerCollection: true
         CollectionCount: 1
-        DocumentCount: 1000000
+        DocumentCount: 10000000
         BatchSize: 1000
         Document:
           # The multiplier is multiplied by the ActorID, and added to the value.
           # Since this is the second actor, the ActorIDs increment for each thread starting at 2.
           # e.g -200000 + 2 * 100000 = 0, -199999 + 2 * 100000 = 1, etc.
           # Once complete, the _ids the collection will have be the range 0-999999.
-          _id: {^Inc: {start: -200000, multiplier: 100000}}
+          _id: {^Inc: {start: -2000000, multiplier: 1000000}}
 
 - Name: Quiesce
   Type: QuiesceActor

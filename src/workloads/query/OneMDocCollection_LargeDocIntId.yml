@@ -33,7 +33,7 @@ ActorTemplates:
           Operations:
           - OperationName: find
             OperationCommand:
-              Filter: {_id: {^RandomInt: {min: 0, max: 999999}}}
+              Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}
 
 Actors:
 # Clear any pre-existing collection state.
@@ -64,10 +64,10 @@ Actors:
         Database: *Database
         MultipleThreadsPerCollection: true
         CollectionCount: 1
-        DocumentCount: 1000000
+        DocumentCount: 10000000
         BatchSize: 1000
         Document:
-          _id: {^Inc: {start: -200000, multiplier: 100000}}
+          _id: {^Inc: {start: -2000000, multiplier: 1000000}}
           extraData: {^Object: {
             withNEntries: {^RandomInt: {min: 5, max: 200}},
             havingKeys: {^RandomString: {length: 10}},
