@@ -626,10 +626,10 @@ public:
     /**
      * @brief [Experimental] Create a metrics::Operation with the specified name
      *
-     * The current operation() function will always return the same operation if MetricsName is
-     * specified. According to the HelloWorld actor, it seems not the expected behavior But it is
-     * too risky to change the behavior without thoroughly exam the impact Created TIG-4328 to track
-     * this work
+     * PhaseContext::operation() always returns the same Operation if MetricsName is specified.
+     * But according to the HelloWorld actor, this behavior seems to be unexpected.
+     * However, it is too risky to change the behavior without thoroughly examining the impact.
+     * EVG-17788 tracks this work.
      *
      * @param metricsName name of the metric
      * @param id
