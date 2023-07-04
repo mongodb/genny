@@ -223,9 +223,9 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         for (const auto& [phaseNum, phaseContexts] : workloadContext.getActivePhaseContexts()) {
             BOOST_LOG_TRIVIAL(debug) << "Phase " << phaseNum << " Actors:";
             int i = 0;
-            for (const PhaseContext& pc : phaseContexts) {
-                const auto& actorCxt = pc.actor();
-                BOOST_LOG_TRIVIAL(debug) << ++i << ") " << actorCxt.getType() << "." << actorCxt.getName();
+            for (const PhaseContext& phaseCtx : phaseContexts) {
+                const auto& actorCtx = phaseCtx.actor();
+                BOOST_LOG_TRIVIAL(debug) << ++i << ") " << actorCtx.getType() << "." << actorCtx.getName();
             }
         }
         
