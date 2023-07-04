@@ -218,8 +218,17 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     genny::metrics::Registry& metrics = workloadContext.getMetrics();
 
     if (options.runMode == DefaultDriver::RunMode::kDryRun) {
-        std::cout << "Workload context constructed without errors." << std::endl;
+        BOOST_LOG_TRIVIAL(info) << "Workload context constructed without errors.";
         reportMetrics(metrics, workloadName, "Setup", true, startTime);
+        for (const auto& [phaseNum, phaseContexts] : workloadContext.getActivePhaseContexts()) {
+            BOOST_LOG_TRIVIAL(debug) << "Phase " << phaseNum << " Actors:";
+            int i = 0;
+            for (const PhaseContext& pc : phaseContexts) {
+                const auto& actorCxt = pc.actor();
+                BOOST_LOG_TRIVIAL(debug) << ++i << ") " << actorCxt.getType() << "." << actorCxt.getName();
+            }
+        }
+        
         reportUnused(nodeSource, true);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
