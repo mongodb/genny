@@ -15,25 +15,25 @@
 #ifndef HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 #define HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 
-#include <arpa/inet.h>
 #include <cassert>
-#include <errno.h>
-#include <fstream>
 #include <map>
 #include <memory>
-#include <netdb.h>
-#include <netinet/in.h>
+#include <fstream>
 #include <sstream>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <type_traits>
 #include <typeinfo>
-#include <unistd.h>
 #include <unordered_map>
 #include <vector>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <arpa/inet.h>
 
 #include <boost/log/trivial.hpp>
 #include <boost/noncopyable.hpp>
