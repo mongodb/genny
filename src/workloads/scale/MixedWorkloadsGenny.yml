@@ -314,3 +314,6 @@ AutoRun:
       - single-replica-sampling-bonsai
       - single-replica-sbe
       - standalone
+    atlas_setup:
+      $neq:
+      - M30-repl

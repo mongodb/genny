@@ -70,6 +70,9 @@ AutoRun:
       - replica
       - single-replica
       - standalone
+    atlas_setup:
+      $neq:
+      - M30-repl
     branch_name:
       $neq:
       - v4.0
