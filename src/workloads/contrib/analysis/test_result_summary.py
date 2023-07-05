@@ -184,15 +184,8 @@ def summarize_readings(args, actor_name, metrics_of_interest, first_line, last_l
     if "throughput" in args.metrics:
         if "counters.ops" in last_line and "timers.dur" in last_line:
             n_ops = float(last_line["counters.ops"])
-            elapsed_nanos = float(last_line["timers.dur"])
-            elapsed_seconds = elapsed_nanos / (1000.0 * 1000.0 * 1000.0)
+            elapsed_seconds = (last_line["ts"] - first_line["ts"]) / 1000
             results["throughput"] = {
-                "ops": n_ops,
-                "seconds": elapsed_seconds,
-                "ops per second": round(n_ops / elapsed_seconds, 4),
-            }
-            elapsed_seconds = (last_line["ts"] - first_line["ts"])/1000
-            results["throughput_new"] = {
                 "ops": n_ops,
                 "seconds": elapsed_seconds,
                 "ops per second": round(n_ops / elapsed_seconds, 4),
