@@ -12,6 +12,8 @@ GlobalDefaults:
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
   DocumentCount: &docCount 1000000
+  LoadingThreads: &LoadingThreads 16
+  DocsPerThread: &DocsPerThread 62500
   MaxPhases: &MaxPhases 9
 
 ValueGenerators:
@@ -73,10 +75,9 @@ Actors:
             key: {_id: "hashed"}
             numInitialChunks: 12
 
-# Phase 2: insert. TODO Make multithreaded once TIG-2938 is resolved.
 - Name: Insert
   Type: Loader
-  Threads: 1
+  Threads: *LoadingThreads
   Phases:
     OnlyActiveInPhases:
       Active: [2]
@@ -84,14 +85,14 @@ Actors:
       PhaseConfig:
         Repeat: 1
         Database: *Database
-        Threads: 1
+        MultipleThreadsPerCollection: true
         CollectionCount: 1
         DocumentCount: *docCount
         BatchSize: 1000
         Document:
           # Start from {_id: "0000001"} in order to be able to set the ^RandomInt max bound to *docCount
           # in the LookupByClusterKey phase. This works around TIG-3759.
-          _id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: 1}}]}}, *PaddingGenerator]}}
+          _id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: -62499, multiplier: *DocsPerThread}}]}}, *PaddingGenerator]}}
           a: &RandomSecondaryKey {^FastRandomString: {length: 6, alphabet: "0123456789"}}
           b: {^FastRandomString: {length: 1024}}
 
