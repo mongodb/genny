@@ -1,14 +1,20 @@
 # /bin/python
 # You may need to pip install some of the imports below if you don't have them already
 
-import os
-import numpy as np
-import re
-import subprocess
-import statistics
 import argparse
-import math
+import itertools
 import json
+import math
+import numpy as np
+import os
+import re
+import statistics
+import subprocess
+import sys
+import threading
+import time
+
+from tqdm import tqdm
 
 default_metrics_path = 'build/WorkloadOutput/CedarMetrics'
 default_metrics = ['throughput', 'timers.dur']
@@ -77,9 +83,17 @@ def replace_suffix(string, suffixTarget, newSuffix):
     suffix_start = string.rfind(suffixTarget)
     return string[0:suffix_start] + newSuffix
 
+def animate(interrupt_event):
+    for c in itertools.cycle(['|', '/', '-', '\\']):
+        sys.stdout.write('\rprocessing ftdc file... ' + c)
+        sys.stdout.flush()
+        if interrupt_event.wait(0.1):
+            sys.stdout.write('\rDone!     ')
+            return
 
-def convert_to_csv(args, actor_file):
-    tmp_file_location = replace_suffix(actor_file, ".ftdc", ".csv")
+
+def convert_to_json(args, actor_file):
+    tmp_file_location = replace_suffix(actor_file, ".ftdc", ".json")
     if (os.path.exists(tmp_file_location)):
         if args.verbose:
             print(
@@ -90,9 +104,15 @@ def convert_to_csv(args, actor_file):
         return tmp_file_location
 
     if args.verbose:
-        print("Outputing ftdc to csv...")
+        print("Outputing ftdc to json...")
+
+    interrupt_event = threading.Event()
+    loading_bar_thread = threading.Thread(target=animate, args=(interrupt_event,), daemon=True)
+    loading_bar_thread.start()
+
     sub_result = subprocess.run(
-        ["./run-genny", "export", actor_file, "-o", tmp_file_location])
+        ["./build/curator/curator", "ftdc", "export", "json", "--input", actor_file, "--flattened", "--output", tmp_file_location])
+    interrupt_event.set()
     assert sub_result.returncode == 0
     return tmp_file_location
 
@@ -149,19 +169,30 @@ def summarize_diffed_data(args, actor_name, metrics_of_interest):
     return results
 
 
-def summarize_readings(args, actor_name, metrics_of_interest, header, last_line):
+def summarize_readings(args, actor_name, metrics_of_interest, first_line, last_line):
     results = summarize_diffed_data(args, actor_name, metrics_of_interest)
 
     if args.verbose:
         print(
             "Finished summarizing diffed data, computing metrics from the the last row...")
 
+    if first_line is None:
+        if args.verbose:
+            print("No first line, assuming this means there was no data.")
+        return results
+
     if "throughput" in args.metrics:
-        if "counters.ops" in header and "timers.dur" in header:
-            n_ops = float(last_line[header.index("counters.ops")])
-            elapsed_nanos = float(last_line[header.index("timers.dur")])
+        if "counters.ops" in last_line and "timers.dur" in last_line:
+            n_ops = float(last_line["counters.ops"])
+            elapsed_nanos = float(last_line["timers.dur"])
             elapsed_seconds = elapsed_nanos / (1000.0 * 1000.0 * 1000.0)
             results["throughput"] = {
+                "ops": n_ops,
+                "seconds": elapsed_seconds,
+                "ops per second": round(n_ops / elapsed_seconds, 4),
+            }
+            elapsed_seconds = (last_line["ts"] - first_line["ts"])/1000
+            results["throughput_new"] = {
                 "ops": n_ops,
                 "seconds": elapsed_seconds,
                 "ops per second": round(n_ops / elapsed_seconds, 4),
@@ -171,8 +202,8 @@ def summarize_readings(args, actor_name, metrics_of_interest, header, last_line)
                 pretty_print_summary(args, results["throughput"], "\t")
 
     if "errors" in args.metrics:
-        if "counters.errors" in header:
-            n_errors = last_line[header.index("counters.errors")]
+        if "counters.errors" in last_line:
+            n_errors = last_line["counters.errors"]
             if n_errors != 0:
                 print("WARNING non-zero error count: ", n_errors)
                 results["errors"] = {"total": n_errors}
@@ -186,11 +217,9 @@ def is_measured_in_nanoseconds(metric_name):
     return metric_name.startswith("timers.")
 
 
-def process_csv(args, actor_name, csv_reader):
-    header = csv_reader.readline().split(',')
+def process_json(args, actor_name, json_reader):
     if args.verbose:
         print("Analyzing the following metrics", args.metrics)
-        print("Available metrics from the header row: ", header)
 
     # These we can calculate by just looking at the last row to get the totals.
     metrics_handled_later = ["throughput", "errors"]
@@ -198,12 +227,6 @@ def process_csv(args, actor_name, csv_reader):
     for metric_name in args.metrics:
         if metric_name in metrics_handled_later:
             continue
-
-        if metric_name not in header:
-            print("Unable to find metric with the name '%s'. Available metrics: %s" % (
-                metric_name, json.dumps(header)))
-            print("Skipping this actor analysis")
-            return {metric_name: []}
 
         # Other metrics should be easy to add, but are untested so not included here.
         assert metric_name.endswith(".total") or metric_name.endswith('.dur'), """
@@ -213,22 +236,34 @@ def process_csv(args, actor_name, csv_reader):
     # Store (last reading, all readings) for each metric.
     metrics_of_interest = {
         m: (0,  []) for m in args.metrics if m not in metrics_handled_later}
-    metric_columns = [(metric, header.index(metric))
-                      for metric in metrics_of_interest]
 
-    # Now scan the '.csv' data, row by row. We have identified which columns we're interested in.
+    # Now scan the '.json' data, row by row.
     # The metrics we know how to process so far are all stored row-by-row with a running total. So
     # if we're interested in say the average latency for an operation, we'll calculate the latency
     # for _each_ operation by subtracting each reading's previous recording to get the diff
     # associated for just that reading.
-    nRows = 0
+    n_rows = 0
+    first_line = None
     last_line = None
-    for raw_recording in csv_reader.readlines():
-        nRows += 1
-        recording = raw_recording.split(',')
+    for raw_recording in tqdm(json_reader, desc="Processing expanded JSON results"):
+        n_rows += 1
+        recording = None
+        try:
+            recording = json.loads(raw_recording)
+        except json.JSONDecodeError:
+            print(f"Found invalid json: {raw_recording}")
+            raise
         last_line = recording
-        for (metric_name, column_idx) in metric_columns:
-            this_reading = float(recording[column_idx])
+        if n_rows == 1:
+            first_line = recording
+        for metric_name in metrics_of_interest:
+            if metric_name not in recording:
+                print("Unable to find metric with the name '%s'. Available metrics: %s" % (
+                    metric_name, json.dumps(recording)))
+                print(f"Skipping actor analysis: {actor_name}")
+                return {metric_name: []}
+
+            this_reading = recording[metric_name]
 
             # Convert nanoseconds to milliseconds - nanos have too many digits for humans to easily
             # interpret.
@@ -241,12 +276,12 @@ def process_csv(args, actor_name, csv_reader):
 
     if args.verbose:
         print("Finished reading %d rows. Now processing data for output" %
-              nRows)
+              n_rows)
 
     # strip out the 'last recording' piece of information - not needed anymore.
     just_data = {m: all_data for (m, (_, all_data))
                  in metrics_of_interest.items()}
-    return summarize_readings(args, actor_name, just_data, header, last_line)
+    return summarize_readings(args, actor_name, just_data, first_line, last_line)
 
 
 def print_histogram_bucket(prefix, global_max, bucket_min, bucket_max, end_bracket, stars, n_items):
@@ -364,9 +399,9 @@ def main():
 
         global_summaries[actor_name] = {}
 
-        tmp_file = convert_to_csv(args, actor_file)
-        with open(tmp_file, 'r') as csv_reader:
-            metric_summaries = process_csv(args, actor_name, csv_reader)
+        tmp_file = convert_to_json(args, actor_file)
+        with open(tmp_file, 'r') as json_reader:
+            metric_summaries = process_json(args, actor_name, json_reader)
 
             for (metric_name, summary_data) in metric_summaries.items():
                 global_summaries[actor_name][metric_name] = summary_data
