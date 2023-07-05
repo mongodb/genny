@@ -1,0 +1,175 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: |
+  This test expects the target cluster is created using ebs snapshot with 1 billion 1KB records 
+  and has 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including 
+  _id index, single-key index and compound index. ReshardCollection should use same-key resharding 
+  and use shardDistribution parameter to reshard into 2 shards then 3 shards. There will be random 
+  CRUD operations during resharding but should run at a very low rate.
+
+  The workload consists of 3 phases:
+    1. Turning off balancer and make the sharded collection exists on only 1 shard.
+    4. Running read and write operations on the collection while it is being resharded to 2 shards.
+    5. Running read and write operations on the collection while it is being resharded to 3 shards.
+    
+
+  The inserted documents have the following form:
+
+      {
+        _id: 10,
+        shardKey: 20,
+        counter: 0,
+        num1: 1,
+        num2: 2,
+        str1: 'abc',
+        str2: 'xyz',
+        padding: 'random string of bytes ...'
+      }
+
+  The indexes are:
+      [
+        {_id: 1},
+        {shardKey: 1},
+        {counter: 1},
+        {num1: 1},
+        {num2: 1},
+        {str1: 1},
+        {str2: 1},
+        {shardKey: 1, counter:1},
+        {str1: 1, num1: 1},
+        {num2:1, str2: 1}
+      ]
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+
+  Database: &Database test
+  # Collection0 is the default collection populated by the MonotonicSingleLoader.
+  Collection: &Collection Collection0
+  Namespace: &Namespace test.Collection0
+
+  DocumentCount: &DocumentCount 1_000_000_000  # for an approximate total of 1TB
+  NumChunks: &NumChunks 1                # start with only 1 shard
+  Timeout: &Timeout 360_000_000 # = 100 hours
+
+  ShardKeyValueMin: &ShardKeyValueMin 1
+  # We use 100x the number of chunks so that the $sample aggregation to choose the new split points
+  # has a wide range of distinct values to choose from. It could be even larger.
+  ShardKeyValueMax: &ShardKeyValueMax 1_000_000
+  ShardName0: &Shard0 shard-00
+  ShardName1: &Shard1 shard-01
+  ShardName2: &Shard2 shard-02
+
+  ReadRate: &ReadRate 100 per 1 second
+  WriteRate: &WriteRate 10 per 10 seconds  # Keep the writes slow to pass critical section.
+
+  ReadOperations: &ReadOperations
+  - OperationName: findOne
+    OperationCommand:
+      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+
+  WriteOperations: &WriteOperations
+  - OperationName: updateOne
+    OperationCommand:
+      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+      Update: {$inc: {counter: 1}}
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 202
+      socketTimeoutMS: *Timeout  # = 100 hours
+  # The reshardCollection command is expected to take a long to complete so we give the actor
+  # running it a much higher socket timeout.
+  ReshardCollection:
+    QueryOptions:
+      maxPoolSize: 1
+      socketTimeoutMS: *Timeout  # = 100 hours
+
+Actors:
+- Name: CreateShardedCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: StopBalancer
+      OperationName: AdminCommand
+      OperationCommand:
+        balancerStop: 1
+        maxTimeMS: *Timeout
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *Database
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: *Namespace
+        key: {shardKey: hashed}
+  - *Nop
+  - *Nop
+
+- Name: ReshardCollection
+  Type: AdminCommand
+  Threads: 1
+  ClientName: ReshardCollection
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: ReshardCollectionToTwoShards
+      OperationName: AdminCommand
+      OperationCommand:
+        reshardCollection: *Namespace
+        key: {shardKey: 1}
+        shardDistribution: [{shard: *Shard0}, {shard: *Shard1}]
+        forceRedistribution: true
+        numInitialChunks: 20000
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: ReshardCollectionToThreeShards
+      OperationName: AdminCommand
+      OperationCommand:
+        reshardCollection: *Namespace
+        key: {shardKey: 1}
+        shardDistribution: [{shard: *Shard0}, {shard: *Shard1}, {shard: *Shard2}]
+        forceRedistribution: true
+        numInitialChunks: 20000
+
+- Name: ReadCollectionBeingResharded
+  Type: CrudActor
+  Threads: 95
+  Database: *Database
+  Phases:
+  - *Nop
+  - MetricsName: ReadDuringReshardingToTwoShards
+    Blocking: None
+    Collection: *Collection
+    Operations: *ReadOperations
+    GlobalRate: *ReadRate
+  - MetricsName: ReadDuringReshardingToThreeShards
+    Blocking: None
+    Collection: *Collection
+    Operations: *ReadOperations
+    GlobalRate: *ReadRate
+
+- Name: WriteCollectionBeingResharded
+  Type: CrudActor
+  Threads: 5
+  Database: *Database
+  Phases:
+  - *Nop
+  - MetricsName: WriteDuringReshardingToTwoShards
+    Blocking: None
+    Collection: *Collection
+    Operations: *WriteOperations
+    GlobalRate: *WriteRate
+  - MetricsName: WriteDuringReshardingToThreeShards
+    Blocking: None
+    Collection: *Collection
+    Operations: *WriteOperations
+    GlobalRate: *WriteRate
