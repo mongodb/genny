@@ -1,7 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests performance of IDHACK on queries with int _id.
+  This workload tests performance of IDHACK on queries with int _id. Since this workloads loads
+  very large documents (average 10KB), you may need to free up disk space before running this
+  workload locally.
 
 KeyWords:
 - IDHACK
@@ -64,12 +66,12 @@ Actors:
         Database: *Database
         MultipleThreadsPerCollection: true
         CollectionCount: 1
-        DocumentCount: 10000000
+        DocumentCount: 1000000
         BatchSize: 1000
         Document:
-          _id: {^Inc: {start: -2000000, multiplier: 1000000}}
+          _id: {^Inc: {start: -200000, multiplier: 100000}}
           extraData: {^Object: {
-            withNEntries: {^RandomInt: {min: 5, max: 200}},
+            withNEntries: {^RandomInt: {min: 5, max: 1000}},
             havingKeys: {^RandomString: {length: 10}},
             andValues: 0,
             duplicatedKeys: skip
