@@ -338,6 +338,9 @@ AutoRun:
       - standalone-sampling-bonsai
       - standalone-sbe
       - standalone-query-stats
+    atlas_setup:
+      $neq:
+      - M30-repl
     branch_name:
       $neq:
       - v4.0
