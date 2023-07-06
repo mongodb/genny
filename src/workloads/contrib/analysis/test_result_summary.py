@@ -188,7 +188,7 @@ def summarize_readings(args, actor_name, metrics_of_interest, first_line, last_l
             results["throughput"] = {
                 "ops": n_ops,
                 "seconds": elapsed_seconds,
-                "ops per second": round(n_ops / elapsed_seconds, 4),
+                "ops per second": round(float('inf') if elapsed_seconds == 0 else n_ops / elapsed_seconds, 4),
             }
             if args.verbose:
                 print("throughput:")
