@@ -1,8 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  The queries in this workload exercise group stage(s) after aggregation stages on computed date
-  fields.
+  The queries in this workload exercise group stage(s) after aggregation stages ($addFields, $match,
+  $sort) on computed date fields.
 
 Keywords:
 - aggregate
@@ -27,7 +27,7 @@ MultipleGroupStagesOnComputedFields: &MultipleGroupStagesOnComputedFields
                           {$group:
                             {"_id" :
                               { "symbol" : "$symbol" ,
-                                "time": { "$dateTrunc" : {"date": "$time", "unit": "minute", "binSize" : 60}}
+                                "time": { "$dateTrunc" : {"date": "$time", "unit": "minute", "binSize" : 1}}
                               },
                               "open" : {"$first" : "$price"},
                               "close" : {"$last" : "$price"}}
@@ -71,9 +71,9 @@ GroupStageOnDateComputationAfterMatch: &GroupStageOnDateComputationAfterMatch
       nopInPhasesUpTo: *NopInPhasesUpTo
       pipeline: [{
                     $match: {
-                            "symbol": "string050",
+                            "symbol": "string50",
                             "time": {
-                              $gte: "2022-01-03"
+                              $gte: {^Date: "2022-01-03"}
                             }
                     }
                   },
@@ -82,7 +82,7 @@ GroupStageOnDateComputationAfterMatch: &GroupStageOnDateComputationAfterMatch
                         "_id" : {
                           $dateTrunc: {
                             "date": "$time",
-                            "unit": "day"
+                            "unit": "minute"
                           }
                         },
                         "count" : {$sum: 1}
