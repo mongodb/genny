@@ -3,8 +3,7 @@ line-length = 100
 target-version = ['py37']
 
 [tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q"
+minversion = "7.0"
 testpaths = [
     "src/lamplib",
     "src/cast_python",
