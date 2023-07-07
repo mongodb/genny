@@ -1,8 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  The queries in this workload exercise group stage(s) after aggregation stages on computed date
-  fields on a timeseries collection.
+  The queries in this workload exercise group stage(s) after other stages ($addFields, $match, $sort)
+  on computed date fields on a timeseries collection.
 
 Keywords:
 - timeseries
