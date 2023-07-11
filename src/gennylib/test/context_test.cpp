@@ -710,8 +710,7 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
 
     SECTION("Incorrect type value inputted") {
         auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, cast); };
-        REQUIRE_THROWS_WITH(test(),
-                            Catch::Matchers::ContainsSubstring(
-                                "Unable to construct actors: No producer for 'Bar'"));
+        REQUIRE_THROWS_WITH(
+            test(), Catch::Matchers::ContainsSubstring("Unable to construct actors: No producer for 'Bar'"));
     }
 }
