@@ -78,7 +78,7 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
         NopInPhasesUpTo: 2
         PhaseConfig:
-          Repeat: 10
+          Repeat: 1000
           RecordFailure: true
           CollectionCount: *NumColls
           Operations:
