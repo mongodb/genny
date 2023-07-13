@@ -147,6 +147,19 @@ GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name, cons
     return rl;
 }
 
+std::map<PhaseNumber, std::vector<std::reference_wrapper<const PhaseContext>>>
+WorkloadContext::getActivePhaseContexts() const {
+    auto phasesMap =
+        std::map<PhaseNumber, std::vector<std::reference_wrapper<const PhaseContext>>>();
+    for (const auto& ac : this->_actorContexts) {
+        for (const auto& [phaseNum, phaseContext] : ac->phases()) {
+            if (!phaseContext->isNop()) {
+                phasesMap[phaseNum].emplace_back(std::cref(*phaseContext));
+            }
+        }
+    }
+    return phasesMap;
+}
 
 DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
     if (this->isDone()) {
