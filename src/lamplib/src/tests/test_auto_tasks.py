@@ -9,7 +9,7 @@ import structlog
 
 from genny.tasks.auto_tasks import (
     CurrentBuildInfo,
-    CLIOperation,
+    OpName,
     WorkloadLister,
     Repo,
     ConfigWriter,
@@ -73,15 +73,14 @@ class BaseTestClass(unittest.TestCase):
         ]
 
         # And send them off into the world.
-        build = CurrentBuildInfo(reader, workspace_root=self.workspace_root)
-        op = CLIOperation.create(
-            and_mode, reader, genny_repo_root=genny_repo_root, workspace_root=self.workspace_root
-        )
+        expansions = reader.load(self.workspace_root, "expansions.yml")
+        build = CurrentBuildInfo(expansions)
+        op = OpName.from_flag(and_mode)
         repo = Repo(lister, reader, workspace_root=self.workspace_root)
         tasks = repo.tasks(op, build)
-        writer = ConfigWriter(op)
+        writer = ConfigWriter(op, build)
 
-        config = writer.write(tasks, write=False)
+        config = writer.write(tasks, None)
         parsed = json.loads(config.to_json())
         try:
             self.assertDictEqual(then_writes, parsed)
@@ -915,20 +914,14 @@ def test_dry_run_all_tasks():
         ):
             reader = YamlReader()
             build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
-            op = CLIOperation.create(
-                mode_name="all_tasks",
-                reader=reader,
-                genny_repo_root=genny_repo_root,
-                workspace_root=workspace_root,
-            )
-            lister = WorkloadLister(
-                workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader
-            )
+            op = OpName.from_flag("all_tasks")
+            lister = WorkloadLister(workspace_root=workspace_root)
             repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
             tasks = repo.tasks(op=op, build=build)
+            os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
 
-            writer = ConfigWriter(op)
-            writer.write(tasks, False)
+            writer = ConfigWriter(op, build)
+            writer.write(tasks, None)
     except Exception as e:
         SLOG.error(
             "'./run-genny auto-tasks --tasks all_tasks' is failing. "
