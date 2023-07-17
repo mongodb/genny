@@ -66,7 +66,4 @@ AutoRun:
       - replica
       - single-replica
       - single-replica-classic-query-engine
-      # TODO after SERVER-77129: Uncomment the following build variants after fixing the issue with long $in lists.
-      # - single-replica-sampling-bonsai
-      # - single-replica-heuristic-bonsai
       - single-replica-sbe

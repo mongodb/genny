@@ -310,8 +310,6 @@ AutoRun:
       - replica-noflowcontrol
       - single-replica
       - single-replica-classic-query-engine
-      - single-replica-heuristic-bonsai
-      - single-replica-sampling-bonsai
       - single-replica-sbe
       - standalone
     atlas_setup:
