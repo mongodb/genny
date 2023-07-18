@@ -10,10 +10,12 @@ python3 -mvenv venv
 ./venv/bin/python3 -mpip install -r ./src/workloads/contrib/analysis/requirements.txt
 
 # Run the script.
-./venv/bin/python3 ./src/workloads/contrib/analysis/result_summary.py
+./venv/bin/python3 ./src/workloads/contrib/analysis/test_result_summary.py
 ```
 
 Once you've tested that out and got it working, I would recommend adding it to your invocation to run the test, like so:
 ```sh
-./run-genny workload src/workloads/query/DensifyNumeric.yml && ./venv/bin/python3 src/workloads/contrib/analysis/result_summary.py
+./run-genny workload src/workloads/query/DensifyNumeric.yml && ./venv/bin/python3 src/workloads/contrib/analysis/test_result_summary.py
 ```
+
+That should save you some waiting time by starting the (potentially intensive) analysis process automatically.
