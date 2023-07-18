@@ -35,3 +35,7 @@ AutoRun:
       - shard-heuristic-bonsai
       - replica-1dayhistory-15gbwtcache
       - replica-all-feature-flags
+    atlas_setup:
+      $neq:
+      - M30-repl
+
