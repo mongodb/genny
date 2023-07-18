@@ -310,34 +310,35 @@ struct CounterProducer : public ActorProducer {
     std::unordered_map<int, int> counters;
 };
 
-TEST_CASE("Actual Actor Example") {
 
-    class IncrementsMapValues : public Actor {
-    protected:
-        struct IncrPhaseConfig {
-            int _key;
-            IncrPhaseConfig(PhaseContext& ctx, int keyOffset)
-                : _key{ctx["Key"].to<int>() + keyOffset} {}
-        };
-
-        PhaseLoop<IncrPhaseConfig> _loop;
-        std::unordered_map<int, int>& _counters;
-
-    public:
-        IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
-            : Actor(actorContext), _loop{actorContext, 1}, _counters{counters} {}
-        //                        ↑ is forwarded to the IncrementsMapValues ctor as the
-        //                        keyOffset param.
-
-        void run() override {
-            for (auto&& cfg : _loop) {
-                for (auto&& _ : cfg) {
-                    ++this->_counters[cfg->_key];
-                }
-            }
-        }
+class IncrementsMapValues : public Actor {
+protected:
+    struct IncrPhaseConfig {
+        int _key;
+        IncrPhaseConfig(PhaseContext& ctx, int keyOffset)
+            : _key{ctx["Key"].to<int>() + keyOffset} {}
     };
 
+    PhaseLoop<IncrPhaseConfig> _loop;
+    std::unordered_map<int, int>& _counters;
+
+public:
+    IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
+        : Actor(actorContext), _loop{actorContext, 1}, _counters{counters} {}
+    //                        ↑ is forwarded to the IncrementsMapValues ctor as the
+    //                        keyOffset param.
+
+    void run() override {
+        for (auto&& cfg : _loop) {
+            for (auto&& _ : cfg) {
+                ++this->_counters[cfg->_key];
+            }
+        }
+    }
+};
+
+
+TEST_CASE("Actual Actor Example") {
     SECTION("Simple Actor") {
         // ////////
         // setup and run (bypass the driver)
@@ -435,33 +436,6 @@ TEST_CASE("Actual Actor Example") {
                     {94, 3}});
     }
 
-    SECTION("SleepBefore and SleepAfter") {
-        using namespace std::literals::chrono_literals;
-        NodeSource config(R"(
-            SchemaVersion: 2018-07-01
-            Actors:
-            - Type: Inc
-              Name: Inc
-              Phases:
-              - Repeat: 3
-                SleepBefore: 50 milliseconds
-                SleepAfter: 100 milliseconds
-                Key: 71
-        )",
-                          "");
-
-        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
-        ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
-
-        auto start = std::chrono::high_resolution_clock::now();
-        ah.run();
-
-        auto duration = std::chrono::high_resolution_clock::now() - start;
-
-        REQUIRE(duration > 450ms);
-        REQUIRE(duration < 550ms);
-    }
-
     SECTION("SleepBefore < 0") {
         using namespace std::literals::chrono_literals;
         NodeSource config(R"(
@@ -512,6 +486,58 @@ TEST_CASE("Actual Actor Example") {
                             Catch::Matchers::ContainsSubstring("GlobalRate must *not* be specified alongside"));
     }
 
+    SECTION("Missing explicit Blocking = None") {
+        using namespace std::literals::chrono_literals;
+        NodeSource config(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Name: Inc
+              Phases:
+              - Key: 72
+        )",
+                          "");
+
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+
+        REQUIRE_THROWS_WITH(([&]() {
+                                ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
+                                ah.run();
+                            }()),
+                            Catch::Matchers::ContainsSubstring("Must specify 'Blocking: None'"));
+    }
+}
+
+TEST_CASE("Actual Actor Example IgnoredOnMacOs") {
+
+    SECTION("SleepBefore and SleepAfter") {
+        using namespace std::literals::chrono_literals;
+        NodeSource config(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Name: Inc
+              Phases:
+              - Repeat: 3
+                SleepBefore: 50 milliseconds
+                SleepAfter: 100 milliseconds
+                Key: 71
+        )",
+                          "");
+
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+        ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
+
+        auto start = std::chrono::high_resolution_clock::now();
+        ah.run();
+
+        auto duration = std::chrono::high_resolution_clock::now() - start;
+
+        REQUIRE(duration > 450ms);
+        REQUIRE(duration < 550ms);
+    }
+
+
     SECTION("SleepBefore = 0") {
         using namespace std::literals::chrono_literals;
         NodeSource config(R"(
@@ -539,24 +565,4 @@ TEST_CASE("Actual Actor Example") {
         REQUIRE(duration < 350ms);
     }
 
-    SECTION("Missing explicit Blocking = None") {
-        using namespace std::literals::chrono_literals;
-        NodeSource config(R"(
-            SchemaVersion: 2018-07-01
-            Actors:
-            - Type: Inc
-              Name: Inc
-              Phases:
-              - Key: 72
-        )",
-                          "");
-
-        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
-
-        REQUIRE_THROWS_WITH(([&]() {
-                                ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
-                                ah.run();
-                            }()),
-                            Catch::Matchers::ContainsSubstring("Must specify 'Blocking: None'"));
-    }
 }

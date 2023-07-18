@@ -158,6 +158,9 @@ private:
     const int m_socket;
 };
 
+// The compiler is not happy if we don't forward-declare it here; see impl below
+class PhaseContext;
+
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
  * Call `.get()` to access top-level yaml configs.
@@ -337,6 +340,12 @@ public:
         return _registry;
     }
 
+    /**
+     * @return PhaseContexts for active actors in each Phase
+     */
+    std::map<PhaseNumber, std::vector<std::reference_wrapper<const PhaseContext>>>
+    getActivePhaseContexts() const;
+
 private:
     friend class ActorContext;
     friend class PhaseContext;
@@ -374,9 +383,6 @@ private:
     std::string _workloadPath;
     ExternalPhaseCoordinator _coordinator;
 };
-
-// For some reason need to decl this; see impl below
-class PhaseContext;
 
 /**
  * Represents each `Actor:` block within a WorkloadConfig.
@@ -438,6 +444,20 @@ public:
      */
     std::string actorInfo(ActorId id) const {
         return _actorType + "::" + _actorName + "::" + std::to_string(id);
+    }
+
+    /**
+     * @return actor type
+     */
+    std::string getType() const {
+        return _actorType;
+    }
+
+    /**
+     * @return actor name
+     */
+    std::string getName() const {
+        return _actorName;
     }
 
     /**
