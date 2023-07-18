@@ -26,6 +26,8 @@ AutoRun:
       - replica
       - replica-all-feature-flags
       - replica-query-stats
+      - atlas-like-replica.2022-10
+      - atlas-like-replica-query-stats.2022-10
       - shard-lite-all-feature-flags
       - shard
       - shard-query-stats
