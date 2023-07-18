@@ -381,11 +381,23 @@ Tests:
             - { a: 1 }
             - { a: 1 }
             - { b: 1 }
+          Options:
+            Ordered: true
+            WriteConcern:
+              Level: 1
+              Timeout: 1000 milliseconds
+              Journal: true
     OutcomeCounts:
       - Filter: {a: 1}
         Count: 2
       - Filter: {b: 1}
         Count: 1
+    ExpectAllEvents:
+      writeConcern:
+        w: 1
+        wtimeout: 1000
+        j: true
+        ordered: true
 
   - Description: Insert a document into a collection.
     Operations:
