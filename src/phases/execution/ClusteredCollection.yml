@@ -92,7 +92,17 @@ Actors:
         Document:
           # Start from {_id: "0000001"} in order to be able to set the ^RandomInt max bound to *docCount
           # in the LookupByClusterKey phase. This works around TIG-3759.
-          _id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: -62499, multiplier: *DocsPerThread}}]}}, *PaddingGenerator]}}
+          # The multiplier uses the actor ID so we start at -3*DocsPerThread + 1 to get to 1 as the
+          # first _id.
+          _id: {^Join: {array: [
+            {
+              ^FormatString: {
+                "format": "%07d",
+                "withArgs": [{^Inc: {start: -187499, multiplier: *DocsPerThread}}]
+              }
+            },
+            *PaddingGenerator
+          ]}}
           a: &RandomSecondaryKey {^FastRandomString: {length: 6, alphabet: "0123456789"}}
           b: {^FastRandomString: {length: 1024}}
 
