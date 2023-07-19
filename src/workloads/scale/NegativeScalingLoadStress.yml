@@ -19,19 +19,13 @@ Keywords:
 - scale
 - insertOne
 - insert
-- findOne
-- find
-- updateOne
-- update
-- deleteOne
-- delete
 
 dbname: &dbname mix
 DocumentCount: &NumDocs 1024
 CollectionCount: &NumColls 512
 PhaseDuration: &PhaseDuration 1 minute
 Document: &doc
-  _id: {^FastRandomString: {length: 25}}
+  _id: {^Inc : {}}
   sortKey: {^Inc : {}}
   accountId: {^FastRandomString: {length: 10}}
   accountOfficerId: 1
