@@ -274,3 +274,6 @@ AutoRun:
     branch_name:
       $neq:
       - v4.0
+    atlas_setup:
+      $neq:
+      - M30-repl

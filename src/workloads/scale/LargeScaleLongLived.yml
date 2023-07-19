@@ -105,3 +105,4 @@ AutoRun:
       $neq:
       - M10-repl
       - M20-repl
+      - M30-repl

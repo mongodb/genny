@@ -27,6 +27,7 @@ Actors:
       z: {^RandomString: {length: 1000}}  # Unused field
   - Nop: true
   - Nop: true
+  - Nop: true
 
 - Name: CreateIndex
   Type: RunCommand
@@ -40,6 +41,7 @@ Actors:
       OperationCommand:
         createIndexes: Collection0
         indexes: [{key: {t: 1}, name: "t"}]
+  - Nop: true
   - Nop: true
 
 - Name: CumulativeWindows
@@ -153,6 +155,18 @@ Actors:
             }
           }]
         cursor: {batchSize: *batchSize}
+  - Nop: true
+
+- Name: CumulativeWindows
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Operations:
     - OperationMetricsName: DocumentNumber
       OperationName: RunCommand
       OperationCommand:

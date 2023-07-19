@@ -30,3 +30,7 @@ AutoRun:
       - replica
       - replica-all-feature-flags
       - single-replica
+    atlas_setup:
+      $neq:
+      - M30-repl
+
