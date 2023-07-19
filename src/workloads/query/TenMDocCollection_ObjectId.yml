@@ -118,4 +118,4 @@ AutoRun:
       - replica
       - replica-query-stats
       - atlas-like-replica.2022-10
-      - atlas-like-replica-query-stats
+      - atlas-like-replica-query-stats.2022-10
