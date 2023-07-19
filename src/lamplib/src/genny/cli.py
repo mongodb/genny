@@ -568,7 +568,29 @@ def auto_tasks(ctx: click.Context, tasks: str):
 
     auto_tasks.main(
         mode_name=tasks,
-        genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+    )
+
+@cli.command(
+    name="auto-tasks-all",
+    help=(
+        "Determine which Genny workloads should be schedulable for a given evergreen yaml config. "
+        "Parses the config to find every build configuration."
+        "This is used by evergreen and allows new genny workloads to be created "
+        "without having to modify any repos outside of genny itself."
+    ),
+)
+@click.option(
+    "--project-file",
+    required=True,
+    help="An evergreen project file",
+)
+@click.pass_context
+def auto_tasks_all(ctx: click.Context, project_file: str):
+    from genny.tasks import auto_tasks_all
+
+    auto_tasks_all.main(
+        project_file=project_file,
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
     )
 

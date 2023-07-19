@@ -78,9 +78,8 @@ class BaseTestClass(unittest.TestCase):
         op = OpName.from_flag(and_mode)
         repo = Repo(lister, reader, workspace_root=self.workspace_root)
         tasks = repo.tasks(op, build)
-        writer = ConfigWriter(op, build)
 
-        config = writer.write(tasks, None)
+        config = ConfigWriter.create_config(op, build, tasks)
         parsed = json.loads(config.to_json())
         try:
             self.assertDictEqual(then_writes, parsed)
@@ -920,8 +919,7 @@ def test_dry_run_all_tasks():
             tasks = repo.tasks(op=op, build=build)
             os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
 
-            writer = ConfigWriter(op, build)
-            writer.write(tasks, None)
+            ConfigWriter.create_config(op, build, tasks)
     except Exception as e:
         SLOG.error(
             "'./run-genny auto-tasks --tasks all_tasks' is failing. "
