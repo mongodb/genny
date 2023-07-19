@@ -1,0 +1,5 @@
+# Based on genny's lamplib internal CLI tooling.
+-r ../../../../src/lamplib/requirements.txt
+
+# Then add anything extra only needed for `contrib`
+tqdm
