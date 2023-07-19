@@ -11,7 +11,7 @@
 # - OutcomeCounts: is a shortcut these tests take to avoid having to
 #   specify every single document in the collection.
 #
-# - Error: indicates a string of what type of error (syntax error
+# - Error: indicates a string of what type of error (syntax error)
 #   encountered during setup or a runtime error
 #
 # - name: (omitted) we always assume everything happens on the same db and collection
@@ -238,7 +238,7 @@ Tests:
         wtimeout: 2500
         j: true
 
-  - Description: Write concern 0 with timeout and journalling false.
+  - Description: Write concern 0 with timeout and journaling false.
     Operations:
       - OperationName: bulkWrite
         OperationCommand:
