@@ -46,6 +46,9 @@ ActorTemplates:
               pipeline: [
                 {
                   $queryStats: {^Parameter: {Name: "queryStatsParameters", Default: {}}}
+                },
+                {
+                  $count: "numDocuments"
                 }
               ]
               cursor: {}
