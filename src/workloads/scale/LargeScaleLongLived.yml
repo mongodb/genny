@@ -93,13 +93,10 @@ AutoRun:
       - replica
       - replica-all-feature-flags
       - shard
-      - shard-heuristic-bonsai
       - single-replica
       - single-replica-15gbwtcache
       - standalone
       - standalone-classic-query-engine
-      - standalone-heuristic-bonsai
-      - standalone-sampling-bonsai
       - standalone-sbe
       - standalone-query-stats
     atlas_setup:
