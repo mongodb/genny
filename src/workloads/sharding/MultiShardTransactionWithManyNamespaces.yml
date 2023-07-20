@@ -1,0 +1,237 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: |
+
+GlobalDefaults:
+  Database0: &Database0 databaseForMultiShardTestingIndex0
+  Database1: &Database1 databaseForMultiShardTestingIndex1
+
+  ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
+  ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
+  DocumentCount: &DocumentCount 100_000
+
+  MaxPhase: &MaxPhase 4
+
+  RandomIdFilter: &RandomIdFilter {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+
+  UpdateOperation: &UpdateOperation
+    OperationName: updateOne
+    OperationCommand:
+      Filter: *RandomIdFilter
+      Update: {$inc: {counter: 1}}
+
+  UpdateOperationDatabase0: &UpdateOperationDatabase0
+    <<: *UpdateOperation
+    Database: *Database0
+
+  UpdateOperationDatabase1: &UpdateOperationDatabase1
+    <<: *UpdateOperation
+    Database: *Database1
+
+Actors:
+- Name: CreateShardedCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            enableSharding: *Database0
+        - OperationName: AdminCommand
+          OperationCommand:
+            enableSharding: *Database1
+        - OperationName: AdminCommand
+          OperationCommand:
+            movePrimary: *Database0
+            to: rs0
+        - OperationName: AdminCommand
+          OperationCommand:
+            movePrimary: *Database1
+            to: rs1
+
+- Name: LoadInitialData
+  Type: MonotonicLoader
+  Threads: 4
+  Phases:
+  - &Nop {Nop: true}
+  - Repeat: 1
+    Threads: 4
+    BatchSize: 1000
+    DocumentCount: *DocumentCount
+    CollectionCount: 25
+    Database: *Database0
+    Document: &Document
+      counter: 0
+      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
+  - Repeat: 1
+    Threads: 4
+    BatchSize: 1000
+    DocumentCount: *DocumentCount
+    CollectionCount: 25
+    Database: *Database1
+    Document: *Document
+  - *Nop
+  - *Nop
+
+- Name: QuiesceDatabase0
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database0
+  Phases:
+    - *Nop
+    - *Nop
+    - Repeat: 1
+    - *Nop
+    - *Nop
+
+- Name: QuiesceDatabase1
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database1
+  Phases:
+    - *Nop
+    - *Nop
+    - *Nop
+    - Repeat: 1
+    - *Nop
+
+- Name: Transactions
+  Type: CrudActor
+  Threads: 16
+  Database: *Database0
+  Phases:
+    - *Nop
+    - *Nop
+    - *Nop
+    - *Nop
+    - MetricsName: 50CollectionUpdate
+      Duration: 1 minute
+      Collection: Collection0
+      ThrowOnFailure: false  # Transactions are allowed to fail.
+      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
+      Operations:
+      - OperationName: withTransaction
+        OperationCommand:
+          OnSession: true
+          OperationsInTransaction:
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection0
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection1
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection2
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection3
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection4
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection5
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection6
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection7
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection8
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection9
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection10
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection11
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection12
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection13
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection14
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection15
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection16
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection17
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection18
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection19
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection20
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection21
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection22
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection23
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection24
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection25
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection0
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection1
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection2
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection3
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection4
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection5
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection6
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection7
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection8
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection9
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection10
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection11
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection12
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection13
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection14
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection15
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection16
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection17
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection18
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection19
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection20
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection21
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection22
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection23
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection24
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection25
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-heuristic-bonsai
+      - shard-lite
+      - shard-lite-all-feature-flags
+    branch_name:
+      $gte: v7.0
