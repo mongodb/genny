@@ -138,9 +138,6 @@ AutoRun:
       - standalone-query-stats
       - standalone-query-stats-small-rate-limit
       - standalone
-      - shard
-      - shard-query-stats
-      - shard-lite
       - single-replica
       - single-replica-query-stats
       - replica
