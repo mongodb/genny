@@ -111,7 +111,7 @@ Actors:
     - *Nop
     - *Nop
     - *Nop
-    - MetricsName: 50CollectionUpdate
+    - MetricsName: UpdateManyCollections
       Duration: 1 minute
       Collection: Collection0
       ThrowOnFailure: false  # Transactions are allowed to fail.
