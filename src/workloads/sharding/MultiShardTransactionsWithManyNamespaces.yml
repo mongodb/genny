@@ -170,8 +170,6 @@ Actors:
             Collection: Collection23
           - <<: *UpdateOperationDatabase0
             Collection: Collection24
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection25
           - <<: *UpdateOperationDatabase1
             Collection: Collection0
           - <<: *UpdateOperationDatabase1
@@ -222,8 +220,6 @@ Actors:
             Collection: Collection23
           - <<: *UpdateOperationDatabase1
             Collection: Collection24
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection25
 
 AutoRun:
 - When:
