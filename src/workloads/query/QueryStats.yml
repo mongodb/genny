@@ -42,10 +42,13 @@ ActorTemplates:
             OperationName: AdminCommand
             OperationCommand:
               aggregate: 1
-              # TODO SERVER-77179: Update $queryStats parameters.
               pipeline: [
                 {
                   $queryStats: {^Parameter: {Name: "queryStatsParameters", Default: {}}}
+                },
+                # The purpose of $count is to ensure we've exhausted the cursor/ data stream and looked at each partition.
+                {
+                  $count: "numDocuments"
                 }
               ]
               cursor: {}
