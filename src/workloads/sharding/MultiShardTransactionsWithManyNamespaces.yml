@@ -65,7 +65,7 @@ Actors:
     Threads: 4
     BatchSize: 1000
     DocumentCount: *DocumentCount
-    CollectionCount: 25
+    CollectionCount: 30
     Database: *Database0
     Document: &Document
       counter: 0
@@ -74,7 +74,7 @@ Actors:
     Threads: 4
     BatchSize: 1000
     DocumentCount: *DocumentCount
-    CollectionCount: 25
+    CollectionCount: 30
     Database: *Database1
     Document: *Document
   - *Nop
@@ -171,6 +171,16 @@ Actors:
             Collection: Collection23
           - <<: *UpdateOperationDatabase0
             Collection: Collection24
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection25
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection26
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection27
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection28
+          - <<: *UpdateOperationDatabase0
+            Collection: Collection29
           - <<: *UpdateOperationDatabase1
             Collection: Collection0
           - <<: *UpdateOperationDatabase1
@@ -221,6 +231,16 @@ Actors:
             Collection: Collection23
           - <<: *UpdateOperationDatabase1
             Collection: Collection24
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection25
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection26
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection27
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection28
+          - <<: *UpdateOperationDatabase1
+            Collection: Collection29
 
 AutoRun:
 - When:
