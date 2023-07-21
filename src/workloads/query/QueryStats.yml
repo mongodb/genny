@@ -234,3 +234,6 @@ AutoRun:
       - standalone-all-feature-flags
       - standalone-query-stats
       - standalone-query-stats-small-rate-limit
+      - single-replica-query-stats
+      - replica-query-stats
+      - atlas-like-replica-query-stats.2022-10
