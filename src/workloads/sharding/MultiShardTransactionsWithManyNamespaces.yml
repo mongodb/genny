@@ -3,8 +3,9 @@ Owner: "@mongodb/sharding"
 Description: |
 
 GlobalDefaults:
-  Database0: &Database0 databaseForMultiShardTestingIndex0
-  Database1: &Database1 databaseForMultiShardTestingIndex1
+  # Use the longest possible database name to increase the size of a transaction coordinator document
+  Database0: &Database0 databaseForMultiShardTestingIndex0PaddingForExtraSizeAAAAAAAAAA
+  Database1: &Database1 databaseForMultiShardTestingIndex1PaddingForExtraSizeAAAAAAAAAA
 
   ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
   ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
