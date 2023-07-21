@@ -29,7 +29,7 @@ GlobalDefaults:
     Database: *Database1
 
 Actors:
-- Name: CreateShardedCollection
+- Name: CreateDatabases
   Type: AdminCommand
   Threads: 1
   Phases:
