@@ -86,8 +86,8 @@ Actors:
   Phases:
     - *Nop
     - *Nop
-    - Repeat: 1
     - *Nop
+    - Repeat: 1
     - *Nop
 
 - Name: QuiesceDatabase1

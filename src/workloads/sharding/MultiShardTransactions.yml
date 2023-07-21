@@ -82,7 +82,7 @@ Actors:
   Database: *Database0
   Phases:
     OnlyActiveInPhases:
-      Active: [2]
+      Active: [3]
       NopInPhasesUpTo: *MaxPhase
       PhaseConfig:
         Repeat: 1
