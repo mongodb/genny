@@ -12,7 +12,7 @@ GlobalDefaults:
   ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
   DocumentCount: &DocumentCount 100_000
 
-  MaxPhase: &MaxPhase 6
+  MaxPhase: &MaxPhase 7
 
 Actors:
 - Name: CreateShardedCollection
@@ -74,12 +74,37 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
+  - *Nop
+
+- Name: QuiesceDatabase0
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database0
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat: 1
+
+- Name: QuiesceDatabase1
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat: 1
+
 
 - Name: Transactions
   Type: CrudActor
   Threads: 16
   Database: *Database0
   Phases:
+    - *Nop
     - *Nop
     - *Nop
     - *Nop
