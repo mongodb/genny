@@ -90,10 +90,13 @@ Actors:
         DocumentCount: *docCount
         BatchSize: 1000
         Document:
-          # Start from {_id: "0000001"} in order to be able to set the ^RandomInt max bound to *docCount
-          # in the LookupByClusterKey phase. This works around TIG-3759.
-          # The multiplier uses the actor ID so we start at -3*DocsPerThread + 1 to get to 1 as the
-          # first _id.
+          # Start from {_id: "0000001"} in order to be able to set the ^RandomInt max bound to
+          # *docCount in the LookupByClusterKey phase. This works around TIG-3759.
+          #
+          # The multiplier in the format string arg uses the actor ID to generate non-conflicting
+          # _ids. Each actor will start their counters from `start + multiplier * ActorID`. The
+          # actor IDs in this phase should start at 3, so we start the increment counter at
+          # -3*DocsPerThread + 1 to get to 1 as the first _id.
           _id: {^Join: {array: [
             {
               ^FormatString: {
