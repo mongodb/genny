@@ -239,6 +239,8 @@ class _WorkloadParser(object):
             out = self._replace_param(value)
         elif key == "^NumExpr":
             out = self._replace_numexpr(value)
+        elif key == "^FlattenArray":
+            out = self._replace_flattenarr(value)
         elif key == "ActorTemplates":
             self._parse_templates(value)
         elif key == "ActorFromTemplate":
@@ -322,10 +324,23 @@ class _WorkloadParser(object):
             raise ParseException(msg)
         except Exception as e:
             msg = (
-                "Failure trying to parse '{OP_KEY}' node.\n"
+                f"Failure trying to parse '{OP_KEY}' node.\n"
                 f"Node source: {input}\n"
                 f"Exception: {e}\n"
             )
+            raise ParseException(msg)
+
+    def _replace_flattenarr(self, input):
+        OP_KEY = "^FlattenArray"
+
+        parsed_values = self._recursive_parse(input)
+
+        try:
+            return [value
+                    for parsed_value in parsed_values
+                    for value in (parsed_value if type(parsed_value) == list else [parsed_value])]
+        except TypeError as e:
+            msg = f"Invalid value type for '{OP_KEY}', which must be iterable: {input}"
             raise ParseException(msg)
 
     def _parse_templates(self, templates):
@@ -351,7 +366,7 @@ class _WorkloadParser(object):
         actor = {}
 
         with self._context.enter():
-            templateNode = self._context.get(instance["TemplateName"], _ContextType.ActorTemplate)
+            templateNode = self._context.get(self._recursive_parse(instance["TemplateName"]), _ContextType.ActorTemplate)
             if templateNode is None:
                 name = instance["TemplateName"]
                 msg = f"Expected template named {name} but could not be found."
