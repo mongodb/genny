@@ -50,9 +50,10 @@ public:
     PoolFactory(std::string_view uri, PoolManager::OnCommandStartCallback callback = {});
     ~PoolFactory();
 
-    // Both `makeUri()` and `makeOptions()` are used internally. They are publicly exposed to
-    // facilitate testing.
+    // `makeUri()`, `makeRedactedUri()` and `makeOptions()` are used internally.
+    // They are publicly exposed to facilitate testing.
     std::string makeUri() const;
+    std::string makeRedactedUri() const;
     mongocxx::options::pool makeOptions() const;
 
     std::unique_ptr<mongocxx::pool> makePool() const;
