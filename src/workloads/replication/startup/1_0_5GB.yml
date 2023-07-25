@@ -1,0 +1,36 @@
+SchemaVersion: 2018-07-01
+Owner: mongodb/server-replication"
+Description: >
+  Loads the data for the light phase.
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 2500
+
+NumPhases: &max_phase 1
+Database: &database "startup_5GB"
+CollectionCount: &collectionCount 5
+
+Actors:
+- LoadInitialData:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: InsertDataTemplate
+    Parameters:
+      active: [0]
+      nopInPhasesUpTo: *max_phase
+      database: *database
+      collectionCount: 5
+      approxDocumentSize: 10000  # 10kB.
+      documentCount: 100000  # for an approximate total of ~1GB.
+
+# The default WC is majority and 'disableSnapshotting' failpoint will prevent satisfying any
+# majority writes.
+- SetDefaultWCToLocal:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: SetDefaultWCToLocalTemplate
+    Parameters:
+      active: [1]
+      nopInPhasesUpTo: *max_phase

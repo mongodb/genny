@@ -1,0 +1,34 @@
+SchemaVersion: 2018-07-01
+Owner: mongodb/server-replication"
+Description: >
+  Adds DDL operations to be replayed during startup recovery for the light phase.
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 2500
+
+NumPhases: &max_phase 1
+Database: &database "startup_5GB_ddl"
+CollectionCount: &collectionCount 5
+
+Actors:
+- StopCheckpointing:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: StopCheckpointTemplate
+    Parameters:
+      active: [0]
+      nopInPhasesUpTo: *max_phase
+
+- DDLAndCrudOperations:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: InsertDataTemplate
+    Parameters:
+      active: [1]
+      nopInPhasesUpTo: *max_phase
+      database: *database
+      collectionCount: *collectionCount
+      approxDocumentSize: 10000  # 10kB
+      documentCount: 100  # for an approximate total of ~1MB per collection, ~5MB total.

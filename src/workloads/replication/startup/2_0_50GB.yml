@@ -1,0 +1,27 @@
+SchemaVersion: 2018-07-01
+Owner: mongodb/server-replication"
+Description: >
+  Loads the data for the heavy phase.
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 2500
+
+NumPhases: &max_phase 0
+Database: &database "startup_50GB"
+CollectionCount: &collectionCount 10000  # 10k collections with 11 indexes each (100k+ tables).
+
+Actors:
+- LoadInitialData:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: InsertDataTemplate
+    Parameters:
+      active: [0]
+      nopInPhasesUpTo: *max_phase
+      database: *database
+      collectionCount: *collectionCount
+      approxDocumentSize: 1000  # 1kB
+      documentCount: 5000  # for an approximate total of ~5MB per collection, total ~50GB.
+

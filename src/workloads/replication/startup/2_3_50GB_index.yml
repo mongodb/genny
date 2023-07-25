@@ -1,0 +1,42 @@
+SchemaVersion: 2018-07-01
+Owner: mongodb/server-replication"
+Description: >
+  Initiates an index build to be continued during startup recovery for the heavy load phase.
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 2500
+
+NumPhases: &max_phase 1
+# Should match values in 'src/workloads/replication/startup/2_0_50GB.yml'
+Database: &database "startup_50GB"
+
+Actors:
+- HangIndexBuild:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: HangIndexBuildTemplate
+    Parameters:
+      active: [0]
+      nopInPhasesUpTo: *max_phase
+
+- CreateIndexes:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: CreateIndexesTemplate
+    Parameters:
+      active: [1]
+      nopInPhasesUpTo: *max_phase
+      database: *database
+
+# During Phase 1, the execution of 'createIndexes' will be blocked due to enabling the failpoint in
+# Phase 0. Hence, stepping down the primary after 10 seconds within the same phase, allowing the
+# 'createIndexes' command to return with error without aborting the index build.
+- StepdownStepup:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: StepdownStepupCommandTemplate
+    Parameters:
+      active: [1]
+      nopInPhasesUpTo: *max_phase
