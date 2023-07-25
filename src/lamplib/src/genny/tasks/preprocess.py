@@ -241,6 +241,8 @@ class _WorkloadParser(object):
             out = self._replace_numexpr(value)
         elif key == "^FlattenOnce":
             out = self._replace_flattenonce(value)
+        elif key == "^FormatString":
+            out = self._replace_formatstr(value)
         elif key == "ActorTemplates":
             self._parse_templates(value)
         elif key == "ActorFromTemplate":
@@ -342,6 +344,44 @@ class _WorkloadParser(object):
         except TypeError as e:
             msg = f"Invalid value type for '{OP_KEY}', which must be iterable: {input}"
             raise ParseException(msg)
+
+    def _replace_formatstr(self, input):
+        OP_KEY = "^FormatString"
+        FORMAT_KEY = "format"
+        ARGS_KEY = "withArgs"
+
+        if FORMAT_KEY not in input:
+            msg = f"Invalid keys for '{OP_KEY}', please set '{FORMAT_KEY}' in following node: {input}"
+            raise ParseException(msg)
+
+        if type(input[FORMAT_KEY]) != str:
+            msg = f"Invalid value for '{FORMAT_KEY}', which must be a string, in following node: {input}"
+            raise ParseException(msg)
+
+        parsed_values = []
+
+        try:
+            if ARGS_KEY in input:
+                parsed_values = self._recursive_parse(input[ARGS_KEY])
+            return input[FORMAT_KEY] % tuple(parsed_values)
+        except KeyError as e:
+            msg = (
+                f"Warning: not preprocessing '{OP_KEY}' because:\n"
+                f"Key used in '{FORMAT_KEY}' not found in '{ARGS_KEY}'\n"
+                f"Node source: {input}\n"
+                f"Faulting key: {e}\n"
+            )
+            print(msg, file=sys.stderr)
+            return {OP_KEY: self._recursive_parse(input)}
+        except Exception as e:
+            msg = (
+                f"Warning: not preprocessing '{OP_KEY}' because:\n"
+                f"Failure trying to parse '{OP_KEY}' node.\n"
+                f"Node source: {input}\n"
+                f"Exception: {e}\n"
+            )
+            print(msg, file=sys.stderr)
+            return {OP_KEY: self._recursive_parse(input)}
 
     def _parse_templates(self, templates):
         for template_node in templates:
