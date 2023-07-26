@@ -2,11 +2,36 @@ SchemaVersion: 2018-07-01
 Owner: mongodb/server-replication"
 Description: >
   Loads the data for the heavy phase.
+  To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
+
+  Expected behavior:
+  --------------
+  We expect after restarting mongod after running this workload to not having any ops to be applied
+  during startup recovery:
+
+  Sample logs:
+  +-------------------------------------------------------------------------------------------+
+  | {                                                                                         |
+  |     s: "I",                                                                               |
+  |     c: "REPL",                                                                            |
+  |     id: 21549,                                                                            |
+  |     ctx: "initandlisten",                                                                 |
+  |     msg: "No oplog entries to apply for recovery. Start point is at the top of the oplog" |
+  |   }                                                                                       |
+  +-------------------------------------------------------------------------------------------+
+
+Keywords:
+- startup
+- collections
+- indexes
 
 Clients:
   Default:
     QueryOptions:
       maxPoolSize: 2500
+      # Allow for longer duration since index builds may take a while.
+      socketTimeoutMS: 3_600_000  # = 1 hour
+      connectTimeoutMS: 3_600_000
 
 NumPhases: &max_phase 0
 Database: &database "startup_50GB"

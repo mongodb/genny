@@ -2,6 +2,54 @@ SchemaVersion: 2018-07-01
 Owner: mongodb/server-replication"
 Description: >
   Adds DDL operations to be replayed during startup recovery for the light phase.
+  To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
+
+  Expected behavior:
+  --------------
+  We expect after restarting mongod after running this workload to have alot of DDL ops to be
+  applied during startup recovery:
+
+  Sample logs:
+  +------------------------------------------------------------------------------------+
+  |   1- Alot of "Dropping unknown ident".                                             |
+  |   2- Alot of createCollection ops:                                                 |
+  |   {                                                                                |
+  |       s: "I",                                                                      |
+  |       c: "REPL",                                                                   |
+  |       id: 7360109,                                                                 |
+  |       ctx: "initandlisten",                                                        |
+  |       msg: "Processing DDL command oplog entry in OplogBatcher",                   |
+  |       attr: {                                                                      |
+  |           oplogEntry: {                                                            |
+  |               oplogEntry: {                                                        |
+  |                   op: "c",                                                         |
+  |                   ns: "startup_5GB_ddl.$cmd",                                      |
+  |                   o: {                                                             |
+  |                       create: "Collection2",                                       |
+  |                       idIndex: {                                                   |
+  |                           v: 2,                                                    |
+  |                           key: {                                                   |
+  |                               _id: 1                                               |
+  |                           },                                                       |
+  |                           name: "_id_"                                             |
+  |                           ...                                                      |
+  |   }                                                                                |
+  |   3- Alot of IndexBuilds:                                                          |
+  |   {                                                                                |
+  |     s: "I",                                                                        |
+  |     c: "STORAGE",                                                                  |
+  |     id: 5039100,                                                                   |
+  |     ctx: "IndexBuildsCoordinatorMongod-2",                                         |
+  |     msg: "Index build: in replication recovery. Not waiting for last optime before |
+  |     interceptors to be majority committed",                                        |
+  |   }                                                                                |
+  +------------------------------------------------------------------------------------+
+
+Keywords:
+- startup
+- stopCheckpointing
+- collections
+- indexes
 
 Clients:
   Default:

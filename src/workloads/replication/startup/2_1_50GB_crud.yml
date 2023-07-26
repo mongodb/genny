@@ -2,6 +2,41 @@ SchemaVersion: 2018-07-01
 Owner: mongodb/server-replication"
 Description: >
   Adds CRUD operations to be replayed during startup recovery for the heavy phase.
+  To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
+
+  Expected behavior:
+  --------------
+  We expect after restarting mongod after running this workload to have alot of CRUD ops to be
+  applied during startup recovery:
+
+  Sample logs:
+  +--------------------------------------------------------+
+  |  {                                                     |
+  |       s: "I",                                          |
+  |       c: "REPL",                                       |
+  |       id: 21536,                                       |
+  |       ctx: "initandlisten",                            |
+  |       msg: "Completed oplog application for recovery", |
+  |       attr: {                                          |
+  |           numOpsApplied: 50207282,                     |
+  |           numBatches: 10042,                           |
+  |           applyThroughOpTime: {                        |
+  |               ts: {                                    |
+  |                   $timestamp: {                        |
+  |                       t: 1690277528,                   |
+  |                       i: 1                             |
+  |                   }                                    |
+  |               },                                       |
+  |               t: 6                                     |
+  |           }                                            |
+  |       }                                                |
+  |   }                                                    |
+  +--------------------------------------------------------+
+
+Keywords:
+- startup
+- stopCheckpointing
+- updates
 
 Clients:
   Default:

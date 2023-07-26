@@ -2,6 +2,29 @@ SchemaVersion: 2018-07-01
 Owner: mongodb/server-replication"
 Description: >
   Loads the data for the light phase.
+  To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
+
+  Expected behavior:
+  --------------
+  We expect after restarting mongod after running this workload to not having any ops to be applied
+  during startup recovery:
+
+  Sample logs:
+  +-------------------------------------------------------------------------------------------+
+  | {                                                                                         |
+  |     s: "I",                                                                               |
+  |     c: "REPL",                                                                            |
+  |     id: 21549,                                                                            |
+  |     ctx: "initandlisten",                                                                 |
+  |     msg: "No oplog entries to apply for recovery. Start point is at the top of the oplog" |
+  |   }                                                                                       |
+  +-------------------------------------------------------------------------------------------+
+
+Keywords:
+- startup
+- collections
+- indexes
+- defaultWC
 
 Clients:
   Default:
@@ -25,8 +48,11 @@ Actors:
       approxDocumentSize: 10000  # 10kB.
       documentCount: 100000  # for an approximate total of ~1GB.
 
-# The default WC is majority and 'disableSnapshotting' failpoint will prevent satisfying any
-# majority writes.
+# By default, the write concern (WC) is set to 'majority,' and enabling 'disableSnapshotting'
+# failpoint, leading to the blocking of majority writes.
+# As many upcoming workloads in 'replication/startup,' activate the 'disableSnapshotting' failpoint,
+# it is prudent to modify the default WC to 'local.' This adjustment will ensure the success of
+# write operations in those scenarios.
 - SetDefaultWCToLocal:
   LoadConfig:
     Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
