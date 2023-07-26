@@ -28,8 +28,11 @@ AutoRun:
       - replica-query-stats
       - atlas-like-replica.2022-10
       - atlas-like-replica-query-stats.2022-10
-      - shard-lite-all-feature-flags
       - shard
       - shard-query-stats
+      - shard-limited-query-stats
+      - shard-lite-all-feature-flags
+      - shard-lite-query-stats
+      - shard-lite-limited-query-stats
     branch_name:
       $gte:  v5.3
