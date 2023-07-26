@@ -61,7 +61,7 @@ Clients:
 
 NumPhases: &max_phase 1
 Database: &database "startup_50GB_ddl"
-CollectionCount: &collectionCount 10000  # 10k collections with 11 indexes each (100k+ tables).
+CollectionCount: &collectionCount 1000  # 1k collections with 11 indexes each (10k+ tables).
 
 Actors:
 - StopCheckpointing:
