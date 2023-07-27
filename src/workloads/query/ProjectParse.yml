@@ -67,7 +67,7 @@ Actors:
         aggregate: *coll
         pipeline: [
           {$project : {^Object: {
-              withNEntries: 10000,
+              withNEntries: 20000,
               havingKeys: {^RandomString: {length: 10}},
               andValues: 1,
               duplicatedKeys: skip
