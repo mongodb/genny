@@ -1,0 +1,91 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  Test $project parsing performance for small and large number of fields.
+
+GlobalDefaults:
+  dbname: &db test
+  coll: &coll Collection0
+  nop: &Nop {Nop: true}
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10
+    BatchSize: 10
+    Document:
+      m: {^Inc: {start: 0}}
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+
+- Name: Queries
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 10000
+    Database: *db
+    Operations:
+    - OperationMetricsName: ProjectParseSmall
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *coll
+        pipeline: [
+          {$project : {^Object: {
+              withNEntries: 10,
+              havingKeys: {^RandomString: {length: 10}},
+              andValues: 1,
+              duplicatedKeys: skip
+            }}}
+        ]
+        cursor: {}
+  - Repeat: 100
+    Database: *db
+    Operations:
+    - OperationMetricsName: ProjectParseLarge
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *coll
+        pipeline: [
+          {$project : {^Object: {
+              withNEntries: 10000,
+              havingKeys: {^RandomString: {length: 10}},
+              andValues: 1,
+              duplicatedKeys: skip
+            }}}
+        ]
+        cursor: {}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-heuristic-bonsai
+      - standalone-sampling-bonsai
+      - standalone-sbe
+      - standalone-query-stats
+    branch_name:
+      $gte:
+      - v7.1
