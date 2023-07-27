@@ -5,6 +5,8 @@ Description: |
 
 DefaultNumPhases: &default_max_phase 13
 
+# The default document that will be inserted during 'InsertDataTemplate' will have its size
+# determined by the 'padding' field.
 Document: &Doc
   t: {^RandomInt: {min: 0, max: 10}}
   w: {^RandomInt: {distribution: geometric, p: 0.1}}
@@ -45,6 +47,7 @@ Document: &Doc
   stringLong: {^RandomString: {length: 100}}
   padding: {^FastRandomString: {length: {^Parameter: {Name: "approxDocumentSize", Default: 100}}}}
 
+# The default indexes that will be used in the 'InsertDataTemplate'.
 IndexesForLoader: &IndexesForLoader  # 10 indexes
 - keys: {t: 1, w: 1}
 - keys: {y: 1}
@@ -57,6 +60,7 @@ IndexesForLoader: &IndexesForLoader  # 10 indexes
 - keys: {int4: 1}
 - keys: {int5: 1, int6: 1}
 
+# The default indexes that will be used in the 'CreateIndexesTemplate'.
 IndexesForCreateCmd: &IndexesForCreateCmd  # 10 indexes
 - key: {t: 1, w: 1}
   name: "index_t_w"
@@ -79,6 +83,7 @@ IndexesForCreateCmd: &IndexesForCreateCmd  # 10 indexes
 - key: {int5: 1, int6: 1}
   name: "index_int5_int6"
 
+# Template that uses the 'Loader' actor to create and populate collections for startup workloads.
 InsertDataTemplate:
   Name: InsertData
   Type: Loader
@@ -97,6 +102,7 @@ InsertDataTemplate:
         Document: *Doc
         Indexes: {^Parameter: {Name: "indexes", Default: *IndexesForLoader}}
 
+# Template that uses the 'CrudActor' to issue 'update' operations to random collections.
 CrudOperationsTemplate:
   Name: CrudOperations
   Type: CrudActor
@@ -117,6 +123,7 @@ CrudOperationsTemplate:
             Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
             Update: {$inc: {x: 1}}
 
+# Template that uses the 'CrudActor' to issue 'find' operations to random collections.
 ReadOperationsTemplate:
   Name: ReadOperations
   Type: CrudActor
@@ -138,6 +145,7 @@ ReadOperationsTemplate:
             Options:
               Limit: 100
 
+# Template that uses the 'RunCommand' to create indexes for a specific collection.
 CreateIndexesTemplate:
   Name: IndexCollection
   Type: RunCommand
@@ -162,6 +170,8 @@ CreateIndexesTemplate:
             createIndexes: {^Parameter: {Name: "collection", Default: Collection0}}
             indexes: {^Parameter: {Name: "indexes", Default: *IndexesForCreateCmd}}
 
+# Template that waits 10 seconds then uses the 'AdminCommand' to initiate a primary stepdown and
+# then subsequently step it up again.
 StepdownStepupCommandTemplate:
   Name: StepdownStepupCommand
   Type: AdminCommand
@@ -185,6 +195,8 @@ StepdownStepupCommandTemplate:
           OperationCommand:
             replSetStepUp: 1
 
+# Template that uses the 'AdminCommand' to enable 'disableSnapshotting' failpoint which stops mongod
+# from taking more checkpoints.
 StopCheckpointTemplate:
   Name: StopCheckpoint
   Type: AdminCommand
@@ -202,6 +214,8 @@ StopCheckpointTemplate:
             configureFailPoint: "disableSnapshotting"
             mode: "alwaysOn"
 
+# Template that uses the 'AdminCommand' to enable 'hangAfterInitializingIndexBuild' failpoint which
+# hangs any index build.
 HangIndexBuildTemplate:
   Name: StopIndexBuild
   Type: AdminCommand
@@ -219,6 +233,7 @@ HangIndexBuildTemplate:
             configureFailPoint: "hangAfterInitializingIndexBuild"
             mode: "alwaysOn"
 
+# Template that uses the 'AdminCommand' to set default write concern to local.
 SetDefaultWCToLocalTemplate:
   Name: SetDefaultWCToLocal
   Type: AdminCommand

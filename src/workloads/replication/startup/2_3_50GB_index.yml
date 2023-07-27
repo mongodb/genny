@@ -75,11 +75,12 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 2500
+      maxPoolSize: 300
 
-NumPhases: &max_phase 1
-# Should match values in 'src/workloads/replication/startup/2_0_50GB.yml'
-Database: &database "startup_50GB"
+GlobalDefaults:
+  - NumPhases: &max_phase 1
+  # Should match values in 'src/workloads/replication/startup/2_0_50GB.yml'
+  - Database: &database "startup_50GB"
 
 Actors:
 - HangIndexBuild:

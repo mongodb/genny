@@ -11,15 +11,16 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 2500
+      maxPoolSize: 300
 
-NumPhases: &max_phase 1
-# Should match values in 'src/workloads/replication/startup/1_0_5GB.yml'
-Database1: &database1 "startup_5GB"
-CollectionCount1: &collectionCount1 5
-# Should match values in 'src/workloads/replication/startup/2_0_50GB.yml'
-Database2: &database2 "startup_50GB"
-CollectionCount2: &collectionCount2 10000
+GlobalDefaults:
+  - NumPhases: &max_phase 1
+  # Should match values in 'src/workloads/replication/startup/1_0_5GB.yml'
+  - Database1: &database1 "startup_5GB"
+  - CollectionCount1: &collectionCount1 5
+  # Should match values in 'src/workloads/replication/startup/2_0_50GB.yml'
+  - Database2: &database2 "startup_50GB"
+  - CollectionCount2: &collectionCount2 10000
 
 Actors:
 - ReadOperationsDB1:

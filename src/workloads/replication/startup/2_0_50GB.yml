@@ -28,14 +28,15 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 2500
+      maxPoolSize: 300
       # Allow for longer duration since index builds may take a while.
       socketTimeoutMS: 3_600_000  # = 1 hour
       connectTimeoutMS: 3_600_000
 
-NumPhases: &max_phase 0
-Database: &database "startup_50GB"
-CollectionCount: &collectionCount 10000  # 10k collections with 11 indexes each (100k+ tables).
+GlobalDefaults:
+  - NumPhases: &max_phase 0
+  - Database: &database "startup_50GB"
+  - CollectionCount: &collectionCount 10000  # 10k collections with 11 indexes each (100k+ tables).
 
 Actors:
 - LoadInitialData:

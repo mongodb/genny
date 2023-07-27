@@ -54,11 +54,12 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 2500
+      maxPoolSize: 300
 
-NumPhases: &max_phase 1
-Database: &database "startup_5GB_ddl"
-CollectionCount: &collectionCount 5
+GlobalDefaults:
+  - NumPhases: &max_phase 1
+  - Database: &database "startup_5GB_ddl"
+  - CollectionCount: &collectionCount 5
 
 Actors:
 - StopCheckpointing:
