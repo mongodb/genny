@@ -58,7 +58,7 @@ Actors:
             }}}
         ]
         cursor: {}
-  - Repeat: 100
+  - Repeat: 50
     Database: *db
     Operations:
     - OperationMetricsName: ProjectParseLarge
