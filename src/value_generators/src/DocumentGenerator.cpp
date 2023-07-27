@@ -1784,7 +1784,7 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^BinDataSensitive",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<BinDataGenerator>(
-            node, generatorArgs, bsoncxx::binary_sub_type::sensitive);
+            node, generatorArgs, bsoncxx::binary_sub_type(0x8));
      }},
 };
 
