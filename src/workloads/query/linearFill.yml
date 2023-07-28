@@ -76,19 +76,19 @@ Actors:
   - Nop: true
 
 - Name: LinearFillWithoutPartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestSingleOutputWithoutPartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $setWindowFields: {
             sortBy: {sortField: 1},
             output: {
@@ -110,7 +110,7 @@ Actors:
   - Nop: true
 
 - Name: LinearFillMultipleOutputWithoutPartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -119,12 +119,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestMultipleOutputWithoutPartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $setWindowFields: {
             sortBy: {sortDateField: 1},
             output: {
@@ -146,7 +146,7 @@ Actors:
   - Nop: true
 
 - Name: LinearFillWithSinglePartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -157,12 +157,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestSingleOutputWithSinglePartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $setWindowFields: {
             sortBy: {sortField: 1},
             partitionBy: "$part1",
@@ -182,7 +182,7 @@ Actors:
   - Nop: true
 
 - Name: LinearFillMultipleOutputWithSinglePartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -195,12 +195,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestMultipleOutputWithSinglePartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $setWindowFields: {
             sortBy: {sortDateField: 1},
             partitionBy: "$part1",
@@ -220,7 +220,7 @@ Actors:
   - Nop: true
 
 - Name: LinearFillWithMultiplePartitions
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -235,12 +235,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestSingleOutputWithMultiplePartitions
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $setWindowFields: {
             sortBy: {sortField: 1},
             partitionBy: {part1: "$part1", part2: "$part2"},
@@ -256,7 +256,7 @@ Actors:
   - Nop: true
 
 - Name: LinearFillMultipleOutputWithMultiplePartitions
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -273,12 +273,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestMultipleOutputWithMultiplePartitions
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $setWindowFields: {
             sortBy: {sortDateField: 1},
             partitionBy: {part1: "$part1", part2: "$part2"},

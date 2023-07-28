@@ -73,7 +73,7 @@ Actors:
   - *Nop
 
 - Name: RunMultiply
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
