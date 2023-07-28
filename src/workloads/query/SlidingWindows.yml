@@ -61,6 +61,7 @@ Actors:
         Repeat: 1
         Threads: 1
 
+<<<<<<< HEAD
 # Phase 3-N: Run window function benchmarks
 - MovingAvgPositionBased:
   LoadConfig: &loadConfig
@@ -72,10 +73,27 @@ Actors:
       operationMetricsName: MovingAvgPositionBased
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+- Name: SlidingWindows
+  Type: CrudActor
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 10
+    Database: *db
+    Collection: Collection0
+    Operations:
+    - OperationMetricsName: MovingAvgPositionBased
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {avg: {$avg: "$temp", window: {documents: [-5, 5]}}}}}]
+<<<<<<< HEAD
 
 - MovingAvgTimeBased:
   LoadConfig:
@@ -86,10 +104,18 @@ Actors:
       operationMetricsName: MovingAvgTimeBased
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: MovingAvgTimeBased
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {avg: {$avg: "$temp", window: {range: [-1, 0], unit: "hour"}}}}}]
+<<<<<<< HEAD
 
 - MinPositionBased:
   LoadConfig:
@@ -100,10 +126,18 @@ Actors:
       operationMetricsName: MinPositionBased
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: MinPositionBased
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {min: {$min: "$temp", window: {documents: [-5, 5]}}}}}]
+<<<<<<< HEAD
 
 - MinTimeBased:
   LoadConfig:
@@ -114,10 +148,18 @@ Actors:
       operationMetricsName: MinTimeBased
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: MinTimeBased
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {min: {$min: "$temp", window: {range: [-1, 0], unit: "hour"}}}}}]
+<<<<<<< HEAD
 
 - ExpMovingAvgSmallN:
   LoadConfig:
@@ -128,10 +170,18 @@ Actors:
       operationMetricsName: ExpMovingAvgSmallN
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: ExpMovingAvgSmallN
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {ema: {$expMovingAvg: {input: "$temp", N: 10}}}}}]
+<<<<<<< HEAD
 
 - ExpMovingAvgLargeN:
   LoadConfig:
@@ -142,10 +192,18 @@ Actors:
       operationMetricsName: ExpMovingAvgLargeN
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: ExpMovingAvgLargeN
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {ema: {$expMovingAvg: {input: "$temp", N: 500}}}}}]
+<<<<<<< HEAD
 
 - DerivativeSmallWindow:
   LoadConfig:
@@ -156,12 +214,20 @@ Actors:
       operationMetricsName: DerivativeSmallWindow
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: DerivativeSmallWindow
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {rate: {
               $derivative: {input: "$temp", unit: "second"},
               window: {documents: [-10, 0]}}}}}]
+<<<<<<< HEAD
 
 - DerivativeLargeWindow:
   LoadConfig:
@@ -172,6 +238,13 @@ Actors:
       operationMetricsName: DerivativeLargeWindow
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: DerivativeLargeWindow
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},

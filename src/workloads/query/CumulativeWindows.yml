@@ -66,6 +66,7 @@ Actors:
             createIndexes: *Collection
             indexes: [{key: {t: 1}, name: "t"}]
 
+<<<<<<< HEAD
 - SumCumulative:
   LoadConfig: &loadConfig
     Path: "../../phases/query/AggregateExpressions.yml"
@@ -76,6 +77,22 @@ Actors:
       operationMetricsName: SumCumulative
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+- Name: CumulativeWindows
+  Type: CrudActor
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Repeat: 10
+    Database: *db
+    Collection: Collection0
+    Operations:
+    - OperationMetricsName: Sum
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -87,6 +104,7 @@ Actors:
               }
             }
           }]
+<<<<<<< HEAD
 
 - AvgCumulative:
   LoadConfig:
@@ -97,6 +115,13 @@ Actors:
       operationMetricsName: AvgCumulative
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: Avg
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -108,6 +133,7 @@ Actors:
               }
             }
           }]
+<<<<<<< HEAD
 
 - StdDevPopCumulative:
   LoadConfig:
@@ -118,6 +144,13 @@ Actors:
       operationMetricsName: StdDevPopCumulative
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: StdDevPop
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -129,6 +162,7 @@ Actors:
               }
             }
           }]
+<<<<<<< HEAD
 
 - StdDevSampCumulative:
   LoadConfig:
@@ -139,6 +173,13 @@ Actors:
       operationMetricsName: StdDevSampCumulative
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: StdDevSamp
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -150,6 +191,7 @@ Actors:
               }
             }
           }]
+<<<<<<< HEAD
 
 - CovPopCumulative:
   LoadConfig:
@@ -160,6 +202,13 @@ Actors:
       operationMetricsName: CovPopCumulative
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: CovPop
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -171,6 +220,7 @@ Actors:
               }
             }
           }]
+<<<<<<< HEAD
 
 - CovSampCumulative:
   LoadConfig:
@@ -181,6 +231,13 @@ Actors:
       operationMetricsName: CovSampCumulative
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
+=======
+        cursor: {batchSize: *batchSize}
+    - OperationMetricsName: CovSamp
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+>>>>>>> 654f29f8 (PERF-3784: Replace RunCommand by CrudActor in query workloads)
           [{
             $setWindowFields: {
               sortBy: {t: 1},
