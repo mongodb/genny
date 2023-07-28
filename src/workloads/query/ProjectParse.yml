@@ -73,7 +73,6 @@ Actors:
     - OperationMetricsName: ProjectParseMedium
       OperationName: aggregate
       OperationCommand:
-        aggregate: *coll
         Pipeline: [
           {$project : {^Object: {
               withNEntries: 101,
@@ -88,7 +87,6 @@ Actors:
     - OperationMetricsName: ProjectParseLarge
       OperationName: aggregate
       OperationCommand:
-        aggregate: *coll
         Pipeline: [
           {$project : {^Object: {
               withNEntries: 20000,
