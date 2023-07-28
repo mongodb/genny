@@ -19,7 +19,7 @@ GlobalDefaults:
   MaxPhases: &MaxPhases 8
   nop: &Nop {Nop: true}
   dbname: &db test
-  binDataGen: &binDataGen {^BinData: {numBytes: 32}}
+  binDataGen: &binDataGen {^BinDataSensitive: {numBytes: 32}}
 
 ActorTemplates:
 - TemplateName: QueryStatsAggregation
