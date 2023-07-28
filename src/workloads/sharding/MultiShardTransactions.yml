@@ -2,6 +2,7 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 Description: |
 
+
 GlobalDefaults:
   Database0: &Database0 databaseForMultiShardTestingIndex0
   Database1: &Database1 databaseForMultiShardTestingIndex1
