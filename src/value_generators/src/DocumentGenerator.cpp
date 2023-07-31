@@ -1388,6 +1388,52 @@ private:
     const UniqueGenerator<int64_t> _nTimesGen;
 };
 
+/** `{^DistinctArray: {of: {^RandomInt {start: 10, end: 1000}}}, number: 2}` */
+template <typename T>
+class DistinctArrayGenerator : public Generator<bsoncxx::array::value> {
+public:
+    DistinctArrayGenerator(const Node& node,
+                   GeneratorArgs generatorArgs)
+        : _rng{generatorArgs.rng},
+          _node{node},
+          _generatorArgs{generatorArgs},
+          _valueGen{getValueGen(node, generatorArgs)},
+          _nTimesGen{intGenerator(extract(node, "number", "^DistinctArray"), generatorArgs)} {}
+
+    bsoncxx::array::value evaluate() override {
+        bsoncxx::builder::basic::array builder{};
+        auto times = _nTimesGen->evaluate();
+        // Choose initial bucket size of 2N to minimize hash collisions and resizes.
+        std::unordered_set<T> distinctValues(2 * times);
+        while (distinctValues.size() < times) {
+            auto [itr, succeeded] = distinctValues.insert(_valueGen->evaluate());
+            if (succeeded) {
+                builder.append(*itr);
+            }
+        }
+        return builder.extract();
+    }
+
+private:
+    template <typename U = T>
+    UniqueGenerator<std::enable_if_t<std::is_same_v<int64_t, U>, T>>
+    static getValueGen(const Node& node, GeneratorArgs generatorArgs) {
+        return intGenerator(extract(node, "of", "^DistinctArray"), generatorArgs);
+    }
+
+    template <typename U = T>
+    UniqueGenerator<std::enable_if_t<std::is_same_v<double, U>, T>>
+    static getValueGen(const Node& node, GeneratorArgs generatorArgs) {
+        return doubleGenerator(extract(node, "of", "^DistinctArray"), generatorArgs);
+    }
+
+    DefaultRandom& _rng;
+    const Node& _node;
+    const GeneratorArgs& _generatorArgs;
+    const UniqueGenerator<T> _valueGen;
+    const UniqueGenerator<int64_t> _nTimesGen;
+};
+
 class ConcatGenerator : public Generator<bsoncxx::array::value> {
 
 public:
@@ -1761,6 +1807,10 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
      }},
+    {"^DistinctArray",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<DistinctArrayGenerator<int64_t>>(node, generatorArgs);
+     }},
     {"^Object",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<ObjectGenerator>(node, generatorArgs, allParsers);
@@ -2061,6 +2111,10 @@ UniqueGenerator<bsoncxx::array::value> bsonArrayGenerator(const Node& node,
         {"^Array",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
+         }},
+        {"^DistinctArray",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<DistinctArrayGenerator<int64_t>>(node, generatorArgs);
          }},
         {"^Verbatim", [](const Node& node, GeneratorArgs generatorArgs) {
              if (!node.isSequence()) {
