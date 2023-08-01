@@ -244,6 +244,9 @@ template <bool Verbatim>
 UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
                                                              GeneratorArgs generatorArgs);
 
+UniqueGenerator<bsoncxx::array::value> distinctArrayGenerator(const Node& node,
+                                                              GeneratorArgs generatorArgs);
+
 UniqueGenerator<bsoncxx::array::value> bsonArrayGenerator(const Node& node,
                                                           GeneratorArgs generatorArgs);
 
@@ -1392,8 +1395,7 @@ private:
 template <typename T>
 class DistinctArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
-    DistinctArrayGenerator(const Node& node,
-                   GeneratorArgs generatorArgs)
+    DistinctArrayGenerator(const Node& node, GeneratorArgs generatorArgs)
         : _rng{generatorArgs.rng},
           _node{node},
           _generatorArgs{generatorArgs},
@@ -1425,6 +1427,12 @@ private:
     UniqueGenerator<std::enable_if_t<std::is_same_v<double, U>, T>>
     static getValueGen(const Node& node, GeneratorArgs generatorArgs) {
         return doubleGenerator(extract(node, "of", "^DistinctArray"), generatorArgs);
+    }
+
+    template <typename U = T>
+    UniqueGenerator<std::enable_if_t<std::is_same_v<std::string, U>, T>>
+    static getValueGen(const Node& node, GeneratorArgs generatorArgs) {
+        return stringGenerator(extract(node, "of", "^DistinctArray"), generatorArgs);
     }
 
     DefaultRandom& _rng;
@@ -1769,7 +1777,7 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
          }},
         {"^DistinctArray",
          [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<DistinctArrayGenerator<int64_t>>(node, generatorArgs);
+             return distinctArrayGenerator(node, generatorArgs);
          }},
         {"^Verbatim", [](const Node& node, GeneratorArgs generatorArgs) {
              if (!node.isSequence()) {
@@ -1925,6 +1933,36 @@ UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
         entries.push_back(std::move(valgen));
     }
     return std::make_unique<LiteralArrayGenerator>(std::move(entries));
+}
+
+/**
+ * @param node sequence node
+ * @return array generator with a uniqueness filter for the node
+ */
+UniqueGenerator<bsoncxx::array::value> distinctArrayGenerator(const Node& node,
+                                                              GeneratorArgs generatorArgs) {
+    try {
+        if (extractKnownParser(node, generatorArgs, intParsers)) {
+            // known parser type
+            return std::make_unique<DistinctArrayGenerator<int64_t>>(node, generatorArgs);
+        }
+    } catch (const InvalidConversionException& e) {
+    }
+    try {
+        if (extractKnownParser(node, generatorArgs, doubleParsers)) {
+            // known parser type
+            return std::make_unique<DistinctArrayGenerator<double>>(node, generatorArgs);
+        }
+    } catch (const InvalidConversionException& e) {
+    }
+    try {
+        if (extractKnownParser(node, generatorArgs, stringParsers)) {
+            // known parser type
+            return std::make_unique<DistinctArrayGenerator<std::string>>(node, generatorArgs);
+        }
+    } catch (const InvalidConversionException& e) {
+    }
+    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Unsupported values for distinct array"));
 }
 
 /**
