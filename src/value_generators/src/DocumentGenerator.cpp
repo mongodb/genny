@@ -1942,27 +1942,27 @@ UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
 UniqueGenerator<bsoncxx::array::value> distinctArrayGenerator(const Node& node,
                                                               GeneratorArgs generatorArgs) {
     try {
-        if (extractKnownParser(node, generatorArgs, intParsers)) {
+        if (extractKnownParser(node["of"], generatorArgs, intParsers)) {
             // known parser type
             return std::make_unique<DistinctArrayGenerator<int64_t>>(node, generatorArgs);
         }
     } catch (const InvalidConversionException& e) {
     }
     try {
-        if (extractKnownParser(node, generatorArgs, doubleParsers)) {
+        if (extractKnownParser(node["of"], generatorArgs, doubleParsers)) {
             // known parser type
             return std::make_unique<DistinctArrayGenerator<double>>(node, generatorArgs);
         }
     } catch (const InvalidConversionException& e) {
     }
     try {
-        if (extractKnownParser(node, generatorArgs, stringParsers)) {
+        if (extractKnownParser(node["of"], generatorArgs, stringParsers)) {
             // known parser type
             return std::make_unique<DistinctArrayGenerator<std::string>>(node, generatorArgs);
         }
     } catch (const InvalidConversionException& e) {
     }
-    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Unsupported values for distinct array"));
+    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Unsupported \"of\" for distinct array"));
 }
 
 /**
