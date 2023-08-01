@@ -1720,125 +1720,161 @@ Out valueGenerator(const Node& node,
     BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
 }
 
-const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
-    {"^FastRandomString",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<FastRandomStringGenerator>(node, generatorArgs);
-     }},
-    {"^RandomString",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
-     }},
-    {"^ChooseFromDataset",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
-     }},
-    {"^Join",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<JoinGenerator>(node, generatorArgs);
-     }},
-    {"^Concat",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ConcatGenerator>(node, generatorArgs);
-     }},
-    {"^FormatString",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers);
-     }},
-    {"^Choose",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ChooseGenerator>(node, generatorArgs);
-     }},
-    {"^TakeRandomStringFromFrequencyMap",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<FrequencyMapGenerator>(node, generatorArgs);
-     }},
-    {"^TakeRandomStringFromFrequencyMapSingleton",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<FrequencyMapSingletonGenerator>(node, generatorArgs);
-     }},
-    {"^IP",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<IPGenerator>(node, generatorArgs);
-     }},
-    {"^ActorIdString",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ActorIdStringGenerator>(node, generatorArgs);
-     }},
-    {"^ActorId",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ActorIdIntGenerator>(node, generatorArgs);
-     }},
-    {"^RandomInt", int64GeneratorBasedOnDistribution},
-    {"^RandomDouble", doubleGeneratorBasedOnDistribution},
-    {"^Now",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<NowGenerator>(node, generatorArgs);
-     }},
-    {"^RandomDate",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<RandomDateGenerator>(node, generatorArgs);
-     }},
-    {"^Date",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<DateGenerator>(node, generatorArgs);
-     }},
-    {"^ObjectId",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ObjectIdGenerator>(node, generatorArgs);
-     }},
-    {"^Verbatim",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return valueGenerator<true, UniqueAppendable>(node, generatorArgs, allParsers);
-     }},
-    {"^Inc",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<IncGenerator>(node, generatorArgs);
-     }},
-    {"^TwoDWalk",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<TwoDWalkGenerator>(node, generatorArgs);
-     }},
-    {"^IncDate",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<IncDateGenerator>(node, generatorArgs);
-     }},
-    {"^Array",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
-     }},
-    {"^DistinctArray",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<DistinctArrayGenerator<int64_t>>(node, generatorArgs);
-     }},
-    {"^Object",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<ObjectGenerator>(node, generatorArgs, allParsers);
-     }},
-    {"^Cycle",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers);
-     }},
-    {"^Repeat",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<RepeatGenerator>(node, generatorArgs, allParsers);
-     }},
-    {"^FixedGeneratedValue",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers, 1);
-     }},
-    {"^BinData",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         return std::make_unique<BinDataGenerator>(node, generatorArgs);
-     }},
-    {"^BinDataSensitive",
-     [](const Node& node, GeneratorArgs generatorArgs) {
-         // TODO: PERF-4467 Update this to bsoncxx::binary_sub_type::sensitive.
-         return std::make_unique<BinDataGenerator>(
-            node, generatorArgs, bsoncxx::binary_sub_type(0x8));
-     }},
-};
+const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, stringParsers] = [] () {
+    static std::map<std::string, Parser<UniqueAppendable>> allParsers {
+        {"^ObjectId",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ObjectIdGenerator>(node, generatorArgs);
+         }},
+        {"^TwoDWalk",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<TwoDWalkGenerator>(node, generatorArgs);
+         }},
+        {"^Object",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ObjectGenerator>(node, generatorArgs, allParsers);
+         }},
+        {"^Cycle",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers);
+         }},
+        {"^Repeat",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<RepeatGenerator>(node, generatorArgs, allParsers);
+         }},
+        {"^FixedGeneratedValue",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers, 1);
+         }},
+        {"^BinData",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<BinDataGenerator>(node, generatorArgs);
+         }},
+        {"^BinDataSensitive",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             // TODO: PERF-4467 Update this to bsoncxx::binary_sub_type::sensitive.
+             return std::make_unique<BinDataGenerator>(
+                node, generatorArgs, bsoncxx::binary_sub_type(0x8));
+         }},
+    };
 
+    const static std::map<std::string, Parser<UniqueGenerator<bsoncxx::array::value>>> arrayParsers{
+        {"^Concat",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ConcatGenerator>(node, generatorArgs);
+         }},
+        {"^Array",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
+         }},
+        {"^DistinctArray",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<DistinctArrayGenerator<int64_t>>(node, generatorArgs);
+         }},
+        {"^Verbatim", [](const Node& node, GeneratorArgs generatorArgs) {
+             if (!node.isSequence()) {
+                 std::stringstream msg;
+                 msg << "Malformed node array. Not a sequence " << node;
+                 BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+             }
+             return literalArrayGenerator<true>(node, generatorArgs);
+         }},
+    };
+
+    // Set of parsers to look when we request a date parser
+    const static std::map<std::string, Parser<UniqueGenerator<bsoncxx::types::b_date>>> dateParsers{
+        {"^Now",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NowGenerator>(node, generatorArgs);
+         }},
+        {"^RandomDate",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<RandomDateGenerator>(node, generatorArgs);
+         }},
+        {"^Date",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<DateGenerator>(node, generatorArgs);
+         }},
+        {"^IncDate",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<IncDateGenerator>(node, generatorArgs);
+         }},
+    };
+
+    // Set of parsers to look when we request an double parser
+    // see doubleGenerator
+    const static std::map<std::string, Parser<UniqueGenerator<double>>> doubleParsers{
+        {"^RandomDouble", doubleGeneratorBasedOnDistribution},
+    };
+
+    // Set of parsers to look when we request an int parser
+    // see int64Generator
+    const static std::map<std::string, Parser<UniqueGenerator<int64_t>>> intParsers{
+        {"^RandomInt", int64GeneratorBasedOnDistribution},
+        {"^ActorId",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ActorIdIntGenerator>(node, generatorArgs);
+         }},
+        // There are other things of type Generator<int64_t>. Not sure if they should be here or not
+        {"^Inc",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<IncGenerator>(node, generatorArgs);
+         }},
+    };
+
+    // Set of parsers to look when we request an int parser
+    // see int64Generator
+    const static std::map<std::string, Parser<UniqueGenerator<std::string>>> stringParsers{
+        {"^FastRandomString",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<FastRandomStringGenerator>(node, generatorArgs);
+         }},
+        {"^RandomString",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
+         }},
+        {"^ChooseFromDataset",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
+         }},
+        {"^Join",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<JoinGenerator>(node, generatorArgs);
+         }},
+        {"^Choose",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ChooseStringGenerator>(node, generatorArgs);
+         }},
+        {"^TakeRandomStringFromFrequencyMap",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<FrequencyMapGenerator>(node, generatorArgs);
+         }},
+        {"^TakeRandomStringFromFrequencyMapSingleton",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<FrequencyMapSingletonGenerator>(node, generatorArgs);
+         }},
+        {"^IP",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<IPGenerator>(node, generatorArgs);
+         }},
+        {"^ActorIdString",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ActorIdStringGenerator>(node, generatorArgs);
+         }},
+        {"^FormatString",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers);
+         }},
+    };
+
+    allParsers.insert(arrayParsers.begin(), arrayParsers.end());
+    allParsers.insert(dateParsers.begin(), dateParsers.end());
+    allParsers.insert(doubleParsers.begin(), doubleParsers.end());
+    allParsers.insert(intParsers.begin(), intParsers.end());
+    allParsers.insert(stringParsers.begin(), stringParsers.end());
+
+    return std::tie(allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, stringParsers);
+} ();
 
 /**
  * Used for top-level values that are of type Map.
@@ -1992,21 +2028,6 @@ UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
  *   or a constant generator if given a constant/scalar.
  */
 UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorArgs) {
-    // Set of parsers to look when we request an int parser
-    // see int64Generator
-    const static std::map<std::string, Parser<UniqueGenerator<int64_t>>> intParsers{
-        {"^RandomInt", int64GeneratorBasedOnDistribution},
-        {"^ActorId",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ActorIdIntGenerator>(node, generatorArgs);
-         }},
-        // There are other things of type Generator<int64_t>. Not sure if they should be here or not
-        {"^Inc",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<IncGenerator>(node, generatorArgs);
-         }},
-    };
-
     if (auto parserPair = extractKnownParser(node, generatorArgs, intParsers)) {
         // known parser type
         return parserPair->first(node[parserPair->second], generatorArgs);
@@ -2022,12 +2043,6 @@ UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorA
  *   or a constant generator if given a constant/scalar.
  */
 UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generatorArgs) {
-    // Set of parsers to look when we request an double parser
-    // see doubleGenerator
-    const static std::map<std::string, Parser<UniqueGenerator<double>>> doubleParsers{
-        {"^RandomDouble", doubleGeneratorBasedOnDistribution},
-    };
-
     if (auto parserPair = extractKnownParser(node, generatorArgs, doubleParsers)) {
         // known parser type
         return parserPair->first(node[parserPair->second], generatorArgs);
@@ -2043,50 +2058,6 @@ UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generato
  *   or a constant generator if given a constant/scalar.
  */
 UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs generatorArgs) {
-    // Set of parsers to look when we request an int parser
-    // see int64Generator
-    const static std::map<std::string, Parser<UniqueGenerator<std::string>>> stringParsers{
-        {"^FastRandomString",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<FastRandomStringGenerator>(node, generatorArgs);
-         }},
-        {"^RandomString",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
-         }},
-        {"^ChooseFromDataset",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
-         }},
-        {"^Join",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<JoinGenerator>(node, generatorArgs);
-         }},
-        {"^Choose",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ChooseStringGenerator>(node, generatorArgs);
-         }},
-        {"^TakeRandomStringFromFrequencyMap",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<FrequencyMapGenerator>(node, generatorArgs);
-         }},
-        {"^TakeRandomStringFromFrequencyMapSingleton",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<FrequencyMapSingletonGenerator>(node, generatorArgs);
-         }},
-        {"^IP",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<IPGenerator>(node, generatorArgs);
-         }},
-        {"^ActorIdString",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ActorIdStringGenerator>(node, generatorArgs);
-         }},
-        {"^FormatString",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<FormatStringGenerator>(node, generatorArgs, allParsers);
-         }},
-    };
     if (auto parserPair = extractKnownParser(node, generatorArgs, stringParsers)) {
         // known parser type
         return parserPair->first(node[parserPair->second], generatorArgs);
@@ -2103,28 +2074,6 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
  */
 UniqueGenerator<bsoncxx::array::value> bsonArrayGenerator(const Node& node,
                                                           GeneratorArgs generatorArgs) {
-    const static std::map<std::string, Parser<UniqueGenerator<bsoncxx::array::value>>> arrayParsers{
-        {"^Concat",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ConcatGenerator>(node, generatorArgs);
-         }},
-        {"^Array",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
-         }},
-        {"^DistinctArray",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<DistinctArrayGenerator<int64_t>>(node, generatorArgs);
-         }},
-        {"^Verbatim", [](const Node& node, GeneratorArgs generatorArgs) {
-             if (!node.isSequence()) {
-                 std::stringstream msg;
-                 msg << "Malformed node array. Not a sequence " << node;
-                 BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
-             }
-             return literalArrayGenerator<true>(node, generatorArgs);
-         }}};
-
     if (auto parserPair = extractKnownParser(node, generatorArgs, arrayParsers)) {
         // known parser type
         return parserPair->first(node[parserPair->second], generatorArgs);
@@ -2230,26 +2179,6 @@ UniqueGenerator<int64_t> doubleTimeGenerator(const Node& node, GeneratorArgs gen
  *   InvalidConfigurationException if the node doesn't hold a ^Now or ^RandomDate.
  */
 UniqueGenerator<int64_t> dateTimeGenerator(const Node& node, GeneratorArgs generatorArgs) {
-    // Set of parsers to look when we request a date parser
-    const static std::map<std::string, Parser<UniqueGenerator<bsoncxx::types::b_date>>> dateParsers{
-        {"^Now",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<NowGenerator>(node, generatorArgs);
-         }},
-        {"^RandomDate",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<RandomDateGenerator>(node, generatorArgs);
-         }},
-        {"^Date",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<DateGenerator>(node, generatorArgs);
-         }},
-        {"^IncDate",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<IncDateGenerator>(node, generatorArgs);
-         }},
-    };
-
     if (auto parserPair = extractKnownParser(node, generatorArgs, dateParsers)) {
         // known parser type
         auto generator = parserPair->first(node[parserPair->second], generatorArgs);
