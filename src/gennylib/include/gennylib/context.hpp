@@ -528,7 +528,7 @@ public:
     }
 
     /**
-     * @return a pool from the "default" MongoDB connection-pool.
+     * @return a pool connection from the "default" MongoDB connection-pool.
      * @throws InvalidConfigurationException if no connections available.
      */
     template <class... Args>
