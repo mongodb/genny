@@ -17,6 +17,7 @@
 #include <value_generators/FrequencyMap.hpp>
 
 #include <cmath>
+#include <deque>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -1427,27 +1428,41 @@ public:
             const auto&& firstValue = generator->evaluate();
             // Choose initial bucket size of 2N to minimize hash collisions and resizes.
             std::unordered_set distinctValues({firstValue}, 2 * times, setHasher, setKeyEq);
-            // Keep track of number of collisions in the past N runs.
-            std::vector<size_t> collisions(times);
-            auto citr = collisions.begin();
+            // Choose a buffer length of max(times, 64).
+            const auto bufferLength = std::max<int64_t>(64, times);
+            // Keep track of collision offsets for next N runs.
+            std::deque<int8_t> offsets(bufferLength);
+            ssize_t collisions = 0;
 
+            /**
+             * Sliding window via cyclic buffer.
+             *
+             * This computes the number of insertion failures, i.e. repeated values, in the past
+             * `bufferLength` number of generated values. We achieve this by queueing up the
+             * inverse operation for N steps away. We set N to be >= 64 so that small counts are
+             * given more generous resources (very small N corresponds to higher variance). If
+             * all of the past N generated values are repeats, then we assume that we will not
+             * converge in a reasonable number of iterations.
+             */
             builder.append(firstValue);
             while (distinctValues.size() < times) {
                 auto [itr, succeeded] = distinctValues.insert(generator->evaluate());
+
+                // Iterate through cyclic buffer and update collisions counter and offsets.
+                collisions -= offsets.front();
+                offsets.pop_front();
+                offsets.push_back(!succeeded);  // Relies on bool translating into 1 or 0.
+
                 if (succeeded) {
                     builder.append(*itr);
-                } else if ((times - ++*citr) * 100 < times) {  // Exceeds 99% chance of failure.
-                    // TODO: something smarter in the face of integer overflow.
+                } else if (++collisions >= bufferLength) {
+                    // Rate of failure: 100% of the past N pulls.
                     std::stringstream msg;
-                    msg << "Rate of repeated values (" << *citr << "/" << times << ") in the past "
-                        << times << " iterations exceeded failure rate threshold. Node: " << _node;
-                    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+                    msg << "All " << bufferLength << " most recently generated values are "
+                        << "duplicates. Assuming unique value convergence failure for node: "
+                        << _node;
+                    BOOST_THROW_EXCEPTION(ValueGeneratorConvergenceTimeout(msg.str()));
                 }
-
-                // Iterate and proactively recompute rolling failure count.
-                auto pitr = citr;
-                citr = citr + 1 == collisions.end() ? collisions.begin() : citr + 1;
-                *citr = *pitr - *citr;
             }
         }, _valueGen);
 
@@ -2027,28 +2042,36 @@ UniqueGenerator<bsoncxx::array::value> distinctArrayGenerator(const Node& node,
     const auto& ofNode = node["of"];
     // TODO: Should this only allow certain parsers? E.g. disallow ^Cycle.
     try {
+        if (auto parserPair = extractKnownParser(ofNode, generatorArgs, arrayParsers)) {
+            // known parser type
+            return std::make_unique<DistinctArrayGenerator>(
+                node, generatorArgs, parserPair->first(ofNode[parserPair->second], generatorArgs));
+        }
+    } catch (const UnknownParserException& e) {
+    }
+    try {
         if (auto parserPair = extractKnownParser(ofNode, generatorArgs, intParsers)) {
             // known parser type
             return std::make_unique<DistinctArrayGenerator>(
-                node, generatorArgs, parserPair->first(ofNode, generatorArgs));
+                node, generatorArgs, parserPair->first(ofNode[parserPair->second], generatorArgs));
         }
-    } catch (const InvalidConversionException& e) {
+    } catch (const UnknownParserException& e) {
     }
     try {
         if (auto parserPair = extractKnownParser(ofNode, generatorArgs, doubleParsers)) {
             // known parser type
             return std::make_unique<DistinctArrayGenerator>(
-                node, generatorArgs, parserPair->first(ofNode, generatorArgs));
+                node, generatorArgs, parserPair->first(ofNode[parserPair->second], generatorArgs));
         }
-    } catch (const InvalidConversionException& e) {
+    } catch (const UnknownParserException& e) {
     }
     try {
         if (auto parserPair = extractKnownParser(ofNode, generatorArgs, stringParsers)) {
             // known parser type
             return std::make_unique<DistinctArrayGenerator>(
-                node, generatorArgs, parserPair->first(ofNode, generatorArgs));
+                node, generatorArgs, parserPair->first(ofNode[parserPair->second], generatorArgs));
         }
-    } catch (const InvalidConversionException& e) {
+    } catch (const UnknownParserException& e) {
     }
     if (ofNode.isSequence()) {
         return std::make_unique<DistinctArrayGenerator>(

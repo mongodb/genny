@@ -189,6 +189,33 @@ Tests:
             "data" : "aaaaaaaaaaoEtN" }}
         ]}
 
+  - Name: Array Generator creates an array with a repeated element
+    GivenTemplate:
+      a:
+        {^Array: {of: {^RandomInt: {min: 1, max: 4}}, number: 2}}
+    ThenReturns:
+      - {a: [{ "$numberLong": "1" }, { "$numberLong": "1" }]}
+
+  - Name: Distinct Array Generator creates an array with no repeated ints
+    GivenTemplate:
+      a:
+        {^DistinctArray: {of: {^RandomInt: {min: 1, max: 4}}, number: 2}}
+    ThenReturns:
+      - {a: [{ "$numberLong": "1" }, { "$numberLong": "2" }]}
+
+  - Name: Distinct Array Generator creates an array with no repeated strings
+    GivenTemplate:
+      a:
+        {^DistinctArray: {of: {^Choose: {from: ["Mongo", "Mongo", "Mongo", "DB"]}}, number: 2}}
+    ThenReturns:
+      - {a: ["Mongo", "DB"]}
+
+  - Name: Distinct Array Generator fails after too many iterations
+    GivenTemplate:
+      a:
+        {^DistinctArray: {of: {^RandomInt: {min: 1, max: 4}}, number: 5}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
   - Name: Object Generator
     GivenTemplate:
       a:
