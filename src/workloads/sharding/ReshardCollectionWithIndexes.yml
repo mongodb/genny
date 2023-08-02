@@ -3,9 +3,10 @@ Owner: "@mongodb/sharding"
 Description: |
   This test expects the target cluster is created using ebs snapshot with 1 billion 1KB records 
   and has 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including 
-  _id index, single-key index and compound index. ReshardCollection should use same-key resharding 
-  and use shardDistribution parameter to reshard into 2 shards then 3 shards. There will be random 
-  CRUD operations during resharding but should run at a very low rate.
+  _id index, single-key index and compound index. The whole dataset is on 1 shard at the beginning.
+  ReshardCollection should use same-key resharding and use shardDistribution parameter to reshard 
+  into 2 shards then 3 shards. There will be random CRUD operations during resharding but should 
+  run at a very low rate.
 
   The workload consists of 3 phases:
     1. Turning off balancer and make the sharded collection exists on only 1 shard.
@@ -16,14 +17,14 @@ Description: |
   The inserted documents have the following form:
 
       {
-        _id: 10,
-        shardKey: 20,
-        counter: 0,
-        num1: 1,
-        num2: 2,
-        str1: 'abc',
-        str2: 'xyz',
-        padding: 'random string of bytes ...'
+        _id: integer(default _id index),
+        shardKey: integer(for the shard key),
+        counter: integer(used for counting updates),
+        num1: integer(random generated between [1, 1000000000]),
+        num2: integer(random generated between [1, 1000000000]),
+        str1: string(length <= 20),
+        str2: string(length <= 20),
+        padding: string(random string of bytes ...)
       }
 
   The indexes are:
@@ -50,7 +51,7 @@ GlobalDefaults:
 
   DocumentCount: &DocumentCount 1_000_000_000  # for an approximate total of 1TB
   NumChunks: &NumChunks 1                # start with only 1 shard
-  Timeout: &Timeout 360_000_000 # = 100 hours
+  Timeout: &Timeout 72_000_000 # = 20 hours
 
   ShardKeyValueMin: &ShardKeyValueMin 1
   # We use 100x the number of chunks so that the $sample aggregation to choose the new split points
@@ -78,13 +79,12 @@ Clients:
   Default:
     QueryOptions:
       maxPoolSize: 202
-      socketTimeoutMS: *Timeout  # = 100 hours
   # The reshardCollection command is expected to take a long to complete so we give the actor
   # running it a much higher socket timeout.
   ReshardCollection:
     QueryOptions:
       maxPoolSize: 1
-      socketTimeoutMS: *Timeout  # = 100 hours
+      socketTimeoutMS: *Timeout  # = 20 hours
 
 Actors:
 - Name: CreateShardedCollection
@@ -94,11 +94,10 @@ Actors:
   - Repeat: 1
     Database: admin
     Operations:
-    - OperationMetricsName: StopBalancer
+    - OperationMetricsName: DisableBalancer
       OperationName: AdminCommand
       OperationCommand:
         balancerStop: 1
-        maxTimeMS: *Timeout
     - OperationMetricsName: EnableSharding
       OperationName: AdminCommand
       OperationCommand:
