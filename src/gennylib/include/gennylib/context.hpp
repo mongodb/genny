@@ -128,7 +128,7 @@ public:
     ExternalPhaseCoordinator(ExternalPhaseCoordinator&&) = delete;
     void operator=(ExternalPhaseCoordinator&&) = delete;
 
-    ~ExternalPhaseCoordinator() {
+    ~ExternalPhaseCoordinator(){
         if (m_socket >= 0) {
             close(m_socket);
         };
@@ -487,7 +487,7 @@ public:
      *
      *   - Operation: Cleanup
      *     # inherits `Collection: links` from parent,
-     *     # and `Phase: 2` is derived based on index
+     *     # and `Phase: 3` is derived based on index
      * ```
      *
      * This would result in 3 `PhaseContext` structures. Keys are inherited from the
@@ -508,7 +508,7 @@ public:
     }
 
     /**
-     * @return a pool client from the "default" MongoDB connection-pool.
+     * @return a pool from the "default" MongoDB connection-pool.
      * @throws InvalidConfigurationException if no connections available.
      */
     template <class... Args>
@@ -562,9 +562,7 @@ private:
 class PhaseContext final : public v1::HasNode {
 public:
     PhaseContext(const Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
-        : v1::HasNode{node},
-          _actorContext{std::addressof(actorContext)},
-          _phaseNumber(phaseNumber) {}
+        : v1::HasNode{node}, _actor{std::addressof(actorContext)}, _phaseNumber(phaseNumber) {}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
@@ -573,7 +571,7 @@ public:
     void operator=(PhaseContext&&) = delete;
 
     DefaultRandom& rng(ActorId id) {
-        return this->_actorContext->rng(id);
+        return this->_actor->rng(id);
     }
 
     /**
@@ -585,15 +583,15 @@ public:
      * @return the parent workload context
      */
     WorkloadContext& workload() const {
-        return this->_actorContext->workload();
+        return _actor->workload();
     }
 
     ActorContext& actor() const {
-        return *this->_actorContext;
+        return *_actor;
     }
 
     SleepContext getSleepContext() const {
-        return SleepContext(this->_phaseNumber, this->actor().orchestrator());
+        return SleepContext(_phaseNumber, this->actor().orchestrator());
     }
 
     /**
@@ -612,24 +610,24 @@ public:
         if (auto metricsName = this->_node["MetricsName"].maybe<std::string>()) {
             stm << *metricsName;
         } else {
-            stm << defaultMetricsName << "." << this->_phaseNumber;
+            stm << defaultMetricsName << "." << _phaseNumber;
         }
 
         return this->workload()._registry.operation(
-            this->_actorContext->operator[]("Name").to<std::string>(),
+            this->_actor->operator[]("Name").to<std::string>(),
             stm.str(),
             id,
-            this->_phaseNumber,
+            _phaseNumber,
             internal);
     }
 
     /**
      * @brief [Experimental] Create a metrics::Operation with the specified name
      *
-     * PhaseContext::operation() always returns the same Operation if MetricsName is specified.
-     * But according to the HelloWorld actor, this behavior seems to be unexpected.
-     * However, it is too risky to change the behavior without thoroughly examining the impact.
-     * EVG-17788 tracks this work.
+     * The current operation() function will always return the same operation if MetricsName is specified.
+     * According to the HelloWorld actor, it seems not the expected behavior
+     * But it is too risky to change the behavior without thoroughly exam the impact
+     * Created TIG-4328 to track this work
      *
      * @param metricsName name of the metric
      * @param id
@@ -639,19 +637,19 @@ public:
     auto namedOperation(const std::string& metricsName, ActorId id, bool internal = false) const {
 
         return this->workload()._registry.operation(
-            this->_actorContext->operator[]("Name").to<std::string>(),
+            this->_actor->operator[]("Name").to<std::string>(),
             metricsName,
             id,
-            this->_phaseNumber,
+            _phaseNumber,
             internal);
     }
 
     const auto getPhaseNumber() const {
-        return this->_phaseNumber;
+        return _phaseNumber;
     }
 
 private:
-    ActorContext* _actorContext;
+    ActorContext* _actor;
     const PhaseNumber _phaseNumber;
 };
 
