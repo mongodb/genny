@@ -57,7 +57,7 @@ auto createPool(const std::string& name,
 mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
                                                      size_t instance,
                                                      const Node& context) {
-    mongocxx::pool::entry pool_entry = this->_client(name, instance, context);
+    auto pool_entry = this->_client(name, instance, context);
     pool_entry->list_databases();  // warm up the connection before returning it
     return pool_entry;
 }
