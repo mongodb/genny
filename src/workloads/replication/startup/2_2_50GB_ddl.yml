@@ -1,0 +1,86 @@
+SchemaVersion: 2018-07-01
+Owner: mongodb/server-replication"
+Description: >
+  Adds DDL operations to be replayed during startup recovery for the heavy phase.
+  To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
+
+  Expected behavior:
+  --------------
+  We expect after restarting mongod after running this workload to have alot of DDL ops to be
+  applied during startup recovery:
+
+  Sample logs:
+  +------------------------------------------------------------------------------------+
+  |   1- Alot of "Dropping unknown ident".                                             |
+  |   2- Alot of createCollection ops:                                                 |
+  |   {                                                                                |
+  |       s: "I",                                                                      |
+  |       c: "REPL",                                                                   |
+  |       id: 7360109,                                                                 |
+  |       ctx: "initandlisten",                                                        |
+  |       msg: "Processing DDL command oplog entry in OplogBatcher",                   |
+  |       attr: {                                                                      |
+  |           oplogEntry: {                                                            |
+  |               oplogEntry: {                                                        |
+  |                   op: "c",                                                         |
+  |                   ns: "startup_50GB_ddl.$cmd",                                     |
+  |                   o: {                                                             |
+  |                       create: "Collection9500",                                    |
+  |                       idIndex: {                                                   |
+  |                           v: 2,                                                    |
+  |                           key: {                                                   |
+  |                               _id: 1                                               |
+  |                           },                                                       |
+  |                           name: "_id_"                                             |
+  |                           ...                                                      |
+  |   }                                                                                |
+  |   3- Alot of IndexBuilds:                                                          |
+  |   {                                                                                |
+  |     s: "I",                                                                        |
+  |     c: "STORAGE",                                                                  |
+  |     id: 5039100,                                                                   |
+  |     ctx: "IndexBuildsCoordinatorMongod-2",                                         |
+  |     msg: "Index build: in replication recovery. Not waiting for last optime before |
+  |     interceptors to be majority committed",                                        |
+  |   }                                                                                |
+  +------------------------------------------------------------------------------------+
+
+Keywords:
+- startup
+- stopCheckpointing
+- collections
+- indexes
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 300
+      # Allow for longer duration since index builds may take a while.
+      socketTimeoutMS: 3_600_000  # = 1 hour
+      connectTimeoutMS: 3_600_000
+
+GlobalDefaults:
+  - NumPhases: &max_phase 1
+  - Database: &database "startup_50GB_ddl"
+  - CollectionCount: &collectionCount 1000  # 1k collections with 11 indexes each (10k+ tables).
+
+Actors:
+- StopCheckpointing:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: StopCheckpointTemplate
+    Parameters:
+      active: [0]
+      nopInPhasesUpTo: *max_phase
+
+- DDLAndCrudOperations:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: InsertDataTemplate
+    Parameters:
+      active: [1]
+      nopInPhasesUpTo: *max_phase
+      database: *database
+      collectionCount: *collectionCount
+      approxDocumentSize: 1000  # 1kB
+      documentCount: 100  # for an approximate total of 100KB per collection, total ~1GB.

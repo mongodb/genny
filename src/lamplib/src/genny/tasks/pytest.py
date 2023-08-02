@@ -19,13 +19,23 @@ def run_self_test(genny_repo_root: str, workspace_root: str):
 
     import pytest
 
-    path = os.path.join(workspace_root, "build", "XUnitXML", "PyTest.xml")
-    path = os.path.abspath(path)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    genny_repo_root = os.path.abspath(genny_repo_root)
+    args = []
 
+    # Configure an explicit configuration path.
+    #
+    # Pytest should find this file by its lookup mechanism, but
+    # this explicitly tells it to use ./pyproject.toml for its
+    # configs. This makes it easier to debug pytest configuration issues.
+    pyproject_path = os.path.join(genny_repo_root, "pyproject.toml")
+    args += ["-c", os.path.abspath(pyproject_path)]
+
+    # Configure output file and format.
+    #
+    pytest_xml_path = os.path.join(workspace_root, "build", "XUnitXML", "PyTest.xml")
+    pytest_xml_path = os.path.abspath(pytest_xml_path)
+    os.makedirs(os.path.dirname(pytest_xml_path), exist_ok=True)
     # TODO: https://docs.pytest.org/en/stable/deprecations.html#junit-family-default-value-change-to-xunit2
-    args = ["--junit-xml", path, genny_repo_root]
+    args += ["--junit-xml", pytest_xml_path]
 
     os.chdir(genny_repo_root)
     SLOG.info("Running pytest.", args=args)
