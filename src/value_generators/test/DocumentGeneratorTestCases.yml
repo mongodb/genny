@@ -206,7 +206,9 @@ Tests:
   - Name: Distinct Array Generator creates an array with no repeated strings
     GivenTemplate:
       a:
-        {^DistinctArray: {of: {^Choose: {from: ["Mongo", "Mongo", "Mongo", "DB"]}}, number: 2}}
+        {^DistinctArray: {
+          of: {^Choose: {from: ["Mongo", "Mongo", "Mongo", "DB"], deterministic: true}},
+          number: 2}}
     ThenReturns:
       - {a: ["Mongo", "DB"]}
 

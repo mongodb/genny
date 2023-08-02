@@ -251,6 +251,26 @@ Actors:
             # The following example returns - repeatingSeq: [1, 2, 3, 1, 2]
             repeatingSeq: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 5}}
 
+            # You can also filter items out, similar to a set. For example, you can generate
+            # N distinct random integers.
+            distinctSeq10Ints: {^DistinctArray: {
+              of: {^RandomInt: {min: 0, max: 100000}}, number: 10}}
+
+            # Just be careful, the generator will give up if the failure rate gets too high, such as
+            # with this next generator.
+            distinctSeqFailure: {^DistinctArray: {
+              of: {^RandomInt: {min: 0, max: 1000}}, number: 1000}}
+
+            # A good rule of thumb is that you should be selecting less than 50% of your range.
+            # You're not limited to integers, though! You can also filter doubles, strings, even
+            # certain documents and arrays.
+            distinctSeq10Strings: {^DistinctArray: {
+              of: {^Choose: {from: ["M", "o", "n", "g", "o", "D", "B"], deterministic: true}},
+              number: 5}}
+
+            # However, not all generators are supported, and DistinctArray doesn't support
+            # heterogeneous types, so the generator must output the same type of elements each time.
+
             # Concatenate constant arrays and generated arrays together.
             combinedArrays: {^Concat: {arrays: [[1, 1], [2, 3, 5]]}}
             combinedArraysWithGenerator: {^Concat: {arrays: [{^Array: {of: 1, number: 2}}, [2, 3, 5]]}}
