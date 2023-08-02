@@ -1812,6 +1812,10 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ObjectIdGenerator>(node, generatorArgs);
          }},
+        {"^Verbatim",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return valueGenerator<true, UniqueAppendable>(node, generatorArgs, allParsers);
+         }},
         {"^TwoDWalk",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<TwoDWalkGenerator>(node, generatorArgs);
