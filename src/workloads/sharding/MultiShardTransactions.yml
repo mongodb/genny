@@ -12,13 +12,19 @@ GlobalDefaults:
   ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
   DocumentCount: &DocumentCount 100_000
 
-  MaxPhase: &MaxPhase 7
+  MaxPhase: &MaxPhase 22
 
   UpdateOperation: &UpdateOperation
     OperationName: updateOne
     OperationCommand:
       Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
       Update: {$inc: {counter: 1}}
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+      maxPoolSize: 1000
 
 ActorTemplates:
 - TemplateName: ShardedCollectionUpdate
@@ -30,7 +36,7 @@ ActorTemplates:
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhases
+        NopInPhasesUpTo: *MaxPhase
         PhaseConfig:
           Duration: 1 minute
           Collection: Collection0
@@ -61,7 +67,7 @@ ActorTemplates:
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhases
+        NopInPhasesUpTo: *MaxPhase
         PhaseConfig:
           Duration: 1 minute
           ThrowOnFailure: false  # Transactions are allowed to fail.
@@ -102,7 +108,7 @@ ActorTemplates:
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhases
+        NopInPhasesUpTo: *MaxPhase
         PhaseConfig:
           Duration: 1 minute
           ThrowOnFailure: false  # Transactions are allowed to fail.
@@ -143,7 +149,7 @@ ActorTemplates:
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhases
+        NopInPhasesUpTo: *MaxPhase
         PhaseConfig:
           Duration: 1 minute
           ThrowOnFailure: false  # Transactions are allowed to fail.
@@ -210,32 +216,39 @@ Actors:
             movePrimary: *Database1
             to: rs1
 
-- Name: LoadInitialData
+- Name: LoadDataDatabase0
   Type: MonotonicLoader
   Threads: 4
   Phases:
-  - &Nop {Nop: true}
-  - Repeat: 1
-    Threads: 4
-    BatchSize: 1000
-    DocumentCount: *DocumentCount
-    CollectionCount: 2
-    Database: *Database0
-    Document: &Document
-      counter: 0
-      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
-  - Repeat: 1
-    Threads: 4
-    BatchSize: 1000
-    DocumentCount: *DocumentCount
-    CollectionCount: 2
-    Database: *Database1
-    Document: *Document
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat: 1
+        Threads: 4
+        BatchSize: 1000
+        DocumentCount: *DocumentCount
+        CollectionCount: 2
+        Database: *Database0
+        Document: &Document
+          counter: 0
+          padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
+
+- Name: LoadDataDatabase1
+  Type: MonotonicLoader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat: 1
+        Threads: 4
+        BatchSize: 1000
+        DocumentCount: *DocumentCount
+        CollectionCount: 2
+        Database: *Database1
+        Document: *Document
 
 - Name: QuiesceDatabase0
   Type: QuiesceActor
