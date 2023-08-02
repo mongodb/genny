@@ -101,6 +101,46 @@ public:
     virtual ~Appendable() = default;
     virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
     virtual void append(bsoncxx::builder::basic::array& builder) = 0;
+    virtual void appendDistinct(bsoncxx::builder::basic::array& builder, size_t nDistinct) = 0;
+
+protected:
+    // Custom hasher to enable hashing for BSON types.
+    struct SetHasher {
+        template <typename T>
+        size_t operator() (const T& v) const {
+            return std::hash<T>{}(v);
+        }
+
+        size_t operator() (const bsoncxx::array::value& value) const {
+            // Hash the view as a string.
+            const auto v = value.view();
+            std::string_view sv {reinterpret_cast<const char*>(v.data()), v.length()};
+            return std::hash<std::string_view>{}(sv);
+        }
+
+        size_t operator() (const bsoncxx::document::value& value) const {
+            // Hash the view as a string.
+            const auto v = value.view();
+            std::string_view sv {reinterpret_cast<const char*>(v.data()), v.length()};
+            return std::hash<std::string_view>{}(sv);
+        }
+
+        size_t operator() (const bsoncxx::types::b_date& value) const {
+            return std::hash<int64_t>{}(value.to_int64());
+        }
+    };
+
+    // Custom equals comparator to enable comparison for certain BSON types.
+    struct SetKeyEq {
+        template <typename T>
+        bool operator() (const T& lhs, const T& rhs) const {
+            return lhs == rhs;
+        }
+
+        bool operator() (const bsoncxx::array::value& lhs, const bsoncxx::array::value& rhs) const {
+            return lhs.view() == rhs.view();
+        }
+    };
 };
 
 using UniqueAppendable = std::unique_ptr<Appendable>;
@@ -118,6 +158,44 @@ public:
     }
     void append(bsoncxx::builder::basic::array& builder) override {
         builder.append(this->evaluate());
+    }
+    void appendDistinct(bsoncxx::builder::basic::array& builder, size_t nDistinct) override {
+        std::unordered_set<T, SetHasher, SetKeyEq> distinctValues(2 * nDistinct);
+        // Choose a buffer length of max(nDistinct, 64).
+        const auto bufferLength = std::max<int64_t>(64, nDistinct);
+        // Keep track of collision offsets for next N runs.
+        std::deque<int8_t> offsets(bufferLength);
+        ssize_t collisions = 0;
+
+        /**
+         * Sliding window via cyclic buffer.
+         *
+         * This computes the number of insertion failures, i.e. repeated values, in the past
+         * `bufferLength` number of generated values. We achieve this by queueing up the
+         * inverse operation for N steps away. We set N to be >= 64 so that small counts are
+         * given more generous resources (very small N corresponds to higher variance). If
+         * all of the past N generated values are repeats, then we assume that we will not
+         * converge in a reasonable number of iterations.
+         */
+        while (distinctValues.size() < nDistinct) {
+            auto [itr, succeeded] = distinctValues.insert(this->evaluate());
+
+            // Iterate through cyclic buffer and update collisions counter and offsets.
+            collisions -= offsets.front();
+            offsets.pop_front();
+            offsets.push_back(!succeeded);  // Relies on bool translating into 1 or 0.
+
+            if (succeeded) {
+                builder.append(*itr);
+            } else if (++collisions >= bufferLength) {
+                // Rate of failure: 100% of the past N pulls.
+                std::stringstream msg;
+                msg << "All " << bufferLength << " most recently generated values are "
+                    << "duplicates. Assuming unique value convergence failure for node: "
+                    << _node;
+                BOOST_THROW_EXCEPTION(ValueGeneratorConvergenceTimeout(msg.str()));
+            }
+        }
     }
 };
 }  // namespace genny
