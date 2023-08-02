@@ -167,6 +167,9 @@ private:
 
     /** manages global key vaults & creates encryption contexts per pool */
     std::unique_ptr<EncryptionManager> _encryptionManager;
+
+    /** Helper method for client() */
+    mongocxx::pool::entry _client(const std::string& name, size_t instance, const Node& context);
 };
 
 }  // namespace genny::v1

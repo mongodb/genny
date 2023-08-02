@@ -15,6 +15,7 @@
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/v1/PoolFactory.hpp>
 #include <gennylib/v1/PoolManager.hpp>
+#include <mongocxx/client.hpp>
 
 namespace genny::v1 {
 namespace {
@@ -56,6 +57,15 @@ auto createPool(const std::string& name,
 mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
                                                      size_t instance,
                                                      const Node& context) {
+    mongocxx::pool::entry pool_entry = this->_client(name, instance, context);
+    pool_entry->list_databases();  // warm up the connection before returning it
+    return pool_entry;
+}
+
+
+mongocxx::pool::entry genny::v1::PoolManager::_client(const std::string& name,
+                                                      size_t instance,
+                                                      const Node& context) {
     // Only one thread can access pools.operator[] at a time...
     std::unique_lock<std::mutex> getLock{this->_poolsLock};
     LockAndPools& lap = this->_pools[name];
