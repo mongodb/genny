@@ -22,6 +22,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <set>
 #include <sstream>
 #include <unordered_map>
 
@@ -1392,53 +1393,112 @@ private:
 };
 
 /** `{^DistinctArray: {of: {^RandomInt {start: 10, end: 1000}}}, number: 2}` */
-template <typename T>
 class DistinctArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
-    DistinctArrayGenerator(const Node& node, GeneratorArgs generatorArgs)
+    // Make the variant type easier to use.
+    using GeneratorTypes = std::variant<
+        UniqueGenerator<bsoncxx::array::value>,
+        UniqueGenerator<bsoncxx::document::value>,
+        UniqueGenerator<bsoncxx::types::b_date>,
+        UniqueGenerator<double>,
+        UniqueGenerator<int64_t>,
+        UniqueGenerator<std::string>
+    >;
+
+    DistinctArrayGenerator(
+        const Node& node, GeneratorArgs generatorArgs, GeneratorTypes&& valueGen)
         : _rng{generatorArgs.rng},
           _node{node},
           _generatorArgs{generatorArgs},
-          _valueGen{getValueGen(node, generatorArgs)},
+          _valueGen{std::move(valueGen)},
           _nTimesGen{intGenerator(extract(node, "number", "^DistinctArray"), generatorArgs)} {}
 
     bsoncxx::array::value evaluate() override {
         bsoncxx::builder::basic::array builder{};
-        auto times = _nTimesGen->evaluate();
-        // Choose initial bucket size of 2N to minimize hash collisions and resizes.
-        std::unordered_set<T> distinctValues(2 * times);
-        while (distinctValues.size() < times) {
-            auto [itr, succeeded] = distinctValues.insert(_valueGen->evaluate());
-            if (succeeded) {
-                builder.append(*itr);
-            }
+        const auto times = _nTimesGen->evaluate();
+        // Save some time if we don't want to have any items.
+        if (times < 1) {
+            return builder.extract();
         }
+
+        // Use a visitor pattern to specialize the filtering.
+        std::visit([&] (auto&& generator) {
+            // Extract the first value so that we can use it to do type deduction for the set.
+            const auto&& firstValue = generator->evaluate();
+            // Choose initial bucket size of 2N to minimize hash collisions and resizes.
+            std::unordered_set distinctValues({firstValue}, 2 * times, setHasher, setKeyEq);
+            // Keep track of number of collisions in the past N runs.
+            std::vector<size_t> collisions(times);
+            auto citr = collisions.begin();
+
+            builder.append(firstValue);
+            while (distinctValues.size() < times) {
+                auto [itr, succeeded] = distinctValues.insert(generator->evaluate());
+                if (succeeded) {
+                    builder.append(*itr);
+                } else if ((times - ++*citr) * 100 < times) {  // Exceeds 99% chance of failure.
+                    // TODO: something smarter in the face of integer overflow.
+                    std::stringstream msg;
+                    msg << "Rate of repeated values (" << *citr << "/" << times << ") in the past "
+                        << times << " iterations exceeded failure rate threshold. Node: " << _node;
+                    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+                }
+
+                // Iterate and proactively recompute rolling failure count.
+                auto pitr = citr;
+                citr = citr + 1 == collisions.end() ? collisions.begin() : citr + 1;
+                *citr = *pitr - *citr;
+            }
+        }, _valueGen);
+
         return builder.extract();
     }
 
 private:
-    template <typename U = T>
-    UniqueGenerator<std::enable_if_t<std::is_same_v<int64_t, U>, T>>
-    static getValueGen(const Node& node, GeneratorArgs generatorArgs) {
-        return intGenerator(extract(node, "of", "^DistinctArray"), generatorArgs);
-    }
+    // Custom hasher to enable hashing for BSON types.
+    struct SetHasherType {
+        template <typename T>
+        size_t operator() (const T& v) const {
+            return std::hash<T>{}(v);
+        }
 
-    template <typename U = T>
-    UniqueGenerator<std::enable_if_t<std::is_same_v<double, U>, T>>
-    static getValueGen(const Node& node, GeneratorArgs generatorArgs) {
-        return doubleGenerator(extract(node, "of", "^DistinctArray"), generatorArgs);
-    }
+        size_t operator() (const bsoncxx::array::value& value) const {
+            // Hash the view as a string.
+            const auto v = value.view();
+            std::string_view sv {reinterpret_cast<const char*>(v.data()), v.length()};
+            return std::hash<std::string_view>{}(sv);
+        }
 
-    template <typename U = T>
-    UniqueGenerator<std::enable_if_t<std::is_same_v<std::string, U>, T>>
-    static getValueGen(const Node& node, GeneratorArgs generatorArgs) {
-        return stringGenerator(extract(node, "of", "^DistinctArray"), generatorArgs);
-    }
+        size_t operator() (const bsoncxx::document::value& value) const {
+            // Hash the view as a string.
+            const auto v = value.view();
+            std::string_view sv {reinterpret_cast<const char*>(v.data()), v.length()};
+            return std::hash<std::string_view>{}(sv);
+        }
+
+        size_t operator() (const bsoncxx::types::b_date& value) const {
+            return std::hash<int64_t>{}(value.to_int64());
+        }
+    };
+    static constexpr auto setHasher = SetHasherType();
+
+    // Custom equals comparator to enable comparison for certain BSON types.
+    struct SetKeyEqType {
+        template <typename T>
+        bool operator() (const T& lhs, const T& rhs) const {
+            return lhs == rhs;
+        }
+
+        bool operator() (const bsoncxx::array::value& lhs, const bsoncxx::array::value& rhs) const {
+            return lhs.view() == rhs.view();
+        }
+    };
+    static constexpr auto setKeyEq = SetKeyEqType();
 
     DefaultRandom& _rng;
     const Node& _node;
     const GeneratorArgs& _generatorArgs;
-    const UniqueGenerator<T> _valueGen;
+    const GeneratorTypes _valueGen;
     const UniqueGenerator<int64_t> _nTimesGen;
 };
 
@@ -1728,8 +1788,26 @@ Out valueGenerator(const Node& node,
     BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
 }
 
+/**
+ * Generate the parser maps.
+ *
+ * This uses a lambda to ensure that we can build the `allParsers` map safely and easily, while
+ * keeping the global variable const.
+ *
+ * To add a new parser, add it in the corresponding parser and it will automatically be included in
+ * `allParsers` as long as the key isn't already defined. Since `map.insert()` does not overwrite
+ * existing keys, you can also specify separate behavior for a key by entering it in `allParser`
+ * directly (e.g. "^Choose").
+ *
+ * If adding a new parsers map, remember to insert its entries into `allParsers` at the end of this
+ * lambda function.
+ */
 const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, stringParsers] = [] () {
     static std::map<std::string, Parser<UniqueAppendable>> allParsers {
+        {"^Choose",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<ChooseGenerator>(node, generatorArgs);
+         }},
         {"^ObjectId",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ObjectIdGenerator>(node, generatorArgs);
@@ -1830,8 +1908,8 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
          }},
     };
 
-    // Set of parsers to look when we request an int parser
-    // see int64Generator
+    // Set of parsers to look when we request an string parser
+    // see stringGenerator
     const static std::map<std::string, Parser<UniqueGenerator<std::string>>> stringParsers{
         {"^FastRandomString",
          [](const Node& node, GeneratorArgs generatorArgs) {
@@ -1875,6 +1953,7 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
          }},
     };
 
+    // Only nonexistent keys are inserted.
     allParsers.insert(arrayParsers.begin(), arrayParsers.end());
     allParsers.insert(dateParsers.begin(), dateParsers.end());
     allParsers.insert(doubleParsers.begin(), doubleParsers.end());
@@ -1941,28 +2020,43 @@ UniqueGenerator<bsoncxx::array::value> literalArrayGenerator(const Node& node,
  */
 UniqueGenerator<bsoncxx::array::value> distinctArrayGenerator(const Node& node,
                                                               GeneratorArgs generatorArgs) {
+    const auto& ofNode = node["of"];
+    // TODO: Should this only allow certain parsers? E.g. disallow ^Cycle.
     try {
-        if (extractKnownParser(node["of"], generatorArgs, intParsers)) {
+        if (auto parserPair = extractKnownParser(ofNode, generatorArgs, intParsers)) {
             // known parser type
-            return std::make_unique<DistinctArrayGenerator<int64_t>>(node, generatorArgs);
+            return std::make_unique<DistinctArrayGenerator>(
+                node, generatorArgs, parserPair->first(ofNode, generatorArgs));
         }
     } catch (const InvalidConversionException& e) {
     }
     try {
-        if (extractKnownParser(node["of"], generatorArgs, doubleParsers)) {
+        if (auto parserPair = extractKnownParser(ofNode, generatorArgs, doubleParsers)) {
             // known parser type
-            return std::make_unique<DistinctArrayGenerator<double>>(node, generatorArgs);
+            return std::make_unique<DistinctArrayGenerator>(
+                node, generatorArgs, parserPair->first(ofNode, generatorArgs));
         }
     } catch (const InvalidConversionException& e) {
     }
     try {
-        if (extractKnownParser(node["of"], generatorArgs, stringParsers)) {
+        if (auto parserPair = extractKnownParser(ofNode, generatorArgs, stringParsers)) {
             // known parser type
-            return std::make_unique<DistinctArrayGenerator<std::string>>(node, generatorArgs);
+            return std::make_unique<DistinctArrayGenerator>(
+                node, generatorArgs, parserPair->first(ofNode, generatorArgs));
         }
     } catch (const InvalidConversionException& e) {
     }
-    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Unsupported \"of\" for distinct array"));
+    if (ofNode.isSequence()) {
+        return std::make_unique<DistinctArrayGenerator>(
+            node, generatorArgs, literalArrayGenerator<false>(ofNode, generatorArgs));
+    }
+    if (ofNode.isMap()) {
+        return std::make_unique<DistinctArrayGenerator>(
+            node, generatorArgs, documentGenerator<false>(ofNode, generatorArgs));
+    }
+    std::stringstream msg;
+    msg << "Unsupported metakey in \"of\" for distinct array: " << ofNode;
+    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
 }
 
 /**
