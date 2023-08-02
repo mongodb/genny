@@ -11,7 +11,7 @@
 # - OutcomeCounts: is a shortcut these tests take to avoid having to
 #   specify every single document in the collection.
 #
-# - Error: indicates a string of what type of error (syntax error
+# - Error: indicates a string of what type of error (syntax error)
 #   encountered during setup or a runtime error
 #
 # - name: (omitted) we always assume everything happens on the same db and collection
@@ -238,7 +238,7 @@ Tests:
         wtimeout: 2500
         j: true
 
-  - Description: Write concern 0 with timeout and journalling false.
+  - Description: Write concern 0 with timeout and journaling false.
     Operations:
       - OperationName: bulkWrite
         OperationCommand:
@@ -373,7 +373,7 @@ Tests:
       - Filter: {a: 1}
         Count: 0
 
-  - Description: The correct documents are inserted.
+  - Description: The correct documents are inserted, with correct insert options.
     Operations:
       - OperationName: insertMany
         OperationCommand:
@@ -381,11 +381,26 @@ Tests:
             - { a: 1 }
             - { a: 1 }
             - { b: 1 }
+          Options:
+            BypassDocumentValidation: true
+            Ordered: false
+            WriteConcern:
+              Level: 1
+              Timeout: 1000 milliseconds
+              Journal: false
     OutcomeCounts:
       - Filter: {a: 1}
         Count: 2
       - Filter: {b: 1}
         Count: 1
+    ExpectAllEvents:
+      bypassDocumentValidation: true
+      ordered: false
+      writeConcern:
+        w: 1
+        wtimeout: 1000
+        j: false
+        ordered: false
 
   - Description: Insert a document into a collection.
     Operations:
@@ -865,7 +880,7 @@ Tests:
             Filter: { a: 1 }
             Options:
               AwaitData: true
-    Error: | 
+    Error: |
       .*Cannot set 'awaitData' to true without also setting 'tailable' to true.*
 
   - Description: Test that an error is thrown when an invalid projection is specified in 'findOne'.
@@ -1018,3 +1033,45 @@ Tests:
             AwaitData: true
     Error: |
       .*Cannot set 'awaitData' to true without also setting 'tailable' to true.*
+
+  - Description: Test that overriding database and collection in operation description works.
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+        Collection: test2
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+        Database: testdb2
+        Collection: testOtherDb
+    ExpectedCollectionsExist:
+      test: false
+      test2: true
+      testOtherDb: false
+
+  - Description: Test that overriding database and collection inside WithTransaction works.
+    Operations:
+      - OperationName: withTransaction
+        Collection: test1
+        OperationCommand:
+          OperationsInTransaction:
+          - OperationName: insertOne
+            OperationCommand:
+              Document: { a: 1 }
+            Collection: test2
+          - OperationName: insertOne
+            OperationCommand:
+              Document: { a: 1 }
+            Collection: test3
+          - OperationName: insertOne
+            OperationCommand:
+              Document: { a: 1 }
+            Database: testdb2
+            Collection: testOtherDb
+    ExpectedCollectionsExist:
+      test: false
+      test1: false
+      test2: true
+      test3: true
+      testOtherDb: false

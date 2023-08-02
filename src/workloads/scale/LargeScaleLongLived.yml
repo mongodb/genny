@@ -88,6 +88,8 @@ AutoRun:
     mongodb_setup:
       $eq:
       - atlas
+      - atlas-like-replica.2022-10
+      - atlas-like-replica-query-stats.2022-10
       - replica
       - replica-all-feature-flags
       - shard
@@ -96,3 +98,9 @@ AutoRun:
       - standalone
       - standalone-classic-query-engine
       - standalone-sbe
+      - standalone-query-stats
+    atlas_setup:
+      $neq:
+      - M10-repl
+      - M20-repl
+      - M30-repl

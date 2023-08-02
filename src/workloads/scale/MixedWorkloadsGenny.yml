@@ -302,7 +302,9 @@ AutoRun:
     mongodb_setup:
       $eq:
       - atlas
+      - atlas-like-replica.2022-10
       - replica
+      - replica-query-stats
       - replica-1dayhistory-15gbwtcache
       - replica-all-feature-flags
       - replica-maintenance-events
@@ -311,3 +313,6 @@ AutoRun:
       - single-replica-classic-query-engine
       - single-replica-sbe
       - standalone
+    atlas_setup:
+      $neq:
+      - M30-repl

@@ -267,9 +267,13 @@ AutoRun:
     mongodb_setup:
       $eq:
       - atlas
+      - atlas-like-replica.2022-10
       - replica
       - replica-all-feature-flags
       - standalone
     branch_name:
       $neq:
       - v4.0
+    atlas_setup:
+      $neq:
+      - M30-repl

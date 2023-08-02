@@ -142,6 +142,22 @@ ActorTemplates:
               Filter: *filter
 
 Actors:
+#
+## Reduce the log level to avoid creating log files
+## of serveral GB
+#
+- Name: LogLevel
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: { profile: 0, slowms: 1000, sampleRate: 0.1 }
+  - &nop {Nop: true}
+  - *nop
+
 - Name: Setup
   Type: Loader
   Threads: 8
@@ -164,7 +180,7 @@ Actors:
   Threads: 1
   Database: *dbname
   Phases:
-  - &nop {Nop: true}
+  - *nop
   - Repeat: 1
   - *nop
 
@@ -222,3 +238,8 @@ AutoRun:
       $eq:
       - atlas
       - replica
+      - replica-disable-execution-control
+      - atlas-like-replica.2022-10
+    atlas_setup:
+      $neq:
+      - M30-repl

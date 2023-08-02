@@ -26,6 +26,7 @@
 #include <boost/log/expressions.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
+#include <boost/stacktrace.hpp>
 
 #include <yaml-cpp/yaml.h>
 
@@ -65,10 +66,13 @@ void runActor(Actor&& actor,
         actor->run();
     } catch (const boost::exception& x) {
         BOOST_LOG_TRIVIAL(error) << "Unexpected boost::exception: "
-                                 << boost::diagnostic_information(x, true);
+                                 << boost::diagnostic_information(x, true)
+                                 << boost::stacktrace::stacktrace();
         outcomeCode = driver::DefaultDriver::OutcomeCode::kBoostException;
     } catch (const std::exception& x) {
-        BOOST_LOG_TRIVIAL(error) << "Unexpected std::exception: " << x.what();
+        BOOST_LOG_TRIVIAL(error) << "Unexpected std::exception: " << x.what() << std::endl
+                                 << boost::diagnostic_information(x, true)
+                                 << boost::stacktrace::stacktrace();
         outcomeCode = driver::DefaultDriver::OutcomeCode::kStandardException;
     } catch (...) {
         BOOST_LOG_TRIVIAL(error) << "Unknown error";
@@ -214,8 +218,17 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     genny::metrics::Registry& metrics = workloadContext.getMetrics();
 
     if (options.runMode == DefaultDriver::RunMode::kDryRun) {
-        std::cout << "Workload context constructed without errors." << std::endl;
+        BOOST_LOG_TRIVIAL(info) << "Workload context constructed without errors.";
         reportMetrics(metrics, workloadName, "Setup", true, startTime);
+        for (const auto& [phaseNum, phaseContexts] : workloadContext.getActivePhaseContexts()) {
+            BOOST_LOG_TRIVIAL(debug) << "Phase " << phaseNum << " Actors:";
+            int i = 0;
+            for (const PhaseContext& phaseCtx : phaseContexts) {
+                const auto& actorCtx = phaseCtx.actor();
+                BOOST_LOG_TRIVIAL(debug) << ++i << ") " << actorCtx.getType() << "." << actorCtx.getName();
+            }
+        }
+        
         reportUnused(nodeSource, true);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
@@ -281,9 +294,12 @@ DefaultDriver::OutcomeCode DefaultDriver::run(const DefaultDriver::ProgramOption
         return doRunLogic(options);
     } catch (const boost::exception& x) {
         BOOST_LOG_TRIVIAL(error) << "Caught boost::exception "
-                                 << boost::diagnostic_information(x, true);
+                                 << boost::diagnostic_information(x, true)
+                                 << boost::stacktrace::stacktrace();
     } catch (const std::exception& x) {
-        BOOST_LOG_TRIVIAL(error) << "Caught std::exception " << x.what();
+        BOOST_LOG_TRIVIAL(error) << "Caught std::exception " << x.what() << std::endl
+                                 << boost::diagnostic_information(x, true)
+                                 << boost::stacktrace::stacktrace();;
     }
     return DefaultDriver::OutcomeCode::kInternalException;
 }

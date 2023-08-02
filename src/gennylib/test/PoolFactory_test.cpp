@@ -42,6 +42,8 @@ TEST_CASE("PoolFactory behavior") {
         auto factoryUri = factory.makeUri();
         auto expectedUri = [&]() { return kSourceUri + std::string{"/?appName=Genny"}; };
         REQUIRE(factoryUri == expectedUri());
+        auto redactedUri = factory.makeRedactedUri();
+        REQUIRE(redactedUri == expectedUri());
 
         auto pool = factory.makePool();
         REQUIRE(pool);
@@ -61,6 +63,8 @@ TEST_CASE("PoolFactory behavior") {
             return std::string{"mongodb://"} + kSourceUri + std::string{"/?appName=Genny"};
         };
         REQUIRE(factoryUri == expectedUri());
+        auto redactedUri = factory.makeRedactedUri();
+        REQUIRE(redactedUri == expectedUri());
 
         auto pool = factory.makePool();
         REQUIRE(pool);
@@ -79,6 +83,8 @@ TEST_CASE("PoolFactory behavior") {
                 return kBaseString + "bigdata?appName=Genny&replicaSet=badChoices";
             };
             REQUIRE(factoryUri == expectedUri());
+            auto redactedUri = factory.makeRedactedUri();
+            REQUIRE(redactedUri == expectedUri());
 
             auto pool = factory.makePool();
             REQUIRE(pool);
@@ -93,6 +99,8 @@ TEST_CASE("PoolFactory behavior") {
 
             auto factoryUri = factory.makeUri();
             REQUIRE(factoryUri == expectedUri());
+            auto redactedUri = factory.makeRedactedUri();
+            REQUIRE(redactedUri == expectedUri());
 
             auto pool = factory.makePool();
             REQUIRE(pool);
@@ -112,6 +120,8 @@ TEST_CASE("PoolFactory behavior") {
 
             auto factoryUri = factory.makeUri();
             REQUIRE(factoryUri == expectedUri());
+            auto redactedUri = factory.makeRedactedUri();
+            REQUIRE(redactedUri == expectedUri());
 
             auto badSet = [&]() {
                 factory.setOption(OptionType::kAccessOption, "database", "test");
@@ -133,6 +143,8 @@ TEST_CASE("PoolFactory behavior") {
 
                 auto factoryUri = factory.makeUri();
                 REQUIRE(factoryUri == expectedUri());
+                auto redactedUri = factory.makeRedactedUri();
+                REQUIRE(redactedUri == expectedUri());
             }
 
             SECTION("Use the string option to reset the Database") {
@@ -141,6 +153,8 @@ TEST_CASE("PoolFactory behavior") {
 
                 auto factoryUri = factory.makeUri();
                 REQUIRE(factoryUri == expectedUri());
+                auto redactedUri = factory.makeRedactedUri();
+                REQUIRE(redactedUri == expectedUri());
             }
 
             SECTION("Use the flag option to flip the Database") {
@@ -149,6 +163,8 @@ TEST_CASE("PoolFactory behavior") {
 
                 auto factoryUri = factory.makeUri();
                 REQUIRE(factoryUri == expectedUri());
+                auto redactedUri = factory.makeRedactedUri();
+                REQUIRE(redactedUri == expectedUri());
             }
         }
 
@@ -162,6 +178,8 @@ TEST_CASE("PoolFactory behavior") {
 
                 auto factoryUri = factory.makeUri();
                 REQUIRE(factoryUri == expectedUri());
+                auto redactedUri = factory.makeRedactedUri();
+                REQUIRE(redactedUri == expectedUri());
             }
 
             SECTION("Overwrite with an empty string") {
@@ -171,6 +189,8 @@ TEST_CASE("PoolFactory behavior") {
 
                 auto factoryUri = factory.makeUri();
                 REQUIRE(factoryUri == expectedUri());
+                auto redactedUri = factory.makeRedactedUri();
+                REQUIRE(redactedUri == expectedUri());
             }
         }
     }
@@ -187,6 +207,8 @@ TEST_CASE("PoolFactory behavior") {
 
         auto factoryUri = factory.makeUri();
         REQUIRE(factoryUri == expectedUri());
+        auto redactedUri = factory.makeRedactedUri();
+        REQUIRE(redactedUri == expectedUri());
 
         auto pool = factory.makePool();
         REQUIRE(pool);
@@ -226,6 +248,12 @@ TEST_CASE("PoolFactory behavior") {
         auto factoryUri = factory.makeUri();
         REQUIRE(factoryUri == expectedUri());
 
+        auto expectedRedactedUri = [&]() {
+            return kProtocol + "boss:[REDACTED]@" + kHost + "/admin?appName=Genny&tls=true";
+        };
+        auto redactedUri = factory.makeRedactedUri();
+        REQUIRE(redactedUri == expectedRedactedUri());
+
         auto factoryOpts = factory.makeOptions();
 
         auto tlsOpts = *factoryOpts.client_opts().tls_opts();
@@ -237,6 +265,25 @@ TEST_CASE("PoolFactory behavior") {
 
         auto pool = factory.makePool();
         REQUIRE(pool);
+
+        // We should be able to change the value of an option.
+        // Also, PoolFactory should work with empty password.
+        auto expectedPassEmptyUri = [&]() {
+            return kProtocol + "boss:@" + kHost + "/admin?appName=Genny&tls=true";
+        };
+        factory.setOption(OptionType::kAccessOption, "Password", "");
+        auto passEmptyUri = factory.makeUri();
+        REQUIRE(passEmptyUri == expectedPassEmptyUri());
+
+        // Should hide the fact that password is empty
+        auto expectedRedactedPassEmptyUri = [&]() {
+            return kProtocol + "boss:[REDACTED]@" + kHost + "/admin?appName=Genny&tls=true";
+        };
+        auto redactedPassEmptyUri = factory.makeRedactedUri();
+        REQUIRE(redactedPassEmptyUri == expectedRedactedPassEmptyUri());
+
+        auto passEmptyPool = factory.makePool();
+        REQUIRE(passEmptyPool);
     }
 
     SECTION("Make a pool with client-side encryption enabled") {
@@ -327,6 +374,8 @@ TEST_CASE("PoolFactory behavior") {
         auto factoryUri = factory.makeUri();
         auto expectedUri = [&]() { return kSourceUri + std::string{"/?appName=Genny"}; };
         REQUIRE(factoryUri == expectedUri());
+        auto redactedUri = factory.makeRedactedUri();
+        REQUIRE(redactedUri == expectedUri());
 
         auto pool = factory.makePool();
         REQUIRE(pool);

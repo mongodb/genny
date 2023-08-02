@@ -1,0 +1,68 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+  Models the Queryable Encryption acceptance criteria workloads
+
+Encryption:
+  UseCryptSharedLib: true
+  CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so
+  EncryptedCollections:
+  - Database: genny_qebench2
+    Collection: medical
+    EncryptionType: queryable
+
+    QueryableEncryptedFields:
+      states: { type: "string", queries: [{queryType: "equality", contention: 16 }] }
+      diagnosis: { type: "string", queries: [{queryType: "equality", contention: 8 }] }
+      status: { type: "string", queries: [{queryType: "equality", contention: 16 }] }
+      credit_cards: { type: "string", queries: [{queryType: "equality", contention: 4 }] }
+      guid: { type: "string", queries: [{queryType: "equality", contention: 1 }] }
+
+Clients:
+  EncryptedPool:
+    QueryOptions:
+      maxPoolSize: 400
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_qebench2.medical
+
+
+Actors:
+  - Name: InsertActor
+    Type: CrudActor
+    Threads: 16
+    Database: genny_qebench2
+    ClientName: EncryptedPool
+    Phases:
+    - Repeat: 62500
+      Collection: {^Parameter: {Name: "Collection", Default: "medical"}}
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+            LoadConfig:
+              Path: ../contrib/qe_test_gen/maps_medical.yml
+              Key: document_insert_medical
+              Parameters:
+                Database: ignored
+                multiplier: 62500
+  
+  - Name: LoggingActor0
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      - Phase: 0..0
+        LogEvery: 5 minutes
+        Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard-lite-fle
+    branch_name:
+      $gte: v7.0

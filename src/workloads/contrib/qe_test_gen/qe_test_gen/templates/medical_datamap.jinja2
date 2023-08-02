@@ -1,0 +1,37 @@
+{% macro ingest(phase) %}
+{% with ctx = phase.context() %}
+{% include phase.generate() %}
+{% endwith %}
+{% endmacro %}
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+    Models the QE acceptance criteria workload.
+
+##############################
+########## pbl
+
+{% for phase in objFields %}
+<< ingest(phase) | indent >>
+
+{% endfor %}
+
+document_insert_medical:
+    _id:     {^Inc: {start: 1, multiplier: {^Parameter: {Name: "multiplier", Default: 0}}}}
+    schema: {^Choose: {from: ["v1", "v2", "legacy-DONOTREMOVE"]}}
+    report_date:  {^RandomDate: {min: "2015-01-01T00:00:00+05:30", max: "2023-01-01T00:00:00+05:30"}}
+    report_source_address: {^IP: {}}
+    report_provided_pkey: {^RandomString: {length: 9, alphabet: "0123456789"}}
+    flaggedForReview: {^Choose: {from: [true, false], weights: [1, 100]}}
+    patient_name: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/names.txt"}}
+    patient_dob:  {^RandomDate: {min: "1950-01-01T00:00:00+05:30", max: "2023-01-01T00:00:00+05:30"}}
+    patient_gender: {^Choose: {from: ["True", "False", "NULL"]}}
+    patient_ssn: {^RandomString: {length: 9, alphabet: "0123456789"}}
+    provider_name: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/names.txt"}}
+    service_date: {^RandomDate: {min: "2015-01-01T00:00:00+05:30", max: "2023-01-01T00:00:00+05:30"}}
+    billing_confirmation_code:  {^ObjectId: {^RandomString: {length: 24, alphabet: "0123456789ABCDEF"}}}
+    billing_date:  {^RandomDate: {min: "2015-01-01T00:00:00+05:30", max: "2023-01-01T00:00:00+05:30"}}
+    aggregate_metric_score: {^RandomDouble: {min: -1, max: 1}}
+    {% for phase in objFields %}
+    <<phase.context().field_name>>: *field_<<phase.context().field_name>>
+    {% endfor %}

@@ -97,8 +97,7 @@ Actors:
         - OperationName: AdminCommand
           OperationCommand:
             setParameter: 1
-            storageEngineConcurrencyAdjustmentAlgorithm: ""
-            storageEngineConcurrentWriteTransactions: 32
+            throughputProbingMaxConcurrency: 32
         - OperationMetricsName: LimitIndexBuildMemoryUsageCommand
           OperationName: RunCommand
           OperationCommand:
@@ -230,11 +229,7 @@ AutoRun:
       - single-replica
       - single-replica-all-feature-flags
     branch_name:
-      $neq:
-      - v4.2
-      - v4.4
-      - v5.0
-      - v6.0
+      $gte: v7.0
     infrastructure_provisioning:
       $neq:
       - graviton-single-lite.2022-11  # Instance type is slow and times out

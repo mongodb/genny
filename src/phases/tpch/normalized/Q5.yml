@@ -14,8 +14,8 @@ TPCHNormalizedQuery5Aggregation: &TPCHNormalizedQuery5Aggregation
     [
       {$lookup: {from: "orders", localField: "c_custkey", foreignField: "o_custkey", as: "orders", let: {c_nationkey: "$c_nationkey"}, pipeline: [
         {$match: {$and: [
-          {$expr: {$gte: ["$o_orderdate", {$dateFromString: {dateString: *query5Date}}]}},
-          {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {$dateFromString: {dateString: *query5Date}}, unit: "year", amount: 1}}]}}]}},
+          {$expr: {$gte: ["$o_orderdate", {^Date: *query5Date}]}},
+          {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {^Date: *query5Date}, unit: "year", amount: 1}}]}}]}},
         {$lookup: {from: "lineitem", localField: "o_orderkey", foreignField: "l_orderkey", as: "lineitem", let: {c_nationkey: "$$c_nationkey"}, pipeline: [
           {$lookup: {from: "supplier", localField: "l_suppkey", foreignField: "s_suppkey", as: "supplier", pipeline: [
             {$match: {$expr: {$eq: ["$s_nationkey", "$$c_nationkey"]}}},

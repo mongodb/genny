@@ -79,12 +79,14 @@ struct PoolFactory::Config {
         queryOptions["appName"] = "Genny";
     }
 
-    auto makeUri() const {
+    auto makeUri(bool redacted) const {
         std::ostringstream ss;
         size_t i;
 
         ss << accessOptions.at("Protocol");
-        if (!accessOptions.at("Username").empty()) {
+        if (!accessOptions.at("Username").empty() && redacted) {
+            ss << accessOptions.at("Username") << ":[REDACTED]@";
+        } else if (!accessOptions.at("Username").empty()) {
             ss << accessOptions.at("Username") << ':' << accessOptions.at("Password") << '@';
         }
 
@@ -189,7 +191,11 @@ PoolFactory::PoolFactory(std::string_view rawUri, PoolManager::OnCommandStartCal
 PoolFactory::~PoolFactory() {}
 
 std::string PoolFactory::makeUri() const {
-    return _config->makeUri();
+    return _config->makeUri(false);
+}
+
+std::string PoolFactory::makeRedactedUri() const {
+    return _config->makeUri(true);
 }
 
 mongocxx::options::pool PoolFactory::makeOptions() const {
@@ -238,13 +244,10 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
 }
 
 std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
+    BOOST_LOG_TRIVIAL(info) << "Constructing pool with MongoURI '" << makeRedactedUri() << "'";
     auto uriStr = makeUri();
-    BOOST_LOG_TRIVIAL(info) << "Constructing pool with MongoURI '" << uriStr << "'";
-
     auto uri = mongocxx::uri{uriStr};
-
     auto poolOptions = makeOptions();
-
     return std::make_unique<mongocxx::pool>(uri, poolOptions);
 }
 

@@ -15,11 +15,11 @@ TPCHNormalizedQuery3Aggregation: &TPCHNormalizedQuery3Aggregation
     [
       {$match: {$expr: {$eq: ["$c_mktsegment", *query3Segment]}}},
       {$lookup: {from: "orders", localField: "c_custkey", foreignField: "o_custkey", as: "orders", pipeline: [
-        {$match: {$expr: {$lt: ["$o_orderdate", {$dateFromString: {dateString: *query3Date}}]}}},
+        {$match: {$expr: {$lt: ["$o_orderdate", {^Date: *query3Date}]}}},
         {$project: {o_orderdate: 1, o_shippriority: 1, o_orderkey: 1}}]}},
       {$unwind: "$orders"},
       {$lookup: {from: "lineitem", localField: "orders.o_orderkey", foreignField: "l_orderkey", as: "lineitem", pipeline: [
-        {$match: {$expr: {$gt: ["$l_shipdate", {$dateFromString: {dateString: *query3Date}}]}}}]}},
+        {$match: {$expr: {$gt: ["$l_shipdate", {^Date: *query3Date}]}}}]}},
       {$unwind: "$lineitem"},
       {$group: {_id: { l_orderkey: "$lineitem.l_orderkey", o_orderdate: "$orders.o_orderdate", o_shippriority: "$orders.o_shippriority"}, revenue: {$sum: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]}}}},
       {$project: {_id: 0, l_orderkey: "$_id.l_orderkey", o_orderdate: "$_id.o_orderdate", o_shippriority: "$_id.o_shippriority", revenue: 1}},

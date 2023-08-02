@@ -1174,6 +1174,36 @@ private:
     const UniqueGenerator<int64_t> _date;
 };
 
+/** `{^BinData: {numBytes: 32}}` */
+class BinDataGenerator : public Generator<bsoncxx::types::b_binary> {
+private:
+    using bintype = bsoncxx::binary_sub_type;
+
+public:
+    BinDataGenerator(const Node& node, GeneratorArgs generatorArgs,
+                     const bintype binDataType = bintype::k_binary)
+        : _node{node}, _binData(genRandBinData(node, binDataType)) {}
+
+    bsoncxx::types::b_binary evaluate() override {
+        return _binData;
+    }
+
+    bsoncxx::types::b_binary genRandBinData(const Node& node, const bintype binDataType) {
+        int64_t numBytes = node["numBytes"].maybe<int64_t>().value_or(32);
+        uint8_t bytesArr[numBytes];
+        for (int i = 0; i < numBytes; i++) {
+            bytesArr[i] = rand();
+        }
+        return bsoncxx::types::b_binary{binDataType,
+                                        static_cast<uint32_t>(sizeof(bytesArr)),
+                                        bytesArr};
+    }
+
+private:
+    bsoncxx::types::b_binary _binData;
+    const Node& _node;
+};
+
 /** `{^IncDate: {start: "2022-01-01", step: 10000, multiplier: 0}}` */
 class IncDateGenerator : public Generator<bsoncxx::types::b_date> {
 public:
@@ -1746,6 +1776,16 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^FixedGeneratedValue",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers, 1);
+     }},
+    {"^BinData",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         return std::make_unique<BinDataGenerator>(node, generatorArgs);
+     }},
+    {"^BinDataSensitive",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         // TODO: PERF-4467 Update this to bsoncxx::binary_sub_type::sensitive.
+         return std::make_unique<BinDataGenerator>(
+            node, generatorArgs, bsoncxx::binary_sub_type(0x8));
      }},
 };
 

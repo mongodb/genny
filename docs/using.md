@@ -1,5 +1,7 @@
+# Using Genny
+[go/using-genny](http://go/using-genny)
 
-# Table of Contents
+## Table of Contents
 
 1.  [Introduction](#orgf1f92f6)
 2.  [Getting Started and Building](#org35e6dff)
@@ -399,7 +401,7 @@ You can also use the `translate` subcommand to convert results to a [t2-readable
 
 If you are running Genny through DSI in Evergreen, the FTDC contents are rolled up into summary statistics like `OperationThroughput` and such, viewable in the Evergreen perf UI. 
 
-If you are running Genny locally, you can use `src/workloads/contrib/analysis/perf_results_summary.py` to print a summary of the most recent run (or any `CedarMetrics` directory) to the console. For example,
+If you are running Genny locally, you can use `src/workloads/contrib/analysis/test_results_summary.py` to print a summary of the most recent run (or any `CedarMetrics` directory) to the console. For example,
 
 ```
 python src/workloads/contrib/analysis/test_result_summary.py -m throughput timers.dur -a ".*Sleep.*" -b 3
@@ -429,7 +431,7 @@ Try using `python test_results_summary.py --help` for more options.
 ## Workload Development
 
 1.  Create a yaml file in `./src/workloads` in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in `./src/phases` (and for more details about what that means, see [here](#org2078b23)). Consider whether existing Actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [here](#org7e6c6bd).
-    
+
     ```bash
     vim src/workloads/[workload_dir]/[workload_name.yml]
     vim src/phases/[phase_dir]/[phases_name.yml] # Only necessary if creating external configuration
@@ -437,23 +439,30 @@ Try using `python test_results_summary.py --help` for more options.
     ```
 
 2.  Run the self-tests:
-    
+
     ```bash
 	./run-genny lint-yaml  # Lint all YAML files
 	./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
 	./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
     ```
-		
+
     Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
 
-3.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
-    
+3.  (Optional) To double-check which Actors run in each Phase, run your workload in dry-run mode with `debug` log level.
+This would set up the workload and print it as a list of Phases with the Actors that run in each Phase, then quit:
+
+    ```bash
+    ./run-genny workload --dry-run --verbosity debug src/workloads/[workload_dir/workload_name.yml]
+    ```
+
+4.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
+
     ```bash
     ./run-genny workload -u [connection_uri] src/workloads/[workload_dir/workload_name.yml]
     ```
 
-4.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](./run-dsi onboarding  # introductory DSI command; see link above for details) for details:
-    
+5.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](go/running-dsi-locally) for details:
+
 	```bash
 	./run-dsi onboarding  # introductory DSI command; see link above for details
 	cd WORK
@@ -462,17 +471,17 @@ Try using `python test_results_summary.py --help` for more options.
 	vim bootstrap.yml
 	```
 
-5.  Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
-    
+6.  Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
+
 	```bash
 	cd ~/[path_to_evg_project_repo]
 	evergreen patch -p [evg_project]
 	cd ~/[path_to_genny]/genny
 	evergreen patch-set-module -i [patch_id_number] -m genny
 	```
-	
+
 	The `evg_project` above should correspond to the Evergreen project being tested. For example, `sys-perf`.
-    
+
     You can then select `schedule_patch_auto_tasks` on a variant to schedule any modified or new Genny tasks created by AutoRun. Alternatively, you could select `schedule_variant_auto_tasks` to schedule all Genny tasks on that variant.
 
 For more details on workload development, please check out our general docs on [Developing and Modifying Workloads](https://github.com/10gen/performance-tooling-docs/blob/main/new_workloads.md) and on [Basic Performance Patch Testing](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md).
@@ -512,7 +521,7 @@ Examples with these and other Actors can be found in [./src/workloads/docs](../s
 
 AutoRun is a utility to allow workload authors to determine scheduling of their workloads without having to commit to a separate repo. The utility is specifically designed for users who are using DSI through Evergreen. To use AutoRun, make sure your project has integrated DSI with Evergreen as explained [here](https://github.com/10gen/dsi/wiki/DSI-In-Evergreen).
 
-AutoRun searches in `./src/*/src/workloads` and assumes that all repos, including Genny itself, are checked out in `./src`.
+AutoRun searches in `[workspace]/src/*/src/workloads` and assumes that all workload repos, including Genny itself, are checked out in `[workspace]/src`.
 
 After performing the above integration, your Evergreen project should have a `schedule_variant_auto_tasks` task on each variant, which can be used to schedule all Genny workloads that are configured to run on this variant. There will also be the `schedule_patch_auto_tasks` task which will schedule any new or modified Genny workloads. If you want to run an unmodified workload, make a small edit (such as inserting whitespace) to force it to be picked up by that latter task.
 

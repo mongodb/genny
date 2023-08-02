@@ -1,0 +1,131 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload tests performance of IDHACK on queries with int _id. Since this workloads loads
+  very large documents (average 10KB), you may need to free up disk space before running this
+  workload locally.
+
+KeyWords:
+- IDHACK
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 2000
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  MaxPhases: &MaxPhases 5
+
+ActorTemplates:
+- TemplateName: IDHACK
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "IDHackQuery"}}
+    Type: CrudActor
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 30 seconds
+          Database: *Database
+          Collection: *Collection
+          Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}
+
+Actors:
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+- Name: LoadIntIDs
+  Type: Loader
+  Threads: 10
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: 1000000
+        BatchSize: 1000
+        Document:
+          _id: {^Inc: {start: -200000, multiplier: 100000}}
+          extraData: {^Object: {
+            withNEntries: {^RandomInt: {min: 5, max: 1000}},
+            havingKeys: {^RandomString: {length: 10}},
+            andValues: 0,
+            duplicatedKeys: skip
+          }}
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHack32Threads
+      Threads: 32
+      OnlyActiveInPhase: 3
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHack128Threads
+      Threads: 128
+      OnlyActiveInPhase: 4
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHack256Threads
+      Threads: 256
+      OnlyActiveInPhase: 5
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-all-feature-flags
+      - standalone-query-stats
+      - standalone
+      - standalone-query-stats-small-rate-limit
+      - shard
+      - shard-query-stats
+      - shard-limited-query-stats
+      - shard-lite
+      - shard-lite-query-stats
+      - shard-lite-limited-query-stats
+      - single-replica
+      - single-replica-query-stats
+      - replica
+      - replica-query-stats
+      - atlas-like-replica.2022-10
+      - atlas-like-replica-query-stats.2022-10

@@ -199,7 +199,7 @@ def evaluate(
     help=("Filepath where the output CSV will be written. Will write to stdout by default."),
 )
 @click.pass_context
-def evaluate(ctx: click.Context, ftdc_path: str, output):
+def export_ftdc_to_csv(ctx: click.Context, ftdc_path: str, output):
     from genny.curator import export
 
     export(
@@ -254,6 +254,13 @@ def clean(ctx: click.Context) -> None:
     help=("Regex to match against tests."),
 )
 @click.option(
+    "-E",
+    "--regex-exclude",
+    required=False,
+    default=None,
+    help=("Exclude tests names of which match this regex."),
+)
+@click.option(
     "-r",
     "--repeat-until-fail",
     required=False,
@@ -263,13 +270,14 @@ def clean(ctx: click.Context) -> None:
     ),
 )
 @click.pass_context
-def cmake_test(ctx: click.Context, regex: str, repeat_until_fail: int) -> None:
+def cmake_test(ctx: click.Context, regex: str, regex_exclude: str, repeat_until_fail: int) -> None:
     from genny.tasks import run_tests
 
     run_tests.cmake_test(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
         regex=regex,
+        regex_exclude=regex_exclude,
         repeat_until_fail=repeat_until_fail,
     )
 
@@ -343,7 +351,7 @@ def benchmark_test(ctx: click.Context) -> None:
 @click.pass_context
 def workload(
     ctx: click.Context,
-    workload_yaml: str,
+    workload_yaml: tuple[str],
     mongo_uri: str,
     verbosity: str,
     override: str,

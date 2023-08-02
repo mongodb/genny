@@ -100,7 +100,8 @@ def _compute_toolchain_info(
     ignore_toolchain_version: bool,
 ) -> ToolchainInfo:
     triplet_arch = "x64"
-    if linux_distro == "amazon2_arm64":
+    if len(linux_distro) > 6 and linux_distro[-6:] == "_arm64":
+        # assumes all arm64 linux distros have this suffix, e.g. 'ubuntu2204_arm64'
         triplet_arch = "arm64"
     if os_family == "Darwin":
         triplet_arch = "arm64" if platform.processor() == "arm" else "x64"
@@ -183,15 +184,22 @@ def toolchain_info(
 
 
 class ToolchainDownloader(Downloader):
-    # These build IDs are from the genny-toolchain Evergreen task.
-    # https://evergreen.mongodb.com/waterfall/genny-toolchain
-    # Find a compile task (for any build variant) and modify the URL:
-    # genny_toolchain_archlinux_t_compile_82eb7c32ad09726f3ef0ddc8d7f24a18b03d9644_21_11_23_16_37_21
-    # =>                                  82eb7c32ad09726f3ef0ddc8d7f24a18b03d9644_21_11_23_16_37_21
+    # These build IDs are from the genny-toolchain Evergreen task (which pulls from 10gen/vcpkg repo)
+    # Old UI: https://evergreen.mongodb.com/waterfall/genny-toolchain
+    # New UI: https://spruce.mongodb.com/commits/genny-toolchain
+    #
+    # Find a compile task (for any build variant) and get TOOLCHAIN_BUILD_ID from URL
+    # https://spruce.mongodb.com/task/genny_toolchain_<$build-variant>_t_compile_<$TOOLCHAIN_BUILD_ID>
+    # Example for merged PR build on archlinux variant:
+    # https://spruce.mongodb.com/task/genny_toolchain_archlinux_t_compile_82eb7c32ad09726f3ef0ddc8d7f24a18b03d9644_21_11_23_16_37_21
+    # =>                                                                  82eb7c32ad09726f3ef0ddc8d7f24a18b03d9644_21_11_23_16_37_21
+    # Example for patch build on macos_1100_arm64 variant:
+    # https://spruce.mongodb.com/task/genny_toolchain_macos_1100_arm64_t_compile_patch_87457e6fec1d98f270c84d915f83bec53554ecee_6451d23fc9ec4441c9ce233d_23_05_03_03_17_20
+    # =>                                                                         patch_87457e6fec1d98f270c84d915f83bec53554ecee_6451d23fc9ec4441c9ce233d_23_05_03_03_17_20
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
 
-    TOOLCHAIN_BUILD_ID = "ae2e01a2da9996a364cf01ecafd90c1f4d893829_23_02_06_21_45_41"
+    TOOLCHAIN_BUILD_ID = "c0f42baafd4845b1f77e0cc19875eba3660d64ba_23_05_17_14_21_03"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
 
     def __init__(

@@ -67,7 +67,7 @@ Actors:
       OperationCommand:
         Filter: {}
         Update: {$inc: {i: 1}}
-        Options:
+        OperationOptions:
           WriteConcern:
             Level: 1
 
@@ -76,9 +76,13 @@ AutoRun:
     mongodb_setup:
       $eq:
       - atlas
+      - atlas-like-replica.2022-10
       - replica
       - replica-noflowcontrol
       - replica-1dayhistory-15gbwtcache
       - replica-all-feature-flags
       - single-replica
       - standalone
+    atlas_setup:
+      $neq:
+      - M30-repl

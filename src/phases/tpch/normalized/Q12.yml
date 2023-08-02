@@ -19,10 +19,10 @@ TPCHNormalizedQuery12Aggregation: &TPCHNormalizedQuery12Aggregation
           {$or: [{l_shipmode: *query12ShipMode1}, {l_shipmode: *query12ShipMode2}]},
           {$expr: {$lt: ["$l_commitdate", "$l_receiptdate"]}},
           {$expr: {$lt: ["$l_shipdate", "$l_commitdate"]}},
-          {$expr: {$gte: ["$l_receiptdate", {$dateFromString: {dateString: *query12Date}}]}},
+          {$expr: {$gte: ["$l_receiptdate", {^Date: *query12Date}]}},
           {$expr: {$lt: [
             "$l_receiptdate",
-            {$dateAdd: {startDate: {$dateFromString: {dateString: *query12Date}}, unit: "year", amount: 1}}]}}]}},
+            {$dateAdd: {startDate: {^Date: *query12Date}, unit: "year", amount: 1}}]}}]}},
       {$lookup: {from: "orders", localField: "l_orderkey", foreignField: "o_orderkey", as: "orders"}},
       {$unwind: "$orders"},
       {$group: {

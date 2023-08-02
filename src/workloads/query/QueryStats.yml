@@ -1,0 +1,242 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload tests performance of $queryStats with and without applying HMAC.
+
+KeyWords:
+- queryStats
+- redaction
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  DocumentCount: &DocumentCount 1e6
+  MaxPhases: &MaxPhases 8
+  nop: &Nop {Nop: true}
+  dbname: &db test
+  binDataGen: &binDataGen {^BinDataSensitive: {numBytes: 32}}
+
+ActorTemplates:
+- TemplateName: QueryStatsAggregation
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "QueryStatsAggregation"}}
+    Type: AdminCommand
+    # TODO SERVER-76597 Consider a higher value here. Until then, using a high value could cause OOM
+    # issues.
+    Threads: 2
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 1 minute
+          SleepBefore: 5 seconds
+          Database: admin
+          Operations:
+          - OperationMetricsName: QueryStatsMetrics
+            OperationName: AdminCommand
+            OperationCommand:
+              aggregate: 1
+              pipeline: [
+                {
+                  $queryStats: {^Parameter: {Name: "queryStatsParameters", Default: {}}}
+                },
+                # The purpose of $count is to ensure we've exhausted the cursor/ data stream and looked at each partition.
+                {
+                  $count: "numDocuments"
+                }
+              ]
+              cursor: {}
+
+Actors:
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            # Configuring the queryStats store size to an arbitrary value which seems reasonable.
+            # This ensures that if run on different sized machines, the test will remain the same.
+            setParameter: 1
+            internalQueryStatsCacheSize: 250MB
+
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: *DocumentCount
+        BatchSize: 1000
+        Document:
+          a1: &integer {^RandomInt: {min: -100, max: 100}}
+          a2: *integer
+          string: &string {^RandomString: {length: 5}}
+        Indexes:
+          - keys: {a1: 1, a2: 1}
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+
+- Name: FindCommand
+  Type: CrudActor
+  Threads: 32
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            # This will create a find command with a random number of fields from 3 to 350, to create varying query shapes and sizes.
+            Filter:
+              {$and:
+                [{a1: 1}, {a2: 1}, {^Object: {
+                  withNEntries: {^RandomInt: {min: 1, max: 350}},
+                  havingKeys: {^RandomString: {length: 10}},
+                  andValues: {$exists: false},
+                  duplicatedKeys: skip
+                }}]
+              }
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+
+- Name: FindConcurrentlyWithQueryStatsWithHMAC
+  Type: CrudActor
+  Threads: 32
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter:
+              {$and:
+                [{a1: 1}, {a2: 1}, {^Object: {
+                  withNEntries: {^RandomInt: {min: 1, max: 350}},
+                  havingKeys: {^RandomString: {length: 10}},
+                  andValues: {$exists: false},
+                  duplicatedKeys: skip
+                }}]
+              }
+
+# QueryStats with HMAC.
+- ActorFromTemplate:
+    TemplateName: QueryStatsAggregation
+    TemplateParameters:
+      Name: "QueryStatsAggregationWithHMAC"
+      queryStatsParameters: {transformIdentifiers: {algorithm: "hmac-sha-256", hmacKey: *binDataGen}}
+      OnlyActiveInPhase: 6
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+
+- Name: FindConcurrentlyWithQueryStatsWithoutHMAC
+  Type: CrudActor
+  Threads: 32
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [8]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter:
+              {$and:
+                [{a1: 1}, {a2: 1}, {^Object: {
+                  withNEntries: {^RandomInt: {min: 1, max: 350}},
+                  havingKeys: {^RandomString: {length: 10}},
+                  andValues: {$exists: false},
+                  duplicatedKeys: skip
+                }}]
+              }
+
+# QueryStats without HMAC.
+- ActorFromTemplate:
+    TemplateName: QueryStatsAggregation
+    TemplateParameters:
+      Name: "QueryStatsAggregationWithoutHMAC"
+      queryStatsParameters: {}
+      OnlyActiveInPhase: 8
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-all-feature-flags
+      - standalone-query-stats
+      - standalone-query-stats-small-rate-limit
+      - single-replica-query-stats
+      - replica-query-stats
+      - atlas-like-replica-query-stats.2022-10

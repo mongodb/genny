@@ -1,0 +1,14 @@
+- Repeat: <<ctx.iterationsPerThread>>
+  Collection: {^Parameter: {Name: "Collection", Default: "<<collectionName>>"}}
+  MetricsName: "load"
+  Operations:
+  - OperationName: insertOne
+    OperationMetricsName: inserts
+    OperationCommand:
+      Document:
+        LoadConfig:
+          Path: ../contrib/qe_test_gen/maps_<<collectionName>>.yml
+          Key: document_insert_<<collectionName>>
+          Parameters:
+            Database: ignored
+            multiplier: <<ctx.iterationsPerThread>>

@@ -187,11 +187,16 @@ AutoRun:
     mongodb_setup:
       $eq:
       - atlas
+      - atlas-like-replica.2022-10
       - replica
       - single-replica
       - standalone
       - standalone-classic-query-engine
       - standalone-sbe
+      - standalone-query-stats
+    atlas_setup:
+      $neq:
+      - M30-repl
     branch_name:
       $neq:
       - v4.0
