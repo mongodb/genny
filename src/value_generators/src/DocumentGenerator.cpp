@@ -17,15 +17,14 @@
 #include <value_generators/FrequencyMap.hpp>
 
 #include <cmath>
-#include <deque>
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <limits>
 #include <map>
-#include <set>
 #include <sstream>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/date_time.hpp>
