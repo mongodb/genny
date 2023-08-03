@@ -124,7 +124,7 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
     return actors;
 }
 
-mongocxx::pool::entry WorkloadContext::client(const std::string& name, size_t instance) {
+mongocxx::pool::entry WorkloadContext::get_warmed_up_client(const std::string& name, size_t instance) {
     return _poolManager.create_warmed_up_client(name, instance, this->_node);
 }
 

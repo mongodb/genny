@@ -285,7 +285,7 @@ public:
      * @throws
      *   InvalidConfigurationException if no connections available.
      */
-    mongocxx::pool::entry client(const std::string& name = "Default", size_t instance = 0);
+    mongocxx::pool::entry get_warmed_up_client(const std::string& name = "Default", size_t instance = 0);
 
     /**
      * Get states that can be shared across actors using the same WorkloadContext.
@@ -533,7 +533,7 @@ public:
      */
     template <class... Args>
     mongocxx::pool::entry client(Args&&... args) {
-        return this->_workload->client(std::forward<Args>(args)...);
+        return this->_workload->get_warmed_up_client(std::forward<Args>(args)...);
     }
 
     /**

@@ -72,7 +72,7 @@ public:
     }
 
     auto client() {
-        return workload()->client("Default");
+        return workload()->get_warmed_up_client("Default");
     }
 
     WorkloadContext* workload() {
