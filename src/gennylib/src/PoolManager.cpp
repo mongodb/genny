@@ -57,13 +57,13 @@ auto createPool(const std::string& name,
 mongocxx::pool::entry genny::v1::PoolManager::create_warmed_up_client(const std::string& name,
                                                                    size_t instance,
                                                                    const Node& context) {
-    auto pool_entry = this->_client(name, instance, context);
+    auto pool_entry = this->_create_client(name, instance, context);
     pool_entry->list_databases();  // warm up the connection before returning it
     return pool_entry;
 }
 
 
-mongocxx::pool::entry genny::v1::PoolManager::_client(const std::string& name,
+mongocxx::pool::entry genny::v1::PoolManager::_create_client(const std::string& name,
                                                       size_t instance,
                                                       const Node& context) {
     // Only one thread can access pools.operator[] at a time...

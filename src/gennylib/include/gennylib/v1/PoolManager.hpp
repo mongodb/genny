@@ -169,7 +169,7 @@ private:
     std::unique_ptr<EncryptionManager> _encryptionManager;
 
     /** Helper method for `create_warmed_up_client()` */
-    mongocxx::pool::entry _client(const std::string& name, size_t instance, const Node& context);
+    mongocxx::pool::entry _create_client(const std::string& name, size_t instance, const Node& context);
 };
 
 }  // namespace genny::v1
