@@ -213,7 +213,7 @@ Tests:
   - Name: Array Generator fails if it no longer makes progress when distinct flag is set
     GivenTemplate:
       a:
-        {^Array: {of: {^Repeat: {fromGenerator: {^Inc: {start: 1, max: 10}}, count: 5}}, number: 100}, distinct: true}
+        {^Array: {of: {^Repeat: {fromGenerator: {^Inc: {start: 1, max: 10}}, count: 5}}, number: 100, distinct: true}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Object Generator

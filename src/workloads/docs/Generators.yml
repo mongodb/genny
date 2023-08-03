@@ -254,18 +254,18 @@ Actors:
             # You can also filter items out, similar to a set, by setting `distinct` = true.
             # For example, you can generate N distinct random integers.
             distinctSeq10Ints: {^Array: {of: {^Repeat: {count: 10, fromGenerator: {
-              ^Inc: {start: 0, end: 1000}}, number: 10, distinct: true}}}}
+              ^Inc: {start: 0, end: 1000}}}}, number: 10, distinct: true}}
 
             # Just be careful, the generator will give up if the failure rate gets too high, such as
             # with this next generator.
             distinctSeqFailure: {^Array: {of: {^Repeat: {count: 10000, fromGenerator: {
-              ^Inc: {start: 0, end: 1000}}, number: 10, distinct: true}}}}
+              ^Inc: {start: 0, end: 1000}}}}, number: 10, distinct: true}}
 
             # A good rule of thumb is that you should be selecting less than 50% of your range.
             # You're not limited to integers, though! You can also filter doubles, strings, even
             # documents and arrays.
             distinctSeq10Strings: {^Array: {of: {^Repeat: {count: 10, fromGenerator: {
-                ^FastRandomString: {length: 10}}, number: 10, distinct: true}}}}
+                ^FastRandomString: {length: 10}}}}, number: 10, distinct: true}}
 
             # Concatenate constant arrays and generated arrays together.
             combinedArrays: {^Concat: {arrays: [[1, 1], [2, 3, 5]]}}
