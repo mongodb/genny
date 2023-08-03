@@ -1409,26 +1409,56 @@ public:
           _node{node},
           _generatorArgs{generatorArgs},
           _valueGen{valueGenerator<false, UniqueAppendable>(node["of"], generatorArgs, parsers)},
-          _nTimesGen{intGenerator(extract(node, "number", "^Array"), generatorArgs)},
+          _nItemsGen{intGenerator(extract(node, "number", "^Array"), generatorArgs)},
           _distinct {node["distinct"] ? node["distinct"].maybe<bool>().value_or(false) : false} {}
 
     bsoncxx::array::value evaluate() override {
         bsoncxx::builder::basic::array builder{};
-        auto times = _nTimesGen->evaluate();
+        const auto nItems = _nItemsGen->evaluate();
+        /* If _distinct is true, then the generated array must contain unique items.
+         *
+         * Uniqueness for individual elements is based on the hash value (as defined in
+         * Appendable::SetHasher) and the == operator (as defined in Appendable::SetKeyEq).
+         *
+         * An unordered set is used to check for uniqueness. To simplify the implementation, we wrap
+         * all generated values in a `bsoncxx::array::value` to store in the set by appending to a
+         * temporary array builder (`tempBuilder`) and extracting the singular array element.
+         *
+         * A failed insertion into the set indicates that the value is duplicate, and we ignore it
+         * and do not add it to the builder. We keep pulling values from _valueGen until either we
+         * have `number` unique elements or pulled duplicate values `consecutiveRepeatsThreshold`
+         * times in a row. In the latter case, we assume that we are unlikely to find `number`
+         * unique elements in a reasonable amount of time, if at all, so we throw an exception.
+         *
+         * If a value is unique, we insert it into `builder`. Since the underlying BSON value can be
+         * any arbitrary BSON value type, we use a strategy employed by the BSON CXX driver library
+         * to extract the underlying BSON value with a switch-case statement and append it to
+         * `builder`.
+         */
         if (_distinct) {
-            // Choose initial bucket size of 2N to minimize hash collisions and resizes.
-            std::unordered_set<bsoncxx::array::value, SetHasher, SetKeyEq> distinctValues(2 * times);
+            // Choose initial bucket size of 2 * nItems to minimize hash collisions and resizes.
+            std::unordered_set<bsoncxx::array::value, SetHasher, SetKeyEq> distinctValues(2 * nItems);
+            // `consecutiveRepeats` and its corresponding threshold are used to set an upper bound
+            // on how hard we should try to pull unique values before we give up.
             int8_t consecutiveRepeats = 0;
             const int8_t consecutiveRepeatsThreshold = 100;
 
-            while (distinctValues.size() < times) {
-                bsoncxx::builder::basic::array sbuilder{};
-                _valueGen->append(sbuilder);
-                auto [itr, succeeded] = distinctValues.insert(sbuilder.extract());
+            while (distinctValues.size() < nItems) {
+                // Use the Appendable visitor pattern to generate a value.
+                bsoncxx::builder::basic::array tempBuilder{};
+                _valueGen->append(tempBuilder);
 
+                // Extract the value as an array::element and attempt to insert it into our set.
+                auto [itr, succeeded] = distinctValues.insert(tempBuilder.extract());
+
+                // Success indicates that the value is unique.
                 if (succeeded) {
+                    // Since there's only one element in the array, we just use the first element.
                     auto& element = *itr->view().begin();
-                    // Stolen shamelessly from the CXX driver library (bsoncxx/types/bson_value/view.cpp).
+                    // Shamelessly stolen from the CXX driver library (bsoncxx/types/bson_value/view.cpp).
+                    // This will generate a case for each BSON value type, call the correct accessor
+                    // function, and append it to `builder`. It would be much nicer if this were
+                    // implemented with std::variant<>, so that we can use std::visit, but alas.
                     switch (static_cast<int>(element.type())) {
 #define BSONCXX_ENUM(type, val)                                     \
                         case val: {                                 \
@@ -1438,8 +1468,10 @@ public:
 #include <bsoncxx/enums/type.hpp>
 #undef BSONCXX_ENUM
                     }
-                    consecutiveRepeats = 0;
+                    // End of shameless stealing.
+                    consecutiveRepeats = 0;  // Reset repetition counter.
                 } else if (++consecutiveRepeats > consecutiveRepeatsThreshold) {
+                    // If we hit the threshold, we just give up.
                     std::stringstream msg;
                     msg << "Repeatedly failed to find a new distinct value "
                         << consecutiveRepeats << " times. Terminating distinct array value "
@@ -1449,7 +1481,7 @@ public:
                 }
             }
         } else {
-            for (int i = 0; i < times; ++i) {
+            for (int i = 0; i < nItems; ++i) {
                 _valueGen->append(builder);
             }
         }
@@ -1461,7 +1493,7 @@ private:
     const Node& _node;
     const GeneratorArgs& _generatorArgs;
     const UniqueAppendable _valueGen;
-    const UniqueGenerator<int64_t> _nTimesGen;
+    const UniqueGenerator<int64_t> _nItemsGen;
     const bool _distinct;
 };
 
