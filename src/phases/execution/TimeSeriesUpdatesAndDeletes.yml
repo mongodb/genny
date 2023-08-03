@@ -15,7 +15,7 @@ Description: |
 GlobalDefaults:
   dbname: &db test
   coll: &coll Collection0
-  nSensors: &nSensors 10
+  nSensors: &nSensors 1000
   nBucketsPerSensor: &nBucketsPerSensor 100
   # (One-hour time span per bucket (3600 seconds)) / (36000 milliseconds (36 seconds) increment per
   # measurement) = 100 measurements per bucket.
