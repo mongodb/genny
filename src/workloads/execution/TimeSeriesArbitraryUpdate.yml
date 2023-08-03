@@ -6,132 +6,50 @@ Description: |
   We have 1000 independent sensors which will each have 100 buckets, and each bucket has 100
   measurements.
 
-  The buckets have the meta field, 'sensorId', with values from 0 to 999, each of which has 100
-  measurements with timestamps within an hour with 36-second intervals. For example, in a bucket,
-  the measurements look like:
-  {t: 2023-01-01T5:00:00, m: 42, ...},
-  {t: 2023-01-01T5:00:36, m: 42, ...},
-  ...
-  {t: 2023-01-01T5:59:24, m: 42, ...}
-
   Then we update a metric field of some measurements, filtered by the '_id' field. This simulates
   the use case where users want to correct fields of some measurements.
-
-GlobalDefaults:
-  dbname: &db test
-  coll: &coll Collection0
-  nSensors: &nSensors 1000
-  nBucketsPerSensor: &nBucketsPerSensor 100
-  # (One-hour time span per bucket (3600 seconds)) / (36000 milliseconds (36 seconds) increment per
-  # measurement) = 100 measurements per bucket.
-  nMeasurementsPerBucket: &nMeasurementsPerBucket 100
-  nTotalMeasurements: &nTotalMeasurements
-    ^NumExpr:
-      withExpression: "nSensors * nBucketsPerSensor * nMeasurementsPerBucket"
-      andValues: {
-        nSensors: *nSensors,
-        nBucketsPerSensor: *nBucketsPerSensor,
-        nMeasurementsPerBucket: *nMeasurementsPerBucket
-      }
-  nop: &Nop {Nop: true}
-  MaxPhases: &MaxPhases 4
 
 Actors:
 - Name: CreateTimeSeriesCollection
   Type: RunCommand
   Threads: 1
   Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Operation:
-          OperationName: RunCommand
-          OperationCommand:
-            # Each bucket holds data within one hour time span.
-            {
-              create: *coll,
-              timeseries: {timeField: "t", metaField: "sensorId", granularity: "seconds"}
-            }
+    LoadConfig:
+      Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
+      Key: CreateTimeSeriesCollection
 
 - Name: InsertData
   Type: Loader
   Threads: 1
   Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Collection: *coll
-        Threads: 1
-        CollectionCount: 1
-        DocumentCount: *nTotalMeasurements
-        BatchSize: 30000
-        Document:
-          _id: {^Inc: {start: 0}}
-          # This generates data that look like:
-          # [2023-01-01T00:00:00 * 1000, 2023-01-01T00:00:36 * 1000, ...]
-          t:
-            {
-              ^Repeat:
-                {count: *nSensors, fromGenerator: {^IncDate: {start: "2023-01-01", step: 36000}}}
-            }
-          # This generates data that look like:
-          # [0, 1, ... 999, 0, 1, ..., 999, ...]
-          sensorId: {^Cycle: {ofLength: *nSensors, fromGenerator: {^Inc: {start: 0}}}}
-          score: {^RandomDouble: {min: 0, max: 1}}
-          temperature: {^RandomInt: {min: 0, max: 100}}
-          humidity: {^RandomDouble: {min: 0, max: 1}}
+    LoadConfig:
+      Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
+      Key: InsertData
 
 - Name: Quiesce
   Type: QuiesceActor
   Threads: 1
-  Database: *db
+  Database: test
   Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
+    LoadConfig:
+      Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
+      Key: Quiesce
 
 - Name: ArbitraryUpdate
   Type: CrudActor
   Threads: 1
-  Database: *db
   Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1000
-        Collection: *coll
-        Operation:
-          OperationName: bulkWrite
-          OperationCommand:
-            WriteOperations:
-            - WriteCommand: updateMany
-              Filter: {_id: {^RandomInt: {min: 0, max: *nTotalMeasurements}}}
-              Update: {$set: {score: {^RandomDouble: {min: 0, max: 1}}}}
-
+    LoadConfig:
+      Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
+      Key: ArbitraryUpdate
 
 - Name: CleanUp
   Type: RunCommand
   Threads: 1
   Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Operation:
-          OperationName: RunCommand
-          OperationCommand:
-            drop: *coll
+    LoadConfig:
+      Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
+      Key: CleanUp
 
 AutoRun:
 - When:
@@ -142,10 +60,4 @@ AutoRun:
       - shard-lite-all-feature-flags
       - replica-all-feature-flags
     branch_name:
-      $neq:
-      - v4.2
-      - v4.4
-      - v5.0
-      - v6.0
-      - v6.3
-      - v7.0
+      $gte:  v7.1
