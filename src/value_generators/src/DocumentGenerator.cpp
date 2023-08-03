@@ -1419,6 +1419,8 @@ public:
             // Choose initial bucket size of 2N to minimize hash collisions and resizes.
             std::unordered_set<bsoncxx::array::value, SetHasher, SetKeyEq> distinctValues(2 * times);
             int8_t consecutiveRepeats = 0;
+            const int8_t consecutiveRepeatsThreshold = 100;
+
             while (distinctValues.size() < times) {
                 bsoncxx::builder::basic::array sbuilder{};
                 _valueGen->append(sbuilder);
@@ -1437,8 +1439,7 @@ public:
 #undef BSONCXX_ENUM
                     }
                     consecutiveRepeats = 0;
-                } else if (++consecutiveRepeats > 100) {
-                    // Rate of failure: 100% of the past N pulls.
+                } else if (++consecutiveRepeats > consecutiveRepeatsThreshold) {
                     std::stringstream msg;
                     msg << "Repeatedly failed to find a new distinct value "
                         << consecutiveRepeats << " times. Terminating distinct array value "
