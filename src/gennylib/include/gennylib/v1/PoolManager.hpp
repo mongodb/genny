@@ -114,7 +114,7 @@ public:
 
     /**
      *  Connection/query-string parameters can be added via `Clients` configuration
-     *  passed in when calling `client()`.
+     *  passed in when calling `create_warmed_up_client()`.
      *  See PoolFactory for how this can be configured.
      *
      * @param callback
@@ -143,7 +143,7 @@ public:
      *   the WorkloadContext used to look up the configurations
      * @return a connection from the pool or throw if none available
      */
-    mongocxx::pool::entry client(const std::string& name, size_t instance, const Node& context);
+    mongocxx::pool::entry create_warmed_up_client(const std::string& name, size_t instance, const Node& context);
 
     // Only used for testing
     /** @private */
@@ -168,7 +168,7 @@ private:
     /** manages global key vaults & creates encryption contexts per pool */
     std::unique_ptr<EncryptionManager> _encryptionManager;
 
-    /** Helper method for client() */
+    /** Helper method for `create_warmed_up_client()` */
     mongocxx::pool::entry _client(const std::string& name, size_t instance, const Node& context);
 };
 

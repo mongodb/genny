@@ -54,9 +54,9 @@ auto createPool(const std::string& name,
 }  // namespace genny::v1
 
 
-mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
-                                                     size_t instance,
-                                                     const Node& context) {
+mongocxx::pool::entry genny::v1::PoolManager::create_warmed_up_client(const std::string& name,
+                                                                   size_t instance,
+                                                                   const Node& context) {
     auto pool_entry = this->_client(name, instance, context);
     pool_entry->list_databases();  // warm up the connection before returning it
     return pool_entry;
@@ -75,7 +75,7 @@ mongocxx::pool::entry genny::v1::PoolManager::_client(const std::string& name,
     }
 
     // ...but no need to keep the lock open past this.
-    // Two threads trying access client("foo",0) at the same
+    // Two threads trying access _client("foo",0) at the same
     // time will subsequently block on the unique_lock.
     getLock.unlock();
 

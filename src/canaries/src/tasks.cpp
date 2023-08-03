@@ -20,6 +20,6 @@ Singleton::Singleton(std::string mongoUri)
             PingTask:
               URI: )" + mongoUri, ""
       },
-      client{_poolManager.client("PingTask", 1, ns.root())},
+      client{_poolManager.create_warmed_up_client("PingTask", 1, ns.root())},
       pingCmd{make_document(kvp("ping", 1))} {};
 }  // namespace genny::canaries::ping_task
