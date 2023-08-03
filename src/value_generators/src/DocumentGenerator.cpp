@@ -1176,25 +1176,27 @@ private:
 
 /** `{^BinData: {numBytes: 32}}` */
 class BinDataGenerator : public Generator<bsoncxx::types::b_binary> {
+private:
+    using bintype = bsoncxx::binary_sub_type;
+
 public:
-    BinDataGenerator(const Node& node, GeneratorArgs generatorArgs)
-        : _node{node} {
-            _binData = genRandBinData();
-        }
+    BinDataGenerator(const Node& node, GeneratorArgs generatorArgs,
+                     const bintype binDataType = bintype::k_binary)
+        : _node{node}, _binData(genRandBinData(node, binDataType)) {}
 
     bsoncxx::types::b_binary evaluate() override {
         return _binData;
     }
 
-    bsoncxx::types::b_binary genRandBinData() {
-        int64_t numBytes = _node["numBytes"].maybe<int64_t>().value_or(32);
+    bsoncxx::types::b_binary genRandBinData(const Node& node, const bintype binDataType) {
+        int64_t numBytes = node["numBytes"].maybe<int64_t>().value_or(32);
         uint8_t bytesArr[numBytes];
         for (int i = 0; i < numBytes; i++) {
             bytesArr[i] = rand();
         }
-        return bsoncxx::types::b_binary{bsoncxx::binary_sub_type::k_binary,
-                                                     static_cast<uint32_t>(sizeof(bytesArr)),
-                                                     bytesArr};
+        return bsoncxx::types::b_binary{binDataType,
+                                        static_cast<uint32_t>(sizeof(bytesArr)),
+                                        bytesArr};
     }
 
 private:
@@ -1775,9 +1777,15 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<CycleGenerator>(node, generatorArgs, allParsers, 1);
      }},
-     {"^BinData",
+    {"^BinData",
      [](const Node& node, GeneratorArgs generatorArgs) {
          return std::make_unique<BinDataGenerator>(node, generatorArgs);
+     }},
+    {"^BinDataSensitive",
+     [](const Node& node, GeneratorArgs generatorArgs) {
+         // TODO: PERF-4467 Update this to bsoncxx::binary_sub_type::sensitive.
+         return std::make_unique<BinDataGenerator>(
+            node, generatorArgs, bsoncxx::binary_sub_type(0x8));
      }},
 };
 

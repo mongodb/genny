@@ -611,8 +611,6 @@ AutoRun:
       - replica-all-feature-flags
       - single-replica
       - single-replica-classic-query-engine
-      - single-replica-heuristic-bonsai
-      - single-replica-sampling-bonsai
       - single-replica-sbe
     branch_name:
       $neq:

@@ -19,7 +19,7 @@ GlobalDefaults:
   MaxPhases: &MaxPhases 8
   nop: &Nop {Nop: true}
   dbname: &db test
-  binDataGen: &binDataGen {^BinData: {numBytes: 32}}
+  binDataGen: &binDataGen {^BinDataSensitive: {numBytes: 32}}
 
 ActorTemplates:
 - TemplateName: QueryStatsAggregation
@@ -42,10 +42,13 @@ ActorTemplates:
             OperationName: AdminCommand
             OperationCommand:
               aggregate: 1
-              # TODO SERVER-77179: Update $queryStats parameters.
               pipeline: [
                 {
                   $queryStats: {^Parameter: {Name: "queryStatsParameters", Default: {}}}
+                },
+                # The purpose of $count is to ensure we've exhausted the cursor/ data stream and looked at each partition.
+                {
+                  $count: "numDocuments"
                 }
               ]
               cursor: {}
@@ -233,3 +236,7 @@ AutoRun:
       $eq:
       - standalone-all-feature-flags
       - standalone-query-stats
+      - standalone-query-stats-small-rate-limit
+      - single-replica-query-stats
+      - replica-query-stats
+      - atlas-like-replica-query-stats.2022-10

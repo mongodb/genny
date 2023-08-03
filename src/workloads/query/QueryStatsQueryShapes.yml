@@ -138,3 +138,9 @@ AutoRun:
       - standalone-query-stats
       - standalone-query-stats-small-rate-limit
       - standalone
+      - single-replica
+      - single-replica-query-stats
+      - replica
+      - replica-query-stats
+      - atlas-like-replica.2022-10
+      - atlas-like-replica-query-stats.2022-10

@@ -1,12 +1,13 @@
-import structlog
 import os
-import sys
+import re
 import shutil
 import subprocess
-import re
-from typing import Callable, TypeVar, Tuple, Optional
+import sys
+from typing import Callable, Optional, Tuple, TypeVar
 
-from genny import curator, cmd_runner, toolchain
+import structlog
+
+from genny import cmd_runner, curator, toolchain
 
 SLOG = structlog.get_logger(__name__)
 
@@ -307,6 +308,36 @@ def _setup_resmoke(
         venv.create(env_dir=resmoke_venv, with_pip=True, symlinks=True)
         reqs_file = os.path.join(mongo_repo_path, "etc", "pip", "evgtest-requirements.txt")
 
+        # Cython >=3 is not compatable with PyYaml <=6.0.1 && >5.3.1. Because we
+        # don't control this requirements.txt, we'll pre-install a pyyaml AND a
+        # Cython that works, and hope that one of them survive. We do the work
+        # here to make sure that old MongoDB versions are compatible with New
+        # Genny.
+        #
+        # If this requirements file is ever upgraded to account for this, the
+        # dependencies manually installed in this line should automatically
+        # upgraded. This line is to make sure that a working set of
+        # dependencies is _already_ installed so that pip wont bother upgrading
+        # them.
+        #
+        # See: https://jira.mongodb.org/browse/EVG-20471
+        # See: https://github.com/yaml/pyyaml/issues/601
+        cmd = [
+            resmoke_python,
+            "-mpip",
+            "install",
+            "Cython<3.0",
+            "PyYAML<=5.3.1",
+            "--no-build-isolation",
+        ]
+        cmd_runner.run_command(
+            cmd=cmd,
+            cwd=workspace_root,
+            capture=False,
+            check=True,
+        )
+
+        # Now install the dependencies in the requirements file like normal
         cmd = [resmoke_python, "-mpip", "install", "-r", reqs_file]
         cmd_runner.run_command(
             cmd=cmd,

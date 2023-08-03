@@ -938,6 +938,9 @@ struct InsertManyOperation : public BaseOperation {
         for (auto&& [k, document] : documents) {
             _docExprs.push_back(document.to<DocumentGenerator>(context, id));
         }
+        if (opNode["Options"]) {
+            _options = opNode["Options"].to<mongocxx::options::insert>();
+        }
     }
 
     void run(mongocxx::client_session& session) override {

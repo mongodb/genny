@@ -377,7 +377,7 @@ functions:
       - -v
       - cmake-test
       - --regex-exclude
-      - "(sleepNonBlocking|Non-Blocking end|Actual Actor Example Timing)"
+      - "(sleepNonBlocking|Non-Blocking end|IgnoredOnMacOs)"
 
   ##
   # Runs benchmarks via ctest.

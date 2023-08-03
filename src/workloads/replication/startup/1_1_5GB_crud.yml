@@ -1,0 +1,71 @@
+SchemaVersion: 2018-07-01
+Owner: mongodb/server-replication"
+Description: >
+  Adds CRUD operations to be replayed during startup recovery for the light phase.
+  To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
+
+  Expected behavior:
+  --------------
+  We expect after restarting mongod after running this workload to have alot of CRUD ops to be
+  applied during startup recovery:
+
+  Sample logs:
+  +--------------------------------------------------------+
+  |  {                                                     |
+  |       s: "I",                                          |
+  |       c: "REPL",                                       |
+  |       id: 21536,                                       |
+  |       ctx: "initandlisten",                            |
+  |       msg: "Completed oplog application for recovery", |
+  |       attr: {                                          |
+  |           numOpsApplied: 50207,                        |
+  |           numBatches: 142,                             |
+  |           applyThroughOpTime: {                        |
+  |               ts: {                                    |
+  |                   $timestamp: {                        |
+  |                       t: 1690277528,                   |
+  |                       i: 1                             |
+  |                   }                                    |
+  |               },                                       |
+  |               t: 6                                     |
+  |           }                                            |
+  |       }                                                |
+  |   }                                                    |
+  +--------------------------------------------------------+
+
+Keywords:
+- startup
+- stopCheckpointing
+- updates
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 300
+
+GlobalDefaults:
+  - NumPhases: &max_phase 1
+  # Should match values in 'src/workloads/replication/startup/1_0_5GB.yml'
+  - Database: &database "startup_5GB"
+  - CollectionCount: &collectionCount 5
+
+Actors:
+- StopCheckpointing:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: StopCheckpointTemplate
+    Parameters:
+      active: [0]
+      nopInPhasesUpTo: *max_phase
+
+- CrudOperations:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: CrudOperationsTemplate
+    Parameters:
+      active: [1]
+      nopInPhasesUpTo: *max_phase
+      database: *database
+      collectionCount: *collectionCount
+      numOfCollectionsTargeted: *collectionCount
+      numOfCrudOpsPerCollection: 10000   # ~50k operations in total.

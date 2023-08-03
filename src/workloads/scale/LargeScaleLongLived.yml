@@ -89,16 +89,14 @@ AutoRun:
       $eq:
       - atlas
       - atlas-like-replica.2022-10
+      - atlas-like-replica-query-stats.2022-10
       - replica
       - replica-all-feature-flags
       - shard
-      - shard-heuristic-bonsai
       - single-replica
       - single-replica-15gbwtcache
       - standalone
       - standalone-classic-query-engine
-      - standalone-heuristic-bonsai
-      - standalone-sampling-bonsai
       - standalone-sbe
       - standalone-query-stats
     atlas_setup:
