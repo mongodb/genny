@@ -31,28 +31,30 @@ def get_all_builds(global_expansions: dict[str, str], project_file_path: str) ->
             all_builds.append(CurrentBuildInfo(build_info_dict))
     return all_builds
 
-
-def main(project_file: str, workspace_root: str) -> None:
-    reader = YamlReader()
-    global_expansions = reader.load(workspace_root, "expansions.yml")
-    execution = int(global_expansions["execution"])
-    builds = get_all_builds(global_expansions, project_file)
-    
-    lister = WorkloadLister(workspace_root=workspace_root)
-    repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
-
+def create_configuration(repo: Repo, builds: List[CurrentBuildInfo], no_activate: bool):
     all_tasks = repo.all_tasks()
-
     config = Configuration()
     ConfigWriter.configure_all_tasks_modern(config, all_tasks)
+    activate_param = False if no_activate else None
     for build in builds:
 
         build_tasks = repo.variant_tasks(build)
         if len(build_tasks) > 0:
             SLOG.info(f"Generating auto-tasks for variant: {build.variant}")
-            ConfigWriter.configure_variant_tasks(config, build_tasks, build.variant)
+            ConfigWriter.configure_variant_tasks(config, build_tasks, build.variant, activate=activate_param)
         else:
             SLOG.info(f"No auto-tasks for variant: {build.variant}")
+    return config
 
+def main(project_file: str, workspace_root: str, no_activate: bool) -> None:
+    reader = YamlReader()
+    global_expansions = reader.load(workspace_root, "expansions.yml")
+    execution = int(global_expansions["execution"])
+    builds = get_all_builds(global_expansions, project_file)
+
+    lister = WorkloadLister(workspace_root=workspace_root)
+    repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
+
+    config = create_configuration(repo, builds, no_activate)
     output_file = os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
     ConfigWriter.write_config(execution, config, output_file)

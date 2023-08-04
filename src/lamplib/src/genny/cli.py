@@ -585,13 +585,15 @@ def auto_tasks(ctx: click.Context, tasks: str):
     required=True,
     help="An evergreen project file",
 )
+@click.option("--no-activate", default=False, is_flag=True, help="Ensure that generated tasks don't activate")
 @click.pass_context
-def auto_tasks_all(ctx: click.Context, project_file: str):
+def auto_tasks_all(ctx: click.Context, project_file: str, no_activate: bool):
     from genny.tasks import auto_tasks_all
 
     auto_tasks_all.main(
         project_file=project_file,
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        no_activate=no_activate,
     )
 
 

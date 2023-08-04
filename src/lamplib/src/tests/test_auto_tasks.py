@@ -58,7 +58,6 @@ class BaseTestClass(unittest.TestCase):
         # Create "dumb" mocks.
         lister: WorkloadLister = MagicMock(name="lister", spec=WorkloadLister, instance=True)
         reader: YamlReader = MockReader(given_files)
-        genny_repo_root = os.path.join(self.workspace_root, "/src/genny")
         # Make them smarter.
         lister.all_workload_files.return_value = [
             v.base_name

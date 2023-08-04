@@ -138,6 +138,12 @@ class CurrentBuildInfo:
         actual = self.conts[key]
         return any(actual == acceptable_value for acceptable_value in acceptable_values)
 
+    def __eq__(self, other):
+        return self.conts == other.conts
+
+    def __repr__(self):
+        return f"CurrentBuildInfo: {self.conts}"
+
 
 class GeneratedTask(NamedTuple):
     name: str
@@ -535,8 +541,8 @@ class ConfigWriter:
 
 
     @staticmethod
-    def configure_variant_tasks(config: Configuration, tasks: List[GeneratedTask], variant: str) -> None:
-        config.variant(variant).tasks([TaskSpec(task.name) for task in tasks])
+    def configure_variant_tasks(config: Configuration, tasks: List[GeneratedTask], variant: str, activate: bool = None) -> None:
+        config.variant(variant).tasks([TaskSpec(task.name).activate(activate) for task in tasks])
 
     @staticmethod
     def configure_all_tasks_modern(config: Configuration, tasks: List[GeneratedTask]) -> None:
