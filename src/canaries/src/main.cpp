@@ -158,6 +158,8 @@ struct ProgramOptions {
     }
 };
 
+// Simple logging thread, print message logEverySeconds until completed.
+// The thread loops until complete and sleeps for logEverySeconds between logging.
 void logging_thread(bool& complete, std::chrono::seconds logEverySeconds) {
     metrics::clock::time_point started{metrics::clock::now()};
     metrics::clock::time_point last{started};
@@ -185,9 +187,12 @@ int main(int argc, char** argv) {
     std::vector<Nanosecond> results;
     bool complete = false;
 
+    // Create a new logging thread and detach to ensure that the process can end without error
+    // or blocking.
     auto t = std::thread([&]() {
         logging_thread(complete, opts._logEverySeconds);
     });
+    t.detach();
 
     if (opts._task == "nop")
         results = runTest<NopTask>(opts._loopNames, opts._iterations);
@@ -207,9 +212,10 @@ int main(int argc, char** argv) {
         throw InvalidConfigurationException(stm.str());
     }
 
+    // set complete and yield to let the logger terminate gracefully. The thread is detached, so
+    //  you can't join, and it won't block the main thread from exiting.
     complete = true;
     std::this_thread::yield();
-    t.join();
 
     std::cout << "Total duration for " << opts._task << ":" << std::endl;
     for (int i = 0; i < results.size(); i++) {
