@@ -120,25 +120,25 @@ ActorTemplates:
               OnSession: true
               OperationsInTransaction:
               - <<: *UpdateOperation
-                Database: Database0
+                Database: *Database0
               - <<: *UpdateOperation
-                Database: Database0
+                Database: *Database0
               - <<: *UpdateOperation
-                Database: Database0
+                Database: *Database0
               - <<: *UpdateOperation
-                Database: Database0
+                Database: *Database0
               - <<: *UpdateOperation
-                Database: Database0
+                Database: *Database0
               - <<: *UpdateOperation
-                Database: Database1
+                Database: *Database1
               - <<: *UpdateOperation
-                Database: Database1
+                Database: *Database1
               - <<: *UpdateOperation
-                Database: Database1
+                Database: *Database1
               - <<: *UpdateOperation
-                Database: Database1
+                Database: *Database1
               - <<: *UpdateOperation
-                Database: Database1
+                Database: *Database1
 
 - TemplateName: DifferentDatabasesShardedCollectionsUpdate
   Config:
@@ -161,25 +161,25 @@ ActorTemplates:
               OnSession: true
               OperationsInTransaction:
               - <<: *UpdateOperation
-                Database: Database0
+                Database: *Database0
               - <<: *UpdateOperation
-                Database: Database0
+                Database: *Database0
               - <<: *UpdateOperation
-                Database: Database0
+                Database: *Database0
               - <<: *UpdateOperation
-                Database: Database0
+                Database: *Database0
               - <<: *UpdateOperation
-                Database: Database0
+                Database: *Database0
               - <<: *UpdateOperation
-                Database: Database1
+                Database: *Database1
               - <<: *UpdateOperation
-                Database: Database1
+                Database: *Database1
               - <<: *UpdateOperation
-                Database: Database1
+                Database: *Database1
               - <<: *UpdateOperation
-                Database: Database1
+                Database: *Database1
               - <<: *UpdateOperation
-                Database: Database1
+                Database: *Database1
 
 Actors:
 - Name: CreateShardedCollection
