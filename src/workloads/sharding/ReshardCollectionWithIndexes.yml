@@ -1,8 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 Description: |
-  This test expects the target cluster is created using ebs snapshot with 1 billion 1KB records 
-  and has 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including 
+  This test measures the time for a sharded cluster to reshard a collection from one shard to two 
+  shards then to three shards. It was added August 2023 as part of PM-2322, to demonstrate planned 
+  resharding performance improvements. 
+  
+  The test expects the target cluster is created using ebs snapshot with 1 billion 1KB records and 
+  has 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including 
   _id index, single-key index and compound index. The whole dataset is on 1 shard at the beginning.
   ReshardCollection should use same-key resharding and use shardDistribution parameter to reshard 
   into 2 shards then 3 shards. There will be random CRUD operations during resharding but should 
@@ -41,6 +45,12 @@ Description: |
         {num2:1, str2: 1}
       ]
 
+Keywords:
+- resharding
+- indexes
+- replication
+- collection copy
+
 GlobalDefaults:
   Nop: &Nop {Nop: true}
 
@@ -51,12 +61,11 @@ GlobalDefaults:
 
   DocumentCount: &DocumentCount 1_000_000_000  # for an approximate total of 1TB
   NumChunks: &NumChunks 1                # start with only 1 shard
+  NumChunksAfterResharding: &NumChunksAfterResharding 20000
+  # Each reshardCollection takes around 15h in past runs so 20h is a reasonable threshold to treat
+  # the reshardCollection as timed out.
   Timeout: &Timeout 72_000_000 # = 20 hours
 
-  ShardKeyValueMin: &ShardKeyValueMin 1
-  # We use 100x the number of chunks so that the $sample aggregation to choose the new split points
-  # has a wide range of distinct values to choose from. It could be even larger.
-  ShardKeyValueMax: &ShardKeyValueMax 1_000_000
   ShardName0: &Shard0 shard-00
   ShardName1: &Shard1 shard-01
   ShardName2: &Shard2 shard-02
@@ -126,7 +135,7 @@ Actors:
         key: {shardKey: 1}
         shardDistribution: [{shard: *Shard0}, {shard: *Shard1}]
         forceRedistribution: true
-        numInitialChunks: 20000
+        numInitialChunks: *NumChunksAfterResharding
   - Repeat: 1
     Database: admin
     Operations:
@@ -137,7 +146,7 @@ Actors:
         key: {shardKey: 1}
         shardDistribution: [{shard: *Shard0}, {shard: *Shard1}, {shard: *Shard2}]
         forceRedistribution: true
-        numInitialChunks: 20000
+        numInitialChunks: *NumChunksAfterResharding
 
 - Name: ReadCollectionBeingResharded
   Type: CrudActor
