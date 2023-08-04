@@ -181,3 +181,12 @@ Actors:
     Collection: *Collection
     Operations: *WriteOperations
     GlobalRate: *WriteRate
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - resharding-3shard.2023-08
+    branch_name:
+      $gte:
+      - v7.1
