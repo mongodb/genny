@@ -43,7 +43,7 @@ struct ProgramOptions {
     bool _isHelp = false;
 
     int64_t _iterations = 0;
-    std::chrono::milliseconds _logEveryMs{0};
+    std::chrono::seconds _logEverySeconds{0};
 
     std::string _description;
     std::string _mongoUri;
@@ -152,25 +152,25 @@ struct ProgramOptions {
         _iterations = vm["iterations"].as<int64_t>();
 
         auto logEverySeconds = vm["log-every"].as<int64_t>();
-        _logEveryMs = std::chrono::milliseconds(std::chrono::seconds{logEverySeconds < 0 ? 1 : logEverySeconds});
+        _logEverySeconds = std::chrono::seconds{logEverySeconds < 0 ? 1 : logEverySeconds};
 
         _mongoUri = vm["mongo-uri"].as<std::string>();
     }
 };
 
-void logging_thread(bool& complete, std::chrono::milliseconds logEveryMs) {
+void logging_thread(bool& complete, std::chrono::seconds logEverySeconds) {
     metrics::clock::time_point started{metrics::clock::now()};
     metrics::clock::time_point last{started};
 
     while(!complete) {
         const auto now = metrics::clock::now();
         const auto duration = now - last;
-        if (duration >= logEveryMs) {
+        if (duration >= logEverySeconds) {
             BOOST_LOG_TRIVIAL(info) << "Canary still progressing (" <<
                 std::chrono::duration_cast<std::chrono::seconds>(now - started).count() << "s)";
             last = now;
         }
-        std::this_thread::sleep_for(std::chrono::seconds{1});
+        std::this_thread::sleep_for(logEverySeconds - duration);
     }
 };
 
@@ -186,7 +186,7 @@ int main(int argc, char** argv) {
     bool complete = false;
 
     auto t = std::thread([&]() {
-        logging_thread(complete, opts._logEveryMs);
+        logging_thread(complete, opts._logEverySeconds);
     });
 
     if (opts._task == "nop")
