@@ -84,7 +84,7 @@ public:
                     docGen();
                     FAIL("Expected exception " << this->_expectedExceptionMessage.as<std::string>()
                                                << " but none occurred");
-                } catch (const std::exception& x) {
+                } catch (const std::exception&) {
                     REQUIRE("InvalidValueGeneratorSyntax" ==
                             this->_expectedExceptionMessage.as<std::string>());
                 }
