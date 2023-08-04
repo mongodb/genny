@@ -10,7 +10,7 @@ Description: >
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
-  MaxPhases: &MaxPhases 12
+  MaxPhases: &MaxPhases 11
 
 Actors:
 # Clear any pre-existing collection state.
@@ -109,33 +109,12 @@ Actors:
             }
           }]
 
-- AvgCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: AvgCumulative
-      active: [5]
-      operationMetricsName: AvgCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                avg: {
-                  $avg: "$x",
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
-
 - StdDevPopCumulative:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: StdDevPopCumulative
-      active: [6]
+      active: [5]
       operationMetricsName: StdDevPopCumulative
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -156,7 +135,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: StdDevSampCumulative
-      active: [7]
+      active: [6]
       operationMetricsName: StdDevSampCumulative
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -177,7 +156,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: CovPopCumulative
-      active: [8]
+      active: [7]
       operationMetricsName: CovPopCumulative
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -198,7 +177,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: CovSampCumulative
-      active: [9]
+      active: [8]
       operationMetricsName: CovSampCumulative
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -219,7 +198,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: DocumentNumber
-      active: [10]
+      active: [9]
       operationMetricsName: DocumentNumber
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -239,7 +218,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: Rank
-      active: [11]
+      active: [10]
       operationMetricsName: Rank
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -259,7 +238,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: DenseRank
-      active: [12]
+      active: [11]
       operationMetricsName: DenseRank
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
