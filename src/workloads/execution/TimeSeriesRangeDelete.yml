@@ -17,7 +17,7 @@ Actors:
   Phases:
     LoadConfig:
       Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
-      Key: CreateTimeSeriesCollection
+      Key: CreateTimeSeriesCollectionPhase
 
 - Name: InsertData
   Type: Loader
@@ -25,7 +25,7 @@ Actors:
   Phases:
     LoadConfig:
       Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
-      Key: InsertData
+      Key: InsertDataPhase
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -34,7 +34,7 @@ Actors:
   Phases:
     LoadConfig:
       Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
-      Key: Quiesce
+      Key: QuiescePhase
 
 - Name: RangeDelete
   Type: CrudActor
@@ -42,7 +42,7 @@ Actors:
   Phases:
     LoadConfig:
       Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
-      Key: RangeDelete
+      Key: RangeDeletePhase
 
 - Name: CleanUp
   Type: RunCommand
@@ -50,7 +50,7 @@ Actors:
   Phases:
     LoadConfig:
       Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
-      Key: CleanUp
+      Key: CleanUpPhase
 
 AutoRun:
 - When:
