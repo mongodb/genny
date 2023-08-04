@@ -1,0 +1,151 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of the time series optimization on $group with $sum. 
+  With the new sum optimizations that works similarly to that of $min/$max, 
+  $group stages on the meta field will skip $_unpack and compare the control field of the buckets without unpacking them
+
+GlobalDefaults:
+  dbname: &db test
+  coll0: &coll0 Collection0
+  coll1: &coll1 Collection1
+  batchSize: &batchSize 30000
+  nop: &Nop {Nop: true}
+  repeat: &repeat 100
+  documentCount: &documentCount 10000
+
+
+
+Actors:
+- Name: CreateCollectionWithSum
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *db
+    Operation:
+      OperationMetricsName: CreateCollectionWithSum
+      OperationName: RunCommand
+      OperationCommand:
+        {create: *coll0, timeseries: {timeField: "t", metaField: "m", bucketRoundingSeconds: 3600,
+        bucketMaxSpanSeconds: 3600, sum: {"paths": ["firstSumField", "thirdSumField", "fourthSumField"]}}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: CreateCollectionWithoutSum
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Operation:
+      OperationMetricsName: CreateCollectionWithoutSum
+      OperationName: RunCommand
+      OperationCommand:
+        {create: *coll1, timeseries: {timeField: "t", metaField: "m", bucketRoundingSeconds: 3600, bucketMaxSpanSeconds: 3600}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  
+
+- Name: InsertDataWithSum
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Threads: 1
+    CollectionCount: 2 
+    DocumentCount: *documentCount
+    BatchSize: *batchSize
+    Document:
+      t: {^IncDate: {start: "2022-01-01", step: 1000}}
+      m: {"sensorId": 5577, "type": "temperature"}
+      firstSumField: 1
+      thirdSumField: 2
+      nestedField: {
+        firstNestedField:{
+          firstField: "hello"
+        },
+        secondNestedField:{
+          secondField: "world"
+        },
+        tripleNestedField:{
+          doubleNestedField: {
+            singleNestedField: {
+              field: 10000
+            }
+          }
+        }
+      }
+  - *Nop
+  - *Nop
+  - *Nop
+
+
+- Name: Quiesce 
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+
+- Name: QueriesWithSum
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *repeat
+    Database: *db
+    Operations:
+    - OperationMetricsName: QueriesWithSum
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *coll0
+        pipeline: [{$group: {_id: "$metadata", total: {$sum: "$thirdSumField"}}}]
+        cursor: {} 
+  - *Nop
+
+- Name: QueriesWithoutSum
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *repeat
+    Database: *db
+    Operations:
+    - OperationMetricsName: QueriesWithoutSum
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *coll1
+        pipeline: [{$group: {_id: "$metadata", total: {$sum: "$thirdSumField"}}}]
+        cursor: {}
+
+AutoRun: 
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-all-feature-flags
+    branch_name:
+      eq:
+      - v7.1
