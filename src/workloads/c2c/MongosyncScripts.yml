@@ -64,8 +64,8 @@ WaitForCommit:
 InsertShortTestData:
   Repeat: 1
   BatchSize: 100
-  Threads: 1
-  DocumentCount: 1000000
+  Threads: 100
+  DocumentCount: 2000000
   Database: db
 
   # Note the document shape and number of collections doesn't
