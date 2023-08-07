@@ -348,15 +348,15 @@ TEST_CASE("PoolFactory behavior") {
         genny::NodeSource ns{"Clients: {Default: {URI: 'mongodb:://localhost:27017'}, Foo: {URI: 'mongodb:://localhost:27017'}, Bar: {URI: 'mongodb:://localhost:27018'}}", ""};
         auto& config = ns.root();
 
-        auto foo0 = manager.create_warmed_up_client("Foo", 0, config);
-        auto foo0again = manager.create_warmed_up_client("Foo", 0, config);
-        auto foo10 = manager.create_warmed_up_client("Foo", 10, config);
-        auto bar0 = manager.create_warmed_up_client("Bar", 0, config);
+        auto foo0 = manager.create_client("Foo", 0, config);
+        auto foo0again = manager.create_client("Foo", 0, config);
+        auto foo10 = manager.create_client("Foo", 10, config);
+        auto bar0 = manager.create_client("Bar", 0, config);
 
         // Note to future maintainers:
         //
         // This assertion doesn't actually verify that we aren't calling
-        // `createPool()` again when running `manager.create_warmed_up_client("Foo", 0, config)` a
+        // `createPool()` again when running `manager.create_client("Foo", 0, config)` a
         // second time.
         //
         // A different style of trying to write this test is to register a

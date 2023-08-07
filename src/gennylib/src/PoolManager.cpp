@@ -54,9 +54,9 @@ auto createPool(const std::string& name,
 }  // namespace genny::v1
 
 
-mongocxx::pool::entry genny::v1::PoolManager::create_warmed_up_client(const std::string& name,
-                                                                   size_t instance,
-                                                                   const Node& context) {
+mongocxx::pool::entry genny::v1::PoolManager::create_client(const std::string& name,
+                                                            size_t instance,
+                                                            const Node& context) {
     auto pool_entry = this->_create_client(name, instance, context);
     bool prewarm = context["Clients"][name]["PreWarm"].maybe<bool>().value_or(true);
     if (prewarm) {
@@ -67,8 +67,8 @@ mongocxx::pool::entry genny::v1::PoolManager::create_warmed_up_client(const std:
 
 
 mongocxx::pool::entry genny::v1::PoolManager::_create_client(const std::string& name,
-                                                      size_t instance,
-                                                      const Node& context) {
+                                                             size_t instance,
+                                                             const Node& context) {
     // Only one thread can access pools.operator[] at a time...
     std::unique_lock<std::mutex> getLock{this->_poolsLock};
     LockAndPools& lap = this->_pools[name];

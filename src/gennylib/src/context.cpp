@@ -124,8 +124,8 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
     return actors;
 }
 
-mongocxx::pool::entry WorkloadContext::get_warmed_up_client(const std::string& name, size_t instance) {
-    return _poolManager.create_warmed_up_client(name, instance, this->_node);
+mongocxx::pool::entry WorkloadContext::get_client(const std::string& name, size_t instance) {
+    return _poolManager.create_client(name, instance, this->_node);
 }
 
 GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name, const RateSpec& spec) {
