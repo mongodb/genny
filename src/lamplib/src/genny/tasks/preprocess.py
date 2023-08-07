@@ -239,8 +239,8 @@ class _WorkloadParser(object):
             out = self._replace_param(value)
         elif key == "^NumExpr":
             out = self._replace_numexpr(value)
-        elif key == "^FlattenArray":
-            out = self._replace_flattenarr(value)
+        elif key == "^FlattenOnce":
+            out = self._replace_flattenonce(value)
         elif key == "ActorTemplates":
             self._parse_templates(value)
         elif key == "ActorFromTemplate":
@@ -330,8 +330,8 @@ class _WorkloadParser(object):
             )
             raise ParseException(msg)
 
-    def _replace_flattenarr(self, input):
-        OP_KEY = "^FlattenArray"
+    def _replace_flattenonce(self, input):
+        OP_KEY = "^FlattenOnce"
 
         parsed_values = self._recursive_parse(input)
 

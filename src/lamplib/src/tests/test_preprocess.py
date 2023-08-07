@@ -632,11 +632,11 @@ Test: {^NumExpr: {withExpression: "a - b", andValues: {a: *Param1, b: "25"}}}
     def test_flatten_array_valid_type_arrays(self):
         yaml_input = """SchemaVersion: 2018-07-01
 Document:
-  ^FlattenArray:
+  ^FlattenOnce:
   - 1
   - "2"
   - [3, "4"]
-  - ^FlattenArray: [5, [6, "7", ["8", 9]]]
+  - ^FlattenOnce: [5, [6, "7", ["8", 9, [], [], [1], [[[1]], [False], [""]]]]]
 """
 
         expected = """SchemaVersion: '2018-07-01'
@@ -650,6 +650,12 @@ Document:
 - '7'
 - - '8'
   - 9
+  - []
+  - []
+  - - 1
+  - - - - 1
+    - - false
+    - - ''
 """
 
         self._assertYaml(yaml_input, expected)
@@ -657,7 +663,7 @@ Document:
     def test_flatten_array_valid_type_dict(self):
         yaml_input = """SchemaVersion: 2018-07-01
 Document:
-  ^FlattenArray:
+  ^FlattenOnce:
     1: 2
     3: 4
     5: 6
@@ -675,7 +681,7 @@ Document:
     def test_flatten_array_invalid_type_int(self):
         yaml_input = """SchemaVersion: 2018-07-01
 Document:
-  ^FlattenArray: 1
+  ^FlattenOnce: 1
 """
 
         self._assertParseException(yaml_input)
@@ -683,7 +689,7 @@ Document:
     def test_flatten_array_valid_type_str(self):
         yaml_input = """SchemaVersion: 2018-07-01
 Document:
-  ^FlattenArray: "12345"
+  ^FlattenOnce: "12345"
 """
 
         expected = """SchemaVersion: '2018-07-01'
