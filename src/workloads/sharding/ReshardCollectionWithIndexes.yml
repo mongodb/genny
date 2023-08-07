@@ -182,6 +182,17 @@ Actors:
     Operations: *WriteOperations
     GlobalRate: *WriteRate
 
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1, 2]
+      NopInPhasesUpTo: 4
+      PhaseConfig:
+        LogEvery: 15 minutes
+        Blocking: None
+
 AutoRun:
 - When:
     mongodb_setup:
