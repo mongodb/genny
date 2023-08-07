@@ -61,6 +61,7 @@ mongocxx::pool::entry genny::v1::PoolManager::create_client(const std::string& n
     bool prewarm = context["Clients"][name]["PreWarm"].maybe<bool>().value_or(true);
     if (prewarm) {
         pool_entry->list_databases();
+        BOOST_LOG_TRIVIAL(debug) << "Prewarmed client for connection pool: " << name;
     }
     return pool_entry;
 }
