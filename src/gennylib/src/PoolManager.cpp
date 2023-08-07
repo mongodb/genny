@@ -58,7 +58,7 @@ mongocxx::pool::entry genny::v1::PoolManager::create_client(const std::string& n
                                                             size_t instance,
                                                             const Node& context) {
     auto pool_entry = this->_create_client(name, instance, context);
-    bool prewarm = context["Clients"][name]["PreWarm"].maybe<bool>().value_or(true);
+    bool prewarm = context["Clients"][name]["PreWarm"].to<bool>();
     if (prewarm) {
         pool_entry->list_databases();
     }
