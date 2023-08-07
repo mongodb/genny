@@ -189,6 +189,42 @@ Tests:
             "data" : "aaaaaaaaaaoEtN" }}
         ]}
 
+  - Name: Array Generator creates an array with a repeated element
+    GivenTemplate:
+      a:
+        {^Array: {of: {^Repeat: {fromGenerator: {^Inc: {start: 1, max: 2}}, count: 2}}, number: 2}}
+    ThenReturns:
+      - {a: [{ "$numberLong": "1" }, { "$numberLong": "1" }]}
+
+  - Name: Array Generator creates an array with no repeated ints when distinct flag is set
+    GivenTemplate:
+      a:
+        {^Array: {
+            of: {^Repeat: {fromGenerator: {^Inc: {start: 1, max: 2}}, count: 2}},
+            number: 2,
+            distinct: true}}
+    ThenReturns:
+      - {a: [{ "$numberLong": "1" }, { "$numberLong": "2" }]}
+
+  - Name: Array Generator creates an array with no repeated strings when distinct flag is set
+    GivenTemplate:
+      a:
+        {^Array: {
+            of: {^Repeat: {fromGenerator: {^FastRandomString: {length: 5}}, count: 2}},
+            number: 2,
+            distinct: true}}
+    ThenReturns:
+      - {a: ["mLkBO", "qgpGD"]}
+
+  - Name: Array Generator fails if it no longer makes progress when distinct flag is set
+    GivenTemplate:
+      a:
+        {^Array: {
+            of: {^Repeat: {fromGenerator: {^RandomInt: {min: 0, max: 10}}, count: 5}},
+            number: 100,
+            distinct: true}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
   - Name: Object Generator
     GivenTemplate:
       a:

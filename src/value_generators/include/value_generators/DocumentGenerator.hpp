@@ -52,6 +52,14 @@ public:
     using InvalidValueGeneratorSyntax::InvalidValueGeneratorSyntax;
 };
 
+/**
+ * Throw this to indicate that the generator exceeded runtime bounds while waiting for convergence.
+ */
+class ValueGeneratorConvergenceTimeout : public InvalidValueGeneratorSyntax {
+public:
+    using InvalidValueGeneratorSyntax::InvalidValueGeneratorSyntax;
+};
+
 struct GeneratorArgs {
     DefaultRandom& rng;
     ActorId actorId;
