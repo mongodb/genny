@@ -12,7 +12,174 @@ GlobalDefaults:
   ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
   DocumentCount: &DocumentCount 100_000
 
-  MaxPhase: &MaxPhase 7
+  MaxPhase: &MaxPhase 22
+
+  UpdateOperation: &UpdateOperation
+    OperationName: updateOne
+    OperationCommand:
+      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+      Update: {$inc: {counter: 1}}
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+      maxPoolSize: 1000
+
+ActorTemplates:
+- TemplateName: ShardedCollectionUpdate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Transactions"}}
+    Type: CrudActor
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Database: *Database0
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+        NopInPhasesUpTo: *MaxPhase
+        PhaseConfig:
+          Duration: 1 minute
+          Collection: Collection0
+          ThrowOnFailure: false  # Transactions are allowed to fail.
+          RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
+          Operations:
+          - OperationName: withTransaction
+            OperationCommand:
+              OnSession: true
+              OperationsInTransaction:
+              - <<: *UpdateOperation
+              - <<: *UpdateOperation
+              - <<: *UpdateOperation
+              - <<: *UpdateOperation
+              - <<: *UpdateOperation
+              - <<: *UpdateOperation
+              - <<: *UpdateOperation
+              - <<: *UpdateOperation
+              - <<: *UpdateOperation
+              - <<: *UpdateOperation
+
+- TemplateName: ShardedAndNonShardedCollectionsUpdate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Transactions"}}
+    Type: CrudActor
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Database: *Database0
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+        NopInPhasesUpTo: *MaxPhase
+        PhaseConfig:
+          Duration: 1 minute
+          ThrowOnFailure: false  # Transactions are allowed to fail.
+          RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
+          Collection: Collection0
+          Operations:
+          - OperationName: withTransaction
+            OperationCommand:
+              OnSession: true
+              OperationsInTransaction:
+              - <<: *UpdateOperation
+                Collection: Collection0
+              - <<: *UpdateOperation
+                Collection: Collection0
+              - <<: *UpdateOperation
+                Collection: Collection0
+              - <<: *UpdateOperation
+                Collection: Collection0
+              - <<: *UpdateOperation
+                Collection: Collection0
+              - <<: *UpdateOperation
+                Collection: Collection1
+              - <<: *UpdateOperation
+                Collection: Collection1
+              - <<: *UpdateOperation
+                Collection: Collection1
+              - <<: *UpdateOperation
+                Collection: Collection1
+              - <<: *UpdateOperation
+                Collection: Collection1
+
+- TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Transactions"}}
+    Type: CrudActor
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Database: *Database0
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+        NopInPhasesUpTo: *MaxPhase
+        PhaseConfig:
+          Duration: 1 minute
+          ThrowOnFailure: false  # Transactions are allowed to fail.
+          RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
+          Collection: Collection1
+          Operations:
+          - OperationName: withTransaction
+            OperationCommand:
+              OnSession: true
+              OperationsInTransaction:
+              - <<: *UpdateOperation
+                Database: *Database0
+              - <<: *UpdateOperation
+                Database: *Database0
+              - <<: *UpdateOperation
+                Database: *Database0
+              - <<: *UpdateOperation
+                Database: *Database0
+              - <<: *UpdateOperation
+                Database: *Database0
+              - <<: *UpdateOperation
+                Database: *Database1
+              - <<: *UpdateOperation
+                Database: *Database1
+              - <<: *UpdateOperation
+                Database: *Database1
+              - <<: *UpdateOperation
+                Database: *Database1
+              - <<: *UpdateOperation
+                Database: *Database1
+
+- TemplateName: DifferentDatabasesShardedCollectionsUpdate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Transactions"}}
+    Type: CrudActor
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Database: *Database0
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+        NopInPhasesUpTo: *MaxPhase
+        PhaseConfig:
+          Duration: 1 minute
+          ThrowOnFailure: false  # Transactions are allowed to fail.
+          RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
+          Collection: Collection0
+          Operations:
+          - OperationName: withTransaction
+            OperationCommand:
+              OnSession: true
+              OperationsInTransaction:
+              - <<: *UpdateOperation
+                Database: *Database0
+              - <<: *UpdateOperation
+                Database: *Database0
+              - <<: *UpdateOperation
+                Database: *Database0
+              - <<: *UpdateOperation
+                Database: *Database0
+              - <<: *UpdateOperation
+                Database: *Database0
+              - <<: *UpdateOperation
+                Database: *Database1
+              - <<: *UpdateOperation
+                Database: *Database1
+              - <<: *UpdateOperation
+                Database: *Database1
+              - <<: *UpdateOperation
+                Database: *Database1
+              - <<: *UpdateOperation
+                Database: *Database1
 
 Actors:
 - Name: CreateShardedCollection
@@ -49,32 +216,39 @@ Actors:
             movePrimary: *Database1
             to: rs1
 
-- Name: LoadInitialData
+- Name: LoadDataDatabase0
   Type: MonotonicLoader
   Threads: 4
   Phases:
-  - &Nop {Nop: true}
-  - Repeat: 1
-    Threads: 4
-    BatchSize: 1000
-    DocumentCount: *DocumentCount
-    CollectionCount: 2
-    Database: *Database0
-    Document: &Document
-      counter: 0
-      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
-  - Repeat: 1
-    Threads: 4
-    BatchSize: 1000
-    DocumentCount: *DocumentCount
-    CollectionCount: 2
-    Database: *Database1
-    Document: *Document
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat: 1
+        Threads: 4
+        BatchSize: 1000
+        DocumentCount: *DocumentCount
+        CollectionCount: 2
+        Database: *Database0
+        Document: &Document
+          counter: 0
+          padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
+
+- Name: LoadDataDatabase1
+  Type: MonotonicLoader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat: 1
+        Threads: 4
+        BatchSize: 1000
+        DocumentCount: *DocumentCount
+        CollectionCount: 2
+        Database: *Database1
+        Document: *Document
 
 - Name: QuiesceDatabase0
   Type: QuiesceActor
@@ -82,7 +256,7 @@ Actors:
   Database: *Database0
   Phases:
     OnlyActiveInPhases:
-      Active: [3]
+      Active: [3, 8, 13, 18]
       NopInPhasesUpTo: *MaxPhase
       PhaseConfig:
         Repeat: 1
@@ -93,251 +267,122 @@ Actors:
   Database: *Database1
   Phases:
     OnlyActiveInPhases:
-      Active: [3]
+      Active: [3, 8, 13, 18]
       NopInPhasesUpTo: *MaxPhase
       PhaseConfig:
         Repeat: 1
 
+- ActorFromTemplate:
+    TemplateName: ShardedCollectionUpdate
+    TemplateParameters:
+      Name: "ShardedCollectionUpdate_4"
+      Threads: 4
+      OnlyActiveInPhase: 4
 
-- Name: Transactions
-  Type: CrudActor
-  Threads: 16
-  Database: *Database0
-  Phases:
-    - *Nop
-    - *Nop
-    - *Nop
-    - *Nop
-    - MetricsName: ShardedCollectionUpdate
-      Duration: 1 minute
-      Collection: Collection0
-      ThrowOnFailure: false  # Transactions are allowed to fail.
-      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
-      Operations:
-      - OperationName: withTransaction
-        OperationCommand:
-          OnSession: true
-          OperationsInTransaction:
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: &RandomIdFilter {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-    - MetricsName: ShardedAndNonShardedCollectionsUpdate
-      Duration: 1 minute
-      ThrowOnFailure: false  # Transactions are allowed to fail.
-      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
-      Collection: Collection0
-      Operations:
-      - OperationName: withTransaction
-        OperationCommand:
-          OnSession: true
-          OperationsInTransaction:
-          - OperationName: updateOne
-            Collection: Collection0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Collection: Collection0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Collection: Collection0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Collection: Collection0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Collection: Collection0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Collection: Collection1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Collection: Collection1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Collection: Collection1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Collection: Collection1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Collection: Collection1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-    - MetricsName: DifferentDatabasesNonShardedCollectionsUpdate
-      Duration: 1 minute
-      ThrowOnFailure: false  # Transactions are allowed to fail.
-      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
-      Collection: Collection1
-      Operations:
-      - OperationName: withTransaction
-        OperationCommand:
-          OnSession: true
-          OperationsInTransaction:
-          - OperationName: updateOne
-            Database: *Database0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-    - MetricsName: DifferentDatabasesShardedCollectionsUpdate
-      Duration: 1 minute
-      ThrowOnFailure: false  # Transactions are allowed to fail.
-      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
-      Collection: Collection0
-      Operations:
-      - OperationName: withTransaction
-        OperationCommand:
-          OnSession: true
-          OperationsInTransaction:
-          - OperationName: updateOne
-            Database: *Database0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database0
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
-          - OperationName: updateOne
-            Database: *Database1
-            OperationCommand:
-              Filter: *RandomIdFilter
-              Update: {$inc: {counter: 1}}
+- ActorFromTemplate:
+    TemplateName: ShardedAndNonShardedCollectionsUpdate
+    TemplateParameters:
+      Name: "ShardedAndNonShardedCollectionsUpdate_4"
+      Threads: 4
+      OnlyActiveInPhase: 5
+
+- ActorFromTemplate:
+    TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
+    TemplateParameters:
+      Name: "DifferentDatabasesNonShardedCollectionsUpdate_4"
+      Threads: 4
+      OnlyActiveInPhase: 6
+
+- ActorFromTemplate:
+    TemplateName: DifferentDatabasesShardedCollectionsUpdate
+    TemplateParameters:
+      Name: "DifferentDatabasesShardedCollectionsUpdate_4"
+      Threads: 4
+      OnlyActiveInPhase: 7
+
+- ActorFromTemplate:
+    TemplateName: ShardedCollectionUpdate
+    TemplateParameters:
+      Name: "ShardedCollectionUpdate_8"
+      Threads: 8
+      OnlyActiveInPhase: 9
+
+- ActorFromTemplate:
+    TemplateName: ShardedAndNonShardedCollectionsUpdate
+    TemplateParameters:
+      Name: "ShardedAndNonShardedCollectionsUpdate_8"
+      Threads: 8
+      OnlyActiveInPhase: 10
+
+- ActorFromTemplate:
+    TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
+    TemplateParameters:
+      Name: "DifferentDatabasesNonShardedCollectionsUpdate_8"
+      Threads: 8
+      OnlyActiveInPhase: 11
+
+- ActorFromTemplate:
+    TemplateName: DifferentDatabasesShardedCollectionsUpdate
+    TemplateParameters:
+      Name: "DifferentDatabasesShardedCollectionsUpdate_8"
+      Threads: 8
+      OnlyActiveInPhase: 12
+
+- ActorFromTemplate:
+    TemplateName: ShardedCollectionUpdate
+    TemplateParameters:
+      Name: "ShardedCollectionUpdate_16"
+      Threads: 16
+      OnlyActiveInPhase: 14
+
+- ActorFromTemplate:
+    TemplateName: ShardedAndNonShardedCollectionsUpdate
+    TemplateParameters:
+      Name: "ShardedAndNonShardedCollectionsUpdate_16"
+      Threads: 16
+      OnlyActiveInPhase: 15
+
+- ActorFromTemplate:
+    TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
+    TemplateParameters:
+      Name: "DifferentDatabasesNonShardedCollectionsUpdate_16"
+      Threads: 16
+      OnlyActiveInPhase: 16
+
+- ActorFromTemplate:
+    TemplateName: DifferentDatabasesShardedCollectionsUpdate
+    TemplateParameters:
+      Name: "DifferentDatabasesShardedCollectionsUpdate_16"
+      Threads: 16
+      OnlyActiveInPhase: 17
+
+- ActorFromTemplate:
+    TemplateName: ShardedCollectionUpdate
+    TemplateParameters:
+      Name: "ShardedCollectionUpdate_32"
+      Threads: 32
+      OnlyActiveInPhase: 19
+
+- ActorFromTemplate:
+    TemplateName: ShardedAndNonShardedCollectionsUpdate
+    TemplateParameters:
+      Name: "ShardedAndNonShardedCollectionsUpdate_32"
+      Threads: 32
+      OnlyActiveInPhase: 20
+
+- ActorFromTemplate:
+    TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
+    TemplateParameters:
+      Name: "DifferentDatabasesNonShardedCollectionsUpdate_32"
+      Threads: 32
+      OnlyActiveInPhase: 21
+
+- ActorFromTemplate:
+    TemplateName: DifferentDatabasesShardedCollectionsUpdate
+    TemplateParameters:
+      Name: "DifferentDatabasesShardedCollectionsUpdate_32"
+      Threads: 32
+      OnlyActiveInPhase: 22
 
 AutoRun:
 - When:
