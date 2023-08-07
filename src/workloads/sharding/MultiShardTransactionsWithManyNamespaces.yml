@@ -13,12 +13,10 @@ GlobalDefaults:
 
   MaxPhase: &MaxPhase 4
 
-  RandomIdFilter: &RandomIdFilter {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
-
   UpdateOperation: &UpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: *RandomIdFilter
+      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
       Update: {$inc: {counter: 1}}
 
   UpdateOperationDatabase0: &UpdateOperationDatabase0
