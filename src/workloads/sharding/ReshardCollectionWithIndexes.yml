@@ -3,7 +3,8 @@ Owner: "@mongodb/sharding"
 Description: |
   This test measures the time for a sharded cluster to reshard a collection from one shard to two 
   shards then to three shards. It was added August 2023 as part of PM-2322, to demonstrate planned 
-  resharding performance improvements. 
+  resharding performance improvements. Note that the goal of this test is to show the performance 
+  gain on this setup rather than the performance difference on different kinds of data type.
   
   The test expects the target cluster is created using ebs snapshot with 1 billion 1KB records and 
   has 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including 
@@ -16,8 +17,12 @@ Description: |
     1. Turning off balancer and make the sharded collection exists on only 1 shard.
     4. Running read and write operations on the collection while it is being resharded to 2 shards.
     5. Running read and write operations on the collection while it is being resharded to 3 shards.
-    
 
+  All documents are generated through genny' data loader where the integer and length of short 
+  string fields are randomly generated. The fields are designed like to form different combinations 
+  of indexes. The goal of having 10 indexes is to test resharding performance with indexes and the 
+  number 10 comes from design, which is arbitrary from testing perspective.
+    
   The inserted documents have the following form:
 
       {
@@ -70,6 +75,9 @@ GlobalDefaults:
   ShardName1: &Shard1 shard-01
   ShardName2: &Shard2 shard-02
 
+  # The CRUD operations here are to test that resharding won't fail with CRUD operations. We keep 
+  # the rate small so it won't significantly affect the resharding performance. That says, these
+  # CRUD operations should keep minimal and should not slow down resharding.
   ReadRate: &ReadRate 100 per 1 second
   WriteRate: &WriteRate 10 per 10 seconds  # Keep the writes slow to pass critical section.
 
