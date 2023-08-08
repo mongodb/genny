@@ -1,0 +1,51 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/service-architecture"
+Description: |
+  Inserts a single document, and keeps reading it (using `findOne` by id) several times.
+  The goal is to use a single thread to measure the path-length of the hot path for `findOne`.
+  Ideally, we should observe similar cost for running all `findOne` operations.
+  Also, the CPU core corresponding to the `findOne` operation must be fully utilized.
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+  Database: &Database tiger
+  Collection: &Collection tiger
+  PaddingLength: &PaddingLength 64 # bytes
+  OperationCount: &OperationCount 1000000
+
+Actors:
+- Name: CRUDOps
+  Type: CrudActor
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *Database
+    Collection: *Collection
+    Operations:
+    - OperationName: drop
+  - Repeat: 1 # only 1 document is needed for this workload
+    Database: *Database
+    Collection: *Collection
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document:
+          _id: 1
+          padding: {^FastRandomString: {length: *PaddingLength}}
+  - Repeat: *OperationCount
+    Database: *Database
+    Collection: *Collection
+    Operations:
+    - OperationName: findOne
+      OperationCommand:
+        Filter: {_id: 1}
+
+# Guard against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - LogEvery: 5 minutes
+    Blocking: None
