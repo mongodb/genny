@@ -6,267 +6,348 @@ Description: >
   kept sufficiently small so that neither the partitioning nor the sorting, in the case of time
   based windows, will spill to disk.
 
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  MaxPhases: &MaxPhases 22
+
 Actors:
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
 - Name: InsertData
   Type: Loader
   Threads: 1
   Phases:
-  - Repeat: 1
-    Database: &db test
-    Threads: 1
-    CollectionCount: 1
-    # Choose a sufficiently small document count to keep from spilling to disk.
-    DocumentCount: 10000
-    BatchSize: &batchSize 10000
-    Document:
-      partitionKey: {^RandomInt: {min: 1, max: 5}}
-      time: {^RandomDate: {min: "2020-01-01", max: "2020-01-02"}}
-      temp: {^RandomDouble: {distribution: normal, mean: 145, sigma: 30.0}}
-  - &Nop {Nop: true}
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        CollectionCount: 1
+        Threads: 1
+        # Choose a sufficiently small document count to keep from spilling to disk.
+        DocumentCount: 10000
+        BatchSize: &batchSize 10000
+        Document:
+          partitionKey: {^RandomInt: {min: 1, max: 5}}
+          time: {^RandomDate: {min: "2020-01-01", max: "2020-01-02"}}
+          temp: {^RandomDouble: {distribution: normal, mean: 145, sigma: 30.0}}
 
+# Phase 2: Ensure all data is synced to disk.
 - Name: Quiesce
   Type: QuiesceActor
   Threads: 1
-  Database: admin
+  Database: *Database
   Phases:
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
 
-- Name: SlidingWindows
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 10
-    Database: *db
-    Operations:
-    - OperationMetricsName: MovingAvgPositionBased
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+# Phase 3-N: Run window function benchmarks
+- MovingAvgPositionBased:
+  LoadConfig: &loadConfig
+    Path: "../../phases/query/AggregateExpressions.yml"
+    Key: ExpressionTemplate
+    Parameters:
+      name: MovingAvgPositionBased
+      active: [3]
+      operationMetricsName: MovingAvgPositionBased
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {avg: {$avg: "$temp", window: {documents: [-5, 5]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MovingAvgTimeBased
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- MovingAvgTimeBased:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: MovingAvgTimeBased
+      active: [4]
+      operationMetricsName: MovingAvgTimeBased
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {avg: {$avg: "$temp", window: {range: [-1, 0], unit: "hour"}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MinPositionBased
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- MinPositionBased:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: MinPositionBased
+      active: [5]
+      operationMetricsName: MinPositionBased
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {min: {$min: "$temp", window: {documents: [-5, 5]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: MinTimeBased
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- MinTimeBased:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: MinTimeBased
+      active: [6]
+      operationMetricsName: MinTimeBased
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {min: {$min: "$temp", window: {range: [-1, 0], unit: "hour"}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: ExpMovingAvgSmallN
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- ExpMovingAvgSmallN:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpMovingAvgSmallN
+      active: [7]
+      operationMetricsName: ExpMovingAvgSmallN
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {ema: {$expMovingAvg: {input: "$temp", N: 10}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: ExpMovingAvgLargeN
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- ExpMovingAvgLargeN:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ExpMovingAvgLargeN
+      active: [8]
+      operationMetricsName: ExpMovingAvgLargeN
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {ema: {$expMovingAvg: {input: "$temp", N: 500}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: DerivativeSmallWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- DerivativeSmallWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: DerivativeSmallWindow
+      active: [9]
+      operationMetricsName: DerivativeSmallWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {rate: {
               $derivative: {input: "$temp", unit: "second"},
               window: {documents: [-10, 0]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: DerivativeLargeWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- DerivativeLargeWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: DerivativeLargeWindow
+      active: [10]
+      operationMetricsName: DerivativeLargeWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {rate: {
               $derivative: {input: "$temp", unit: "second"},
               window: {documents: [-500, 0]}}}}}]
-        cursor: {batchSize: *batchSize}
-  - *Nop
 
-
-- Name: SlidingWindows
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 10
-    Database: *db
-    Operations:
-    - OperationMetricsName: IntegralSmallWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+- IntegralSmallWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: IntegralSmallWindow
+      active: [11]
+      operationMetricsName: IntegralSmallWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {integral: {
               $integral: {input: "$temp", unit: "second"},
               window: {documents: [-10, 0]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: IntegralLargeWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- IntegralLargeWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: IntegralLargeWindow
+      active: [12]
+      operationMetricsName: IntegralLargeWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {integral: {
               $integral: {input: "$temp", unit: "second"},
               window: {documents: [-500, 0]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: AddToSetSmallWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- AddToSetSmallWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: AddToSetSmallWindow
+      active: [13]
+      operationMetricsName: AddToSetSmallWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {set: {
               $addToSet: "$temp",
               window: {documents: [-10, 0]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: AddToSetLargeWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- AddToSetLargeWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: AddToSetLargeWindow
+      active: [14]
+      operationMetricsName: AddToSetLargeWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {set: {
               $addToSet: "$temp",
               window: {documents: [-500, 0]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: PushSmallWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- PushSmallWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: PushSmallWindow
+      active: [15]
+      operationMetricsName: PushSmallWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {docs: {
               $push: "$temp",
               window: {documents: [-10, 0]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: PushLargeWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- PushLargeWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: PushLargeWindow
+      active: [16]
+      operationMetricsName: PushLargeWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {docs: {
               $push: "$temp",
               window: {documents: [-500, 0]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: FirstSmallWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- FirstSmallWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: FirstSmallWindow
+      active: [17]
+      operationMetricsName: FirstSmallWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {first: {
               $first: "$temp",
               window: {documents: [-10, 0]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: FirstLargeWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- FirstLargeWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: FirstLargeWindow
+      active: [18]
+      operationMetricsName: FirstLargeWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {first: {
               $first: "$temp",
               window: {documents: [-500, 0]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: LastSmallWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- LastSmallWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: LastSmallWindow
+      active: [19]
+      operationMetricsName: LastSmallWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {last: {
               $last: "$temp",
               window: {documents: [0, 10]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: LastLargeWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- LastLargeWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: LastLargeWindow
+      active: [20]
+      operationMetricsName: LastLargeWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {last: {
               $last: "$temp",
               window: {documents: [0, 500]}}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: ShiftSmallWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- ShiftSmallWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ShiftSmallWindow
+      active: [21]
+      operationMetricsName: ShiftSmallWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
@@ -276,12 +357,16 @@ Actors:
                   by: 10,
                   default: "Not available"
                }}}}}]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: ShiftLargeWindow
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- ShiftLargeWindow:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: ShiftLargeWindow
+      active: [22]
+      operationMetricsName: ShiftLargeWindow
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{$setWindowFields: {
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
@@ -291,7 +376,6 @@ Actors:
                   by: 500,
                   default: "Not available"
                }}}}}]
-        cursor: {batchSize: *batchSize}
 
 AutoRun:
 - When:
