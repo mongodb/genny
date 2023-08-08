@@ -344,7 +344,7 @@ TEST_CASE("PoolFactory behavior") {
     }
 
     SECTION("PoolManager can construct multiple pools") {
-        genny::v1::PoolManager manager{{}};
+        genny::v1::PoolManager manager{{}, true};
         genny::NodeSource ns{"Clients: {Default: {URI: 'mongodb:://localhost:27017', PreWarm: true}, Foo: {URI: 'mongodb:://localhost:27017', PreWarm: true}, Bar: {URI: 'mongodb:://localhost:27018', PreWarm: true}}", ""};
         auto& config = ns.root();
 
