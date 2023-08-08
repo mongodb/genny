@@ -60,7 +60,7 @@ mongocxx::pool::entry genny::v1::PoolManager::create_client(const std::string& n
                                                             const Node& context) {
     auto pool_entry = this->_create_client(name, instance, context);
     bool prewarm = context["Clients"][name]["PreWarm"].maybe<bool>().value_or(true);
-    if (prewarm) {
+    if (prewarm && !_dryRun) {
         auto ping = bsoncxx::builder::stream::document{} << "ping" << 1 << bsoncxx::builder::stream::finalize;
         pool_entry->database("admin").run_command(ping.view());
     }
