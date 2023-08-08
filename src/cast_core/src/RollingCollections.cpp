@@ -296,11 +296,11 @@ struct OplogTailer : public RunOperation {
     }
 
     std::optional<long> isRollingOplogEntry(const bsoncxx::document::view& doc) {
-        if (doc["op"].get_utf8().value.to_string() == "c") {
+        if (doc["op"].get_string().value.to_string() == "c") {
             auto object = doc["o"].get_document().value;
             auto it = object.find("create");
             if (it != object.end()) {
-                auto collectionName = object["create"].get_utf8().value.to_string();
+                auto collectionName = object["create"].get_string().value.to_string();
                 if (collectionName.substr(0, 2) == "r_") {
                     // It's a collection we care about,
                     // get the embedded millisecond time.

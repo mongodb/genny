@@ -87,7 +87,7 @@ void MoveRandomChunkToRandomShard::run() {
 
                 // Find a destination shard different to the source.
                 bsoncxx::document::value notEqualDoc = bsoncxx::builder::stream::document()
-                    << "$ne" << chunk["shard"].get_utf8() << bsoncxx::builder::stream::finalize;
+                    << "$ne" << chunk["shard"].get_string() << bsoncxx::builder::stream::finalize;
                 bsoncxx::document::value shardFilter = bsoncxx::builder::stream::document()
                     << "_id" << notEqualDoc.view() << bsoncxx::builder::stream::finalize;
                 auto numShards = configDatabase["shards"].count_documents(shardFilter.view());
@@ -108,7 +108,7 @@ void MoveRandomChunkToRandomShard::run() {
                     << "moveChunk" << config->collectionNamespace << "bounds"
                     << bsoncxx::builder::stream::open_array << chunk["min"].get_value()
                     << chunk["max"].get_value() << bsoncxx::builder::stream::close_array << "to"
-                    << shard["_id"].get_utf8() << bsoncxx::builder::stream::finalize;
+                    << shard["_id"].get_string() << bsoncxx::builder::stream::finalize;
                 // This is only for better readability when logging.
                 auto bounds = bsoncxx::builder::stream::document()
                     << "bounds" << bsoncxx::builder::stream::open_array << chunk["min"].get_value()
@@ -116,8 +116,8 @@ void MoveRandomChunkToRandomShard::run() {
                     << bsoncxx::builder::stream::finalize;
                 BOOST_LOG_TRIVIAL(info) << "MoveChunkToRandomShardActor moving chunk "
                                         << bsoncxx::to_json(bounds.view())
-                                        << " from: " << chunk["shard"].get_utf8().value.to_string()
-                                        << " to: " << shard["_id"].get_utf8().value.to_string();
+                                        << " from: " << chunk["shard"].get_string().value.to_string()
+                                        << " to: " << shard["_id"].get_string().value.to_string();
                 _client->database("admin").run_command(moveChunkCmd.view());
             } catch (mongocxx::operation_exception& e) {
                 BOOST_THROW_EXCEPTION(MongoException(
