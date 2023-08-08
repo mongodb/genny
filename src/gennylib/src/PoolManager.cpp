@@ -16,6 +16,7 @@
 #include <gennylib/v1/PoolFactory.hpp>
 #include <gennylib/v1/PoolManager.hpp>
 #include <mongocxx/client.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
 
 namespace genny::v1 {
 namespace {
@@ -60,7 +61,8 @@ mongocxx::pool::entry genny::v1::PoolManager::create_client(const std::string& n
     auto pool_entry = this->_create_client(name, instance, context);
     bool prewarm = context["Clients"][name]["PreWarm"].maybe<bool>().value_or(true);
     if (prewarm) {
-        pool_entry->list_databases();
+        auto ping = bsoncxx::builder::stream::document{} << "ping" << 1 << bsoncxx::builder::stream::finalize;
+        pool_entry->database("admin").run_command(ping.view());
     }
     return pool_entry;
 }
