@@ -32,7 +32,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 50
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 25
+  MaxPhases: &MaxPhases 30
 
 # Set of actor templates for executing a rooted $and/$or over a configurable number of clauses for
 # the aggregation and match languages, respectively.
@@ -679,6 +679,100 @@ Actors:
       Repeat: 1
       ActivePhase: 25
       NumberOfClauses: 200
+
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [26]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+# Populate collection for rooted $or index scan plans
+- Name: InsertDataForIndexScan
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [27]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Threads: *Threads
+        CollectionCount: 1
+        DocumentCount: *DocumentCount
+        BatchSize: 3000
+        Document:
+          a: {^RandomInt: {min: 0, max: 6}}
+          b: {^RandomInt: {min: 0, max: 6}}
+          c: {^RandomInt: {min: 0, max: 6}}
+
+- Name: CreateIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [28]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *Collection
+            indexes:
+            - key:
+                a: 1
+              name: a_1
+            - key:
+                a: 1
+                b: 1
+              name: a_1_b_1
+            - key:
+                a: 1
+                b: 1
+                c: 1
+              name: a_1_b_1_c_1
+
+# Ensure all data is synced to disk.
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [29]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+
+- Name: RunRootedOrQuery
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [30]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Database: *Database
+        Collection: *Collection
+        Operations:
+        - OperationMetricsName: RunRootedOrQuery
+          OperationName: find
+          OperationCommand:
+            Filter: {a:1, $or:[{b:2, c:2},{b:3,c:3},{b:4,c:4},{b:5,c:5}]}
 
 AutoRun:
 - When:
