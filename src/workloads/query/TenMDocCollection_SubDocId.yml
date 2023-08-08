@@ -27,7 +27,7 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
-          Duration: 30 seconds
+          Duration: 5 minutes
           Database: *Database
           Collection: *Collection
           Operations:
