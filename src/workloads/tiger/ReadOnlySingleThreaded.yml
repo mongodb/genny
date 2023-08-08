@@ -5,6 +5,7 @@ Description: |
   The goal is to use a single thread to measure the path-length of the hot path for `findOne`.
   Ideally, we should observe similar cost for running all `findOne` operations.
   Also, the CPU core corresponding to the `findOne` operation must be fully utilized.
+  It also runs a series of `ping` commands as a baseline.
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
@@ -39,6 +40,23 @@ Actors:
     - OperationName: findOne
       OperationCommand:
         Filter: {_id: 1}
+  - *Nop
+- Name: RunCommand
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: *OperationCount
+    Database: *Database
+    Collection: *Collection
+    Operations:
+    - OperationMetricsName: ping
+      OperationName: RunCommand
+      OperationIsQuiet: true
+      OperationCommand:
+        ping: 1
 
 # Guard against timeout for no output.
 - Name: LoggingActor
@@ -47,5 +65,7 @@ Actors:
   Phases:
   - *Nop
   - *Nop
+  - LogEvery: 5 minutes
+    Blocking: None
   - LogEvery: 5 minutes
     Blocking: None
