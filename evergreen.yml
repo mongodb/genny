@@ -190,7 +190,7 @@ tasks:
       - -v
       - resmoke-test
       - --suites
-      - ../../src/genny/src/resmokeconfig/genny_single_node_replset.yml
+      - src/genny/src/resmokeconfig/genny_single_node_replset.yml
 
 - name: t_integration_test_three_node_replset
   commands:
@@ -201,7 +201,7 @@ tasks:
       - -v
       - resmoke-test
       - --suites
-      - ../../src/genny/src/resmokeconfig/genny_three_node_replset.yml
+      - src/genny/src/resmokeconfig/genny_three_node_replset.yml
 
 - name: t_integration_test_sharded
   commands:
@@ -212,7 +212,7 @@ tasks:
       - -v
       - resmoke-test
       - --suites
-      - ../../src/genny/src/resmokeconfig/genny_sharded.yml
+      - src/genny/src/resmokeconfig/genny_sharded.yml
 
 # Must run this task last to avoid polluting test results with tests generated
 # by the new actor.
