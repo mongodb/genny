@@ -110,7 +110,6 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
             SchemaVersion: 2018-07-01
             Clients:
               Default:
-                PreWarm: false
                 URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestInsertWriteConcern
@@ -163,9 +162,9 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
         ah.run();
         auto coll = MongoTestFixture::client["test"]["testCollection"];
         REQUIRE(events.size() > 0);
-        auto&& event = events.front();
-        REQUIRE(event.command["writeConcern"]);
-        auto writeConcernLevel = event.command["writeConcern"]["w"].get_int32().value;
+        auto&& insert_event = events.back();
+        REQUIRE(insert_event.command["writeConcern"]);
+        auto writeConcernLevel = insert_event.command["writeConcern"]["w"].get_int32().value;
         REQUIRE(writeConcernLevel == 3);
     }
 
