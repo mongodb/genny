@@ -200,9 +200,3 @@ Actors:
       PhaseConfig:
         LogEvery: 15 minutes
         Blocking: None
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - resharding-3shard.2023-08
