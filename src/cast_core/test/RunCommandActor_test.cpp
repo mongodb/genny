@@ -110,6 +110,7 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
             SchemaVersion: 2018-07-01
             Clients:
               Default:
+                PreWarm: false
                 URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
             Actors:
             - Name: TestInsertWriteConcern
