@@ -7,57 +7,75 @@ Description: >
   creation of an index on the timestamp field to avoid generating a sort of the documents and
   running of the the cumulative window aggregations.
 
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  MaxPhases: &MaxPhases 11
+
 Actors:
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
 - Name: InsertData
   Type: Loader
   Threads: 1
   Phases:
-  - Repeat: 1
-    Database: &db test
-    Threads: 1
-    CollectionCount: 1
-    # Choose a collection large enough such that a sort will trigger a spill to disk.
-    # Note that we create an index on the sort field (t) to keep from generating a sort operation.
-    DocumentCount: 100000
-    BatchSize: &batchSize 100000
-    Document:
-      t: {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}}
-      x: {^RandomDouble: {distribution: normal, mean: 0, sigma: 3}}
-      y: {^RandomDouble: {distribution: normal, mean: 1, sigma: 3}}
-      z: {^RandomString: {length: 1000}}  # Unused field
-  - Nop: true
-  - Nop: true
-  - Nop: true
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        CollectionCount: 1
+        Threads: 1
+        # Choose a sufficiently small document count to keep from spilling to disk.
+        DocumentCount: 100000
+        BatchSize: &batchSize 100000
+        Document:
+          t: {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}}
+          x: {^RandomDouble: {distribution: normal, mean: 0, sigma: 3}}
+          y: {^RandomDouble: {distribution: normal, mean: 1, sigma: 3}}
+          z: {^RandomString: {length: 1000}}  # Unused field
 
 - Name: CreateIndex
   Type: RunCommand
   Threads: 1
   Phases:
-  - Nop: true
-  - Repeat: 1
-    Database: *db
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        createIndexes: Collection0
-        indexes: [{key: {t: 1}, name: "t"}]
-  - Nop: true
-  - Nop: true
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *Collection
+            indexes: [{key: {t: 1}, name: "t"}]
 
-- Name: CumulativeWindows
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Repeat: 10
-    Database: *db
-    Operations:
-    - OperationMetricsName: Sum
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+- SumCumulative:
+  LoadConfig: &loadConfig
+    Path: "../../phases/query/AggregateExpressions.yml"
+    Key: ExpressionTemplate
+    Parameters:
+      name: SumCumulative
+      active: [3]
+      operationMetricsName: SumCumulative
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -69,12 +87,16 @@ Actors:
               }
             }
           }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: Avg
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- AvgCumulative:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: AvgCumulative
+      active: [4]
+      operationMetricsName: AvgCumulative
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -86,12 +108,16 @@ Actors:
               }
             }
           }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: StdDevPop
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- StdDevPopCumulative:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: StdDevPopCumulative
+      active: [5]
+      operationMetricsName: StdDevPopCumulative
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -103,12 +129,16 @@ Actors:
               }
             }
           }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: StdDevSamp
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- StdDevSampCumulative:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: StdDevSampCumulative
+      active: [6]
+      operationMetricsName: StdDevSampCumulative
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -120,12 +150,16 @@ Actors:
               }
             }
           }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: CovPop
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- CovPopCumulative:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: CovPopCumulative
+      active: [7]
+      operationMetricsName: CovPopCumulative
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -137,12 +171,16 @@ Actors:
               }
             }
           }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: CovSamp
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- CovSampCumulative:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: CovSampCumulative
+      active: [8]
+      operationMetricsName: CovSampCumulative
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -154,24 +192,16 @@ Actors:
               }
             }
           }]
-        cursor: {batchSize: *batchSize}
-  - Nop: true
 
-- Name: CumulativeWindows
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Repeat: 10
-    Database: *db
-    Operations:
-    - OperationMetricsName: DocumentNumber
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+- DocumentNumber:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: DocumentNumber
+      active: [9]
+      operationMetricsName: DocumentNumber
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -182,12 +212,16 @@ Actors:
               }
             }
           }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: Rank
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- Rank:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: Rank
+      active: [10]
+      operationMetricsName: Rank
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -198,12 +232,16 @@ Actors:
               }
             }
           }]
-        cursor: {batchSize: *batchSize}
-    - OperationMetricsName: DenseRank
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
+
+- DenseRank:
+  LoadConfig:
+    <<: *loadConfig
+    Parameters:
+      name: DenseRank
+      active: [11]
+      operationMetricsName: DenseRank
+      nopInPhasesUpTo: *MaxPhases
+      Pipeline:
           [{
             $setWindowFields: {
               sortBy: {t: 1},
@@ -214,7 +252,6 @@ Actors:
               }
             }
           }]
-        cursor: {batchSize: *batchSize}
 
 AutoRun:
 - When:
