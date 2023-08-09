@@ -476,6 +476,7 @@ def resmoke_test(
 ):
     from genny.tasks import run_tests
 
+    suites = os.path.realpath(suites)
     run_tests.resmoke_test(
         genny_repo_root=ctx.obj["GENNY_REPO_ROOT"],
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
