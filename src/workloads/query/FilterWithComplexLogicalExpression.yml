@@ -709,13 +709,13 @@ Actors:
         Threads: *Threads
         CollectionCount: 1
         DocumentCount: *DocumentCount
-        BatchSize: 3000
+        BatchSize: 1000
         Document:
           a: {^RandomInt: {min: 0, max: 6}}
           b: {^RandomInt: {min: 0, max: 6}}
           c: {^RandomInt: {min: 0, max: 6}}
 
-- Name: CreateIndex
+- Name: CreateIndexForRootedOr
   Type: RunCommand
   Threads: 1
   Phases:
