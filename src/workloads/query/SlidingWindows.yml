@@ -160,7 +160,7 @@ Actors:
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {rate: {
-              $derivative: {input: "$temp", unit: "second"},
+              $derivative: {input: "$temp", unit: "hour"},
               window: {documents: [-10, 0]}}}}}]
 
 - DerivativeLargeWindow:
@@ -176,7 +176,7 @@ Actors:
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {rate: {
-              $derivative: {input: "$temp", unit: "second"},
+              $derivative: {input: "$temp", unit: "hour"},
               window: {documents: [-500, 0]}}}}}]
 
 - IntegralSmallWindow:
@@ -192,7 +192,7 @@ Actors:
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {integral: {
-              $integral: {input: "$temp", unit: "second"},
+              $integral: {input: "$temp", unit: "hour"},
               window: {documents: [-10, 0]}}}}}]
 
 - IntegralLargeWindow:
@@ -208,7 +208,7 @@ Actors:
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {integral: {
-              $integral: {input: "$temp", unit: "second"},
+              $integral: {input: "$temp", unit: "hour"},
               window: {documents: [-500, 0]}}}}}]
 
 - AddToSetSmallWindow:
@@ -390,10 +390,10 @@ Actors:
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {rate: {
-              $derivative: {input: "$temp", unit: "second"},
+              $derivative: {input: "$temp", unit: "hour"},
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - IntegralTimeBased:
@@ -409,10 +409,10 @@ Actors:
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {integral: {
-              $integral: {input: "$temp", unit: "second"},
+              $integral: {input: "$temp", unit: "hour"},
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - AddToSetTimeBased:
@@ -430,8 +430,8 @@ Actors:
             output: {set: {
               $addToSet: "$temp",
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - PushTimeBased:
@@ -449,8 +449,8 @@ Actors:
             output: {docs: {
               $push: "$temp",
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - FirstTimeBased:
@@ -468,8 +468,8 @@ Actors:
             output: {first: {
               $first: "$temp",
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - LastTimeBased:
@@ -487,8 +487,8 @@ Actors:
             output: {last: {
               $last: "$temp",
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - SumPositionBased:
@@ -521,8 +521,8 @@ Actors:
             output: {sum: {
               $sum: "$temp",
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - AvgPositionBased:
@@ -555,8 +555,8 @@ Actors:
             output: {avg: {
               $avg: "$temp",
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - MaxPositionBased:
@@ -589,8 +589,8 @@ Actors:
             output: {max: {
               $max: "$temp",
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - MinPositionBased:
@@ -623,8 +623,8 @@ Actors:
             output: {min: {
               $min: "$temp",
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - TopPositionBased:
@@ -657,8 +657,8 @@ Actors:
             output: {top: {
               $top: {sortBy: {time: 1}, output: "$temp"},
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - BottomPositionBased:
@@ -691,8 +691,8 @@ Actors:
             output: {bottom: {
               $bottom: {sortBy: {time: 1}, output: "$temp"},
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - MaxNPositionBased:
@@ -726,8 +726,8 @@ Actors:
             output: {maxN: {
               $maxN: {input: "$temp", n: 4},
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - MinNPositionBased:
@@ -761,8 +761,8 @@ Actors:
             output: {minN: {
               $minN: {input: "$temp", n: 4},
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - TopNPositionBased:
@@ -796,8 +796,8 @@ Actors:
             output: {topN: {
               $topN: {sortBy: {time: 1}, output: "$temp", n: 4},
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - BottomNPositionBased:
@@ -831,8 +831,8 @@ Actors:
             output: {bottomN: {
               $bottomN: {sortBy: {time: 1}, output: "$temp", n: 4},
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - FirstNPositionBased:
@@ -866,8 +866,8 @@ Actors:
             output: {firstN: {
               $firstN: {input: "$temp", n: 4},
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - LastNPositionBased:
@@ -901,8 +901,8 @@ Actors:
             output: {lastN: {
               $lastN: {input: "$temp", n: 4},
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - StdDevPopPositionBased:
@@ -936,8 +936,8 @@ Actors:
             output: {stdDevPop: {
               $stdDevPop: "$temp",
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - StdDevSampPositionBased:
@@ -971,8 +971,8 @@ Actors:
             output: {stdDevSamp: {
               $stdDevSamp: "$temp",
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - CovariancePopPositionBased:
@@ -1006,8 +1006,8 @@ Actors:
             output: {covariancePop: {
               $covariancePop: "$temp",
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 - CovarianceSampPositionBased:
@@ -1041,8 +1041,8 @@ Actors:
             output: {covarianceSamp: {
               $covarianceSamp: "$temp",
               window: {
-                range: [-10, 10],
-                unit: "second"
+                range: [-1, 0],
+                unit: "hour"
               }}}}}]
 
 AutoRun:
