@@ -241,7 +241,7 @@ class _WorkloadParser(object):
             out = self._replace_numexpr(value)
         elif key == "^FlattenOnce":
             out = self._replace_flattenonce(value)
-        elif key == "^FormatString":
+        elif key == "^PreprocessorFormatString":
             out = self._replace_formatstr(value)
         elif key == "ActorTemplates":
             self._parse_templates(value)
@@ -346,7 +346,7 @@ class _WorkloadParser(object):
             raise ParseException(msg)
 
     def _replace_formatstr(self, input):
-        OP_KEY = "^FormatString"
+        OP_KEY = "^PreprocessorFormatString"
         FORMAT_KEY = "format"
         ARGS_KEY = "withArgs"
 
@@ -371,8 +371,7 @@ class _WorkloadParser(object):
                 f"Node source: {input}\n"
                 f"Faulting key: {e}\n"
             )
-            print(msg, file=sys.stderr)
-            return {OP_KEY: self._recursive_parse(input)}
+            raise ParseException(msg)
         except Exception as e:
             msg = (
                 f"Warning: not preprocessing '{OP_KEY}' because:\n"
@@ -380,8 +379,7 @@ class _WorkloadParser(object):
                 f"Node source: {input}\n"
                 f"Exception: {e}\n"
             )
-            print(msg, file=sys.stderr)
-            return {OP_KEY: self._recursive_parse(input)}
+            raise ParseException(msg)
 
     def _parse_templates(self, templates):
         for template_node in templates:

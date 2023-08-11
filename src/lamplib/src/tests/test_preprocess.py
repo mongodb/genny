@@ -632,7 +632,7 @@ Test: {^NumExpr: {withExpression: "a - b", andValues: {a: *Param1, b: "25"}}}
     def test_formatstring_with_preprocessable_args(self):
         yaml_input = """SchemaVersion: 2018-07-01
 Document:
-  ^FormatString:
+  ^PreprocessorFormatString:
     format: "%s %04d"
     withArgs:
     - Test
@@ -652,12 +652,12 @@ Document: Test 0012
     def test_formatstring_with_invalid_args(self):
         yaml_input = """SchemaVersion: 2018-07-01
 Document:
-- ^FormatString:
+- ^PreprocessorFormatString:
     format: "%s %04d"
     withArgs:
     - Test
     - [0, 0, 1, 2]
-- ^FormatString:
+- ^PreprocessorFormatString:
     format: "%04d"
     withArgs:
     - ^Array:
@@ -665,90 +665,19 @@ Document:
         of: 1
 """
 
-        expected = """SchemaVersion: '2018-07-01'
-Document:
-- ^FormatString:
-    format: '%s %04d'
-    withArgs:
-    - Test
-    - - 0
-      - 0
-      - 1
-      - 2
-- ^FormatString:
-    format: '%04d'
-    withArgs:
-    - ^Array:
-        number: 4
-        of: 1
-"""
-
-        self._assertYaml(yaml_input, expected)
+        self._assertParseException(yaml_input)
 
     def test_formatstring_with_invalid_arg_type(self):
         yaml_input = """SchemaVersion: 2018-07-01
 Document:
-  ^FormatString:
+  ^PreprocessorFormatString:
     format: "%s %04d"
     withArgs:
     - Test
     - "0012"
 """
 
-        expected = """SchemaVersion: '2018-07-01'
-Document:
-  ^FormatString:
-    format: '%s %04d'
-    withArgs:
-    - Test
-    - '0012'
-"""
-
-        self._assertYaml(yaml_input, expected)
-
-    def test_formatstring_with_mixed_success(self):
-        yaml_input = """SchemaVersion: 2018-07-01
-Document:
-- ^FormatString:
-    format: "%s %04d"
-    withArgs:
-    - Test
-    - ^NumExpr:
-        withExpression: "a * b"
-        andValues:
-          a: 3
-          b: 4
-- ^FormatString:
-    format: '%s %04d'
-    withArgs:
-    - Test
-    - [0, 0, 1, 2]
-- ^FormatString:
-    format: "%s %04d"
-    withArgs:
-    - Test
-    - "0012"
-"""
-
-        expected = """SchemaVersion: '2018-07-01'
-Document:
-- Test 0012
-- ^FormatString:
-    format: '%s %04d'
-    withArgs:
-    - Test
-    - - 0
-      - 0
-      - 1
-      - 2
-- ^FormatString:
-    format: '%s %04d'
-    withArgs:
-    - Test
-    - '0012'
-"""
-
-        self._assertYaml(yaml_input, expected)
+        self._assertParseException(yaml_input)
 
     def test_flatten_array_valid_type_arrays(self):
         yaml_input = """SchemaVersion: 2018-07-01
