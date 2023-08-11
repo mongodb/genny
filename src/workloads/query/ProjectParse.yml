@@ -1,0 +1,110 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  Test $project parsing performance for small and large number of fields. We previously (before August 2023)
+  had a quadratic $project parsing algorithm which would take hours for the largest stages, due to a linear
+  search through all currently parsed fields rather than a map lookup. It should now take milliseconds to parse.
+  This issue was fixed by SERVER-78580, and discovered by SERVER-62509.
+
+GlobalDefaults:
+  dbname: &db test
+  coll: &coll Collection0
+  nop: &Nop {Nop: true}
+
+Keywords:
+- Project
+- Parsing
+- Aggregation
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *db
+    Collection: *coll
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10
+    BatchSize: 10
+    Document:
+      m: {^Inc: {start: 0}}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - *Nop
+  - Repeat: 1
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: ProjectQueries
+  Type: CrudActor
+  Database: *db
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Duration: 5 minutes
+    Collection: *coll
+    Operations:
+    - OperationMetricsName: ProjectParseSmall
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline: [
+          {$project : {^Object: {
+              withNEntries: 10,
+              havingKeys: {^FastRandomString: {length: 10}},
+              andValues: 1,
+              duplicatedKeys: skip
+            }}}
+        ]
+  - Duration: 5 minutes
+    Collection: *coll
+    Operations:
+    - OperationMetricsName: ProjectParseMedium
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline: [
+          {$project : {^FixedGeneratedValue: {fromGenerator: {^Object: {
+              withNEntries: 101,
+              havingKeys: {^FastRandomString: {length: 10}},
+              andValues: 1,
+              duplicatedKeys: skip
+            }}}}}
+        ]
+  - Duration: 5 minutes
+    Collection: *coll
+    Operations:
+    - OperationMetricsName: ProjectParseLarge
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline: [
+          {$project : {^FixedGeneratedValue: {fromGenerator: {^Object: {
+              withNEntries: 20000,
+              havingKeys: {^RandomString: {length: 10}},
+              andValues: 1,
+              duplicatedKeys: skip
+            }}}}}
+        ]
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-sbe
+      - standalone-query-stats
+    branch_name:
+      $gte:
+        v7.0

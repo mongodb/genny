@@ -208,16 +208,16 @@ public:
         StreamPtr stream = nullptr;
 
         auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
-        auto& opsByType = this->_ops[actorName];
-        auto& opsByThread = opsByType[opName];
+        OperationsByType& opsByType = this->_ops[actorName];
+        OperationsByThread& opsByThread = opsByType[opName];
         if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
             auto name = createName(actorName, opName, phase, internal);
             stream = _grpcClient->createStream(actorId, name, phase, pathPrefix);
         }
-        auto opIt =
+        OperationImpl<ClockSource>& op =
             opsByThread.try_emplace(actorId, std::move(actorName), *this, std::move(opName), stream)
-                .first;
-        return OperationT{opIt->second};
+               .first->second;
+        return OperationT{op};
     }
 
     OperationT<ClockSource> operation(std::string actorName,
@@ -228,15 +228,15 @@ public:
                                       std::optional<genny::PhaseNumber> phase = std::nullopt,
                                       bool internal = false) {
         std::lock_guard<std::mutex> lk(*_opLock);
-        auto& opsByType = this->_ops[actorName];
-        auto& opsByThread = opsByType[opName];
+        OperationsByType& opsByType = this->_ops[actorName];
+        OperationsByThread& opsByThread = opsByType[opName];
         auto pathPrefix = internal ? _internalPathPrefix : _pathPrefix;
         StreamPtr stream = nullptr;
         if (_format.useGrpc() && opsByThread.find(actorId) == opsByThread.end()) {
             auto name = createName(actorName, opName, phase, internal);
             stream = _grpcClient->createStream(actorId, name, phase, pathPrefix);
         }
-        auto opIt =
+        OperationImpl<ClockSource>& op =
             opsByThread
                 .try_emplace(
                     actorId,
@@ -246,8 +246,8 @@ public:
                     stream,
                     std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
                         threshold, percentage))
-                .first;
-        return OperationT{opIt->second};
+                .first->second;
+        return OperationT{op};
     }
 
     [[nodiscard]] const OperationsMap& getOps(v1::Permission) const {

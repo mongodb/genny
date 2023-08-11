@@ -136,7 +136,7 @@ def wait_for_commit(workload_yaml):
     help=("Pause the migration"),
 )
 @click.argument("workload_yaml", nargs=1)
-def commit(workload_yaml):
+def pause(workload_yaml):
     change_state(workload_yaml, "/api/v1/pause", {})
 
 
@@ -145,7 +145,7 @@ def commit(workload_yaml):
     help=("Resume the migration"),
 )
 @click.argument("workload_yaml", nargs=1)
-def commit(workload_yaml):
+def resume(workload_yaml):
     change_state(workload_yaml, "/api/v1/resume", {})
 
 
