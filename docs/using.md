@@ -424,7 +424,7 @@ SleepTest.SleepTest summary:
 
 ```
 
-Try using `python test_results_summary.py --help` for more options.
+Try using `python test_result_summary.py --help` for more options.
 
 <a id="org0e7c476"></a>
 
