@@ -15,8 +15,8 @@ Description: |
 
   The workload consists of 3 phases:
     1. Turning off balancer and make the sharded collection exists on only 1 shard.
-    4. Running read and write operations on the collection while it is being resharded to 2 shards.
-    5. Running read and write operations on the collection while it is being resharded to 3 shards.
+    2. Running read and write operations on the collection while it is being resharded to 2 shards.
+    3. Running read and write operations on the collection while it is being resharded to 3 shards.
 
   All documents are generated through genny' data loader where the integer and length of short 
   string fields are randomly generated. The fields are designed like to form different combinations 
@@ -196,7 +196,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [1, 2]
-      NopInPhasesUpTo: 4
+      NopInPhasesUpTo: 2
       PhaseConfig:
         LogEvery: 15 minutes
         Blocking: None
