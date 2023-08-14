@@ -17,25 +17,6 @@ GlobalDefaults:
   Collection: &Collection Collection0
   MaxPhases: &MaxPhases 5
 
-ActorTemplates:
-- TemplateName: IDHACK
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "IDHackQuery"}}
-    Type: CrudActor
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Duration: 5 minutes
-          Database: *Database
-          Collection: *Collection
-          Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: {_id: {^ObjectId: {^FormatString: {"format": "%07d%s", "withArgs": [{^RandomInt: {min: 0, max: 9999999}}, "bbbbbbbbbbbbbbbbb"]}}}}
-
 Actors:
 # Clear any pre-existing collection state.
 - Name: ClearCollection
@@ -53,22 +34,16 @@ Actors:
         Operations:
         - OperationName: drop
 
-- Name: LoadObjectIDs
-  Type: Loader
-  Threads: 10
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
+- LoadObjectIDs:
+  LoadConfig:
+    Path: "../../phases/query/IDHack.yml"
+    Key: LoadObjectIdTemplate
+    Parameters:
+      Name: LoadObjectIDs
+      OnlyActiveInPhase: 1
       NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: 10000000
-        BatchSize: 1000
-        Document:
-          _id: {^ObjectId: {^FormatString: {"format": "%07d%s", "withArgs": [{^Inc: {start: -2000000, multiplier: 1000000}}, "bbbbbbbbbbbbbbbbb"]}}}
+      Database: *Database
+      DocumentCount: 1000
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -81,26 +56,39 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- ActorFromTemplate:
-    TemplateName: IDHACK
-    TemplateParameters:
+- IDHack32Threads:
+  LoadConfig: &loadIdHackConfig
+    Path: "../../phases/query/IDHack.yml"
+    Key: IDHackObjectIdTemplate
+    Parameters:
       Name: IDHack32Threads
       Threads: 32
       OnlyActiveInPhase: 3
+      NopInPhasesUpTo: *MaxPhases
+      Database: *Database
+      Collection: *Collection
 
-- ActorFromTemplate:
-    TemplateName: IDHACK
-    TemplateParameters:
+- IDHack128Threads:
+  LoadConfig:
+    <<: *loadIdHackConfig
+    Parameters:
       Name: IDHack128Threads
       Threads: 128
       OnlyActiveInPhase: 4
+      NopInPhasesUpTo: *MaxPhases
+      Database: *Database
+      Collection: *Collection
 
-- ActorFromTemplate:
-    TemplateName: IDHACK
-    TemplateParameters:
+- IDHack256Threads:
+  LoadConfig:
+    <<: *loadIdHackConfig
+    Parameters:
       Name: IDHack256Threads
       Threads: 256
       OnlyActiveInPhase: 5
+      NopInPhasesUpTo: *MaxPhases
+      Database: *Database
+      Collection: *Collection
 
 AutoRun:
 - When:

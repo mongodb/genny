@@ -1,0 +1,39 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  Defines common configurations for IDHack query workloads.
+
+IDHackObjectIdTemplate:
+  Name: {^Parameter: {Name: "Name", Default: "IDHackObjectId"}}
+  Type: CrudActor
+  Threads: {^Parameter: {Name: "Threads", Default: 1}}
+  Phases:
+    OnlyActiveInPhases:
+      Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+      NopInPhasesUpTo: {^Parameter: {Name: "NopInPhasesUpTo", Default: 99}}
+      PhaseConfig:
+        Duration: 15 seconds
+        Database: {^Parameter: {Name: "Database", Default: test}}
+        Collection: {^Parameter: {Name: "Collection", Default: Collection0}}
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {_id: {^ObjectId: {^FormatString: {"format": "%07d%s", "withArgs": [{^RandomInt: {min: 0, max: 9999999}}, "bbbbbbbbbbbbbbbbb"]}}}}
+
+LoadObjectIdTemplate:
+  Name: {^Parameter: {Name: "Name", Default: "LoadObjectIDs"}}
+  Type: Loader
+  Threads: 10
+  Phases:
+    OnlyActiveInPhases:
+      Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+      NopInPhasesUpTo: {^Parameter: {Name: "NopInPhasesUpTo", Default: 99}}
+      PhaseConfig:
+        Repeat: 1
+        Database: {^Parameter: {Name: "Database", Default: test}}
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: {^Parameter: {Name: "DocumentCount", Default: 10000000}}
+        BatchSize: 1000
+        Document:
+          _id: {^ObjectId: {^FormatString: {"format": "%07d%s", "withArgs": [{^Inc: {start: -2000000, multiplier: 1000000}}, "bbbbbbbbbbbbbbbbb"]}}}
