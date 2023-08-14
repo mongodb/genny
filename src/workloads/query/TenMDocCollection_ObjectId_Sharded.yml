@@ -69,7 +69,7 @@ Actors:
     Parameters:
       Name: IDHack32Threads
       Threads: 32
-      OnlyActiveInPhase: 5
+      OnlyActiveInPhase: 3
       NopInPhasesUpTo: *MaxPhases
       Database: *Database
       Collection: *Collection
@@ -91,7 +91,7 @@ Actors:
     Parameters:
       Name: IDHack256Threads
       Threads: 256
-      OnlyActiveInPhase: 3
+      OnlyActiveInPhase: 5
       NopInPhasesUpTo: *MaxPhases
       Database: *Database
       Collection: *Collection
