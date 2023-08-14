@@ -1,0 +1,121 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload tests performance of IDHACK on queries with OID _id on a sharded collection.
+
+KeyWords:
+- IDHACK
+- OID
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 2000
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  Namespace: &Namespace test.Collection0
+  MaxPhases: &MaxPhases 5
+
+ActorTemplates:
+- TemplateName: IDHACK
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "IDHackQuery"}}
+    Type: CrudActor
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 15 seconds
+          Database: *Database
+          Collection: *Collection
+          Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {_id: {^ObjectId: {^FormatString: {"format": "%07d%s", "withArgs": [{^RandomInt: {min: 0, max: 9999999}}, "bbbbbbbbbbbbbbbbb"]}}}}
+
+Actors:
+# Clear any pre-existing collection state.
+- Name: CreateShardedCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Operations:
+        - OperationName: AdminCommand
+          OperationMetricsName: EnableSharding
+          OperationCommand:
+            enableSharding: *Database
+        - OperationName: AdminCommand
+          OperationMetricsName: ShardCollection
+          OperationCommand:
+            shardCollection: *Namespace
+            key: {_id: "hashed"}
+            numInitialChunks: 12
+
+- Name: LoadObjectIDs
+  Type: Loader
+  Threads: 10
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: 10000000
+        BatchSize: 1000
+        Document:
+          _id: {^ObjectId: {^FormatString: {"format": "%07d%s", "withArgs": [{^Inc: {start: -2000000, multiplier: 1000000}}, "bbbbbbbbbbbbbbbbb"]}}}
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHack32Threads
+      Threads: 32
+      OnlyActiveInPhase: 3
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHack128Threads
+      Threads: 128
+      OnlyActiveInPhase: 4
+
+- ActorFromTemplate:
+    TemplateName: IDHACK
+    TemplateParameters:
+      Name: IDHack256Threads
+      Threads: 256
+      OnlyActiveInPhase: 5
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-query-stats
+      - shard-limited-query-stats
+      - shard-lite
+      - shard-lite-query-stats
+      - shard-lite-limited-query-stats
