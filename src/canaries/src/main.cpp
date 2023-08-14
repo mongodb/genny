@@ -14,6 +14,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <metrics/metrics.hpp>
 #include <string>
 #include <vector>
 
@@ -42,6 +43,7 @@ struct ProgramOptions {
     bool _isHelp = false;
 
     int64_t _iterations = 0;
+    std::chrono::seconds _logEverySeconds{0};
 
     std::string _description;
     std::string _mongoUri;
@@ -82,6 +84,7 @@ struct ProgramOptions {
     )"
                  << "\n";
 
+        using namespace std::chrono_literals;
         progDesc << "Options";
         po::options_description optDesc(progDesc.str());
         po::positional_options_description positional;
@@ -100,6 +103,9 @@ struct ProgramOptions {
         ("iterations,i",
                 po::value<int64_t>()->default_value(10000),
                 "Number of iterations to run the tests")
+        ("log-every,l",
+                po::value<int64_t>()->default_value(std::chrono::seconds(15min).count()),
+                "Log every number of seconds, defaults to 15 minutes")
         ("mongo-uri,u",
                 po::value<std::string>()->default_value("mongodb://localhost:27017"))
         ("metrics-output-file,o",
@@ -144,7 +150,29 @@ struct ProgramOptions {
             _loopNames = {"simple", "phase", "metrics", "metrics-ftdc", "real", "real-ftdc"};
 
         _iterations = vm["iterations"].as<int64_t>();
+
+        auto logEverySeconds = vm["log-every"].as<int64_t>();
+        _logEverySeconds = std::chrono::seconds{logEverySeconds < 0 ? 1 : logEverySeconds};
+
         _mongoUri = vm["mongo-uri"].as<std::string>();
+    }
+};
+
+// Simple logging thread, print message logEverySeconds until completed.
+// The thread loops until complete and sleeps for logEverySeconds between logging.
+void logging_thread(bool& complete, std::chrono::seconds logEverySeconds) {
+    metrics::clock::time_point started{metrics::clock::now()};
+    metrics::clock::time_point last{started};
+
+    while(!complete) {
+        const auto now = metrics::clock::now();
+        const auto duration = now - last;
+        if (duration >= logEverySeconds) {
+            BOOST_LOG_TRIVIAL(info) << "Canary still progressing (" <<
+                std::chrono::duration_cast<std::chrono::seconds>(now - started).count() << "s)";
+            last = now;
+        }
+        std::this_thread::sleep_for(logEverySeconds - duration);
     }
 };
 
@@ -157,6 +185,14 @@ int main(int argc, char** argv) {
     }
 
     std::vector<Nanosecond> results;
+    bool complete = false;
+
+    // Create a new logging thread and detach to ensure that the process can end without error
+    // or blocking.
+    auto t = std::thread([&]() {
+        logging_thread(complete, opts._logEverySeconds);
+    });
+    t.detach();
 
     if (opts._task == "nop")
         results = runTest<NopTask>(opts._loopNames, opts._iterations);
@@ -175,6 +211,11 @@ int main(int argc, char** argv) {
         stm << "Unknown task name: " << opts._task;
         throw InvalidConfigurationException(stm.str());
     }
+
+    // set complete and yield to let the logger terminate gracefully. The thread is detached, so
+    //  you can't join, and it won't block the main thread from exiting.
+    complete = true;
+    std::this_thread::yield();
 
     std::cout << "Total duration for " << opts._task << ":" << std::endl;
     for (int i = 0; i < results.size(); i++) {
