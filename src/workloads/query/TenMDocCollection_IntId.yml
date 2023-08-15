@@ -92,21 +92,21 @@ Actors:
 - ActorFromTemplate:
     TemplateName: CrudTemplate
     TemplateParameters:
-      Name: IDHACK32Threads
+      Name: IDHack32Threads
       Find: &IDHACKFind {Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}}
       OnlyActiveInPhase: 3
       Threads: 32
 - ActorFromTemplate:
     TemplateName: CrudTemplate
     TemplateParameters:
-      Name: IDHACK128Threads
+      Name: IDHack128Threads
       Find: *IDHACKFind
       OnlyActiveInPhase: 4
       Threads: 128
 - ActorFromTemplate:
     TemplateName: CrudTemplate
     TemplateParameters:
-      Name: IDHACK256Threads
+      Name: IDHack256Threads
       Find: *IDHACKFind
       OnlyActiveInPhase: 5
       Threads: 256
@@ -116,7 +116,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: CrudTemplate
     TemplateParameters:
-      Name: IDHACKPointProject128Threads
+      Name: IDHackPointProject128Threads
       Find:
         Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}
         Options:
