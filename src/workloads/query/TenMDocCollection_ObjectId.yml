@@ -43,7 +43,7 @@ Actors:
       OnlyActiveInPhase: 1
       NopInPhasesUpTo: *MaxPhases
       Database: *Database
-      DocumentCount: 1000
+      DocumentCount: 10000000
 
 - Name: Quiesce
   Type: QuiesceActor
