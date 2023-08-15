@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests performance of IDHACK on queries with OID _id.
+  This workload tests performance of IDHACK on queries with OID _id on a sharded collection.
 
 KeyWords:
 - IDHACK
@@ -15,13 +15,12 @@ Clients:
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
+  Namespace: &Namespace test.Collection0
   MaxPhases: &MaxPhases 5
 
 Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
+- Name: CreateShardedCollection
+  Type: AdminCommand
   Threads: 1
   Phases:
     OnlyActiveInPhases:
@@ -29,10 +28,17 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
-        Threads: 1
-        Collection: *Collection
         Operations:
-        - OperationName: drop
+        - OperationName: AdminCommand
+          OperationMetricsName: EnableSharding
+          OperationCommand:
+            enableSharding: *Database
+        - OperationName: AdminCommand
+          OperationMetricsName: ShardCollection
+          OperationCommand:
+            shardCollection: *Namespace
+            key: {_id: "hashed"}
+            numInitialChunks: 12
 
 - LoadObjectIDs:
   LoadConfig:
@@ -94,19 +100,9 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - standalone-all-feature-flags
-      - standalone-query-stats
-      - standalone
-      - standalone-query-stats-small-rate-limit
       - shard
       - shard-query-stats
       - shard-limited-query-stats
       - shard-lite
       - shard-lite-query-stats
       - shard-lite-limited-query-stats
-      - single-replica
-      - single-replica-query-stats
-      - replica
-      - replica-query-stats
-      - atlas-like-replica.2022-10
-      - atlas-like-replica-query-stats.2022-10
