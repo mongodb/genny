@@ -1,0 +1,143 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  This workload is a more stressful version of MixedWorkloadsGenny.yml, which itself is a port of
+  the mixed_workloads in the workloads,
+  repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
+  operations, each with dedicated actors/threads. The 4 operations are insertOne, findOne,
+  updateOne, and deleteOne. Since each type of operation runs in a dedicated thread it enables
+  interesting behavior, such as reads getting faster because of a write regression, or reads being
+  starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
+  starved out by writes.
+
+  This more stressful version of the test only runs one test phase, using 1024 threads per operation
+  for 45 minutes.
+
+# This workload does not support sharding yet.
+
+Keywords:
+- scale
+- insertOne
+- insert
+
+dbname: &dbname mix
+CollectionCount: &NumColls 512
+PhaseDuration: &PhaseDuration 1 minute
+Document: &doc
+  _id: {^Inc : {}}
+  sortKey: {^Inc : {}}
+  accountId: {^FastRandomString: {length: 10}}
+  accountOfficerId: 1
+  amountInAccountCurrency: {^RandomDouble: { min: 0.0, max: 1000.0 }}
+  amountInEventCurrency: {^RandomDouble: { min: 0.0, max: 1000.0 }}
+  bookingDate: {^RandomDate: {min: "2020-01-01", max: "2023-01-01"}}
+  categorisactionId: 130
+  chequeNumber: 123
+  currency: "USD"
+  customerId: { ^RandomInt: { min: 10000, max: 100000 } }
+  customerReference: "FT21105YDXJT"
+  extensionData: {}
+  externalIndicator: false
+  externalReference: "XYZ"
+  narrative: "ABC"
+  objectID: {^FastRandomString: {length: 25}}
+  processingDate: {^RandomDate: {min: "2020-01-01", max: "2023-01-01"}}
+  recordId: 197453644225786.030004
+  runningBalance: {^RandomDouble: { min: 0.0, max: 1000.0 }}
+  transactionAmount: {^RandomDouble: { min: 0.0, max: 1000.0 }}
+  transactionReference: "FT21105YDXJT"
+  valueDate: {^RandomDate: {min: "2020-01-01", max: "2023-01-01"}}
+
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 2500
+  Insert:
+    QueryOptions:
+      maxPoolSize: 2500
+
+ActorTemplates:
+
+- TemplateName: InsertTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Insert"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Insert
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+        NopInPhasesUpTo: 2
+        PhaseConfig:
+          Repeat: 100000
+          RecordFailure: true
+          CollectionCount: *NumColls
+          Operations:
+          - OperationName: insertOne
+            OperationCommand:
+              Document: *doc
+
+- TemplateName: FindTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "Find"}}
+    Type: CrudActor
+    Database: *dbname
+    ClientName: Default
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 2}}]
+        NopInPhasesUpTo: 2
+        PhaseConfig:
+          Repeat: 100000
+          RecordFailure: true
+          CollectionCount: *NumColls
+          Operations:
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {_id: {^RandomInt: {min: 0, max: 100000}}}
+
+Actors:
+
+# Insert Actors
+- ActorFromTemplate:
+    TemplateName: InsertTemplate
+    TemplateParameters:
+      Name: Insert_1024
+      Threads: 128
+      OnlyActiveInPhase: 1
+
+# Find Actors
+- ActorFromTemplate:
+    TemplateName: FindTemplate
+    TemplateParameters:
+      Name: Find_1024
+      Threads: 256
+      OnlyActiveInPhase: 2
+
+# Guard Against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0, 2]
+      NopInPhasesUpTo: 2
+      PhaseConfig:
+        LogEvery: 10 seconds
+        Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas
+      - replica
+      - replica-disable-execution-control
+      - atlas-like-replica.2022-10
+      - atlas-like-replica
+    atlas_setup:
+      $neq:
+      - M30-repl
