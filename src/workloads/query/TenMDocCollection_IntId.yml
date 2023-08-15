@@ -20,7 +20,7 @@ Clients:
       socketTimeoutMS: 3_600_000  # 1 hour
 
 ActorTemplates:
-- TemplateName: Workload
+- TemplateName: CrudTemplate
   Config:
     Name: {^Parameter: {Name: "Name", Default: {unused: "Need to specify the actor name."}}}
     Type: CrudActor
@@ -90,79 +90,84 @@ Actors:
       PhaseConfig:
         Repeat: 1
 - ActorFromTemplate:
-    TemplateName: Workload
+    TemplateName: CrudTemplate
     TemplateParameters:
-      Find: &IDHACKFind {Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}}
       Name: IDHACK32Threads
+      Find: &IDHACKFind {Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}}
       OnlyActiveInPhase: 3
       Threads: 32
 - ActorFromTemplate:
-    TemplateName: Workload
+    TemplateName: CrudTemplate
     TemplateParameters:
-      Find: *IDHACKFind
       Name: IDHACK128Threads
+      Find: *IDHACKFind
       OnlyActiveInPhase: 4
       Threads: 128
 - ActorFromTemplate:
-    TemplateName: Workload
+    TemplateName: CrudTemplate
     TemplateParameters:
-      Find: *IDHACKFind
       Name: IDHACK256Threads
+      Find: *IDHACKFind
       OnlyActiveInPhase: 5
       Threads: 256
+
+# Only run these variants at 128 threads because the additional thread counts of
+# 32 and 256 produce roughly similar throughput values.
 - ActorFromTemplate:
-    TemplateName: Workload
+    TemplateName: CrudTemplate
     TemplateParameters:
+      Name: IDHACKPointProject128Threads
       Find:
         Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}
         Options:
           Projection: {_id: 1}
-      Name: IDHACKPointProject128Threads
       OnlyActiveInPhase: 6
       Threads: 128
 - ActorFromTemplate:
-    TemplateName: Workload
+    TemplateName: CrudTemplate
     TemplateParameters:
+      Name: IDFieldPointProject128Threads
       Find:
+        # Using $eq turns this from an IDHACK find into a scan find.
         Filter: {_id: {$eq: {^RandomInt: {min: 0, max: 9999999}}}}
         Options:
           Projection: {_id: 1}
-      Name: IDFieldPointProject128Threads
       OnlyActiveInPhase: 7
       Threads: 128
 - ActorFromTemplate:
-    TemplateName: Workload
+    TemplateName: CrudTemplate
     TemplateParameters:
-      Find: {Filter: {a: {$eq: {^RandomInt: {min: 10000000, max: 19999999}}}}}
       Name: IntFieldEq128Threads
+      Find: {Filter: {a: {$eq: {^RandomInt: {min: 10000000, max: 19999999}}}}}
       OnlyActiveInPhase: 8
       Threads: 128
 - ActorFromTemplate:
-    TemplateName: Workload
+    TemplateName: CrudTemplate
     TemplateParameters:
+      Name: IntField10KIn128Threads
       Find:
         Filter: {a: {$in: {^Array: {
           distinct: true,
           number: 10000,
           of: {^RandomInt: {min: 10000000, max: 19999999}}}}}}
-      Name: IntField10KIn128Threads
       Number: 10000
       OnlyActiveInPhase: 9
       Threads: 128
 - ActorFromTemplate:
-    TemplateName: Workload
+    TemplateName: CrudTemplate
     TemplateParameters:
+      Name: IntField100KIn128Threads
       Find:
         Filter: {a: {$in: {^Array: {
           distinct: true,
           number: 100000,
           of: {^RandomInt: {min: 10000000, max: 19999999}}}}}}
-      Name: IntField100KIn128Threads
       OnlyActiveInPhase: 10
       Threads: 128
 - ActorFromTemplate:
-    TemplateName: Workload
+    TemplateName: CrudTemplate
     TemplateParameters:
+      Name: IntFieldOr128Threads
       Find:
         Filter:
           $or:
@@ -173,7 +178,6 @@ Actors:
                 $and:
                 - b: {$gte: {^RandomInt: {min: 20000000, max: 29999999}}}
                 - b: {$lt: {^RandomInt: {min: 20000000, max: 29999999}}}
-      Name: IntFieldOr128Threads
       OnlyActiveInPhase: 11
       Threads: 128
 
