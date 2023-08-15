@@ -177,7 +177,7 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
         bsoncxx::array::view passives_view = passives.get_array();
         for (auto member : passives_view) {
             MongodDescription memberDesc;
-            memberDesc.mongodUri = std::string(member.get_utf8().value);
+            memberDesc.mongodUri = nameToUri(std::string(member.get_utf8().value));
             if (configSetNames.find(setName) != configSetNames.end()) {
                 memberDesc.clusterType = ClusterType::configSvrMember;
             } else {
