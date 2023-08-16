@@ -54,9 +54,9 @@ bool waitOplog(v1::Topology& topology) {
             if (members && members.type() == bsoncxx::type::k_array) {
                 bsoncxx::array::view members_view = members.get_array();
                 for (auto member : members_view) {
-                    std::string state(member["stateStr"].get_utf8().value);
+                    std::string state(member["stateStr"].get_string().value);
                     if (state != "PRIMARY" && state != "SECONDARY" && state != "ARBITER") {
-                        std::string name(member["name"].get_utf8().value);
+                        std::string name(member["name"].get_string().value);
                         BOOST_LOG_TRIVIAL(warning)
                             << "Cannot wait oplog, replset member " << name << " is " << state;
                         _successAcc = false;

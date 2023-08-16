@@ -55,7 +55,7 @@ inline std::string toString(int i) {
 template <typename Client>
 inline void dropAllDatabases(Client& client) {
     for (auto&& dbDoc : client.list_databases()) {
-        const auto dbName = dbDoc["name"].get_utf8().value;
+        const auto dbName = dbDoc["name"].get_string().value;
         const auto dbNameString = std::string(dbName);
         if (dbNameString != "admin" && dbNameString != "config" && dbNameString != "local") {
             client.database(dbName).drop();
