@@ -143,7 +143,7 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
     }
 
     std::unique_ptr<ReplSetDescription> desc;
-    std::string setName = res.view()["setName"].get_utf8().value.data();
+    std::string setName = res.view()["setName"].get_string().value.data();
     std::set<std::string> configSetNames{"configSet", "configRepl", "configSvrRS"};
     if (configSetNames.find(setName) != configSetNames.end()) {
         desc = std::make_unique<ConfigSvrDescription>();
@@ -152,14 +152,14 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
     }
     auto primary = res.view()["primary"];
 
-    desc->primaryUri = nameToUri(std::string(primary.get_utf8().value));
+    desc->primaryUri = nameToUri(std::string(primary.get_string().value));
 
     auto hosts = res.view()["hosts"];
     if (hosts && hosts.type() == bsoncxx::type::k_array) {
         bsoncxx::array::view hosts_view = hosts.get_array();
         for (auto member : hosts_view) {
             MongodDescription memberDesc;
-            memberDesc.mongodUri = nameToUri(std::string(member.get_utf8().value));
+            memberDesc.mongodUri = nameToUri(std::string(member.get_string().value));
             if (configSetNames.find(setName) != configSetNames.end()) {
                 memberDesc.clusterType = ClusterType::configSvrMember;
             } else {
@@ -177,7 +177,7 @@ void Topology::computeDataMemberConnectionStrings(DBConnection& connection) {
         bsoncxx::array::view passives_view = passives.get_array();
         for (auto member : passives_view) {
             MongodDescription memberDesc;
-            memberDesc.mongodUri = std::string(member.get_utf8().value);
+            memberDesc.mongodUri = std::string(member.get_string().value);
             if (configSetNames.find(setName) != configSetNames.end()) {
                 memberDesc.clusterType = ClusterType::configSvrMember;
             } else {
@@ -214,7 +214,7 @@ void Topology::findConnectedNodesViaMongos(DBConnection& connection) {
 
     // Config Server
     auto shardMap = connection.runAdminCommand("getShardMap");
-    std::string configServerConn(shardMap.view()["map"]["config"].get_utf8().value);
+    std::string configServerConn(shardMap.view()["map"]["config"].get_string().value);
     auto configConnection = connection.makePeer(nameToUri(configServerConn));
     Topology configTopology(*configConnection);
     configTopology.accept(configSvrRetriever);
@@ -224,7 +224,7 @@ void Topology::findConnectedNodesViaMongos(DBConnection& connection) {
     auto shardListRes = connection.runAdminCommand("listShards");
     bsoncxx::array::view shards = shardListRes.view()["shards"].get_array();
     for (auto shard : shards) {
-        std::string shardConn(shard["host"].get_utf8().value);
+        std::string shardConn(shard["host"].get_string().value);
         auto shardConnection = connection.makePeer(nameToUri(shardConn));
         Topology shardTopology(*shardConnection);
         shardTopology.accept(replSetRetriever);
@@ -248,7 +248,7 @@ void Topology::update(DBConnection& connection) {
     auto res = connection.runAdminCommand("isMaster");
     auto msg = res.view()["msg"];
     if (msg && msg.type() == bsoncxx::type::k_utf8) {
-        isMongos = msg.get_utf8().value == "isdbgrid";
+        isMongos = msg.get_string().value == "isdbgrid";
     }
 
     if (isMongos) {

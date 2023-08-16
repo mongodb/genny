@@ -497,8 +497,8 @@ TEST_CASE("EncryptionContext outputs correct extra options document") {
         REQUIRE_NOTHROW(doc.view()["cryptSharedLibRequired"].get_bool());
         REQUIRE(doc.view()["cryptSharedLibRequired"].get_bool());
         REQUIRE(doc.view()["cryptSharedLibPath"]);
-        REQUIRE_NOTHROW(doc.view()["cryptSharedLibPath"].get_utf8());
-        REQUIRE(doc.view()["cryptSharedLibPath"].get_utf8().value == "/usr/lib/mongo_crypt_v1.so");
+        REQUIRE_NOTHROW(doc.view()["cryptSharedLibPath"].get_string());
+        REQUIRE(doc.view()["cryptSharedLibPath"].get_string().value == "/usr/lib/mongo_crypt_v1.so");
     }
 }
 TEST_CASE("EncryptionContext outputs correct schema map document") {
@@ -552,11 +552,11 @@ TEST_CASE("EncryptionContext outputs correct schema map document") {
     auto doc = encryption.generateSchemaMapDoc();
 
     REQUIRE_NOTHROW(doc.view()["accounts.balances"]["properties"].get_document());
-    REQUIRE_NOTHROW(doc.view()["accounts.balances"]["bsonType"].get_utf8());
+    REQUIRE_NOTHROW(doc.view()["accounts.balances"]["bsonType"].get_string());
 
     auto rootProperties = doc.view()["accounts.balances"]["properties"].get_document();
     REQUIRE_NOTHROW(rootProperties.view()["pii"]["properties"].get_document());
-    REQUIRE_NOTHROW(rootProperties.view()["pii"]["bsonType"].get_utf8());
+    REQUIRE_NOTHROW(rootProperties.view()["pii"]["bsonType"].get_string());
     REQUIRE_NOTHROW(rootProperties.view()["name"].get_document());
 
     auto piiProperties = rootProperties.view()["pii"]["properties"].get_document();
@@ -566,8 +566,8 @@ TEST_CASE("EncryptionContext outputs correct schema map document") {
     REQUIRE(rootProperties.view()["name"].get_document().view() == bsoncxx::from_json(expectedNameSchema));
     REQUIRE(piiProperties.view()["dob"].get_document().view() == bsoncxx::from_json(expectedDobSchema));
     REQUIRE(piiProperties.view()["ssn"].get_document().view() == bsoncxx::from_json(expectedSsnSchema));
-    REQUIRE(doc.view()["accounts.balances"]["bsonType"].get_utf8().value == "object");
-    REQUIRE(rootProperties.view()["pii"]["bsonType"].get_utf8().value == "object");
+    REQUIRE(doc.view()["accounts.balances"]["bsonType"].get_string().value == "object");
+    REQUIRE(rootProperties.view()["pii"]["bsonType"].get_string().value == "object");
 }
 
 TEST_CASE("EncryptionContext outputs correct encrypted fields map document") {
@@ -661,8 +661,8 @@ TEST_CASE("EncryptionContext outputs correct encrypted fields map document") {
     for (auto& subobj : fieldsArray.value) {
         REQUIRE_NOTHROW(subobj.get_document());
         auto subdoc = subobj.get_document();
-        REQUIRE_NOTHROW(subdoc.view()["path"].get_utf8());
-        auto path = subdoc.view()["path"].get_utf8();
+        REQUIRE_NOTHROW(subdoc.view()["path"].get_string());
+        auto path = subdoc.view()["path"].get_string();
 
         auto itr = expectedFieldsMap.find(path.value.to_string());
         REQUIRE(itr != expectedFieldsMap.end());
