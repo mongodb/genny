@@ -26,6 +26,8 @@ Keywords:
   - IO
   - bulk insert
   - stress
+  - checkpoint
+  - journal
 
 GlobalConstants:
   - &database test
@@ -37,6 +39,7 @@ GlobalConstants:
     WriteConcern:
       Level: majority
   - &defaultDocument  # The size of each document is about 1kb.
+    # Generate a string like 'x    x' (but with 1000 blank characters between the start and end x's.
     x: {^PreprocessorFormatString: {format: "x%*s", withArgs: [1000, "x" ]}}
     id: { ^Join: { array: [ { ^FormatString: { "format": "User%07d", "withArgs": [ { ^Inc: { start: 1 } } ] } } ] } }
   - &documentList10x {^FlattenOnce: [
