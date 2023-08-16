@@ -1,0 +1,107 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  TODO
+
+  - BulkWrite API, empty db, many connections, no index
+  - BulkWrite API, empty db, many connections, with index
+
+  - BulkWrite API, 30GB data, single connection, no index
+  - BulkWrite API, 30GB data, single connection, with index
+
+  - BulkWrite API, no index, many connections, 30GB data
+  - BulkWrite API, with index, many connections, 30GB data
+
+  - normal writes, no index, many connections, 30GB data
+  - normal writes, with index, many connections, 30GB data
+
+GlobalDefaults:
+  NumPhases: &NumPhases 3
+  DbName: &DbName db
+  CollectionName: &CollectionName coll
+  # Using ^RandomDate for the timestamp is too compute intensive
+  WriteOp: &WriteOp {
+    WriteCommand: insertOne,
+    Document: {
+      sensorId: {^RandomInt: {min: 0, max: 1000}},
+      timestamp: {^RandomInt: {min: 1577836800000, max: 1692020604000}},
+      event: {^Choose: {from: ["EVENT1", "EVENT2", "EVENT3", "EVENT4", "EVENT5"]}}
+    }
+  }
+  # This workload uses a batch size of 100 for the bulk writes.
+  # We evaluated the impact of different batch sizes and the document throughput
+  # does not appear to be impacted by the batch size.
+  WriteOps10x: &WriteOps10x [
+                     *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp,
+                     *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp,
+                  ]
+  WriteOps100x: &WriteOps100x {^FlattenOnce: [
+      *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
+      *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
+    ]}
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+      maxPoolSize: 1000
+
+ActorTemplates:
+- TemplateName: BulkLoaderTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "unset"}}
+    Type: CrudActor
+    Threads:  {^Parameter: {Name: "Threads", Default: "unset"}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: "unset"}}]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Duration: 15 seconds
+          Database: *DbName
+          Collection: *CollectionName
+          Operations:
+          - OperationName: bulkWrite
+            OperationCommand:
+              WriteOperations: *WriteOps100x
+
+Actors:
+- ActorFromTemplate:
+    TemplateName: BulkLoaderTemplate
+    TemplateParameters:
+      Name: SingleThreadedBulkLoadEmptyDB
+      Threads: 1
+      OnlyActiveInPhase: 0
+
+- ActorFromTemplate:
+    TemplateName: BulkLoaderTemplate
+    TemplateParameters:
+      Name: MultiThreadedBulkLoadEmptyDB
+      Threads: 15
+      OnlyActiveInPhase: 3
+
+- Name: DeleteCollectionActor
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1,4]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *DbName
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            drop: *CollectionName
+
+- Name: QuiesceActor
+  Type: QuiesceActor
+  Threads: 1
+  Database: *DbName
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2,5]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
