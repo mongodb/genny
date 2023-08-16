@@ -39,6 +39,7 @@ def setup_logging(verbose: bool = False) -> None:
             structlog.processors.TimeStamper(fmt="%Y-%m-%dT%H:%M:%SZ"),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
+            _stringify_event,
             structlog.dev.ConsoleRenderer(pad_event=20, colors=True, force_colors=True),
         ],
         context_class=dict,
@@ -51,6 +52,14 @@ def setup_logging(verbose: bool = False) -> None:
     c.init(strip=False)  # Don't strip ansi colors even if we're not on a tty.
 
     _tweak_structlog_log_line()
+
+
+def _stringify_event(logger: Any, name: str, event_dict: dict) -> dict:
+    """
+    Force `event_dict["event"]` to str for compatibility with standard library.
+    """
+    event_dict["event"] = str(event_dict["event"])
+    return event_dict
 
 
 def _tweak_structlog_log_line() -> None:
@@ -118,11 +127,7 @@ def _tweak_structlog_log_line() -> None:
                     + "] "
                 )
 
-            # force event to str for compatibility with standard library
             event = event_dict.pop("event")
-            if not isinstance(event, str):
-                event = str(event)
-
             if event_dict:
                 event = structlog.dev._pad(event, self._pad_event) + self._styles.reset + " "
             else:
