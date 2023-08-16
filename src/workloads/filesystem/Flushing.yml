@@ -1,7 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-perf"
 Description: >
-  Run large insertMany's to stress checkpointing, journal flush and dirty memory with {w:majority}.
+  Run large insertMany's to stress checkpointing, journal flush and dirty memory with {w:majority}. This workload uses:
+    - a very simple document structure 
+      - _id: ObjectId
+      - x: a ~1KB fixed string 
+      - id: 'User%07d' incrementing field.
+    - no additional indexes (beyond _id).
   The important ftdc metrics to look at are:
     - ss opcounters insert
     - ss average latency writes
