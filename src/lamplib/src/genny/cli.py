@@ -3,11 +3,23 @@ import structlog
 import sys
 import os
 
-from typing import List, Optional
+from typing import Any, Callable, List, Optional
 import click
 from click_option_group import optgroup, RequiredMutuallyExclusiveOptionGroup
 
-SLOG = structlog.get_logger(__name__)
+SLOG = structlog.get_logger("genny.cli")
+
+
+def slog_exception(func: Callable) -> Any:
+    """
+    Log exceptions using structlog, to enable secrets redaction.
+    """
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        try:
+            func(*args, **kwargs)
+        except Exception as e:
+            SLOG.exception(e)
+    return wrapper
 
 
 @click.group(name="Genny", context_settings=dict(help_option_names=["-h", "--help"]))
@@ -101,6 +113,7 @@ def cli(ctx: click.Context, verbose: bool) -> None:
 )
 @click.argument("cmake_args", nargs=-1)
 @click.pass_context
+@slog_exception
 def cmake_compile_install(
     ctx: click.Context,
     linux_distro: str,
@@ -172,6 +185,7 @@ def cmake_compile_install(
     ),
 )
 @click.pass_context
+@slog_exception
 def evaluate(
     ctx: click.Context, workload_path: str, mongo_uri: str, output: str, override: str, smoke: bool
 ):
@@ -199,6 +213,7 @@ def evaluate(
     help=("Filepath where the output CSV will be written. Will write to stdout by default."),
 )
 @click.pass_context
+@slog_exception
 def export_ftdc_to_csv(ctx: click.Context, ftdc_path: str, output):
     from genny.curator import export
 
@@ -223,6 +238,7 @@ def export_ftdc_to_csv(ctx: click.Context, ftdc_path: str, output):
     help=("Filepath where the output ftdc will be written. Will write to stdout by default."),
 )
 @click.pass_context
+@slog_exception
 def translate(ctx: click.Context, ftdc_path: str, output):
     from genny.curator import translate
 
@@ -239,6 +255,7 @@ def translate(ctx: click.Context, ftdc_path: str, output):
     help="Resets output and venv directories to clean checkout state.",
 )
 @click.pass_context
+@slog_exception
 def clean(ctx: click.Context) -> None:
     from genny.tasks import compile
 
@@ -270,6 +287,7 @@ def clean(ctx: click.Context) -> None:
     ),
 )
 @click.pass_context
+@slog_exception
 def cmake_test(ctx: click.Context, regex: str, regex_exclude: str, repeat_until_fail: int) -> None:
     from genny.tasks import run_tests
 
@@ -287,6 +305,7 @@ def cmake_test(ctx: click.Context, regex: str, regex_exclude: str, repeat_until_
     help="Run benchmark tests that assert genny's internals are sufficiently performant.",
 )
 @click.pass_context
+@slog_exception
 def benchmark_test(ctx: click.Context) -> None:
     from genny.tasks import run_tests
 
@@ -349,6 +368,7 @@ def benchmark_test(ctx: click.Context) -> None:
     ),
 )
 @click.pass_context
+@slog_exception
 def workload(
     ctx: click.Context,
     workload_yaml: tuple[str],
@@ -394,6 +414,7 @@ def workload(
     help=("Workload to dry-run."),
 )
 @click.pass_context
+@slog_exception
 def dry_run_workloads(ctx: click.Context, workload: str):
     from genny.tasks import dry_run
 
@@ -417,6 +438,7 @@ def dry_run_workloads(ctx: click.Context, workload: str):
 # f"{prefix} ./src/genny/run-genny canaries ping -- --mongo-uri '{db_url}'"
 @click.argument("canary_args", nargs=-1)
 @click.pass_context
+@slog_exception
 def canaries(ctx: click.Context, canary_args: List[str]):
     from genny.tasks import canaries_runner
 
@@ -467,6 +489,7 @@ def canaries(ctx: click.Context, canary_args: List[str]):
     ),
 )
 @click.pass_context
+@slog_exception
 def resmoke_test(
     ctx: click.Context,
     suites: str,
@@ -496,6 +519,7 @@ def resmoke_test(
 )
 @click.argument("actor_name")
 @click.pass_context
+@slog_exception
 def create_new_actor(ctx: click.Context, actor_name: str):
     from genny.tasks import create_new_actor
 
@@ -510,6 +534,7 @@ def create_new_actor(ctx: click.Context, actor_name: str):
     help=("Generate a random UUID tag for headers."),
 )
 @click.pass_context
+@slog_exception
 def generate_uuid_tag(ctx: click.Context):
     from genny.tasks import generate_uuid_tag
 
@@ -524,6 +549,7 @@ def generate_uuid_tag(ctx: click.Context):
     "--fix", default=False, is_flag=True, help="Fix formatting in-place rather than erroring."
 )
 @click.pass_context
+@slog_exception
 def lint_python(ctx: click.Context, fix: bool):
     from genny.tasks import lint_python
 
@@ -532,6 +558,7 @@ def lint_python(ctx: click.Context, fix: bool):
 
 @cli.command(name="self-test", help="Run the pytest tests of genny's internal python.")
 @click.pass_context
+@slog_exception
 def self_test(ctx: click.Context):
     from genny.tasks import pytest
 
@@ -542,6 +569,7 @@ def self_test(ctx: click.Context):
 
 @cli.command(name="lint-yaml", help="Run pylint on all workload and phase yamls")
 @click.pass_context
+@slog_exception
 def lint_yaml(ctx: click.Context):
     from genny.tasks import yaml_linter
 
@@ -563,6 +591,7 @@ def lint_yaml(ctx: click.Context):
     type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks"]),
 )
 @click.pass_context
+@slog_exception
 def auto_tasks(ctx: click.Context, tasks: str):
     from genny.tasks import auto_tasks
 
