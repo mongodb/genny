@@ -1,3 +1,4 @@
+import re
 import sys
 
 import structlog
@@ -40,6 +41,7 @@ def setup_logging(verbose: bool = False) -> None:
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
             _stringify_event,
+            SecretsRedactor(),
             structlog.dev.ConsoleRenderer(pad_event=20, colors=True, force_colors=True),
         ],
         context_class=dict,
@@ -57,9 +59,34 @@ def setup_logging(verbose: bool = False) -> None:
 def _stringify_event(logger: Any, name: str, event_dict: dict) -> dict:
     """
     Force `event_dict["event"]` to str for compatibility with standard library.
+
+    Put this in the processor chain before SecretsRedactor, to ensure that
+    secrets in `event_dict["event"]` are redacted.
     """
     event_dict["event"] = str(event_dict["event"])
     return event_dict
+
+
+class SecretsRedactor:
+    """
+    Redact secrets in `event_dict`.
+
+    Put this in the processor chain before ConsoleRenderer.
+    """
+
+    regex_to_redaction: dict[re.Pattern[str], str]
+
+    def __init__(self) -> None:
+        self.regex_to_redaction = {
+            re.compile(r"://([^:@]*):([^@]*)@?"): r"://\g<1>:[REDACTED]@",  # password in URLs
+        }
+
+    def __call__(self, logger: Any, name: str, event_dict: dict) -> dict:
+        for key, value in event_dict.items():
+            if isinstance(value, str):
+                for regex, redaction in self.regex_to_redaction.items():
+                    event_dict[key] = re.sub(regex, redaction, value)
+        return event_dict
 
 
 def _tweak_structlog_log_line() -> None:
