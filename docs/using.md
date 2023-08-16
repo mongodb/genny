@@ -26,7 +26,10 @@
         1.  [LoadConfig](#orga6d35c7)
         2.  [ActorTemplate](#orga45b1d8)
         3.  [OnlyActiveInPhases](#orgf9c328f)
-        4.  [Defaults and Overrides](#org22b7a0f)
+        4.  [FlattenOnce](#preprocessorflattenonce)
+        5.  [PreprocessorFormatString](#preprocessorformatstring)
+        6.  [NumExpr](#preprocessornumexpr)
+        7.  [Defaults and Overrides](#org22b7a0f)
     5.  [Connecting to the Server](#orgd6b0450)
         1.  [Connection Strings and Pools](#orgd2659db)
         2.  [Multiple Connection Strings](#orga591018)
@@ -401,7 +404,7 @@ You can also use the `translate` subcommand to convert results to a [t2-readable
 
 If you are running Genny through DSI in Evergreen, the FTDC contents are rolled up into summary statistics like `OperationThroughput` and such, viewable in the Evergreen perf UI. 
 
-If you are running Genny locally, you can use `src/workloads/contrib/analysis/test_results_summary.py` to print a summary of the most recent run (or any `CedarMetrics` directory) to the console. For example,
+If you are running Genny locally, you can use `src/workloads/contrib/analysis/test_result_summary.py` to print a summary of the most recent run (or any `CedarMetrics` directory) to the console. For example,
 
 ```
 python src/workloads/contrib/analysis/test_result_summary.py -m throughput timers.dur -a ".*Sleep.*" -b 3
@@ -424,7 +427,7 @@ SleepTest.SleepTest summary:
 
 ```
 
-Try using `python test_results_summary.py --help` for more options.
+Try using `python test_result_summary.py --help` for more options.
 
 <a id="org0e7c476"></a>
 
@@ -715,6 +718,126 @@ Actors:
 
 This configures the Actor to run with the given configuration in phases named 0 and 2, and nops in all other phases up phase named 3.
 
+<a id="preprocessorflattenonce"></a>
+
+### FlattenOnce
+
+You can also flatten arrays to reduce their dimensionality by 1 with `FlattenOnce`. For example:
+
+```yaml
+Actors:
+  FlattenOnce:
+  - - ActorFromTemplate: {TemplateName: Setup1}
+    - ActorFromTemplate: {TemplateName: Setup2}
+    - ActorFromTemplate: {TemplateName: Setup3}
+  - - ActorFromTemplate: {TemplateName: Workload1}
+    - ActorFromTemplate: {TemplateName: Workload2}
+  - ActorFromTemplate: {TemplateName: Workload3}
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *db
+    Phases:
+      OnlyActiveInPhases: [7]
+      NopInPhasesUpTo: 6
+      PhaseConfig:
+        Repeat: 1
+```
+
+will flatten down to
+
+```yaml
+Actors:
+- ActorFromTemplate: {TemplateName: Setup1}
+- ActorFromTemplate: {TemplateName: Setup2}
+- ActorFromTemplate: {TemplateName: Setup3}
+- ActorFromTemplate: {TemplateName: Workload1}
+- ActorFromTemplate: {TemplateName: Workload2}
+- ActorFromTemplate: {TemplateName: Workload3}
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+    OnlyActiveInPhases: [7]
+    NopInPhasesUpTo: 6
+    PhaseConfig:
+      Repeat: 1
+```
+
+This only flattens the outermost array, so inner arrays are left unflattened. You can also use this to hack together a pseudo-repeat. For example:
+
+```yaml
+GlobalDefaults:
+  One10x: &One10x [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  One100x: &One100x [One10x, One10x, One10x, One10x, One10x, One10x, One10x, One10x, One10x, One10x]
+  One1000x: &One1000x [One100x, One100x, One100x, One100x, One100x, One100x, One100x, One100x, One100x]
+  One10000x: &One10000x [One1000x, One1000x, One1000x, One1000x, One1000x, One1000x, One1000x, One1000x, One1000x, One1000x]
+```
+
+<a id="preprocessorformatstring"></a>
+
+### PreprocessorFormatString
+
+`PreprocessorFormatString` behaves similarly to the `FormatString` generator, but at the
+preprocessor level. This is helpful particularly when you need to autogenerate sensible names for
+actors or something, but want to eliminate as much redundancy as possible. For example:
+
+```yaml
+ActorTemplates:
+- TemplateName: MultithreadedWorkload
+  Config:
+    Name: {^PreprocessorFormatString: {format: "MTWorkload%04dT", withArgs: {^Parameter: {Name: Threads, Default: 1}}}}
+    Type: CrudActor
+    Threads: {^Parameter: {Name: Threads, Default: 1}}
+    Phases: {^Parameter: {Name: Phases}}
+
+Actors:
+- ActorFromTemplate:
+    TemplateName: MultithreadedWorkload
+    TemplateParameters:
+      Threads: 16
+      Phases: {...}
+- ActorFromTemplate:
+    TemplateName: MultithreadedWorkload
+    TemplateParameters:
+      Threads: 512
+      Phases: {...}
+- ActorFromTemplate:
+    TemplateName: MultithreadedWorkload
+    TemplateParameters:
+      Threads: 4096
+      Phases: {...}
+```
+
+will generate three actors, with names MTWorkload0016T, MTWorkload0512T, and MTWorkload4096T.
+
+<a id="preprocessornumexpr"></a>
+
+### NumExpr
+
+The preprocessor can also precompute simple numerical expressions for you.
+
+```yaml
+GlobalDefaults:
+  MaxThreads: &MaxThreads 1024
+
+ActorTemplates:
+- TemplateName: ReadWriteWorkload
+  Config:
+    Type: CustomReadWriteActor
+    Threads: *MaxThreads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: Phase, Default: {unused: ...}}}]
+        NopInPhasesUpTo: 10
+        PhaseConfig:
+          Readers: {^Parameter: {Name: Readers, Default: *MaxThreads}}
+          Writes: {^NumExpr: {withExpression: "total - readers", andValues: {total: *MaxThreads, readers: {^Parameter: {Name: Readers, Default: *MaxThreads}}}}}
+```
+
+This can help ensure numerical invariants, such as `Readers + Writers = Threads` in the actor
+template above.
 
 <a id="org22b7a0f"></a>
 

@@ -73,7 +73,7 @@ TEST_CASE_METHOD(MongoTestFixture, "MultiCollectionQuery", "[standalone][MultiCo
                 REQUIRE(event.command["limit"].get_int64() == 1);
                 REQUIRE(event.command["sort"].get_document().view() ==
                         BasicBson::make_document(BasicBson::kvp("a", 1)));
-                auto readMode = event.command["$readPreference"]["mode"].get_utf8().value;
+                auto readMode = event.command["$readPreference"]["mode"].get_string().value;
                 REQUIRE(std::string(readMode) == "primaryPreferred");
             }
 

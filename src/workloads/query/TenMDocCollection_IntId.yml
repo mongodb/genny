@@ -1,42 +1,43 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: |
-  This workload tests performance of IDHACK on queries with int _id.
+Description: >
+  This workload tests the performance of IDHACK on queries with int _id versus non-IDHACK queries
+  on regular int indices.
 
 KeyWords:
 - IDHACK
 
-Clients:
-  Default:
-    QueryOptions:
-      maxPoolSize: 2000
-
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
-  MaxPhases: &MaxPhases 5
+  MaxPhases: &MaxPhases 11
+
+Clients:
+  Default:
+    QueryOptions:
+      connectTimeoutMS: 3_600_000  # 1 hour
+      maxPoolSize: 2000
+      socketTimeoutMS: 3_600_000  # 1 hour
 
 ActorTemplates:
-- TemplateName: IDHACK
+- TemplateName: CrudTemplate
   Config:
-    Name: {^Parameter: {Name: "Name", Default: "IDHackQuery"}}
+    Name: {^Parameter: {Name: "Name", Default: {unused: "Need to specify the actor name."}}}
     Type: CrudActor
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Threads: {^Parameter: {Name: "Threads", Default: {unused: "Need to specify the number of threads."}}}
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "Need to specify in which phases this actor should be active."}}}]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Duration: 5 minutes
-          Database: *Database
-          Collection: *Collection
+          Database: {^Parameter: {Name: "Database", Default: *Database}}
+          Collection: {^Parameter: {Name: "Collection", Default: *Collection}}
           Operations:
           - OperationName: find
-            OperationCommand:
-              Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}
+            OperationCommand: {^Parameter: {Name: "Find", Default: {unused: "Need to specify the actor find operation command"}}}
 
 Actors:
-# Clear any pre-existing collection state.
 - Name: ClearCollection
   Type: CrudActor
   Database: *Database
@@ -51,8 +52,7 @@ Actors:
         Collection: *Collection
         Operations:
         - OperationName: drop
-
-- Name: LoadIntIDs
+- Name: Prepopulate
   Type: Loader
   Threads: 10
   Phases:
@@ -70,9 +70,15 @@ Actors:
           # The multiplier is multiplied by the ActorID, and added to the value.
           # Since this is the second actor, the ActorIDs increment for each thread starting at 2.
           # e.g -2000000 + 2 * 1000000 = 0, -1999999 + 2 * 1000000 = 1, etc.
-          # Once complete, the _ids the collection will have be the range 0-9999999.
+          # Once complete, the ids in the collection will be the range 0-9999999.
           _id: {^Inc: {start: -2000000, multiplier: 1000000}}
-
+          # [10M, 20M)
+          a: {^Inc: {start: -1000000, multiplier: 1000000}}
+          # [20M, 30M)
+          b: {^Inc: {start: 0, multiplier: 1000000}}
+        Indexes:
+          - keys: {a: 1}
+          - keys: {b: 1}
 - Name: Quiesce
   Type: QuiesceActor
   Threads: 1
@@ -83,27 +89,97 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
-
 - ActorFromTemplate:
-    TemplateName: IDHACK
+    TemplateName: CrudTemplate
     TemplateParameters:
       Name: IDHack32Threads
-      Threads: 32
+      Find: &IDHACKFind {Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}}
       OnlyActiveInPhase: 3
-
+      Threads: 32
 - ActorFromTemplate:
-    TemplateName: IDHACK
+    TemplateName: CrudTemplate
     TemplateParameters:
       Name: IDHack128Threads
-      Threads: 128
+      Find: *IDHACKFind
       OnlyActiveInPhase: 4
-
+      Threads: 128
 - ActorFromTemplate:
-    TemplateName: IDHACK
+    TemplateName: CrudTemplate
     TemplateParameters:
       Name: IDHack256Threads
-      Threads: 256
+      Find: *IDHACKFind
       OnlyActiveInPhase: 5
+      Threads: 256
+
+# Only run these variants at 128 threads because the additional thread counts of
+# 32 and 256 produce roughly similar throughput values.
+- ActorFromTemplate:
+    TemplateName: CrudTemplate
+    TemplateParameters:
+      Name: IDHackPointProject128Threads
+      Find:
+        Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}
+        Options:
+          Projection: {_id: 1}
+      OnlyActiveInPhase: 6
+      Threads: 128
+- ActorFromTemplate:
+    TemplateName: CrudTemplate
+    TemplateParameters:
+      Name: IDFieldPointProject128Threads
+      Find:
+        # Using $eq turns this from an IDHACK find into a scan find.
+        Filter: {_id: {$eq: {^RandomInt: {min: 0, max: 9999999}}}}
+        Options:
+          Projection: {_id: 1}
+      OnlyActiveInPhase: 7
+      Threads: 128
+- ActorFromTemplate:
+    TemplateName: CrudTemplate
+    TemplateParameters:
+      Name: IntFieldEq128Threads
+      Find: {Filter: {a: {$eq: {^RandomInt: {min: 10000000, max: 19999999}}}}}
+      OnlyActiveInPhase: 8
+      Threads: 128
+- ActorFromTemplate:
+    TemplateName: CrudTemplate
+    TemplateParameters:
+      Name: IntField10KIn128Threads
+      Find:
+        Filter: {a: {$in: {^Array: {
+          distinct: true,
+          number: 10000,
+          of: {^RandomInt: {min: 10000000, max: 19999999}}}}}}
+      Number: 10000
+      OnlyActiveInPhase: 9
+      Threads: 128
+- ActorFromTemplate:
+    TemplateName: CrudTemplate
+    TemplateParameters:
+      Name: IntField100KIn128Threads
+      Find:
+        Filter: {a: {$in: {^Array: {
+          distinct: true,
+          number: 100000,
+          of: {^RandomInt: {min: 10000000, max: 19999999}}}}}}
+      OnlyActiveInPhase: 10
+      Threads: 128
+- ActorFromTemplate:
+    TemplateName: CrudTemplate
+    TemplateParameters:
+      Name: IntFieldOr128Threads
+      Find:
+        Filter:
+          $or:
+            ^Array:
+              distinct: true
+              number: 10
+              of:
+                $and:
+                - b: {$gte: {^RandomInt: {min: 20000000, max: 29999999}}}
+                - b: {$lt: {^RandomInt: {min: 20000000, max: 29999999}}}
+      OnlyActiveInPhase: 11
+      Threads: 128
 
 AutoRun:
 - When:
