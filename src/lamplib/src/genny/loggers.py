@@ -68,7 +68,7 @@ class StringifyAndRedact:
 
     def __init__(self) -> None:
         self.regex_to_redaction = {
-            re.compile(r"://([^:@]*):([^@]*)@?"): r"://\g<1>:[REDACTED]@",  # password in URLs
+            re.compile(r"://([^:@]*):([^@]*)@"): r"://\g<1>:[REDACTED]@",  # password in URLs
         }
 
     def __call__(self, logger: Any, name: str, event_dict: dict) -> dict:
