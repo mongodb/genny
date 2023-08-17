@@ -1,3 +1,4 @@
+from collections.abc import MutableSequence, MutableMapping
 import re
 import sys
 
@@ -81,12 +82,20 @@ class SecretsRedactor:
             re.compile(r"://([^:@]*):([^@]*)@?"): r"://\g<1>:[REDACTED]@",  # password in URLs
         }
 
-    def __call__(self, logger: Any, name: str, event_dict: dict) -> dict:
-        for key, value in event_dict.items():
-            if isinstance(value, str):
-                for regex, redaction in self.regex_to_redaction.items():
-                    event_dict[key] = re.sub(regex, redaction, value)
-        return event_dict
+    def __call__(self, logger: Any, name: str, event_dict: dict) -> Any:
+        return self._recursive_redact(event_dict)
+
+    def _recursive_redact(self, element: Any) -> Any:
+        if isinstance(element, MutableMapping):
+            for key, value in element.items():
+                element[key] = self._recursive_redact(value)
+        elif isinstance(element, MutableSequence):
+            for i, item in enumerate(element):
+                element[i] = self._recursive_redact(item)
+        elif isinstance(element, str):
+            for regex, redaction in self.regex_to_redaction.items():
+                element = re.sub(regex, redaction, element)
+        return element
 
 
 def _tweak_structlog_log_line() -> None:
