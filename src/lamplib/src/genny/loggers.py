@@ -1,3 +1,4 @@
+from io import StringIO
 import re
 import sys
 
@@ -41,7 +42,7 @@ def setup_logging(verbose: bool = False) -> None:
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
             StringifyAndRedact(),
-            structlog.dev.ConsoleRenderer(pad_event=20, colors=True, force_colors=True),
+            CustomConsoleRenderer(pad_event=20, colors=True, force_colors=True),
         ],
         context_class=dict,
         logger_factory=structlog.stdlib.LoggerFactory(),
@@ -51,8 +52,6 @@ def setup_logging(verbose: bool = False) -> None:
     # Initialize colorama. Structlog does this but it doesn't have the strip=False
     # so we don't get colors on Evergreen pages (which usually doesn't give us a TTY).
     c.init(strip=False)  # Don't strip ansi colors even if we're not on a tty.
-
-    _tweak_structlog_log_line()
 
 
 class StringifyAndRedact:
@@ -78,32 +77,27 @@ class StringifyAndRedact:
         return event_dict
 
 
-def _tweak_structlog_log_line() -> None:
-    """
-    Unfortunately structlog's ConsoleRenderer doesn't give us any ability to format the log message.
-    This changes the format by monkeypatching the __call__ method.
+class CustomConsoleRenderer(structlog.dev.ConsoleRenderer):
+    def __call__(self: structlog.dev.ConsoleRenderer, _: Any, __: Any, event_dict: dict) -> str:
+        """
+        Unfortunately structlog's ConsoleRenderer doesn't let us format the log message.
+        This changes the format by overriding the __call__ method.
 
-    Default:
-        timestamp [level] event [logger] params exc_info
-    Changed to:
-        timestamp [level] [logger] event params exc_info
+        Default:
+            timestamp [level] event [logger] params exc_info
+        Changed to:
+            timestamp [level] [logger] event params exc_info
 
-    Also tweaked a couple padding values:
+        Also tweaked a couple padding values:
 
-      level:  Default pads to longest level (e.g. len('exception')=9).
-              Changed to pad to 5 (we usually only use info and debug)
+        level:  Default pads to longest level (e.g. len('exception')=9).
+                Changed to pad to 5 (we usually only use info and debug)
 
-      logger: Default pads to 30.
-              Changed from 30 to 27 after running a few common DSI commands.
+        logger: Default pads to 30.
+                Changed from 30 to 27 after running a few common DSI commands.
 
-    :return: None
-    """
-
-    from io import StringIO
-
-    def _override_call(
-        self: structlog.dev.ConsoleRenderer, _: Any, __: Any, event_dict: dict
-    ) -> str:
+        :return: None
+        """
         # Initialize lazily to prevent import side-effects.
         if self._init_colorama:
             structlog.dev._init_colorama(self._force_colors)
@@ -176,5 +170,3 @@ def _tweak_structlog_log_line() -> None:
             return out
         finally:
             sio.close()
-
-    structlog.dev.ConsoleRenderer.__call__ = _override_call
