@@ -15,10 +15,8 @@ Clients:
       socketTimeoutMS: 3_600_000  # 1 hour
 
 GlobalDefaults:
-  Database: &Database test
-  Collection: &Collection Collection0
   DocumentCount: &DocumentCount 1e6
-  NumStages: &NumStages 12
+  NumGroups: &NumGroups 4
 
 Actors: 
   ^FlattenOnce:
@@ -26,46 +24,38 @@ Actors:
       Path: QueryStats.tmpl
       Key: SetupStage
       Parameters:
-        Database: *Database
-        Collection: *Collection
         DocumentCount: *DocumentCount
-        NumStages: *NumStages
+        NumGroups: *NumGroups
   - LoadConfig:
       Path: QueryStats.tmpl
-      Key: QueryStatsTriple
+      Key: QueryStatsGroup
       Parameters:
-        Database: *Database
-        Collection: *Collection
-        NumStages: *NumStages
+        NumGroups: *NumGroups
         Group: 1
+        PrepopulateMB: 25
         QueryStatsCacheSize: 25MB
   - LoadConfig:
       Path: QueryStats.tmpl
-      Key: QueryStatsTriple
+      Key: QueryStatsGroup
       Parameters:
-        Database: *Database
-        Collection: *Collection
-        NumStages: *NumStages
+        NumGroups: *NumGroups
         Group: 2
+        PrepopulateMB: 250
         QueryStatsCacheSize: 250MB
   - LoadConfig:
       Path: QueryStats.tmpl
-      Key: QueryStatsTriple
+      Key: QueryStatsGroup
       Parameters:
-        Database: *Database
-        Collection: *Collection
-        NumStages: *NumStages
+        NumGroups: *NumGroups
         Group: 3
-        QueryStatsCacheSize: 500MB
+        QueryStatsCacheSize: 25MB
   - LoadConfig:
       Path: QueryStats.tmpl
-      Key: QueryStatsTriple
+      Key: QueryStatsGroup
       Parameters:
-        Database: *Database
-        Collection: *Collection
-        NumStages: *NumStages
+        NumGroups: *NumGroups
         Group: 4
-        QueryStatsCacheSize: 1GB
+        QueryStatsCacheSize: 250MB
 
 AutoRun:
 - When:
