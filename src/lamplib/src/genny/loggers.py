@@ -58,9 +58,10 @@ class StringifyAndRedact:
     """
     Force all values in `event_dict` to be string, and redact secrets in those values.
     This ensures that all secrets are redacted, regardless of how nested they are in
-    data structures.
+    data structures. (Custom)ConsoleRenderer would convert all the values to string in order
+    to print them to stdout anyway.
 
-    Put this in the processor chain just before ConsoleRenderer.
+    Put this in the processor chain just before (Custom)ConsoleRenderer.
     """
 
     regex_to_redaction: dict[re.Pattern[str], str]
