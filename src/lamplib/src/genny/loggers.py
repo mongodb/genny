@@ -1,4 +1,3 @@
-from collections.abc import MutableSequence, MutableMapping
 import re
 import sys
 
@@ -41,8 +40,7 @@ def setup_logging(verbose: bool = False) -> None:
             structlog.processors.TimeStamper(fmt="%Y-%m-%dT%H:%M:%SZ"),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            _stringify_event,
-            SecretsRedactor(),
+            StringifyAndRedact(),
             structlog.dev.ConsoleRenderer(pad_event=20, colors=True, force_colors=True),
         ],
         context_class=dict,
@@ -57,22 +55,13 @@ def setup_logging(verbose: bool = False) -> None:
     _tweak_structlog_log_line()
 
 
-def _stringify_event(logger: Any, name: str, event_dict: dict) -> dict:
+class StringifyAndRedact:
     """
-    Force `event_dict["event"]` to str for compatibility with standard library.
+    Force all values in `event_dict` to be string, and redact secrets in those values.
+    This ensures that all secrets are redacted, regardless of how nested they are in
+    data structures.
 
-    Put this in the processor chain before SecretsRedactor, to ensure that
-    secrets in `event_dict["event"]` are redacted.
-    """
-    event_dict["event"] = str(event_dict["event"])
-    return event_dict
-
-
-class SecretsRedactor:
-    """
-    Redact secrets in `event_dict`.
-
-    Put this in the processor chain before ConsoleRenderer.
+    Put this in the processor chain just before ConsoleRenderer.
     """
 
     regex_to_redaction: dict[re.Pattern[str], str]
@@ -82,20 +71,11 @@ class SecretsRedactor:
             re.compile(r"://([^:@]*):([^@]*)@?"): r"://\g<1>:[REDACTED]@",  # password in URLs
         }
 
-    def __call__(self, logger: Any, name: str, event_dict: dict) -> Any:
-        return self._recursive_redact(event_dict)
-
-    def _recursive_redact(self, element: Any) -> Any:
-        if isinstance(element, MutableMapping):
-            for key, value in element.items():
-                element[key] = self._recursive_redact(value)
-        elif isinstance(element, MutableSequence):
-            for i, item in enumerate(element):
-                element[i] = self._recursive_redact(item)
-        elif isinstance(element, str):
+    def __call__(self, logger: Any, name: str, event_dict: dict) -> dict:
+        for key, value in event_dict.items():
             for regex, redaction in self.regex_to_redaction.items():
-                element = re.sub(regex, redaction, element)
-        return element
+                event_dict[key] = re.sub(regex, redaction, str(value))
+        return event_dict
 
 
 def _tweak_structlog_log_line() -> None:
