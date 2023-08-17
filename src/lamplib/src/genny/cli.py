@@ -14,11 +14,14 @@ def slog_exception(func: Callable) -> Any:
     """
     Log exceptions using structlog, to enable secrets redaction.
     """
+
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             func(*args, **kwargs)
         except Exception as e:
             SLOG.exception(e)
+            raise e
+
     return wrapper
 
 
