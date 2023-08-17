@@ -69,3 +69,8 @@ Actors:
     Blocking: None
   - LogEvery: 5 minutes
     Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq: standalone
