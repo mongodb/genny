@@ -114,24 +114,24 @@ QueryStatsStage:
       Active: [{^NumExpr: {withExpression: "phase + 3", andValues: {phase: *StageToPhase, pps: *PhasesPerStage}}}]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        #Repeat: {^NumExpr: {withExpression: "targetMB * 10", andValues: {targetMB: *PrepopulateMB}}}
-        Repeat: 10
+        Repeat: {^NumExpr: {withExpression: "targetMB * 100", andValues: {targetMB: *PrepopulateMB}}}
+        #Repeat: 1000
         Collection: *Collection
         Operations:
           ^FlattenOnce:
           - &PrepopulateOp OperationName: find
             OperationCommand:
-              # This will send a find command that is a little over 100KB per query shape key.
+              # This will send a find command that is a little over 10KB per query shape key.
               Filter:
                 $and:
                 # So that this can use an index scan and immediately return. We don't want to be
                 # spending actual time on this query, we just want it in the logs.
                 - a1: {^RandomDouble: {min: 1000000, max: 10000000000}}
                 - ^Object:
-                    withNEntries: *PrepopulateMB
+                    withNEntries: 10
                     havingKeys: 
                       ^FormatString:
-                        format: "%3200d"
+                        format: "%32d"
                         withArgs: [{^Inc: {start: 0, multiplier: 1, step: 32}}]
                     andValues: {$exists: true}
                     duplicatedKeys: skip
@@ -165,7 +165,7 @@ QueryStatsStage:
             Filter:
               {$and:
                 [{a1: 1}, {a2: 1}, {^Object: {
-                  withNEntries: {^RandomInt: {min: 1, max: 350}},
+                  withNEntries: 128,
                   havingKeys: {^RandomString: {length: 10}},
                   andValues: {$exists: false},
                   duplicatedKeys: skip
