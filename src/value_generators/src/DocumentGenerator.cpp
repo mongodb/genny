@@ -798,7 +798,7 @@ protected:
 void format_element(boost::format& message, bsoncxx::document::element val) {
     switch (val.type()) {
         case bsoncxx::v_noabi::type::k_utf8:
-            message % val.get_utf8().value.to_string();
+            message % val.get_string().value.to_string();
             return;
         case bsoncxx::type::k_int32:
             message % val.get_int32().value;

@@ -96,7 +96,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                 configDatabase["chunks"].find_one(chunksFilter.view(), chunkFindOptions);
             REQUIRE(chunkOpt.is_initialized());
 
-            auto initialShardId = chunkOpt.get().view()["shard"].get_utf8().value.to_string();
+            auto initialShardId = chunkOpt.get().view()["shard"].get_string().value.to_string();
 
             // Run the actor.
             genny::ActorHelper ah(nodes.root(), 1);
@@ -108,7 +108,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 
             REQUIRE(afterMigrationChunkOpt.is_initialized());
             auto finalShardId =
-                afterMigrationChunkOpt.get().view()["shard"].get_utf8().value.to_string();
+                afterMigrationChunkOpt.get().view()["shard"].get_string().value.to_string();
 
             REQUIRE(initialShardId != finalShardId);
         } catch (const std::exception& e) {
