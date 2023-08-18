@@ -15,10 +15,14 @@ GlobalDefaults:
   Stage: &Stage {^Parameter: {Name: Stage, Default: {unused: "Please specify the stage."}}}
   StageToPhase: &StageToPhase {^NumExpr: {withExpression: "(stage - 1) * pps + setup", andValues: {stage: *Stage, pps: *PhasesPerStage, setup: *SetupPhases}}}
   MaxPhases: &MaxPhases {^NumExpr: {withExpression: "stages * pps + setup", andValues: {stages: *NumStages, pps: *PhasesPerStage, setup: *SetupPhases}}}
-  BinDataSensitive: &BinDataSensitive {^BinDataSensitive: {numBytes: 32}}
-  PrepopulateMB: &PrepopulateMB {^Parameter: {Name: PrepopulateMB, Default: 0}}
-  QueryStatsCacheSize: &QueryStatsCacheSize {^Parameter: {Name: QueryStatsCacheSize, Default: {unused: "Need to specify a query stats cache size."}}}
+
+  QueryStatsCacheSizeMB: &QueryStatsCacheSizeMB {^Parameter: {Name: QueryStatsCacheSizeMB, Default: 300}}
+  QueryStatsCacheSize: &QueryStatsCacheSize {^PreprocessorFormatString: {format: "%dMB", withArgs: [*QueryStatsCacheSizeMB]}}
+  PrepopulateMB: &PrepopulateMB {^NumExpr: {withExpression: "ratio * cacheSize", andValues: {ratio: {^Parameter: {Name: PrepopulateRatio, Default: 0}}, cacheSize: *QueryStatsCacheSizeMB}}}
   QueryStatsSuffix: &QueryStatsSuffix {^Parameter: {Name: Suffix, Default: ""}}
+  EntriesPerObjectName: &EntriesPerObjectName {^Parameter: {Name: EntriesPerObjectName, Default: {unused: "Need to provide a name for this entries/object variant."}}}
+
+  BinDataSensitive: &BinDataSensitive {^BinDataSensitive: {numBytes: 32}}
 
 SetupStage:
 - Name: ClearCollection
@@ -121,7 +125,7 @@ QueryStatsStage:
           ^FlattenOnce:
           - &PrepopulateOp OperationName: find
             OperationCommand:
-              # This will send a find command that is a little over 10KB per query shape key.
+              # This will send a find command that is a little over 320B per query shape key.
               Filter:
                 $and:
                 # So that this can use an index scan and immediately return. We don't want to be
@@ -165,7 +169,7 @@ QueryStatsStage:
             Filter:
               {$and:
                 [{a1: 1}, {a2: 1}, {^Object: {
-                  withNEntries: 128,
+                  withNEntries: {^Parameter: {Name: EntriesPerObject, Default: {unused: "Need to provide the number of entries per object."}}},
                   havingKeys: {^RandomString: {length: 10}},
                   andValues: {$exists: false},
                   duplicatedKeys: skip
@@ -173,7 +177,7 @@ QueryStatsStage:
               }
 - Name: {^PreprocessorFormatString: {format: "QueryStatsAggregation%s", withArgs: [*QueryStatsSuffix]}}
   Type: AdminCommand
-  Threads: 32
+  Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: {^Parameter: {Name: QueryStatsActive, Default: [{^NumExpr: {withExpression: "phase + pps - 1", andValues: {phase: *StageToPhase, pps: *PhasesPerStage}}}]}}
@@ -204,7 +208,7 @@ QueryStatsGroup:
           Collection: *Collection
           NumStages: *NumStages
           Stage: {^NumExpr: {withExpression: "3 * (group - 1) + 1", andValues: {group: &Group {^Parameter: {Name: Group, Default: {unused: "Need to specify a group number."}}}}}}
-          Suffix: {^PreprocessorFormatString: {format: "Base%sPre%dMB", withArgs: [*QueryStatsCacheSize, *PrepopulateMB]}}
+          Suffix: {^PreprocessorFormatString: {format: "Base%sEntries%dMbCache%dMbPrepop", withArgs: [*EntriesPerObjectName, *QueryStatsCacheSizeMB, *PrepopulateMB]}}
           QueryStatsActive: []
           QueryStatsParameters: {}
 
@@ -217,7 +221,7 @@ QueryStatsGroup:
           Collection: *Collection
           NumStages: *NumStages
           Stage: {^NumExpr: {withExpression: "3 * (group - 1) + 2", andValues: {group: *Group}}}
-          Suffix: {^PreprocessorFormatString: {format: "WithHMAC%sPre%dMB", withArgs: [*QueryStatsCacheSize, *PrepopulateMB]}}
+          Suffix: {^PreprocessorFormatString: {format: "WithHMAC%sEntries%dMbCache%dMbPrepop", withArgs: [*EntriesPerObjectName, *QueryStatsCacheSizeMB, *PrepopulateMB]}}
           QueryStatsParameters: {transformIdentifiers: {algorithm: "hmac-sha-256", hmacKey: *BinDataSensitive}}
 
     # QueryStats without HMAC.
@@ -229,5 +233,5 @@ QueryStatsGroup:
           Collection: *Collection
           NumStages: *NumStages
           Stage: {^NumExpr: {withExpression: "3 * (group - 1) + 3", andValues: {group: *Group}}}
-          Suffix: {^PreprocessorFormatString: {format: "WithoutHMAC%sPre%dMB", withArgs: [*QueryStatsCacheSize, *PrepopulateMB]}}
+          Suffix: {^PreprocessorFormatString: {format: "WithoutHMAC%sEntries%dMbCache%dMbPrepop", withArgs: [*EntriesPerObjectName, *QueryStatsCacheSizeMB, *PrepopulateMB]}}
           QueryStatsParameters: {}

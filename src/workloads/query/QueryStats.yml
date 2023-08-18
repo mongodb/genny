@@ -16,7 +16,9 @@ Clients:
 
 GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
-  NumGroups: &NumGroups 4
+  FixedEntriesPerObject: &FixedEntries 128
+  RandomEntriesPerObject: &RandomEntries {^RandomInt: {min: 1, max: 350}}
+  NumGroups: &NumGroups 8
 
 Actors: 
   ^FlattenOnce:
@@ -32,30 +34,72 @@ Actors:
       Parameters:
         NumGroups: *NumGroups
         Group: 1
-        PrepopulateMB: 25
-        QueryStatsCacheSize: 25MB
+        PrepopulateRatio: 0
+        EntriesPerObject: *FixedEntries
+        EntriesPerObjectName: "128"
   - LoadConfig:
       Path: QueryStats.tmpl
       Key: QueryStatsGroup
       Parameters:
         NumGroups: *NumGroups
         Group: 2
-        PrepopulateMB: 250
-        QueryStatsCacheSize: 250MB
+        PrepopulateRatio: 0
+        EntriesPerObject: *FixedEntries
+        EntriesPerObjectName: "128"
   - LoadConfig:
       Path: QueryStats.tmpl
       Key: QueryStatsGroup
       Parameters:
         NumGroups: *NumGroups
         Group: 3
-        QueryStatsCacheSize: 25MB
+        PrepopulateRatio: 1
+        EntriesPerObject: *FixedEntries
+        EntriesPerObjectName: "128"
   - LoadConfig:
       Path: QueryStats.tmpl
       Key: QueryStatsGroup
       Parameters:
         NumGroups: *NumGroups
         Group: 4
-        QueryStatsCacheSize: 250MB
+        PrepopulateRatio: 1
+        EntriesPerObject: *FixedEntries
+        EntriesPerObjectName: "128"
+  - LoadConfig:
+      Path: QueryStats.tmpl
+      Key: QueryStatsGroup
+      Parameters:
+        NumGroups: *NumGroups
+        Group: 5
+        PrepopulateRatio: 0
+        EntriesPerObject: *RandomEntries
+        EntriesPerObjectName: "Random"
+  - LoadConfig:
+      Path: QueryStats.tmpl
+      Key: QueryStatsGroup
+      Parameters:
+        NumGroups: *NumGroups
+        Group: 6
+        PrepopulateRatio: 0
+        EntriesPerObject: *RandomEntries
+        EntriesPerObjectName: "Random"
+  - LoadConfig:
+      Path: QueryStats.tmpl
+      Key: QueryStatsGroup
+      Parameters:
+        NumGroups: *NumGroups
+        Group: 7
+        PrepopulateRatio: 1
+        EntriesPerObject: *RandomEntries
+        EntriesPerObjectName: "Random"
+  - LoadConfig:
+      Path: QueryStats.tmpl
+      Key: QueryStatsGroup
+      Parameters:
+        NumGroups: *NumGroups
+        Group: 8
+        PrepopulateRatio: 1
+        EntriesPerObject: *RandomEntries
+        EntriesPerObjectName: "Random"
 
 AutoRun:
 - When:
