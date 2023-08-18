@@ -47,6 +47,7 @@ Actors:
           partitionKey: {^RandomInt: {min: 1, max: 5}}
           time: {^RandomDate: {min: "2020-01-01", max: "2020-01-02"}}
           temp: {^RandomDouble: {distribution: normal, mean: 145, sigma: 30.0}}
+          temp2: {^RandomDouble: {distribution: normal, mean: 145, sigma: 30.0}}
 
 # Phase 2: Ensure all data is synced to disk.
 - Name: Quiesce
@@ -988,7 +989,7 @@ Actors:
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {covariancePop: {
-              $covariancePop: "$temp",
+              $covariancePop: ["$temp", "$temp2"],
               window: {documents: [-5, 5]}}}}}]
 
 - CovariancePopTimeBased:
@@ -1004,7 +1005,7 @@ Actors:
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {covariancePop: {
-              $covariancePop: "$temp",
+              $covariancePop: ["$temp", "$temp2"],
               window: {
                 range: [-1, 0],
                 unit: "hour"
@@ -1023,7 +1024,7 @@ Actors:
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {covarianceSamp: {
-              $covarianceSamp: "$temp",
+              $covarianceSamp: ["$temp", "$temp2"],
               window: {documents: [-5, 5]}}}}}]
 
 - CovarianceSampTimeBased:
@@ -1039,7 +1040,7 @@ Actors:
             partitionBy: "$partitionKey",
             sortBy: {time: 1},
             output: {covarianceSamp: {
-              $covarianceSamp: "$temp",
+              $covarianceSamp: ["$temp", "$temp2"],
               window: {
                 range: [-1, 0],
                 unit: "hour"
