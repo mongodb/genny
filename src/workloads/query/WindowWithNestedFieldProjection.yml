@@ -16,6 +16,7 @@ Actors:
         DocumentCount: 10000
         BatchSize: &batchSize 10000
         Document:
+          time: {^RandomDate: {min: "2020-01-01", max: "2020-01-02"}}
           price: {^RandomDouble: {distribution: normal, mean: 100, sigma: 20}}
       - &Nop {Nop: true}
       - *Nop
@@ -44,6 +45,7 @@ Actors:
               aggregate: Collection0
               pipeline:
                 [{$setWindowFields: {
+                  sortBy: {time: 1},
                   output: {sum.result: {$sum: "$price", window: {documents: [-5, 5]}}}}}]
               cursor: {batchSize: *batchSize}
 
