@@ -11,7 +11,7 @@ Clients:
   Default:
     QueryOptions:
       connectTimeoutMS: 3_600_000  # 1 hour
-      maxPoolSize: 2000
+      maxPoolSize: 4000
       socketTimeoutMS: 3_600_000  # 1 hour
 
 GlobalDefaults:
