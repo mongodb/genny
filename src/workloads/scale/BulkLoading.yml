@@ -12,83 +12,9 @@ Description: |
   - normal writes, 30GB data, many connections, no index
   - normal writes, 30GB data, many connections, with index
 
-  - BulkWrite Upserts, 30GB data, many connections, no index
   - BulkWrite Upserts, 30GB data, many connections, with index
-GlobalDefaults:
-  - &NumPhases 26
-  - &DbName db
-  - &CollectionName coll
-  # Using ^RandomDate for the timestamp is too compute intensive
-  # TODO 650%
-  - &Document {
-      sensorId: {^RandomInt: {min: 0, max: 200000000}},
-      timestamp: {^RandomInt: {min: 1577836800000, max: 1692020604000}},
-      eventId: {^RandomInt: {min: 1, max: 10}},
-      dataField1: {^FastRandomString: {length: 10}},
-      dataField2: {^FastRandomString: {length: 20}},
-      dataField3: {^FastRandomString: {length: 30}},
-      dataField4: {^FastRandomString: {length: 40}},
-      dataField5: {^FastRandomString: {length: 50}},
-    }
-  - &WriteOp {
-    WriteCommand: insertOne,
-    Document: *Document
-  }
-  # This workload uses a batch size of 100 for the bulk writes.
-  # We evaluated the impact of different batch sizes and the document throughput
-  # does not appear to be impacted by the batch size.
-  - &WriteOps10x [
-                     *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp,
-                     *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp,
-                  ]
-  - &WriteOps100x {^FlattenOnce: [
-      *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
-      *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
-    ]}
 
-Clients:
-  Default:
-    QueryOptions:
-      socketTimeoutMS: -1
-      maxPoolSize: 1000
-
-ActorTemplates:
-- TemplateName: BulkWriterTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "unset"}}
-    Type: CrudActor
-    Threads:  {^Parameter: {Name: "Threads", Default: "unset"}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: "unset"}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Duration: {^Parameter: {Name: "Duration", Default: "unset"}}
-          Database: *DbName
-          Collection: *CollectionName
-          Operations:
-          - OperationName: bulkWrite
-            OperationCommand:
-              WriteOperations: *WriteOps100x
-- TemplateName: NormalWriterTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "unset"}}
-    Type: CrudActor
-    Threads:  {^Parameter: {Name: "Threads", Default: "unset"}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "OnlyActiveInPhase", Default: "unset"}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Duration: {^Parameter: {Name: "Duration", Default: "unset"}}
-          Database: *DbName
-          Collection: *CollectionName
-          Operations:
-            - OperationName: insertOne
-              OperationCommand:
-                Document: *Document
-
-# ---Phases---
+# ---Phase Description---
 # 0 Load
 # 1 Measure - BulkWriteSingleConnectionNoIndex
 # 2 Delete
@@ -121,110 +47,282 @@ ActorTemplates:
 # 24 Measure - NormalWriteManyConnectionsWithIndex
 # 25 Delete
 # 26 Quiese
+
+# 27 Load
+# 28 Index
+# 29 Measure - BulkUpsertManyConnectionsWithIndex
+# 30 Delete
+# 31 Quiese
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+GlobalDefaults:
+  - &NumPhases 26
+  - &DbName db
+  - &CollectionName coll
+
+  # This document layout leads to ~650% CPU utilization on the genny client,
+  # so this is close to the maximum document complexity we can use here.
+  # Using ^RandomDate for the timestamp is too compute intensive.
+  - &Document {
+      sensorId: { ^RandomInt: { min: 0, max: 200000000 } },
+      timestamp: { ^RandomInt: { min: 1577836800000, max: 1692020604000 } },
+      eventId: { ^RandomInt: { min: 1, max: 10 } },
+      dataField1: { ^FastRandomString: { length: 10 } },
+      dataField2: { ^FastRandomString: { length: 20 } },
+      dataField3: { ^FastRandomString: { length: 30 } },
+      dataField4: { ^FastRandomString: { length: 40 } },
+      dataField5: { ^FastRandomString: { length: 50 } },
+    }
+
+  # This workload uses a batch size of 100 for the bulk writes.
+  # We evaluated the impact of different batch sizes and the document throughput
+  # does not appear to be impacted by the batch size.
+  - &WriteOp { WriteCommand: insertOne, Document: *Document }
+  - &WriteOps10x [
+      *WriteOp,
+      *WriteOp,
+      *WriteOp,
+      *WriteOp,
+      *WriteOp,
+      *WriteOp,
+      *WriteOp,
+      *WriteOp,
+      *WriteOp,
+      *WriteOp,
+    ]
+  - &WriteOps100x {
+      ^FlattenOnce:
+        [
+          *WriteOps10x,
+          *WriteOps10x,
+          *WriteOps10x,
+          *WriteOps10x,
+          *WriteOps10x,
+          *WriteOps10x,
+          *WriteOps10x,
+          *WriteOps10x,
+          *WriteOps10x,
+          *WriteOps10x,
+        ],
+    }
+  - &UpsertOp {
+      WriteCommand: updateOne,
+      Filter: {sensorId: { ^RandomInt: { min: 0, max: 200000000 } }},
+      Update: {$set: {eventId: 0, dataField1: { ^FastRandomString: { length: 10 } }}},
+      Options: {Upsert: true},
+      OperationOptions: {Upsert: true},
+      WriteOptions: {Upsert: true},
+      UpdateOptions: {Upsert: true},
+    }
+  - &UpsertOps10x [
+      *UpsertOp,
+      *UpsertOp,
+      *UpsertOp,
+      *UpsertOp,
+      *UpsertOp,
+      *UpsertOp,
+      *UpsertOp,
+      *UpsertOp,
+      *UpsertOp,
+      *UpsertOp,
+    ]
+  - &UpsertOps100x {
+      ^FlattenOnce:
+        [
+          *UpsertOps10x,
+          *UpsertOps10x,
+          *UpsertOps10x,
+          *UpsertOps10x,
+          *UpsertOps10x,
+          *UpsertOps10x,
+          *UpsertOps10x,
+          *UpsertOps10x,
+          *UpsertOps10x,
+          *UpsertOps10x,
+        ],
+    }
+
+ActorTemplates:
+  - TemplateName: BulkWriterTemplate
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "unset" } }
+      Type: CrudActor
+      Threads: { ^Parameter: { Name: "Threads", Default: "unset" } }
+      Phases:
+        OnlyActiveInPhases:
+          Active:
+            { ^Parameter: { Name: "OnlyActiveInPhase", Default: "unset" } }
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Duration: { ^Parameter: { Name: "Duration", Default: "unset" } }
+            Database: *DbName
+            Collection: *CollectionName
+            Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations: { ^Parameter: { Name: "Operations", Default: "unset" } }
+                  Options:
+                    Upsert: true
+                  OperationOptions:
+                    Upsert: true
+                  WriteOptions:
+                    Upsert: true
+                  UpdateOptions:
+                    Upsert: true
+                Options:
+                  Upsert: true
+                OperationOptions:
+                  Upsert: true
+                WriteOptions:
+                  Upsert: true
+                UpdateOptions:
+                  Upsert: true
+  # TODO merge Templates
+  - TemplateName: NormalWriterTemplate
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "unset" } }
+      Type: CrudActor
+      Threads: { ^Parameter: { Name: "Threads", Default: "unset" } }
+      Phases:
+        OnlyActiveInPhases:
+          Active:
+            { ^Parameter: { Name: "OnlyActiveInPhase", Default: "unset" } }
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Duration: { ^Parameter: { Name: "Duration", Default: "unset" } }
+            Database: *DbName
+            Collection: *CollectionName
+            Operations:
+              - OperationName: insertOne
+                OperationCommand:
+                  Document: *Document
+
 Actors:
-# This loads about 35 GB of data to warm up the DB
-- ActorFromTemplate:
-    TemplateName: BulkWriterTemplate
-    TemplateParameters:
-      Name: Warmup
-      Threads: 20
-      OnlyActiveInPhase: [0,4,9,13, 18, 22]
-      Duration: 2 minutes
+  # This loads about 35 GB of data to warm up the DB
+  # - ActorFromTemplate:
+  #     TemplateName: BulkWriterTemplate
+  #     TemplateParameters:
+  #       Name: Warmup
+  #       Threads: 20
+  #       #OnlyActiveInPhase: [0, 4, 9, 13, 18, 22]
+  #       OnlyActiveInPhase: [0]
+  #       Duration: 2 minutes
+  #       Operations: *WriteOps100x
 
-- Name: BuildIndexActor
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5,14, 23]
-      Active: [1]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *DbName
-        Operations:
-        - OperationMetricsName: BulkBuildColumnStoreIndex
-          OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *CollectionName
-            indexes:
-            - key: {sensorId: 1, timestamp: -1}
-              name: SensorAndTimestamp
-            - key: {timestamp: -1}
-              name: Timestamp
+  - Name: BuildIndexActor
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        # Active: [5, 14, 23]
+        Active: [1]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *DbName
+          Operations:
+            - OperationMetricsName: BulkBuildColumnStoreIndex
+              OperationName: RunCommand
+              OperationCommand:
+                createIndexes: *CollectionName
+                indexes:
+                  - key: { sensorId: 1, timestamp: -1 }
+                    name: SensorAndTimestamp
+                  - key: { timestamp: -1 }
+                    name: Timestamp
 
-- Name: QuiesceActor
-  Type: QuiesceActor
-  Threads: 1
-  Database: *DbName
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3,8,12,17,21,26]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
+  # - Name: QuiesceActor
+  #   Type: QuiesceActor
+  #   Threads: 1
+  #   Database: *DbName
+  #   Phases:
+  #     OnlyActiveInPhases:
+  #       Active: [3, 8, 12, 17, 21, 26]
+  #       NopInPhasesUpTo: *NumPhases
+  #       PhaseConfig:
+  #         Repeat: 1
 
-- Name: DeleteCollectionActor
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2,7,11,16,20,25]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *DbName
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            drop: *CollectionName
+  # - Name: DeleteCollectionActor
+  #   Type: RunCommand
+  #   Threads: 1
+  #   Phases:
+  #     OnlyActiveInPhases:
+  #       Active: [2, 7, 11, 16, 20, 25]
+  #       NopInPhasesUpTo: *NumPhases
+  #       PhaseConfig:
+  #         Repeat: 1
+  #         Database: *DbName
+  #         Operations:
+  #           - OperationName: RunCommand
+  #             OperationCommand:
+  #               drop: *CollectionName
 
-- ActorFromTemplate:
-    TemplateName: BulkWriterTemplate
-    TemplateParameters:
-      Name: BulkWriteSingleConnectionNoIndex
-      Threads: 1
-      OnlyActiveInPhase: [1]
-      Duration: 1 minute
+  # - ActorFromTemplate:
+  #     TemplateName: BulkWriterTemplate
+  #     TemplateParameters:
+  #       Name: BulkWriteSingleConnectionNoIndex
+  #       Threads: 1
+  #       OnlyActiveInPhase: [1]
+  #       Duration: 1 minute
+  #       Operations: *WriteOps100x
 
-- ActorFromTemplate:
-    TemplateName: BulkWriterTemplate
-    TemplateParameters:
-      Name: BulkWriteSingleConnectionWithIndex
-      Threads: 1
-      OnlyActiveInPhase: [6]
-      Duration: 1 minute
+  # - ActorFromTemplate:
+  #     TemplateName: BulkWriterTemplate
+  #     TemplateParameters:
+  #       Name: BulkWriteSingleConnectionWithIndex
+  #       Threads: 1
+  #       OnlyActiveInPhase: [6]
+  #       Duration: 1 minute
+  #       Operations: *WriteOps100x
 
-- ActorFromTemplate:
-    TemplateName: BulkWriterTemplate
-    TemplateParameters:
-      Name: BulkWriteManyConnectionsNoIndex
-      Threads: 20
-      OnlyActiveInPhase: [10]
-      Duration: 1 minute
+  # - ActorFromTemplate:
+  #     TemplateName: BulkWriterTemplate
+  #     TemplateParameters:
+  #       Name: BulkWriteManyConnectionsNoIndex
+  #       Threads: 20
+  #       OnlyActiveInPhase: [10]
+  #       Duration: 1 minute
+  #       Operations: *WriteOps100x
 
-- ActorFromTemplate:
-    TemplateName: BulkWriterTemplate
-    TemplateParameters:
-      Name: BulkWriteManyConnectionsWithIndex
-      Threads: 20
-      OnlyActiveInPhase: [15]
-      Duration: 1 minute
+  # - ActorFromTemplate:
+  #     TemplateName: BulkWriterTemplate
+  #     TemplateParameters:
+  #       Name: BulkWriteManyConnectionsWithIndex
+  #       Threads: 20
+  #       OnlyActiveInPhase: [15]
+  #       Duration: 1 minute
+  #       Operations: *WriteOps100x
 
-- ActorFromTemplate:
-    TemplateName: NormalWriterTemplate
-    TemplateParameters:
-      Name: NormalWriteManyConnectionsNoIndex
-      Threads: 30
-      OnlyActiveInPhase: [19]
-      Duration: 1 minute
+  # - ActorFromTemplate:
+  #     TemplateName: NormalWriterTemplate
+  #     TemplateParameters:
+  #       Name: NormalWriteManyConnectionsNoIndex
+  #       Threads: 30
+  #       OnlyActiveInPhase: [19]
+  #       Duration: 1 minute
 
-- ActorFromTemplate:
-    TemplateName: NormalWriterTemplate
-    TemplateParameters:
-      Name: NormalWriteManyConnectionsWithIndex
-      Threads: 30
-      OnlyActiveInPhase: [24]
-      Duration: 1 minute
+  # - ActorFromTemplate:
+  #     TemplateName: NormalWriterTemplate
+  #     TemplateParameters:
+  #       Name: NormalWriteManyConnectionsWithIndex
+  #       Threads: 30
+  #       OnlyActiveInPhase: [24]
+  #       Duration: 1 minute
+
+# We only test upserts with an index, as they would require COLSCANs without an index.
+# 120s * 900,000docs/sec = 108,000,000 docs after warmup (slight overestimation since ids could overlapp).
+# With 200,000,000 sensorIds, the upserts have a ~50% chance of requiring an insert.
+  - ActorFromTemplate:
+      TemplateName: BulkWriterTemplate
+      TemplateParameters:
+        Name: BulkUpsertManyConnectionsWithIndex
+        Threads: 1
+        OnlyActiveInPhase: [2]
+        Duration: 1 minute
+        Operations: [*UpsertOp]
 
 # TODO auto-run
