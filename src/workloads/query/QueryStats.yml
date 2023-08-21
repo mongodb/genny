@@ -17,7 +17,7 @@ Clients:
 GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   FixedEntriesPerObject: &FixedEntries 128
-  LowVariance: &LowVariance {^RandomInt: {min: 125, max: 250}}
+  LowVarianceEntriesPerObject: &LowVarianceEntries {^RandomInt: {min: 125, max: 250}}
   RandomEntriesPerObject: &RandomEntries {^RandomInt: {min: 1, max: 350}}
   NumGroups: &NumGroups 8
 
