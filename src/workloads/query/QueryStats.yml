@@ -17,6 +17,7 @@ Clients:
 GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   FixedEntriesPerObject: &FixedEntries 128
+  LowVariance: &LowVariance {^RandomInt: {min: 125, max: 250}}
   RandomEntriesPerObject: &RandomEntries {^RandomInt: {min: 1, max: 350}}
   NumGroups: &NumGroups 8
 
@@ -64,6 +65,7 @@ Actors:
         PrepopulateRatio: 1
         EntriesPerObject: *FixedEntries
         EntriesPerObjectName: "128"
+
   - LoadConfig:
       Path: QueryStats.tmpl
       Key: QueryStatsGroup
@@ -100,6 +102,43 @@ Actors:
         PrepopulateRatio: 1
         EntriesPerObject: *RandomEntries
         EntriesPerObjectName: "Random"
+
+  - LoadConfig:
+      Path: QueryStats.tmpl
+      Key: QueryStatsGroup
+      Parameters:
+        NumGroups: *NumGroups
+        Group: 9
+        PrepopulateRatio: 0
+        EntriesPerObject: *LowVarianceEntries
+        EntriesPerObjectName: "LowVariance"
+  - LoadConfig:
+      Path: QueryStats.tmpl
+      Key: QueryStatsGroup
+      Parameters:
+        NumGroups: *NumGroups
+        Group: 10
+        PrepopulateRatio: 0
+        EntriesPerObject: *LowVarianceEntries
+        EntriesPerObjectName: "LowVariance"
+  - LoadConfig:
+      Path: QueryStats.tmpl
+      Key: QueryStatsGroup
+      Parameters:
+        NumGroups: *NumGroups
+        Group: 11
+        PrepopulateRatio: 1
+        EntriesPerObject: *LowVarianceEntries
+        EntriesPerObjectName: "LowVariance"
+  - LoadConfig:
+      Path: QueryStats.tmpl
+      Key: QueryStatsGroup
+      Parameters:
+        NumGroups: *NumGroups
+        Group: 12
+        PrepopulateRatio: 1
+        EntriesPerObject: *LowVarianceEntries
+        EntriesPerObjectName: "LowVariance"
 
 AutoRun:
 - When:

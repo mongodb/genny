@@ -160,7 +160,7 @@ QueryStatsStage:
       Active: [{^NumExpr: {withExpression: "phase + pps - 1", andValues: {phase: *StageToPhase, pps: *PhasesPerStage}}}]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Duration: 1 minute
+        Duration: 5 minutes
         Collection: *Collection
         Operations:
         - OperationName: find
@@ -183,7 +183,7 @@ QueryStatsStage:
       Active: {^Parameter: {Name: QueryStatsActive, Default: [{^NumExpr: {withExpression: "phase + pps - 1", andValues: {phase: *StageToPhase, pps: *PhasesPerStage}}}]}}
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Duration: 1 minute
+        Duration: 5 minutes
         SleepBefore: 5 seconds
         Database: admin
         Operations:
