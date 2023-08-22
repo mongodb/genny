@@ -36,7 +36,7 @@ Actors:
         NumGroups: *NumGroups
         Group: 1
         PrepopulateRatio: 1
-        EntriesPerObject: {^Cycle: {ofLength: 25, fromGenerator: *FixedEntriesPerObject}}
+        EntriesPerObject: {^Cycle: {ofLength: 25, fromGenerator: *FixedEntries}}
         EntriesPerObjectName: "Cycle25Fixed"
   - LoadConfig:
       Path: QueryStats.tmpl
@@ -45,7 +45,7 @@ Actors:
         NumGroups: *NumGroups
         Group: 2
         PrepopulateRatio: 1
-        EntriesPerObject: {^Cycle: {ofLength: 25, fromGenerator: *RandomEntriesPerObject}}
+        EntriesPerObject: {^Cycle: {ofLength: 25, fromGenerator: *RandomEntries}}
         EntriesPerObjectName: "Cycle25Random"
 #  - LoadConfig:
 #      Path: QueryStats.tmpl
