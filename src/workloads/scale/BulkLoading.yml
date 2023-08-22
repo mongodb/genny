@@ -99,35 +99,23 @@ GlobalDefaults:
     }
   - &UpsertOp {
       WriteCommand: updateOne,
-      Filter: {sensorId: { ^RandomInt: { min: 0, max: 200000000 } }},
-      Update: {$set: {eventId: 0, dataField1: { ^FastRandomString: { length: 10 } }}},
-      OperationOptions: {Upsert: true},
+      Filter: { sensorId: { ^RandomInt: { min: 0, max: 200000000 } } },
+      Update:
+        {
+          $set:
+            { eventId: 0, dataField1: { ^FastRandomString: { length: 10 } } },
+        },
+      OperationOptions: { Upsert: true },
     }
   - &UpsertOps10x [
-      *UpsertOp,
-      *UpsertOp,
-      *UpsertOp,
-      *UpsertOp,
-      *UpsertOp,
-      *UpsertOp,
-      *UpsertOp,
-      *UpsertOp,
-      *UpsertOp,
-      *UpsertOp,
+      *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp,
+      *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp,
     ]
   - &UpsertOps100x {
       ^FlattenOnce:
         [
-          *UpsertOps10x,
-          *UpsertOps10x,
-          *UpsertOps10x,
-          *UpsertOps10x,
-          *UpsertOps10x,
-          *UpsertOps10x,
-          *UpsertOps10x,
-          *UpsertOps10x,
-          *UpsertOps10x,
-          *UpsertOps10x,
+          *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x,
+          *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x,
         ],
     }
 
@@ -280,6 +268,9 @@ Actors:
         OnlyActiveInPhase: [24]
         Duration: 1 minute
 
+  # We only test upserts with an index, as they would require COLSCANs without an index.
+  # 120s * 900,000docs/sec = 108,000,000 docs after warmup (slight overestimation since ids could overlapp).
+  # With 200,000,000 sensorIds, the upserts have a ~50% chance of requiring an insert.
   - ActorFromTemplate:
       TemplateName: BulkWriterTemplate
       TemplateParameters:
@@ -288,6 +279,7 @@ Actors:
         OnlyActiveInPhase: [29]
         Duration: 1 minute
         Operations: *UpsertOps100x
+
 AutoRun:
   - When:
       mongodb_setup:
