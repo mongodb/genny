@@ -1,20 +1,20 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  TODO
+  This workload tests the performance of the bulkWrite API, and compares it to normal writes.
+  It is modeled as a collection of sensor data. It would be common for this use case to do batching using, e.g., AWS SQS.
 
-  - BulkWrite API, 30GB data, single connection, no index
-  - BulkWrite API, 30GB data, single connection, with index
+  It tests the following scenarios:
+  - BulkWrite API, ~30GB data in the db, single connection, no index
+  - BulkWrite API, ~30GB data in the db, single connection, with index
 
-  - BulkWrite API, 30GB data, many connections, no index
-  - BulkWrite API, 30GB data, many connections, with index
+  - BulkWrite API, ~30GB data in the db, many connections, no index
+  - BulkWrite API, ~30GB data in the db, many connections, with index
 
-  - normal writes, 30GB data, many connections, no index
-  - normal writes, 30GB data, many connections, with index
+  - normal writes, ~30GB data in the db, many connections, no index
+  - normal writes, ~30GB data in the db, many connections, with index
 
-  - BulkWrite Upserts, 30GB data, many connections, with index
-
-# ---Phase Description---
+# ---Start Phase Description---
 # 0 Load
 # 1 Measure - BulkWriteSingleConnectionNoIndex
 # 2 Delete
@@ -50,17 +50,19 @@ Description: |
 
 # 27 Load
 # 28 Index
-# 29 Measure - BulkUpsertManyConnectionsWithIndex
+# 29 Measure - BulkUpsertsManyConnectionsWithIndex
 # 30 Delete
 # 31 Quiese
+# ---End Phase Description---
 
 Clients:
   Default:
     QueryOptions:
       socketTimeoutMS: -1
+      maxPoolSize: 400
 
 GlobalDefaults:
-  - &NumPhases 26
+  - &NumPhases 31
   - &DbName db
   - &CollectionName coll
 
@@ -83,40 +85,21 @@ GlobalDefaults:
   # does not appear to be impacted by the batch size.
   - &WriteOp { WriteCommand: insertOne, Document: *Document }
   - &WriteOps10x [
-      *WriteOp,
-      *WriteOp,
-      *WriteOp,
-      *WriteOp,
-      *WriteOp,
-      *WriteOp,
-      *WriteOp,
-      *WriteOp,
-      *WriteOp,
-      *WriteOp,
+      *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp,
+      *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp,
     ]
   - &WriteOps100x {
       ^FlattenOnce:
         [
-          *WriteOps10x,
-          *WriteOps10x,
-          *WriteOps10x,
-          *WriteOps10x,
-          *WriteOps10x,
-          *WriteOps10x,
-          *WriteOps10x,
-          *WriteOps10x,
-          *WriteOps10x,
-          *WriteOps10x,
+          *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
+          *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
         ],
     }
   - &UpsertOp {
       WriteCommand: updateOne,
       Filter: {sensorId: { ^RandomInt: { min: 0, max: 200000000 } }},
       Update: {$set: {eventId: 0, dataField1: { ^FastRandomString: { length: 10 } }}},
-      Options: {Upsert: true},
       OperationOptions: {Upsert: true},
-      WriteOptions: {Upsert: true},
-      UpdateOptions: {Upsert: true},
     }
   - &UpsertOps10x [
       *UpsertOp,
@@ -164,24 +147,8 @@ ActorTemplates:
             Operations:
               - OperationName: bulkWrite
                 OperationCommand:
-                  WriteOperations: { ^Parameter: { Name: "Operations", Default: "unset" } }
-                  Options:
-                    Upsert: true
-                  OperationOptions:
-                    Upsert: true
-                  WriteOptions:
-                    Upsert: true
-                  UpdateOptions:
-                    Upsert: true
-                Options:
-                  Upsert: true
-                OperationOptions:
-                  Upsert: true
-                WriteOptions:
-                  Upsert: true
-                UpdateOptions:
-                  Upsert: true
-  # TODO merge Templates
+                  WriteOperations:
+                    { ^Parameter: { Name: "Operations", Default: "unset" } }
   - TemplateName: NormalWriterTemplate
     Config:
       Name: { ^Parameter: { Name: "Name", Default: "unset" } }
@@ -203,22 +170,22 @@ ActorTemplates:
 
 Actors:
   # This loads about 35 GB of data to warm up the DB
-  # - ActorFromTemplate:
-  #     TemplateName: BulkWriterTemplate
-  #     TemplateParameters:
-  #       Name: Warmup
-  #       Threads: 20
-  #       #OnlyActiveInPhase: [0, 4, 9, 13, 18, 22]
-  #       OnlyActiveInPhase: [0]
-  #       Duration: 2 minutes
-  #       Operations: *WriteOps100x
+  - ActorFromTemplate:
+      TemplateName: BulkWriterTemplate
+      TemplateParameters:
+        Name: Warmup
+        Threads: 20
+        #OnlyActiveInPhase: [0, 4, 9, 13, 18, 22, 27]
+        OnlyActiveInPhase: [0]
+        Duration: 2 minutes
+        Operations: *WriteOps100x
 
   - Name: BuildIndexActor
     Type: RunCommand
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        # Active: [5, 14, 23]
+        #Active: [5, 14, 23, 28]
         Active: [1]
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
@@ -241,7 +208,7 @@ Actors:
   #   Database: *DbName
   #   Phases:
   #     OnlyActiveInPhases:
-  #       Active: [3, 8, 12, 17, 21, 26]
+  #       Active: [3, 8, 12, 17, 21, 26, 31]
   #       NopInPhasesUpTo: *NumPhases
   #       PhaseConfig:
   #         Repeat: 1
@@ -251,7 +218,7 @@ Actors:
   #   Threads: 1
   #   Phases:
   #     OnlyActiveInPhases:
-  #       Active: [2, 7, 11, 16, 20, 25]
+  #       Active: [2, 7, 11, 16, 20, 25, 30]
   #       NopInPhasesUpTo: *NumPhases
   #       PhaseConfig:
   #         Repeat: 1
@@ -313,16 +280,16 @@ Actors:
   #       OnlyActiveInPhase: [24]
   #       Duration: 1 minute
 
-# We only test upserts with an index, as they would require COLSCANs without an index.
-# 120s * 900,000docs/sec = 108,000,000 docs after warmup (slight overestimation since ids could overlapp).
-# With 200,000,000 sensorIds, the upserts have a ~50% chance of requiring an insert.
   - ActorFromTemplate:
       TemplateName: BulkWriterTemplate
       TemplateParameters:
-        Name: BulkUpsertManyConnectionsWithIndex
-        Threads: 1
-        OnlyActiveInPhase: [2]
+        Name: BulkUpsertsManyConnectionsWithIndex
+        Threads: 20
+        OnlyActiveInPhase: [29]
         Duration: 1 minute
-        Operations: [*UpsertOp]
-
-# TODO auto-run
+        Operations: *UpsertOps100x
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
