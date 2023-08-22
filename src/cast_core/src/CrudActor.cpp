@@ -207,7 +207,6 @@ struct InsertOneOperation : public WriteOperation {
 
     mongocxx::model::write getModel() override {
         auto document = _document();
-        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1insert__one.html
         return mongocxx::model::insert_one{std::move(document)};
     }
 
@@ -252,21 +251,7 @@ struct UpdateOneOperation : public WriteOperation {
     mongocxx::model::write getModel() override {
         auto filter = _filter();
         auto update = _update();
-        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1update__one.html
-        mongocxx::model::update_one op{std::move(filter), std::move(update)};
-        if (_options.array_filters()) {
-            op.array_filters(_options.array_filters().value());
-        }
-        if (_options.collation()) {
-            op.collation(_options.collation().value());
-        }
-        if (_options.hint()) {
-            op.hint(_options.hint().value());
-        }
-        if (_options.upsert()) {
-            op.upsert(_options.upsert().value());
-        }
-        return op;
+        return mongocxx::model::update_one{std::move(filter), std::move(update)};
     }
 
     void run(mongocxx::client_session& session) override {
@@ -312,21 +297,7 @@ struct UpdateManyOperation : public WriteOperation {
     mongocxx::model::write getModel() override {
         auto filter = _filter();
         auto update = _update();
-        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1update__many.html
-        mongocxx::model::update_many op{std::move(filter), std::move(update)};
-        if (_options.array_filters()) {
-            op.array_filters(_options.array_filters().value());
-        }
-        if (_options.collation()) {
-            op.collation(_options.collation().value());
-        }
-        if (_options.hint()) {
-            op.hint(_options.hint().value());
-        }
-        if (_options.upsert()) {
-            op.upsert(_options.upsert().value());
-        }
-        return op;
+        return mongocxx::model::update_many{std::move(filter), std::move(update)};
     }
 
     void run(mongocxx::client_session& session) override {
@@ -370,15 +341,7 @@ struct DeleteOneOperation : public WriteOperation {
 
     mongocxx::model::write getModel() override {
         auto filter = _filter();
-        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1delete__one.html
-        mongocxx::model::delete_one op{std::move(filter)};
-        if (_options.collation()) {
-            op.collation(_options.collation().value());
-        }
-        if (_options.hint()) {
-            op.hint(_options.hint().value());
-        }
-        return op;
+        return mongocxx::model::delete_one{std::move(filter)};
     }
 
     void run(mongocxx::client_session& session) override {
@@ -416,15 +379,7 @@ struct DeleteManyOperation : public WriteOperation {
 
     mongocxx::model::write getModel() override {
         auto filter = _filter();
-        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1delete__many.html
-        mongocxx::model::delete_many op{std::move(filter)};
-        if (_options.collation()) {
-            op.collation(_options.collation().value());
-        }
-        if (_options.hint()) {
-            op.hint(_options.hint().value());
-        }
-        return op;
+        return mongocxx::model::delete_many{std::move(filter)};
     }
 
     void run(mongocxx::client_session& session) override {
@@ -464,18 +419,7 @@ struct ReplaceOneOperation : public WriteOperation {
     mongocxx::model::write getModel() override {
         auto filter = _filter();
         auto replacement = _replacement();
-        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1replace__one.html
-        mongocxx::model::replace_one op{std::move(filter), std::move(replacement)};
-        if (_options.collation()) {
-            op.collation(_options.collation().value());
-        }
-        if (_options.hint()) {
-            op.hint(_options.hint().value());
-        }
-        if (_options.upsert()) {
-            op.upsert(_options.upsert().value());
-        }
-        return op;
+        return mongocxx::model::replace_one{std::move(filter), std::move(replacement)};
     }
 
     void run(mongocxx::client_session& session) override {
