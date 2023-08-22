@@ -14,6 +14,8 @@ Description: |
   - normal writes, ~30GB data in the db, many connections, no index
   - normal writes, ~30GB data in the db, many connections, with index
 
+  - BulkWrite Upserts, ~30GB data in the db, many connections, with index
+
 # ---Start Phase Description---
 # 0 Load
 # 1 Measure - BulkWriteSingleConnectionNoIndex
@@ -175,8 +177,7 @@ Actors:
       TemplateParameters:
         Name: Warmup
         Threads: 20
-        #OnlyActiveInPhase: [0, 4, 9, 13, 18, 22, 27]
-        OnlyActiveInPhase: [0]
+        OnlyActiveInPhase: [0, 4, 9, 13, 18, 22, 27]
         Duration: 2 minutes
         Operations: *WriteOps100x
 
@@ -185,8 +186,7 @@ Actors:
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        #Active: [5, 14, 23, 28]
-        Active: [1]
+        Active: [5, 14, 23, 28]
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
           Repeat: 1
@@ -202,83 +202,83 @@ Actors:
                   - key: { timestamp: -1 }
                     name: Timestamp
 
-  # - Name: QuiesceActor
-  #   Type: QuiesceActor
-  #   Threads: 1
-  #   Database: *DbName
-  #   Phases:
-  #     OnlyActiveInPhases:
-  #       Active: [3, 8, 12, 17, 21, 26, 31]
-  #       NopInPhasesUpTo: *NumPhases
-  #       PhaseConfig:
-  #         Repeat: 1
+  - Name: QuiesceActor
+    Type: QuiesceActor
+    Threads: 1
+    Database: *DbName
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3, 8, 12, 17, 21, 26, 31]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
 
-  # - Name: DeleteCollectionActor
-  #   Type: RunCommand
-  #   Threads: 1
-  #   Phases:
-  #     OnlyActiveInPhases:
-  #       Active: [2, 7, 11, 16, 20, 25, 30]
-  #       NopInPhasesUpTo: *NumPhases
-  #       PhaseConfig:
-  #         Repeat: 1
-  #         Database: *DbName
-  #         Operations:
-  #           - OperationName: RunCommand
-  #             OperationCommand:
-  #               drop: *CollectionName
+  - Name: DeleteCollectionActor
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2, 7, 11, 16, 20, 25, 30]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *DbName
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                drop: *CollectionName
 
-  # - ActorFromTemplate:
-  #     TemplateName: BulkWriterTemplate
-  #     TemplateParameters:
-  #       Name: BulkWriteSingleConnectionNoIndex
-  #       Threads: 1
-  #       OnlyActiveInPhase: [1]
-  #       Duration: 1 minute
-  #       Operations: *WriteOps100x
+  - ActorFromTemplate:
+      TemplateName: BulkWriterTemplate
+      TemplateParameters:
+        Name: BulkWriteSingleConnectionNoIndex
+        Threads: 1
+        OnlyActiveInPhase: [1]
+        Duration: 1 minute
+        Operations: *WriteOps100x
 
-  # - ActorFromTemplate:
-  #     TemplateName: BulkWriterTemplate
-  #     TemplateParameters:
-  #       Name: BulkWriteSingleConnectionWithIndex
-  #       Threads: 1
-  #       OnlyActiveInPhase: [6]
-  #       Duration: 1 minute
-  #       Operations: *WriteOps100x
+  - ActorFromTemplate:
+      TemplateName: BulkWriterTemplate
+      TemplateParameters:
+        Name: BulkWriteSingleConnectionWithIndex
+        Threads: 1
+        OnlyActiveInPhase: [6]
+        Duration: 1 minute
+        Operations: *WriteOps100x
 
-  # - ActorFromTemplate:
-  #     TemplateName: BulkWriterTemplate
-  #     TemplateParameters:
-  #       Name: BulkWriteManyConnectionsNoIndex
-  #       Threads: 20
-  #       OnlyActiveInPhase: [10]
-  #       Duration: 1 minute
-  #       Operations: *WriteOps100x
+  - ActorFromTemplate:
+      TemplateName: BulkWriterTemplate
+      TemplateParameters:
+        Name: BulkWriteManyConnectionsNoIndex
+        Threads: 20
+        OnlyActiveInPhase: [10]
+        Duration: 1 minute
+        Operations: *WriteOps100x
 
-  # - ActorFromTemplate:
-  #     TemplateName: BulkWriterTemplate
-  #     TemplateParameters:
-  #       Name: BulkWriteManyConnectionsWithIndex
-  #       Threads: 20
-  #       OnlyActiveInPhase: [15]
-  #       Duration: 1 minute
-  #       Operations: *WriteOps100x
+  - ActorFromTemplate:
+      TemplateName: BulkWriterTemplate
+      TemplateParameters:
+        Name: BulkWriteManyConnectionsWithIndex
+        Threads: 20
+        OnlyActiveInPhase: [15]
+        Duration: 1 minute
+        Operations: *WriteOps100x
 
-  # - ActorFromTemplate:
-  #     TemplateName: NormalWriterTemplate
-  #     TemplateParameters:
-  #       Name: NormalWriteManyConnectionsNoIndex
-  #       Threads: 30
-  #       OnlyActiveInPhase: [19]
-  #       Duration: 1 minute
+  - ActorFromTemplate:
+      TemplateName: NormalWriterTemplate
+      TemplateParameters:
+        Name: NormalWriteManyConnectionsNoIndex
+        Threads: 30
+        OnlyActiveInPhase: [19]
+        Duration: 1 minute
 
-  # - ActorFromTemplate:
-  #     TemplateName: NormalWriterTemplate
-  #     TemplateParameters:
-  #       Name: NormalWriteManyConnectionsWithIndex
-  #       Threads: 30
-  #       OnlyActiveInPhase: [24]
-  #       Duration: 1 minute
+  - ActorFromTemplate:
+      TemplateName: NormalWriterTemplate
+      TemplateParameters:
+        Name: NormalWriteManyConnectionsWithIndex
+        Threads: 30
+        OnlyActiveInPhase: [24]
+        Duration: 1 minute
 
   - ActorFromTemplate:
       TemplateName: BulkWriterTemplate
