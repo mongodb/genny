@@ -168,12 +168,12 @@ QueryStatsStage:
             # This will create a find command with a random number of fields from 3 to 350, to create varying query shapes and sizes.
             Filter:
               {$and:
-                [{a1: 1}, {a2: 1}, {^Object: {
+                [{a1: 1}, {a2: 1}, {^Cycle: {ofLength: 25, fromGenerator: {^Object: {
                   withNEntries: {^Parameter: {Name: EntriesPerObject, Default: {unused: "Need to provide the number of entries per object."}}},
                   havingKeys: {^RandomString: {length: 10}},
                   andValues: {$exists: false},
                   duplicatedKeys: skip
-                }}]
+                }}}}]
               }
 - Name: {^PreprocessorFormatString: {format: "QueryStatsAggregation%s", withArgs: [*QueryStatsSuffix]}}
   Type: AdminCommand
