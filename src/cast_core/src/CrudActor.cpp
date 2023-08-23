@@ -1075,7 +1075,7 @@ struct WithTransactionOperation : public BaseOperation {
         auto& opsInTxn = opNode["OperationsInTransaction"];
         if (!opsInTxn.isSequence()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                "'WithTransaction' requires an 'OperationsInTransaction' node of sequence type."));
+                "'withTransaction' requires an 'OperationsInTransaction' node of sequence type."));
         }
         if (!opNode["OnSession"]){
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
