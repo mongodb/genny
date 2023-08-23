@@ -993,7 +993,7 @@ private:
 struct StartTransactionOperation : public BaseOperation {
 
     StartTransactionOperation(const Node& opNode,
-                              bool onSession,
+                              bool,
                               mongocxx::collection collection,
                               metrics::Operation operation,
                               PhaseContext& context,
@@ -1027,7 +1027,7 @@ private:
 struct CommitTransactionOperation : public BaseOperation {
 
     CommitTransactionOperation(const Node& opNode,
-                               bool onSession,
+                               bool,
                                mongocxx::collection collection,
                                metrics::Operation operation,
                                PhaseContext& context,
@@ -1063,7 +1063,7 @@ private:
 
 struct WithTransactionOperation : public BaseOperation {
     WithTransactionOperation(const Node& opNode,
-                             bool onSession,
+                             bool,
                              CollectionHandle collectionHandle,
                              metrics::Operation operation,
                              PhaseContext& context,
