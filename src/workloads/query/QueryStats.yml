@@ -19,7 +19,7 @@ GlobalDefaults:
   FixedEntriesPerObject: &FixedEntries 128
   LowVarianceEntriesPerObject: &LowVarianceEntries {^RandomInt: {min: 125, max: 250}}
   RandomEntriesPerObject: &RandomEntries {^RandomInt: {min: 1, max: 350}}
-  NumGroups: &NumGroups 2
+  NumGroups: &NumGroups 4
 
 Actors: 
   ^FlattenOnce:
@@ -36,6 +36,7 @@ Actors:
         NumGroups: *NumGroups
         Group: 1
         PrepopulateRatio: 1
+        CycleLength: 25
         EntriesPerObject: *FixedEntries
         EntriesPerObjectName: "Cycle25Fixed"
   - LoadConfig:
@@ -45,8 +46,29 @@ Actors:
         NumGroups: *NumGroups
         Group: 2
         PrepopulateRatio: 1
+        CycleLength: 25
         EntriesPerObject: *RandomEntries
         EntriesPerObjectName: "Cycle25Random"
+  - LoadConfig:
+      Path: QueryStats.tmpl
+      Key: QueryStatsGroup
+      Parameters:
+        NumGroups: *NumGroups
+        Group: 3
+        PrepopulateRatio: 1
+        CycleLength: 5
+        EntriesPerObject: *FixedEntries
+        EntriesPerObjectName: "Cycle5Fixed"
+  - LoadConfig:
+      Path: QueryStats.tmpl
+      Key: QueryStatsGroup
+      Parameters:
+        NumGroups: *NumGroups
+        Group: 4
+        PrepopulateRatio: 1
+        CycleLength: 5
+        EntriesPerObject: *RandomEntries
+        EntriesPerObjectName: "Cycle5Random"
 #  - LoadConfig:
 #      Path: QueryStats.tmpl
 #      Key: QueryStatsGroup

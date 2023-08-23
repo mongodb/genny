@@ -168,7 +168,7 @@ QueryStatsStage:
             # This will create a find command with a random number of fields from 3 to 350, to create varying query shapes and sizes.
             Filter:
               {$and:
-                [{a1: 1}, {a2: 1}, {^Cycle: {ofLength: 25, fromGenerator: {^Object: {
+                [{a1: 1}, {a2: 1}, {^Cycle: {ofLength: {^Parameter: {Name: CycleLength, Default: {unused: "Need to provide the cycle length."}}}, fromGenerator: {^Object: {
                   withNEntries: {^Parameter: {Name: EntriesPerObject, Default: {unused: "Need to provide the number of entries per object."}}},
                   havingKeys: {^RandomString: {length: 10}},
                   andValues: {$exists: false},
@@ -211,6 +211,7 @@ QueryStatsGroup:
           Suffix: {^PreprocessorFormatString: {format: "Base%sEntries%dMbCache%dMbPrepop", withArgs: [*EntriesPerObjectName, *QueryStatsCacheSizeMB, *PrepopulateMB]}}
           QueryStatsActive: []
           QueryStatsParameters: {}
+          CycleLength: &CycleLength {^Parameter: {Name: CycleLength, Default: {unused: "Need to specify a cycle length."}}}
 
     # QueryStats with HMAC.
     - LoadConfig:
@@ -223,15 +224,16 @@ QueryStatsGroup:
           Stage: {^NumExpr: {withExpression: "3 * (group - 1) + 2", andValues: {group: *Group}}}
           Suffix: {^PreprocessorFormatString: {format: "WithHMAC%sEntries%dMbCache%dMbPrepop", withArgs: [*EntriesPerObjectName, *QueryStatsCacheSizeMB, *PrepopulateMB]}}
           QueryStatsParameters: {transformIdentifiers: {algorithm: "hmac-sha-256", hmacKey: *BinDataSensitive}}
+          CycleLength: *CycleLength
 
-    # QueryStats without HMAC.
-    - LoadConfig:
-        Path: QueryStats.tmpl
-        Key: QueryStatsStage
-        Parameters:
-          Database: *Database
-          Collection: *Collection
-          NumStages: *NumStages
-          Stage: {^NumExpr: {withExpression: "3 * (group - 1) + 3", andValues: {group: *Group}}}
-          Suffix: {^PreprocessorFormatString: {format: "WithoutHMAC%sEntries%dMbCache%dMbPrepop", withArgs: [*EntriesPerObjectName, *QueryStatsCacheSizeMB, *PrepopulateMB]}}
-          QueryStatsParameters: {}
+#    # QueryStats without HMAC.
+#    - LoadConfig:
+#        Path: QueryStats.tmpl
+#        Key: QueryStatsStage
+#        Parameters:
+#          Database: *Database
+#          Collection: *Collection
+#          NumStages: *NumStages
+#          Stage: {^NumExpr: {withExpression: "3 * (group - 1) + 3", andValues: {group: *Group}}}
+#          Suffix: {^PreprocessorFormatString: {format: "WithoutHMAC%sEntries%dMbCache%dMbPrepop", withArgs: [*EntriesPerObjectName, *QueryStatsCacheSizeMB, *PrepopulateMB]}}
+#          QueryStatsParameters: {}
