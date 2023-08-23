@@ -1069,7 +1069,6 @@ struct WithTransactionOperation : public BaseOperation {
                              PhaseContext& context,
                              ActorId id)
         : BaseOperation(context, opNode),
-          _onSession{onSession},
           _collectionHandle{std::move(collectionHandle)},
           _operation{operation} {
         auto& opsInTxn = opNode["OperationsInTransaction"];
