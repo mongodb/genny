@@ -105,6 +105,12 @@ struct BaseOperation {
         ctx.success();
     }
 
+    void setUpsert(mongocxx::model::update_one& model, mongocxx::options::update options) {
+        if (options.upsert()) {
+            model.upsert(options.upsert().value());
+        }
+    }
+
     virtual void run(mongocxx::client_session& session) = 0;
     virtual ~BaseOperation() = default;
 };
@@ -263,9 +269,7 @@ struct UpdateOneOperation : public WriteOperation {
         if (_options.hint()) {
             op.hint(_options.hint().value());
         }
-        if (_options.upsert()) {
-            op.upsert(_options.upsert().value());
-        }
+        setUpsert(op, _options);
         return op;
     }
 
