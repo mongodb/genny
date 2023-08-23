@@ -487,6 +487,8 @@ This would set up the workload and print it as a list of Phases with the Actors 
 
     You can then select `schedule_patch_auto_tasks` on a variant to schedule any modified or new Genny tasks created by AutoRun. Alternatively, you could select `schedule_variant_auto_tasks` to schedule all Genny tasks on that variant.
 
+    *Note:* [Skipping the compile step in sys-perf projects](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md#skipping-compilation-on-sys-perf-projects) can save some time when testing a genny workload.
+
 For more details on workload development, please check out our general docs on [Developing and Modifying Workloads](https://github.com/10gen/performance-tooling-docs/blob/main/new_workloads.md) and on [Basic Performance Patch Testing](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md).
 
 Users who would like a second look at their workloads can ask product performance. Users who have questions about their Genny usage can ask TIPS (@dev-prod-tips).
