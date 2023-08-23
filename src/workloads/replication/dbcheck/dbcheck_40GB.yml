@@ -1,0 +1,104 @@
+SchemaVersion: 2018-07-01
+Owner: mongodb/server-replication"
+Description: >
+  Measures the performance of running dbcheck and its effect on crud operations.
+
+Keywords:
+- dbcheck
+- collections
+- indexes
+- crud
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 300
+      # Allow for longer duration since index builds may take a while.
+      socketTimeoutMS: 7_200_000  # = 2 hour
+      connectTimeoutMS: 7_200_000
+
+GlobalDefaults:
+  - NumPhases: &max_phase 2
+  - Database: &database "testDB"
+  - CollectionCount: &collectionCount 1
+  - CollectionName: &coll "Collection0"
+  - CrudGlobalRate: &globalRate 100 per 31 milliseconds
+
+Actors:
+# Phase0: Load initial data.
+- LoadInitialData:
+  LoadConfig:
+    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+    Key: InsertDataTemplate
+    Parameters:
+      active: [0]
+      nopInPhasesUpTo: *max_phase
+      database: *database
+      collectionCount: 1
+      approxDocumentSize: 2000  # 2kB.
+      documentCount: 20000000  #20000000 for an approximate total of ~40GB.
+
+# Phase1: Measure the perf of crud operations before running dbcheck.
+- Name: CrudOperationsWithoutDbCheck
+  Type: CrudActor
+  Threads: 1
+  Database: *database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *max_phase
+      PhaseConfig:
+        Duration: 15 minutes
+        GlobalRate: *globalRate
+        Collection: *coll
+        Operations:
+          - OperationName: updateMany
+            OperationMetricsName: "updateWithoutDbcheck"
+            OperationCommand:    
+              Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
+              Update: {$inc: {x: 1}}
+          - OperationName: find
+            OperationMetricsName: "findWithoutDbcheck"
+            OperationCommand:
+              Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
+              Options:
+                Limit: 100
+
+# Phase2: Measure the perf of crud operations while running dbcheck.
+- Name: CrudOperationsWithDbCheck
+  Type: CrudActor
+  Threads: 1
+  Database: *database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *max_phase
+      PhaseConfig:
+        Blocking: None
+        GlobalRate: *globalRate
+        Collection: *coll
+        Operations:
+          - OperationName: updateMany
+            OperationMetricsName: "updateWithDbcheck"
+            OperationCommand:    
+              Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
+              Update: {$inc: {x: 1}}
+          - OperationName: find
+            OperationMetricsName: "findWithDbcheck"
+            OperationCommand:
+              Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
+              Options:
+                Limit: 100
+
+- Name: DbCheckActor
+  Type: DbCheckActor
+  Threads: 1
+  Database: *database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *max_phase
+      PhaseConfig:
+        Repeat: 1
+        Collection: *coll
+        ValidateMode: dataConsistency
