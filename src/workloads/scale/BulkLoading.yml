@@ -3,6 +3,7 @@ Owner: "@mongodb/product-perf"
 Description: |
   This workload tests the performance of the bulkWrite API, and compares it to normal writes.
   It is modeled as a collection of sensor data. It would be common for this use case to do batching using, e.g., AWS SQS.
+  The thread levels for the many connections scenario are tuned for maximum throughput.
 
   It tests the following scenarios:
   - BulkWrite API, ~30GB data in the db, single connection, no index
@@ -57,16 +58,26 @@ Description: |
 # 31 Quiese
 # ---End Phase Description---
 
+Keywords:
+  - bulk insert
+  - bulk write
+  - indexes
+  - upsert
+  - stress
+
 Clients:
   Default:
     QueryOptions:
+      # Without this, the index builds time out
       socketTimeoutMS: -1
+      # The default poolsize of 100 is not enough
       maxPoolSize: 400
 
 GlobalDefaults:
   - &NumPhases 31
   - &DbName db
   - &CollectionName coll
+  - &MeasurementDuration 1 minute
 
   # This document layout leads to ~650% CPU utilization on the genny client,
   # so this is close to the maximum document complexity we can use here.
@@ -124,33 +135,33 @@ ActorTemplates:
     Config:
       Name: { ^Parameter: { Name: "Name", Default: "unset" } }
       Type: CrudActor
-      Threads: { ^Parameter: { Name: "Threads", Default: "unset" } }
+      Threads: { ^Parameter: { Name: "Threads", Default: 20 } }
       Phases:
         OnlyActiveInPhases:
           Active:
             { ^Parameter: { Name: "OnlyActiveInPhase", Default: "unset" } }
           NopInPhasesUpTo: *NumPhases
           PhaseConfig:
-            Duration: { ^Parameter: { Name: "Duration", Default: "unset" } }
+            Duration: { ^Parameter: { Name: "Duration", Default: *MeasurementDuration } }
             Database: *DbName
             Collection: *CollectionName
             Operations:
               - OperationName: bulkWrite
                 OperationCommand:
                   WriteOperations:
-                    { ^Parameter: { Name: "Operations", Default: "unset" } }
+                    { ^Parameter: { Name: "Operations", Default: *WriteOps100x } }
   - TemplateName: NormalWriterTemplate
     Config:
       Name: { ^Parameter: { Name: "Name", Default: "unset" } }
       Type: CrudActor
-      Threads: { ^Parameter: { Name: "Threads", Default: "unset" } }
+      Threads: { ^Parameter: { Name: "Threads", Default: 30 } }
       Phases:
         OnlyActiveInPhases:
           Active:
             { ^Parameter: { Name: "OnlyActiveInPhase", Default: "unset" } }
           NopInPhasesUpTo: *NumPhases
           PhaseConfig:
-            Duration: { ^Parameter: { Name: "Duration", Default: "unset" } }
+            Duration: { ^Parameter: { Name: "Duration", Default: *MeasurementDuration } }
             Database: *DbName
             Collection: *CollectionName
             Operations:
@@ -159,15 +170,13 @@ ActorTemplates:
                   Document: *Document
 
 Actors:
-  # This loads about 35 GB of data to warm up the DB
+  # Each invocation of this actor bulk loads about 35 GB of data to populate the DB
   - ActorFromTemplate:
       TemplateName: BulkWriterTemplate
       TemplateParameters:
-        Name: Warmup
-        Threads: 20
+        Name: WarmupLoadData
         OnlyActiveInPhase: [0, 4, 9, 13, 18, 22, 27]
         Duration: 2 minutes
-        Operations: *WriteOps100x
 
   - Name: BuildIndexActor
     Type: RunCommand
@@ -180,7 +189,7 @@ Actors:
           Repeat: 1
           Database: *DbName
           Operations:
-            - OperationMetricsName: BulkBuildColumnStoreIndex
+            - OperationMetricsName: BuildIndex
               OperationName: RunCommand
               OperationCommand:
                 createIndexes: *CollectionName
@@ -189,17 +198,6 @@ Actors:
                     name: SensorAndTimestamp
                   - key: { timestamp: -1 }
                     name: Timestamp
-
-  - Name: QuiesceActor
-    Type: QuiesceActor
-    Threads: 1
-    Database: *DbName
-    Phases:
-      OnlyActiveInPhases:
-        Active: [3, 8, 12, 17, 21, 26, 31]
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Repeat: 1
 
   - Name: DeleteCollectionActor
     Type: RunCommand
@@ -216,13 +214,23 @@ Actors:
               OperationCommand:
                 drop: *CollectionName
 
+  - Name: QuiesceActor
+    Type: QuiesceActor
+    Threads: 1
+    Database: *DbName
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3, 8, 12, 17, 21, 26, 31]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+
   - ActorFromTemplate:
       TemplateName: BulkWriterTemplate
       TemplateParameters:
         Name: BulkWriteSingleConnectionNoIndex
         Threads: 1
         OnlyActiveInPhase: [1]
-        Duration: 1 minute
         Operations: *WriteOps100x
 
   - ActorFromTemplate:
@@ -231,53 +239,46 @@ Actors:
         Name: BulkWriteSingleConnectionWithIndex
         Threads: 1
         OnlyActiveInPhase: [6]
-        Duration: 1 minute
         Operations: *WriteOps100x
 
   - ActorFromTemplate:
       TemplateName: BulkWriterTemplate
       TemplateParameters:
         Name: BulkWriteManyConnectionsNoIndex
-        Threads: 20
         OnlyActiveInPhase: [10]
-        Duration: 1 minute
         Operations: *WriteOps100x
 
   - ActorFromTemplate:
       TemplateName: BulkWriterTemplate
       TemplateParameters:
         Name: BulkWriteManyConnectionsWithIndex
-        Threads: 20
         OnlyActiveInPhase: [15]
-        Duration: 1 minute
         Operations: *WriteOps100x
 
   - ActorFromTemplate:
       TemplateName: NormalWriterTemplate
       TemplateParameters:
         Name: NormalWriteManyConnectionsNoIndex
-        Threads: 30
         OnlyActiveInPhase: [19]
-        Duration: 1 minute
+        # This test runs longer as it's more noisy
+        Duration: 2 minutes
 
   - ActorFromTemplate:
       TemplateName: NormalWriterTemplate
       TemplateParameters:
         Name: NormalWriteManyConnectionsWithIndex
-        Threads: 30
         OnlyActiveInPhase: [24]
-        Duration: 1 minute
+        # This test runs longer as it's more noisy
+        Duration: 2 minutes
 
   # We only test upserts with an index, as they would require COLSCANs without an index.
-  # 120s * 900,000docs/sec = 108,000,000 docs after warmup (slight overestimation since ids could overlapp).
+  # 120s * 900,000docs/sec = 108,000,000 docs after loading (slight overestimation since ids could overlapp).
   # With 200,000,000 sensorIds, the upserts have a ~50% chance of requiring an insert.
   - ActorFromTemplate:
       TemplateName: BulkWriterTemplate
       TemplateParameters:
         Name: BulkUpsertsManyConnectionsWithIndex
-        Threads: 20
         OnlyActiveInPhase: [29]
-        Duration: 1 minute
         Operations: *UpsertOps100x
 
 AutoRun:
