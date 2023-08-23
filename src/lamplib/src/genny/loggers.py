@@ -7,6 +7,16 @@ import colorama as c
 from typing import Any
 
 
+# Reuse compiled regex patterns throughout for efficiency
+REGEX_TO_REDACTION: dict[re.Pattern[str], str] = {
+    re.compile(r"://([^:@]*):([^@]*)@"): r"://\g<1>:[REDACTED]@",  # password in URLs
+    re.compile(r"mongo(.+?)-p ([^;' ]*)"): r"mongo\g<1>-p [REDACTED]",  # -p flag of mongo
+    re.compile(
+        r"--password ([^;' ]*)"
+    ): r"--password [REDACTED]",  # --password flag of mongo & mongosh
+}
+
+
 def setup_logging(verbose: bool = False) -> None:
     import logging
 
@@ -64,17 +74,12 @@ class StringifyAndRedact:
     Put this in the processor chain just before (Custom)ConsoleRenderer.
     """
 
-    regex_to_redaction: dict[re.Pattern[str], str]
-
-    def __init__(self) -> None:
-        self.regex_to_redaction = {
-            re.compile(r"://([^:@]*):([^@]*)@"): r"://\g<1>:[REDACTED]@",  # password in URLs
-        }
-
     def __call__(self, logger: Any, name: str, event_dict: dict) -> dict:
         for key, value in event_dict.items():
-            for regex, redaction in self.regex_to_redaction.items():
-                event_dict[key] = re.sub(regex, redaction, str(value))
+            value = str(value)
+            for regex, redaction in REGEX_TO_REDACTION.items():
+                value = re.sub(regex, redaction, value)
+            event_dict[key] = value
         return event_dict
 
 
