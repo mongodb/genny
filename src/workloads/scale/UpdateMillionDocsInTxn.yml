@@ -59,6 +59,7 @@ Actors:
     Operations:
     - OperationName: withTransaction
       OperationCommand:
+        OnSession: true
         Options:
           WriteConcern:
             Level: majority
@@ -78,7 +79,6 @@ Actors:
             Options:
               Ordered: true
               MaxTime: 0
-            OnSession: true
   - Repeat: 1
     Collection: *Coll
     Operation:
