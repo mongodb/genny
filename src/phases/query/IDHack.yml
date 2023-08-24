@@ -12,6 +12,8 @@ IDHackObjectIdTemplate:
       Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
       NopInPhasesUpTo: {^Parameter: {Name: "NopInPhasesUpTo", Default: 99}}
       PhaseConfig:
+          # Our testing suggested the first ~20 seconds of this actor shows a lot of noise before
+          # stabilizing - 100s should gather sufficient post-noise data.
         Duration: 100 seconds
         Database: {^Parameter: {Name: "Database", Default: test}}
         Collection: {^Parameter: {Name: "Collection", Default: Collection0}}

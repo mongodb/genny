@@ -29,6 +29,8 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
+          # Our testing suggested the first ~20 seconds of this actor shows a lot of noise before
+          # stabilizing - 100s should gather sufficient post-noise data.
           Duration: 100 seconds
           Database: *Database
           Collection: *Collection
