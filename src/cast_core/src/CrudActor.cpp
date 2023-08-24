@@ -1076,11 +1076,12 @@ struct WithTransactionOperation : public BaseOperation {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'withTransaction' requires an 'OperationsInTransaction' node of sequence type."));
         }
-        if (!opNode["OnSession"]){
+        auto& onSession = opNode["OnSession"];
+        if (!onSession || !onSession.to<bool>()){
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                "'withTransaction' requires an explicit boolean 'OnSession' node."));
+                "'withTransaction' requires explicit 'OnSession: true'."));
         };
-        _onSession = opNode["OnSession"].to<bool>();
+        _onSession = onSession.to<bool>();
         for (const auto&& [k, txnOp] : opsInTxn) {
             createTxnOps(txnOp, context, id);
         }
