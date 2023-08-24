@@ -12,7 +12,7 @@ IDHackObjectIdTemplate:
       Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
       NopInPhasesUpTo: {^Parameter: {Name: "NopInPhasesUpTo", Default: 99}}
       PhaseConfig:
-        Duration: 1 minute
+        Duration: 100 seconds
         Database: {^Parameter: {Name: "Database", Default: test}}
         Collection: {^Parameter: {Name: "Collection", Default: Collection0}}
         Operations:
