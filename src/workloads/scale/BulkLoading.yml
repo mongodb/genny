@@ -136,12 +136,14 @@ GlobalDefaults:
 ActorTemplates:
   - TemplateName: BulkWriterTemplate
     Config:
+      # TODO https://jira.mongodb.org/browse/EVG-20735
       Name: { ^Parameter: { Name: "Name", Default: "unset" } }
       Type: CrudActor
       Threads: { ^Parameter: { Name: "Threads", Default: *BulkWriteThreadCount } }
       Phases:
         OnlyActiveInPhases:
           Active:
+            # TODO https://jira.mongodb.org/browse/EVG-20735
             { ^Parameter: { Name: "OnlyActiveInPhase", Default: "unset" } }
           NopInPhasesUpTo: *NumPhases
           PhaseConfig:
@@ -156,12 +158,14 @@ ActorTemplates:
 
   - TemplateName: NormalWriterTemplate
     Config:
+      # TODO https://jira.mongodb.org/browse/EVG-20735
       Name: { ^Parameter: { Name: "Name", Default: "unset" } }
       Type: CrudActor
       Threads: { ^Parameter: { Name: "Threads", Default: *NormalWriteThreadCount } }
       Phases:
         OnlyActiveInPhases:
           Active:
+            # TODO https://jira.mongodb.org/browse/EVG-20735
             { ^Parameter: { Name: "OnlyActiveInPhase", Default: "unset" } }
           NopInPhasesUpTo: *NumPhases
           PhaseConfig:
