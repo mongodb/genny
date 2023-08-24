@@ -1,0 +1,163 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: >
+  This is a template of helper stages for QueryStats workloads. Each stage represents a single
+  workload variant, comprising multiple phases. Multiple stages can be grouped together if they have
+  commonalities in their variations.
+
+GlobalDefaults:
+  # Workload "constants."
+  Database: &Database {^Parameter: {Name: Database, Default: test}}
+  Collection: &Collection {^Parameter: {Name: Collection, Default: Collection0}}
+  MaxPhases: &MaxPhases {^Parameter: {Name: MaxPhases, Default: {unused: "Need to specify the max phase number."}}}
+
+  # Template variables.
+  AggregateDuration: &AggregateDuration {^Parameter: {Name: AggregateDuration, Default: 5 minutes}}
+  CacheSizeMB: &CacheSizeMB {^Parameter: {Name: CacheSizeMB, Default: 300}}
+  FindCommandDuration: &FindCommandDuration {^Parameter: {Name: FindCommandDuration, Default: 5 minutes}}
+  # Unfortunately can't just assign one anchor to another.
+  PrepopulateMB: &PrepopulateMB {^NumExpr: {withExpression: "size", andValues: {size: *CacheSizeMB}}}
+  QueryStatsParameters: &QueryStatsParameters {^Parameter: {Name: "QueryStatsParameters", Default: {}}}
+  # Rate limit is 100 query stats aggregations per second.
+  # TODO: it would be nice if we could somehow discover whether we're running with the rate limit.
+  #       That would allow us to set the parameter back and forth, instead of running the prepop
+  #       phase longer.
+  RateLimitHz: &RateLimitHz {^Parameter: {Name: RateLimitHz, Default: 100}}
+  StartingPhase: &StartingPhase {^Parameter: {Name: StartingPhase, Default: {unused: "Need to specify the starting phase of the stage."}}}
+  Suffix: &Suffix {^Parameter: {Name: Suffix, Default: {unused: "Need to specify the stage suffix."}}}
+
+  # Syntactic sugar.
+  CacheSize: &CacheSize {^PreprocessorFormatString: {format: "%sMB", withArgs: [*CacheSizeMB]}}
+  FormattedSuffix: &FormattedSuffix
+    ^PreprocessorFormatString:
+      format: "%s-CacheSize%s-Prepopulate%sMB"
+      withArgs: [*Suffix, *CacheSize, *PrepopulateMB]
+  Phase0: &Phase0 {^NumExpr: {withExpression: "phase + 0", andValues: {phase: *StartingPhase}}}
+  Phase1: &Phase1 {^NumExpr: {withExpression: "phase + 1", andValues: {phase: *StartingPhase}}}
+  Phase2: &Phase2 {^NumExpr: {withExpression: "phase + 2", andValues: {phase: *StartingPhase}}}
+  Phase3: &Phase3 {^NumExpr: {withExpression: "phase + 3", andValues: {phase: *StartingPhase}}}
+  Phase4: &Phase4 {^NumExpr: {withExpression: "phase + 4", andValues: {phase: *StartingPhase}}}
+  PrepopulateDuration: &PrepopulateDuration
+    ^PreprocessorFormatString:
+      format: "%d seconds"
+      withArgs:
+      - ^NumExpr:
+          withExpression: "targetMB * rlh"
+          andValues:
+            targetMB: *PrepopulateMB
+            rlh: *RateLimitHz
+  PrepopulateRepeat: &PrepopulateRepeat {^NumExpr: {withExpression: "targetMB * 100", andValues: {targetMB: *PrepopulateMB}}}
+  # Needs to be edited if the phases change.
+  LastPhase: &LastPhase {^NumExpr: {withExpression: "phase + 5", andValues: {phase: *StartingPhase}}}
+
+# One-time setup for the workload, run at the beginning of the workload.
+SetupStage:
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: {^Parameter: {Name: DocumentCount, Default: 1e6}}
+        BatchSize: 1000
+        Document:
+          a1: &integer {^RandomInt: {min: -100, max: 100}}
+          a2: *integer
+          string: &string {^RandomString: {length: 5}}
+        Indexes:
+          - keys: {a1: 1, a2: 1}
+
+StageTemplate: &StageTemplate
+- LoadConfig:
+    Path: QueryStatsActors.tmpl
+    Key: QueryStatsCacheSizeActor
+    Parameters:
+      Name: {^PreprocessorFormatString: {format: "ClearQueryStats-%s", withArgs: [*FormattedSuffix]}}
+      Phases: *Phase0
+      MaxPhases: *MaxPhases
+      Size: 0MB
+- LoadConfig:
+    Path: QueryStatsActors.tmpl
+    Key: QueryStatsCacheSizeActor
+    Parameters:
+      Name: {^PreprocessorFormatString: {format: "SetQueryStats-%s", withArgs: [*FormattedSuffix]}}
+      Phases: *Phase1
+      MaxPhases: *MaxPhases
+      Size: *CacheSize
+- LoadConfig:
+    Path: QueryStatsActors.tmpl
+    Key: QueryStatsQuiesceActor
+    Parameters:
+      Name: {^PreprocessorFormatString: {format: "Quiesce-%s", withArgs: [*FormattedSuffix]}}
+      Phases: [*Phase2, *Phase4]
+      MaxPhases: *MaxPhases
+      Database: *Database
+- LoadConfig:
+    Path: QueryStatsActors.tmpl
+    Key: QueryStatsPrepopulateActor
+    Parameters:
+      Name: {^PreprocessorFormatString: {format: "Prepopulate-%s", withArgs: [*FormattedSuffix]}}
+      Phases: *Phase3
+      MaxPhases: *MaxPhases
+      Database: *Database
+      Collection: *Collection
+      Duration: *PrepopulateDuration
+      Payload:
+        ^Parameter:
+          Name: PrepopulatePayload
+          Default:
+            # This will send a find command that is a little over 320B per query shape key.
+            ^Object:
+              withNEntries: 10
+              havingKeys: 
+                ^FormatString:
+                  format: "%32d"
+                  withArgs: [{^Inc: {start: 0, multiplier: 1, step: 32}}]
+              andValues: {$exists: true}
+              duplicatedKeys: skip
+      Repeat: *PrepopulateRepeat
+- LoadConfig:
+    Path: QueryStatsActors.tmpl
+    Key: QueryStatsFindCommandActor
+    Parameters:
+      Name: {^PreprocessorFormatString: {format: "FindCommand-%s", withArgs: [*FormattedSuffix]}}
+      Phases: *LastPhase
+      MaxPhases: *MaxPhases
+      Database: *Database
+      Collection: *Collection
+      Duration: *FindCommandDuration
+      Payload: {^Parameter: {Name: FindCommandPayload, Default: {unused: "Need to provide a find command payload."}}}
+
+QueryStatsStageTemplate:
+  ^FlattenOnce:
+  - *StageTemplate
+  - LoadConfig:
+      Path: QueryStatsActors.tmpl
+      Key: QueryStatsAggregateActor
+      Parameters:
+        Name: {^PreprocessorFormatString: {format: "QueryStatsAggregate-%s", withArgs: [*FormattedSuffix]}}
+        Phases: {^Parameter: {Name: AggregatePhase, Default: *LastPhase}}
+        MaxPhases: *MaxPhases
+        Duration: *AggregateDuration
+        QueryStatsParameters: *QueryStatsParameters
