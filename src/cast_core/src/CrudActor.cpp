@@ -105,9 +105,31 @@ struct BaseOperation {
         ctx.success();
     }
 
-    void setUpsert(mongocxx::model::update_one& model, mongocxx::options::update options) {
+    template <class Model, class Options>
+    void setUpsert(Model& model, Options options) {
         if (options.upsert()) {
             model.upsert(options.upsert().value());
+        }
+    }
+
+    template <class Model, class Options>
+    void setArrayFilters(Model& model, Options options) {
+        if (options.array_filters()) {
+            model.array_filters(options.array_filters().value());
+        }
+    }
+
+    template <class Model, class Options>
+    void setCollation(Model& model, Options options) {
+        if (options.collation()) {
+            model.collation(options.collation().value());
+        }
+    }
+
+    template <class Model, class Options>
+    void setHint(Model& model, Options options) {
+        if (options.hint()) {
+            model.hint(options.hint().value());
         }
     }
 
@@ -258,17 +280,11 @@ struct UpdateOneOperation : public WriteOperation {
     mongocxx::model::write getModel() override {
         auto filter = _filter();
         auto update = _update();
-        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1update__one.html
         mongocxx::model::update_one op{std::move(filter), std::move(update)};
-        if (_options.array_filters()) {
-            op.array_filters(_options.array_filters().value());
-        }
-        if (_options.collation()) {
-            op.collation(_options.collation().value());
-        }
-        if (_options.hint()) {
-            op.hint(_options.hint().value());
-        }
+        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1update__one.html
+        setArrayFilters(op, _options);
+        setCollation(op, _options);
+        setHint(op, _options);
         setUpsert(op, _options);
         return op;
     }
@@ -316,20 +332,12 @@ struct UpdateManyOperation : public WriteOperation {
     mongocxx::model::write getModel() override {
         auto filter = _filter();
         auto update = _update();
-        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1update__many.html
         mongocxx::model::update_many op{std::move(filter), std::move(update)};
-        if (_options.array_filters()) {
-            op.array_filters(_options.array_filters().value());
-        }
-        if (_options.collation()) {
-            op.collation(_options.collation().value());
-        }
-        if (_options.hint()) {
-            op.hint(_options.hint().value());
-        }
-        if (_options.upsert()) {
-            op.upsert(_options.upsert().value());
-        }
+        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1update__many.html
+        setArrayFilters(op, _options);
+        setCollation(op, _options);
+        setHint(op, _options);
+        setUpsert(op, _options);
         return op;
     }
 
@@ -374,14 +382,10 @@ struct DeleteOneOperation : public WriteOperation {
 
     mongocxx::model::write getModel() override {
         auto filter = _filter();
-        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1delete__one.html
         mongocxx::model::delete_one op{std::move(filter)};
-        if (_options.collation()) {
-            op.collation(_options.collation().value());
-        }
-        if (_options.hint()) {
-            op.hint(_options.hint().value());
-        }
+        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1delete__one.html
+        setCollation(op, _options);
+        setHint(op, _options);
         return op;
     }
 
@@ -420,14 +424,10 @@ struct DeleteManyOperation : public WriteOperation {
 
     mongocxx::model::write getModel() override {
         auto filter = _filter();
-        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1delete__many.html
         mongocxx::model::delete_many op{std::move(filter)};
-        if (_options.collation()) {
-            op.collation(_options.collation().value());
-        }
-        if (_options.hint()) {
-            op.hint(_options.hint().value());
-        }
+        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1delete__many.html
+        setCollation(op, _options);
+        setHint(op, _options);
         return op;
     }
 
@@ -468,17 +468,11 @@ struct ReplaceOneOperation : public WriteOperation {
     mongocxx::model::write getModel() override {
         auto filter = _filter();
         auto replacement = _replacement();
-        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1replace__one.html
         mongocxx::model::replace_one op{std::move(filter), std::move(replacement)};
-        if (_options.collation()) {
-            op.collation(_options.collation().value());
-        }
-        if (_options.hint()) {
-            op.hint(_options.hint().value());
-        }
-        if (_options.upsert()) {
-            op.upsert(_options.upsert().value());
-        }
+        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1replace__one.html
+        setCollation(op, _options);
+        setHint(op, _options);
+        setUpsert(op, _options);
         return op;
     }
 
