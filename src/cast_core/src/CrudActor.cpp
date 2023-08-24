@@ -1071,17 +1071,17 @@ struct WithTransactionOperation : public BaseOperation {
         : BaseOperation(context, opNode),
           _collectionHandle{std::move(collectionHandle)},
           _operation{operation} {
-        auto& opsInTxn = opNode["OperationsInTransaction"];
-        if (!opsInTxn.isSequence()) {
-            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                "'withTransaction' requires an 'OperationsInTransaction' node of sequence type."));
-        }
         auto& onSession = opNode["OnSession"];
         if (!onSession || !onSession.to<bool>()){
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'withTransaction' requires explicit 'OnSession: true'."));
         };
         _onSession = onSession.to<bool>();
+        auto& opsInTxn = opNode["OperationsInTransaction"];
+        if (!opsInTxn.isSequence()) {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "'withTransaction' requires an 'OperationsInTransaction' node of sequence type."));
+        }
         for (const auto&& [k, txnOp] : opsInTxn) {
             createTxnOps(txnOp, context, id);
         }
