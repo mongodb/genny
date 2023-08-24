@@ -78,6 +78,9 @@ GlobalDefaults:
   - &DbName db
   - &CollectionName coll
   - &MeasurementDuration 1 minute
+  - &LoaderDuration 2 minutes
+  - &BulkWriteThreadCount 20
+  - &NormalWriteThreadCount 30
 
   # This document layout leads to ~650% CPU utilization on the genny client,
   # so this is close to the maximum document complexity we can use here.
@@ -135,7 +138,7 @@ ActorTemplates:
     Config:
       Name: { ^Parameter: { Name: "Name", Default: "unset" } }
       Type: CrudActor
-      Threads: { ^Parameter: { Name: "Threads", Default: 20 } }
+      Threads: { ^Parameter: { Name: "Threads", Default: *BulkWriteThreadCount } }
       Phases:
         OnlyActiveInPhases:
           Active:
@@ -150,11 +153,12 @@ ActorTemplates:
                 OperationCommand:
                   WriteOperations:
                     { ^Parameter: { Name: "Operations", Default: *WriteOps100x } }
+
   - TemplateName: NormalWriterTemplate
     Config:
       Name: { ^Parameter: { Name: "Name", Default: "unset" } }
       Type: CrudActor
-      Threads: { ^Parameter: { Name: "Threads", Default: 30 } }
+      Threads: { ^Parameter: { Name: "Threads", Default: *NormalWriteThreadCount } }
       Phases:
         OnlyActiveInPhases:
           Active:
@@ -174,9 +178,9 @@ Actors:
   - ActorFromTemplate:
       TemplateName: BulkWriterTemplate
       TemplateParameters:
-        Name: WarmupLoadData
+        Name: LoadData
         OnlyActiveInPhase: [0, 4, 9, 13, 18, 22, 27]
-        Duration: 2 minutes
+        Duration: *LoaderDuration
 
   - Name: BuildIndexActor
     Type: RunCommand
