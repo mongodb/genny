@@ -616,15 +616,17 @@ Tests:
     Operations:
       - OperationName: withTransaction
         OperationCommand:
-          OnSession: false
+          OnSession: true
           OperationsInTransaction:
             - OperationName: insertOne
               OperationCommand:
                 Document: {a: 100}
+                OnSession: false
             - OperationName: findOneAndReplace
               OperationCommand:
                 Filter: {a: 100}
                 Replacement: {a: 30}
+                OnSession: false
     OutcomeCounts:
       - Filter: {a: 100}
         Count: 0
@@ -695,7 +697,7 @@ Tests:
     Operations:
       - OperationName: withTransaction
         OperationCommand:
-          OnSession: false
+          OnSession: true
           OperationsInTransaction:
           - OperationName: bulkWrite
             OperationCommand:
@@ -1077,7 +1079,7 @@ Tests:
       - OperationName: withTransaction
         Collection: test1
         OperationCommand:
-          OnSession: false
+          OnSession: true
           OperationsInTransaction:
           - OperationName: insertOne
             OperationCommand:
