@@ -44,6 +44,8 @@ Actors:
   - *nop
   - *nop
   - *nop
+  - *nop
+  - *nop
 
 - Name: Mongosync
   Type: Python
@@ -73,6 +75,12 @@ Actors:
   - LoadConfig:
       Path: *scriptsPath
       Key: WaitForCommit
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: Verify
+  - LoadConfig:
+      Path: *scriptsPath
+      Key: WaitForVerifyDone
 
 - Name: InsertDocs
   Type: Loader
@@ -86,6 +94,8 @@ Actors:
   - LoadConfig:
       Path: *scriptsPath
       Key: InsertShortTestData
+  - *nop
+  - *nop
   - *nop
   - *nop
   - *nop

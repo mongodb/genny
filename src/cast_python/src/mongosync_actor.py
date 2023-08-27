@@ -130,9 +130,41 @@ def commit(workload_yaml):
 def wait_for_commit(workload_yaml):
     poll(workload_yaml, lambda x: x != "COMMITTED", "state")
 
+@ cli.command(
+        "verify",
+    help=("data consistency check"),
+)
+@click.argument("workload_yaml", nargs=1)
+def commit(workload_yaml):
+    change_state(workload_yaml, "/api/v1/verify", {})
+
+@cli.command(
+    "wait_for_verify_done",
+    help=("Wait until verification is done"),
+)
+@click.argument("workload_yaml", nargs=1)
+def wait_for_commit(workload_yaml):
+    poll(workload_yaml, lambda x: x != "VERIFYDONE", "state")
 
 @cli.command(
     "pause",
+    help=("Pause the migration"),
+)
+@click.argument("workload_yaml", nargs=1)
+def commit(workload_yaml):
+    change_state(workload_yaml, "/api/v1/pause", {})
+
+
+@cli.command(
+    "resume",
+    help=("Resume the migration"),
+)
+@click.argument("workload_yaml", nargs=1)
+def commit(workload_yaml):
+    change_state(workload_yaml, "/api/v1/resume", {})
+
+cli.command(
+   "pause",
     help=("Pause the migration"),
 )
 @click.argument("workload_yaml", nargs=1)
