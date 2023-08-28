@@ -64,6 +64,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
+      - replica-query-stats
       - single-replica
       - single-replica-classic-query-engine
       - single-replica-sbe
