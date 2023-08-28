@@ -105,6 +105,34 @@ struct BaseOperation {
         ctx.success();
     }
 
+    template <class Model, class Options>
+    void setUpsert(Model& model, Options options) {
+        if (options.upsert()) {
+            model.upsert(options.upsert().value());
+        }
+    }
+
+    template <class Model, class Options>
+    void setArrayFilters(Model& model, Options options) {
+        if (options.array_filters()) {
+            model.array_filters(options.array_filters().value());
+        }
+    }
+
+    template <class Model, class Options>
+    void setCollation(Model& model, Options options) {
+        if (options.collation()) {
+            model.collation(options.collation().value());
+        }
+    }
+
+    template <class Model, class Options>
+    void setHint(Model& model, Options options) {
+        if (options.hint()) {
+            model.hint(options.hint().value());
+        }
+    }
+
     virtual void run(mongocxx::client_session& session) = 0;
     virtual ~BaseOperation() = default;
 };
@@ -207,6 +235,7 @@ struct InsertOneOperation : public WriteOperation {
 
     mongocxx::model::write getModel() override {
         auto document = _document();
+        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1insert__one.html
         return mongocxx::model::insert_one{std::move(document)};
     }
 
@@ -251,7 +280,13 @@ struct UpdateOneOperation : public WriteOperation {
     mongocxx::model::write getModel() override {
         auto filter = _filter();
         auto update = _update();
-        return mongocxx::model::update_one{std::move(filter), std::move(update)};
+        mongocxx::model::update_one op{std::move(filter), std::move(update)};
+        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1update__one.html
+        setArrayFilters(op, _options);
+        setCollation(op, _options);
+        setHint(op, _options);
+        setUpsert(op, _options);
+        return op;
     }
 
     void run(mongocxx::client_session& session) override {
@@ -297,7 +332,13 @@ struct UpdateManyOperation : public WriteOperation {
     mongocxx::model::write getModel() override {
         auto filter = _filter();
         auto update = _update();
-        return mongocxx::model::update_many{std::move(filter), std::move(update)};
+        mongocxx::model::update_many op{std::move(filter), std::move(update)};
+        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1update__many.html
+        setArrayFilters(op, _options);
+        setCollation(op, _options);
+        setHint(op, _options);
+        setUpsert(op, _options);
+        return op;
     }
 
     void run(mongocxx::client_session& session) override {
@@ -341,7 +382,11 @@ struct DeleteOneOperation : public WriteOperation {
 
     mongocxx::model::write getModel() override {
         auto filter = _filter();
-        return mongocxx::model::delete_one{std::move(filter)};
+        mongocxx::model::delete_one op{std::move(filter)};
+        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1delete__one.html
+        setCollation(op, _options);
+        setHint(op, _options);
+        return op;
     }
 
     void run(mongocxx::client_session& session) override {
@@ -379,7 +424,11 @@ struct DeleteManyOperation : public WriteOperation {
 
     mongocxx::model::write getModel() override {
         auto filter = _filter();
-        return mongocxx::model::delete_many{std::move(filter)};
+        mongocxx::model::delete_many op{std::move(filter)};
+        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1delete__many.html
+        setCollation(op, _options);
+        setHint(op, _options);
+        return op;
     }
 
     void run(mongocxx::client_session& session) override {
@@ -419,7 +468,12 @@ struct ReplaceOneOperation : public WriteOperation {
     mongocxx::model::write getModel() override {
         auto filter = _filter();
         auto replacement = _replacement();
-        return mongocxx::model::replace_one{std::move(filter), std::move(replacement)};
+        mongocxx::model::replace_one op{std::move(filter), std::move(replacement)};
+        // Available options: http://mongocxx.org/api/current/classmongocxx_1_1model_1_1replace__one.html
+        setCollation(op, _options);
+        setHint(op, _options);
+        setUpsert(op, _options);
+        return op;
     }
 
     void run(mongocxx::client_session& session) override {
