@@ -583,7 +583,7 @@ def auto_tasks(ctx: click.Context, tasks: str):
 @click.option(
     "--project-file",
     required=True,
-    help="An evergreen project file",
+    help="An evergreen project file, such as system_perf.yml",
 )
 @click.option("--no-activate", default=False, is_flag=True, help="Ensure that generated tasks don't activate")
 @click.pass_context

@@ -157,6 +157,7 @@ class AutoTasksTests(BaseTestClass):
             ],
             and_mode="all_tasks",
             then_writes={
+                "exec_timeout_secs": 64800,
                 "tasks": [
                     {
                         "name": "empty_unmodified",
@@ -307,7 +308,6 @@ class AutoTasksTests(BaseTestClass):
                         "priority": 5,
                     },
                 ],
-                "timeout": 64800,
             },
             to_file="./build/TaskJSON/Tasks.json",
         )
@@ -907,18 +907,15 @@ def test_dry_run_all_tasks():
             f"This is set when you run through the 'run-genny' wrapper"
         )
     try:
-        with patch.object(CurrentBuildInfo, "expansions", return_value={}), patch.object(
-            YamlReader, "load", return_value={"execution": "0"}
-        ):
-            reader = YamlReader()
-            build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
-            op = OpName.from_flag("all_tasks")
-            lister = WorkloadLister(workspace_root=workspace_root)
-            repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
-            tasks = repo.tasks(op=op, build=build)
-            os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
+        build = CurrentBuildInfo({"build_variant": "Test Variant", "execution": 1})
+        op = OpName.from_flag("all_tasks")
+        lister = WorkloadLister(workspace_root=workspace_root)
+        reader = YamlReader()
+        repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
+        tasks = repo.tasks(op=op, build=build)
+        os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
 
-            ConfigWriter.create_config(op, build, tasks)
+        ConfigWriter.create_config(op, build, tasks)
     except Exception as e:
         SLOG.error(
             "'./run-genny auto-tasks --tasks all_tasks' is failing. "

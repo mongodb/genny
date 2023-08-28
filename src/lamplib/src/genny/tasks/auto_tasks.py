@@ -429,9 +429,9 @@ class Repo:
 
 
     def all_workloads(self) -> List[Workload]:
-        all_files = self.lister.all_workload_files()
-        modified = self.lister.modified_workload_files()
         if self._all_workloads is None:
+            all_files = self.lister.all_workload_files()
+            modified = self.lister.modified_workload_files()
             self._all_workloads = [
                 Workload(
                     workspace_root=self.workspace_root,
