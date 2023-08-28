@@ -681,7 +681,7 @@ Actors:
       NumberOfClauses: 200
 
 # Clear any pre-existing collection state.
-- Name: ClearCollection
+- Name: ClearCollectionAgain
   Type: CrudActor
   Database: *Database
   Phases:
