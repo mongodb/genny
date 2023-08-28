@@ -38,8 +38,6 @@ class YamlReader:
         :return: deserialized yaml file
         """
         joined = os.path.join(workspace_root, path)
-        if not os.path.exists(joined):
-            raise Exception(f"File {joined} not found.")
         with open(joined) as handle:
             return yaml.safe_load(handle)
 

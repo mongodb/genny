@@ -1,5 +1,6 @@
 from typing import List
 import os
+import sys
 import yaml
 import structlog
 from shrub.config import Configuration
@@ -48,7 +49,11 @@ def create_configuration(repo: Repo, builds: List[CurrentBuildInfo], no_activate
 
 def main(project_file: str, workspace_root: str, no_activate: bool) -> None:
     reader = YamlReader()
-    global_expansions = reader.load(workspace_root, "expansions.yml")
+    try:
+        global_expansions = reader.load(workspace_root, "expansions.yml")
+    except FileNotFoundError:
+        SLOG.error(f"Evergreen expansions file {os.path.join(workspace_root, 'expansions.yml')} does not exist. Ensure this file exists and that it is in the correct location.")
+        sys.exit(1)
     execution = int(global_expansions["execution"])
     builds = get_all_builds(global_expansions, project_file)
 
