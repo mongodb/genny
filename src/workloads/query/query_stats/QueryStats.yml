@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  This workload tests performance of $queryStats with and without applying HMAC.
+  This is the main workload for testing $queryStats performance regressions.
 
 KeyWords:
 - queryStats
@@ -15,7 +15,15 @@ Clients:
       socketTimeoutMS: 3_600_000  # 1 hour
 
 GlobalDefaults:
-  NumGroups: &NumGroups 3  # Excluding the setup group.
+  # Workload "constants."
+  ConstantNumGroups: &NumGroups 2  # Excluding the setup group.
+  ConstantDatabase: &Database {LoadConfig: {Path: QueryStats.tmpl, Key: ConstantDatabase}}
+  ConstantCollection: &Collection {LoadConfig: {Path: QueryStats.tmpl, Key: ConstantCollection}}
+  ConstantStagesPerGroup: &StagesPerGroup 2
+
+  # Entry count generators.
+  ConstantFixedEntries: &FixedEntries {LoadConfig: {Path: QueryStats.tmpl, Key: ConstantFixedEntries}}
+  ConstantRandomEntries: &RandomEntries {LoadConfig: {Path: QueryStats.tmpl, Key: ConstantRandomEntries}}
 
 Actors:
   ^FlattenOnce:
@@ -25,23 +33,53 @@ Actors:
       Parameters:
         NumGroups: *NumGroups
   - LoadConfig:
-      Path: QueryStats.tmpl
-      Key: AllBaseGroup
+      Path: QueryStatsVariants.tmpl
+      Key: UniqueBaseStage
       Parameters:
-        NumGroups: *NumGroups
+        Name: "Fixed"
+        Database: *Database
+        Collection: *Collection
         Group: 1
-  - LoadConfig:
-      Path: QueryStats.tmpl
-      Key: AllHmacGroup
-      Parameters:
         NumGroups: *NumGroups
+        StagesPerGroup: *StagesPerGroup
+        StageInGroup: 1
+        EntriesPerObject: *FixedEntries
+  - LoadConfig:
+      Path: QueryStatsVariants.tmpl
+      Key: UniqueBaseStage
+      Parameters:
+        Name: "Random"
+        Database: *Database
+        Collection: *Collection
+        Group: 1
+        NumGroups: *NumGroups
+        StagesPerGroup: *StagesPerGroup
+        StageInGroup: 2
+        EntriesPerObject: *RandomEntries
+  - LoadConfig:
+      Path: QueryStatsVariants.tmpl
+      Key: UniqueHmacStage
+      Parameters:
+        Name: "Fixed"
+        Database: *Database
+        Collection: *Collection
         Group: 2
-  - LoadConfig:
-      Path: QueryStats.tmpl
-      Key: AllTextGroup
-      Parameters:
         NumGroups: *NumGroups
-        Group: 3
+        StagesPerGroup: *StagesPerGroup
+        StageInGroup: 1
+        EntriesPerObject: *FixedEntries
+  - LoadConfig:
+      Path: QueryStatsVariants.tmpl
+      Key: UniqueHmacStage
+      Parameters:
+        Name: "Random"
+        Database: *Database
+        Collection: *Collection
+        Group: 2
+        NumGroups: *NumGroups
+        StagesPerGroup: *StagesPerGroup
+        StageInGroup: 2
+        EntriesPerObject: *RandomEntries
 
 AutoRun:
 - When:

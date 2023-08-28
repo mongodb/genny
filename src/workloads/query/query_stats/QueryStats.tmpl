@@ -3,21 +3,20 @@ Owner: "@mongodb/query"
 Description: >
   This is a template of predefined workload groups for QueryStats workloads.
 
-GlobalDefaults:
-  # Workload "constants."
-  Database: &Database {^Parameter: {Name: Database, Default: test}}
-  Collection: &Collection {^Parameter: {Name: Collection, Default: Collection0}}
+# Workload "constants."
+ConstantDatabase: &Database {^Parameter: {Name: Database, Default: test}}
+ConstantCollection: &Collection {^Parameter: {Name: Collection, Default: Collection0}}
 
-  # Template parameters.
-  Group: &Group {^Parameter: {Name: Group, Default: 1}}
-  NumGroups: &NumGroups {^Parameter: {Name: NumGroups, Default: {unused: "Need to specify the total number of groups."}}}
-  # Default should be the max of all groups' stage counts.
-  StagesPerGroup: &StagesPerGroup {^Parameter: {Name: StagesPerGroup, Default: 6}}
+# Template parameters.
+ConstantGroup: &Group {^Parameter: {Name: Group, Default: 1}}
+ConstantNumGroups: &NumGroups {^Parameter: {Name: NumGroups, Default: {unused: "Need to specify the total number of groups."}}}
+# Default should be the max of all groups' stage counts.
+ConstantStagesPerGroup: &StagesPerGroup {^Parameter: {Name: StagesPerGroup, Default: 3}}
 
-  # Entry count generators.
-  CustomEntries: &CustomEntries {^Parameter: {Name: CustomEntries, Default: {unused: "Need to specify the custom entry count generator."}}}
-  FixedEntries: &FixedEntries 175
-  RandomEntries: &RandomEntries {^RandomInt: {min: 1, max: 350}}
+# Entry count generators.
+ConstantCustomEntries: &CustomEntries {^Parameter: {Name: CustomEntries, Default: {unused: "Need to specify the custom entry count generator."}}}
+ConstantFixedEntries: &FixedEntries 175
+ConstantRandomEntries: &RandomEntries {^RandomInt: {min: 1, max: 350}}
 
 SetupGroup:
   ^FlattenOnce:
@@ -30,7 +29,7 @@ SetupGroup:
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
 
-AllBaseGroup:
+AllBaseFixedGroup:
   ^FlattenOnce:
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
@@ -46,6 +45,35 @@ AllBaseGroup:
         EntriesPerObject: *FixedEntries
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
+      Key: CycleBaseStage
+      Parameters:
+        Name: "Fixed"
+        Database: *Database
+        Collection: *Collection
+        Group: *Group
+        NumGroups: *NumGroups
+        StagesPerGroup: *StagesPerGroup
+        StageInGroup: 2
+        CycleLength: 5
+        EntriesPerObject: *FixedEntries
+  - LoadConfig:
+      Path: QueryStatsVariants.tmpl
+      Key: CycleBaseStage
+      Parameters:
+        Name: "Fixed"
+        Database: *Database
+        Collection: *Collection
+        Group: *Group
+        NumGroups: *NumGroups
+        StagesPerGroup: *StagesPerGroup
+        StageInGroup: 3
+        CycleLength: 25
+        EntriesPerObject: *FixedEntries
+
+AllBaseRandomGroup:
+  ^FlattenOnce:
+  - LoadConfig:
+      Path: QueryStatsVariants.tmpl
       Key: UniqueBaseStage
       Parameters:
         Name: "Random"
@@ -54,62 +82,36 @@ AllBaseGroup:
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
-        StageInGroup: 2
+        StageInGroup: 1
         EntriesPerObject: *RandomEntries
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
       Key: CycleBaseStage
       Parameters:
-        Name: "Fixed"
+        Name: "Random"
+        Database: *Database
+        Collection: *Collection
+        Group: *Group
+        NumGroups: *NumGroups
+        StagesPerGroup: *StagesPerGroup
+        StageInGroup: 2
+        CycleLength: 5
+        EntriesPerObject: *RandomEntries
+  - LoadConfig:
+      Path: QueryStatsVariants.tmpl
+      Key: CycleBaseStage
+      Parameters:
+        Name: "Random"
         Database: *Database
         Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
         StageInGroup: 3
-        CycleLength: 5
-        EntriesPerObject: *FixedEntries
-  - LoadConfig:
-      Path: QueryStatsVariants.tmpl
-      Key: CycleBaseStage
-      Parameters:
-        Name: "Random"
-        Database: *Database
-        Collection: *Collection
-        Group: *Group
-        NumGroups: *NumGroups
-        StagesPerGroup: *StagesPerGroup
-        StageInGroup: 4
-        CycleLength: 5
-        EntriesPerObject: *RandomEntries
-  - LoadConfig:
-      Path: QueryStatsVariants.tmpl
-      Key: CycleBaseStage
-      Parameters:
-        Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
-        Group: *Group
-        NumGroups: *NumGroups
-        StagesPerGroup: *StagesPerGroup
-        StageInGroup: 5
-        CycleLength: 25
-        EntriesPerObject: *FixedEntries
-  - LoadConfig:
-      Path: QueryStatsVariants.tmpl
-      Key: CycleBaseStage
-      Parameters:
-        Name: "Random"
-        Database: *Database
-        Collection: *Collection
-        Group: *Group
-        NumGroups: *NumGroups
-        StagesPerGroup: *StagesPerGroup
-        StageInGroup: 6
         CycleLength: 25
         EntriesPerObject: *RandomEntries
 
-AllHmacGroup:
+AllHmacFixedGroup:
   ^FlattenOnce:
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
@@ -125,16 +127,17 @@ AllHmacGroup:
         EntriesPerObject: *FixedEntries
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
-      Key: UniqueHmacStage
+      Key: CycleHmacStage
       Parameters:
-        Name: "Random"
+        Name: "Fixed"
         Database: *Database
         Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
         StageInGroup: 2
-        EntriesPerObject: *RandomEntries
+        CycleLength: 5
+        EntriesPerObject: *FixedEntries
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
       Key: CycleHmacStage
@@ -146,8 +149,23 @@ AllHmacGroup:
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
         StageInGroup: 3
-        CycleLength: 5
+        CycleLength: 25
         EntriesPerObject: *FixedEntries
+
+AllHmacRandomGroup:
+  ^FlattenOnce:
+  - LoadConfig:
+      Path: QueryStatsVariants.tmpl
+      Key: UniqueHmacStage
+      Parameters:
+        Name: "Random"
+        Database: *Database
+        Collection: *Collection
+        Group: *Group
+        NumGroups: *NumGroups
+        StagesPerGroup: *StagesPerGroup
+        StageInGroup: 1
+        EntriesPerObject: *RandomEntries
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
       Key: CycleHmacStage
@@ -158,37 +176,24 @@ AllHmacGroup:
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
-        StageInGroup: 4
+        StageInGroup: 2
         CycleLength: 5
         EntriesPerObject: *RandomEntries
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
       Key: CycleHmacStage
       Parameters:
-        Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
-        Group: *Group
-        NumGroups: *NumGroups
-        StagesPerGroup: *StagesPerGroup
-        StageInGroup: 5
-        CycleLength: 25
-        EntriesPerObject: *FixedEntries
-  - LoadConfig:
-      Path: QueryStatsVariants.tmpl
-      Key: CycleHmacStage
-      Parameters:
         Name: "Random"
         Database: *Database
         Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
-        StageInGroup: 6
+        StageInGroup: 3
         CycleLength: 25
         EntriesPerObject: *RandomEntries
 
-AllTextGroup:
+AllTextFixedGroup:
   ^FlattenOnce:
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
@@ -204,16 +209,17 @@ AllTextGroup:
         EntriesPerObject: *FixedEntries
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
-      Key: UniqueTextStage
+      Key: CycleTextStage
       Parameters:
-        Name: "Random"
+        Name: "Fixed"
         Database: *Database
         Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
         StageInGroup: 2
-        EntriesPerObject: *RandomEntries
+        CycleLength: 5
+        EntriesPerObject: *FixedEntries
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
       Key: CycleTextStage
@@ -225,8 +231,23 @@ AllTextGroup:
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
         StageInGroup: 3
-        CycleLength: 5
+        CycleLength: 25
         EntriesPerObject: *FixedEntries
+
+AllTextRandomGroup:
+  ^FlattenOnce:
+  - LoadConfig:
+      Path: QueryStatsVariants.tmpl
+      Key: UniqueTextStage
+      Parameters:
+        Name: "Random"
+        Database: *Database
+        Collection: *Collection
+        Group: *Group
+        NumGroups: *NumGroups
+        StagesPerGroup: *StagesPerGroup
+        StageInGroup: 1
+        EntriesPerObject: *RandomEntries
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
       Key: CycleTextStage
@@ -237,32 +258,19 @@ AllTextGroup:
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
-        StageInGroup: 4
+        StageInGroup: 2
         CycleLength: 5
         EntriesPerObject: *RandomEntries
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
       Key: CycleTextStage
       Parameters:
-        Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
-        Group: *Group
-        NumGroups: *NumGroups
-        StagesPerGroup: *StagesPerGroup
-        StageInGroup: 5
-        CycleLength: 25
-        EntriesPerObject: *FixedEntries
-  - LoadConfig:
-      Path: QueryStatsVariants.tmpl
-      Key: CycleTextStage
-      Parameters:
         Name: "Random"
         Database: *Database
         Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
-        StageInGroup: 6
+        StageInGroup: 3
         CycleLength: 25
         EntriesPerObject: *RandomEntries

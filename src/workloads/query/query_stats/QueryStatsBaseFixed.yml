@@ -1,0 +1,34 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: >
+  This workload tests for performance regressions without concurrent $queryStats aggregates,
+  using fixed-size payloads in the find queries.
+
+KeyWords:
+- queryStats
+- redaction
+
+Clients:
+  Default:
+    QueryOptions:
+      connectTimeoutMS: 3_600_000  # 1 hour
+      maxPoolSize: 4000
+      socketTimeoutMS: 3_600_000  # 1 hour
+
+GlobalDefaults:
+  # Workload "constants."
+  NumGroups: &NumGroups 1  # Excluding the setup group.
+
+Actors:
+  ^FlattenOnce:
+  - LoadConfig:
+      Path: QueryStats.tmpl
+      Key: SetupGroup
+      Parameters:
+        NumGroups: *NumGroups
+  - LoadConfig:
+      Path: QueryStats.tmpl
+      Key: AllBaseFixedGroup
+      Parameters:
+        NumGroups: *NumGroups
+        Group: 1
