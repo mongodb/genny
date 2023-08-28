@@ -32,3 +32,10 @@ Actors:
       Parameters:
         NumGroups: *NumGroups
         Group: 1
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-query-stats
+      - standalone-query-stats-small-rate-limit
