@@ -61,6 +61,18 @@ WaitForCommit:
   Endpoint: wait_for_commit
   MetricsName: WaitForCommit
 
+Verify:
+  Repeat: 1
+  Module: mongosync_actor
+  Endpoint: verify
+  MetricsName: Verify
+
+WaitForVerifyDone:
+  Repeat: 1
+  Module: mongosync_actor
+  Endpoint: wait_for_verify_done
+  MetricsName: VerifyDone
+
 InsertShortTestData:
   Repeat: 1
   BatchSize: 100
@@ -104,3 +116,4 @@ ShardCollection:
       shardCollection: db.Collection0
       key:
         _id: hashed
+
