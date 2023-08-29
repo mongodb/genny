@@ -32,6 +32,7 @@ Actors:
       Key: SetupGroup
       Parameters:
         NumGroups: *NumGroups
+        StagesPerGroup: *StagesPerGroup
   - LoadConfig:
       Path: QueryStatsVariants.tmpl
       Key: UniqueBaseStage
