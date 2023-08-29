@@ -42,11 +42,13 @@ GlobalDefaults:
       format: "%d seconds"
       withArgs:
       - ^NumExpr:
-          withExpression: "targetMB * rlh"
+          withExpression: "targetMB * 100 / rlh + 1"
           andValues:
             targetMB: *PrepopulateMB
             rlh: *RateLimitHz
-  PrepopulateRepeat: &PrepopulateRepeat {^NumExpr: {withExpression: "targetMB * 100", andValues: {targetMB: *PrepopulateMB}}}
+  # This is not technically accurate -- it should be targetMB * 1e6 / (32 * 320) + 1...
+  # but floating point values are hard.
+  PrepopulateRepeat: &PrepopulateRepeat {^NumExpr: {withExpression: "targetMB * 100 + 1", andValues: {targetMB: *PrepopulateMB}}}
   # Needs to be edited if the phases change.
   LastPhase: &LastPhase {^NumExpr: {withExpression: "phase + 5", andValues: {phase: *StartingPhase}}}
 
