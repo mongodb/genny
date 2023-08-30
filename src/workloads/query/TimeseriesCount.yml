@@ -1,8 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  The queries in this workload exercise group stage that uses the $count accumulator and the $count aggregation stage. 
-  On FCV greater than or equal to 7.1 $group using $count is optimized to remove the $unpack stage.
+  The queries in this workload exercise group stage that uses the $count accumulator and the $count 
+  aggregation stage. On FCV greater than or equal to 7.1 $group using $count is optimized to remove 
+  the $unpack stage.
 
 Keywords:
 - timeseries
@@ -32,8 +33,9 @@ Actors:
         Operations:
         - OperationName: drop
 
-# Testing during development showed the runtime is greatly affected by the number of measurements per bucket. There is on average 103 
-# measurements per bucket when granularity = "seconds", which was determined is a typical customer bucket.
+# Testing during development showed the runtime is greatly affected by the number of measurements per bucket.
+# There is on average 103  measurements per bucket when granularity = "seconds", which was determined is a 
+# typical customer bucket.
 - Name: CreateTimeseriesCollection
   Type: RunCommand
   Threads: 1
@@ -48,9 +50,9 @@ Actors:
           OperationMetricsName: CreateTimeseriesCollection
           OperationName: RunCommand
           OperationCommand:
-            {create: *collection, timeseries: {timeField: "time", metaField: "symbol", bucketMaxSpanSeconds: 900, bucketRoundingSeconds: 900}}
+            {create: *collection, timeseries: {timeField: "time", metaField: "symbol", granularity: "seconds"}}
 
-# This template is used by other time-series workloads and will add 1,000,000 documents to the collection.
+# This template is used by other timeseries workloads and will add 1000000 documents to the collection.
 - InsertData:
   LoadConfig:
     Path: "../../phases/query/GroupStagesOnComputedFields.yml"
