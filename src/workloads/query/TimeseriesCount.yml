@@ -48,7 +48,7 @@ Actors:
           OperationMetricsName: CreateTimeseriesCollection
           OperationName: RunCommand
           OperationCommand:
-            {create: *collection, timeseries: {timeField: "time", metaField: "symbol", granularity: "seconds"}}
+            {create: *collection, timeseries: {timeField: "time", metaField: "symbol", bucketMaxSpanSeconds: 900, bucketRoundingSeconds: 900}}
 
 # This template is used by other time-series workloads and will add 1,000,000 documents to the collection.
 - InsertData:
@@ -72,8 +72,8 @@ Actors:
         Repeat: 1
         Threads: 1
 
-# Run queries with and without the optimization.
-- Name: GroupCountAccumulatorNoOpt
+# Run queries with the optimization.
+- Name: GroupCountAccumulatorOpt
   Type: CrudActor
   Database: *database
   Threads: 10
@@ -86,30 +86,6 @@ Actors:
         Database: *database
         Collection: *collection
         Operations:
-        - OperationMetricsName: 
-          OperationName: aggregate
-          OperationCommand:
-            Pipeline: [
-              {$_internalInhibitOptimization: {}},
-              {$group: {
-                _id: "$symbol",
-                count: {$count: {}},
-              }}
-            ]
-
-- Name: GroupCountAccumulatorOpt
-  Type: CrudActor
-  Database: *database
-  Threads: 10
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: *repeat
-        Database: *database
-        Collection: *collection
-        Operations:
         - OperationMetricsName:
           OperationName: aggregate
           OperationCommand:
@@ -119,32 +95,13 @@ Actors:
                 count: {$count: {}},
               }}
             ]
-
-- Name: GroupCountAggStageNoOpt
-  Type: CrudActor
-  Database: *database
-  Threads: 10
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: *repeat
-        Database: *database
-        Collection: *collection
-        Operations:
-        - OperationMetricsName:
-          OperationName: aggregate
-          OperationCommand:
-            Pipeline: [ {$_internalInhibitOptimization: {}}, {$count: "count"} ]
-
 - Name: GroupCountAggStageOpt
   Type: CrudActor
   Database: *database
   Threads: 10
   Phases:
     OnlyActiveInPhases:
-      Active: [7]
+      Active: [5]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Repeat: *repeat
