@@ -17,65 +17,55 @@ Clients:
 GlobalDefaults:
   # Workload "constants."
   ConstantNumGroups: &NumGroups 2  # Excluding the setup group.
-  ConstantDatabase: &Database {LoadConfig: {Path: QueryStats.tmpl, Key: ConstantDatabase}}
-  ConstantCollection: &Collection {LoadConfig: {Path: QueryStats.tmpl, Key: ConstantCollection}}
   ConstantStagesPerGroup: &StagesPerGroup 2
 
   # Entry count generators.
-  ConstantFixedEntries: &FixedEntries {LoadConfig: {Path: QueryStats.tmpl, Key: ConstantFixedEntries}}
-  ConstantRandomEntries: &RandomEntries {LoadConfig: {Path: QueryStats.tmpl, Key: ConstantRandomEntries}}
+  ConstantFixedEntries: &FixedEntries {LoadConfig: {Path: ../../../phases/query/QueryStatsWorkloads.tmpl, Key: ConstantFixedEntries}}
+  ConstantRandomEntries: &RandomEntries {LoadConfig: {Path: ../../../phases/query/QueryStatsWorkloads.tmpl, Key: ConstantRandomEntries}}
 
 Actors:
   ^FlattenOnce:
   - LoadConfig:
-      Path: QueryStats.tmpl
+      Path: ../../../phases/query/QueryStatsWorkloads.tmpl
       Key: SetupGroup
       Parameters:
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
   - LoadConfig:
-      Path: QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: UniqueBaseStage
       Parameters:
         Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
         Group: 1
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
         StageInGroup: 1
         EntriesPerObject: *FixedEntries
   - LoadConfig:
-      Path: QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: UniqueBaseStage
       Parameters:
         Name: "Random"
-        Database: *Database
-        Collection: *Collection
         Group: 1
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
         StageInGroup: 2
         EntriesPerObject: *RandomEntries
   - LoadConfig:
-      Path: QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: UniqueHmacStage
       Parameters:
         Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
         Group: 2
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
         StageInGroup: 1
         EntriesPerObject: *FixedEntries
   - LoadConfig:
-      Path: QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: UniqueHmacStage
       Parameters:
         Name: "Random"
-        Database: *Database
-        Collection: *Collection
         Group: 2
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup

@@ -1,8 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  This workload tests for performance regressions without concurrent $queryStats aggregates,
-  using fixed-size payloads in the find queries.
+  This workload tests for performance regressions with concurrent HMAC'ed $queryStats aggregates,
+  using random-size payloads in the find queries.
 
 KeyWords:
 - queryStats
@@ -22,13 +22,13 @@ GlobalDefaults:
 Actors:
   ^FlattenOnce:
   - LoadConfig:
-      Path: QueryStats.tmpl
+      Path: ../../../phases/query/QueryStatsWorkloads.tmpl
       Key: SetupGroup
       Parameters:
         NumGroups: *NumGroups
   - LoadConfig:
-      Path: QueryStats.tmpl
-      Key: AllBaseFixedGroup
+      Path: ../../../phases/query/QueryStatsWorkloads.tmpl
+      Key: AllHmacRandomGroup
       Parameters:
         NumGroups: *NumGroups
         Group: 1

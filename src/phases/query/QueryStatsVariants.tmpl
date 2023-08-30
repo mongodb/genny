@@ -8,10 +8,6 @@ GlobalDefaults:
   PhasesPerStage: &PhasesPerStage 6
   SetupPhases: &SetupPhases 2
 
-  # Workload "constants."
-  Database: &Database {^Parameter: {Name: Database, Default: test}}
-  Collection: &Collection {^Parameter: {Name: Collection, Default: Collection0}}
-
   # Template variables.
   Name: &Name {^Parameter: {Name: Name, Default: {unused: "Need to specify the stage name."}}}
   EntriesPerObject: &EntriesPerObject {^Parameter: {Name: EntriesPerObject, Default: {^RandomInt: {min: 1, max: 350}}}}
@@ -41,23 +37,19 @@ GlobalDefaults:
 SetupStage:
   ^FlattenOnce:
   - LoadConfig:
-      Path: QueryStatsStages.tmpl
+      Path: ../../../phases/query/QueryStatsStages.tmpl
       Key: SetupStage
       Parameters:
         # Workload "constants."
-        Database: *Database
-        Collection: *Collection
         MaxPhases: *MaxPhases
 
 CycleBaseStage:
   ^FlattenOnce:
   - LoadConfig:
-      Path: QueryStatsStages.tmpl
+      Path: ../../../phases/query/QueryStatsStages.tmpl
       Key: StageTemplate
       Parameters:
         # Workload "constants."
-        Database: *Database
-        Collection: *Collection
         MaxPhases: *MaxPhases
 
         # Template variables.
@@ -79,12 +71,10 @@ CycleBaseStage:
 CycleHmacStage:
   ^FlattenOnce:
   - LoadConfig:
-      Path: QueryStatsStages.tmpl
+      Path: ../../../phases/query/QueryStatsStages.tmpl
       Key: QueryStatsStageTemplate
       Parameters:
         # Workload "constants."
-        Database: *Database
-        Collection: *Collection
         MaxPhases: *MaxPhases
 
         # Template variables.
@@ -98,12 +88,10 @@ CycleHmacStage:
 CycleTextStage:  # Cleartex, instead of obscured by HMAC.
   ^FlattenOnce:
   - LoadConfig:
-      Path: QueryStatsStages.tmpl
+      Path: ../../../phases/query/QueryStatsStages.tmpl
       Key: QueryStatsStageTemplate
       Parameters:
         # Workload "constants."
-        Database: *Database
-        Collection: *Collection
         MaxPhases: *MaxPhases
 
         # Template variables.
@@ -116,12 +104,10 @@ CycleTextStage:  # Cleartex, instead of obscured by HMAC.
 UniqueBaseStage:
   ^FlattenOnce:
   - LoadConfig:
-      Path: QueryStatsStages.tmpl
+      Path: ../../../phases/query/QueryStatsStages.tmpl
       Key: StageTemplate
       Parameters:
         # Workload "constants."
-        Database: *Database
-        Collection: *Collection
         MaxPhases: *MaxPhases
 
         # Template variables.
@@ -140,12 +126,10 @@ UniqueBaseStage:
 UniqueHmacStage:
   ^FlattenOnce:
   - LoadConfig:
-      Path: QueryStatsStages.tmpl
+      Path: ../../../phases/query/QueryStatsStages.tmpl
       Key: QueryStatsStageTemplate
       Parameters:
         # Workload "constants."
-        Database: *Database
-        Collection: *Collection
         MaxPhases: *MaxPhases
 
         # Template variables.
@@ -159,12 +143,10 @@ UniqueHmacStage:
 UniqueTextStage:
   ^FlattenOnce:
   - LoadConfig:
-      Path: QueryStatsStages.tmpl
+      Path: ../../../phases/query/QueryStatsStages.tmpl
       Key: QueryStatsStageTemplate
       Parameters:
         # Workload "constants."
-        Database: *Database
-        Collection: *Collection
         MaxPhases: *MaxPhases
 
         # Template variables.

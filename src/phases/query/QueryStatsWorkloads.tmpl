@@ -3,10 +3,6 @@ Owner: "@mongodb/query"
 Description: >
   This is a template of predefined workload groups for QueryStats workloads.
 
-# Workload "constants."
-ConstantDatabase: &Database {^Parameter: {Name: Database, Default: test}}
-ConstantCollection: &Collection {^Parameter: {Name: Collection, Default: Collection0}}
-
 # Template parameters.
 ConstantGroup: &Group {^Parameter: {Name: Group, Default: 1}}
 ConstantNumGroups: &NumGroups {^Parameter: {Name: NumGroups, Default: {unused: "Need to specify the total number of groups."}}}
@@ -24,8 +20,6 @@ SetupGroup:
       Path: QueryStatsVariants.tmpl
       Key: SetupStage
       Parameters:
-        Database: *Database
-        Collection: *Collection
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
 
@@ -36,8 +30,6 @@ AllBaseFixedGroup:
       Key: UniqueBaseStage
       Parameters:
         Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -48,8 +40,6 @@ AllBaseFixedGroup:
       Key: CycleBaseStage
       Parameters:
         Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -61,8 +51,6 @@ AllBaseFixedGroup:
       Key: CycleBaseStage
       Parameters:
         Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -77,8 +65,6 @@ AllBaseRandomGroup:
       Key: UniqueBaseStage
       Parameters:
         Name: "Random"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -89,8 +75,6 @@ AllBaseRandomGroup:
       Key: CycleBaseStage
       Parameters:
         Name: "Random"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -102,8 +86,6 @@ AllBaseRandomGroup:
       Key: CycleBaseStage
       Parameters:
         Name: "Random"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -118,8 +100,6 @@ AllHmacFixedGroup:
       Key: UniqueHmacStage
       Parameters:
         Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -130,8 +110,6 @@ AllHmacFixedGroup:
       Key: CycleHmacStage
       Parameters:
         Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -143,8 +121,6 @@ AllHmacFixedGroup:
       Key: CycleHmacStage
       Parameters:
         Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -159,8 +135,6 @@ AllHmacRandomGroup:
       Key: UniqueHmacStage
       Parameters:
         Name: "Random"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -171,8 +145,6 @@ AllHmacRandomGroup:
       Key: CycleHmacStage
       Parameters:
         Name: "Random"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -184,8 +156,6 @@ AllHmacRandomGroup:
       Key: CycleHmacStage
       Parameters:
         Name: "Random"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -200,8 +170,6 @@ AllTextFixedGroup:
       Key: UniqueTextStage
       Parameters:
         Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -212,8 +180,6 @@ AllTextFixedGroup:
       Key: CycleTextStage
       Parameters:
         Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -225,8 +191,6 @@ AllTextFixedGroup:
       Key: CycleTextStage
       Parameters:
         Name: "Fixed"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -241,8 +205,6 @@ AllTextRandomGroup:
       Key: UniqueTextStage
       Parameters:
         Name: "Random"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -253,8 +215,6 @@ AllTextRandomGroup:
       Key: CycleTextStage
       Parameters:
         Name: "Random"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
@@ -266,8 +226,6 @@ AllTextRandomGroup:
       Key: CycleTextStage
       Parameters:
         Name: "Random"
-        Database: *Database
-        Collection: *Collection
         Group: *Group
         NumGroups: *NumGroups
         StagesPerGroup: *StagesPerGroup
