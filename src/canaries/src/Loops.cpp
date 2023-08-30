@@ -37,8 +37,9 @@ namespace genny::canaries {
 /**
  * Use `rdtsc` as a low overhead, high resolution clock.
  *
- * Adapted from Google Benchmark
- * https://github.com/google/benchmark/blob/439d6b1c2a6da5cb6adc4c4dfc555af235722396/src/cycleclock.h#L61
+ * Adapted from Google Benchmark:
+ * x86_64/amd64: https://github.com/google/benchmark/blob/8f7b8dd9a3211e6043e742a383ccb35eb810829f/src/cycleclock.h#L82-L85
+ * arm64: https://github.com/google/benchmark/blob/8f7b8dd9a3211e6043e742a383ccb35eb810829f/src/cycleclock.h#L142-L149
  */
 inline Nanosecond now() {
 #if defined(__APPLE__)
@@ -47,6 +48,12 @@ inline Nanosecond now() {
     uint64_t low, high;
     __asm__ volatile("rdtsc" : "=a"(low), "=d"(high));
     return (high << 32) | low;
+#elif defined(__aarch64__)
+    int64_t virtual_timer_value;
+    asm volatile("mrs %0, cntvct_el0" : "=r"(virtual_timer_value));
+    return virtual_timer_value;
+#else
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 #endif
 }
 
