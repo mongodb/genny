@@ -42,13 +42,13 @@ Actors:
 
 - Name: FindLargeIn
   Type: CrudActor
-  Threads: 64
+  Threads: 128
   Database: largeins
   Phases:
   - {Nop: true}
   - Name: FindLargeIn
-    Duration: 2 minutes
-    GlobalRate: 1000 per 15 seconds
+    Duration: 20 minutes
+    GlobalRate: 10000 per 15 seconds
     Collection: Collection0
     Operations:
     - OperationName: find
@@ -65,6 +65,7 @@ AutoRun:
       $eq:
       - replica
       - replica-query-stats
+      - atlas-like-replica
       - single-replica
       - single-replica-classic-query-engine
       - single-replica-sbe
