@@ -1,0 +1,79 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/altas-streams"
+Description: |
+  Streaming pipeline that computes the highest bid within a 10s tumbling window.
+
+GlobalDefaults:
+  DatabaseName: &DatabaseName "test"
+  StreamProcessorName: &StreamProcessorName "sp"
+
+Actors:
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: CreateStreamProcessor
+      OperationName: RunCommand
+      OperationCommand:
+        streams_startStreamProcessor: ""
+        name: *StreamProcessorName
+        pipeline: [
+          { $source: { 
+              connectionName: "kafka",
+              topic: "topic-input",
+              timeField: { $convert: { input: "$dateTime", to: "date" }},
+              allowedLateness: { size: 10, unit: "second" },
+              testOnlyPartitionCount: 1
+          }},
+          { $tumblingWindow: {
+              interval: { size: 10, unit: "second" },
+              pipeline: [
+                { $group: {
+                    _id: null,
+                    maxPrice: { $max: "$price" }
+                }}
+              ]
+          }},
+          { $emit: { connectionName: "__testMemory" } }
+        ]
+        connections: [
+          {
+            name: "kafka",
+            type: "kafka",
+            options: {
+              bootstrapServers: "localhost:9092",
+              isTestKafka: true
+            }
+          }
+        ]
+  - Phase: 1
+    Nop: true
+  - Phase: 2
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Stop
+      OperationName: RunCommand
+      OperationCommand:
+        streams_stopStreamProcessor:
+        name: *StreamProcessorName
+
+- Name: Insert_Batch1000x
+  Type: RunCommand
+  Threads: 32
+  Phases:
+    - Phase: 0
+      Nop: true
+    - Phase: 1
+      LoadConfig:
+        Path: ./InsertBidsTemplate.yml
+        Key: InsertBids
+        Parameters:
+          Database: *DatabaseName
+          StreamProcessorName: *StreamProcessorName
+    - Phase: 2
+      Nop: true

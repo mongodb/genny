@@ -1,0 +1,63 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/altas-streams"
+Description: |
+  Streaming pipeline that filters for specific auction IDs.
+
+GlobalDefaults:
+  DatabaseName: &DatabaseName "test"
+  StreamProcessorName: &StreamProcessorName "sp"
+
+Actors:
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: CreateStreamProcessor
+      OperationName: RunCommand
+      OperationCommand:
+        streams_startStreamProcessor: ""
+        name: *StreamProcessorName
+        pipeline: [
+          { $source: { connectionName: "__testMemory" } },
+          { $match: {
+            $or: [
+              { auction: 1007 },
+              { auction: 1020 },
+              { auction: 2001 },
+              { auction: 2019 },
+              { auction: 2087 }
+            ]
+          }},
+          { $project: { auction: 1, price: 1 }}
+          { $emit: { connectionName: "__testMemory" } }
+        ]
+        connections: []
+  - Phase: 1..2
+    Nop: true
+
+- Name: Insert_Batch1000x
+  Type: RunCommand
+  Threads: 32
+  Phases:
+    - Phase: 0
+      Nop: true
+    - Phase: 1
+      LoadConfig:
+        Path: ./InsertBidsTemplate.yml
+        Key: InsertBids
+        Parameters:
+          Database: *DatabaseName
+          StreamProcessorName: *StreamProcessorName
+    - Phase: 2
+      Repeat: 1
+      Database: *DatabaseName
+      Operations:
+      - OperationMetricsName: Stop
+        OperationName: RunCommand
+        OperationCommand:
+          streams_stopStreamProcessor:
+          name: *StreamProcessorName
