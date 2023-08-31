@@ -17,7 +17,7 @@ ConstantRandomEntries: &RandomEntries {^RandomInt: {min: 1, max: 350}}
 SetupGroup:
   ^FlattenOnce:
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: SetupStage
       Parameters:
         NumGroups: *NumGroups
@@ -26,7 +26,7 @@ SetupGroup:
 AllBaseFixedGroup:
   ^FlattenOnce:
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: UniqueBaseStage
       Parameters:
         Name: "Fixed"
@@ -36,7 +36,7 @@ AllBaseFixedGroup:
         StageInGroup: 1
         EntriesPerObject: *FixedEntries
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: CycleBaseStage
       Parameters:
         Name: "Fixed"
@@ -47,7 +47,7 @@ AllBaseFixedGroup:
         CycleLength: 5
         EntriesPerObject: *FixedEntries
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: CycleBaseStage
       Parameters:
         Name: "Fixed"
@@ -61,7 +61,7 @@ AllBaseFixedGroup:
 AllBaseRandomGroup:
   ^FlattenOnce:
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: UniqueBaseStage
       Parameters:
         Name: "Random"
@@ -71,7 +71,7 @@ AllBaseRandomGroup:
         StageInGroup: 1
         EntriesPerObject: *RandomEntries
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: CycleBaseStage
       Parameters:
         Name: "Random"
@@ -82,7 +82,7 @@ AllBaseRandomGroup:
         CycleLength: 5
         EntriesPerObject: *RandomEntries
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: CycleBaseStage
       Parameters:
         Name: "Random"
@@ -96,7 +96,7 @@ AllBaseRandomGroup:
 AllHmacFixedGroup:
   ^FlattenOnce:
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: UniqueHmacStage
       Parameters:
         Name: "Fixed"
@@ -106,7 +106,7 @@ AllHmacFixedGroup:
         StageInGroup: 1
         EntriesPerObject: *FixedEntries
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: CycleHmacStage
       Parameters:
         Name: "Fixed"
@@ -117,7 +117,7 @@ AllHmacFixedGroup:
         CycleLength: 5
         EntriesPerObject: *FixedEntries
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: CycleHmacStage
       Parameters:
         Name: "Fixed"
@@ -131,7 +131,7 @@ AllHmacFixedGroup:
 AllHmacRandomGroup:
   ^FlattenOnce:
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: UniqueHmacStage
       Parameters:
         Name: "Random"
@@ -141,7 +141,7 @@ AllHmacRandomGroup:
         StageInGroup: 1
         EntriesPerObject: *RandomEntries
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: CycleHmacStage
       Parameters:
         Name: "Random"
@@ -152,7 +152,7 @@ AllHmacRandomGroup:
         CycleLength: 5
         EntriesPerObject: *RandomEntries
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: CycleHmacStage
       Parameters:
         Name: "Random"
@@ -166,7 +166,7 @@ AllHmacRandomGroup:
 AllTextFixedGroup:
   ^FlattenOnce:
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: UniqueTextStage
       Parameters:
         Name: "Fixed"
@@ -176,7 +176,7 @@ AllTextFixedGroup:
         StageInGroup: 1
         EntriesPerObject: *FixedEntries
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: CycleTextStage
       Parameters:
         Name: "Fixed"
@@ -187,7 +187,7 @@ AllTextFixedGroup:
         CycleLength: 5
         EntriesPerObject: *FixedEntries
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: CycleTextStage
       Parameters:
         Name: "Fixed"
@@ -201,7 +201,7 @@ AllTextFixedGroup:
 AllTextRandomGroup:
   ^FlattenOnce:
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: UniqueTextStage
       Parameters:
         Name: "Random"
@@ -211,7 +211,7 @@ AllTextRandomGroup:
         StageInGroup: 1
         EntriesPerObject: *RandomEntries
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: CycleTextStage
       Parameters:
         Name: "Random"
@@ -222,7 +222,7 @@ AllTextRandomGroup:
         CycleLength: 5
         EntriesPerObject: *RandomEntries
   - LoadConfig:
-      Path: ../../../QueryStatsVariants.tmpl
+      Path: ../../../phases/query/QueryStatsVariants.tmpl
       Key: CycleTextStage
       Parameters:
         Name: "Random"

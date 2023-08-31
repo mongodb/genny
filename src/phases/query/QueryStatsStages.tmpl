@@ -87,7 +87,7 @@ SetupStage:
 
 StageTemplate: &StageTemplate
 - LoadConfig:
-    Path: ../../../QueryStatsActors.tmpl
+    Path: ../../../phases/query/QueryStatsActors.tmpl
     Key: QueryStatsCacheSizeActor
     Parameters:
       Name: {^PreprocessorFormatString: {format: "ClearQueryStats-%s", withArgs: [*FormattedSuffix]}}
@@ -95,7 +95,7 @@ StageTemplate: &StageTemplate
       MaxPhases: *MaxPhases
       Size: 0MB
 - LoadConfig:
-    Path: ../../../QueryStatsActors.tmpl
+    Path: ../../../phases/query/QueryStatsActors.tmpl
     Key: QueryStatsCacheSizeActor
     Parameters:
       Name: {^PreprocessorFormatString: {format: "SetQueryStats-%s", withArgs: [*FormattedSuffix]}}
@@ -103,14 +103,14 @@ StageTemplate: &StageTemplate
       MaxPhases: *MaxPhases
       Size: *CacheSize
 - LoadConfig:
-    Path: ../../../QueryStatsActors.tmpl
+    Path: ../../../phases/query/QueryStatsActors.tmpl
     Key: QueryStatsQuiesceActor
     Parameters:
       Name: {^PreprocessorFormatString: {format: "Quiesce-%s", withArgs: [*FormattedSuffix]}}
       Phases: [*Phase2, *Phase4]
       MaxPhases: *MaxPhases
 - LoadConfig:
-    Path: ../../../QueryStatsActors.tmpl
+    Path: ../../../phases/query/QueryStatsActors.tmpl
     Key: QueryStatsPrepopulateActor
     Parameters:
       Name: {^PreprocessorFormatString: {format: "Prepopulate-%s", withArgs: [*FormattedSuffix]}}
@@ -132,7 +132,7 @@ StageTemplate: &StageTemplate
               duplicatedKeys: skip
       Repeat: *PrepopulateRepeat
 - LoadConfig:
-    Path: ../../../QueryStatsActors.tmpl
+    Path: ../../../phases/query/QueryStatsActors.tmpl
     Key: QueryStatsFindCommandActor
     Parameters:
       Name: {^PreprocessorFormatString: {format: "FindCommand-%s", withArgs: [*FormattedSuffix]}}
@@ -145,7 +145,7 @@ QueryStatsStageTemplate:
   ^FlattenOnce:
   - *StageTemplate
   - LoadConfig:
-      Path: ../../../QueryStatsActors.tmpl
+      Path: ../../../phases/query/QueryStatsActors.tmpl
       Key: QueryStatsAggregateActor
       Parameters:
         Name: {^PreprocessorFormatString: {format: "QueryStatsAggregate-%s", withArgs: [*FormattedSuffix]}}
