@@ -1641,8 +1641,29 @@ struct CrudActor::PhaseConfig {
 
         auto& yamlCommand = node["OperationCommand"];
         auto opName = node["OperationName"].to<std::string>();
-        auto opMetricsName = node["OperationMetricsName"].maybe<std::string>().value_or(opName);
         auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
+        auto metricsName = phaseContext["MetricsName"].maybe<std::string>();
+        auto opMetricsName = node["OperationMetricsName"].maybe<std::string>();
+        metrics::Operation opMetrics;
+
+        if (metricsName && opMetricsName) {
+            // Special case if we have set "MetricsName" at the Phase level, and
+            // "OperationMetricsName" on the operation. Ideally the operation constructors would
+            // directly support this functionality, and be common to all Actors. At the time this
+            // was originally added, it was non-trivial to do so in a non-breaking fashion.
+            opMetrics = phaseContext.actor().operation(*metricsName + "." + *opMetricsName, id);
+        } else if (metricsName) {
+            // If Phase block specifies "MetricsName", then associate the metrics with the Phase.
+            opMetrics = phaseContext.operation(opName, id);
+        }
+        // Otherwise, associate it with the Actor (e.g. all bulkWrite
+        // operations get recorded together across all Phases). This latter case (not
+        // specifying "MetricsName") is legacy configuration-syntax.
+        else if (opMetricsName) {
+            opMetrics = phaseContext.actor().operation(*opMetricsName, id);
+        } else {
+            opMetrics = phaseContext.actor().operation(opName, id);
+        }
 
         auto opConstructors = getOpConstructors();
         // Grab the appropriate Operation struct defined by 'OperationName'.
@@ -1651,38 +1672,11 @@ struct CrudActor::PhaseConfig {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException("Operation '" + opName +
                                                                 "' not supported in Crud Actor."));
         }
-
-        // If the yaml specified MetricsName in the Phase block, then associate the metrics
-        // with the Phase; otherwise, associate with the Actor (e.g. all bulkWrite
-        // operations get recorded together across all Phases). The latter case (not
-        // specifying MetricsName) is legacy configuration-syntax.
-        //
-        // Node is convertible to bool but only explicitly.
-        const bool perPhaseMetrics = bool(phaseContext["MetricsName"]);
         auto opCreator = op->second;
-
-        if (auto metricsName = phaseContext["MetricsName"].maybe<std::string>();
-            metricsName && opMetricsName != opName) {
-            // Special case if we have set MetricsName at the phase level, and OperationMetricsName
-            // on the operation. Ideally the operation constructors would directly support this
-            // functionality, and be common to all actors. At the time this was added, it was
-            // non-trivial to do so in a non-breaking fashion.
-            std::ostringstream stm;
-            stm << *metricsName << "." << opMetricsName;
-
-            return opCreator(yamlCommand,
-                             onSession,
-                             std::move(collectionHandle),
-                             phaseContext.actor().operation(stm.str(), id),
-                             phaseContext,
-                             id);
-        }
-
         return opCreator(yamlCommand,
                          onSession,
                          std::move(collectionHandle),
-                         perPhaseMetrics ? phaseContext.operation(opMetricsName, id)
-                                         : phaseContext.actor().operation(opMetricsName, id),
+                         opMetrics,
                          phaseContext,
                          id);
     }
