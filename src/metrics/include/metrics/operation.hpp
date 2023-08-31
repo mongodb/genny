@@ -384,6 +384,8 @@ class OperationT final {
     using time_point = typename ClockSource::time_point;
 
 public:
+    explicit OperationT() {};
+
     explicit OperationT(internals::OperationImpl<ClockSource>& op) : _op{std::addressof(op)} {}
 
     OperationContextT<ClockSource> start() {
