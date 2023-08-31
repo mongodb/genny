@@ -524,6 +524,26 @@ C collectionHandleCallback = [](const Node& opNode,
     return std::make_unique<O>(opNode, onSession, collection, operation, context, id);
 };
 
+template <class P, class C, class O>
+C txnCallback = [](const Node& opNode,
+                   bool,
+                   CollectionHandle,
+                   metrics::Operation operation,
+                   PhaseContext& context,
+                   ActorId id) -> std::unique_ptr<P> {
+    return std::make_unique<O>(opNode, operation, context, id);
+};
+
+template <class P, class C, class O>
+C collectionHandleTxnCallback = [](const Node& opNode,
+                                   bool,
+                                   CollectionHandle collection,
+                                   metrics::Operation operation,
+                                   PhaseContext& context,
+                                   ActorId id) -> std::unique_ptr<P> {
+    return std::make_unique<O>(opNode, collection, operation, context, id);
+};
+
 // Maps the WriteCommand name to the constructor of the designated Operation struct.
 std::unordered_map<std::string, WriteOpCallback&> bulkWriteConstructors = {
     {"insertOne", baseCallback<WriteOperation, WriteOpCallback, InsertOneOperation>},
@@ -1047,8 +1067,6 @@ private:
 struct StartTransactionOperation : public BaseOperation {
 
     StartTransactionOperation(const Node& opNode,
-                              bool,
-                              mongocxx::collection collection,
                               metrics::Operation operation,
                               PhaseContext& context,
                               ActorId id)
@@ -1081,8 +1099,6 @@ private:
 struct CommitTransactionOperation : public BaseOperation {
 
     CommitTransactionOperation(const Node& opNode,
-                               bool,
-                               mongocxx::collection collection,
                                metrics::Operation operation,
                                PhaseContext& context,
                                ActorId id)
@@ -1117,7 +1133,6 @@ private:
 
 struct WithTransactionOperation : public BaseOperation {
     WithTransactionOperation(const Node& opNode,
-                             bool,
                              CollectionHandle collectionHandle,
                              metrics::Operation operation,
                              PhaseContext& context,
@@ -1278,8 +1293,12 @@ private:
 std::unordered_map<std::string, OpCallback&> getOpConstructors() {
     // Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
     std::unordered_map<std::string, OpCallback&> opConstructors = {
-        {"aggregate", baseCallback<BaseOperation, OpCallback, AggregateOperation>},
         {"bulkWrite", collectionHandleCallback<BaseOperation, OpCallback, BulkWriteOperation>},
+        {"startTransaction", txnCallback<BaseOperation, OpCallback, StartTransactionOperation>},
+        {"commitTransaction", txnCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
+        {"withTransaction",
+         collectionHandleTxnCallback<BaseOperation, OpCallback, WithTransactionOperation>},
+        {"aggregate", baseCallback<BaseOperation, OpCallback, AggregateOperation>},
         {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
         {"estimatedDocumentCount",
          baseCallback<BaseOperation, OpCallback, EstimatedDocumentCountOperation>},
@@ -1290,10 +1309,6 @@ std::unordered_map<std::string, OpCallback&> getOpConstructors() {
         {"findOneAndDelete", baseCallback<BaseOperation, OpCallback, FindOneAndDeleteOperation>},
         {"findOneAndReplace", baseCallback<BaseOperation, OpCallback, FindOneAndReplaceOperation>},
         {"insertMany", baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
-        {"startTransaction", baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
-        {"commitTransaction", baseCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
-        {"withTransaction",
-         collectionHandleCallback<BaseOperation, OpCallback, WithTransactionOperation>},
         {"setReadConcern", baseCallback<BaseOperation, OpCallback, SetReadConcernOperation>},
         {"drop", baseCallback<BaseOperation, OpCallback, DropOperation>},
         {"insertOne", baseCallback<BaseOperation, OpCallback, InsertOneOperation>},
