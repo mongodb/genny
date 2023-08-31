@@ -14,10 +14,14 @@
 
 project(cast_core VERSION 0.0.1 LANGUAGES CXX)
 
+find_package(RdKafka)
+
 CreateGennyTargets(
     NAME    cast_core
     TYPE    SHARED
     DEPENDS
         gennylib
+        RdKafka::rdkafka
+        RdKafka::rdkafka++
     TEST_DEPENDS    testlib
 )

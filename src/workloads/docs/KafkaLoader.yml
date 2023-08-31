@@ -1,0 +1,17 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/atlas-streams"
+Description: |
+  KafkaLoader generates random JSON document based on the document generator
+  provided and publishes them to the kafka server and topic specificed at the
+  actor level.
+
+Actors:
+- Name: KafkaLoader
+  Type: KafkaLoader
+  Threads: 100
+  BootstrapServers: localhost:9092
+  Topic: example-topic
+  Phases:
+  - Phase: 0
+    Repeat: 1e3
+    Document: {foo: {^RandomInt: {min: 0, max: 100}}}
