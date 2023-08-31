@@ -1129,7 +1129,7 @@ struct WithTransactionOperation : public BaseOperation {
         auto& opsInTxn = opNode["OperationsInTransaction"];
         if (!opsInTxn.isSequence()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                "'withTransaction' requires an 'OperationsInTransaction' node of sequence type."));
+                "'withTransaction' requires an 'OperationsInTransaction' list of operations."));
         }
         for (const auto&& [k, txnOp] : opsInTxn) {
             createTxnOps(txnOp, context, id);
