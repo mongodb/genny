@@ -524,26 +524,6 @@ C collectionHandleCallback = [](const Node& opNode,
     return std::make_unique<O>(opNode, onSession, collection, operation, context, id);
 };
 
-template <class P, class C, class O>
-C txnCallback = [](const Node& opNode,
-                   bool,
-                   CollectionHandle,
-                   metrics::Operation operation,
-                   PhaseContext& context,
-                   ActorId id) -> std::unique_ptr<P> {
-    return std::make_unique<O>(opNode, operation, context, id);
-};
-
-template <class P, class C, class O>
-C collectionHandleTxnCallback = [](const Node& opNode,
-                                   bool,
-                                   CollectionHandle collection,
-                                   metrics::Operation operation,
-                                   PhaseContext& context,
-                                   ActorId id) -> std::unique_ptr<P> {
-    return std::make_unique<O>(opNode, collection, operation, context, id);
-};
-
 // Maps the WriteCommand name to the constructor of the designated Operation struct.
 std::unordered_map<std::string, WriteOpCallback&> bulkWriteConstructors = {
     {"insertOne", baseCallback<WriteOperation, WriteOpCallback, InsertOneOperation>},
@@ -1294,10 +1274,6 @@ std::unordered_map<std::string, OpCallback&> getOpConstructors() {
     // Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
     std::unordered_map<std::string, OpCallback&> opConstructors = {
         {"bulkWrite", collectionHandleCallback<BaseOperation, OpCallback, BulkWriteOperation>},
-        {"startTransaction", txnCallback<BaseOperation, OpCallback, StartTransactionOperation>},
-        {"commitTransaction", txnCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
-        {"withTransaction",
-         collectionHandleTxnCallback<BaseOperation, OpCallback, WithTransactionOperation>},
         {"aggregate", baseCallback<BaseOperation, OpCallback, AggregateOperation>},
         {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
         {"estimatedDocumentCount",
@@ -1663,6 +1639,14 @@ struct CrudActor::PhaseConfig {
             opMetrics = phaseContext.actor().operation(*opMetricsName, id);
         } else {
             opMetrics = phaseContext.actor().operation(opName, id);
+        }
+
+        if (opName == "withTransaction") {
+            return std::make_unique<WithTransactionOperation>(yamlCommand, collectionHandle, opMetrics, phaseContext, id);
+        } else if (opName == "startTransaction") {
+            return std::make_unique<StartTransactionOperation>(yamlCommand, opMetrics, phaseContext, id);
+        } else if (opName == "commitTransaction") {
+            return std::make_unique<CommitTransactionOperation>(yamlCommand, opMetrics, phaseContext, id);
         }
 
         auto opConstructors = getOpConstructors();
