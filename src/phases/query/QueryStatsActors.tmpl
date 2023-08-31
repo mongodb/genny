@@ -5,8 +5,8 @@ Description: >
 
 GlobalDefaults:
   # Workload "constants."
-  Database: &Database {^Parameter: {Name: Database, Default: test}}
-  Collection: &Collection {^Parameter: {Name: Collection, Default: Collection0}}
+  Database: &Database test
+  Collection: &Collection Collection0
   MaxPhases: &MaxPhases {^Parameter: {Name: MaxPhases, Default: {unused: "Need to specify the max phase number."}}}
 
   # Template variables.
