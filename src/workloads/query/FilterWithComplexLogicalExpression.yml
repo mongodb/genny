@@ -25,6 +25,8 @@ Keywords:
 - QuiesceActor
 - insert
 - find
+- matcher
+- expressions
 
 GlobalDefaults:
   Database: &Database test
