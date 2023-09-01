@@ -1047,10 +1047,16 @@ private:
 struct StartTransactionOperation : public BaseOperation {
 
     StartTransactionOperation(const Node& opNode,
+                              bool onSession,
+                              [[maybe_unused]] mongocxx::collection collection,
                               metrics::Operation operation,
                               PhaseContext& context,
                               ActorId id)
         : BaseOperation(context, opNode), _operation{operation} {
+        if (!onSession) {
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("'startTransaction' expects 'OnSession: true'."));
+        };
         if (!opNode.isMap())
             return;
         if (opNode["Options"]) {
@@ -1079,10 +1085,17 @@ private:
 struct CommitTransactionOperation : public BaseOperation {
 
     CommitTransactionOperation(const Node& opNode,
+                               bool onSession,
+                               [[maybe_unused]] mongocxx::collection collection,
                                metrics::Operation operation,
                                PhaseContext& context,
                                ActorId id)
-        : BaseOperation(context, opNode), _operation{operation} {}
+        : BaseOperation(context, opNode), _operation{operation} {
+        if (!onSession) {
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("'commitTransaction' expects 'OnSession: true'."));
+        };
+    }
 
     void run(mongocxx::client_session& session) override {
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
@@ -1113,6 +1126,7 @@ private:
 
 struct WithTransactionOperation : public BaseOperation {
     WithTransactionOperation(const Node& opNode,
+                             bool onSession,
                              CollectionHandle collectionHandle,
                              metrics::Operation operation,
                              PhaseContext& context,
@@ -1120,12 +1134,11 @@ struct WithTransactionOperation : public BaseOperation {
         : BaseOperation(context, opNode),
           _collectionHandle{std::move(collectionHandle)},
           _operation{operation} {
-        auto& onSession = opNode["OnSession"];
-        if (!onSession || !onSession.to<bool>()){
-            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                "'withTransaction' requires explicit 'OnSession: true'."));
+        if (!onSession) {
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("'withTransaction' expects 'OnSession: true'."));
         };
-        _onSession = onSession.to<bool>();
+        _onSession = onSession;
         auto& opsInTxn = opNode["OperationsInTransaction"];
         if (!opsInTxn.isSequence()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
@@ -1274,6 +1287,10 @@ std::unordered_map<std::string, OpCallback&> getOpConstructors() {
     // Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
     std::unordered_map<std::string, OpCallback&> opConstructors = {
         {"bulkWrite", collectionHandleCallback<BaseOperation, OpCallback, BulkWriteOperation>},
+        {"withTransaction",
+         collectionHandleCallback<BaseOperation, OpCallback, WithTransactionOperation>},
+        {"startTransaction", baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
+        {"commitTransaction", baseCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
         {"aggregate", baseCallback<BaseOperation, OpCallback, AggregateOperation>},
         {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
         {"estimatedDocumentCount",
@@ -1617,7 +1634,10 @@ struct CrudActor::PhaseConfig {
 
         auto& yamlCommand = node["OperationCommand"];
         auto opName = node["OperationName"].to<std::string>();
-        auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
+        std::set<std::string> transactionOps = {
+            "startTransaction", "commitTransaction", "withTransaction"};
+        bool isTransactionOp = transactionOps.find(opName) == transactionOps.end();
+        auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(isTransactionOp);        
         auto metricsName = phaseContext["MetricsName"].maybe<std::string>();
         auto opMetricsName = node["OperationMetricsName"].maybe<std::string>();
         metrics::Operation opMetrics;
@@ -1639,14 +1659,6 @@ struct CrudActor::PhaseConfig {
             opMetrics = phaseContext.actor().operation(*opMetricsName, id);
         } else {
             opMetrics = phaseContext.actor().operation(opName, id);
-        }
-
-        if (opName == "withTransaction") {
-            return std::make_unique<WithTransactionOperation>(yamlCommand, collectionHandle, opMetrics, phaseContext, id);
-        } else if (opName == "startTransaction") {
-            return std::make_unique<StartTransactionOperation>(yamlCommand, opMetrics, phaseContext, id);
-        } else if (opName == "commitTransaction") {
-            return std::make_unique<CommitTransactionOperation>(yamlCommand, opMetrics, phaseContext, id);
         }
 
         auto opConstructors = getOpConstructors();

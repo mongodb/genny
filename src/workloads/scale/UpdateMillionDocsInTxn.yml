@@ -59,7 +59,6 @@ Actors:
     Operations:
     - OperationName: withTransaction
       OperationCommand:
-        OnSession: true
         Options:
           WriteConcern:
             Level: majority
