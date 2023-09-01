@@ -8,7 +8,7 @@ Description: |
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
-  MaxPhases: &MaxPhases 9
+  MaxPhases: &MaxPhases 8
   DocumentCount: &DocumentCount 10
 
 Keywords:
@@ -48,27 +48,12 @@ ActorTemplates:
               ]
 
 Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
-
 - Name: InsertData
   Type: Loader
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [1]
+      Active: [0]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -91,7 +76,7 @@ Actors:
   Database: *Database
   Phases:
     OnlyActiveInPhases:
-      Active: [2]
+      Active: [1]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -101,7 +86,7 @@ Actors:
     TemplateParameters:
       Name: RunMatchExpressionOrWith10Clauses
       Repeat: 1000
-      ActivePhase: 3
+      ActivePhase: 2
       NumberOfClauses: 10
 
 - ActorFromTemplate:
@@ -109,7 +94,7 @@ Actors:
     TemplateParameters:
       Name: RunMatchExpressionOrWith25Clauses
       Repeat: 1000
-      ActivePhase: 4
+      ActivePhase: 3
       NumberOfClauses: 20
 
 - ActorFromTemplate:
@@ -117,7 +102,7 @@ Actors:
     TemplateParameters:
       Name: RunMatchExpressionOrWith50Clauses
       Repeat: 1000
-      ActivePhase: 5
+      ActivePhase: 4
       NumberOfClauses: 50
 
 - ActorFromTemplate:
@@ -125,7 +110,7 @@ Actors:
     TemplateParameters:
       Name: RunMatchExpressionOrWith100Clauses
       Repeat: 1000
-      ActivePhase: 6
+      ActivePhase: 5
       NumberOfClauses: 100
 
 - ActorFromTemplate:
@@ -133,7 +118,7 @@ Actors:
     TemplateParameters:
       Name: RunMatchExpressionOrWith1000Clauses
       Repeat: 100
-      ActivePhase: 7
+      ActivePhase: 6
       NumberOfClauses: 1000
 
 - ActorFromTemplate:
@@ -141,7 +126,7 @@ Actors:
     TemplateParameters:
       Name: RunMatchExpressionOrWith10000Clauses
       Repeat: 10
-      ActivePhase: 8
+      ActivePhase: 7
       NumberOfClauses: 10000
 
 - ActorFromTemplate:
@@ -149,7 +134,7 @@ Actors:
     TemplateParameters:
       Name: RunMatchExpressionOrWith50000Clauses
       Repeat: 10
-      ActivePhase: 9
+      ActivePhase: 8
       NumberOfClauses: 50000
 
 AutoRun:
