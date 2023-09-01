@@ -163,4 +163,4 @@ AutoRun:
       - standalone-query-stats
     branch_name:
       $gte:
-        v7.0
+        v7.2
