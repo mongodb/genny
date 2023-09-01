@@ -1648,6 +1648,28 @@ struct CrudActor::PhaseConfig {
                                                                 "' not supported in Crud Actor."));
         }
 
+        /*
+        The code section below is equivalent to the following pseudocode (because
+        `metrics::Operation` doesn't currently allow declaration without initialization):
+
+        metrics::Operation opMetrics;
+        auto metricsName = phaseContext["MetricsName"].maybe<std::string>();
+        auto opMetricsName = node["OperationMetricsName"].maybe<std::string>();
+        if (metricsName && opMetricsName) {
+            opMetrics = phaseContext.actor().operation(*metricsName + "." + *opMetricsName, id);
+        } else if (metricsName) {
+            opMetrics = phaseContext.operation(opName, id);
+        }
+        else if (opMetricsName) {
+            opMetrics = phaseContext.actor().operation(*opMetricsName, id);
+        } else {
+            opMetrics = phaseContext.actor().operation(opName, id);
+        }
+        auto opCreator = op->second;
+        return opCreator(yamlCommand, onSession, std::move(collectionHandle), opMetrics,
+                         phaseContext, id);
+        */
+
         // If the yaml specified MetricsName in the Phase block, then associate the metrics
         // with the Phase; otherwise, associate with the Actor (e.g. all bulkWrite
         // operations get recorded together across all Phases). The latter case (not
