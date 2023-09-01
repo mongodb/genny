@@ -146,7 +146,7 @@ Actors:
     TemplateName: MatchExpressionWithOrClausesTemplate
     TemplateParameters:
       Name: RunMatchExpressionOrWith50000Clauses
-      Repeat: 5
+      Repeat: 10
       ActivePhase: 9
       NumberOfClauses: 50000
 
