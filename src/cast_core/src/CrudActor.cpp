@@ -1637,7 +1637,7 @@ struct CrudActor::PhaseConfig {
         auto opMetricsName = node["OperationMetricsName"].maybe<std::string>().value_or(opName);
         std::set<std::string> transactionOps = {
             "startTransaction", "commitTransaction", "withTransaction"};
-        bool isTransactionOp = transactionOps.find(opName) == transactionOps.end();
+        bool isTransactionOp = transactionOps.find(opName) != transactionOps.end();
         auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(isTransactionOp);
 
         auto opConstructors = getOpConstructors();
