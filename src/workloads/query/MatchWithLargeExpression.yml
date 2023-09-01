@@ -8,7 +8,7 @@ Description: |
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
-  MaxPhases: &MaxPhases 7
+  MaxPhases: &MaxPhases 9
   DocumentCount: &DocumentCount 10
 
 Keywords:
@@ -97,9 +97,25 @@ Actors:
 - ActorFromTemplate:
     TemplateName: MatchExpressionWithOrClausesTemplate
     TemplateParameters:
-      Name: RunMatchExpressionOrWith50Clauses
+      Name: RunMatchExpressionOrWith10Clauses
       Repeat: 1000
       ActivePhase: 3
+      NumberOfClauses: 10
+
+- ActorFromTemplate:
+    TemplateName: MatchExpressionWithOrClausesTemplate
+    TemplateParameters:
+      Name: RunMatchExpressionOrWith25Clauses
+      Repeat: 1000
+      ActivePhase: 4
+      NumberOfClauses: 20
+
+- ActorFromTemplate:
+    TemplateName: MatchExpressionWithOrClausesTemplate
+    TemplateParameters:
+      Name: RunMatchExpressionOrWith50Clauses
+      Repeat: 1000
+      ActivePhase: 5
       NumberOfClauses: 50
 
 - ActorFromTemplate:
@@ -107,7 +123,7 @@ Actors:
     TemplateParameters:
       Name: RunMatchExpressionOrWith100Clauses
       Repeat: 1000
-      ActivePhase: 4
+      ActivePhase: 6
       NumberOfClauses: 100
 
 - ActorFromTemplate:
@@ -115,7 +131,7 @@ Actors:
     TemplateParameters:
       Name: RunMatchExpressionOrWith1000Clauses
       Repeat: 100
-      ActivePhase: 5
+      ActivePhase: 7
       NumberOfClauses: 1000
 
 - ActorFromTemplate:
@@ -123,7 +139,7 @@ Actors:
     TemplateParameters:
       Name: RunMatchExpressionOrWith10000Clauses
       Repeat: 10
-      ActivePhase: 6
+      ActivePhase: 8
       NumberOfClauses: 10000
 
 - ActorFromTemplate:
@@ -131,7 +147,7 @@ Actors:
     TemplateParameters:
       Name: RunMatchExpressionOrWith50000Clauses
       Repeat: 5
-      ActivePhase: 7
+      ActivePhase: 9
       NumberOfClauses: 50000
 
 AutoRun:
