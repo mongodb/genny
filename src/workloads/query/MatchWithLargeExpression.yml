@@ -17,6 +17,8 @@ Keywords:
 - QuiesceActor
 - insert
 - Aggregation
+- matcher
+- expressions
 
 ActorTemplates:
 - TemplateName: MatchExpressionWithOrClausesTemplate
