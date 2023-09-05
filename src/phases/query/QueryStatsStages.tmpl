@@ -51,6 +51,7 @@ GlobalDefaults:
   PrepopulateRepeat: &PrepopulateRepeat {^NumExpr: {withExpression: "targetMB * 100 + 1", andValues: {targetMB: *PrepopulateMB}}}
   # Needs to be edited if the phases change.
   LastPhase: &LastPhase {^NumExpr: {withExpression: "phase + 5", andValues: {phase: *StartingPhase}}}
+  AggregatePhase: &AggregatePhase {^Parameter: {Name: AggregatePhase, Default: *LastPhase}}
 
 # One-time setup for the workload, run at the beginning of the workload.
 SetupStage:
@@ -140,7 +141,7 @@ StageTemplate: &StageTemplate
     Path: ../../../phases/query/QueryStatsActors.tmpl
     Key: QueryStatsFindCommandActor
     Parameters:
-      Name: {^PreprocessorFormatString: {format: "FindCommand-%s", withArgs: [*FormattedSuffix]}}
+      Name: {^PreprocessorFormatString: {format: "FindCommand-%s-Phase%d", withArgs: [*FormattedSuffix, *LastPhase]}}
       Phases: *LastPhase
       MaxPhases: *MaxPhases
       Duration: *FindCommandDuration
@@ -153,8 +154,8 @@ QueryStatsStageTemplate:
       Path: ../../../phases/query/QueryStatsActors.tmpl
       Key: QueryStatsAggregateActor
       Parameters:
-        Name: {^PreprocessorFormatString: {format: "QueryStatsAggregate-%s", withArgs: [*FormattedSuffix]}}
-        Phases: {^Parameter: {Name: AggregatePhase, Default: *LastPhase}}
+        Name: {^PreprocessorFormatString: {format: "QueryStatsAggregate-%s-Phase%d", withArgs: [*FormattedSuffix, *AggregatePhase]}}
+        Phases: *AggregatePhase
         MaxPhases: *MaxPhases
         Duration: *AggregateDuration
         QueryStatsParameters: *QueryStatsParameters
