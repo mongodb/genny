@@ -8,9 +8,9 @@ Description: |
   and the metaField is "tags". There are 20736000 documents in the collection.
 
 Keywords:
-- timeseries
-- aggregate
-- group
+  - timeseries
+  - aggregate
+  - group
 
 GlobalDefaults:
   Database: &Database test
@@ -21,7 +21,7 @@ GlobalDefaults:
 # The dates below are chosen for different $match queries. The dates in the tsbs dataset are
 # between 2016-01-01 and 2016-01-25. The dates for the queries were chosen to be in the middle of the
 # dataset. Date0 and Date1 should be close together, since we want to measure the performance
-# improvement of removing the 'eventFilter' in the $match queries. 
+# improvement of removing the 'eventFilter' in the $match queries.
 Date0: &DateForBucketAlign
   LoadConfig:
     Path: "../../phases/query/GetBsonDate.yml"
@@ -37,143 +37,212 @@ Date1: &DateForBucketNotAlign
       date: "2016-01-13T01:03:02"
 
 Actors:
-# The data is already loaded into the collection from the dsi configuration.
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
+  # The data is already loaded into the collection from the dsi configuration.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
 
-# Testing during development showed no significant changes in runtime between the different 
-# dateTrunc.unit values. We chose "year", so the optimization would  apply for many values of 
-# bucketMaxSpanSeconds, if the user decides to adjust the bucketing parameter.
-- Name: DateTruncYear
-  Type: CrudActor
-  Database: *Database
-  Threads: 10
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Database: *Database
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName:
-          OperationName: aggregate
-          OperationCommand:
-            Pipeline: [
-              {$group: {
-                _id: {t: {$dateTrunc: {date: "$time", unit: "year"}}},
-                min: {$min: "$usage_steal"},
-                max: {$max: "$usage_steal"}
-              }}
-            ]
-# This actor was used during development to measure the improvement in performance for 
-# the rewrite. However, with tsbs data this actor is very slow and therefore we decided to 
-# remove it from this workload in production.
-# - Name: DateTruncYearNoOpt
-#   Type: CrudActor
-#   Database: *Database
-#   Threads: 10
-#   Phases:
-#     OnlyActiveInPhases:
-#       Active: [2]
-      # NopInPhasesUpTo: *maxPhases
-      # PhaseConfig:
-      #   Repeat: *Repeat
-      #   Database: *Database
-      #   Collection: *Collection
-      #   Operations:
-      #   - OperationMetricsName:
-      #     OperationName: aggregate
-      #     OperationCommand:
-      #       Pipeline: [
-      #         {$_internalInhibitOptimization: {}},
-      #         {$group: {
-      #           _id: {t: {$dateTrunc: {date: "$time", unit: "year"}}},
-      #           min: {$min: "$usage_steal"},
-      #           max: {$max: "$usage_steal"}
-      #         }}
-      #       ]
+  # Testing during development showed no significant changes in runtime between the different
+  # dateTrunc.unit values. We chose "year", so the optimization would  apply for many values of
+  # bucketMaxSpanSeconds, if the user decides to adjust the bucketing parameter.
+  - Name: DateTruncYear
+    Type: CrudActor
+    Database: *Database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Database: *Database
+          Collection: *Collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              t:
+                                { $dateTrunc: { date: "$time", unit: "year" } },
+                            },
+                          min: { $min: "$usage_steal" },
+                          max: { $max: "$usage_steal" },
+                        },
+                    },
+                  ]
 
-# $lt query that aligns with the bucket boundaries.
-- Name: MatchLTBucketAlign
-  Type: CrudActor
-  Database: *Database
-  Threads: 10
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Database: *Database
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName:
-          OperationName: aggregate
-          OperationCommand:
-            Pipeline: [ {$match: {"time": {$lt: *DateForBucketAlign}}}  ]
+  # This actor was used during development to measure the improvement in performance for
+  # the rewrite. However, with tsbs data this actor is very slow and therefore we decided to
+  # remove it from this workload in production.
+  # - Name: DateTruncYearNoOpt
+  #   Type: CrudActor
+  #   Database: *Database
+  #   Threads: 10
+  #   Phases:
+  #     OnlyActiveInPhases:
+  #       Active: [2]
+  #       NopInPhasesUpTo: *maxPhases
+  #       PhaseConfig:
+  #         Repeat: *Repeat
+  #         Database: *Database
+  #         Collection: *Collection
+  #         Operations:
+  #         - OperationMetricsName:
+  #           OperationName: aggregate
+  #           OperationCommand:
+  #             Pipeline: [
+  #               {$_internalInhibitOptimization: {}},
+  #               {$group: {
+  #     _id: {t: {$dateTrunc: {date: "$time", unit: "year"}}},
+  #     min: {$min: "$usage_steal"},
+  #     max: {$max: "$usage_steal"}
+  #   }}
+  # ]
 
-- Name: MatchLTBucketNotAlign
-  Type: CrudActor
-  Database: *Database
-  Threads: 10
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Database: *Database
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName:
-          OperationName: aggregate
-          OperationCommand:
-            Pipeline: [ {$match: {"time": {$lt: *DateForBucketNotAlign}}}  ]
+  # $lt query that aligns with the bucket boundaries.
+  - Name: MatchLTBucketAlign
+    Type: CrudActor
+    Database: *Database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Database: *Database
+          Collection: *Collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { "time": { $lt: *DateForBucketAlign } } },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              t:
+                                { $dateTrunc: { date: "$time", unit: "year" } },
+                            },
+                          min: { $min: "$usage_steal" },
+                          max: { $max: "$usage_steal" },
+                        },
+                    },
+                  ]
 
-# gte query that aligns with the bucket boundaries.
-- Name: MatchGTEBucketAlign
-  Type: CrudActor
-  Database: *Database
-  Threads: 10
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Database: *Database
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName:
-          OperationName: aggregate
-          OperationCommand:
-            Pipeline: [ {$match: {"time": {$gte: *DateForBucketAlign}}}  ]
+  - Name: MatchLTBucketNotAlign
+    Type: CrudActor
+    Database: *Database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Database: *Database
+          Collection: *Collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { "time": { $lt: *DateForBucketNotAlign } } },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              t:
+                                { $dateTrunc: { date: "$time", unit: "year" } },
+                            },
+                          min: { $min: "$usage_steal" },
+                          max: { $max: "$usage_steal" },
+                        },
+                    },
+                  ]
 
-# gte query that aligns with the bucket boundaries.
-- Name: MatchGTEBucketNotAlign
-  Type: CrudActor
-  Database: *Database
-  Threads: 10
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Database: *Database
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName:
-          OperationName: aggregate
-          OperationCommand:
-            Pipeline: [ {$match: {"time": {$gte: *DateForBucketNotAlign}}}  ]
+  # gte query that aligns with the bucket boundaries.
+  - Name: MatchGTEBucketAlign
+    Type: CrudActor
+    Database: *Database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Database: *Database
+          Collection: *Collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { "time": { $gte: *DateForBucketAlign } } },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              t:
+                                { $dateTrunc: { date: "$time", unit: "year" } },
+                            },
+                          min: { $min: "$usage_steal" },
+                          max: { $max: "$usage_steal" },
+                        },
+                    },
+                  ]
+
+  # gte query that aligns with the bucket boundaries.
+  - Name: MatchGTEBucketNotAlign
+    Type: CrudActor
+    Database: *Database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Database: *Database
+          Collection: *Collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { "time": { $gte: *DateForBucketNotAlign } } },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              t:
+                                { $dateTrunc: { date: "$time", unit: "year" } },
+                            },
+                          min: { $min: "$usage_steal" },
+                          max: { $max: "$usage_steal" },
+                        },
+                    },
+                  ]
