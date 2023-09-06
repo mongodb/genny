@@ -19,6 +19,7 @@
 
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
+#include <bsoncxx/decimal128.hpp>
 #include <bsoncxx/exception/exception.hpp>
 #include <bsoncxx/json.hpp>
 #include <mongocxx/client.hpp>
@@ -105,6 +106,9 @@ private:
         Query(const Node& yaml);
         std::string queryType;
         std::optional<int> contention;
+        std::optional<int> sparsity;
+        std::optional<int> precision;
+        std::optional<std::string> min, max;
     };
     std::vector<Query> _queries;
 };
@@ -335,6 +339,10 @@ void FLEEncryptedField::appendEncryptInfo(sub_document subdoc) const {
 QueryableEncryptedField::Query::Query(const Node& yaml) {
     queryType = yaml["queryType"].to<std::string>();
     contention = yaml["contention"].maybe<int>();
+    sparsity = yaml["sparsity"].maybe<int>();
+    precision = yaml["precision"].maybe<int>();
+    min = yaml["min"].maybe<std::string>();
+    max = yaml["max"].maybe<std::string>();
 }
 
 QueryableEncryptedField::QueryableEncryptedField(const Node& yaml) : EncryptedField(yaml) {
@@ -375,6 +383,36 @@ void QueryableEncryptedField::appendEncryptInfo(sub_document subdoc) const {
                 queryDoc.append(kvp("queryType", query.queryType));
                 if (query.contention) {
                     queryDoc.append(kvp("contention", query.contention.value()));
+                }
+
+                auto append_string_as_number_with_correct_type = [&](const std::string& s, const std::string& n) {
+                    if(_type == "double") {
+                        queryDoc.append(kvp(s, std::stod(n)));
+                    } else if(_type == "decimal") {
+                        queryDoc.append(kvp(s, bsoncxx::decimal128(n)));
+                    } else if(_type == "long") {
+                        queryDoc.append(kvp(s, std::stol(n)));
+                    } else if(_type == "int") {
+                        queryDoc.append(kvp(s, std::stoi(n)));
+                    } else {
+                        std::ostringstream ss;
+                        ss << "Expected number bsonType, but got: \"" << _type << "\"";
+                        throw InvalidConfigurationException(ss.str());
+                    }
+                };
+                if(query.queryType == "rangePreview") {
+                    if(query.min) {
+                        append_string_as_number_with_correct_type("min", query.min.value());
+                    }
+                    if(query.max) {
+                        append_string_as_number_with_correct_type("max", query.max.value());
+                    }
+                    if(query.sparsity) {
+                        queryDoc.append(kvp("sparsity", query.sparsity.value()));
+                    }
+                    if(query.precision) {
+                        queryDoc.append(kvp("precision", query.precision.value()));
+                    }
                 }
             });
         }
