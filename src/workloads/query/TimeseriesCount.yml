@@ -14,10 +14,10 @@ GlobalDefaults:
   Database: &database test
   Collection: &collection Collection0
   MaxPhases: &maxPhases 10
-  repeat: &repeat 100
+  repeat: &repeat 10
 
 Actors:
-  # Clear any pre-existing collection state. Helpful to avoid errors for local testing.
+  # Clear any pre-existing collection state. Helpful to avoid errors during local testing.
   - Name: ClearCollection
     Type: CrudActor
     Database: *database
@@ -66,8 +66,8 @@ Actors:
       Path: "../../phases/query/GroupStagesOnComputedFields.yml"
       Key: InsertDataTemplate
       Parameters:
-        Active: [2]
-        NopInPhasesUpTo: *maxPhases
+        active: [2]
+        nopInPhasesUpTo: *maxPhases
 
   # Phase 3: Ensure all data is synced to disk.
   - Name: Quiesce

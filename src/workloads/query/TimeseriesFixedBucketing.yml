@@ -112,7 +112,8 @@ Actors:
   #   }}
   # ]
 
-  # $lt query that aligns with the bucket boundaries.
+  # $lt query that aligns with the bucket boundaries. This allows for further optimization, such as
+  # rewriting the $group stage to occur.
   - Name: MatchLTBucketAlign
     Type: CrudActor
     Database: *Database
@@ -146,6 +147,8 @@ Actors:
                     },
                   ]
 
+  # lt query that does not align with the bucket boundaries. This prevents further optimizations, such as
+  # rewriting the $group stage.
   - Name: MatchLTBucketNotAlign
     Type: CrudActor
     Database: *Database
@@ -163,23 +166,10 @@ Actors:
               OperationName: aggregate
               OperationCommand:
                 Pipeline:
-                  [
-                    { $match: { "time": { $lt: *DateForBucketNotAlign } } },
-                    {
-                      $group:
-                        {
-                          _id:
-                            {
-                              t:
-                                { $dateTrunc: { date: "$time", unit: "year" } },
-                            },
-                          min: { $min: "$usage_steal" },
-                          max: { $max: "$usage_steal" },
-                        },
-                    },
-                  ]
+                  [{ $match: { "time": { $lt: *DateForBucketNotAlign } } }]
 
-  # gte query that aligns with the bucket boundaries.
+  # gte query that aligns with the bucket boundaries. This allows for further optimization, such as
+  # rewriting the $group stage to occur.
   - Name: MatchGTEBucketAlign
     Type: CrudActor
     Database: *Database
@@ -213,7 +203,8 @@ Actors:
                     },
                   ]
 
-  # gte query that aligns with the bucket boundaries.
+  # gte query that does not align with the bucket boundaries. This prevents further optimizations, such as
+  # rewriting the $group stage.
   - Name: MatchGTEBucketNotAlign
     Type: CrudActor
     Database: *Database
@@ -231,18 +222,4 @@ Actors:
               OperationName: aggregate
               OperationCommand:
                 Pipeline:
-                  [
-                    { $match: { "time": { $gte: *DateForBucketNotAlign } } },
-                    {
-                      $group:
-                        {
-                          _id:
-                            {
-                              t:
-                                { $dateTrunc: { date: "$time", unit: "year" } },
-                            },
-                          min: { $min: "$usage_steal" },
-                          max: { $max: "$usage_steal" },
-                        },
-                    },
-                  ]
+                  [{ $match: { "time": { $gte: *DateForBucketNotAlign } } }]
