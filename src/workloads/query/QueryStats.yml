@@ -159,7 +159,17 @@ AutoRun:
       $eq:
       - standalone-all-feature-flags
       - standalone-query-stats
+      - standalone
       - standalone-query-stats-small-rate-limit
+      - shard
+      - shard-query-stats
+      - shard-limited-query-stats
+      - shard-lite
+      - shard-lite-query-stats
+      - shard-lite-limited-query-stats
+      - single-replica
       - single-replica-query-stats
+      - replica
       - replica-query-stats
+      - atlas-like-replica.2022-10
       - atlas-like-replica-query-stats.2022-10
