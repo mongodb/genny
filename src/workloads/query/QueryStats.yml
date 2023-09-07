@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  This is the main workload for testing $queryStats performance regressions.
+  This workload tests $queryStats performance.
 
 KeyWords:
 - queryStats
@@ -64,7 +64,7 @@ Actors:
     Parameters:
       MaxPhase: *MaxPhase
       Phases: [12, 22, 32, 42]
-      RateLimitHz: 0
+      RateLimitHz: -1
 - LoadConfig:
     Path: ../../phases/query/QueryStats.tmpl
     Key: QuiesceActor
