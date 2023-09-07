@@ -1,0 +1,225 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-integration"
+Description: |
+  This test exercises the behavior of the time series optimization when the collection has 
+  fixed buckets. This workload uses tsbs data that is imported in the dsi configuration. See 
+  'configurations/test_control/test_control.fixed_bucketing.yml' for all the details.
+  The data is set up with the fixed bucketing parameters set to 3600 and the timeField is "time"
+  and the metaField is "tags". There are 20736000 documents in the collection.
+
+Keywords:
+  - timeseries
+  - aggregate
+  - group
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection coll
+  maxPhases: &maxPhases 10
+  Repeat: &Repeat 5
+
+# The dates below are chosen for different $match queries. The dates in the tsbs dataset are
+# between 2016-01-01 and 2016-01-25. The dates for the queries were chosen to be in the middle of the
+# dataset. Date0 and Date1 should be close together, since we want to measure the performance
+# improvement of removing the 'eventFilter' in the $match queries.
+Date0: &DateForBucketAlign
+  LoadConfig:
+    Path: "../../phases/query/GetBsonDate.yml"
+    Key: GetBsonDate
+    Parameters:
+      date: "2016-01-13T01:00:00"
+
+Date1: &DateForBucketNotAlign
+  LoadConfig:
+    Path: "../../phases/query/GetBsonDate.yml"
+    Key: GetBsonDate
+    Parameters:
+      date: "2016-01-13T01:03:02"
+
+Actors:
+  # The data is already loaded into the collection from the dsi configuration.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+
+  # Testing during development showed no significant changes in runtime between the different
+  # dateTrunc.unit values. We chose "year", so the optimization would  apply for many values of
+  # bucketMaxSpanSeconds, if the user decides to adjust the bucketing parameter.
+  - Name: DateTruncYear
+    Type: CrudActor
+    Database: *Database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Database: *Database
+          Collection: *Collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              t:
+                                { $dateTrunc: { date: "$time", unit: "year" } },
+                            },
+                          min: { $min: "$usage_steal" },
+                          max: { $max: "$usage_steal" },
+                        },
+                    },
+                  ]
+
+  # This actor was used during development to measure the improvement in performance for
+  # the rewrite. However, with tsbs data this actor is very slow and therefore we decided to
+  # remove it from this workload in production.
+  # - Name: DateTruncYearNoOpt
+  #   Type: CrudActor
+  #   Database: *Database
+  #   Threads: 10
+  #   Phases:
+  #     OnlyActiveInPhases:
+  #       Active: [2]
+  #       NopInPhasesUpTo: *maxPhases
+  #       PhaseConfig:
+  #         Repeat: *Repeat
+  #         Database: *Database
+  #         Collection: *Collection
+  #         Operations:
+  #         - OperationMetricsName:
+  #           OperationName: aggregate
+  #           OperationCommand:
+  #             Pipeline: [
+  #               {$_internalInhibitOptimization: {}},
+  #               {$group: {
+  #     _id: {t: {$dateTrunc: {date: "$time", unit: "year"}}},
+  #     min: {$min: "$usage_steal"},
+  #     max: {$max: "$usage_steal"}
+  #   }}
+  # ]
+
+  # $lt query that aligns with the bucket boundaries. This allows for further optimization, such as
+  # rewriting the $group stage to occur.
+  - Name: MatchLTBucketAlign
+    Type: CrudActor
+    Database: *Database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Database: *Database
+          Collection: *Collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { "time": { $lt: *DateForBucketAlign } } },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              t:
+                                { $dateTrunc: { date: "$time", unit: "year" } },
+                            },
+                          min: { $min: "$usage_steal" },
+                          max: { $max: "$usage_steal" },
+                        },
+                    },
+                  ]
+
+  # lt query that does not align with the bucket boundaries. This prevents further optimizations, such as
+  # rewriting the $group stage.
+  - Name: MatchLTBucketNotAlign
+    Type: CrudActor
+    Database: *Database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Database: *Database
+          Collection: *Collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [{ $match: { "time": { $lt: *DateForBucketNotAlign } } }]
+
+  # gte query that aligns with the bucket boundaries. This allows for further optimization, such as
+  # rewriting the $group stage to occur.
+  - Name: MatchGTEBucketAlign
+    Type: CrudActor
+    Database: *Database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Database: *Database
+          Collection: *Collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { "time": { $gte: *DateForBucketAlign } } },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              t:
+                                { $dateTrunc: { date: "$time", unit: "year" } },
+                            },
+                          min: { $min: "$usage_steal" },
+                          max: { $max: "$usage_steal" },
+                        },
+                    },
+                  ]
+
+  # gte query that does not align with the bucket boundaries. This prevents further optimizations, such as
+  # rewriting the $group stage.
+  - Name: MatchGTEBucketNotAlign
+    Type: CrudActor
+    Database: *Database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Database: *Database
+          Collection: *Collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [{ $match: { "time": { $gte: *DateForBucketNotAlign } } }]
