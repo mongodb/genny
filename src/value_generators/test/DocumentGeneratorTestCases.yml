@@ -1439,3 +1439,108 @@ Tests:
     ThenReturns:
         - foo:
           - "1.0"
+
+  # https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_(random)
+  # Check uuid with the following python:
+  #   import base64
+  #   b = b'00000000-0000-0000-0000-000000000000'
+  #   s = base64.b64encode(b).decode()
+  #   assert base64.b64decode(s) == b
+  #
+  - Name: Invalid subType
+    GivenTemplate:
+      a: {^UUID: {hex: "", subType: 5}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Empty Uuid
+    GivenTemplate:
+      a: {^UUID: {hex: ""}}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "", "subType": "04" } } }
+
+  - Name: Nil Uuid
+    GivenTemplate:
+      a: {^UUID: {hex: "00000000-0000-0000-0000-000000000000" }}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw", "subType": "04" } } }
+
+  - Name: Max Uuid
+    GivenTemplate:
+      a: {^UUID: {hex: "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF" }}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "RkZGRkZGRkYtRkZGRi1GRkZGLUZGRkYtRkZGRkZGRkZGRkZG", "subType": "04" } } }
+
+  - Name: Value Uuid
+    GivenTemplate:
+      a: {^UUID: {hex: "3b241101-e2bb-4255-8caf-4136c566a962" }}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "M2IyNDExMDEtZTJiYi00MjU1LThjYWYtNDEzNmM1NjZhOTYy", "subType": "04" } } }
+
+  - Name: Deadbeef Uuid
+    GivenTemplate:
+      a: {^UUID: {hex: "deadbeef" }}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "ZGVhZGJlZWY=", "subType": "04" } } }
+
+  - Name: Fixed Uuid
+    GivenTemplate:
+      a: {^UUID: {hex: "00000000-4000-8000-0000-000000000021" }}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "MDAwMDAwMDAtNDAwMC04MDAwLTAwMDAtMDAwMDAwMDAwMDIx", "subType": "04" } } }
+
+  - Name: RandomString Uuid
+    GivenTemplate:
+      a: {^UUID: {hex: { ^Join: { array: [ "00000000-4000-8000-0000-000000", { ^RandomString: { length: 2, alphabet: "0123456789abcdef" } } ], sep: "" } }}}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "MDAwMDAwMDAtNDAwMC04MDAwLTAwMDAtMDAwMDAwMjE=", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "MDAwMDAwMDAtNDAwMC04MDAwLTAwMDAtMDAwMDAwMDE=", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "MDAwMDAwMDAtNDAwMC04MDAwLTAwMDAtMDAwMDAwNWQ=", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "MDAwMDAwMDAtNDAwMC04MDAwLTAwMDAtMDAwMDAwYzQ=", "subType": "04" } } }
+
+  - Name: FormatRandom Uuid
+    GivenTemplate:
+      a: {^UUID: {hex: {^FormatString: {format: "3b241101-e2bb-4255-8caf-4136c566a9%02x",  withArgs: [{^RandomInt: {min: 0, max: 255}}]}}}}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "M2IyNDExMDEtZTJiYi00MjU1LThjYWYtNDEzNmM1NjZhOTI3", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "M2IyNDExMDEtZTJiYi00MjU1LThjYWYtNDEzNmM1NjZhOTFi", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "M2IyNDExMDEtZTJiYi00MjU1LThjYWYtNDEzNmM1NjZhOTA1", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "M2IyNDExMDEtZTJiYi00MjU1LThjYWYtNDEzNmM1NjZhOTEy", "subType": "04" } } }
+
+  - Name: FormatRandomFull Uuid
+    GivenTemplate:
+      a: {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x",
+                                        withArgs: [
+                                          {^RandomInt: {min: 0, max: 0xFFFFFFFF}},         #      4294967295
+                                          {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
+                                          {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
+                                          {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
+                                          {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}}]}}}} # 281474976710655
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "MjdjNzk1OGItMWI2ZS0wNWFjLTEyYjYtNTdlZGM5MmUxYWU0", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "ZDM5ZjMzNzgtY2RhNC00Mjk2LTY2MWItMjM1NjE0NmVlYTAy", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "N2I0MWVjZjEtMzRkMS02ZDY3LWI3ZDEtODY3NTAyM2YzNjdl", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "MDVmNjIyNWMtYjY2ZC05OGM4LWFkZGYtNjYzOGI0MGQ2YjE3", "subType": "04" } } }
+
+  - Name: Random Uuids
+    GivenTemplate:
+      a: [
+        {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x",
+                                       withArgs: [
+                                         {^RandomInt: {min: 0, max: 0xFFFFFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}}]}}}},
+        {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x",
+                                       withArgs: [
+                                         {^RandomInt: {min: 0, max: 0xFFFFFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}}]}}}},
+      ]
+    ThenReturns:
+      - {
+          "a": [ { "$binary": { "base64": "MjdjNzk1OGItMWI2ZS0wNWFjLTEyYjYtNTdlZGM5MmUxYWU0", "subType": "04" } },
+                 { "$binary": { "base64": "ZDM5ZjMzNzgtY2RhNC00Mjk2LTY2MWItMjM1NjE0NmVlYTAy", "subType": "04" } } ]
+        }

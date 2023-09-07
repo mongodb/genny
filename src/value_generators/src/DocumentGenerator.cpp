@@ -262,6 +262,7 @@ const static boost::posix_time::ptime max_date{boost::gregorian::date(2150, 1, 1
 // Documentation is at the implementations-site.
 int64_t parseStringToMillis(const std::string& datetime);
 UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorArgs);
+UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorArgs, int64_t d);
 UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
                                                            GeneratorArgs generatorArgs);
 UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generatorArgs);
@@ -935,6 +936,53 @@ private:
     DefaultRandom& _rng;
     const Node& _node;
     const UniqueGenerator<std::string> _hexGen;
+};
+
+/**
+ * `{^UUID: {hex: "3b241101-e2bb-4255-8caf-4136c566a962"} }`
+ *  Generator for non-legacy UUIDs (0x04). hex can itself be a generator so the string can be
+ *  generated in many fashions ^Join, ^FormatString, ... etc.
+ *
+ *  The input format accepted for the hex field is 8-4-4-4-12 format. The code is agnostic as to the
+ *  UUID version.
+ *
+ *  see https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_(random)
+ */
+class UuidGenerator : public Generator<bsoncxx::types::b_binary> {
+public:
+    UuidGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _rng{generatorArgs.rng},
+          _node{node},
+          _hexGen{stringGenerator(node["hex"], generatorArgs)},
+          _subTypeGen{intGenerator(node["subType"],
+                                   generatorArgs,
+                                   static_cast<int64_t>(bsoncxx::binary_sub_type::k_uuid))} {}
+
+    bsoncxx::types::b_binary evaluate() override {
+        hex = _hexGen->evaluate();
+        return bsoncxx::types::b_binary{generateSubType(),
+                                        static_cast<uint32_t>(hex.length()),
+                                        reinterpret_cast<const uint8_t*>(hex.data())};
+    }
+
+private:
+    bsoncxx::binary_sub_type generateSubType() {
+        int64_t sub_type = _subTypeGen->evaluate();
+
+        if (static_cast<int64_t>(bsoncxx::binary_sub_type::k_uuid) != sub_type) {
+            std::stringstream msg;
+            msg << "Malformed binary sub_type. UUID only supports bsoncxx::binary_sub_type::k_uuid("
+                << static_cast<int64_t>(bsoncxx::binary_sub_type::k_uuid) << "), got " << sub_type;
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+        }
+        return static_cast<bsoncxx::binary_sub_type>(sub_type);
+    }
+
+    DefaultRandom& _rng;
+    const Node& _node;
+    const UniqueGenerator<std::string> _hexGen;
+    const UniqueGenerator<int64_t> _subTypeGen;
+    std::string hex;
 };
 
 class StringGenerator : public Generator<std::string> {
@@ -1807,6 +1855,10 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ObjectIdGenerator>(node, generatorArgs);
          }},
+        {"^UUID",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<UuidGenerator>(node, generatorArgs);
+         }},
         {"^Verbatim",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return valueGenerator<true, UniqueAppendable>(node, generatorArgs, allParsers);
@@ -2115,6 +2167,28 @@ UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorA
         return parserPair->first(node[parserPair->second], generatorArgs);
     }
     return std::make_unique<ConstantAppender<int64_t>>(node.to<int64_t>());
+}
+
+/**
+ * @param node
+ *   a top-level document value i.e. either a scalar or a `^RandomInt` value
+ * @param generatorArgs
+ *   the generator arguments
+ * @param d
+ *   the default value to generate if node is null
+ * @return
+ *   either a `^RantomInt` generator (etc--see `intParsers`)
+ *   or a constant generator if given a constant/scalar.
+ */
+UniqueGenerator<int64_t> intGenerator(const Node& node, GeneratorArgs generatorArgs, int64_t d) {
+    if (auto parserPair = extractKnownParser(node, generatorArgs, intParsers)) {
+        // known parser type
+        return parserPair->first(node[parserPair->second], generatorArgs);
+    }
+    if (node) {
+        return std::make_unique<ConstantAppender<int64_t>>(node.to<int64_t>());
+    }
+    return std::make_unique<ConstantAppender<int64_t>>(d);
 }
 
 /**
