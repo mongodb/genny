@@ -1,0 +1,165 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: >
+  This is the main workload for testing $queryStats performance regressions.
+
+KeyWords:
+- queryStats
+- redaction
+
+Clients:
+  Default:
+    QueryOptions:
+      connectTimeoutMS: 3_600_000  # 1 hour
+      maxPoolSize: 4000
+      socketTimeoutMS: 3_600_000  # 1 hour
+
+GlobalDefaults:
+  CacheSizeMb: &CacheSizeMb 300
+  HmacParameters: &HmacParameters {transformIdentifiers: {algorithm: "hmac-sha-256", hmacKey: {^BinDataSensitive: {numBytes: 32}}}}
+  MaxPhase: &MaxPhase 50
+  RateLimitHz: &RateLimitHz 100
+
+# For the find command.
+Payloads:
+  FixedPayload: &FixedPayload
+    ^Object:
+      withNEntries: 175
+      havingKeys: {^RandomString: {length: 10}}
+      andValues: {$exists: false}
+      duplicatedKeys: skip
+  RandomPayload: &RandomPayload
+    ^Object:
+      withNEntries: {^RandomInt: {min: 1, max: 350}}
+      havingKeys: {^RandomString: {length: 10}}
+      andValues: {$exists: false}
+      duplicatedKeys: skip
+
+Actors:
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: ClearCollection
+    Parameters: {MaxPhase: *MaxPhase}
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: InsertData
+    Parameters: {MaxPhase: *MaxPhase}
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: CacheSizeActor
+    Parameters:
+      CacheSizeMb: 0
+      MaxPhase: *MaxPhase
+      Phases: [10, 20, 30, 40]
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: CacheSizeActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phases: [11, 21, 31, 41]
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: RateLimitActor
+    Parameters:
+      MaxPhase: *MaxPhase
+      Phases: [12, 22, 32, 42]
+      RateLimitHz: 0
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: QuiesceActor
+    Parameters:
+      MaxPhase: *MaxPhase
+      Phases: [
+        13, 23, 33, 43,
+        16, 26, 36, 46,
+      ]
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: PrepopulateActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phases: [14, 24, 34, 44]
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: RateLimitActor
+    Parameters:
+      MaxPhase: *MaxPhase
+      Phases: [15, 25, 35, 45]
+      RateLimitHz: *RateLimitHz
+
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: FindCommandActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phases: 17
+      Payload: *FixedPayload
+      RateLimitHz: *RateLimitHz
+      Suffix: "Base-Fixed"
+
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: FindCommandActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phases: 27
+      Payload: *FixedPayload
+      RateLimitHz: *RateLimitHz
+      Suffix: "Hmac-Fixed"
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: AggregateActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phases: 27
+      QueryStatsParameters: *HmacParameters
+      RateLimitHz: *RateLimitHz
+      Suffix: "Hmac-Fixed"
+
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: FindCommandActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phases: 37
+      Payload: *RandomPayload
+      RateLimitHz: *RateLimitHz
+      Suffix: "Base-Random"
+
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: FindCommandActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phases: 47
+      Payload: *RandomPayload
+      RateLimitHz: *RateLimitHz
+      Suffix: "Hmac-Random"
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: AggregateActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phases: 47
+      QueryStatsParameters: *HmacParameters
+      RateLimitHz: *RateLimitHz
+      Suffix: "Hmac-Random"
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-all-feature-flags
+      - standalone-query-stats
+      - standalone-query-stats-small-rate-limit
+      - single-replica-query-stats
+      - replica-query-stats
+      - atlas-like-replica-query-stats.2022-10
