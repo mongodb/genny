@@ -9,7 +9,7 @@ Description: >
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
-  MaxPhases: &MaxPhases 57
+  MaxPhases: &MaxPhases 44 
 
 Actors:
 # Clear any pre-existing collection state.
@@ -628,290 +628,12 @@ Actors:
                 unit: "hour"
               }}}}}]
 
-- TopPositionBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: TopPositionBased
-      active: [37]
-      operationMetricsName: TopPositionBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {top: {
-              $top: {sortBy: {time: 1}, output: "$temp"}, window: {documents: [-5, 5]}}}}}]
-
-- TopTimeBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: TopTimeBased
-      active: [38]
-      operationMetricsName: TopTimeBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {top: {
-              $top: {sortBy: {time: 1}, output: "$temp"},
-              window: {
-                range: [-1, 0],
-                unit: "hour"
-              }}}}}]
-
-- BottomPositionBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: BottomPositionBased
-      active: [39]
-      operationMetricsName: BottomPositionBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {bottom: {
-              $bottom: {sortBy: {time: 1}, output: "$temp"}, window: {documents: [-5, 5]}}}}}]
-
-- BottomTimeBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: BottomTimeBased
-      active: [40]
-      operationMetricsName: BottomTimeBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {bottom: {
-              $bottom: {sortBy: {time: 1}, output: "$temp"},
-              window: {
-                range: [-1, 0],
-                unit: "hour"
-              }}}}}]
-
-- MaxNPositionBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: MaxNPositionBased
-      active: [41]
-      operationMetricsName: MaxNPositionBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {maxN: {
-              $maxN: {input: "$temp", n: 4},
-              window: {documents: [-5, 5]}}}}}]
-
-- MaxNTimeBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: MaxNTimeBased
-      active: [42]
-      operationMetricsName: MaxNTimeBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {maxN: {
-              $maxN: {input: "$temp", n: 4},
-              window: {
-                range: [-1, 0],
-                unit: "hour"
-              }}}}}]
-
-- MinNPositionBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: MinNPositionBased
-      active: [43]
-      operationMetricsName: MinNPositionBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {minN: {
-              $minN: {input: "$temp", n: 4},
-              window: {documents: [-5, 5]}}}}}]
-
-- MinNTimeBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: MinNTimeBased
-      active: [44]
-      operationMetricsName: MinNTimeBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {minN: {
-              $minN: {input: "$temp", n: 4},
-              window: {
-                range: [-1, 0],
-                unit: "hour"
-              }}}}}]
-
-- TopNPositionBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: TopNPositionBased
-      active: [45]
-      operationMetricsName: TopNPositionBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {topN: {
-              $topN: {sortBy: {time: 1}, output: "$temp", n: 4},
-              window: {documents: [-5, 5]}}}}}]
-
-- TopNTimeBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: TopNTimeBased
-      active: [46]
-      operationMetricsName: TopNTimeBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {topN: {
-              $topN: {sortBy: {time: 1}, output: "$temp", n: 4},
-              window: {
-                range: [-1, 0],
-                unit: "hour"
-              }}}}}]
-
-- BottomNPositionBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: BottomNPositionBased
-      active: [47]
-      operationMetricsName: BottomNPositionBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {bottomN: {
-              $bottomN: {sortBy: {time: 1}, output: "$temp", n: 4},
-              window: {documents: [-5, 5]}}}}}]
-
-- BottomNTimeBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: BottomNTimeBased
-      active: [48]
-      operationMetricsName: BottomNTimeBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {bottomN: {
-              $bottomN: {sortBy: {time: 1}, output: "$temp", n: 4},
-              window: {
-                range: [-1, 0],
-                unit: "hour"
-              }}}}}]
-
-- FirstNPositionBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: FirstNPositionBased
-      active: [49]
-      operationMetricsName: FirstNPositionBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {firstN: {
-              $firstN: {input: "$temp", n: 4},
-              window: {documents: [-5, 5]}}}}}]
-
-- FirstNTimeBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: FirstNTimeBased
-      active: [50]
-      operationMetricsName: FirstNTimeBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {firstN: {
-              $firstN: {input: "$temp", n: 4},
-              window: {
-                range: [-1, 0],
-                unit: "hour"
-              }}}}}]
-
-- LastNPositionBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: LastNPositionBased
-      active: [51]
-      operationMetricsName: LastNPositionBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {lastN: {
-              $lastN: {input: "$temp", n: 4},
-              window: {documents: [-5, 5]}}}}}]
-
-- LastNTimeBased:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: LastNTimeBased
-      active: [52]
-      operationMetricsName: LastNTimeBased
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{$setWindowFields: {
-            partitionBy: "$partitionKey",
-            sortBy: {time: 1},
-            output: {lastN: {
-              $lastN: {input: "$temp", n: 4},
-              window: {
-                range: [-1, 0],
-                unit: "hour"
-              }}}}}]
-
 - StdDevPopPositionBased:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: StdDevPopPositionBased
-      active: [53]
+      active: [37]
       operationMetricsName: StdDevPopPositionBased
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -927,7 +649,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: StdDevPopTimeBased
-      active: [54]
+      active: [38]
       operationMetricsName: StdDevPopTimeBased
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -946,7 +668,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: StdDevSampPositionBased
-      active: [55]
+      active: [39]
       operationMetricsName: StdDevSampPositionBased
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -962,7 +684,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: StdDevSampTimeBased
-      active: [56]
+      active: [40]
       operationMetricsName: StdDevSampTimeBased
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -981,7 +703,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: CovariancePopPositionBased
-      active: [57]
+      active: [41]
       operationMetricsName: CovariancePopPositionBased
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -997,7 +719,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: CovariancePopTimeBased
-      active: [58]
+      active: [42]
       operationMetricsName: CovariancePopTimeBased
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -1016,7 +738,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: CovarianceSampPositionBased
-      active: [59]
+      active: [43]
       operationMetricsName: CovarianceSampPositionBased
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
@@ -1032,7 +754,7 @@ Actors:
     <<: *loadConfig
     Parameters:
       name: CovarianceSampTimeBased
-      active: [60]
+      active: [44]
       operationMetricsName: CovarianceSampTimeBased
       nopInPhasesUpTo: *MaxPhases
       Pipeline:
