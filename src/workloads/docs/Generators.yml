@@ -152,6 +152,9 @@ Actors:
             # Generate the current Date
             now: {^Now: {}}
 
+            # Generate field with a null value
+            nullField: {^Null: {}}
+
             # ^RandomDate max precision is to the millisecond as bson dates are to the millisecond
             # (see https://docs.mongodb.com/manual/reference/bson-types/#date). However, nanos can be
             # specified, but will be ignored.

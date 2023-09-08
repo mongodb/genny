@@ -1260,6 +1260,15 @@ private:
     int64_t _actorId;
 };
 
+/** `{^Null: {}}` */
+class NullGenerator : public Generator<bsoncxx::types::b_null> {
+public:
+    NullGenerator(const Node& node, GeneratorArgs generatorArgs) {}
+    bsoncxx::types::b_null evaluate() override {
+        return bsoncxx::types::b_null{};
+    }
+};
+
 /** `{^ActorIdString: {}}` */
 class ActorIdStringGenerator : public Generator<std::string> {
 public:
@@ -1944,6 +1953,10 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
         {"^UUID",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<UuidGenerator>(node, generatorArgs);
+         }},
+        {"^Null",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NullGenerator>(node, generatorArgs);
          }},
         {"^Verbatim",
          [](const Node& node, GeneratorArgs generatorArgs) {

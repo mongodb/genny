@@ -627,6 +627,12 @@ Tests:
     ThenReturns:
       - a: {^RandomInt: {min: 10000000050, max: 10000000060}}
 
+  - Name: Null
+    GivenTemplate:
+      a: {^Null: {}}
+    ThenReturns:
+      - a: null
+
   - Name: Verbatim can break all the rules
     GivenTemplate:
       a:
