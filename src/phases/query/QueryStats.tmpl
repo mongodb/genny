@@ -10,14 +10,15 @@ Description: |
     RateLimitActor: (requires MaxPhase, Phases, RateLimitHz) changes the QueryStates rate limit. Should be set to -1 before each QueryStats cache prepopulation to speed things up.
     QuiesceActor: (requires MaxPhase, Phases) ensures that actors quiesce before continuing.
     PrepopulateActor: (requires MaxPhase, Phases, CacheSizeMb) prepopulates the QueryStats cache to ensure that it is filled with similarish shapes before every workload execution.
-    FindCommandActor: (requires MaxPhase, Phases, CacheSizeMb, RateLimitHz, Payload; optional Suffix) runs find commands to generate query stats.
-    AggregateActor: (requires MaxPhase, Phases, CacheSizeMb, RateLimitHz; optional Suffix, QueryStatsParameters) runs $queryStats.
+    FindCommandActor: (requires MaxPhase, Phase, CacheSizeMb, RateLimitHz, Payload; optional Suffix) runs find commands to generate query stats.
+    AggregateActor: (requires MaxPhase, Phase, CacheSizeMb, RateLimitHz; optional Suffix, QueryStatsParameters) runs $queryStats.
 
   Parameters:
     # Required parameters.
     CacheSizeMb: (integer) QueryStats cache size in MB.
     MaxPhase: (integer) largest phase number in the workload.
     Name: (string) string name of the CrudActor.
+    Phase: (integer) phase in which the actor runs.
     Phases: (integer | array[integer]) phase(s) in which the actor runs.
     RateLimitHz: (integer) QueryStats rate limit value in Hz.
 
@@ -38,6 +39,7 @@ GlobalDefaults:
   CacheSizeMb: &CacheSizeMb {^Parameter: {Name: CacheSizeMb, Default: {unused: "Need to specify the query stats cache size, in MB."}}}
   MaxPhase: &MaxPhase {^Parameter: {Name: MaxPhase, Default: {unused: "Need to specify the max phase number."}}}
   Name: &Name {^Parameter: {Name: Name, Default: {unused: "Need to specify the actor name."}}}
+  Phase: &Phase {^Parameter: {Name: Phase, Default: {unused: "Need to specify the actor's phase."}}}
   Phases: &Phases {^FlattenOnce: [{^Parameter: {Name: Phases, Default: {unused: "Need to specify the actor's phase(s)."}}}]}
   RateLimitHz: &RateLimitHz {^Parameter: {Name: RateLimitHz, Default: {unused: "Need to specify the query stats rate limit to change to."}}}
 
@@ -54,7 +56,7 @@ GlobalDefaults:
   FormattedSuffix: &FormattedSuffix
     ^PreprocessorFormatString:
       format: "%s-CacheSize%s-RateLimit%sHz-Phase%s"
-      withArgs: [*Suffix, *CacheSize, *RateLimitHz, *Phases]
+      withArgs: [*Suffix, *CacheSize, *RateLimitHz, *Phase]
 
 # One-time setup for the workload, run at the beginning of the workload.
 ClearCollection:
@@ -186,7 +188,7 @@ FindCommandActor:
   Database: *Database
   Phases:
     OnlyActiveInPhases:
-      Active: *Phases
+      Active: [*Phase]
       NopInPhasesUpTo: *MaxPhase
       PhaseConfig:
         Duration: *Duration
@@ -207,7 +209,7 @@ AggregateActor:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: *Phases
+      Active: [*Phase]
       NopInPhasesUpTo: *MaxPhase
       PhaseConfig:
         Duration: *Duration

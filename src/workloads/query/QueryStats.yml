@@ -95,7 +95,7 @@ Actors:
     Parameters:
       CacheSizeMb: *CacheSizeMb
       MaxPhase: *MaxPhase
-      Phases: 17
+      Phase: 17
       Payload: *FixedPayload
       RateLimitHz: *RateLimitHz
       Suffix: "Base-Fixed"
@@ -106,7 +106,7 @@ Actors:
     Parameters:
       CacheSizeMb: *CacheSizeMb
       MaxPhase: *MaxPhase
-      Phases: 27
+      Phase: 27
       Payload: *FixedPayload
       RateLimitHz: *RateLimitHz
       Suffix: "Hmac-Fixed"
@@ -116,7 +116,7 @@ Actors:
     Parameters:
       CacheSizeMb: *CacheSizeMb
       MaxPhase: *MaxPhase
-      Phases: 27
+      Phase: 27
       QueryStatsParameters: *HmacParameters
       RateLimitHz: *RateLimitHz
       Suffix: "Hmac-Fixed"
@@ -127,7 +127,7 @@ Actors:
     Parameters:
       CacheSizeMb: *CacheSizeMb
       MaxPhase: *MaxPhase
-      Phases: 37
+      Phase: 37
       Payload: *RandomPayload
       RateLimitHz: *RateLimitHz
       Suffix: "Base-Random"
@@ -138,7 +138,7 @@ Actors:
     Parameters:
       CacheSizeMb: *CacheSizeMb
       MaxPhase: *MaxPhase
-      Phases: 47
+      Phase: 47
       Payload: *RandomPayload
       RateLimitHz: *RateLimitHz
       Suffix: "Hmac-Random"
@@ -148,7 +148,7 @@ Actors:
     Parameters:
       CacheSizeMb: *CacheSizeMb
       MaxPhase: *MaxPhase
-      Phases: 47
+      Phase: 47
       QueryStatsParameters: *HmacParameters
       RateLimitHz: *RateLimitHz
       Suffix: "Hmac-Random"
