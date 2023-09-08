@@ -337,8 +337,6 @@ Actors:
 
             # UUID
             uuids: [
-              # Short uuid
-              {^UUID: {hex: {^RandomString: {length: 8, alphabet: "0123456789ABCDEF"}}}},
               # Long uuid
               {^UUID: {hex: "00000000-1111-2222-3333-444444444444"}},
               # Long uuid joined with last 2 digits

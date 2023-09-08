@@ -1023,9 +1023,9 @@ uint8_t* hex2BinUuid(std::string hex, uint8_t* uuid) {
                              [&](char c) { return c == '-'; } ),
               hex.end());
 
+    auto i = 0;
     for(std::string::iterator it = hex.begin(); it != hex.end(); ++it) {
-        int pos = std::distance(hex.begin(), it) / 2;
-        uuid[pos] = (hexNibbleToBin(*it) << 4) + hexNibbleToBin(*++it);
+        uuid[i++] = (hexNibbleToBin(*it) << 4) + hexNibbleToBin(*++it);
     }
     return uuid;
 }
