@@ -339,7 +339,7 @@ Actors:
               # Long uuid
               {^UUID: {hex: "00000000-1111-2222-3333-444444444444"}},
               # Long uuid joined with last 2 digits
-              {^UUID: {hex: { ^Join: { array: [ "00000000-4000-8000-0000-000000",
+              {^UUID: {hex: { ^Join: { array: [ "00000000-4000-8000-0000-0000000000",
                                                 { ^RandomString: { length: 2, alphabet: "0123456789abcdef" } } ],
                                        sep: "" } }}},
               # Long uuid formatted with last 2 digits

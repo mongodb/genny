@@ -1442,71 +1442,91 @@ Tests:
 
   # https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_(random)
   # Check uuid with the following python:
+  #   # "3b241101-e2bb-4255-8caf-4136c566a962"
   #   import base64
-  #   b = b'00000000-0000-0000-0000-000000000000'
-  #   s = base64.b64encode(b).decode()
-  #   assert base64.b64decode(s) == b
+  #   from hexdump import hexdump
+  #   s = "OyQRAeK7QlWMr0E2xWapYg=="
+  #   b = base64.b64decode(s)
+  #   print(hexdump(b))
+  #   00000000: 3B 24 11 01 E2 BB 42 55  8C AF 41 36 C5 66 A9 62  ;$....BU..A6.f.b
   #
-  - Name: Invalid subType
+  #   b = b"\x3b\x24\x11\x01\xe2\xbb\x42\x55\x8c\xaf\x41\x36\xc5\x66\xa9\x62"
+  #   s = base64.b64encode(b)
+  #   print(s.decode())
+  #   OyQRAeK7QlWMr0E2xWapYg==
+  - Name: Uuid Invalid subType
     GivenTemplate:
       a: {^UUID: {hex: "", subType: 5}}
     ThenThrows: InvalidValueGeneratorSyntax
 
-  - Name: Empty Uuid
+  - Name: Uuid Invalid Ascii chars
+    GivenTemplate:
+      a: {^UUID: {hex: "t0000000-0000-0000-0000-00000000000g" }}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Uuid Invalid Unicode char
+    GivenTemplate:
+      a: {^UUID: {hex: "00000000-0000-0000-0000-00000000000ф" }}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Uuid Invalid 7 char format
+    GivenTemplate:
+      a: {^UUID: {hex: "0000000" }}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Uuid Invalid Long format
+    GivenTemplate:
+      a: {^UUID: {hex: "00000000-0000-0000-0000-00000000000" }}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Uuid Empty
     GivenTemplate:
       a: {^UUID: {hex: ""}}
-    ThenReturns:
-      - { "a": { "$binary": { "base64": "", "subType": "04" } } }
+    ThenThrows: InvalidValueGeneratorSyntax
 
-  - Name: Nil Uuid
+  - Name: Uuid Nil
     GivenTemplate:
       a: {^UUID: {hex: "00000000-0000-0000-0000-000000000000" }}
     ThenReturns:
-      - { "a": { "$binary": { "base64": "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "AAAAAAAAAAAAAAAAAAAAAA==", "subType": "04" } } }   # 00000000000000000000000000000000
 
-  - Name: Max Uuid
+  - Name: Uuid Max
     GivenTemplate:
       a: {^UUID: {hex: "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF" }}
     ThenReturns:
-      - { "a": { "$binary": { "base64": "RkZGRkZGRkYtRkZGRi1GRkZGLUZGRkYtRkZGRkZGRkZGRkZG", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "/////////////////////w==", "subType": "04" } } }   # FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 
-  - Name: Value Uuid
+  - Name: Uuid Value
     GivenTemplate:
       a: {^UUID: {hex: "3b241101-e2bb-4255-8caf-4136c566a962" }}
     ThenReturns:
-      - { "a": { "$binary": { "base64": "M2IyNDExMDEtZTJiYi00MjU1LThjYWYtNDEzNmM1NjZhOTYy", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "OyQRAeK7QlWMr0E2xWapYg==", "subType": "04" } } }
 
-  - Name: Deadbeef Uuid
-    GivenTemplate:
-      a: {^UUID: {hex: "deadbeef" }}
-    ThenReturns:
-      - { "a": { "$binary": { "base64": "ZGVhZGJlZWY=", "subType": "04" } } }
-
-  - Name: Fixed Uuid
+  - Name: Uuid Fixed
     GivenTemplate:
       a: {^UUID: {hex: "00000000-4000-8000-0000-000000000021" }}
     ThenReturns:
-      - { "a": { "$binary": { "base64": "MDAwMDAwMDAtNDAwMC04MDAwLTAwMDAtMDAwMDAwMDAwMDIx", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "AAAAAEAAgAAAAAAAAAAAIQ==", "subType": "04" } } }   # 00000000400080000000000000000021
 
-  - Name: RandomString Uuid
+  - Name: Uuid RandomString
     GivenTemplate:
-      a: {^UUID: {hex: { ^Join: { array: [ "00000000-4000-8000-0000-000000", { ^RandomString: { length: 2, alphabet: "0123456789abcdef" } } ], sep: "" } }}}
+      a: {^UUID: {hex: { ^Join: { array: [ "00000000-4000-8000-0000-0000000000", { ^RandomString: { length: 2, alphabet: "0123456789abcdef" } } ], sep: "" } }}}
     ThenReturns:
-      - { "a": { "$binary": { "base64": "MDAwMDAwMDAtNDAwMC04MDAwLTAwMDAtMDAwMDAwMjE=", "subType": "04" } } }
-      - { "a": { "$binary": { "base64": "MDAwMDAwMDAtNDAwMC04MDAwLTAwMDAtMDAwMDAwMDE=", "subType": "04" } } }
-      - { "a": { "$binary": { "base64": "MDAwMDAwMDAtNDAwMC04MDAwLTAwMDAtMDAwMDAwNWQ=", "subType": "04" } } }
-      - { "a": { "$binary": { "base64": "MDAwMDAwMDAtNDAwMC04MDAwLTAwMDAtMDAwMDAwYzQ=", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "AAAAAEAAgAAAAAAAAAAAIQ==", "subType": "04" } } }   # 00000000400080000000000000000021
+      - { "a": { "$binary": { "base64": "AAAAAEAAgAAAAAAAAAAAAQ==", "subType": "04" } } }   # 00000000400080000000000000000001
+      - { "a": { "$binary": { "base64": "AAAAAEAAgAAAAAAAAAAAXQ==", "subType": "04" } } }   # 0000000040008000000000000000005D
+      - { "a": { "$binary": { "base64": "AAAAAEAAgAAAAAAAAAAAxA==", "subType": "04" } } }   # 000000004000800000000000000000C4
 
-  - Name: FormatRandom Uuid
+  - Name: Uuid FormatRandom
     GivenTemplate:
       a: {^UUID: {hex: {^FormatString: {format: "3b241101-e2bb-4255-8caf-4136c566a9%02x",  withArgs: [{^RandomInt: {min: 0, max: 255}}]}}}}
     ThenReturns:
-      - { "a": { "$binary": { "base64": "M2IyNDExMDEtZTJiYi00MjU1LThjYWYtNDEzNmM1NjZhOTI3", "subType": "04" } } }
-      - { "a": { "$binary": { "base64": "M2IyNDExMDEtZTJiYi00MjU1LThjYWYtNDEzNmM1NjZhOTFi", "subType": "04" } } }
-      - { "a": { "$binary": { "base64": "M2IyNDExMDEtZTJiYi00MjU1LThjYWYtNDEzNmM1NjZhOTA1", "subType": "04" } } }
-      - { "a": { "$binary": { "base64": "M2IyNDExMDEtZTJiYi00MjU1LThjYWYtNDEzNmM1NjZhOTEy", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "OyQRAeK7QlWMr0E2xWapJw==", "subType": "04" } } }   # 3b241101e2bb42558caf4136c566a927
+      - { "a": { "$binary": { "base64": "OyQRAeK7QlWMr0E2xWapGw==", "subType": "04" } } }   # 3b241101e2bb42558caf4136c566a91b
+      - { "a": { "$binary": { "base64": "OyQRAeK7QlWMr0E2xWapBQ==", "subType": "04" } } }   # 3b241101e2bb42558caf4136c566a905
+      - { "a": { "$binary": { "base64": "OyQRAeK7QlWMr0E2xWapEg==", "subType": "04" } } }   # 3b241101e2bb42558caf4136c566a912
 
-  - Name: FormatRandomFull Uuid
+  - Name: Uuid FormatRandomFull
     GivenTemplate:
       a: {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x",
                                         withArgs: [
@@ -1516,12 +1536,12 @@ Tests:
                                           {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
                                           {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}}]}}}} # 281474976710655
     ThenReturns:
-      - { "a": { "$binary": { "base64": "MjdjNzk1OGItMWI2ZS0wNWFjLTEyYjYtNTdlZGM5MmUxYWU0", "subType": "04" } } }
-      - { "a": { "$binary": { "base64": "ZDM5ZjMzNzgtY2RhNC00Mjk2LTY2MWItMjM1NjE0NmVlYTAy", "subType": "04" } } }
-      - { "a": { "$binary": { "base64": "N2I0MWVjZjEtMzRkMS02ZDY3LWI3ZDEtODY3NTAyM2YzNjdl", "subType": "04" } } }
-      - { "a": { "$binary": { "base64": "MDVmNjIyNWMtYjY2ZC05OGM4LWFkZGYtNjYzOGI0MGQ2YjE3", "subType": "04" } } }
+      - { "a": { "$binary": { "base64": "J8eVixtuBawStlftyS4a5A==", "subType": "04" } } }   # 27c7958b1b6e05ac12b657edc92e1ae4
+      - { "a": { "$binary": { "base64": "058zeM2kQpZmGyNWFG7qAg==", "subType": "04" } } }   # d39f3378cda44296661b2356146eea02
+      - { "a": { "$binary": { "base64": "e0Hs8TTRbWe30YZ1Aj82fg==", "subType": "04" } } }   # 7b41ecf134d16d67b7d18675023f367e
+      - { "a": { "$binary": { "base64": "BfYiXLZtmMit32Y4tA1rFw==", "subType": "04" } } }   # 05f6225cb66d98c8addf6638b40d6b17
 
-  - Name: Random Uuids
+  - Name: Uuids Random
     GivenTemplate:
       a: [
         {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x",
@@ -1541,6 +1561,7 @@ Tests:
       ]
     ThenReturns:
       - {
-          "a": [ { "$binary": { "base64": "MjdjNzk1OGItMWI2ZS0wNWFjLTEyYjYtNTdlZGM5MmUxYWU0", "subType": "04" } },
-                 { "$binary": { "base64": "ZDM5ZjMzNzgtY2RhNC00Mjk2LTY2MWItMjM1NjE0NmVlYTAy", "subType": "04" } } ]
+          "a": [ { "$binary": { "base64": "J8eVixtuBawStlftyS4a5A==", "subType": "04" } },  # 27c7958b1b6e05ac12b657edc92e1ae4
+                 { "$binary": { "base64": "058zeM2kQpZmGyNWFG7qAg==", "subType": "04" } }   # d39f3378cda44296661b2356146eea02
+          ]
         }
