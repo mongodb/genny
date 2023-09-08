@@ -163,8 +163,7 @@ SamplingLoader::SamplingLoader(genny::ActorContext& context,
     : Actor(context),
       _totalBulkLoad{context.operation("TotalBulkInsert", SamplingLoader::id())},
       _individualBulkLoad{context.operation("IndividualBulkInsert", SamplingLoader::id())},
-      _client{std::move(
-          context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
+      _client{std::move(context.client())},
       _collection{(*_client)[dbName][collectionName]},
       _deferredSample{std::move(deferredSample)},
       _loop{context, _client, SamplingLoader::id()} {}
@@ -182,8 +181,7 @@ public:
         uint sampleSize = context["SampleSize"].to<int>();
         auto pipelineSuffixGenerator =
             context["Pipeline"].maybe<PipelineGenerator>(context).value_or(PipelineGenerator{});
-        auto clientName = context.get("ClientName").maybe<std::string>().value_or("Default");
-        auto client = context.client(clientName);
+        auto client = context.client();
         auto database = client->database(context["Database"].to<std::string>());
         auto collName = context["Collection"].to<std::string>();
         auto collection = database[collName];

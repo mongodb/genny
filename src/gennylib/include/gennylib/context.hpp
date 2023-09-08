@@ -531,9 +531,9 @@ public:
      * @return a pool connection from the "default" MongoDB connection-pool.
      * @throws InvalidConfigurationException if no connections available.
      */
-    template <class... Args>
-    mongocxx::pool::entry client(Args&&... args) {
-        return this->_workload->get_client(std::forward<Args>(args)...);
+    mongocxx::pool::entry client() {
+        auto name = this->get("ClientName").maybe<std::string>().value_or("Default");
+        return this->_workload->get_client(name);
     }
 
     /**
