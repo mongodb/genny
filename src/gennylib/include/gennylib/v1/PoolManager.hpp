@@ -114,7 +114,7 @@ public:
 
     /**
      *  Connection/query-string parameters can be added via `Clients` configuration
-     *  passed in when calling `create_client()`.
+     *  passed in when calling `createClient()`.
      *  See PoolFactory for how this can be configured.
      *
      * @param callback
@@ -139,13 +139,15 @@ public:
      * @param instance
      *   which instance of the named pool to use. Will be created on-demand the first time the
      *   (name,instance) pair is used.
-     * @param context
+     * @param workloadCtx
      *   the WorkloadContext used to look up the configurations
      * @return a connection from the pool or throw if none available
      */
-    mongocxx::pool::entry create_client(const std::string& name,
-                                        size_t instance,
-                                        const Node& context);
+    mongocxx::pool::entry createClient(const std::string& name,
+                                       size_t instance,
+                                       const Node& workloadCtx);
+    
+    mongocxx::pool::entry _preWarm(mongocxx::pool::entry connection);
 
     // Only used for testing
     /** @private */
@@ -169,11 +171,6 @@ private:
 
     /** manages global key vaults & creates encryption contexts per pool */
     std::unique_ptr<EncryptionManager> _encryptionManager;
-
-    /** Helper method for `create_client()` */
-    mongocxx::pool::entry _create_client(const std::string& name,
-                                         size_t instance,
-                                         const Node& context);
 };
 
 }  // namespace genny::v1
