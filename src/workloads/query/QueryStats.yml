@@ -20,8 +20,6 @@ GlobalDefaults:
   MaxPhase: &MaxPhase 50
   RateLimitHz: &RateLimitHz 100
 
-# For the find command.
-Payloads:
   FixedPayload: &FixedPayload
     ^Object:
       withNEntries: 175

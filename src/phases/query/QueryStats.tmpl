@@ -91,9 +91,9 @@ InsertData:
         DocumentCount: *DocumentCount
         BatchSize: 1000
         Document:
-          a1: &integer {^RandomInt: {min: -100, max: 100}}
-          a2: *integer
-          string: &string {^RandomString: {length: 5}}
+          a1: {^RandomInt: {min: -100, max: 100}}
+          a2: {^RandomInt: {min: -100, max: 100}}
+          string: {^RandomString: {length: 5}}
         Indexes:
           - keys: {a1: 1, a2: 1}
 
@@ -173,13 +173,13 @@ PrepopulateActor:
                 - a1: {^RandomDouble: {min: 1000000, max: 10000000000}}
                 # This will send a find command that is a little over 320B per query shape key.
                 - ^Object:
-                  withNEntries: 10
-                  havingKeys: 
-                    ^FormatString:
-                      format: "%32d"
-                      withArgs: [{^Inc: {start: 0, multiplier: 1, step: 32}}]
-                  andValues: {$exists: true}
-                  duplicatedKeys: skip
+                    withNEntries: 10
+                    havingKeys: 
+                      ^FormatString:
+                        format: "%32d"
+                        withArgs: [{^Inc: {start: 0, multiplier: 1, step: 32}}]
+                    andValues: {$exists: true}
+                    duplicatedKeys: skip
 
 FindCommandActor:
   Name: {^PreprocessorFormatString: {format: "FindCommand-%s", withArgs: [*FormattedSuffix]}}
