@@ -88,7 +88,7 @@ private:
  */
 class EncryptionManager {
 public:
-    EncryptionManager(const Node& yaml, bool dryRun = false);
+    EncryptionManager(const Node& workloadCtx, bool dryRun = false);
     ~EncryptionManager();
 
     EncryptionContext createEncryptionContext(const std::string& uri,
