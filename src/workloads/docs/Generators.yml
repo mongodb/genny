@@ -152,6 +152,9 @@ Actors:
             # Generate the current Date
             now: {^Now: {}}
 
+            # Generate field with a null value
+            nullField: {^Null: {}}
+
             # ^RandomDate max precision is to the millisecond as bson dates are to the millisecond
             # (see https://docs.mongodb.com/manual/reference/bson-types/#date). However, nanos can be
             # specified, but will be ignored.
@@ -332,6 +335,26 @@ Actors:
             # Maps are identified by their "id" are shared.
             freqmap_singleton: { ^TakeRandomStringFromFrequencyMapSingleton: { id: "some_string", from: { "string3":100, "string4":200 } } }
 
+            # UUID
+            uuids: [
+              # Long uuid
+              {^UUID: {hex: "00000000-1111-2222-3333-444444444444"}},
+              # Long uuid joined with last 2 digits
+              {^UUID: {hex: { ^Join: { array: [ "00000000-4000-8000-0000-0000000000",
+                                                { ^RandomString: { length: 2, alphabet: "0123456789abcdef" } } ],
+                                       sep: "" } }}},
+              # Long uuid formatted with last 2 digits
+              {^UUID: {hex: {^FormatString: {format: "3b241101-e2bb-4255-8caf-4136c566a9%02x",
+                                             withArgs: [{^RandomInt: {min: 0, max: 255}}]}}}},
+              # Long uuid random format
+              {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x",
+                                             withArgs: [
+                                               {^RandomInt: {min: 0, max: 0xFFFFFFFF}},         #      4294967295
+                                               {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
+                                               {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
+                                               {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
+                                               {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}}]}}}} # 281474976710655
+            ]
 
   # 10% of the findOnes will introduce a 60-second sleep.
   - Duration: 1 minutes
