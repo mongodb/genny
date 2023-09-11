@@ -398,7 +398,7 @@ class _WorkloadParser(object):
         clients_dict = self._recursive_parse(clients)
         for _, client in clients_dict.items():
             client.setdefault("URI", self._default_uri)
-            client.setdefault("PreWarm", True)
+            client.setdefault("NoPreWarm", False)
         return clients_dict
 
     def _parse_instance(self, instance):

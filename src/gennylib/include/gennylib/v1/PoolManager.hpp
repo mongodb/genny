@@ -129,7 +129,16 @@ public:
     /**
      * Obtain a connection or throw if none available.
      *
-     * This is allowed to be called from multiple threads simultaneously.
+     * This connection will be pre-warmed by default, unless "NoPreWarm" is set to true, e.g.:
+     * 
+     * ```yaml
+     * Clients:
+     *   Default:
+     *     PreWarm: false
+     *     QueryOptions:
+     * ...
+     * ```
+     * This function could be called from multiple threads simultaneously.
      *
      * @warning it is advised to only call this during setup since creating a connection pool
      * can be an expensive operation

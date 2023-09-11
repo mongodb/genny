@@ -560,7 +560,7 @@ Clients:
     QueryOptions:
       maxPoolSize: 100
     URI: FakeUri
-    PreWarm: true
+    NoPreWarm: false
 SchemaVersion: '2018-07-01'
 OverriddenKey: ThisIsTheCorrectValue
 NotOverriddenKey: ValueShouldStaySame

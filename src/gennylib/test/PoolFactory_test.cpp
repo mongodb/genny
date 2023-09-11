@@ -345,7 +345,7 @@ TEST_CASE("PoolFactory behavior") {
 
     SECTION("PoolManager can construct multiple pools") {
         genny::v1::PoolManager manager{{}, true};
-        genny::NodeSource ns{"Clients: {Default: {URI: 'mongodb:://localhost:27017', PreWarm: true}, Foo: {URI: 'mongodb:://localhost:27017', PreWarm: true}, Bar: {URI: 'mongodb:://localhost:27018', PreWarm: true}}", ""};
+        genny::NodeSource ns{"Clients: {Default: {URI: 'mongodb:://localhost:27017', NoPreWarm: false}, Foo: {URI: 'mongodb:://localhost:27017', NoPreWarm: false}, Bar: {URI: 'mongodb:://localhost:27018', NoPreWarm: false}}", ""};
         auto& config = ns.root();
 
         auto foo0 = manager.createClient("Foo", 0, config);
@@ -366,6 +366,7 @@ TEST_CASE("PoolFactory behavior") {
         REQUIRE((manager.instanceCount() ==
                  std::unordered_map<std::string, size_t>({{"Foo", 2}, {"Bar", 1}})));
     }
+
     SECTION("Make DNS seed list connection uri pools") {
         constexpr auto kSourceUri = "mongodb+srv://test.mongodb.net";
 

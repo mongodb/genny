@@ -75,6 +75,7 @@ mongocxx::pool::entry genny::v1::PoolManager::createClient(const std::string& na
     Pools& pools = lap.second;
 
     auto& clientNode = workloadCtx["Clients"][name];
+    bool shouldPrewarm = !_dryRun & !clientNode["NoPreWarm"].maybe<bool>().value_or(true);
     auto& pool = pools[instance];
     if (pool == nullptr) {
         pool = createPool(clientNode, this->_apmCallback, *_encryptionManager);
@@ -83,18 +84,17 @@ mongocxx::pool::entry genny::v1::PoolManager::createClient(const std::string& na
     // no need to keep it past this point; pool is thread-safe
     lock.unlock();
 
-    bool prewarm = clientNode["PreWarm"].maybe<bool>().value_or(true);
     if (_apmCallback) {
         // TODO: Remove this conditional when TIG-1396 is resolved.
         auto connection = pool->acquire();
-        return prewarm && !_dryRun ? _preWarm(std::move(connection)) : std::move(connection);
+        return shouldPrewarm ? _preWarm(std::move(connection)) : std::move(connection);
     } else {
         auto opEntry = pool->try_acquire();
         if (!opEntry) {
             // TODO: better error handling
             throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
         }
-        return prewarm && !_dryRun ? _preWarm(std::move(*opEntry)) : std::move(*opEntry);
+        return shouldPrewarm ? _preWarm(std::move(*opEntry)) : std::move(*opEntry);
     }
 }
 
