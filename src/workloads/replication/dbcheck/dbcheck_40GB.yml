@@ -29,7 +29,6 @@ GlobalDefaults:
       OperationCommand:    
         Filter: {y: 1000}
         Update: {$inc: {x: 1}}
-
     - OperationName: findOne
       OperationMetricsName: find
       OperationCommand:
@@ -89,7 +88,7 @@ Actors:
   Database: *database
   Phases:
     OnlyActiveInPhases:
-      Active: [2]
+      Active: [1]
       NopInPhasesUpTo: *max_phase
       PhaseConfig:
         Duration: 15 minutes
