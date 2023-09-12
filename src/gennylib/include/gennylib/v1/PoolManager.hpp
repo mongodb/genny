@@ -134,7 +134,7 @@ public:
      * ```yaml
      * Clients:
      *   Default:
-     *     PreWarm: false
+     *     NoPreWarm: true
      *     QueryOptions:
      * ...
      * ```
