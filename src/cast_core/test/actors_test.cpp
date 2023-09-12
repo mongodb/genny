@@ -19,9 +19,11 @@
 #include <mongocxx/stdx.hpp>
 #include <mongocxx/uri.hpp>
 
+#include <testlib/ActorHelper.hpp>
 #include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>
 
+namespace genny {
 namespace {
 
 using namespace genny::testing;
@@ -52,4 +54,66 @@ TEST_CASE_METHOD(MongoTestFixture,
         REQUIRE(db.collection("test").count_documents(view) == 1);
     }
 }
+
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Pre-warming a client works, by sending a ping to the DB.",
+                 "[sharded][single_node_replset][three_node_replset]") {
+
+    SECTION("Pre-warming is enabled by default, so must ping.") {
+        auto session = MongoTestFixture::client.start_session();
+        auto events = ApmEvents{};
+        auto apmCallback = makeApmCallback(events);
+        NodeSource config(R"(
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                              R"(
+            Actors:
+              - Name: TestActor
+                Type: RunCommand
+                Threads: 1
+                Phases:
+                - {Nop: true}
+            Metrics:
+              Format: csv
+        )",
+                          "");
+        ActorHelper ah{
+            config.root(), 1, apmCallback};
+        ah.run();
+        REQUIRE(events.size() == 1);
+        auto&& ping_event = events.front();
+        REQUIRE(ping_event.command_name == "ping");
+    }
+
+    SECTION("Pre-warming is disabled, so no ping.") {
+        auto session = MongoTestFixture::client.start_session();
+        auto events = ApmEvents{};
+        auto apmCallback = makeApmCallback(events);
+        NodeSource config(R"(
+            SchemaVersion: 2018-07-01
+            Clients:
+              Default:
+                NoPreWarm: true
+                URI: )" + MongoTestFixture::connectionUri().to_string() +
+                              R"(
+            Actors:
+              - Name: TestActor
+                Type: RunCommand
+                Threads: 1
+                Phases:
+                - {Nop: true}
+            Metrics:
+              Format: csv
+        )",
+                          "");
+        ActorHelper ah{
+            config.root(), 1, apmCallback};
+        ah.run();
+        REQUIRE(events.size() == 0);
+    }
+}
+
 }  // namespace
+}  // namespace genny
