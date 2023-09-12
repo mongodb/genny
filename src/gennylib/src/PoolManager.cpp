@@ -75,7 +75,7 @@ mongocxx::pool::entry genny::v1::PoolManager::createClient(const std::string& na
     Pools& pools = lap.second;
 
     auto& clientNode = workloadCtx["Clients"][name];
-    bool shouldPrewarm = !_dryRun & !clientNode["NoPreWarm"].maybe<bool>().value_or(true);
+    bool shouldPrewarm = !_dryRun & !clientNode["NoPreWarm"].maybe<bool>().value_or(false);
     auto& pool = pools[instance];
     if (pool == nullptr) {
         pool = createPool(clientNode, this->_apmCallback, *_encryptionManager);
