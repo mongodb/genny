@@ -12,11 +12,6 @@ Description: |
   To learn more about partitions, please check out the docs here:
   https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/
 
-GlobalDefaults:
-  # The limit ensures that the entire result set fits in an entire batch. That way we can use
-  # the 'RunCommand' actor without abandoning open cursors.
-  Limit: &limit 100
-
 Actors:
 - Name: InsertData
   Type: Loader
@@ -27,7 +22,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 10000
-    BatchSize: 100
+    BatchSize: &batchSize 10000
     Document:
       part1: {^Choose: {from: [1, 2, 3, 4]}}
       part2: {^Choose: {from: [1, 2, 3, 4]}}
@@ -113,10 +108,9 @@ Actors:
                   $locf: "$numeric"}
               }
             }
-          },
-          {$limit: *limit}
+          }
         ]
-        cursor: {}
+        cursor: {batchSize: *batchSize}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -158,10 +152,9 @@ Actors:
                   $locf: "$randomType"}
               }
             }
-          },
-          {$limit: *limit}
+          }
         ]
-        cursor: {}
+        cursor: {batchSize: *batchSize}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -207,10 +200,9 @@ Actors:
                   $locf: "$date"}
               }
             }
-          },
-          {$limit: *limit}
+          }
         ]
-        cursor: {}
+        cursor: {batchSize: *batchSize}
   - Nop: true
   - Nop: true
   - Nop: true
@@ -253,10 +245,9 @@ Actors:
                   $locf: "$date"}
               }
             }
-          },
-          {$limit: *limit}
+          }
         ]
-        cursor: {}
+        cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - Nop: true
   - Nop: true
@@ -300,10 +291,9 @@ Actors:
                   $locf: "$randomType"}
               }
             }
-          },
-          {$limit: *limit}
+          }
         ]
-        cursor: {}
+        cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - Nop: true
   - Nop: true
@@ -351,10 +341,9 @@ Actors:
                   $locf: "$date"}
               }
             }
-          },
-          {$limit: *limit}
+          }
         ]
-        cursor: {}
+        cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - Nop: true
   - Nop: true
@@ -398,10 +387,9 @@ Actors:
                   $locf: "$string"}
               }
             }
-          },
-          {$limit: *limit}
+          }
         ]
-        cursor: {}
+        cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - Nop: true
   - Nop: true
@@ -445,10 +433,9 @@ Actors:
                   $locf: "$randomType"}
               }
             }
-          },
-          {$limit: *limit}
+          }
         ]
-        cursor: {}
+        cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - Nop: true
   - Nop: true
@@ -496,10 +483,9 @@ Actors:
                   $locf: "$date"}
               }
             }
-          },
-          {$limit: *limit}
+          }
         ]
-        cursor: {}
+        cursor: {batchSize: *batchSize}
         allowDiskUse: true
 
 AutoRun:
