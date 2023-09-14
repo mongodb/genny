@@ -147,6 +147,10 @@ struct DbCheckActor::PhaseConfig {
         auto validateMode = phaseContext["ValidateMode"].maybe<std::string>();
         if (validateMode) {
             dbCheckCmdStream << "validateMode" << validateMode.value();
+            if (validateMode.value() == "extraIndexKeysCheck") {
+                auto secondaryIndex = phaseContext["SecondaryIndex"].to<std::string>();
+                dbCheckCmdStream << "secondaryIndex" << secondaryIndex;
+            }
         }
 
         dbCheckCmd = (dbCheckCmdStream << bsoncxx::builder::stream::finalize);
