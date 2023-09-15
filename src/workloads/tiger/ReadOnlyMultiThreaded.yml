@@ -99,4 +99,7 @@ Actors:
 AutoRun:
 - When:
     mongodb_setup:
-      $eq: standalone
+      $eq:
+      - shard-single
+      - single_replica
+      - standalone
