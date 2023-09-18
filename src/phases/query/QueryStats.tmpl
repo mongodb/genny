@@ -4,8 +4,8 @@ Description: |
   This is a template library of actors for QueryStats workloads.
 
   Actors (in the order they should appear in the workload):
-    ClearCollection: (requires MaxPhase) deletes the working collection, should only need to be run once.
-    InsertData: (requires MaxPhase) populates the working collection, should only need to be run once.
+    ClearCollection: (requires MaxPhase, Phase) deletes the working collection, should only need to be run once.
+    InsertData: (requires MaxPhase, Phase) populates the working collection, should only need to be run once.
     CacheSizeActor: (requires MaxPhase, Phases, CacheSizeMb) changes the QueryStats cache size.
     RateLimitActor: (requires MaxPhase, Phases, RateLimitHz) changes the QueryStates rate limit. Should be set to -1 before each QueryStats cache prepopulation to speed things up.
     QuiesceActor: (requires MaxPhase, Phases) ensures that actors quiesce before continuing.
@@ -66,7 +66,7 @@ ClearCollection:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [0]
+      Active: [*Phase]
       NopInPhasesUpTo: *MaxPhase
       PhaseConfig:
         Repeat: 1
@@ -81,7 +81,7 @@ InsertData:
   Threads: 4
   Phases:
     OnlyActiveInPhases:
-      Active: [1]
+      Active: [*Phase]
       NopInPhasesUpTo: *MaxPhase
       PhaseConfig:
         Repeat: 1
@@ -157,7 +157,8 @@ PrepopulateActor:
       PhaseConfig:
         Repeat:
           ^NumExpr:
-            # 32 threads * 320B per iteration = 10KB, so 100 iterations = 1MB"
+            # 320B per query shape * 32 threads = 10KB for each Repeat.
+            # So, this creates ~1MB of query shape data with a Repeat value of 100.
             withExpression: "mb * 100"
             andValues:
               mb: *CacheSizeMb
@@ -169,12 +170,13 @@ PrepopulateActor:
               Filter:
                 $and:
                 # So that this can use an index scan and immediately return. We don't want to be
-                # spending actual time on this query, we just want it in the logs.
+                # spending actual time on this query, we just want it to generate entries in the
+                # query stats store.
                 - a1: {^RandomDouble: {min: 1000000, max: 10000000000}}
                 # This will send a find command that is a little over 320B per query shape key.
                 - ^Object:
                     withNEntries: 10
-                    havingKeys: 
+                    havingKeys:
                       ^FormatString:
                         format: "%32d"
                         withArgs: [{^Inc: {start: 0, multiplier: 1, step: 32}}]
@@ -203,7 +205,7 @@ FindCommandActor:
                 - a2: 1
                 - *Payload
 
-AggregateActor:
+QueryStatsActor:
   Name: {^PreprocessorFormatString: {format: "QueryStatsAggregate-%s", withArgs: [*FormattedSuffix]}}
   Type: AdminCommand
   Threads: *Threads
