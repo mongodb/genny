@@ -65,7 +65,16 @@ QuiesceActor::QuiesceActor(genny::ActorContext& context)
     : Actor{context},
       _totalQuiesces{context.operation("Quiesce", QuiesceActor::id())},
       _client{context.client()},
-      _loop{context} {}
+      _loop{context} {
+
+    std::string srv = "mongodb+srv://";
+    auto uri_prefix = _client->uri().to_string().substr(0, srv.length());
+
+    if (uri_prefix == srv) {
+        throw InvalidConfigurationException(
+            "QuiesceActor does not support 'mongodb+srv://' connection URI.");
+    }
+}
 
 namespace {
 auto registerQuiesceActor = Cast::registerDefault<QuiesceActor>();
