@@ -575,6 +575,5 @@ def main(mode_name: str, workspace_root: str) -> None:
     tasks = repo.tasks(op=op, build=build)
 
     output_file = os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
-    writer = ConfigWriter(op, build)
     config = ConfigWriter.create_config(op, build, tasks)
-    ConfigWriter.write_config(build.execution, tasks, output_file)
+    ConfigWriter.write_config(build.execution, config, output_file)
