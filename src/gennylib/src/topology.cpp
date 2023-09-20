@@ -121,6 +121,18 @@ std::string Topology::nameToUri(const std::string& name) {
     }
     nameSet.insert(strippedName);
     _factory.overrideHosts(nameSet);
+
+    // Currently, the only two protocols supported are "mongodb://" and
+    // "mongodb+srv://" (see PoolFactory::Config). Hence, replacing
+    // "mongodb+srv://" with "mongodb://" implies always setting the protocoal
+    // to "mongodb://". Therefore, the following "if" is unnecessary. the The
+    // goal of adding it is to avoid surprises should more protocols are
+    // supported in the future.
+    if (_factory.getOption(PoolFactory::OptionType::kAccessOption, "Protocol") == "mongodb+srv://") {
+        _factory.setOption(PoolFactory::OptionType::kAccessOption,
+                           "Protocol", "mongodb://");
+    }
+
     return _factory.makeUri();
 }
 

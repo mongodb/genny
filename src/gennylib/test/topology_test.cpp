@@ -86,6 +86,61 @@ TEST_CASE("Topology visitor traverses nodes correctly") {
     }
 };
 
+TEST_CASE("Topology replaces srv uri") {
+    using bsoncxx::builder::stream::array;
+    using bsoncxx::builder::stream::close_array;
+    using bsoncxx::builder::stream::close_document;
+    using bsoncxx::builder::stream::document;
+    using bsoncxx::builder::stream::finalize;
+    using bsoncxx::builder::stream::open_array;
+    using bsoncxx::builder::stream::open_document;
+
+    SECTION("Topology replaces srv uri") {
+        class MockReplConnection : public DBConnection {
+
+            ConnectionUri uri() const override {
+                return "mongodb+srv://testPrimaryUriNeverUsedHere";
+            }
+
+            bsoncxx::document::value runAdminCommand(std::string command) override {
+                if (command == "isMaster") {
+                    auto doc = document{};
+                    doc << "setName"
+                        << "testSetName";
+                    doc << "primary"
+                        << "testPrimaryHost:testPrimaryPort";
+                    doc << "hosts" << open_array << "testPrimaryHost:testPrimaryPort"
+                        << "host2:port2"
+                        << "host3:port3" << close_array;
+                    return doc << finalize;
+                }
+                return document{} << "unplannedKey"
+                                  << "unplannedValue" << finalize;
+            }
+
+            std::unique_ptr<DBConnection> makePeer(ConnectionUri uri) override {
+                return std::make_unique<MockReplConnection>();
+            }
+        };
+
+        MockReplConnection connection;
+        Topology topology(connection);
+
+        ToJsonVisitor visitor;
+        topology.accept(visitor);
+
+        stringstream expected;
+        expected
+            << "{primaryUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny, "
+            << "nodes: [{replSetMemberMongodUri: mongodb://testPrimaryHost:testPrimaryPort/?appName=Genny}, "
+            << "{replSetMemberMongodUri: mongodb://host2:port2/?appName=Genny}, "
+            << "{replSetMemberMongodUri: mongodb://host3:port3/?appName=Genny}]}";
+
+        REQUIRE(expected.str() == visitor.str());
+    }
+}
+
+
 TEST_CASE("Topology maps the cluster correctly") {
     using bsoncxx::builder::stream::array;
     using bsoncxx::builder::stream::close_array;
