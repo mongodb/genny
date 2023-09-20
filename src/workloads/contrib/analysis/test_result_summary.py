@@ -169,7 +169,7 @@ def summarize_diffed_data(args, actor_name, metrics_of_interest):
     return results
 
 
-def summarize_readings(args, actor_name, metrics_of_interest, first_line, last_line):
+def summarize_readings(args, actor_name, metrics_of_interest, first_line, last_line, n_rows):
     results = summarize_diffed_data(args, actor_name, metrics_of_interest)
 
     if args.verbose:
@@ -185,6 +185,14 @@ def summarize_readings(args, actor_name, metrics_of_interest, first_line, last_l
         if "counters.ops" in last_line and "timers.dur" in last_line:
             n_ops = float(last_line["counters.ops"])
             elapsed_seconds = (last_line["ts"] - first_line["ts"]) / 1000
+            if n_rows == 1:
+                # If there is only a single recording, then assume that its
+                # a synthetic recording and use that as the absolute elapsed
+                # time.
+                #
+                # NOTE: `timers.dur` is expected to be in nanoseconds.
+                elapsed_seconds = last_line["timers.dur"] / 1e9
+
             results["throughput"] = {
                 "ops": n_ops,
                 "seconds": elapsed_seconds,
@@ -274,7 +282,7 @@ def process_json(args, actor_name, json_reader):
     # strip out the 'last recording' piece of information - not needed anymore.
     just_data = {m: all_data for (m, (_, all_data))
                  in metrics_of_interest.items()}
-    return summarize_readings(args, actor_name, just_data, first_line, last_line)
+    return summarize_readings(args, actor_name, just_data, first_line, last_line, n_rows)
 
 
 def print_histogram_bucket(prefix, global_max, bucket_min, bucket_max, end_bracket, stars, n_items):
