@@ -1,17 +1,20 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/altas-streams"
+Owner: "@10gen/atlas-streams"
 Description: |
-  Streaming pipeline that runs a filter matcher against the input data, only
-  emitting a subset of the input data. This is meant to stress the match operator,
-  which is a commonly used operator.
-
-Keywords:
-- streams
+  Generates load against a stream processor and has a stats reporter actor that will
+  report stats about that stream processor after the insert phase is complete since
+  the processing is fully async.
 
 GlobalDefaults:
-  DatabaseName: &DatabaseName "test"
-  StreamProcessorName: &StreamProcessorName "sp"
-  Duration: &Duration 1 minute
+  DatabaseName: &DatabaseName test
+  StreamProcessorName: &StreamProcessorName sp1
+  Document: &Document
+    id: {^Inc: { start: 1000 }}
+  BatchSize: &BatchSize 1000
+  Batch1000x: &Batch1000x {^Array: { number: *BatchSize, of: *Document }}
+  NumBatches: &NumBatches 1000
+  NumThreads: &NumThreads 8
+  ExpectedDocumentCount: &ExpectedDocumentCount 8000000
 
 Actors:
 - Name: Setup
@@ -29,18 +32,6 @@ Actors:
         name: *StreamProcessorName
         pipeline: [
           { $source: { connectionName: "__testMemory" } },
-          {
-            $match: {
-              $or: [
-                { auction: 1007 },
-                { auction: 1020 },
-                { auction: 2001 },
-                { auction: 2019 },
-                { auction: 2087 }
-              ]
-            }
-          },
-          { $project: { auction: 1, price: 1 } },
           { $emit: { connectionName: "__testMemory" } }
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
@@ -56,41 +47,35 @@ Actors:
         streams_stopStreamProcessor: ""
         name: *StreamProcessorName
 
-- Name: Insert_Batch1000x
+- Name: Inserter
   Type: RunCommand
-  Threads: 32
+  Threads: 8
   Phases:
   - Phase: 0
     Nop: true
   - Phase: 1
-    LoadConfig:
-      Path: ./InsertBidsTemplate.yml
-      Key: InsertBids
-      Parameters:
-        Database: *DatabaseName
-        StreamProcessorName: *StreamProcessorName
-        Duration: *Duration
+    Database: test
+    Repeat: *NumBatches
+    Operations:
+    - OperationMetricsName: Insert
+      OperationName: RunCommand
+      OperationCommand:
+        streams_testOnlyInsert: ""
+        name: *StreamProcessorName
+        documents: *Batch1000x
   - Phase: 2
     Nop: true
 
-- Name: Stats
+- Name: StreamStatsReporter
   Type: StreamStatsReporter
-  Database: *DatabaseName
   Threads: 1
+  Database: test
   Phases:
   - Phase: 0
     Nop: true
   - Phase: 1
     Repeat: 1
-    SleepBefore: *Duration
     StreamProcessorName: *StreamProcessorName
+    ExpectedDocumentCount: *ExpectedDocumentCount
   - Phase: 2
     Nop: true
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone-streams
-    branch_name:
-      $gte: v7.2
