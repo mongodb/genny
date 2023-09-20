@@ -79,7 +79,7 @@ void StreamStatsReporter::run() {
             double inputMessageBytes{0};
             while (_orchestrator.continueRunning()) {
                 auto reply = config->database.run_command(config->statsCommand.view());
-                BOOST_LOG_TRIVIAL(debug) << "stats reply: " << bsoncxx::to_json(reply);
+                BOOST_LOG_TRIVIAL(info) << "stats reply: " << bsoncxx::to_json(reply);
 
                 inputMessageCount = reply.view()["inputMessageCount"].get_int64();
                 inputMessageBytes = reply.view()["inputMessageSize"].get_double();

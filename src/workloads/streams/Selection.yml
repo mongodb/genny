@@ -11,6 +11,7 @@ Keywords:
 GlobalDefaults:
   DatabaseName: &DatabaseName "test"
   StreamProcessorName: &StreamProcessorName "sp"
+  Duration: &Duration 1 minute
 
   # Use 16 inserter threads that insert 100 batches of 1k documents, so
   # total of 1.6M documents.

@@ -29,15 +29,13 @@
 namespace genny::actor {
 
 /**
- * Periodically polls (every 250ms) the stream processor's stats from the
- * mongostream instance (`streams_getStats`) until the expected document count
- * is met. This is needed because stream processing is fully async so we need to
- * rely on metrics emitted from the stream processor itself in order to get proper
- * numbers on throughput.
+ * Periodically polls the stream processor's stats from the mongostream instance
+ * until the expected document count is hit. This is needed because stream processing
+ * is fully async so we need to rely on metrics emitted from the stream processor
+ * itself in order to get proper numbers on throughput.
  *
  * Throughput for a stream processor is measured based on the input rate of
- * the stream processor, so in our case it'll be based on the `inputMessageCount`
- * and `inputMessageBytes` stats in the `streams_getStats` response.
+ * the stream processor.
  *
  * ```yaml
  * SchemaVersion: 2017-07-01
