@@ -25,6 +25,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
+#include <variant>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/date_time.hpp>
@@ -35,6 +36,7 @@
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
+#include <bsoncxx/decimal128.hpp>
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/oid.hpp>
 #include <bsoncxx/types/bson_value/view.hpp>
@@ -267,6 +269,7 @@ UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
 UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
                                                            GeneratorArgs generatorArgs);
+UniqueGenerator<int32_t> int32Generator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<int64_t> dateGenerator(const Node& node,
                                        GeneratorArgs generatorArgs,
@@ -1113,6 +1116,108 @@ public:
     }
 };
 
+// The following is a replacement for partial template specialization for functions, which is not
+// currently supported in C++.
+template <typename F, typename T>
+struct convert{};
+
+// Conversion used between int, long, double
+template <typename F, typename T>
+T convertToNumeric(convert<F, T>, const F& from)
+{
+    return (T)from;
+}
+
+// Special conversion for decimal
+template<typename F>
+bsoncxx::decimal128 convertToNumeric(convert<F, bsoncxx::decimal128>, const F& from) {
+    // mongocxx doesn't define nice converters from numeric types to decimal, so we convert first
+    // to string and then to decimal
+    return bsoncxx::decimal128(std::to_string(from));
+}
+
+// String conversions
+bsoncxx::decimal128 convertToNumeric(convert<std::string, bsoncxx::decimal128>,
+        const std::string& s) {
+    return bsoncxx::decimal128(s);
+}
+double convertToNumeric(convert<std::string, double>, const std::string& s) {
+    return stod(s);
+}
+int64_t convertToNumeric(convert<std::string, int64_t>, const std::string& s) {
+    return stol(s);
+}
+int32_t convertToNumeric(convert<std::string, int32_t>, const std::string& s) {
+    return stoi(s);
+}
+
+// This is the only overload we run directly, and it will route to the correct template.
+template <typename F, typename T>
+T convertToNumeric(const F& from) {
+    return convertToNumeric(convert<F, T>{}, from);
+}
+
+// overloaded struct for use with std::variants.
+template<class... Ts>
+struct overloaded : Ts... { using Ts::operator()...; };
+
+template<class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
+// Generator to convert from any numeric type except decimal or string to specific numeric type.
+template<typename T>
+class NumericConversionGenerator : public Generator<T> {
+public:
+    NumericConversionGenerator(const Node& node, GeneratorArgs generatorArgs) {
+        // Try all of the possible generators for from, return when we find one that works.
+        try {
+            _generator = stringGenerator(node["from"], generatorArgs);
+            return;
+        } catch (const InvalidConversionException& e) {}
+          catch (const UnknownParserException& e) {}
+        try {
+            _generator = intGenerator(node["from"], generatorArgs);
+            return;
+        } catch (const InvalidConversionException& e) {}
+          catch (const UnknownParserException& e) {}
+        try {
+            _generator = doubleGenerator(node["from"], generatorArgs);
+            return;
+        } catch (const InvalidConversionException& e) {}
+          catch (const UnknownParserException& e) {}
+        try {
+            _generator = int32Generator(node["from"], generatorArgs);
+            return;
+        } catch (const InvalidConversionException& e) {}
+          catch (const UnknownParserException& e) {}
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+            "Numeric conversion generator only supports conversions from the string, double, int, "
+            "and int32 types. The type of the \"from\" field did not match any of those types."));
+    }
+    T evaluate() override {
+        return std::visit(overloaded{
+            [&](UniqueGenerator<std::string>& gen) {
+                return convertToNumeric<std::string, T>(gen->evaluate());
+            },
+            [&](UniqueGenerator<int64_t>& gen) {
+                return convertToNumeric<int64_t, T>(gen->evaluate());
+            },
+            [&](UniqueGenerator<double>& gen) {
+                return convertToNumeric<double, T>(gen->evaluate());
+            },
+            [&](UniqueGenerator<int32_t>& gen) {
+                return convertToNumeric<int32_t, T>(gen->evaluate());
+            }
+        }, _generator);
+    }
+private:
+    std::variant<
+        UniqueGenerator<std::string>,
+        UniqueGenerator<int64_t>,
+        UniqueGenerator<double>,
+        UniqueGenerator<int32_t>> _generator;
+};
+
 /** `{^ActorId: {}}` */
 class ActorIdIntGenerator : public Generator<int64_t> {
 public:
@@ -1797,7 +1902,8 @@ Out valueGenerator(const Node& node,
  * If adding a new parsers map, remember to insert its entries into `allParsers` at the end of this
  * lambda function.
  */
-const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, stringParsers] = [] () {
+const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers,
+            stringParsers, int32Parsers, decimalParsers] = [] () {
     static std::map<std::string, Parser<UniqueAppendable>> allParsers {
         {"^Choose",
          [](const Node& node, GeneratorArgs generatorArgs) {
@@ -1886,6 +1992,10 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
     // see doubleGenerator
     const static std::map<std::string, Parser<UniqueGenerator<double>>> doubleParsers{
         {"^RandomDouble", doubleGeneratorBasedOnDistribution},
+        {"^ConvertToDouble",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NumericConversionGenerator<double>>(node, generatorArgs);
+         }},
     };
 
     // Set of parsers to look when we request an int parser
@@ -1900,6 +2010,10 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
         {"^Inc",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<IncGenerator>(node, generatorArgs);
+         }},
+        {"^ConvertToInt",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NumericConversionGenerator<int64_t>>(node, generatorArgs);
          }},
     };
 
@@ -1948,14 +2062,36 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
          }},
     };
 
+    // Set of parsers to look when we request an int32 parser
+    // see int32Generator
+    const static std::map<std::string, Parser<UniqueGenerator<int32_t>>> int32Parsers{
+        {"^ConvertToInt32",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NumericConversionGenerator<int32_t>>(node, generatorArgs);
+         }},
+    };
+
+    // Set of parsers to look when we request a decimal parser
+    // see decimalGenerator
+    const static std::map<std::string, Parser<UniqueGenerator<bsoncxx::decimal128>>> decimalParsers{
+        {"^ConvertToDecimal",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NumericConversionGenerator<bsoncxx::decimal128>>(
+                node, generatorArgs);
+         }},
+    };
+
     // Only nonexistent keys are inserted.
     allParsers.insert(arrayParsers.begin(), arrayParsers.end());
     allParsers.insert(dateParsers.begin(), dateParsers.end());
     allParsers.insert(doubleParsers.begin(), doubleParsers.end());
     allParsers.insert(intParsers.begin(), intParsers.end());
     allParsers.insert(stringParsers.begin(), stringParsers.end());
+    allParsers.insert(int32Parsers.begin(), int32Parsers.end());
+    allParsers.insert(decimalParsers.begin(), decimalParsers.end());
 
-    return std::tie(allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, stringParsers);
+    return std::tie(allParsers, arrayParsers, dateParsers, doubleParsers, intParsers,
+        stringParsers, int32Parsers, decimalParsers);
 } ();
 
 /**
@@ -2145,6 +2281,21 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
         return parserPair->first(node[parserPair->second], generatorArgs);
     }
     return std::make_unique<ConstantAppender<std::string>>(node.to<std::string>());
+}
+
+/**
+ * @param node
+ *   a top-level document value i.e. either a scalar or an int32 generator value
+ * @return
+ *   either a `^ConvertToInt32` generator (etc--see `int32Parsers`)
+ *   or a constant generator if given a constant/scalar.
+ */
+UniqueGenerator<int32_t> int32Generator(const Node& node, GeneratorArgs generatorArgs) {
+    if (auto parserPair = extractKnownParser(node, generatorArgs, int32Parsers)) {
+        // known parser type
+        return parserPair->first(node[parserPair->second], generatorArgs);
+    }
+    return std::make_unique<ConstantAppender<int32_t>>(node.to<int32_t>());
 }
 
 /**
