@@ -18,6 +18,11 @@ GlobalDefaults:
   RandomUUID: &RandomUUID {^RandomString: { length: 16 }}
   StreamProcessorName: &StreamProcessorName "sp"
 
+  # Use 16 inserter threads that insert 100 batches of 1k documents, so
+  # total of 1.6M documents.
+  NumThreads: &NumThreads 16
+  NumBatches: &NumBatches 100
+
   AdIds: &AdIds             {^Cycle: { ofLength: 1000, fromGenerator: *RandomUUID }}
   CampaignIds: &CampaignIds {^Cycle: { ofLength: 100, fromGenerator: *RandomUUID }}
 
@@ -31,7 +36,9 @@ GlobalDefaults:
     eventTime:  {^IncDate: { start: "2023-01-01T00:00:00.000", step: 10 }}
     ipAddress:  {^IP: {}}
 
-  Batch1000x: &Batch1000x {^Array: { number: 1000, of: *Document }}
+  Batch10x: &Batch10x [*Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document]
+  Batch100x: &Batch100x {^FlattenOnce: [*Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x]}
+  Batch1000x: &Batch1000x {^FlattenOnce: [*Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x]}
 
 Actors:
 - Name: Setup
@@ -99,12 +106,12 @@ Actors:
 - Name: Insert_Batch1000x
   Type: RunCommand
   ClientName: Stream
-  Threads: 32
+  Threads: *NumThreads
   Phases:
     - Phase: 0
       Nop: true
     - Phase: 1
-      Duration: 1 minute
+      Repeat: *NumBatches
       Database: *DatabaseName
       Operations:
       - OperationMetricsName: Insert
@@ -115,6 +122,21 @@ Actors:
           documents: *Batch1000x
     - Phase: 2
       Nop: true
+
+- Name: Stats
+  Type: StreamStatsReporter
+  ClientName: Stream
+  Database: *DatabaseName
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Nop: true
+  - Phase: 1
+    Repeat: 1
+    StreamProcessorName: *StreamProcessorName
+    ExpectedDocumentCount: 1600000
+  - Phase: 2
+    Nop: true
 
 AutoRun:
 - When:

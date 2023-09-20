@@ -23,10 +23,12 @@ GlobalDefaults:
     url: *Urls
     dateTime: {^IncDate: { start: "2023-01-01T00:00:00.000", step: 10 }}
 
-  Batch1000x: &Batch1000x {^Array: { number: 1000, of: *Document }}
+  Batch10x: &Batch10x [*Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document]
+  Batch100x: &Batch100x {^FlattenOnce: [*Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x]}
+  Batch1000x: &Batch1000x {^FlattenOnce: [*Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x]}
 
 InsertBids:
-  Duration: {^Parameter: { Name: "Duration", Default: "1 minute" }}
+  Repeat: {^Parameter: { Name: "Repeat", Default: 100 }}
   Database: {^Parameter: { Name: "Database", Default: *DatabaseName }}
   Operations:
   - OperationMetricsName: Insert
