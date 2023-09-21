@@ -59,6 +59,7 @@ Ensure you have installed [Homebrew](https://brew.sh/)
 
 xcode-select --install
 brew install zstd
+brew install snappy
 
 # Necessary because the cmake in vcpkg is unsigned and can't be copied between machines
 brew install cmake
