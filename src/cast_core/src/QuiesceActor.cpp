@@ -67,10 +67,7 @@ QuiesceActor::QuiesceActor(genny::ActorContext& context)
       _client{context.client()},
       _loop{context} {
 
-    std::string srv = "mongodb+srv://";
-    auto uri_prefix = _client->uri().to_string().substr(0, srv.length());
-
-    if (uri_prefix == srv) {
+    if (_client->uri().to_string().find("mongodb+srv://") == 0){
         throw InvalidConfigurationException(
             "QuiesceActor does not support 'mongodb+srv://' connection URI.");
     }
