@@ -55,8 +55,8 @@ GlobalDefaults:
   CacheSize: &CacheSize {^PreprocessorFormatString: {format: "%dMB", withArgs: [*CacheSizeMb]}}
   FormattedSuffix: &FormattedSuffix
     ^PreprocessorFormatString:
-      format: "%s-CacheSize%s-RateLimit%sHz-Phase%s"
-      withArgs: [*Suffix, *CacheSize, *RateLimitHz, *Phase]
+      format: "%s-CacheSize%s-Phase%s"
+      withArgs: [*Suffix, *CacheSize, *Phase]
 
 # One-time setup for the workload, run at the beginning of the workload.
 ClearCollection:

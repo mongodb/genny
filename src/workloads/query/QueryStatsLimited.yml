@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  This workload tests $queryStats performance.
+  This workload tests $queryStats performance with rate limiting.
 
 KeyWords:
 - queryStats
@@ -18,7 +18,7 @@ GlobalDefaults:
   CacheSizeMb: &CacheSizeMb 300
   HmacParameters: &HmacParameters {transformIdentifiers: {algorithm: "hmac-sha-256", hmacKey: {^BinDataSensitive: {numBytes: 32}}}}
   MaxPhase: &MaxPhase 50
-  RateLimitHz: &RateLimitHz -1
+  RateLimitHz: &RateLimitHz 100
 
   FixedPayload: &FixedPayload
     ^Object:
@@ -108,7 +108,7 @@ Actors:
       Phase: 17
       Payload: *FixedPayload
       RateLimitHz: *RateLimitHz
-      Suffix: "Base-Fixed"
+      Suffix: "Base-Fixed-RateLimited"
 
 # Concurrent HMAC-transformed $queryStats query, all find queries are roughly the same size.
 - LoadConfig:
@@ -120,7 +120,7 @@ Actors:
       Phase: 27
       Payload: *FixedPayload
       RateLimitHz: *RateLimitHz
-      Suffix: "Hmac-Fixed"
+      Suffix: "Hmac-Fixed-RateLimited"
 - LoadConfig:
     Path: ../../phases/query/QueryStats.tmpl
     Key: QueryStatsActor
@@ -130,7 +130,7 @@ Actors:
       Phase: 27
       QueryStatsParameters: *HmacParameters
       RateLimitHz: *RateLimitHz
-      Suffix: "Hmac-Fixed"
+      Suffix: "Hmac-Fixed-RateLimited"
 
 # No concurrent $queryStats query, find queries vary widely in size.
 - LoadConfig:
@@ -142,7 +142,7 @@ Actors:
       Phase: 37
       Payload: *RandomPayload
       RateLimitHz: *RateLimitHz
-      Suffix: "Base-Random"
+      Suffix: "Base-Random-RateLimited"
 
 # Concurrent HMAC-transformed $queryStats query, find queries vary widely in size.
 - LoadConfig:
@@ -154,7 +154,7 @@ Actors:
       Phase: 47
       Payload: *RandomPayload
       RateLimitHz: *RateLimitHz
-      Suffix: "Hmac-Random"
+      Suffix: "Hmac-Random-RateLimited"
 - LoadConfig:
     Path: ../../phases/query/QueryStats.tmpl
     Key: QueryStatsActor
@@ -164,22 +164,12 @@ Actors:
       Phase: 47
       QueryStatsParameters: *HmacParameters
       RateLimitHz: *RateLimitHz
-      Suffix: "Hmac-Random"
+      Suffix: "Hmac-Random-RateLimited"
 
 AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - standalone-all-feature-flags
-      - standalone-query-stats
-      - standalone
-      - shard
-      - shard-query-stats
-      - shard-lite
-      - shard-lite-query-stats
-      - single-replica
-      - single-replica-query-stats
-      - replica
-      - replica-query-stats
-      - atlas-like-replica.2022-10
-      - atlas-like-replica-query-stats.2022-10
+      - standalone-query-stats-small-rate-limit
+      - shard-limited-query-stats
+      - shard-lite-limited-query-stats
