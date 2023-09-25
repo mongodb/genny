@@ -60,7 +60,8 @@ Actors:
               bootstrapServers: "localhost:9092",
               isTestKafka: true
             }
-          }
+          },
+          { name: "__testMemory", type: "in_memory", options: {} }
         ]
   - Phase: 1
     Nop: true
