@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import structlog
 import tempfile
@@ -23,6 +23,7 @@ def main_genny_runner(
     cleanup_metrics: bool,
     workspace_root: str,
     hang: bool = False,
+    mongostream_uri: Optional[str] = None,
 ):
     """
     Intended to be the main entry point for running Genny.
@@ -54,6 +55,7 @@ def main_genny_runner(
             preprocess.preprocess(
                 workload_path=workload_yaml_path,
                 default_uri=mongo_uri,
+                mongostream_uri=mongostream_uri,
                 smoke=smoke_test,
                 output_file=f,
                 override_file_path=override,
