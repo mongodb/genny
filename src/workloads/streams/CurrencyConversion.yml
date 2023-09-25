@@ -14,6 +14,7 @@ GlobalDefaults:
 Actors:
 - Name: Setup
   Type: RunCommand
+  ClientName: Stream
   Threads: 1
   Phases:
   - Phase: 0
@@ -52,6 +53,7 @@ Actors:
 
 - Name: Insert_Batch1000x
   Type: RunCommand
+  ClientName: Stream
   Threads: 32
   Phases:
   - Phase: 0
