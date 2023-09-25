@@ -2,8 +2,9 @@ SchemaVersion: 2018-07-01
 Owner: "@10gen/altas-streams"
 Description: |
   Streaming pipeline that runs with a stateful window operator on the input data. This
-  is meant to stress the window operator with large numbers of keys within a single open
-  window.
+  is meant to stress the window operator, which is a commonly used operator. This will
+  only create a single key within every 10s window since its just looking for the max
+  value across all events, so this is just testing the throughput for the window operator.
 
 Keywords:
 - streams
@@ -47,11 +48,8 @@ Actors:
               pipeline: [
                 { 
                   $group: {
-                    _id: "$url",
-                    sum: { $sum: "$price" },
-                    avg: { $avg: "$price" },
-                    max: { $max: "$price" },
-                    min: { $min: "$price" }
+                    _id: null,
+                    maxPrice: { $max: "$price" }
                   }
                 }
               ]

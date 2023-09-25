@@ -1,9 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@10gen/altas-streams"
 Description: |
-  Streaming pipeline that runs with a stateful window operator on the input data. This
-  is meant to stress the window operator with large numbers of keys within a single open
-  window.
+  Streaming pipeline that runs a filter matcher against the input data, only
+  emitting a subset of the input data. This is meant to stress the match operator,
+  which is a commonly used operator.
 
 Keywords:
 - streams
@@ -32,44 +32,22 @@ Actors:
         streams_startStreamProcessor: ""
         name: *StreamProcessorName
         pipeline: [
+          { $source: { connectionName: "__testMemory" } },
           {
-            $source: {
-              connectionName: "kafka",
-              topic: "topic-input",
-              timeField: { $convert: { input: "$dateTime", to: "date" }},
-              allowedLateness: { size: 10, unit: "second" },
-              testOnlyPartitionCount: 1
-            }
-          },
-          {
-            $tumblingWindow: {
-              interval: { size: 10, unit: "second" },
-              pipeline: [
-                { 
-                  $group: {
-                    _id: "$url",
-                    sum: { $sum: "$price" },
-                    avg: { $avg: "$price" },
-                    max: { $max: "$price" },
-                    min: { $min: "$price" }
-                  }
-                }
+            $match: {
+              $or: [
+                { auction: 1007 },
+                { auction: 1020 },
+                { auction: 2001 },
+                { auction: 2019 },
+                { auction: 2087 }
               ]
             }
           },
+          { $project: { auction: 1, price: 1 } },
           { $emit: { connectionName: "__testMemory" } }
         ]
-        connections: [
-          {
-            name: "kafka",
-            type: "kafka",
-            options: {
-              bootstrapServers: "localhost:9092",
-              isTestKafka: true
-            }
-          },
-          { name: "__testMemory", type: "in_memory", options: {} }
-        ]
+        connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
   - Phase: 1
     Nop: true
   - Phase: 2

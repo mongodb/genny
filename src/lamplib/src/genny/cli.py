@@ -151,6 +151,15 @@ def cmake_compile_install(
     help=("Set a default mongo uri used by connection pools that don't have one configured."),
 )
 @click.option(
+    "--mongostream-uri",
+    required=False,
+    default=None,
+    help=(
+        "Set a mongostream uri used by the stream connection pool, if this is not "
+        "set then this will default to the --mongo-uri."
+    ),
+)
+@click.option(
     "-o",
     "--output",
     required=False,
@@ -177,7 +186,13 @@ def cmake_compile_install(
 )
 @click.pass_context
 def evaluate(
-    ctx: click.Context, workload_path: str, mongo_uri: str, output: str, override: str, smoke: bool
+    ctx: click.Context,
+    workload_path: str,
+    mongo_uri: str,
+    output: str,
+    override: str,
+    smoke: bool,
+    mongostream_uri: Optional[str],
 ):
     from genny.tasks import preprocess
 
@@ -187,6 +202,7 @@ def evaluate(
         smoke=smoke,
         override_file_path=override,
         output=output,
+        mongostream_uri=mongostream_uri,
     )
 
 
@@ -312,6 +328,15 @@ def benchmark_test(ctx: click.Context) -> None:
     help=("Set a default mongo uri used by connection pools that don't have one configured."),
 )
 @click.option(
+    "--mongostream-uri",
+    required=False,
+    default=None,
+    help=(
+        "Set a mongostream uri used by the stream connection pool, if this is not "
+        "set then this will default to the --mongo-uri."
+    ),
+)
+@click.option(
     "-v",
     "--verbosity",
     required=False,
@@ -357,6 +382,7 @@ def workload(
     ctx: click.Context,
     workload_yaml: tuple[str],
     mongo_uri: str,
+    mongostream_uri: Optional[str],
     verbosity: str,
     override: str,
     dry_run: bool,
@@ -370,6 +396,7 @@ def workload(
     genny_runner.main_genny_runner(
         workload_yaml_path=workload_yaml[0],
         mongo_uri=mongo_uri,
+        mongostream_uri=mongostream_uri,
         verbosity=verbosity,
         override=override,
         dry_run=dry_run,
