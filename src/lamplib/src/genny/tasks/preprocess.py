@@ -13,6 +13,12 @@ import structlog
 import numexpr
 from typing import Any, Dict, Optional, Union
 
+
+class ClientType(str, Enum):
+    MONGODB = "mongo"
+    MONGOSTREAM = "mongostream"
+
+
 SLOG = structlog.get_logger(__name__)
 # Cannot be in the default config because yaml merges overwrite lists instead of appending.
 GENNY_INTERNAL = {"Name": "PhaseTimingRecorder", "Type": "PhaseTimingRecorder", "Threads": 1}
@@ -22,7 +28,16 @@ DEFAULT_CONFIG = {
     # later URI injection can configure it. It's okay if the Default
     # pool isn't actually used in a workload, since they're constructed
     # lazily.
-    "Clients": {"Default": {"QueryOptions": {"maxPoolSize": 100}}}
+    "Clients": {
+        "Default": {
+            "Type": ClientType.MONGODB.value,
+            "QueryOptions": {"maxPoolSize": 100},
+        },
+        "Stream": {
+            "Type": ClientType.MONGOSTREAM.value,
+            "QueryOptions": {"maxPoolSize": 100},
+        },
+    },
 }
 
 
@@ -31,7 +46,12 @@ class ParseException(Exception):
 
 
 def evaluate(
-    workload_path: str, default_uri: str, smoke: bool, output: str, override_file_path=None
+    workload_path: str,
+    default_uri: str,
+    smoke: bool,
+    output: str,
+    override_file_path: Optional[str] = None,
+    mongostream_uri: Optional[str] = None,
 ):
     """CLI-friendly wrapper for preprocess."""
     if output is not None:
@@ -42,6 +62,7 @@ def evaluate(
                 smoke=smoke,
                 output_file=f,
                 override_file_path=override_file_path,
+                mongostream_uri=mongostream_uri,
             )
     else:
         preprocess(
@@ -49,6 +70,7 @@ def evaluate(
             default_uri=default_uri,
             smoke=smoke,
             override_file_path=override_file_path,
+            mongostream_uri=mongostream_uri,
         )
 
 
@@ -60,6 +82,7 @@ def preprocess(
     default_uri: str,
     output_file=sys.stdout,
     override_file_path=None,
+    mongostream_uri: Optional[str] = None,
 ):
     """Evaluate a workload and output it to a file (or stdout)."""
     mode = _ParseMode.Smoke if smoke else _ParseMode.Normal
@@ -79,7 +102,13 @@ def preprocess(
         OmegaConf.save(config=conf, f=fp.name)
         parser = _WorkloadParser()
         path = Path(workload_path)
-        raw_parsed = parser.parse(fp.name, path=path, parse_mode=mode, default_uri=default_uri)
+        raw_parsed = parser.parse(
+            fp.name,
+            path=path,
+            parse_mode=mode,
+            default_uri=default_uri,
+            mongostream_uri=mongostream_uri,
+        )
         conf = OmegaConf.create(raw_parsed)
 
     output_logger = structlog.PrintLogger(output_file)
@@ -194,6 +223,7 @@ class _WorkloadParser(object):
         source: YamlSource = YamlSource.File,
         path: Union[Path, str] = "",
         parse_mode: _ParseMode = _ParseMode.Normal,
+        mongostream_uri: Optional[str] = None,
     ):
         """Parse the yaml input, assumed to be a file by default."""
 
@@ -202,6 +232,7 @@ class _WorkloadParser(object):
         path = Path(path)  # Path("") is equivalent to Path("./")
 
         self._default_uri = default_uri
+        self._mongostream_uri = mongostream_uri
         with self._context.enter():
             if source == _WorkloadParser.YamlSource.File:
                 workload = _load_file(yaml_input)
@@ -427,7 +458,11 @@ class _WorkloadParser(object):
     def _parse_clients(self, clients):
         clients_dict = self._recursive_parse(clients)
         for name, client in clients_dict.items():
-            client.setdefault("URI", self._default_uri)
+            client_type: Optional[ClientType] = client.get("Type", None)
+            if self._mongostream_uri and client_type == ClientType.MONGOSTREAM:
+                client.setdefault("URI", self._mongostream_uri)
+            else:
+                client.setdefault("URI", self._default_uri)
             self._context.insert(f"client/{name}", client, _ContextType.Client)
         return clients_dict
 
