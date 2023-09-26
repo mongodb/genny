@@ -752,3 +752,27 @@ Document:
 """
 
         self._assertYaml(yaml_input, expected)
+
+    def test_clienturi_reference(self):
+        yaml_input: str = (
+            "Clients:\n"
+            "  Default:\n"
+            "    URI: mongodb://mongod:27017\n"
+            "  Stream:\n"
+            "    URI: mongodb://mongostream:27017\n"
+            "SchemaVersion: 2018-07-01\n"
+            "MongoClientURI: {^ClientURI: { Name: 'Default' }}\n"
+            "MongostreamClientURI: {^ClientURI: { Name: 'Stream' }}"
+        )
+        expected: str = (
+            "Clients:\n"
+            "  Default:\n"
+            "    URI: mongodb://mongod:27017\n"
+            "  Stream:\n"
+            "    URI: mongodb://mongostream:27017\n"
+            "SchemaVersion: '2018-07-01'\n"
+            "MongoClientURI: mongodb://mongod:27017\n"
+            "MongostreamClientURI: mongodb://mongostream:27017\n"
+        )
+
+        self._assertYaml(yaml_input, expected)
