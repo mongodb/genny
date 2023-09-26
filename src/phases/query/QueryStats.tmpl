@@ -3,35 +3,35 @@ Owner: "@mongodb/query"
 Description: |
   This is a template library of actors for QueryStats workloads.
 
-  Actors (in the order they should appear in the workload):
-    ClearCollection: (requires MaxPhase, Phase) deletes the working collection, should only need to be run once.
-    InsertData: (requires MaxPhase, Phase) populates the working collection, should only need to be run once.
-    CacheSizeActor: (requires MaxPhase, Phases, CacheSizeMb) changes the QueryStats cache size.
-    RateLimitActor: (requires MaxPhase, Phases, RateLimitHz) changes the QueryStates rate limit. Should be set to -1 before each QueryStats cache prepopulation to speed things up.
-    QuiesceActor: (requires MaxPhase, Phases) ensures that actors quiesce before continuing.
-    PrepopulateActor: (requires MaxPhase, Phases, CacheSizeMb) prepopulates the QueryStats cache to ensure that it is filled with similarish shapes before every workload execution.
-    FindCommandActor: (requires MaxPhase, Phase, CacheSizeMb, Payload; optional Suffix) runs find commands to generate query stats.
-    AggregateActor: (requires MaxPhase, Phase, CacheSizeMb; optional Suffix, QueryStatsParameters) runs $queryStats.
+  Actors (in the order they should appear in the workload)
+    ClearCollection (requires MaxPhase, Phase) deletes the working collection, should only need to be run once.
+    InsertData (requires MaxPhase, Phase) populates the working collection, should only need to be run once.
+    CacheSizeActor (requires MaxPhase, Phases, CacheSizeMb) changes the QueryStats cache size.
+    RateLimitActor (requires MaxPhase, Phases, RateLimitHz) changes the QueryStates rate limit. Should be set to -1 before each QueryStats cache prepopulation to speed things up.
+    QuiesceActor (requires MaxPhase, Phases) ensures that actors quiesce before continuing.
+    PrepopulateActor (requires MaxPhase, Phases, CacheSizeMb) prepopulates the QueryStats cache to ensure that it is filled with similarish shapes before every workload execution.
+    FindCommandActor (requires MaxPhase, Phase, CacheSizeMb, Payload; optional Suffix) runs find commands to generate query stats.
+    AggregateActor (requires MaxPhase, Phase, CacheSizeMb; optional Suffix, QueryStatsParameters) runs $queryStats.
 
-  Parameters:
+  Parameters
     # Required parameters.
     # These parameters have a default value of {unused: }. This results in a runtime
     # error if they are used in an actor. Any actor that uses one of these parameters
     # needs to have the parameter value explicitly set to avoid runtime errors.
-    CacheSizeMb: (integer) QueryStats cache size in MB.
-    MaxPhase: (integer) largest phase number in the workload.
-    Name: (string) string name of the CrudActor.
-    Phase: (integer) phase in which the actor runs.
-    Phases: (integer | array[integer]) phase(s) in which the actor runs.
-    RateLimitHz: (integer) QueryStats rate limit value in Hz.
+    CacheSizeMb (integer) QueryStats cache size in MB.
+    MaxPhase (integer) largest phase number in the workload.
+    Name (string) string name of the CrudActor.
+    Phase (integer) phase in which the actor runs.
+    Phases (integer | array[integer]) phase(s) in which the actor runs.
+    RateLimitHz (integer) QueryStats rate limit value in Hz.
 
     # Optional parameters
-    DocumentCount: (integer | float; default: 1e6) number of documents to insert into the database.
-    Duration: (time; default: 100 seconds) how long to run the workload.
-    Payload: (object; default: {}) additional query components to the find command CrudActor.
-    QueryStatsParameters: (object; default: {}) additional query components to $queryStats.
-    Suffix: (string; default: "") additional suffix arguments.
-    Threads: (integer; default: 1) the number of concurrently-running $quueryStats threads.
+    DocumentCount (integer | float; default 1e6) number of documents to insert into the database.
+    Duration (time; default 100 seconds) how long to run the workload.
+    Payload (object; default {}) additional query components to the find command CrudActor.
+    QueryStatsParameters (object; default {}) additional query components to $queryStats.
+    Suffix (string; default "") additional suffix arguments.
+    Threads (integer; default 1) the number of concurrently-running $quueryStats threads.
 
 GlobalDefaults:
   # Workload constants.
