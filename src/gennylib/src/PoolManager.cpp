@@ -65,7 +65,7 @@ mongocxx::pool::entry genny::v1::PoolManager::createClient(const std::string& na
     }
 
     // ...but no need to keep the lock open past this.
-    // Two threads trying access _client("foo",0) at the same
+    // Two threads trying access createClient("foo",0) at the same
     // time will subsequently block on the unique_lock.
     getLock.unlock();
 
