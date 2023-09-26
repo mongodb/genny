@@ -18,7 +18,7 @@ GlobalDefaults:
   CacheSizeMb: &CacheSizeMb 300
   HmacParameters: &HmacParameters {transformIdentifiers: {algorithm: "hmac-sha-256", hmacKey: {^BinDataSensitive: {numBytes: 32}}}}
   MaxPhase: &MaxPhase 50
-  RateLimitHz: &RateLimitHz -1
+  RateLimitHz: &RateLimitHz 100
 
   FixedPayload: &FixedPayload
     ^Object:
@@ -52,10 +52,10 @@ Actors:
     Parameters:
       CacheSizeMb: 0
       MaxPhase: *MaxPhase
-      Phases: [10, 20, 30, 40]  # To make analysis easier, each variant (there are 4 here) gets its
-                                # own block of 10 phases. This way, the FindCommand and QueryStats
-                                # actors always end with the same digit. The extra no-op phases will
-                                # simply be ignored.
+      Phases: [10, 20, 30, 40, 50, 60]
+      # To make analysis easier, each variant (there are 6 here) gets its own block of 10 phases.
+      # This way, the FindCommand and QueryStats actors always end with the same digit. The extra
+      # no-op phases will simply be ignored.
 - LoadConfig:
     Path: ../../phases/query/QueryStats.tmpl
     Key: CacheSizeActor  # Reset the query stats cache to the target size. We do this explicitly to
@@ -64,13 +64,13 @@ Actors:
     Parameters:
       CacheSizeMb: *CacheSizeMb
       MaxPhase: *MaxPhase
-      Phases: [11, 21, 31, 41]
+      Phases: [11, 21, 31, 41, 51, 61]
 - LoadConfig:
     Path: ../../phases/query/QueryStats.tmpl
     Key: RateLimitActor  # Disable the rate limit so that we can prepopulate the cache faster.
     Parameters:
       MaxPhase: *MaxPhase
-      Phases: [12, 22, 32, 42]
+      Phases: [12, 22, 32, 42, 52, 62]
       RateLimitHz: -1
 - LoadConfig:
     Path: ../../phases/query/QueryStats.tmpl
@@ -78,8 +78,8 @@ Actors:
     Parameters:
       MaxPhase: *MaxPhase
       Phases: [
-        13, 23, 33, 43,
-        16, 26, 36, 46,
+        13, 23, 33, 43, 53, 63,
+        16, 26, 36, 46, 56, 66,
       ]
 - LoadConfig:
     Path: ../../phases/query/QueryStats.tmpl
@@ -88,14 +88,14 @@ Actors:
     Parameters:
       CacheSizeMb: *CacheSizeMb
       MaxPhase: *MaxPhase
-      Phases: [14, 24, 34, 44]
+      Phases: [14, 24, 34, 44, 54, 64]
 - LoadConfig:
     Path: ../../phases/query/QueryStats.tmpl
     Key: RateLimitActor  # Reset the rate limit to the desired value. This needs to be kept
                          # up-to-date with the actual rate limit.
     Parameters:
       MaxPhase: *MaxPhase
-      Phases: [15, 25, 35, 45]
+      Phases: [55, 65]
       RateLimitHz: *RateLimitHz
 
 # No concurrent $queryStats query, all find queries are roughly the same size.
@@ -107,7 +107,6 @@ Actors:
       MaxPhase: *MaxPhase
       Phase: 17
       Payload: *FixedPayload
-      RateLimitHz: *RateLimitHz
       Suffix: "Base-Fixed"
 
 # Concurrent HMAC-transformed $queryStats query, all find queries are roughly the same size.
@@ -119,7 +118,6 @@ Actors:
       MaxPhase: *MaxPhase
       Phase: 27
       Payload: *FixedPayload
-      RateLimitHz: *RateLimitHz
       Suffix: "Hmac-Fixed"
 - LoadConfig:
     Path: ../../phases/query/QueryStats.tmpl
@@ -129,7 +127,6 @@ Actors:
       MaxPhase: *MaxPhase
       Phase: 27
       QueryStatsParameters: *HmacParameters
-      RateLimitHz: *RateLimitHz
       Suffix: "Hmac-Fixed"
 
 # No concurrent $queryStats query, find queries vary widely in size.
@@ -141,7 +138,6 @@ Actors:
       MaxPhase: *MaxPhase
       Phase: 37
       Payload: *RandomPayload
-      RateLimitHz: *RateLimitHz
       Suffix: "Base-Random"
 
 # Concurrent HMAC-transformed $queryStats query, find queries vary widely in size.
@@ -153,7 +149,6 @@ Actors:
       MaxPhase: *MaxPhase
       Phase: 47
       Payload: *RandomPayload
-      RateLimitHz: *RateLimitHz
       Suffix: "Hmac-Random"
 - LoadConfig:
     Path: ../../phases/query/QueryStats.tmpl
@@ -163,8 +158,47 @@ Actors:
       MaxPhase: *MaxPhase
       Phase: 47
       QueryStatsParameters: *HmacParameters
-      RateLimitHz: *RateLimitHz
       Suffix: "Hmac-Random"
+
+# Rate-limited HMAC-transformed $queryStats query, all find queries are roughly the same size.
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: FindCommandActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 57
+      Payload: *FixedPayload
+      Suffix: "Hmac-Fixed-RateLimited"
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: QueryStatsActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 57
+      QueryStatsParameters: *HmacParameters
+      Suffix: "Hmac-Fixed-RateLimited"
+
+# Rate-limited HMAC-transformed $queryStats query, find queries vary widely in size.
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: FindCommandActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 67
+      Payload: *RandomPayload
+      Suffix: "Hmac-Random-RateLimited"
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: QueryStatsActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 67
+      QueryStatsParameters: *HmacParameters
+      Suffix: "Hmac-Random-RateLimited"
 
 AutoRun:
 - When:

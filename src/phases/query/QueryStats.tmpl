@@ -10,8 +10,8 @@ Description: |
     RateLimitActor: (requires MaxPhase, Phases, RateLimitHz) changes the QueryStates rate limit. Should be set to -1 before each QueryStats cache prepopulation to speed things up.
     QuiesceActor: (requires MaxPhase, Phases) ensures that actors quiesce before continuing.
     PrepopulateActor: (requires MaxPhase, Phases, CacheSizeMb) prepopulates the QueryStats cache to ensure that it is filled with similarish shapes before every workload execution.
-    FindCommandActor: (requires MaxPhase, Phase, CacheSizeMb, RateLimitHz, Payload; optional Suffix) runs find commands to generate query stats.
-    AggregateActor: (requires MaxPhase, Phase, CacheSizeMb, RateLimitHz; optional Suffix, QueryStatsParameters) runs $queryStats.
+    FindCommandActor: (requires MaxPhase, Phase, CacheSizeMb, Payload; optional Suffix) runs find commands to generate query stats.
+    AggregateActor: (requires MaxPhase, Phase, CacheSizeMb; optional Suffix, QueryStatsParameters) runs $queryStats.
 
   Parameters:
     # Required parameters.
