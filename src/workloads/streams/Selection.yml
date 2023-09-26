@@ -1,0 +1,81 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/altas-streams"
+Description: |
+  Streaming pipeline that runs a filter matcher against the input data, only
+  emitting a subset of the input data. This is meant to stress the match operator,
+  which is a commonly used operator.
+
+Keywords:
+- streams
+
+GlobalDefaults:
+  DatabaseName: &DatabaseName "test"
+  StreamProcessorName: &StreamProcessorName "sp"
+
+Actors:
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: CreateStreamProcessor
+      OperationName: RunCommand
+      OperationCommand:
+        streams_startStreamProcessor: ""
+        name: *StreamProcessorName
+        pipeline: [
+          { $source: { connectionName: "__testMemory" } },
+          {
+            $match: {
+              $or: [
+                { auction: 1007 },
+                { auction: 1020 },
+                { auction: 2001 },
+                { auction: 2019 },
+                { auction: 2087 }
+              ]
+            }
+          },
+          { $project: { auction: 1, price: 1 } },
+          { $emit: { connectionName: "__testMemory" } }
+        ]
+        connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
+  - Phase: 1
+    Nop: true
+  - Phase: 2
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Stop
+      OperationName: RunCommand
+      OperationCommand:
+        streams_stopStreamProcessor: ""
+        name: *StreamProcessorName
+
+- Name: Insert_Batch1000x
+  Type: RunCommand
+  Threads: 32
+  Phases:
+  - Phase: 0
+    Nop: true
+  - Phase: 1
+    LoadConfig:
+      Path: ./InsertBidsTemplate.yml
+      Key: InsertBids
+      Parameters:
+        Database: *DatabaseName
+        StreamProcessorName: *StreamProcessorName
+        Duration: 1 minute
+  - Phase: 2
+    Nop: true
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-streams
+    branch_name:
+      $gte: v7.2
