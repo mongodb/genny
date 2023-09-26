@@ -3,7 +3,6 @@ Owner: "@mongodb/query"
 Description: >
   This workload tests $queryStats performance.
 
-Note: >
   Run `./run-genny evaluate src/workloads/query/QueryStats.yml` to see the output of
   the preprocessor. See the [Genny docs](https://github.com/mongodb/genny/blob/master/docs/using.md#preprocessor)
   for more information on using `evaluate`.
