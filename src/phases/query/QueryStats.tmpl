@@ -4,34 +4,14 @@ Description: |
   This is a template library of actors for QueryStats workloads.
 
   Actors (in the order they should appear in the workload)
-    ClearCollection (requires MaxPhase, Phase) deletes the working collection, should only need to be run once.
-    InsertData (requires MaxPhase, Phase) populates the working collection, should only need to be run once.
-    CacheSizeActor (requires MaxPhase, Phases, CacheSizeMb) changes the QueryStats cache size.
-    RateLimitActor (requires MaxPhase, Phases, RateLimitHz) changes the QueryStates rate limit. Should be set to -1 before each QueryStats cache prepopulation to speed things up.
-    QuiesceActor (requires MaxPhase, Phases) ensures that actors quiesce before continuing.
-    PrepopulateActor (requires MaxPhase, Phases, CacheSizeMb) prepopulates the QueryStats cache to ensure that it is filled with similarish shapes before every workload execution.
-    FindCommandActor (requires MaxPhase, Phase, CacheSizeMb, Payload; optional Suffix) runs find commands to generate query stats.
-    AggregateActor (requires MaxPhase, Phase, CacheSizeMb; optional Suffix, QueryStatsParameters) runs $queryStats.
-
-  Parameters
-    # Required parameters.
-    # These parameters have a default value of {unused: }. This results in a runtime
-    # error if they are used in an actor. Any actor that uses one of these parameters
-    # needs to have the parameter value explicitly set to avoid runtime errors.
-    CacheSizeMb (integer) QueryStats cache size in MB.
-    MaxPhase (integer) largest phase number in the workload.
-    Name (string) string name of the CrudActor.
-    Phase (integer) phase in which the actor runs.
-    Phases (integer | array[integer]) phase(s) in which the actor runs.
-    RateLimitHz (integer) QueryStats rate limit value in Hz.
-
-    # Optional parameters
-    DocumentCount (integer | float; default 1e6) number of documents to insert into the database.
-    Duration (time; default 100 seconds) how long to run the workload.
-    Payload (object; default {}) additional query components to the find command CrudActor.
-    QueryStatsParameters (object; default {}) additional query components to $queryStats.
-    Suffix (string; default "") additional suffix arguments.
-    Threads (integer; default 1) the number of concurrently-running $quueryStats threads.
+  ClearCollection (requires MaxPhase, Phase) deletes the working collection, should only need to be run once.
+  InsertData (requires MaxPhase, Phase) populates the working collection, should only need to be run once.
+  CacheSizeActor (requires MaxPhase, Phases, CacheSizeMb) changes the QueryStats cache size.
+  RateLimitActor (requires MaxPhase, Phases, RateLimitHz) changes the QueryStates rate limit. Should be set to -1 before each QueryStats cache prepopulation to speed things up.
+  QuiesceActor (requires MaxPhase, Phases) ensures that actors quiesce before continuing.
+  PrepopulateActor (requires MaxPhase, Phases, CacheSizeMb) prepopulates the QueryStats cache to ensure that it is filled with similarish shapes before every workload execution.
+  FindCommandActor (requires MaxPhase, Phase, CacheSizeMb, Payload; optional Suffix) runs find commands to generate query stats.
+  AggregateActor (requires MaxPhase, Phase, CacheSizeMb; optional Suffix, QueryStatsParameters) runs $queryStats.
 
 GlobalDefaults:
   # Workload constants.
@@ -39,19 +19,46 @@ GlobalDefaults:
   Collection: &Collection Collection0
 
   # Required template variables.
+  # These parameters have a default value of {unused: }. This results in a runtime
+  # error if they are used in an actor. Any actor that uses one of these parameters
+  # needs to have the parameter value explicitly set to avoid runtime errors.
+
+  # (integer) QueryStats cache size in MB.
   CacheSizeMb: &CacheSizeMb {^Parameter: {Name: CacheSizeMb, Default: {unused: "Need to specify the query stats cache size, in MB."}}}
+
+  # (integer) largest phase number in the workload.
   MaxPhase: &MaxPhase {^Parameter: {Name: MaxPhase, Default: {unused: "Need to specify the max phase number."}}}
+
+  # (string) string name of the CrudActor.
   Name: &Name {^Parameter: {Name: Name, Default: {unused: "Need to specify the actor name."}}}
+
+  # (integer) phase in which the actor runs.
   Phase: &Phase {^Parameter: {Name: Phase, Default: {unused: "Need to specify the actor's phase."}}}
+
+  # (integer | array[integer]) phase(s) in which the actor runs.
   Phases: &Phases {^FlattenOnce: [{^Parameter: {Name: Phases, Default: {unused: "Need to specify the actor's phase(s)."}}}]}
+
+  # (integer) QueryStats rate limit value in Hz.
   RateLimitHz: &RateLimitHz {^Parameter: {Name: RateLimitHz, Default: {unused: "Need to specify the query stats rate limit to change to."}}}
 
   # Optional template variables.
+
+  # (integer | float; default 1e6) number of documents to insert into the database.
   DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: 1e6}}
+
+  # (time; default 100 seconds) how long to run the workload.
   Duration: &Duration {^Parameter: {Name: Duration, Default: 100 seconds}}
+
+  # (object; default {}) additional query components to the find command CrudActor.
   Payload: &Payload {^Parameter: {Name: Payload, Default: {}}}
+
+  # (object; default {}) additional query components to $queryStats.
   QueryStatsParameters: &QueryStatsParameters {^Parameter: {Name: "QueryStatsParameters", Default: {}}}
+
+  # (string; default "") additional suffix arguments.
   Suffix: &Suffix {^Parameter: {Name: Suffix, Default: ""}}
+
+  # (integer; default 1) the number of concurrently-running $queryStats threads.
   Threads: &Threads {^Parameter: {Name: Threads, Default: 1}}
 
   # Syntactic sugar.
