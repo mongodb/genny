@@ -112,6 +112,7 @@ Actors:
       Phase: 17
       Payload: *FixedPayload
       Suffix: "Base-Fixed"
+      # This gets rendered as FindCommand-Base-Fixed-CacheSize300Mb-Phase17
 
 # Concurrent HMAC-transformed $queryStats query, all find queries are roughly the same size.
 - LoadConfig:
