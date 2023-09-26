@@ -1,7 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  This workload tests $queryStats performance.
+  This workload tests $queryStats performance. Specifically, it tests:
+    - The general performance metrics of running $queryStats (latency, throughput, etc.)
+    - The impact of running $queryStats to collect and report metrics while there are active queries
+      trying to record their own metrics. We run a couple different experiments with different sized
+      "payloads" (size of the find command shape).
 
   Run `./run-genny evaluate src/workloads/query/QueryStats.yml` to see the output of
   the preprocessor. See the [Genny docs](https://github.com/mongodb/genny/blob/master/docs/using.md#preprocessor)
