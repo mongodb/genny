@@ -4,14 +4,24 @@ Description: |
   This is a template library of actors for QueryStats workloads.
 
   Actors (in the order they should appear in the workload)
-  ClearCollection (requires MaxPhase, Phase) deletes the working collection, should only need to be run once.
-  InsertData (requires MaxPhase, Phase) populates the working collection, should only need to be run once.
-  CacheSizeActor (requires MaxPhase, Phases, CacheSizeMb) changes the QueryStats cache size.
-  RateLimitActor (requires MaxPhase, Phases, RateLimitHz) changes the QueryStates rate limit. Should be set to -1 before each QueryStats cache prepopulation to speed things up.
-  QuiesceActor (requires MaxPhase, Phases) ensures that actors quiesce before continuing.
-  PrepopulateActor (requires MaxPhase, Phases, CacheSizeMb) prepopulates the QueryStats cache to ensure that it is filled with similarish shapes before every workload execution.
-  FindCommandActor (requires MaxPhase, Phase, CacheSizeMb, Payload; optional Suffix) runs find commands to generate query stats.
-  AggregateActor (requires MaxPhase, Phase, CacheSizeMb; optional Suffix, QueryStatsParameters) runs $queryStats.
+  ClearCollection (requires MaxPhase, Phase)
+    deletes the working collection, should only need to be run once.
+  InsertData (requires MaxPhase, Phase)
+    populates the working collection, should only need to be run once.
+  CacheSizeActor (requires MaxPhase, Phases, CacheSizeMb)
+    changes the QueryStats cache size.
+  RateLimitActor (requires MaxPhase, Phases, RateLimitHz)
+    changes the QueryStates rate limit. Should be set to -1 before each QueryStats cache
+    prepopulation to speed things up.
+  QuiesceActor (requires MaxPhase, Phases)
+    ensures that actors quiesce before continuing.
+  PrepopulateActor (requires MaxPhase, Phases, CacheSizeMb)
+    prepopulates the QueryStats cache to ensure that it is filled with similarish shapes before
+    every workload execution.
+  FindCommandActor (requires MaxPhase, Phase, CacheSizeMb, Payload; optional Suffix)
+    runs find commands to generate query stats.
+  AggregateActor (requires MaxPhase, Phase, CacheSizeMb; optional Suffix, QueryStatsParameters)
+    runs $queryStats.
 
 GlobalDefaults:
   # Workload constants.
