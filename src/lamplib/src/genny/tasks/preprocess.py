@@ -11,7 +11,7 @@ from omegaconf import OmegaConf
 import yaml
 import structlog
 import numexpr
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 
 class ClientType(str, Enum):
@@ -124,6 +124,7 @@ class _ContextType(Enum):
 
     Parameter = (1,)
     ActorTemplate = (2,)
+    Client = (3,)
 
 
 class _ParseMode(Enum):
@@ -271,6 +272,8 @@ class _WorkloadParser(object):
             out = self._replace_flattenonce(value)
         elif key == "^PreprocessorFormatString":
             out = self._replace_formatstr(value)
+        elif key == "^ClientURI":
+            out = self._replace_clienturi(value)
         elif key == "ActorTemplates":
             self._parse_templates(value)
         elif key == "ActorFromTemplate":
@@ -413,6 +416,29 @@ class _WorkloadParser(object):
             )
             raise ParseException(msg)
 
+    def _replace_clienturi(self, input):
+        OP_KEY = "^ClientURI"
+
+        name: Optional[str] = input.get("Name", None)
+        if not name:
+            msg = (
+                "Invalid keys for '^ClientURI', please set the client name as "
+                f"'Name' in the following node: {input}"
+            )
+            raise ParseException(msg)
+
+        client: Optional[Dict[str, Any]] = self._context.get(f"client/{name}", _ContextType.Client)
+        if not client:
+            msg = f"Invalid client name for '^ClientURI', {name} not found"
+            raise ParseException(msg)
+
+        uri: Optional[str] = client.get("URI", None)
+        if not uri:
+            msg = f"Client {name} does not have 'URI' set"
+            raise ParseException(msg)
+
+        return uri
+
     def _parse_templates(self, templates):
         for template_node in templates:
             self._context.insert(
@@ -428,11 +454,12 @@ class _WorkloadParser(object):
 
     def _parse_clients(self, clients):
         clients_dict = self._recursive_parse(clients)
-        for _, client in clients_dict.items():
+        for name, client in clients_dict.items():
             if self._mongostream_uri and client.get("Type", None) == ClientType.MONGOSTREAM:
                 client.setdefault("URI", self._mongostream_uri)
             else:
                 client.setdefault("URI", self._default_uri)
+            self._context.insert(f"client/{name}", client, _ContextType.Client)
         return clients_dict
 
     def _parse_instance(self, instance):
