@@ -9,7 +9,7 @@ Keywords:
 
 GlobalDefaults:
   DatabaseName: &DatabaseName "test"
-  StreamProcessorName: &StreamProcessorName "sp"
+  StreamProcessorName: &StreamProcessorName "sp1"
 
 Actors:
 - Name: Setup
@@ -36,9 +36,12 @@ Actors:
               price: { $multiply: ["$price", 0.908] }
             }
           },
-          { $emit: { connectionName: "__testMemory" } }
+          { $merge: { into: { connectionName: "db", db: "test", coll: "output" }}}
         ]
-        connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
+        connections: [
+          { name: "__testMemory", type: "in_memory", options: {} },
+          { name: "db", type: "atlas", options: { uri: {^ClientURI: { Name: "Default" }}}}
+        ]
   - Phase: 1
     Nop: true
   - Phase: 2

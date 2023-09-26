@@ -41,7 +41,7 @@ Actors:
             }
           },
           { $project: { auction: 1, price: 1 } },
-          { $merge: { into: { connectionName: "db", db: "test", coll: "input" } } }
+          { $merge: { into: { connectionName: "db", db: "test", coll: "output" } } }
         ]
         connections: [
             { name: "__testMemory", type: "in_memory", options: {} },
@@ -73,7 +73,7 @@ Actors:
       Parameters:
         Database: *DatabaseName
         StreamProcessorName: *StreamProcessorName
-        Repeat: 250
+        Repeat: 1
   - Phase: 2
     Nop: true
 
@@ -87,7 +87,7 @@ Actors:
   - Phase: 1
     Repeat: 1
     StreamProcessorName: *StreamProcessorName
-    ExpectedDocumentCount: 2000000
+    ExpectedDocumentCount: 8000
   - Phase: 2
     Nop: true
 
@@ -95,6 +95,6 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - streams
+      - standalone-streams
     branch_name:
       $gte: v7.2

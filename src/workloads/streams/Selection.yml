@@ -92,6 +92,6 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - streams
+      - standalone-streams
     branch_name:
       $gte: v7.2
