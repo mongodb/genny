@@ -15,9 +15,9 @@ Description: |
 
   Parameters:
     # Required parameters.
-    # In Genny, these parameters are checked at runtime. If an actor doesn't use a required
-    # parameter, that parameter doesn't need to be set. Only required parameters that are actually
-    # used by an actor need to be set.
+    # These parameters have a default value of {unused: }. This results in a runtime
+    # error if they are used in an actor. Any actor that uses one of these parameters
+    # needs to have the parameter value explicitly set to avoid runtime errors.
     CacheSizeMb: (integer) QueryStats cache size in MB.
     MaxPhase: (integer) largest phase number in the workload.
     Name: (string) string name of the CrudActor.
