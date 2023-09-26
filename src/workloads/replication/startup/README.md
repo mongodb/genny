@@ -53,7 +53,9 @@ The time taken for startup recovery and shutdown is tracked in these two timing 
 | ShutdownTime | The time in milliseconds it takes to shutdown all launched mongod programs.	|
 | RecoveryTimeAfterRestart | The "recovery" time in milliseconds that it takes to start the server after this particular test phase / session ends. This metric is equal to the start time of the subsequent phase. |
 
-Note: The startup task is currently running on a single node replica set variant, so these metrics are giving us the time for that single node to shutdown/startup.
+**Notes**
+- The startup task is currently running on a single node replica set variant, so these metrics are giving us the time for that single node to shutdown/startup.
+- Metrics for the dummy last phase should be ignored (starts with Step_3_0).
 
 **Example**
 
