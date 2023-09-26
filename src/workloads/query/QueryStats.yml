@@ -208,7 +208,6 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - standalone-all-feature-flags
       - standalone
       - shard
       - shard-lite
