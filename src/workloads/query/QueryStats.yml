@@ -3,6 +3,11 @@ Owner: "@mongodb/query"
 Description: >
   This workload tests $queryStats performance.
 
+Note: >
+  Run `./run-genny evaluate src/workloads/query/QueryStats.yml` to see the output of
+  the preprocessor. See the [Genny docs](https://github.com/mongodb/genny/blob/master/docs/using.md#preprocessor)
+  for more information on using `evaluate`.
+
 KeyWords:
 - queryStats
 - redaction
@@ -205,15 +210,9 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone-all-feature-flags
-      - standalone-query-stats
       - standalone
       - shard
-      - shard-query-stats
       - shard-lite
-      - shard-lite-query-stats
       - single-replica
-      - single-replica-query-stats
       - replica
-      - replica-query-stats
       - atlas-like-replica.2022-10
-      - atlas-like-replica-query-stats.2022-10
