@@ -57,7 +57,7 @@ Actors:
       CacheSizeMb: 0
       MaxPhase: *MaxPhase
       Phases: [10, 20, 30, 40, 50, 60]
-      # To make analysis easier, each variant (there are 6 here) gets its own block of 10 phases.
+      # To make analysis easier, each experiment (there are 6 here) gets its own block of 10 phases.
       # This way, the FindCommand and QueryStats actors always end with the same digit. The extra
       # no-op phases will simply be ignored.
 - LoadConfig:
