@@ -9,7 +9,7 @@ import structlog
 
 from genny.tasks.auto_tasks import (
     CurrentBuildInfo,
-    CLIOperation,
+    OpName,
     WorkloadLister,
     Repo,
     ConfigWriter,
@@ -58,7 +58,6 @@ class BaseTestClass(unittest.TestCase):
         # Create "dumb" mocks.
         lister: WorkloadLister = MagicMock(name="lister", spec=WorkloadLister, instance=True)
         reader: YamlReader = MockReader(given_files)
-        genny_repo_root = os.path.join(self.workspace_root, "/src/genny")
         # Make them smarter.
         lister.all_workload_files.return_value = [
             v.base_name
@@ -73,15 +72,13 @@ class BaseTestClass(unittest.TestCase):
         ]
 
         # And send them off into the world.
-        build = CurrentBuildInfo(reader, workspace_root=self.workspace_root)
-        op = CLIOperation.create(
-            and_mode, reader, genny_repo_root=genny_repo_root, workspace_root=self.workspace_root
-        )
+        expansions = reader.load(self.workspace_root, "expansions.yml")
+        build = CurrentBuildInfo(expansions)
+        op = OpName.from_flag(and_mode)
         repo = Repo(lister, reader, workspace_root=self.workspace_root)
         tasks = repo.tasks(op, build)
-        writer = ConfigWriter(op)
 
-        config = writer.write(tasks, write=False)
+        config = ConfigWriter.create_config(op, build, tasks)
         parsed = json.loads(config.to_json())
         try:
             self.assertDictEqual(then_writes, parsed)
@@ -160,6 +157,7 @@ class AutoTasksTests(BaseTestClass):
             ],
             and_mode="all_tasks",
             then_writes={
+                "exec_timeout_secs": 64800,
                 "tasks": [
                     {
                         "name": "empty_unmodified",
@@ -310,7 +308,6 @@ class AutoTasksTests(BaseTestClass):
                         "priority": 5,
                     },
                 ],
-                "timeout": 64800,
             },
             to_file="./build/TaskJSON/Tasks.json",
         )
@@ -910,25 +907,15 @@ def test_dry_run_all_tasks():
             f"This is set when you run through the 'run-genny' wrapper"
         )
     try:
-        with patch.object(CurrentBuildInfo, "expansions", return_value={}), patch.object(
-            YamlReader, "load", return_value={"execution": "0"}
-        ):
-            reader = YamlReader()
-            build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
-            op = CLIOperation.create(
-                mode_name="all_tasks",
-                reader=reader,
-                genny_repo_root=genny_repo_root,
-                workspace_root=workspace_root,
-            )
-            lister = WorkloadLister(
-                workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader
-            )
-            repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
-            tasks = repo.tasks(op=op, build=build)
+        build = CurrentBuildInfo({"build_variant": "Test Variant", "execution": 1})
+        op = OpName.from_flag("all_tasks")
+        lister = WorkloadLister(workspace_root=workspace_root)
+        reader = YamlReader()
+        repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
+        tasks = repo.tasks(op=op, build=build)
+        os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
 
-            writer = ConfigWriter(op)
-            writer.write(tasks, False)
+        ConfigWriter.create_config(op, build, tasks)
     except Exception as e:
         SLOG.error(
             "'./run-genny auto-tasks --tasks all_tasks' is failing. "
