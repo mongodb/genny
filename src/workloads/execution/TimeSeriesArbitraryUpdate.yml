@@ -55,9 +55,10 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - shard-lite
-      - replica
+      # TODO (PERF-4726): Enable on these variants.
+      # - shard-lite
+      # - replica
       - shard-lite-all-feature-flags
       - replica-all-feature-flags
     branch_name:
-      $gte:  v7.1
+      $gte:  v7.2

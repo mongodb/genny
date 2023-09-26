@@ -38,8 +38,6 @@ class YamlReader:
         :return: deserialized yaml file
         """
         joined = os.path.join(workspace_root, path)
-        if not os.path.exists(joined):
-            raise Exception(f"File {joined} not found.")
         with open(joined) as handle:
             return yaml.safe_load(handle)
 
@@ -70,11 +68,8 @@ class WorkloadLister:
     Separate from the Repo class for easier testing.
     """
 
-    def __init__(self, workspace_root: str, genny_repo_root: str, reader: YamlReader):
+    def __init__(self, workspace_root: str):
         self.workspace_root = workspace_root
-        self.genny_repo_root = genny_repo_root
-        self._expansions = None
-        self.reader = reader
 
     def all_workload_files(self) -> Set[str]:
         pattern = os.path.join(self.workspace_root, "src", "*", "src", "workloads", "**", "*.yml")
@@ -115,47 +110,20 @@ class OpName(enum.Enum):
     VARIANT_TASKS = object()
     PATCH_TASKS = object()
 
-
-class CLIOperation(NamedTuple):
-    """
-    Represents the "input" to what we're doing"
-    """
-
-    mode: OpName
-    variant: Optional[str]
-    execution: Optional[str]
-    genny_repo_root: str
-    workspace_root: str
-
     @staticmethod
-    def create(
-        mode_name: str, reader: YamlReader, genny_repo_root: str, workspace_root: str
-    ) -> "CLIOperation":
-        mode = OpName.ALL_TASKS
-        variant = None
-
-        execution = int(reader.load(workspace_root, "expansions.yml")["execution"])
+    def from_flag(mode_name):
         if mode_name == "all_tasks":
-            mode = OpName.ALL_TASKS
+            return OpName.ALL_TASKS
         if mode_name == "patch_tasks":
-            mode = OpName.PATCH_TASKS
-            variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
+            return OpName.PATCH_TASKS
         if mode_name == "variant_tasks":
-            mode = OpName.VARIANT_TASKS
-            variant = reader.load(workspace_root, "expansions.yml")["build_variant"]
-        return CLIOperation(
-            mode, variant, execution, genny_repo_root=genny_repo_root, workspace_root=workspace_root
-        )
-
+            return OpName.VARIANT_TASKS
 
 class CurrentBuildInfo:
-    def __init__(self, reader: YamlReader, workspace_root: str):
-        self.reader = reader
-        self.workspace_root = workspace_root
-        self.conts = self.expansions()
-
-    def expansions(self):
-        return self.reader.load(self.workspace_root, "expansions.yml")
+    def __init__(self, expansions: dict[str, str]):
+        self.conts = expansions
+        self.variant = expansions["build_variant"]
+        self.execution = int(expansions["execution"])
 
     def has(self, key: str, acceptable_values: List[str]) -> bool:
         """
@@ -167,6 +135,12 @@ class CurrentBuildInfo:
             return False
         actual = self.conts[key]
         return any(actual == acceptable_value for acceptable_value in acceptable_values)
+
+    def __eq__(self, other):
+        return self.conts == other.conts
+
+    def __repr__(self):
+        return f"CurrentBuildInfo: {self.conts}"
 
 
 class GeneratedTask(NamedTuple):
@@ -449,19 +423,23 @@ class Repo:
         self.workspace_root = workspace_root
         self.lister = lister
         self.reader = reader
+        self._all_workloads = None
+
 
     def all_workloads(self) -> List[Workload]:
-        all_files = self.lister.all_workload_files()
-        modified = self.lister.modified_workload_files()
-        return [
-            Workload(
-                workspace_root=self.workspace_root,
-                file_path=fpath,
-                is_modified=fpath in modified,
-                reader=self.reader,
-            )
-            for fpath in all_files
-        ]
+        if self._all_workloads is None:
+            all_files = self.lister.all_workload_files()
+            modified = self.lister.modified_workload_files()
+            self._all_workloads = [
+                Workload(
+                    workspace_root=self.workspace_root,
+                    file_path=fpath,
+                    is_modified=fpath in modified,
+                    reader=self.reader,
+                )
+                for fpath in all_files
+            ]
+        return self._all_workloads
 
     def modified_workloads(self) -> List[Workload]:
         return [workload for workload in self.all_workloads() if workload.is_modified]
@@ -487,17 +465,17 @@ class Repo:
             task for workload in self.modified_workloads() for task in workload.variant_tasks(build)
         ]
 
-    def tasks(self, op: CLIOperation, build: CurrentBuildInfo) -> List[GeneratedTask]:
+    def tasks(self, op: OpName, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
         :param op: current cli invocation
         :param build: current build info
         :return: tasks that should be scheduled given the above
         """
-        if op.mode == OpName.ALL_TASKS:
+        if op == OpName.ALL_TASKS:
             tasks = self.all_tasks()
-        elif op.mode == OpName.PATCH_TASKS:
+        elif op == OpName.PATCH_TASKS:
             tasks = self.patch_tasks(build)
-        elif op.mode == OpName.VARIANT_TASKS:
+        elif op == OpName.VARIANT_TASKS:
             tasks = self.variant_tasks(build)
         else:
             raise Exception("Invalid operation mode")
@@ -509,59 +487,64 @@ class ConfigWriter:
     Takes tasks and converts them to shrub Configuration objects.
     """
 
-    def __init__(self, op: CLIOperation):
-        self.op = op
-
-    def write(self, tasks: List[GeneratedTask], write: bool = True) -> Configuration:
+    @staticmethod
+    def write_config(execution: int, config: Configuration, output_file: str) -> None:
         """
-        :param tasks: tasks to write
-        :param write: boolean to actually write the file - exposed for testing
-        :return: the configuration object to write (exposed for testing)
+        :param config: The configuration to write
+        :param output_file: What file to write to.
         """
-        if self.op.mode != OpName.ALL_TASKS:
-            config: Configuration = self.variant_tasks(tasks, self.op.variant)
-        else:
-            config = self.all_tasks_modern(tasks)
-
-        output_file = os.path.join(self.op.workspace_root, "build", "TaskJSON", "Tasks.json")
-
+        
         success = False
         raised = None
-        if write:
-            try:
-                out_text = config.to_json()
-                os.makedirs(os.path.dirname(output_file), exist_ok=True)
-                if os.path.exists(output_file):
-                    os.unlink(output_file)
-                with open(output_file, "w") as output:
-                    output.write(out_text)
-                    SLOG.debug("Wrote task json", output_file=output_file, contents=out_text)
-                success = True
-            except Exception as e:
-                raised = e
-                raise e
-            finally:
-                SLOG.info(
-                    f"{'Succeeded' if success else 'Failed'} to write to {output_file} from cwd={os.getcwd()}."
-                    f"{raised if raised else ''}"
+        try:
+            out_text = config.to_json()
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)
+            if os.path.exists(output_file):
+                os.unlink(output_file)
+            with open(output_file, "w") as output:
+                output.write(out_text)
+                SLOG.debug("Wrote task json", output_file=output_file, contents=out_text)
+            success = True
+        except Exception as e:
+            raised = e
+            raise e
+        finally:
+            SLOG.info(
+                f"{'Succeeded' if success else 'Failed'} to write to {output_file} from cwd={os.getcwd()}."
+                f"{raised if raised else ''}"
+            )
+            if execution != 0:
+                SLOG.warning(
+                    "Repeated executions will not re-generate tasks.",
+                    execution=build.execution,
                 )
-                if self.op.execution != 0:
-                    SLOG.warning(
-                        "Repeated executions will not re-generate tasks.",
-                        execution=self.op.execution,
-                    )
+
+    @staticmethod
+    def create_config(op: OpName, build: CurrentBuildInfo, tasks: List[GeneratedTask]) -> Configuration:
+        """
+        Creates a configuration for generated tasks to either execute particular tasks for 
+        a variant or to define global tasks used by variants.
+
+        :param op: Used to determine whether to write global config or tasks for a variant.
+        :param build: Information about the current build. Only used for variant configuration
+        :param output_file: What file to write to.
+        :return: the configuration object to write (exposed for testing)
+        """
+        config = Configuration()
+        if op != OpName.ALL_TASKS:
+            ConfigWriter.configure_variant_tasks(config, tasks, build.variant)
+        else:
+            ConfigWriter.configure_all_tasks_modern(config, tasks)
         return config
 
-    @staticmethod
-    def variant_tasks(tasks: List[GeneratedTask], variant: str) -> Configuration:
-        c = Configuration()
-        c.variant(variant).tasks([TaskSpec(task.name) for task in tasks])
-        return c
 
     @staticmethod
-    def all_tasks_modern(tasks: List[GeneratedTask]) -> Configuration:
-        c = Configuration()
-        c.exec_timeout(64800)  # 18 hours
+    def configure_variant_tasks(config: Configuration, tasks: List[GeneratedTask], variant: str, activate: bool = None) -> None:
+        config.variant(variant).tasks([TaskSpec(task.name).activate(activate) for task in tasks])
+
+    @staticmethod
+    def configure_all_tasks_modern(config: Configuration, tasks: List[GeneratedTask]) -> None:
+        config.exec_timeout(64800)  # 18 hours
         for task in tasks:
             bootstrap = {
                 "test_control": task.name,
@@ -570,7 +553,7 @@ class ConfigWriter:
             if task.bootstrap_key:
                 bootstrap[task.bootstrap_key] = task.bootstrap_value
 
-            t = c.task(task.name)
+            t = config.task(task.name)
             t.priority(5)
             t.commands(
                 [
@@ -580,23 +563,17 @@ class ConfigWriter:
                     CommandDefinition().function("f_run_dsi_workload").vars(bootstrap),
                 ]
             )
-        return c
 
 
-def main(mode_name: str, genny_repo_root: str, workspace_root: str) -> None:
+def main(mode_name: str, workspace_root: str) -> None:
     reader = YamlReader()
-    build = CurrentBuildInfo(reader=reader, workspace_root=workspace_root)
-    op = CLIOperation.create(
-        mode_name=mode_name,
-        reader=reader,
-        genny_repo_root=genny_repo_root,
-        workspace_root=workspace_root,
-    )
-    lister = WorkloadLister(
-        workspace_root=workspace_root, genny_repo_root=genny_repo_root, reader=reader
-    )
+    expansions = reader.load(workspace_root, "expansions.yml")
+    build = CurrentBuildInfo(expansions)
+    op = OpName.from_flag(mode_name)
+    lister = WorkloadLister(workspace_root=workspace_root)
     repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
     tasks = repo.tasks(op=op, build=build)
 
-    writer = ConfigWriter(op)
-    writer.write(tasks)
+    output_file = os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
+    config = ConfigWriter.create_config(op, build, tasks)
+    ConfigWriter.write_config(build.execution, config, output_file)
