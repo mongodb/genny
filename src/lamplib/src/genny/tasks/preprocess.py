@@ -452,7 +452,7 @@ class _WorkloadParser(object):
 
     def _parse_clients(self, clients):
         clients_dict = self._recursive_parse(clients)
-        for _, client in clients_dict.items():
+        for name, client in clients_dict.items():
             if self._mongostream_uri and client.get("Type", None) == ClientType.MONGOSTREAM:
                 client.setdefault("URI", self._mongostream_uri)
             else:

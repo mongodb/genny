@@ -26,7 +26,7 @@ GlobalDefaults:
   Batch1000x: &Batch1000x {^Array: { number: 1000, of: *Document }}
 
 InsertBids:
-  Duration: {^Parameter: { Name: "Duration", Default: "1 minute" }}
+  Repeat: {^Parameter: { Name: "Repeat", Default: 100 }}
   Database: {^Parameter: { Name: "Database", Default: *DatabaseName }}
   Operations:
   - OperationMetricsName: Insert
