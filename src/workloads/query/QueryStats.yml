@@ -214,3 +214,6 @@ AutoRun:
       - single-replica
       - replica
       - atlas-like-replica.2022-10
+    branch_name:
+      $gte:
+        v7.1
