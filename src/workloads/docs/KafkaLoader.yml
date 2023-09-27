@@ -5,13 +5,33 @@ Description: |
   provided and publishes them to the kafka server and topic specificed at the
   actor level.
 
+GlobalDefaults:
+  Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
+  Urls: &Urls {^Cycle: { ofLength: 10000, fromGenerator: {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    *Channel
+  ]}}}}
+
+  Document: &Document
+    auction: {^Inc: { start: 1000 }}
+    bidder: {^Inc: { start: 1000 }}
+    price: {^RandomDouble: {min: 100, max: 100000000}}
+    channel: *Channel
+    url: *Urls
+    dateTime: {^IncDate: { start: "2023-01-01T00:00:00.000", step: 10 }}
+
+  #Batch10x: &Batch10x [*Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document]
+  #Batch100x: &Batch100x {^FlattenOnce: [*Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x]}
+
 Actors:
 - Name: KafkaLoader
   Type: KafkaLoader
-  Threads: 100
-  BootstrapServers: localhost:9092
-  Topic: example-topic
+  Threads: 16
+  BootstrapServers: localhost:27017
+  Topic: perf-input
   Phases:
   - Phase: 0
-    Repeat: 1e3
-    Document: {foo: {^RandomInt: {min: 0, max: 100}}}
+    Repeat: 100000
+    Document: *Document
