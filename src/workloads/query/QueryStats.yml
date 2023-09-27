@@ -1,7 +1,15 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: |
-  This workload tests performance of $queryStats with and without applying HMAC.
+Description: >
+  This workload tests $queryStats performance. Specifically, it tests:
+    - The general performance metrics of running $queryStats (latency, throughput, etc.)
+    - The impact of running $queryStats to collect and report metrics while there are active queries
+      trying to record their own metrics. We run a couple different experiments with different sized
+      "payloads" (size of the find command shape).
+
+  Run `./run-genny evaluate src/workloads/query/QueryStats.yml` to see the output of
+  the preprocessor. See the [Genny docs](https://github.com/mongodb/genny/blob/master/docs/using.md#preprocessor)
+  for more information on using `evaluate`.
 
 KeyWords:
 - queryStats
@@ -10,233 +18,207 @@ KeyWords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 400
+      connectTimeoutMS: 3_600_000  # 1 hour
+      maxPoolSize: 4000
+      socketTimeoutMS: 3_600_000  # 1 hour
 
 GlobalDefaults:
-  Database: &Database test
-  Collection: &Collection Collection0
-  DocumentCount: &DocumentCount 1e6
-  MaxPhases: &MaxPhases 8
-  nop: &Nop {Nop: true}
-  dbname: &db test
-  binDataGen: &binDataGen {^BinDataSensitive: {numBytes: 32}}
+  CacheSizeMb: &CacheSizeMb 300
+  HmacParameters: &HmacParameters {transformIdentifiers: {algorithm: "hmac-sha-256", hmacKey: {^BinDataSensitive: {numBytes: 32}}}}
+  MaxPhase: &MaxPhase 69
+  RateLimitHz: &RateLimitHz 100
 
-ActorTemplates:
-- TemplateName: QueryStatsAggregation
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "QueryStatsAggregation"}}
-    Type: AdminCommand
-    # TODO SERVER-76597 Consider a higher value here. Until then, using a high value could cause OOM
-    # issues.
-    Threads: 2
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Duration: 1 minute
-          SleepBefore: 5 seconds
-          Database: admin
-          Operations:
-          - OperationMetricsName: QueryStatsMetrics
-            OperationName: AdminCommand
-            OperationCommand:
-              aggregate: 1
-              pipeline: [
-                {
-                  $queryStats: {^Parameter: {Name: "queryStatsParameters", Default: {}}}
-                },
-                # The purpose of $count is to ensure we've exhausted the cursor/ data stream and looked at each partition.
-                {
-                  $count: "numDocuments"
-                }
-              ]
-              cursor: {}
+  FixedPayload: &FixedPayload
+    ^Object:
+      withNEntries: 175
+      havingKeys: {^RandomString: {length: 10}}
+      andValues: {$exists: false}
+      duplicatedKeys: skip
+  RandomPayload: &RandomPayload
+    ^Object:
+      withNEntries: {^RandomInt: {min: 1, max: 350}}
+      havingKeys: {^RandomString: {length: 10}}
+      andValues: {$exists: false}
+      duplicatedKeys: skip
 
 Actors:
-- Name: Setup
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationName: AdminCommand
-          OperationCommand:
-            # Configuring the queryStats store size to an arbitrary value which seems reasonable.
-            # This ensures that if run on different sized machines, the test will remain the same.
-            setParameter: 1
-            internalQueryStatsCacheSize: 250MB
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: ClearCollection  # Drops the collection, only needs to happen once.
+    Parameters:
+      MaxPhase: *MaxPhase
+      Phase: 0
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: InsertData  # Repopulates the collection, only needs to happen once.
+    Parameters:
+      MaxPhase: *MaxPhase
+      Phase: 1
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: CacheSizeActor  # Clear the query stats cache by setting it to 0MB.
+    Parameters:
+      CacheSizeMb: 0
+      MaxPhase: *MaxPhase
+      Phases: [10, 20, 30, 40, 50, 60]
+      # To make analysis easier, each experiment (there are 6 here) gets its own block of 10 phases.
+      # This way, the FindCommand and QueryStats actors always end with the same digit. The extra
+      # no-op phases will simply be ignored.
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: CacheSizeActor  # Reset the query stats cache to the target size. We do this explicitly to
+                         # prevent fluctuations in the query stats cache size based on machine type,
+                         # since the default value is 1% of RAM.
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phases: [11, 21, 31, 41, 51, 61]
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: RateLimitActor  # Disable the rate limit so that we can prepopulate the cache faster.
+    Parameters:
+      MaxPhase: *MaxPhase
+      Phases: [12, 22, 32, 42, 52, 62]
+      RateLimitHz: -1
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: QuiesceActor  # Wait for all threads to quiesce before running prepop or query stats.
+    Parameters:
+      MaxPhase: *MaxPhase
+      Phases: [
+        13, 23, 33, 43, 53, 63,
+        16, 26, 36, 46, 56, 66,
+      ]
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: PrepopulateActor  # Prepopulate the query stats cache until it's full. This is to simulate
+                           # the steady-state scenario, which is what we're mostly interested in.
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phases: [14, 24, 34, 44, 54, 64]
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: RateLimitActor  # Reset the rate limit to the desired value. This needs to be kept
+                         # up-to-date with the actual rate limit.
+    Parameters:
+      MaxPhase: *MaxPhase
+      Phases: [55, 65]
+      RateLimitHz: *RateLimitHz
 
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
+# No concurrent $queryStats query, all find queries are roughly the same size.
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: FindCommandActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 17
+      Payload: *FixedPayload
+      Suffix: "Base-FixedPayload"
+      # This gets rendered as FindCommand-Base-FixedPayload-CacheSize300Mb-Phase17
 
-- Name: InsertData
-  Type: Loader
-  Threads: 4
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document:
-          a1: &integer {^RandomInt: {min: -100, max: 100}}
-          a2: *integer
-          string: &string {^RandomString: {length: 5}}
-        Indexes:
-          - keys: {a1: 1, a2: 1}
+# Concurrent HMAC-transformed $queryStats query, all find queries are roughly the same size.
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: FindCommandActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 27
+      Payload: *FixedPayload
+      Suffix: "Hmac-FixedPayload"
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: QueryStatsActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 27
+      QueryStatsParameters: *HmacParameters
+      Suffix: "Hmac-FixedPayload"
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
+# No concurrent $queryStats query, find queries vary widely in size.
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: FindCommandActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 37
+      Payload: *RandomPayload
+      Suffix: "Base-RandomPayload"
 
-- Name: FindCommand
-  Type: CrudActor
-  Threads: 32
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 1 minute
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            # This will create a find command with a random number of fields from 3 to 350, to create varying query shapes and sizes.
-            Filter:
-              {$and:
-                [{a1: 1}, {a2: 1}, {^Object: {
-                  withNEntries: {^RandomInt: {min: 1, max: 350}},
-                  havingKeys: {^RandomString: {length: 10}},
-                  andValues: {$exists: false},
-                  duplicatedKeys: skip
-                }}]
-              }
+# Concurrent HMAC-transformed $queryStats query, find queries vary widely in size.
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: FindCommandActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 47
+      Payload: *RandomPayload
+      Suffix: "Hmac-RandomPayload"
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: QueryStatsActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 47
+      QueryStatsParameters: *HmacParameters
+      Suffix: "Hmac-RandomPayload"
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
+# Rate-limited HMAC-transformed $queryStats query, all find queries are roughly the same size.
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: FindCommandActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 57
+      Payload: *FixedPayload
+      Suffix: "Hmac-FixedPayload-RateLimited"
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: QueryStatsActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 57
+      QueryStatsParameters: *HmacParameters
+      Suffix: "Hmac-FixedPayload-RateLimited"
 
-- Name: FindConcurrentlyWithQueryStatsWithHMAC
-  Type: CrudActor
-  Threads: 32
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 1 minute
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter:
-              {$and:
-                [{a1: 1}, {a2: 1}, {^Object: {
-                  withNEntries: {^RandomInt: {min: 1, max: 350}},
-                  havingKeys: {^RandomString: {length: 10}},
-                  andValues: {$exists: false},
-                  duplicatedKeys: skip
-                }}]
-              }
-
-# QueryStats with HMAC.
-- ActorFromTemplate:
-    TemplateName: QueryStatsAggregation
-    TemplateParameters:
-      Name: "QueryStatsAggregationWithHMAC"
-      queryStatsParameters: {transformIdentifiers: {algorithm: "hmac-sha-256", hmacKey: *binDataGen}}
-      OnlyActiveInPhase: 6
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [7]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-
-- Name: FindConcurrentlyWithQueryStatsWithoutHMAC
-  Type: CrudActor
-  Threads: 32
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 1 minute
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter:
-              {$and:
-                [{a1: 1}, {a2: 1}, {^Object: {
-                  withNEntries: {^RandomInt: {min: 1, max: 350}},
-                  havingKeys: {^RandomString: {length: 10}},
-                  andValues: {$exists: false},
-                  duplicatedKeys: skip
-                }}]
-              }
-
-# QueryStats without HMAC.
-- ActorFromTemplate:
-    TemplateName: QueryStatsAggregation
-    TemplateParameters:
-      Name: "QueryStatsAggregationWithoutHMAC"
-      queryStatsParameters: {}
-      OnlyActiveInPhase: 8
+# Rate-limited HMAC-transformed $queryStats query, find queries vary widely in size.
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: FindCommandActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 67
+      Payload: *RandomPayload
+      Suffix: "Hmac-RandomPayload-RateLimited"
+- LoadConfig:
+    Path: ../../phases/query/QueryStats.tmpl
+    Key: QueryStatsActor
+    Parameters:
+      CacheSizeMb: *CacheSizeMb
+      MaxPhase: *MaxPhase
+      Phase: 67
+      QueryStatsParameters: *HmacParameters
+      Suffix: "Hmac-RandomPayload-RateLimited"
 
 AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - standalone-all-feature-flags
-      - standalone-query-stats
-      - standalone-query-stats-small-rate-limit
-      - single-replica-query-stats
-      - replica-query-stats
-      - atlas-like-replica-query-stats.2022-10
+      - standalone
+      - shard
+      - shard-lite
+      - single-replica
+      - replica
+      - atlas-like-replica.2022-10
+    branch_name:
+      $gte:
+        v7.1
