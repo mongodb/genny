@@ -2,6 +2,7 @@ from typing import List
 
 import structlog
 import os
+import platform
 import subprocess
 
 from genny.cmd_runner import run_command
@@ -30,6 +31,85 @@ def _sanitizer_flags(sanitizer: str, genny_repo_root: str):
 
     # arg parser should prevent us from getting here
     raise ValueError("Unknown sanitizer {}".format(sanitizer))
+
+
+class PlatformDetectionError(Exception):
+    pass
+
+
+def _detect_distro_ubuntu(machine, freedesktop_version):
+    if freedesktop_version == "22.04":
+        if machine == "aarch64":
+            return "ubuntu2204_arm64"
+        elif machine == "x86_64":
+            return "ubuntu2204"
+        else:
+            raise PlatformDetectionError(f"Invalid machine type for Ubuntu 22.04: {machine}")
+    elif freedesktop_version == "20.04":
+        if machine == "aarch64":
+            return "ubuntu2004_arm64"
+        elif machine == "x86_64":
+            return "ubuntu2004"
+        else:
+            raise PlatformDetectionError(f"Invalid machine type for Ubunutu 20.04: {machine}")
+    elif freedesktop_version == "18.04":
+        if machine == "x86_64":
+            return "ubuntu1804"
+        else:
+            raise PlatformDetectionError(f"Invalid machine type for Ubuntu 18.04: {machine}")
+    else:
+        raise PlatformDetectionError(f"Invalid version for Ubuntu: {freedesktop_version}")
+
+
+def _detect_distro_rhel(machine, freedesktop_version):
+    # We only distinguish between major versions of RHEL, but they include minor versions in their version_id
+    if freedesktop_version.startswith("7."):
+        if machine == "x86_64":
+            return "rhel70"
+        else:
+            raise PlatformDetectionError(f"Invalid machine type for RHEL 7.x: {machine}")
+    elif freedesktop_version.startswith("8."):
+        if machine == "x86_64":
+            return "rhel8"
+        else:
+            raise PlatformDetectionError(f"Invalid machine type for RHEL 8.x: {machine}")
+
+
+def _detect_distro_amazon(machine, freedesktop_version):
+    if freedesktop_version == "2":
+        if machine == "aarch64":
+            return "amazon2_arm64"
+        elif machine == "x86_64":
+            return "amazon2"
+        else:
+            raise PlatformDetectionError(f"Invalid machine type for Amazon 2: {machine}")
+    else:
+        raise PlatformDetectionError(f"Invalid version for Amazon Linux: {freedesktop_version}")
+
+
+def detect_distro():
+    SLOG.info(f"Distro not specified. Detecting distro.")
+
+    system = platform.system()
+    machine = platform.machine()
+    if system == "Darwin":
+        distro = "not-linux"
+    elif system == "Linux":
+        freedesktop_release = platform.freedesktop_os_release()
+        freedesktop_id = freedesktop_release["ID"]
+        freedesktop_version = freedesktop_release["VERSION_ID"]
+        if freedesktop_id == "ubuntu":
+            distro = _detect_distro_ubuntu(machine, freedesktop_version)
+        elif freedesktop_id == "rhel":
+            distro = _detect_distro_rhel(machine, freedesktop_version)
+        elif freedesktop_id == "amzn":
+            distro = _detect_distro_amazon(machine, freedesktop_version)
+        else:
+            raise PlatformDetectionError(f"Unrecognized Linux distro: {freedesktop_id}")
+    else:
+        raise PlatformDetectionError(f"Cannot determine distro for system {platform.system()}")
+    SLOG.info(f"Found distro for installation.", distro=distro)
+    return distro
 
 
 def cmake(
