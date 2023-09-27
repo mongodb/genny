@@ -33,7 +33,7 @@ def _sanitizer_flags(sanitizer: str, genny_repo_root: str):
     raise ValueError("Unknown sanitizer {}".format(sanitizer))
 
 
-class PlatformDetectionError(Exception):
+class DistroDetectionError(Exception):
     pass
 
 
@@ -44,21 +44,21 @@ def _detect_distro_ubuntu(machine, freedesktop_version):
         elif machine == "x86_64":
             return "ubuntu2204"
         else:
-            raise PlatformDetectionError(f"Invalid machine type for Ubuntu 22.04: {machine}")
+            raise DistroDetectionError(f"Invalid machine type for Ubuntu 22.04: {machine}")
     elif freedesktop_version == "20.04":
         if machine == "aarch64":
             return "ubuntu2004_arm64"
         elif machine == "x86_64":
             return "ubuntu2004"
         else:
-            raise PlatformDetectionError(f"Invalid machine type for Ubunutu 20.04: {machine}")
+            raise DistroDetectionError(f"Invalid machine type for Ubunutu 20.04: {machine}")
     elif freedesktop_version == "18.04":
         if machine == "x86_64":
             return "ubuntu1804"
         else:
-            raise PlatformDetectionError(f"Invalid machine type for Ubuntu 18.04: {machine}")
+            raise DistroDetectionError(f"Invalid machine type for Ubuntu 18.04: {machine}")
     else:
-        raise PlatformDetectionError(f"Invalid version for Ubuntu: {freedesktop_version}")
+        raise DistroDetectionError(f"Invalid version for Ubuntu: {freedesktop_version}")
 
 
 def _detect_distro_rhel(machine, freedesktop_version):
@@ -67,12 +67,12 @@ def _detect_distro_rhel(machine, freedesktop_version):
         if machine == "x86_64":
             return "rhel70"
         else:
-            raise PlatformDetectionError(f"Invalid machine type for RHEL 7.x: {machine}")
+            raise DistroDetectionError(f"Invalid machine type for RHEL 7.x: {machine}")
     elif freedesktop_version.startswith("8."):
         if machine == "x86_64":
             return "rhel8"
         else:
-            raise PlatformDetectionError(f"Invalid machine type for RHEL 8.x: {machine}")
+            raise DistroDetectionError(f"Invalid machine type for RHEL 8.x: {machine}")
 
 
 def _detect_distro_amazon(machine, freedesktop_version):
@@ -82,9 +82,9 @@ def _detect_distro_amazon(machine, freedesktop_version):
         elif machine == "x86_64":
             return "amazon2"
         else:
-            raise PlatformDetectionError(f"Invalid machine type for Amazon 2: {machine}")
+            raise DistroDetectionError(f"Invalid machine type for Amazon 2: {machine}")
     else:
-        raise PlatformDetectionError(f"Invalid version for Amazon Linux: {freedesktop_version}")
+        raise DistroDetectionError(f"Invalid version for Amazon Linux: {freedesktop_version}")
 
 
 def detect_distro():
@@ -105,9 +105,9 @@ def detect_distro():
         elif freedesktop_id == "amzn":
             distro = _detect_distro_amazon(machine, freedesktop_version)
         else:
-            raise PlatformDetectionError(f"Unrecognized Linux distro: {freedesktop_id}")
+            raise DistroDetectionError(f"Unrecognized Linux distro: {freedesktop_id}")
     else:
-        raise PlatformDetectionError(f"Cannot determine distro for system {platform.system()}")
+        raise DistroDetectionError(f"Cannot determine distro for system {platform.system()}")
     SLOG.info(f"Found distro for installation.", distro=distro)
     return distro
 
