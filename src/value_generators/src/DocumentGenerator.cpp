@@ -1008,22 +1008,23 @@ public:
                 InvalidValueGeneratorSyntax("ChooseFromDataset requieres non-empty path"));
         }
         loadDataset();
+        // We can store a pointer to this data because the dataset never moves once created.
+        _dataset = &_datasets.getDatasetForPath(_path);
     }
 
     std::string evaluate() {
-        auto dataset = _datasets.getDatasetForPath(_path);
         if(_sequential) {
             // We can't check this until evaluation time, but this can only happen when startFromLine > # lines in dataset.
-            if(_i >= dataset.size()) {
+            if(_i >= _dataset->size()) {
                 BOOST_THROW_EXCEPTION(
                     InvalidValueGeneratorSyntax("In ChooseFromDataset, startFromLine was out of range of the provided file"));
             }
-            auto next = dataset[_i];
-            _i = (_i + 1) % dataset.size();
+            auto next = (*_dataset)[_i];
+            _i = (_i + 1) % _dataset->size();
             return next;
         } else {
-            auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataset.size() - 1};
-            return dataset[distribution(_rng)];
+            auto distribution = boost::random::uniform_int_distribution<size_t>{0, _dataset->size() - 1};
+            return (*_dataset)[distribution(_rng)];
         }
     }
 
@@ -1073,6 +1074,7 @@ private:
     ActorId _id;
     std::string _path;
     static inline DataSetCache _datasets;
+    const std::vector<std::string>* _dataset;
     bool _sequential;
     uint64_t _i;
 };
