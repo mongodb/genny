@@ -74,6 +74,7 @@ Actors:
 
 - Name: Stats
   Type: StreamStatsReporter
+  ClientName: Stream
   Database: *DatabaseName
   Threads: 1
   Phases:
