@@ -1098,33 +1098,50 @@ class DataSetCache {
 public:
     DataSetCache() {}
 
-    /* The dataset is stored in a map, using the path of the file as the key and a vector of strings
-    with file's content as the value. In this method the empty vector is created and return its
-    pointer. getDataSetForPath method doesn't need the lock because loading and evaluating are
-    separate stages in Genny */
-    std::vector<std::string>* createMemoryForDataset(const std::string& path) {
-        std::lock_guard<std::mutex> lk(_dataset_mutex);
-        if (_all_datasets.count(path) > 0) {
-            /* When multiple threads try to load a dataset, all but the first thread will return
-               and do nothing. This way only the first thread will actually load the data.
-               Once the first vector is inserted and the first thread has finished running the
-               threads that were waiting on this mutex will find that there is already one element
-               for that _path and return a null pointer */
-            return nullptr;
-        }
+    using LoadFunction = std::function<void(std::vector<std::string>*)>;
+    /* The dataset is stored in a map, using the path of the file as the key and a Dataset object,
+    which contains the actual data as well as whether it is done being loaded,as the value.
+    In this method, the dataset at the given path is filled by the load function, and a reference
+    to the data is returned. getDataSetForPath method doesn't need the lock because loading and
+    evaluating are separate stages in Genny */
+    std::vector<std::string>& loadDataset(const std::string& path, LoadFunction loader) {
+        {
+            std::unique_lock<std::mutex> lk(_dataset_mutex);
+            /* If the path already exists, it is either loaded or being loaded, so this thread
+            should not do any loading. However, it should wait until loading is finished. */
+            if (_all_datasets.count(path) > 0) {
+                /* When multiple threads try to load a dataset, all but the first thread will just
+                wait for the loading to finish. This way only the first thread will actually load
+                the data. Once the first vector is inserted and the first thread has finished
+                loading, it will signal all waiting threads, and those that were waiting on the
+                same path as was loaded will finish waiting and return the data. */
+                _dataset_done_cv.wait(lk, [&]() {return _all_datasets[path].done; });
+                return _all_datasets[path].data;
+            }
 
-        /* Insert an empty vector and return its pointer */
-        _all_datasets[path] = std::vector<std::string>();
-        return &_all_datasets[path];
+            /* Insert an empty vector to denote that we have won the race */
+            _all_datasets[path] = {false, std::vector<std::string>()};
+        }
+        // Only the first thread should ever get here. It should load the data, set the done flag to
+        // true, and signal cond waiters that a dataset has been loaded.
+        loader(&_all_datasets[path].data);
+        _all_datasets[path].done = true;
+        _dataset_done_cv.notify_all();
+        return _all_datasets[path].data;
     }
 
     const std::vector<std::string>& getDatasetForPath(const std::string& path) {
-        return _all_datasets[path];
+        return _all_datasets[path].data;
     }
 
 private:
-    std::unordered_map<std::string, std::vector<std::string>> _all_datasets;
+    struct Dataset {
+        bool done;
+        std::vector<std::string> data;
+    };
+    std::unordered_map<std::string, Dataset> _all_datasets;
     std::mutex _dataset_mutex;
+    std::condition_variable _dataset_done_cv;
 };
 
 // The ChooseStringFromDataset* generators will use the same static dataset stored in this class.
@@ -1146,16 +1163,9 @@ protected:
 
 private:
     void loadDataset() {
-        auto pd = _datasets.createMemoryForDataset(_path);
+        auto& dataset = _datasets.loadDataset(_path, [this](std::vector<std::string>* to) { readFile(to); });
 
-        if (pd == nullptr) {
-            /* No need to load the dataset because another thread is doing it */
-            return;
-        }
-
-        readFile(pd);
-
-        if (pd->empty()) {
+        if (dataset.empty()) {
             boost::filesystem::path cwd(boost::filesystem::current_path());
 
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
@@ -1210,15 +1220,15 @@ class ChooseStringFromDatasetSequentially : public Generator<std::string>, priva
 public:
     ChooseStringFromDatasetSequentially(const Node& node, GeneratorArgs generatorArgs)
         : WithDatasetStorage(node["path"].maybe<std::string>().value()),
-          _line(node["startFromLine"].maybe<uint64_t>().value_or(0)) {}
-
-    std::string evaluate() {
-        // We can't check this until evaluation time, but this can only happen when startFromLine > # lines in dataset.
-        const auto& dataset = getDataset();
-        if(_line >= dataset.size()) {
+          _line(node["startFromLine"].maybe<uint64_t>().value_or(0)) {
+        if(_line >= getDataset().size()) {
             BOOST_THROW_EXCEPTION(
                 InvalidValueGeneratorSyntax("In ChooseFromDataset, startFromLine was out of range of the provided file"));
         }
+    }
+
+    std::string evaluate() {
+        const auto& dataset = getDataset();
         auto next = dataset[_line];
         _line = (_line + 1) % dataset.size();
         return next;
