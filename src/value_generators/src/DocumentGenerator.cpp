@@ -1127,39 +1127,21 @@ private:
     std::mutex _dataset_mutex;
 };
 
-/** `{^ChooseFromDataset:{...}` */
-class ChooseStringFromDataset : public Generator<std::string> {
-
-public:
-    ChooseStringFromDataset(const Node& node, GeneratorArgs generatorArgs)
-        : _rng{generatorArgs.rng},
-          _id{generatorArgs.actorId},
-          _path{node["path"].maybe<std::string>().value()},
-          _sequential(node["sequential"].maybe<bool>().value_or(false)),
-          _i(node["startFromLine"].maybe<uint64_t>().value_or(0)) {
+// The ChooseStringFromDataset* generators will use the same static dataset stored in this class.
+class WithDatasetStorage {
+protected:
+    WithDatasetStorage(const std::string& path) : _path(path) {
         if (_path.empty()) {
             BOOST_THROW_EXCEPTION(
-                InvalidValueGeneratorSyntax("ChooseFromDataset requieres non-empty path"));
+                InvalidValueGeneratorSyntax("Dataset requires non-empty path"));
         }
         loadDataset();
         // We can store a pointer to this data because the dataset never moves once created.
         _dataset = &_datasets.getDatasetForPath(_path);
     }
 
-    std::string evaluate() {
-        if(_sequential) {
-            // We can't check this until evaluation time, but this can only happen when startFromLine > # lines in dataset.
-            if(_i >= _dataset->size()) {
-                BOOST_THROW_EXCEPTION(
-                    InvalidValueGeneratorSyntax("In ChooseFromDataset, startFromLine was out of range of the provided file"));
-            }
-            auto next = (*_dataset)[_i];
-            _i = (_i + 1) % _dataset->size();
-            return next;
-        } else {
-            auto distribution = boost::random::uniform_int_distribution<size_t>{0, _dataset->size() - 1};
-            return (*_dataset)[distribution(_rng)];
-        }
+    const std::vector<std::string>& getDataset() {
+        return *_dataset;
     }
 
 private:
@@ -1202,15 +1184,48 @@ private:
             }
         }
     }
-
 private:
-    DefaultRandom& _rng;
-    ActorId _id;
     std::string _path;
     static inline DataSetCache _datasets;
     const std::vector<std::string>* _dataset;
-    bool _sequential;
-    uint64_t _i;
+};
+
+class ChooseStringFromDatasetRandomly : public Generator<std::string>, private WithDatasetStorage {
+public:
+    ChooseStringFromDatasetRandomly(const Node& node, GeneratorArgs generatorArgs)
+        : WithDatasetStorage(node["path"].maybe<std::string>().value()),
+          _rng{generatorArgs.rng} {}
+
+    std::string evaluate() {
+        const auto& dataset = getDataset();
+        auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataset.size() - 1};
+        return dataset[distribution(_rng)];
+    }
+
+private:
+    DefaultRandom& _rng;
+};
+
+class ChooseStringFromDatasetSequentially : public Generator<std::string>, private WithDatasetStorage {
+public:
+    ChooseStringFromDatasetSequentially(const Node& node, GeneratorArgs generatorArgs)
+        : WithDatasetStorage(node["path"].maybe<std::string>().value()),
+          _line(node["startFromLine"].maybe<uint64_t>().value_or(0)) {}
+
+    std::string evaluate() {
+        // We can't check this until evaluation time, but this can only happen when startFromLine > # lines in dataset.
+        const auto& dataset = getDataset();
+        if(_line >= dataset.size()) {
+            BOOST_THROW_EXCEPTION(
+                InvalidValueGeneratorSyntax("In ChooseFromDataset, startFromLine was out of range of the provided file"));
+        }
+        auto next = dataset[_line];
+        _line = (_line + 1) % dataset.size();
+        return next;
+    }
+
+private:
+    uint64_t _line;
 };
 
 /** `{^RandomString:{...}` */
@@ -2083,8 +2098,12 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
              return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
          }},
         {"^ChooseFromDataset",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<ChooseStringFromDataset>(node, generatorArgs);
+         [](const Node& node, GeneratorArgs generatorArgs) -> UniqueGenerator<std::string> {
+            if(node["sequential"].maybe<bool>().value_or(false)) {
+                return std::make_unique<ChooseStringFromDatasetSequentially>(node, generatorArgs);
+            } else {
+                return std::make_unique<ChooseStringFromDatasetRandomly>(node, generatorArgs);
+            }
          }},
         {"^Join",
          [](const Node& node, GeneratorArgs generatorArgs) {
