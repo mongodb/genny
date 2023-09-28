@@ -87,6 +87,21 @@ def _detect_distro_amazon(machine, freedesktop_version):
         raise DistroDetectionError(f"Invalid version for Amazon Linux: {freedesktop_version}")
 
 
+def _freedesktop_os_release():
+    """
+    Best effort parser of the freedesktop.org os-release file. 
+
+    This is a little imprecise, but works well enough for all three Linux 
+    distros we support.
+    """
+    result = {}
+    with open ("/etc/os-release") as os_release_file:
+        for line in os_release_file:
+            key, value = line.strip("\n").split("=", 1)
+            value = value.strip("'\"")
+            result[key] = value
+    return result
+
 def detect_distro():
     SLOG.info(f"Distro not specified. Detecting distro.")
 
@@ -95,7 +110,7 @@ def detect_distro():
     if system == "Darwin":
         distro = "not-linux"
     elif system == "Linux":
-        freedesktop_release = platform.freedesktop_os_release()
+        freedesktop_release = _freedesktop_os_release()
         freedesktop_id = freedesktop_release["ID"]
         freedesktop_version = freedesktop_release["VERSION_ID"]
         if freedesktop_id == "ubuntu":
