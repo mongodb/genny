@@ -89,21 +89,22 @@ def _detect_distro_amazon(machine, freedesktop_version):
 
 def _freedesktop_os_release():
     """
-    Best effort parser of the freedesktop.org os-release file. 
+    Best effort parser of the freedesktop.org os-release file.
 
-    This is a little imprecise, but works well enough for all three Linux 
+    This is a little imprecise, but works well enough for all three Linux
     distros we support.
 
     This exists to support Python versions less than 3.10. Otherwise it
     can be replaced with platform.freedesktop_os_release().
     """
     result = {}
-    with open ("/etc/os-release") as os_release_file:
+    with open("/etc/os-release") as os_release_file:
         for line in os_release_file:
             key, value = line.strip("\n").split("=", 1)
             value = value.strip("'\"")
             result[key] = value
     return result
+
 
 def detect_distro():
     SLOG.info(f"Distro not specified. Detecting distro.")
