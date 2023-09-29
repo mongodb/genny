@@ -93,6 +93,9 @@ def _freedesktop_os_release():
 
     This is a little imprecise, but works well enough for all three Linux 
     distros we support.
+
+    This exists to support Python versions less than 3.10. Otherwise it
+    can be replaced with platform.freedesktop_os_release().
     """
     result = {}
     with open ("/etc/os-release") as os_release_file:
