@@ -391,7 +391,7 @@ void QueryableEncryptedField::appendEncryptInfo(sub_document subdoc) const {
                     } else if(_type == "decimal") {
                         queryDoc.append(kvp(s, bsoncxx::decimal128(n)));
                     } else if(_type == "long") {
-                        queryDoc.append(kvp(s, std::stol(n)));
+                        queryDoc.append(kvp(s, int64_t(std::stol(n))));
                     } else if(_type == "int") {
                         queryDoc.append(kvp(s, std::stoi(n)));
                     } else {
