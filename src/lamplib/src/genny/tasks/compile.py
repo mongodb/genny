@@ -106,13 +106,13 @@ def detect_distro():
     SLOG.info(f"Distro not specified. Detecting distro.")
 
     system = platform.system()
-    machine = platform.machine()
     if system == "Darwin":
         distro = "not-linux"
     elif system == "Linux":
         freedesktop_release = _freedesktop_os_release()
         freedesktop_id = freedesktop_release["ID"]
         freedesktop_version = freedesktop_release["VERSION_ID"]
+        machine = platform.machine()
         if freedesktop_id == "ubuntu":
             distro = _detect_distro_ubuntu(machine, freedesktop_version)
         elif freedesktop_id == "rhel":
