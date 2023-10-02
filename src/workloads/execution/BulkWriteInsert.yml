@@ -1,0 +1,57 @@
+# VKTODO fill in everything correctly.
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/replication"
+Description: |
+  Run updateOnes, deleteOnes, and findAndModifys on a replica set.
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+  Database: &Database test
+  DocumentCount: &DocumentCount 10000  # Number of documents to insert and modify.
+  WriteOp: &WriteOp { insert: 0, document: {a: 1} }
+  WriteOps10x: &WriteOps10x [
+      *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp,
+      *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp,
+    ]
+  WriteOps100x: &WriteOps100x {
+      ^FlattenOnce:
+        [
+          *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
+          *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
+        ],
+    }
+
+Actors:
+- Name: BulkWriteInserter
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: 1
+      PhaseConfig:
+        Repeat: 1000
+        Operations:
+        - OperationName: AdminCommand
+          # Each invocation of bulkWrite calls bulkWrite once, i.e. it results
+          # in one exchange between the driver and the server to send a command
+          # and receive a response. (Under the hood several network round trips
+          # may be involved.)
+          OperationMetricsName: BulkWriteInsertRoundTrip
+          OperationCommand:
+            bulkWrite: 1
+            ops: *WriteOps10x
+            nsInfo:
+              - {ns: "test.bangalore"}
+            ordered: true
+
+# Clients:
+#   Default:
+#     URI: "mongodb://localhost:20000"
+
+# VKTODO
+# AutoRun:
+# - When:
+#     mongodb_setup:
+#       $eq:
+#       - replica
