@@ -8,9 +8,8 @@ InsertData:
   Database: &db {^Parameter: {Name: "db", Default: test}}
   Threads: 1
   CollectionCount: 1
-  # TODO Change below back to original values
-  DocumentCount: 150
-  BatchSize: 10
+  DocumentCount: 150000
+  BatchSize: 10000
   Document:
     loc2d: &loc2d [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
     loc2dSphere: &loc2dSphere [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
@@ -21,8 +20,7 @@ InsertData:
 
 Create2dIndexesCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
-  # TODO Change Durations back to original values
-  Duration: {^Parameter: {Name: "Duration", Default: 2 seconds}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
   Database: *db
   Operations:
   - OperationMetricsName: Create2dIndexesCmd
@@ -44,7 +42,7 @@ Create2dIndexesCmd:
 
 Create2dSphereIndexesCoordCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
-  Duration: {^Parameter: {Name: "Duration", Default: 2 seconds}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
   Database: *db
   Operations:
   - OperationMetricsName: Create2dSphereIndexesCoordCmd
@@ -63,7 +61,7 @@ Create2dSphereIndexesCoordCmd:
 
 Create2dSphereGeoJsonIndexesCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
-  Duration: {^Parameter: {Name: "Duration", Default: 2 seconds}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
   Database: *db
   Operations:
   - OperationMetricsName: Create2dSphereGeoJsonIndexesCmd
@@ -82,7 +80,7 @@ Create2dSphereGeoJsonIndexesCmd:
 
 CreateHashedIndexesCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
-  Duration: {^Parameter: {Name: "Duration", Default: 2 seconds}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
   Database: *db
   Operations:
   - OperationMetricsName: CreateHashedIndexesCmd
@@ -101,7 +99,7 @@ CreateHashedIndexesCmd:
 
 CreateTextIndexesCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
-  Duration: {^Parameter: {Name: "Duration", Default: 2 seconds}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
   Database: *db
   Operations:
   - OperationMetricsName: CreateTextIndexesCmd
@@ -120,7 +118,7 @@ CreateTextIndexesCmd:
 
 CreateUniqueIndexesCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
-  Duration: {^Parameter: {Name: "Duration", Default: 2 seconds}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
   Database: *db
   Operations:
   - OperationMetricsName: CreateUniqueIndexesCmd
@@ -140,7 +138,7 @@ CreateUniqueIndexesCmd:
 
 CreateWildCardIndexesCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
-  Duration: {^Parameter: {Name: "Duration", Default: 2 seconds}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
   Database: *db
   Operations:
   - OperationMetricsName: CreateWildCardIndexesCmd
