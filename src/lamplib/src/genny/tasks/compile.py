@@ -73,6 +73,8 @@ def _detect_distro_rhel(machine, freedesktop_version):
             return "rhel8"
         else:
             raise DistroDetectionError(f"Invalid machine type for RHEL 8.x: {machine}")
+    else:
+        raise DistroDetectionError(f"Invalid version for RHEL: {freedesktop_version}")
 
 
 def _detect_distro_amazon(machine, freedesktop_version):
