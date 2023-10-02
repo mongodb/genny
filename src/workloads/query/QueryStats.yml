@@ -83,11 +83,13 @@ Actors:
 - LoadConfig:
     Path: ../../phases/query/QueryStats.tmpl
     Key: QuiesceActor  # Wait for all threads to quiesce before running prepop or query stats.
+                       # Also quiesce at the end of each set.
     Parameters:
       MaxPhase: *MaxPhase
       Phases: [
         13, 23, 33, 43, 53, 63,
         16, 26, 36, 46, 56, 66,
+        19, 29, 39, 49, 59, 69,
       ]
 - LoadConfig:
     Path: ../../phases/query/QueryStats.tmpl
