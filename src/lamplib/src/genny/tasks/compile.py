@@ -100,6 +100,9 @@ def _freedesktop_os_release():
     result = {}
     with open("/etc/os-release") as os_release_file:
         for line in os_release_file:
+            if "=" not in line:
+                # Skip blank lines and any other lines that don't obviously set a value.
+                continue
             key, value = line.strip("\n").split("=", 1)
             value = value.strip("'\"")
             result[key] = value
