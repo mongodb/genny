@@ -50,8 +50,8 @@ Actors:
 #     URI: "mongodb://localhost:20000"
 
 # VKTODO
-# AutoRun:
-# - When:
-#     mongodb_setup:
-#       $eq:
-#       - replica
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
