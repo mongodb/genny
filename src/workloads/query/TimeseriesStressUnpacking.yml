@@ -65,11 +65,13 @@ Actors:
           DocumentCount: 1000000
           BatchSize: 1000
           Document:
-            # Since step = 900 ms and documentCount = 1,000,000, the first and last document would be 900,000,000 ms apart (roughly 10 days).
+            # Since step = 900 ms and documentCount = 1,000,000, the first and last document
+            # would be 900,000,000 ms apart (roughly 10 days).
             time: { ^IncDate: { start: "2022-01-01", step: 900 } }
             temp: { ^RandomDouble: { min: -30, max: 120 } }
-            # This is the value we are going to query against. We will have ~1600 buckets in this collection and roughly 600 documents per bucket.
-            # By making this an increasing value, we can write predicates to target certain number of buckets.
+            # This is the value we are going to query against. We will have ~1600 buckets in this
+            # collection and roughly 600 documents per bucket. By making this an increasing value, we can write
+            # predicates to target certain number of buckets.
             measurement0: { ^Inc: { start: 1 } }
             # The fields below create larger documents to stress unpacking.
             measurement1: { ^RandomDouble: { min: -100.0, max: 900.00 } }
@@ -108,7 +110,8 @@ Actors:
             - OperationMetricsName:
               OperationName: aggregate
               OperationCommand:
-                # With 600 documents per bucket, 10 buckets will have 'measurement0' <= 6000 (600 * 10). We'll add 100 just to be safe.
+                # With 600 documents per bucket, 10 buckets will have 'measurement0' <= 6000 (600 * 10).
+                # We'll add 100 just to be safe.
                 Pipeline: [{ $match: { "measurement0": { $lte: 6100 } } }]
 
   - Name: ConjunctionMatchMeasurement10Buckets
@@ -158,7 +161,7 @@ Actors:
             - OperationMetricsName:
               OperationName: aggregate
               OperationCommand:
-                # With 600 documents per bucket, 100 buckets will have 'measurement0' <= 60000 (600 * 100). We'll add 100 just to be safe.
+                # With 600 documents per bucket, 100 buckets will have 'measurement0' <= 60000 (600 * 100).
                 Pipeline: [{ $match: { "measurement0": { $gt: 60100 } } }]
 
   - Name: ConjunctionMatchMeasurement100Buckets
