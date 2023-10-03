@@ -1,0 +1,69 @@
+# VKTODO fill in everything correctly.
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/replication"
+Description: |
+  Run updateOnes, deleteOnes, and findAndModifys on a replica set.
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+  Database: &Database test
+  WriteOp: &WriteOp { a: 1 }
+  WriteOps1x: &WriteOps1x [
+      *WriteOp
+    ]
+  WriteOps10x: &WriteOps10x {
+      ^FlattenOnce:
+        [
+          *WriteOps1x, *WriteOps1x, *WriteOps1x, *WriteOps1x, *WriteOps1x,
+          *WriteOps1x, *WriteOps1x, *WriteOps1x, *WriteOps1x, *WriteOps1x,
+        ],
+    }
+  WriteOps100x: &WriteOps100x {
+      ^FlattenOnce:
+        [
+          *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
+          *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
+        ],
+    }
+  WriteOps1000x: &WriteOps1000x {
+      ^FlattenOnce:
+        [
+          *WriteOps100x, *WriteOps100x, *WriteOps100x, *WriteOps100x, *WriteOps100x,
+          *WriteOps100x, *WriteOps100x, *WriteOps100x, *WriteOps100x, *WriteOps100x,
+        ],
+    }
+
+Actors:
+- Name: Inserter
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: 1
+      PhaseConfig:
+        # 10,000,000 documents inserted totally: Repeat * num ops per round trip
+        Repeat: 10000000
+        Database: *Database
+        Operations:
+        - OperationName: RunCommand
+          # Each invocation of bulkWrite calls bulkWrite once, i.e. it results
+          # in one exchange between the driver and the server to send a command
+          # and receive a response. (Under the hood several network round trips
+          # may be involved.)
+          OperationMetricsName: InsertRoundTrip
+          OperationCommand:
+            insert: "bangalore"
+            documents: *WriteOps1x
+            ordered: true
+
+# Clients:
+#   Default:
+#     URI: "mongodb://localhost:20000"
+
+# VKTODO
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica-all-feature-flags
