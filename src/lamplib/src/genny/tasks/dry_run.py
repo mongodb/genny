@@ -24,6 +24,12 @@ def dry_run_workload(
         "MixedWorkloadsGennyStress.yml",
         "ClusteredCollection.yml",
         "ClusteredCollectionLargeRecordIds.yml",
+        "YCSBLikeQueryableEncrypt1Cf16.yml",
+        "YCSBLikeQueryableEncrypt1Cf32.yml",
+        "YCSBLikeQueryableEncrypt1Cfdefault.yml",
+        "YCSBLikeQueryableEncrypt5Cf16.yml",
+        "YCSBLikeQueryableEncrypt5Cf32.yml",
+        "YCSBLikeQueryableEncrypt5Cfdefault.yml"
     ]:
         SLOG.info(f"TIG-3290 skipping dry run for {yaml_file_basename}.", file=yaml_file_path)
         return
