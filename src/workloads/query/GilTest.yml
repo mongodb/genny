@@ -1,0 +1,183 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of the time series optimization on $group with $sum. 
+  With the new sum optimizations that works similarly to that of $min/$max, 
+  $group stages on the meta field will skip $_unpack and compare the control field of the buckets without unpacking them
+GlobalDefaults:
+  dbname: &db test
+  coll: &coll Collection0
+  batchSize: &batchSize 30000
+  repeat: &repeat 100
+  documentCount: &documentCount 1000000
+  maxPhases: &maxPhases 10
+
+
+Actors:
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *db
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0, 4]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *coll
+        Operations:
+        - OperationName: drop
+
+- Name: CreateCollectionWithSum
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases: 
+      Active: [1]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Collection: *coll
+        Operation:
+          OperationMetricsName:
+          OperationName: RunCommand
+          OperationCommand:
+            {create: *coll, timeseries: {timeField: "t", metaField: "m", bucketRoundingSeconds: 3600,
+            bucketMaxSpanSeconds: 3600, sum: {"paths": ["firstSumField", "thirdSumField", "fourthSumField"]}}}
+
+- Name: CreateCollectionWithoutSum
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases: 
+      Active: [5]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Collection: *coll
+        Operation:
+          OperationMetricsName:
+          OperationName: RunCommand
+          OperationCommand:
+            {create: *coll, timeseries: {timeField: "t", metaField: "m", bucketRoundingSeconds: 3600,
+            bucketMaxSpanSeconds: 3600}}
+
+- Name: InsertDataSum
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Threads: 1
+        Repeat: 1
+        Database: *db
+        CollectionCount: 1
+        DocumentCount: *documentCount
+        BatchSize: 1000
+        Document:
+          t: {^IncDate: {start: "2022-01-01", step: 1000}}
+          m: {"sensorId": 5577, "type": "temperature"}
+          firstSumField: 1
+          thirdSumField: 2
+          nestedField: {
+            firstNestedField:{
+              firstField: "hello"
+            },
+            secondNestedField:{
+              secondField: "world"
+            },
+            tripleNestedField:{
+              doubleNestedField: {
+                singleNestedField: {
+                  field: 10000
+                }
+              }
+            }
+          }
+
+- Name: InsertDataNoSum
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Threads: 1
+        Repeat: 1
+        Database: *db
+        CollectionCount: 1
+        DocumentCount: *documentCount
+        BatchSize: 1000
+        Document:
+          t: {^IncDate: {start: "2022-01-01", step: 1000}}
+          m: {"sensorId": 5577, "type": "temperature"}
+          firstSumField: 1
+          thirdSumField: 2
+          nestedField: {
+            firstNestedField:{
+              firstField: "hello"
+            },
+            secondNestedField:{
+              secondField: "world"
+            },
+            tripleNestedField:{
+              doubleNestedField: {
+                singleNestedField: {
+                  field: 10000
+                }
+              }
+            }
+          }
+
+- Name: QueriesWithSum
+  Type: CrudActor
+  Database: *db
+  Threads: 10
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Repeat: *repeat
+        Database: *db
+        Collection: *coll
+        Operations:
+        - OperationMetricsName:
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline:  [{$group: {_id: "$m", total: {$sum: "$thirdSumField"}}}]
+
+- Name: QueriesWithoutSum
+  Type: CrudActor
+  Database: *db
+  Threads: 10
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *maxPhases
+      PhaseConfig:
+        Repeat: *repeat
+        Database: *db
+        Collection: *coll
+        Operations:
+        - OperationMetricsName:
+          OperationName: aggregate
+          OperationCommand:
+            Pipeline:  [{$group: {_id: "$m", total: {$sum: "$thirdSumField"}}}]
+
+AutoRun: 
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-all-feature-flags
+    branch_name:
+      gte:
+      - v7.1

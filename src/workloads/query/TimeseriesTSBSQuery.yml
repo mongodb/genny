@@ -1,0 +1,435 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-integration"
+Description: |
+  This workload tests running identical queries as tsbs_query in a Genny workload. During
+  development we noticed significant performance differences between Genny and tsbs
+  workloads running very similar queries. This workload is being used for development
+  to investigate these runtime differences. The data is preloaded by the dsi configuration.
+  See 'configurations/test_control/test_control.tsbs_query.yml' for all the details. There are 20736000 
+  documents in the collection.
+
+Keywords:
+  - timeseries
+  - aggregate
+  - group
+  - sort
+
+GlobalDefaults:
+  Database: &database cpu
+  Collection: &collection point_data
+  maxPhases: &maxPhases 12
+  Repeat: &repeat 10
+
+# Create variables to mimic the randomness of tsbs_generate_queries.
+#  The min and max time of the pre-loaded tsbs dataset.
+MinDate:
+  &MinDate {
+    ^RandomDate: { min: "2016-01-01T00:00:00Z", max: "2016-01-24T23:59:50Z" },
+  }
+
+MaxDate:
+  &MaxDate { ^RandomDate: { min: *MinDate, max: "2016-01-24T23:59:50Z" } }
+
+HostName1: &HostName1
+  LoadConfig:
+    Path: "../../phases/query/GetHostNameArray.yml"
+    Key: GetHostNameArray
+    Parameters:
+      count: 1
+
+HostName8: &HostName8
+  LoadConfig:
+    Path: "../../phases/query/GetHostNameArray.yml"
+    Key: GetHostNameArray
+    Parameters:
+      count: 8
+
+Actors:
+  # The data is already loaded into the collection from the dsi configuration.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+
+  - Name: single_groupby_1_1_1
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.hostname": { $in: *HostName1 },
+                          time: { $gte: *MinDate, $lt: *MaxDate },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
+                          max_usage_user: { $max: "$usage_user" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: single_groupby_1_8_1
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.hostname": { $in: *HostName8 },
+                          time: { $gte: *MinDate, $lt: *MaxDate },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
+                          max_usage_user: { $max: "$usage_user" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: single_groupby_5_1_1
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.hostname": { $in: *HostName1 },
+                          time: { $gte: *MinDate, $lt: *MaxDate },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
+                          max_usage_user: { $max: "$usage_user" },
+                          max_usage_guest: { $max: "$usage_guest" },
+                          max_usage_system: { $max: "$usage_system" },
+                          max_usage_iowait: { $max: "$usage_iowait" },
+                          max_usage_irq: { $max: "$usage_irq" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: single_groupby_5_8_1
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.hostname": { $in: *HostName8 },
+                          time: { $gte: *MinDate, $lt: *MaxDate },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
+                          max_usage_user: { $max: "$usage_user" },
+                          max_usage_guest: { $max: "$usage_guest" },
+                          max_usage_system: { $max: "$usage_system" },
+                          max_usage_iowait: { $max: "$usage_iowait" },
+                          max_usage_irq: { $max: "$usage_irq" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: single_groupby_1_1_12
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.hostname": { $in: *HostName1 },
+                          time: { $gte: *MinDate, $lt: *MaxDate },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              $dateTrunc: { "date": "$time", "unit": "minute" },
+                            },
+                          max_usage_user: { $max: "$usage_user" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: single_groupby_5_1_12
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.hostname": { $in: *HostName1 },
+                          time: { $gte: *MinDate, $lt: *MaxDate },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              $dateTrunc: { "date": "$time", "unit": "minute" },
+                            },
+                          max_usage_user: { $max: "$usage_user" },
+                          max_usage_guest: { $max: "$usage_guest" },
+                          max_usage_system: { $max: "$usage_system" },
+                          max_usage_iowait: { $max: "$usage_iowait" },
+                          max_usage_irq: { $max: "$usage_irq" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: double_groupby_1
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 10
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { time: { $gte: *MinDate, $lt: *MaxDate } } },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              time:
+                                { $dateTrunc: { date: "$time", unit: "hour" } },
+                              hostname: "$tags.hostname",
+                            },
+                          avg_usage_softirq: { $avg: "$usage_softirq" },
+                        },
+                    },
+                    { $sort: { "_id.time": 1, "_id.hostname": 1 } },
+                  ]
+
+  - Name: double_groupby_5
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [8]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 10
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { time: { $gte: *MinDate, $lt: *MaxDate } } },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              time:
+                                { $dateTrunc: { date: "$time", unit: "hour" } },
+                              hostname: "$tags.hostname",
+                            },
+                          avg_usage_softirq: { $avg: "$usage_softirq" },
+                          avg_usage_steal: { $avg: "$usage_steal" },
+                          avg_usage_guest: { $avg: "$usage_guest" },
+                          avg_usage_user: { $avg: "$usage_user" },
+                          avg_usage_system: { $avg: "$usage_system" },
+                        },
+                    },
+                    { $sort: { "_id.time": 1, "_id.hostname": 1 } },
+                  ]
+
+  - Name: double_groupby_all
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [9]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 10
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { time: { $gte: *MinDate, $lt: *MaxDate } } },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              time:
+                                { $dateTrunc: { date: "$time", unit: "hour" } },
+                              hostname: "$tags.hostname",
+                            },
+                          avg_usage_softirq: { $avg: "$usage_softirq" },
+                          avg_usage_steal: { $avg: "$usage_steal" },
+                          avg_usage_guest: { $avg: "$usage_guest" },
+                          avg_usage_user: { $avg: "$usage_user" },
+                          avg_usage_system: { $avg: "$usage_system" },
+                          avg_usage_iowait: { $avg: "$usage_iowait" },
+                          avg_usage_irq: { $avg: "$usage_irq" },
+                          avg_usage_nice: { $avg: "$usage_nice" },
+                          avg_usage_idle: { $avg: "$usage_idle" },
+                          avg_usage_guest_nice: { $avg: "$usage_guest_nice" },
+                        },
+                    },
+                    { $sort: { "_id.time": 1, "_id.hostname": 1 } },
+                  ]
+
+  - Name: groupby-orderby-limit
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [10]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.hostname": { $in: *HostName1 },
+                          time: { $gte: *MinDate, $lt: *MaxDate },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
+                          max_usage_user: { $max: "$usage_user" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                    { $limit: 5 },
+                  ]
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v6.0
