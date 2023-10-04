@@ -1,0 +1,187 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/altas-streams"
+Description: |
+  Pipeline: Memory -> Lookup -> AddField -> Window (Group) -> Memory
+  Documents: 8M
+  BatchSize: 1k
+  ForeignCollectionDocuments: 10k
+
+  This tests the scenario where incoming data needs to be merged with a foreign mongoDB collection
+  and then propagated to a tumbling window which groups by a foreign column that was fetched
+  from the $lookup (join) on the foreign mongoDB collection.
+
+Keywords:
+- streams
+
+GlobalDefaults:
+  DatabaseName: &DatabaseName test
+  StreamProcessorName: &StreamProcessorName sp
+
+  # Genny workload client typically has 16 CPUs, so use 16 inserter threads each inserting
+  # 500 batches of 1k documents, so a total of 8M documents, which will all have unique keys
+  # for the window so this will generate 8M keys on the open window.
+  NumThreads: &NumThreads 16
+  NumBatch1000xPerThread: &NumBatch1000xPerThread 500
+  ExpectedDocumentCount: &ExpectedDocumentCount 8000000 # NumThreads * NumBatch1000xPerThread * 1000
+  NumAuctionDocuments: &NumAuctionDocuments 10000
+
+  Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
+  Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    *Channel
+  ]}}
+
+  AuctionCollectionName: &AuctionCollectionName auctions
+  AuctionDocument: &AuctionDocument
+    _id: {^Inc: { start: 1000 }}
+    impressionId: {^RandomString: { length: 16 }}
+    publisherId: {^RandomString: { length: 16 }}
+    sellerId: {^RandomString: { length: 16 }}
+
+  Document: &Document
+    # There will only be `NumAuctionDocuments`, so generate a random auction ID b/w (1k, 1k + `NumAuctionDocuments`]
+    auctionId: {^RandomInt: { min: 1000, max: 11000 }}
+    bidderId: {^Inc: { start: 1000, multipler: 1 }}
+    price: {^RandomDouble: {min: 100, max: 100000000}}
+    channel: *Channel
+    url: *Url
+    dateTime: "2023-01-01T00:00:00.000"
+
+  Batch1000x: &Batch1000x {^Array: { of: *Document, number: 1000 }}
+
+Actors:
+
+# Loads the `auction` collection which is what the `$lookup` operator in the streaming pipeline will
+# be joining incoming stream data with.
+- Name: Loader
+  Type: CrudActor
+  ClientName: Default
+  Database: *DatabaseName
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Repeat: *NumAuctionDocuments
+    Collection: *AuctionCollectionName
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *AuctionDocument
+  - Phase: 1..3
+    Nop: true
+
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Nop: true
+  - Phase: 1
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: CreateStreamProcessor
+      OperationName: RunCommand
+      OperationCommand:
+        streams_startStreamProcessor: ""
+        name: *StreamProcessorName
+        pipeline: [
+          {
+            $source: {
+              connectionName: "__testMemory",
+              timeField: { $convert: { input: "$dateTime", to: "date" }},
+              allowedLateness: { size: 1, unit: "second" },
+            }
+          },
+          {
+            $lookup: {
+              from: {
+                connectionName: "db",
+                db: *DatabaseName,
+                coll: *AuctionCollectionName
+              },
+              localField: "auctionId",
+              foreignField: "_id",
+              as: "auctions"
+            }
+          },
+          {
+            $addFields: {
+              auction: { $first: "$auctions" }
+            }
+          },
+          {
+            $tumblingWindow: {
+              interval: { size: 1, unit: "second" },
+              pipeline: [
+                { 
+                  $group: {
+                    _id: "$auction.sellerId",
+                    minPrice: { $min: "$price" },
+                    maxPrice: { $max: "$price" },
+                    sumPrice: { $sum: "$price" },
+                    avgPrice: { $avg: "$price" }
+                  }
+                }
+              ]
+            }
+          },
+          { $emit: { connectionName: "__testMemory" } }
+        ]
+        connections: [
+          { name: "__testMemory", type: "in_memory", options: {} },
+          { name: "db", type: "atlas", options: { uri: {^ClientURI: { Name: "Default" }} }}
+        ]
+  - Phase: 2
+    Nop: true
+  - Phase: 3
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Stop
+      OperationName: RunCommand
+      OperationCommand:
+        streams_stopStreamProcessor: ""
+        name: *StreamProcessorName
+
+- Name: Insert_Batch1000x
+  Type: RunCommand
+  Threads: *NumThreads
+  Phases:
+  - Phase: 0..1
+    Nop: true
+  - Phase: 2
+    Repeat: *NumBatch1000xPerThread
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Insert
+      OperationName: RunCommand
+      OperationCommand:
+        streams_testOnlyInsert: ""
+        name: *StreamProcessorName
+        documents: *Batch1000x
+  - Phase: 3
+    Nop: true
+
+- Name: Stats
+  Type: StreamStatsReporter
+  Database: *DatabaseName
+  Threads: 1
+  Phases:
+  - Phase: 0..1
+    Nop: true
+  - Phase: 2
+    Repeat: 1
+    StreamProcessorName: *StreamProcessorName
+    ExpectedDocumentCount: *ExpectedDocumentCount
+  - Phase: 3
+    Nop: true
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-streams
+    branch_name:
+      $gte: v7.2
