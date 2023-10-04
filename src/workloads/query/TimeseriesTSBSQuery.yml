@@ -1,12 +1,15 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-integration"
 Description: |
-  This workload tests running identical queries as tsbs_query in a Genny workload. During
-  development we noticed significant performance differences between Genny and tsbs
-  workloads running very similar queries. This workload is being used for development
-  to investigate these runtime differences. The data is preloaded by the dsi configuration.
-  See 'configurations/test_control/test_control.tsbs_query.yml' for all the details. There are 20736000 
-  documents in the collection.
+  This workload runs queries from the tsbs_query benchmark in Genny. It allows us to cross-check the results of the TSBS 
+  benchmarks, collect additional measurements, profile individual queries, and extend some of the queries as needed.
+  The data is preloaded by the dsi configuration. See 'configurations/test_control/test_control.tsbs_query.yml' for all 
+  the details. There are 20736000 documents in the collection.
+  There are some differences between the queries in this workload and tsbs, but we do not expect these differences to significantly
+  affect runtime:
+  1. All TSBS queries have a filter on "measurement": "cpu", which we remove since it is true for all measurements.
+  2. TSBS will generate a random start time between the start/end time of the workload for every query type. We hard code
+  our time values, since genny does not currently support date arithmetic, nor storing a fixed value from randomized generation.
 
 Keywords:
   - timeseries
@@ -17,32 +20,36 @@ Keywords:
 GlobalDefaults:
   Database: &database cpu
   Collection: &collection point_data
-  maxPhases: &maxPhases 12
-  Repeat: &repeat 10
+  maxPhases: &maxPhases 20
+  Repeat: &repeat 1000 # Matches the number of queries run in 'configurations/test_control/test_control.tsbs_query.yml'.
+  # TSBS constructs a time windows of various sizes (1 hour, 8 hours, 12 hours) from a uniformly random start-time within
+  # this time-period. Ideally, we would do this as well, but currently genny doesn't support storing randomized date values as
+  # variables, so we will fix a starting value and increment it each time the query runs.
+  # StartDate: &StartDate "2016-01-04T21:49:27Z"
+  Hour1: &Hour1 "2016-01-04T22:49:27Z"
+  Hour8: &Hour8 "2016-01-05T05:49:27Z"
+  Hour12: &Hour12 "2016-01-05T09:49:27Z"
+  CloseToEndTime: &CloseToEndTime "2016-01-20T09:49:27Z"
+  StartDate: &StartDate "2016-01-04T21:49:27Z"
 
 # Create variables to mimic the randomness of tsbs_generate_queries.
-#  The min and max time of the pre-loaded tsbs dataset.
-MinDate:
-  &MinDate {
-    ^RandomDate: { min: "2016-01-01T00:00:00Z", max: "2016-01-24T23:59:50Z" },
+# Generates a single string like "host_42", with random integer in range [0,99].
+GenHostNames:
+  &GenHostNames {
+    ^FormatString:
+      {
+        "format": "host_%d",
+        "withArgs": [{ ^RandomInt: { min: 0, max: 99 } }],
+      },
   }
 
-MaxDate:
-  &MaxDate { ^RandomDate: { min: *MinDate, max: "2016-01-24T23:59:50Z" } }
-
-HostName1: &HostName1
-  LoadConfig:
-    Path: "../../phases/query/GetHostNameArray.yml"
-    Key: GetHostNameArray
-    Parameters:
-      count: 1
-
-HostName8: &HostName8
-  LoadConfig:
-    Path: "../../phases/query/GetHostNameArray.yml"
-    Key: GetHostNameArray
-    Parameters:
-      count: 8
+# Generates an array of strings like "host_42", with random integer in range [0,99].
+HostName1:
+  &HostName1 { ^Array: { of: *GenHostNames, number: 1, distinct: true } }
+HostName8:
+  &HostName8 { ^Array: { of: *GenHostNames, number: 8, distinct: true } }
+HostNameAll:
+  &HostNameAll { ^Array: { of: *GenHostNames, number: 100, distinct: true } }
 
 Actors:
   # The data is already loaded into the collection from the dsi configuration.
@@ -77,7 +84,36 @@ Actors:
                       $match:
                         {
                           "tags.hostname": { $in: *HostName1 },
-                          time: { $gte: *MinDate, $lt: *MaxDate },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour1, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                     {
@@ -111,7 +147,36 @@ Actors:
                       $match:
                         {
                           "tags.hostname": { $in: *HostName8 },
-                          time: { $gte: *MinDate, $lt: *MaxDate },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour8, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                     {
@@ -145,7 +210,36 @@ Actors:
                       $match:
                         {
                           "tags.hostname": { $in: *HostName1 },
-                          time: { $gte: *MinDate, $lt: *MaxDate },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour1, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                     {
@@ -183,7 +277,36 @@ Actors:
                       $match:
                         {
                           "tags.hostname": { $in: *HostName8 },
-                          time: { $gte: *MinDate, $lt: *MaxDate },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour1, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                     {
@@ -221,7 +344,36 @@ Actors:
                       $match:
                         {
                           "tags.hostname": { $in: *HostName1 },
-                          time: { $gte: *MinDate, $lt: *MaxDate },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour12, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                     {
@@ -257,7 +409,36 @@ Actors:
                       $match:
                         {
                           "tags.hostname": { $in: *HostName1 },
-                          time: { $gte: *MinDate, $lt: *MaxDate },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour12, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                     {
@@ -285,7 +466,7 @@ Actors:
         Active: [7]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: 10
+          Repeat: 200 # Matches the number of queries ran in the dsi configuration.
           Database: *database
           Collection: *collection
           Operations:
@@ -293,7 +474,41 @@ Actors:
               OperationCommand:
                 Pipeline:
                   [
-                    { $match: { time: { $gte: *MinDate, $lt: *MaxDate } } },
+                    {
+                      $match:
+                        {
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour12, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     {
                       $group:
                         {
@@ -317,7 +532,7 @@ Actors:
         Active: [8]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: 10
+          Repeat: 100 # matches the number of queries ran in the dsi configuration.
           Database: *database
           Collection: *collection
           Operations:
@@ -325,7 +540,41 @@ Actors:
               OperationCommand:
                 Pipeline:
                   [
-                    { $match: { time: { $gte: *MinDate, $lt: *MaxDate } } },
+                    {
+                      $match:
+                        {
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour12, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     {
                       $group:
                         {
@@ -353,7 +602,7 @@ Actors:
         Active: [9]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: 10
+          Repeat: 100 # matches the number of queries ran in the dsi configuration.
           Database: *database
           Collection: *collection
           Operations:
@@ -361,7 +610,41 @@ Actors:
               OperationCommand:
                 Pipeline:
                   [
-                    { $match: { time: { $gte: *MinDate, $lt: *MaxDate } } },
+                    {
+                      $match:
+                        {
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour12, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     {
                       $group:
                         {
@@ -386,7 +669,7 @@ Actors:
                     { $sort: { "_id.time": 1, "_id.hostname": 1 } },
                   ]
 
-  - Name: groupby-orderby-limit
+  - Name: groupby_orderby_limit
     Type: CrudActor
     Threads: 1
     Phases:
@@ -394,19 +677,52 @@ Actors:
         Active: [10]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: *repeat
+          Repeat: 100 # matches the number of queries ran in the dsi configuration.
           Database: *database
           Collection: *collection
           Operations:
             - OperationName: aggregate
               OperationCommand:
+                # It is unclear how TSBS evaluates the endpoint, but the range is often wide. So we pick a time close to the max time.
                 Pipeline:
                   [
                     {
                       $match:
                         {
                           "tags.hostname": { $in: *HostName1 },
-                          time: { $gte: *MinDate, $lt: *MaxDate },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *CloseToEndTime,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                     {
@@ -421,15 +737,465 @@ Actors:
                     { $limit: 5 },
                   ]
 
+  - Name: cpu_max_all_1
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [11]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.hostname": { $in: *HostName1 },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour8, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { date: "$time", unit: "hour" } },
+                          max_usage_softirq: { $max: "$usage_softirq" },
+                          max__usage_steal: { $max: "$usage_steal" },
+                          max_usage_guest: { $max: "$usage_guest" },
+                          max_usage_user: { $max: "$usage_user" },
+                          max_usage_system: { $max: "$usage_system" },
+                          max_usage_iowait: { $max: "$usage_iowait" },
+                          max_usage_irq: { $max: "$usage_irq" },
+                          max_usage_nice: { $max: "$usage_nice" },
+                          max_usage_idle: { $max: "$usage_idle" },
+                          max_usage_guest_nice: { $max: "$usage_guest_nice" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: cpu_max_all_8
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [12]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.hostname": { $in: *HostName8 },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour8, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { date: "$time", unit: "hour" } },
+                          max_usage_softirq: { $max: "$usage_softirq" },
+                          max__usage_steal: { $max: "$usage_steal" },
+                          max_usage_guest: { $max: "$usage_guest" },
+                          max_usage_user: { $max: "$usage_user" },
+                          max_usage_system: { $max: "$usage_system" },
+                          max_usage_iowait: { $max: "$usage_iowait" },
+                          max_usage_irq: { $max: "$usage_irq" },
+                          max_usage_nice: { $max: "$usage_nice" },
+                          max_usage_idle: { $max: "$usage_idle" },
+                          max_usage_guest_nice: { $max: "$usage_guest_nice" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: high_cpu_1
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [13]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.hostname": { $in: *HostName1 },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour12, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                          usage_user: { $gt: 90 }, # 90 is hard-coded in TSBS.
+                        },
+                    },
+                    { $set: { tags: "$tags.hostname" } },
+                  ]
+
+  - Name: high_cpu_all
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [14]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 500 # Matches the number of queries ran in the dsi configuration.
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.hostname": { $in: *HostNameAll },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *StartDate,
+                                              step: 2520000,
+                                            },
+                                        },
+                                    },
+                                },
+                              $lte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 10,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *Hour12, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                          usage_user: { $gt: 90 }, # 90 is hard-coded in TSBS.
+                        },
+                    },
+                    { $set: { tags: "$tags.hostname" } },
+                  ]
+
+  - Name: lastpoint
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [15]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $sort: { "tags.hostname": 1, "time": -1 } },
+                    {
+                      $group:
+                        {
+                          _id: { "hostname": "$tags.hostname" },
+                          time: { $first: "$time" },
+                          measurement: { $first: "$measurement" },
+                          usage_softirq: { $first: "$usage_softirq" },
+                          musage_steal: { $first: "$usage_steal" },
+                          usage_guest: { $first: "$usage_guest" },
+                          usage_user: { $first: "$usage_user" },
+                          usage_system: { $first: "$usage_system" },
+                          usage_iowait: { $first: "$usage_iowait" },
+                          usage_irq: { $first: "$usage_irq" },
+                          usage_nice: { $first: "$usage_nice" },
+                          usage_idle: { $first: "$usage_idle" },
+                          usage_guest_nice: { $first: "$usage_guest_nice" },
+                        },
+                    },
+                  ]
+
+  # The queries below are not from tsbs_query, but are typical user queries.
+  - Name: match_on_measurements_non_selective_query
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [16]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  # All usage_* fields are random integers between 0-100.
+                  [
+                    {
+                      $match:
+                        {
+                          $or:
+                            [
+                              { usage_guest: { $gte: 25, $lt: 75 } },
+                              { usage_nice: { $gt: 50 } },
+                            ],
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { date: "$time", unit: "hour" } },
+                          min_usage_softirq: { $min: "$usage_softirq" },
+                          min__usage_steal: { $min: "$usage_steal" },
+                          min_usage_guest: { $min: "$usage_guest" },
+                          min_usage_user: { $min: "$usage_user" },
+                          min_usage_system: { $min: "$usage_system" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: match_on_measurements_selective_query
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [17]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  # All usage_* fields are random integers between 0-100.
+                  [
+                    {
+                      $match:
+                        {
+                          $or:
+                            [
+                              { usage_guest: { $gte: 12, $lt: 30 } },
+                              { usage_nice: { $gt: 50, $lte: 60 } },
+                            ],
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { date: "$time", unit: "hour" } },
+                          min_usage_softirq: { $min: "$usage_softirq" },
+                          min__usage_steal: { $min: "$usage_steal" },
+                          min_usage_guest: { $min: "$usage_guest" },
+                          min_usage_user: { $min: "$usage_user" },
+                          min_usage_system: { $min: "$usage_system" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: match_on_measurement_meta_time
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [18]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  # All usage_* fields are random integers between 0-100.
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              { usage_steal: { $gte: 25, $lt: 85 } },
+                              { "tags.hostname": { $in: *HostName8 } },
+                              {
+                                time:
+                                  {
+                                    $gte:
+                                      {
+                                        ^Cycle:
+                                          {
+                                            ofLength: 10,
+                                            fromGenerator:
+                                              {
+                                                ^IncDate:
+                                                  {
+                                                    start: *StartDate,
+                                                    step: 2520000,
+                                                  },
+                                              },
+                                          },
+                                      },
+                                    $lte:
+                                      {
+                                        ^Cycle:
+                                          {
+                                            ofLength: 10,
+                                            fromGenerator:
+                                              {
+                                                ^IncDate:
+                                                  {
+                                                    start: *Hour12,
+                                                    step: 2520000,
+                                                  },
+                                              },
+                                          },
+                                      },
+                                  },
+                              },
+                            ],
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { date: "$time", unit: "hour" } },
+                          min_usage_softirq: { $min: "$usage_softirq" },
+                          min__usage_steal: { $min: "$usage_steal" },
+                          min_usage_guest: { $min: "$usage_guest" },
+                          min_usage_user: { $min: "$usage_user" },
+                          min_usage_system: { $min: "$usage_system" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
 AutoRun:
   - When:
       mongodb_setup:
         $eq:
           - standalone-all-feature-flags
+          - standalone
       branch_name:
         $neq:
           - v4.0
           - v4.2
           - v4.4
           - v5.0
-          - v6.0

@@ -4,18 +4,17 @@ Description: |
   This test stress tests bucket unpacking. Each document is large with many top-level fields.
   Each query targets a measurement, and cannot use the index on time/meta for time-series collections.
   Each query will target a different number of buckets, and we should see the runtime for each query
-  increases based on the number of buckets to unpack.
+  increase based on the number of buckets unpacked.
 
 Keywords:
   - timeseries
   - aggregate
-  - unpack
 
 GlobalDefaults:
   Database: &database test
   Collection: &collection Collection0
   maxPhases: &maxPhases 10
-  Repeat: &repeat 5
+  Repeat: &repeat 100
 
 Actors:
   # Clear any pre-existing collection state. This is helpful to avoid errors during local testing.
@@ -219,10 +218,10 @@ AutoRun:
       mongodb_setup:
         $eq:
           - standalone-all-feature-flags
+          - standalone
       branch_name:
         $neq:
           - v4.0
           - v4.2
           - v4.4
           - v5.0
-          - v6.0
