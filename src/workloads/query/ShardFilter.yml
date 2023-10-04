@@ -9,7 +9,7 @@ GlobalDefaults:
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
   MaxPhases: &MaxPhases 8
-  DocumentCount: &DocumentCount 1000
+  DocumentCount: &DocumentCount 1e6
 
 Actors:
 - Name: CreateShardedCollection
@@ -99,3 +99,44 @@ Actors:
         - OperationName: find
           OperationCommand:
             Filter: {sKey: {$in: [123, 5000, 6789]}}
+
+- Name: PointQueryByNonShardKey
+  Type: CrudActor
+  Database: *Database
+  Threads: 16
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: 5000}
+
+- Name: AllDocumentsQueryByNonShardKey
+  Type: CrudActor
+  Database: *Database
+  Threads: 16
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {a: {$gt: -1}}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-heuristic-bonsai
+    branch_name:
+      $gte: v7.2
