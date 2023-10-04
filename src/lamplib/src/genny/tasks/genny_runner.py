@@ -1,8 +1,7 @@
-from typing import List
+import shlex
+import time
 
 import structlog
-import tempfile
-import shutil
 import os
 
 from genny.cmd_runner import run_command
@@ -63,9 +62,6 @@ def main_genny_runner(
         cmd.append(processed_workload)
 
         if hang:
-            import time
-            import shlex
-
             SLOG.info(
                 "Debug mode. Poplar is running. "
                 "Start genny_core (./build/src/driver/genny_core or ./dist/bin/genny_core) "
