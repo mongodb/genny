@@ -42,8 +42,8 @@ Actors:
       Active: [0]
       NopInPhasesUpTo: 1
       PhaseConfig:
-        # 10,000,000 documents inserted totally: Repeat * num ops per round trip
-        Repeat: 10000000
+        # 1,000,000 documents inserted totally: Repeat * num ops per round trip
+        Repeat: 1000000
         Database: *Database
         Operations:
         - OperationName: RunCommand
