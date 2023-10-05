@@ -34,8 +34,8 @@ GlobalDefaults:
   ]}}
 
   DocumentWithUniqueKey: &DocumentWithUniqueKey
-    auction: {^Inc: { start: 1000, multipler: *NumDocumentsPerThread }}
-    bidder: {^Inc: { start: 1000, multipler: 1 }}
+    auction: {^Inc: { start: 1000, multiplier: *NumDocumentsPerThread }}
+    bidder: {^Inc: { start: 1000, multiplier: 1 }}
     price: {^RandomDouble: {min: 100, max: 100000000}}
     channel: *Channel
     url: *Url
@@ -43,7 +43,7 @@ GlobalDefaults:
 
   DocumentWithExistingKey: &DocumentWithExistingKey
     auction: {^RandomInt: { min: 1000, max: 8001000 }}
-    bidder: {^Inc: { start: 1000, multipler: 1 }}
+    bidder: {^Inc: { start: 1000, multiplier: 1 }}
     price: {^RandomDouble: {min: 100, max: 100000000}}
     channel: *Channel
     url: *Url
@@ -51,7 +51,7 @@ GlobalDefaults:
 
   DocumentWithAdvancingTimestamp: &DocumentWithAdvancingTimestamp
     auction: {^RandomInt: { min: 1000, max: 8001000 }}
-    bidder: {^Inc: { start: 1000, multipler: 1 }}
+    bidder: {^Inc: { start: 1000, multiplier: 1 }}
     price: {^RandomDouble: {min: 100, max: 100000000}}
     channel: *Channel
     url: *Url

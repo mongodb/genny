@@ -31,8 +31,8 @@ GlobalDefaults:
   ]}}
 
   Document: &Document
-    auction: {^Inc: { start: 1000, multipler: 1 }}
-    bidder: {^Inc: { start: 1000, multipler: 1 }}
+    auction: {^Inc: { start: 1000, multiplier: 1 }}
+    bidder: {^Inc: { start: 1000, multiplier: 1 }}
     price: {^RandomDouble: {min: 100, max: 100000000 }}
     channel: *Channel
     url: *Url

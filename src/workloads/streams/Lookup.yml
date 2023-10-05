@@ -43,7 +43,7 @@ GlobalDefaults:
   Document: &Document
     # There will only be `NumAuctionDocuments`, so generate a random auction ID b/w (1k, 1k + `NumAuctionDocuments`]
     auctionId: {^RandomInt: { min: 1000, max: 11000 }}
-    bidderId: {^Inc: { start: 1000, multipler: 1 }}
+    bidderId: {^Inc: { start: 1000, multiplier: 1 }}
     price: {^RandomDouble: {min: 100, max: 100000000}}
     channel: *Channel
     url: *Url
