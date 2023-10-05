@@ -1,17 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  This workload is a more stressful version of MixedWorkloadsGenny.yml, which itself is a port of
-  the mixed_workloads in the workloads,
-  repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
-  operations, each with dedicated actors/threads. The 4 operations are insertOne, findOne,
-  updateOne, and deleteOne. Since each type of operation runs in a dedicated thread it enables
-  interesting behavior, such as reads getting faster because of a write regression, or reads being
-  starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
-  starved out by writes.
-
-  This more stressful version of the test only runs one test phase, using 1024 threads per operation
-  for 45 minutes.
+  This workload is intended to be used to stress a system that may show negative scaling behaviour.
+  The workload will insert 100k documents and then run 100k finds across 256 threads. This workload
+  has been shown to identify negative scaling on dual socket instances and was originally created to
+  mimic the behvaiour reported in HELP-44821. This workload is not scheduled to run at this time and is
+  intended for adhoc use.
 
 # This workload does not support sharding yet.
 
@@ -19,6 +13,8 @@ Keywords:
 - scale
 - insertOne
 - insert
+- findOne
+- find
 
 dbname: &dbname mix
 CollectionCount: &NumColls 512
@@ -128,16 +124,3 @@ Actors:
       PhaseConfig:
         LogEvery: 10 seconds
         Blocking: None
-
-AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - atlas
-      - replica
-      - replica-disable-execution-control
-      - atlas-like-replica.2022-10
-      - atlas-like-replica
-    atlas_setup:
-      $neq:
-      - M30-repl
