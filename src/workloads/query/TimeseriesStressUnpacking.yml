@@ -16,6 +16,51 @@ GlobalDefaults:
   maxPhases: &maxPhases 10
   Repeat: &repeat 100
 
+ActorTemplates:
+- TemplateName: RunMatchProjectPipeline
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "RunMatchProjectPipeline"}}
+    Type: CrudActor
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "Active", Default: 1000}}]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+          - OperationName: aggregate
+            OperationCommand:
+              Pipeline: [
+                    {
+                      $match:
+                        {
+                          "measurement0":
+                            {
+                              $lte:
+                                {
+                                  ^Parameter:
+                                    { Name: "Predicate", Default: 0 },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $project:
+                        {
+                          _id: 1,
+                          time: 1,
+                          measurement0: 1,
+                          payload1: 1,
+                          payload2: 1,
+                          payload5: 1,
+                          payload6: 1,
+                        },
+                    },
+                  ]
+
 Actors:
   # Clear any pre-existing collection state. This is helpful to avoid errors during local testing.
   - Name: ClearCollection
@@ -66,20 +111,23 @@ Actors:
           Document:
             # Since step = 900 ms and documentCount = 1,000,000, the first and last document
             # would be 900,000,000 ms apart (roughly 10 days).
+            # Add events in this way means we have no out-of-order events and neat buckets. However, this is acceptable for this workload,
+            # because we are testing the speed of bucket unpacking. Inserting documents in order allows us to deterministically control how
+            # many documents are in each bucket, the number of overall buckets, and how many buckets each predicate will unpack.
             time: { ^IncDate: { start: "2022-01-01", step: 900 } }
             temp: { ^RandomDouble: { min: -30, max: 120 } }
             # This is the value we are going to query against. We will have ~1600 buckets in this
             # collection and roughly 600 documents per bucket. By making this an increasing value, we can write
             # predicates to target certain number of buckets.
-            measurement0: { ^Inc: { start: 1 } }
+            measurement: { ^Inc: { start: 1 } }
             # The fields below create larger documents to stress unpacking.
-            measurement1: { ^RandomDouble: { min: -100.0, max: 900.00 } }
-            measurement2: { ^RandomString: { length: 10 } }
-            measurement3:
+            payload1: { ^RandomDouble: { min: -100.0, max: 900.00 } }
+            payload2: { ^RandomString: { length: 10 } }
+            payload3:
               { ^Array: { of: { ^Choose: { from: [1, 2, 3] } }, number: 6 } }
-            measurement4: { ^RandomString: { length: 15 } }
-            measurement5: { ^RandomString: { length: 20 } }
-            measurement6: { ^RandomString: { length: 5 } }
+            payload4: { ^RandomString: { length: 15 } }
+            payload5: { ^RandomString: { length: 20 } }
+            payload6: { ^RandomString: { length: 5 } }
 
   - Name: Quiesce
     Type: QuiesceActor
@@ -93,125 +141,29 @@ Actors:
           Repeat: 1
 
   # Run queries that target a different number of buckets.
-  - Name: SimpleMatchMeasurement10Buckets
-    Type: CrudActor
-    Database: *database
-    Threads: 10
-    Phases:
-      OnlyActiveInPhases:
-        Active: [4]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
-              OperationCommand:
-                # With 600 documents per bucket, 10 buckets will have 'measurement0' <= 6000 (600 * 10).
-                # We'll add 100 just to be safe.
-                Pipeline: [{ $match: { "measurement0": { $lte: 6100 } } }]
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "SimpleMatchMeasurement10Buckets"
+        Active: 4
+        # With 600 documents per bucket, 10 buckets will have 'measurement0' <= 6000 (600 * 10).
+        Predicate: 6000
 
-  - Name: ConjunctionMatchMeasurement10Buckets
-    Type: CrudActor
-    Database: *database
-    Threads: 10
-    Phases:
-      OnlyActiveInPhases:
-        Active: [5]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
-              OperationCommand:
-                # With 600 documents per bucket, 10 buckets will have 6000 <= 'measurement0' <= 12000 (6000 + 6000).
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          $and:
-                            [
-                              { "measurement0": { $gt: 6000 } },
-                              { "measurement0": { $lte: 12100 } },
-                            ],
-                        },
-                    },
-                  ]
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "MatchTarget100Buckets"
+        Active: 4
+        # With 600 documents per bucket, 100 buckets will have 'measurement0' <= 60000 (600 * 100).
+        Predicate: 60000
 
-  - Name: MatchTarget100Buckets
-    Type: CrudActor
-    Database: *database
-    Threads: 10
-    Phases:
-      OnlyActiveInPhases:
-        Active: [6]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
-              OperationCommand:
-                # With 600 documents per bucket, 100 buckets will have 'measurement0' <= 60000 (600 * 100).
-                Pipeline: [{ $match: { "measurement0": { $gt: 60100 } } }]
-
-  - Name: ConjunctionMatchMeasurement100Buckets
-    Type: CrudActor
-    Database: *database
-    Threads: 10
-    Phases:
-      OnlyActiveInPhases:
-        Active: [7]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
-              OperationCommand:
-                # With 600 documents per bucket, 100 buckets will have 6000 <= 'measurement0' <= 66000 (6000 + 600 * 100).
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          $and:
-                            [
-                              { "measurement0": { $gt: 6000 } },
-                              { "measurement0": { $lte: 66100 } },
-                            ],
-                        },
-                    },
-                  ]
-
-  - Name: MatchTarget1000Buckets
-    Type: CrudActor
-    Database: *database
-    Threads: 10
-    Phases:
-      OnlyActiveInPhases:
-        Active: [8]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
-              OperationCommand:
-                # With 600 documents per bucket, 1000 buckets will have 'measurement0' <= 600000 (600 * 1000).
-                Pipeline: [{ $match: { "measurement0": { $gte: 600100 } } }]
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "MatchTarget1000Buckets"
+        Active: 4
+        # With 600 documents per bucket, 1000 buckets will have 'measurement0' <= 600000 (600 * 1000).
+        Predicate: 600000
 
 AutoRun:
   - When:

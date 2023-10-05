@@ -1,0 +1,166 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-integration"
+Description: |
+  This workload runs different time-series optimizations with the tsbs dataset. During development, we targeted optimizations
+  that are most relevant to pushdown time-series queries to SBE. Further optimizations should be added to this workload.
+  The data is preloaded by the dsi configuration. See 'configurations/test_control/test_control.tsbs_query.yml' for all 
+  the details. There are 20736000 documents in the collection.
+
+Keywords:
+  - timeseries
+  - aggregate
+  - group
+  - sort
+
+GlobalDefaults:
+  Database: &database cpu
+  Collection: &collection point_data
+  maxPhases: &maxPhases 20
+  repeat: &repeat 100
+
+DateForMatchQuery: &dateForMatchQuery
+  LoadConfig:
+    Path: "../../phases/query/GetBsonDate.yml"
+    Key: GetBsonDate
+    Parameters:
+      date: "2016-01-15T01:49:23"
+
+Actors:
+  # The data is already loaded into the collection from the dsi configuration.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+
+# The following two tasks test the $group rewrite for the $min and $max accumulators. 
+# The $group rewrite for $count was added in 7.1, and tsbs_query runs on the last-lts variant. 
+# Thus at the time of writing, these rewrites were split into two different workloads.
+  - Name: GroupRewriteMax
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  { 
+                    $group: 
+                    { 
+                      _id: "$tags",  
+                      max_usage_user: { $max: "$usage_user" },
+                      max_usage_iowait: { $max: "$usage_iowait" },
+                      max_usage_irq: { $max: "$usage_irq" },
+                      max_usage_steal: {$max: "$usage_steal"}
+                    }
+                  }
+                ]
+
+  - Name: GroupRewriteMin
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  { 
+                    $group: 
+                    { 
+                      _id: "$tags",  
+                      min_usage_user: { $min: "$usage_user" },
+                      min_usage_iowait: { $min: "$usage_iowait" },
+                      min_usage_irq: { $min: "$usage_irq" },
+                      min_usage_steal: {$min: "$usage_steal"}
+                    }
+                  }
+                ]
+
+# If the following stages after unpack doesn't depend on the fields of the documents, the unpack stage will only
+# return empty documents. The following two tasks test this optimization.
+  - Name: EmptyUnpackWithGroupSum
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  { 
+                    $group: 
+                    { 
+                      _id: "$tags",
+                      new_count: {$sum: 2},
+                    }
+                  }
+                ]
+
+  - Name: EmptyUnpackWithCountStage
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:  [{ $count: "count" }]
+
+# Predicates generated for a $match on the timeField are not applied to the unpacked documents if the entire bucket matches the predicate. 
+# This task tests that optimization.
+  - Name: WholeBucketFilter
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:  [ { $match: { "time": { $lt: *dateForMatchQuery } } }]
