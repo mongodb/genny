@@ -31,14 +31,16 @@ GlobalDefaults:
   ]}}
 
   Document: &Document
-    auction: {^RandomInt: { min: 1000, max: 2000000 }}
+    auction: {^Inc: { start: 1000, multipler: 1 }}
     bidder: {^Inc: { start: 1000, multipler: 1 }}
     price: {^RandomDouble: {min: 100, max: 100000000 }}
     channel: *Channel
     url: *Url
     dateTime: {^IncDate: { start: "2023-01-01T00:00:00.000", step: 10 }}
 
-  Batch1000x: &Batch1000x {^Array: { of: *Document, number: 1000 }}
+  Batch10x: &Batch10x [*Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document]
+  Batch100x: &Batch100x {^FlattenOnce: [*Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x]}
+  Batch1000x: &Batch1000x {^FlattenOnce: [*Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x]}
 
 Actors:
 - Name: Setup

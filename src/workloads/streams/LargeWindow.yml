@@ -23,6 +23,7 @@ GlobalDefaults:
   # for the window so this will generate 8M keys on the open window.
   NumThreads: &NumThreads 16
   NumBatch1000xPerThread: &NumBatch1000xPerThread 500
+  NumDocumentsPerThread: &NumDocumentsPerThread 500000 # NumBatch1000xPerThread * 1000
 
   Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
   Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
@@ -33,7 +34,7 @@ GlobalDefaults:
   ]}}
 
   DocumentWithUniqueKey: &DocumentWithUniqueKey
-    auction: {^Inc: { start: 1000, multipler: 1 }}
+    auction: {^Inc: { start: 1000, multipler: *NumDocumentsPerThread }}
     bidder: {^Inc: { start: 1000, multipler: 1 }}
     price: {^RandomDouble: {min: 100, max: 100000000}}
     channel: *Channel
@@ -48,8 +49,20 @@ GlobalDefaults:
     url: *Url
     dateTime: "2023-01-01T00:00:00.000"
 
+  DocumentWithAdvancingTimestamp: &DocumentWithAdvancingTimestamp
+    auction: {^RandomInt: { min: 1000, max: 8001000 }}
+    bidder: {^Inc: { start: 1000, multipler: 1 }}
+    price: {^RandomDouble: {min: 100, max: 100000000}}
+    channel: *Channel
+    url: *Url
+    dateTime: {^IncDate: { start: "2023-01-01T00:00:00.000", step: 10 }}
+
   Batch1000x_UniqueKey: &Batch1000x_UniqueKey {^Array: { of: *DocumentWithUniqueKey, number: 1000 }}
   Batch1000x_ExistingKey: &Batch1000x_ExistingKey {^Array: { of: *DocumentWithExistingKey, number: 1000 }}
+
+  Batch10x_AdvancingTimestamp: &Batch10x_AdvancingTimestamp [*DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp]
+  Batch100x_AdvancingTimestamp: &Batch100x_AdvancingTimestamp {^FlattenOnce: [*Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp]}
+  Batch1000x_AdvancingTimestamp: &Batch1000x_AdvancingTimestamp {^FlattenOnce: [*Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp]}
 
 Actors:
 - Name: Setup
@@ -92,9 +105,9 @@ Actors:
           { $emit: { connectionName: "__testMemory" } }
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
-  - Phase: 1..2
+  - Phase: 1..3
     Nop: true
-  - Phase: 3
+  - Phase: 4
     Repeat: 1
     Database: *DatabaseName
     Operations:
@@ -131,6 +144,16 @@ Actors:
         name: *StreamProcessorName
         documents: *Batch1000x_ExistingKey
   - Phase: 3
+    Repeat: *NumBatch1000xPerThread
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Insert_AdvancingTimestamp
+      OperationName: RunCommand
+      OperationCommand:
+        streams_testOnlyInsert: ""
+        name: *StreamProcessorName
+        documents: *Batch1000x_AdvancingTimestamp
+  - Phase: 4
     Nop: true
 
 - Name: Stats_UniqueKey
@@ -144,7 +167,7 @@ Actors:
     Repeat: 1
     StreamProcessorName: *StreamProcessorName
     ExpectedDocumentCount: 8000000
-  - Phase: 2..3
+  - Phase: 2..4
     Nop: true
 
 - Name: Stats_ExistingKey
@@ -158,7 +181,21 @@ Actors:
     Repeat: 1
     StreamProcessorName: *StreamProcessorName
     ExpectedDocumentCount: 16000000
+  - Phase: 3..4
+    Nop: true
+
+- Name: Stats_AdvancingTimestamp
+  Type: StreamStatsReporter
+  Database: *DatabaseName
+  Threads: 1
+  Phases:
+  - Phase: 0..2
+    Nop: true
   - Phase: 3
+    Repeat: 1
+    StreamProcessorName: *StreamProcessorName
+    ExpectedDocumentCount: 24000000
+  - Phase: 4
     Nop: true
 
 AutoRun:
