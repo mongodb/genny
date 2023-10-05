@@ -46,7 +46,7 @@ Document: &doc
 
 
 Clients:
-  Default:
+  Find:
     QueryOptions:
       maxPoolSize: 2500
   Insert:
@@ -80,7 +80,7 @@ ActorTemplates:
     Name: {^Parameter: {Name: "Name", Default: "Find"}}
     Type: CrudActor
     Database: *dbname
-    ClientName: Default
+    ClientName: Find
     Threads: {^Parameter: {Name: "Threads", Default: 1}}
     Phases:
       OnlyActiveInPhases:
@@ -101,7 +101,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
-      Name: Insert_1024
+      Name: Insert_128
       Threads: 128
       OnlyActiveInPhase: 1
 
@@ -109,7 +109,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
-      Name: Find_1024
+      Name: Find_256
       Threads: 256
       OnlyActiveInPhase: 2
 
