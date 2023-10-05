@@ -73,6 +73,7 @@ Actors:
 
 - Name: Setup
   Type: RunCommand
+  ClientName: Stream
   Threads: 1
   Phases:
   - Phase: 0
@@ -147,6 +148,7 @@ Actors:
 
 - Name: Insert_Batch1000x
   Type: RunCommand
+  ClientName: Stream
   Threads: *NumThreads
   Phases:
   - Phase: 0..1
@@ -166,6 +168,7 @@ Actors:
 
 - Name: Stats
   Type: StreamStatsReporter
+  ClientName: Stream
   Database: *DatabaseName
   Threads: 1
   Phases:

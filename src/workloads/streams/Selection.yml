@@ -62,12 +62,8 @@ Actors:
 
 - Name: Insert_Batch100x
   Type: RunCommand
-<<<<<<< HEAD
-  Threads: *NumThreads
-=======
   ClientName: Stream
-  Threads: 32
->>>>>>> b1e791f7 (SERVER-81260: support separate mongostream URI)
+  Threads: *NumThreads
   Phases:
   - Phase: 0
     Nop: true
@@ -83,6 +79,7 @@ Actors:
 
 - Name: Stats
   Type: StreamStatsReporter
+  ClientName: Stream
   Database: *DatabaseName
   Threads: 1
   Phases:
