@@ -477,7 +477,7 @@ Actors:
                     { $limit: 5 },
                   ]
 
-# cpu_max_all_H family of queries computes per-hour max of all(10) metrics for H(1|8) hosts for a randomly chosen 8h time window
+# cpu_max_all_H family of queries computes per-hour max of all(10) metrics for H(1|8) hosts for a randomly chosen 8h time window.
   - Name: cpu_max_all_1
     Type: CrudActor
     Threads: 8
@@ -569,7 +569,8 @@ Actors:
                     },
                     { $sort: { _id: 1 } },
                   ]
-  
+
+  # high-cpu-H: finds events with high “usage_user” metric in a random 12h window for H(1|all) hosts.
   - Name: high_cpu_1
     Type: CrudActor
     Threads: 8
