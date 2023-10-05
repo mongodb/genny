@@ -45,7 +45,7 @@ def cli(ctx: click.Context, verbose: bool) -> None:
     "-d",
     "--linux-distro",
     required=False,
-    default="not-linux",
+    default=None,
     type=click.Choice(
         [
             "ubuntu1804",
@@ -62,7 +62,8 @@ def cli(ctx: click.Context, verbose: bool) -> None:
     ),
     help=(
         "Specify the linux distro you're on; if your system isn't available,"
-        " please contact us at #workload-generation. The not-linux value is useful on macOS."
+        " please contact us at #performance-tooling-users. Specify not-linux for macOS."
+        " If no value is specified, it will be autodetected." 
     ),
 )
 @click.option(
@@ -114,6 +115,9 @@ def cmake_compile_install(
 
     from genny.tasks import compile
     from genny import curator
+
+    if linux_distro is None:
+        linux_distro = compile.detect_distro()
 
     curator.ensure_curator_installed(
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
@@ -571,6 +575,7 @@ def auto_tasks(ctx: click.Context, tasks: str):
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
     )
 
+
 @cli.command(
     name="auto-tasks-all",
     help=(
@@ -585,7 +590,9 @@ def auto_tasks(ctx: click.Context, tasks: str):
     required=True,
     help="An evergreen project file, such as system_perf.yml",
 )
-@click.option("--no-activate", default=False, is_flag=True, help="Ensure that generated tasks don't activate")
+@click.option(
+    "--no-activate", default=False, is_flag=True, help="Ensure that generated tasks don't activate"
+)
 @click.pass_context
 def auto_tasks_all(ctx: click.Context, project_file: str, no_activate: bool):
     from genny.tasks import auto_tasks_all
