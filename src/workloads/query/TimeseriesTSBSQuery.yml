@@ -352,7 +352,7 @@ Actors:
         Active: [8]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: 100 # matches the number of queries ran in the dsi configuration.
+          Repeat: 100 # Repeat slow queries just 100 times.
           Database: *database
           Collection: *collection
           Operations:
