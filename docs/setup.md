@@ -88,7 +88,7 @@ unsure. (mongodbtoolchain is internal to MongoDB).
 ./run-genny install 
 ```
 
-This command autodects and downloads the appropriate Genny toolchain, compiles Genny, creates its
+This command autodetects and downloads the appropriate Genny toolchain, compiles Genny, creates its
 virtualenv, and installs Genny to `dist/`. You can rerun this command
 at any time to rebuild Genny. If your OS isn't the supported, please let us know in
 `#workload-generation` slack or on GitHub.
