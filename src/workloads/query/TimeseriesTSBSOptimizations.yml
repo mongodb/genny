@@ -121,7 +121,7 @@ Actors:
                   { 
                     $group: 
                     { 
-                      _id: "$tags",
+                      _id: 5,
                       new_count: {$sum: 2},
                     }
                   }

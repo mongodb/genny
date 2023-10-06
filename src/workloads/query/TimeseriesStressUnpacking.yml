@@ -3,8 +3,9 @@ Owner: "@mongodb/query-integration"
 Description: |
   This test stress tests bucket unpacking. Each document is large with many top-level fields.
   Each query targets a measurement, and cannot use the index on time/meta for time-series collections.
-  Each query will target a different number of buckets, and we should see the runtime for each query
-  increase based on the number of buckets unpacked.
+  Each query will target a different number of buckets, and a different number of fields to unpack. 
+  We should see the runtime for each query increase based on the number of buckets and fields to unpack.
+  We also compare the runtime of queries that unpack empty documents (or exclude all fields).
 
 Keywords:
   - timeseries
@@ -13,10 +14,47 @@ Keywords:
 GlobalDefaults:
   Database: &database test
   Collection: &collection Collection0
-  maxPhases: &maxPhases 10
+  maxPhases: &maxPhases 20
   Repeat: &repeat 100
 
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 4000
+      
 ActorTemplates:
+- TemplateName: RunMatchPipeline
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "RunMatchPipeline"}}
+    Type: CrudActor
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "Active", Default: 1000}}]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+          - OperationName: aggregate
+            OperationCommand:
+              Pipeline: [
+                    {
+                      $match:
+                        {
+                          "measurement0":
+                            {
+                              $lte:
+                                {
+                                  ^Parameter:
+                                    { Name: "Predicate", Default: 0 },
+                                },
+                            },
+                        },
+                    },
+                  ]
+
 - TemplateName: RunMatchProjectPipeline
   Config:
     Name: {^Parameter: {Name: "Name", Default: "RunMatchProjectPipeline"}}
@@ -47,18 +85,7 @@ ActorTemplates:
                             },
                         },
                     },
-                    {
-                      $project:
-                        {
-                          _id: 1,
-                          time: 1,
-                          measurement0: 1,
-                          payload1: 1,
-                          payload2: 1,
-                          payload5: 1,
-                          payload6: 1,
-                        },
-                    },
+                    {$project: {^Parameter: {Name: "FieldsToUnpack", Default: {} }}}
                   ]
 
 Actors:
@@ -115,7 +142,6 @@ Actors:
             # because we are testing the speed of bucket unpacking. Inserting documents in order allows us to deterministically control how
             # many documents are in each bucket, the number of overall buckets, and how many buckets each predicate will unpack.
             time: { ^IncDate: { start: "2022-01-01", step: 900 } }
-            temp: { ^RandomDouble: { min: -30, max: 120 } }
             # This is the value we are going to query against. We will have ~1600 buckets in this
             # collection and roughly 600 documents per bucket. By making this an increasing value, we can write
             # predicates to target certain number of buckets.
@@ -128,6 +154,13 @@ Actors:
             payload4: { ^RandomString: { length: 15 } }
             payload5: { ^RandomString: { length: 20 } }
             payload6: { ^RandomString: { length: 5 } }
+            payload7: { ^RandomInt: { min: -10, max: 100 } }
+            payload8: { ^RandomInt: { min: -10, max: 100 } }
+            payload9: { ^RandomInt: { min: -10, max: 100 } }
+            payload10: { ^RandomInt: { min: -10, max: 100 } }
+            payload11: { ^RandomInt: { min: -10, max: 100 } }
+            payload12: { ^RandomInt: { min: -10, max: 100 } }
+            payload13: { ^RandomDouble: { min: -30, max: 120 } }
 
   - Name: Quiesce
     Type: QuiesceActor
@@ -144,26 +177,199 @@ Actors:
   - ActorFromTemplate:
       TemplateName: RunMatchProjectPipeline
       TemplateParameters:
-        Name: "SimpleMatchMeasurement10Buckets"
+        Name: "match_10_buckets_include_1_field"
         Active: 4
         # With 600 documents per bucket, 10 buckets will have 'measurement0' <= 6000 (600 * 10).
         Predicate: 6000
+        FieldsToUnpack: { payload1: 1 }
 
   - ActorFromTemplate:
       TemplateName: RunMatchProjectPipeline
       TemplateParameters:
-        Name: "MatchTarget100Buckets"
-        Active: 4
+        Name: "match_10_buckets_include_10_fields"
+        Active: 5
+        # With 600 documents per bucket, 10 buckets will have 'measurement0' <= 6000 (600 * 10).
+        Predicate: 6000
+        FieldsToUnpack: {
+          _id: 1,
+          time: 1,
+          payload1: 1,
+          payload2: 1,
+          payload3: 1,
+          payload4: 1,
+          payload5: 1,
+          payload6: 1,
+          payload7: 1,
+          payload8: 1,
+          payload9: 1
+        }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_10_buckets_include_all_fields"
+        Active: 6
+        # With 600 documents per bucket, 10 buckets will have 'measurement0' <= 6000 (600 * 10).
+        Predicate: 6000
+        FieldsToUnpack: {
+          _id: 1,
+          time: 1,
+          measurement0: 1,
+          payload1: 1,
+          payload2: 1,
+          payload3: 1,
+          payload4: 1,
+          payload5: 1,
+          payload6: 1,
+          payload7: 1,
+          payload8: 1,
+          payload9: 1,
+          payload10: 1,
+          payload11: 1,
+          payload12: 1,
+          payload13: 1,
+        }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipeline
+      TemplateParameters:
+        Name: "match_10_buckets_exclude"
+        Active: 7
+        # With 600 documents per bucket, 10 buckets will have 'measurement0' <= 6000 (600 * 10).
+        Predicate: 6000
+        # Without a $project stage, $_internalUnpackBucket will have an "exclude" parameter.
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_100_buckets_include_1_field"
+        Active: 8
         # With 600 documents per bucket, 100 buckets will have 'measurement0' <= 60000 (600 * 100).
         Predicate: 60000
+        FieldsToUnpack: { payload1: 1 }
 
   - ActorFromTemplate:
       TemplateName: RunMatchProjectPipeline
       TemplateParameters:
-        Name: "MatchTarget1000Buckets"
-        Active: 4
+        Name: "match_100_buckets_include_10_fields"
+        Active: 9
+        # With 600 documents per bucket, 100 buckets will have 'measurement0' <= 60000 (600 * 100).
+        Predicate: 60000
+        FieldsToUnpack: {
+          _id: 1,
+          time: 1,
+          payload1: 1,
+          payload2: 1,
+          payload3: 1,
+          payload4: 1,
+          payload5: 1,
+          payload6: 1,
+          payload7: 1,
+          payload8: 1,
+          payload9: 1
+        }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_100_buckets_include_all_fields"
+        Active: 10
+        # With 600 documents per bucket, 100 buckets will have 'measurement0' <= 60000 (600 * 100).
+        Predicate: 60000
+        FieldsToUnpack: {
+          _id: 1,
+          time: 1,
+          measurement0: 1,
+          payload1: 1,
+          payload2: 1,
+          payload3: 1,
+          payload4: 1,
+          payload5: 1,
+          payload6: 1,
+          payload7: 1,
+          payload8: 1,
+          payload9: 1,
+          payload10: 1,
+          payload11: 1,
+          payload12: 1,
+          payload13: 1,
+        }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipeline
+      TemplateParameters:
+        Name: "match_100_buckets_exclude"
+        Active: 11
+        # With 600 documents per bucket, 100 buckets will have 'measurement0' <= 60000 (600 * 100).
+        Predicate: 60000
+        # Without a $project stage, $_internalUnpackBucket will have an "exclude" parameter.
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_1000_buckets_include_1_field"
+        Active: 12
         # With 600 documents per bucket, 1000 buckets will have 'measurement0' <= 600000 (600 * 1000).
         Predicate: 600000
+        FieldsToUnpack: { payload1: 1 }
+
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_1000_buckets_include_10_fields"
+        Active: 13
+        # With 600 documents per bucket, 1000 buckets will have 'measurement0' <= 600000 (600 * 1000).
+        Predicate: 600000
+        FieldsToUnpack: {
+          _id: 1,
+          time: 1,
+          payload1: 1,
+          payload2: 1,
+          payload3: 1,
+          payload4: 1,
+          payload5: 1,
+          payload6: 1,
+          payload7: 1,
+          payload8: 1,
+          payload9: 1
+        }
+
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_1000_buckets_include_all_fields"
+        Active: 14
+        # With 600 documents per bucket, 1000 buckets will have 'measurement0' <= 600000 (600 * 1000).
+        Predicate: 600000
+        FieldsToUnpack: {
+          _id: 1,
+          time: 1,
+          measurement0: 1,
+          payload1: 1,
+          payload2: 1,
+          payload3: 1,
+          payload4: 1,
+          payload5: 1,
+          payload6: 1,
+          payload7: 1,
+          payload8: 1,
+          payload9: 1,
+          payload10: 1,
+          payload11: 1,
+          payload12: 1,
+          payload13: 1,
+        }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipeline
+      TemplateParameters:
+        Name: "match_1000_buckets_exclude"
+        Active: 15
+        # With 600 documents per bucket, 1000 buckets will have 'measurement0' <= 600000 (600 * 1000).
+        Predicate: 600000
+        # Without a $project stage, $_internalUnpackBucket will have an "exclude" parameter.
 
 AutoRun:
   - When:

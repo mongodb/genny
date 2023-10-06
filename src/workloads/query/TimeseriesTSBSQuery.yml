@@ -28,7 +28,7 @@ GlobalDefaults:
   Database: &database cpu
   Collection: &collection point_data
   maxPhases: &maxPhases 20
-  Repeat: &repeat 1000 # Matches the number of queries run in 'configurations/test_control/test_control.tsbs_query.yml'.
+  Repeat: &repeat 500
   # TSBS constructs a time windows of various sizes (1 hour, 8 hours, 12 hours) from a uniformly random start-time within
   # this time-period. Ideally, we would do this as well, but currently genny doesn't support storing randomized date values as
   # variables, so we will fix a starting value and increment it each time the query runs.
@@ -678,7 +678,7 @@ Actors:
         Active: [16]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: *repeat
+          Repeat: 100
           Database: *database
           Collection: *collection
           Operations:
@@ -717,7 +717,7 @@ Actors:
         Active: [17]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: *repeat
+          Repeat: 100
           Database: *database
           Collection: *collection
           Operations:
