@@ -4,8 +4,9 @@ Description: |
   This workload is intended to be used to stress a system that may show negative scaling behaviour.
   The workload will insert 100k documents and then run 100k finds across 256 threads. This workload
   has been shown to identify negative scaling on dual socket instances and was originally created to
-  mimic the behvaiour reported in HELP-44821. This workload is not scheduled to run at this time and is
-  intended for adhoc use.
+  mimic the behvaiour reported in HELP-44821. Key metrics to observe here are operations per second,
+  cpu kernel usage and cpu user usage. If we see high CPU kernel usage plus low ops/s, we may be observing
+  negative scaling. This workload is not scheduled to run at this time and is intended for adhoc use.
 
 # This workload does not support sharding yet.
 
@@ -57,11 +58,11 @@ ActorTemplates:
 
 - TemplateName: InsertTemplate
   Config:
-    Name: {^Parameter: {Name: "Name", Default: "Insert"}}
+    Name: {^Parameter: {Name: "Name", Default: "Insert_128"}}
     Type: CrudActor
     Database: *dbname
     ClientName: Insert
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Threads: {^Parameter: {Name: "Threads", Default: 128}}
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
@@ -77,11 +78,11 @@ ActorTemplates:
 
 - TemplateName: FindTemplate
   Config:
-    Name: {^Parameter: {Name: "Name", Default: "Find"}}
+    Name: {^Parameter: {Name: "Name", Default: "FindTemplate"}}
     Type: CrudActor
     Database: *dbname
     ClientName: Find
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Threads: {^Parameter: {Name: "Threads", Default: 256}}
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 2}}]
@@ -101,16 +102,12 @@ Actors:
 - ActorFromTemplate:
     TemplateName: InsertTemplate
     TemplateParameters:
-      Name: Insert_128
-      Threads: 128
       OnlyActiveInPhase: 1
 
 # Find Actors
 - ActorFromTemplate:
     TemplateName: FindTemplate
     TemplateParameters:
-      Name: Find_256
-      Threads: 256
       OnlyActiveInPhase: 2
 
 # Guard Against timeout for no output.
