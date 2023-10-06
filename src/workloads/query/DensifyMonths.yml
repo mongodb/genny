@@ -92,22 +92,6 @@ Actors:
   - Repeat: 1
   - *Nop
 
-- Name: IncreaseInternalQueryMaxAllowedDensifyDocs
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - Repeat: 1
-    Database: admin
-    Operation:
-      OperationMetricsName: internalQueryMaxAllowedDensifyDocs
-      OperationName: RunCommand
-      OperationCommand:
-        setParameter: 1
-        internalQueryMaxAllowedDensifyDocs: 10000000
-
-  - *Nop
-
 - Name: DensifyMonths
   Type: CrudActor
   Threads: 1
