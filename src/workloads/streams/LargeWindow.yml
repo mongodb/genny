@@ -22,8 +22,8 @@ GlobalDefaults:
   # 500 batches of 1k documents, so a total of 8M documents, which will all have unique keys
   # for the window so this will generate 8M keys on the open window.
   NumThreads: &NumThreads 16
-  NumBatch1000xPerThread: &NumBatch1000xPerThread 200
-  NumDocumentsPerThread: &NumDocumentsPerThread 200000 # NumBatch1000xPerThread * 1000
+  NumBatch1000xPerThread: &NumBatch1000xPerThread 500
+  NumDocumentsPerThread: &NumDocumentsPerThread 500000 # NumBatch1000xPerThread * 1000
 
   Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
   Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
@@ -49,21 +49,8 @@ GlobalDefaults:
     url: *Url
     dateTime: "2023-01-01T00:00:00.000"
 
-  DocumentWithAdvancingTimestamp: &DocumentWithAdvancingTimestamp
-    auction: {^RandomInt: { min: 1000, max: 8001000 }}
-    bidder: {^Inc: { start: 1000, multiplier: 1 }}
-    price: {^RandomDouble: {min: 100, max: 100000000}}
-    channel: *Channel
-    url: *Url
-    dateTime: {^IncDate: { start: "2023-01-01T00:00:03.000", step: 10 }}
-    #dateTime: {^IncDate: { start: "2023-01-01T00:00:00.000", step: 10 }}
-
   Batch1000x_UniqueKey: &Batch1000x_UniqueKey {^Array: { of: *DocumentWithUniqueKey, number: 1000 }}
   Batch1000x_ExistingKey: &Batch1000x_ExistingKey {^Array: { of: *DocumentWithExistingKey, number: 1000 }}
-
-  #Batch10x_AdvancingTimestamp: &Batch10x_AdvancingTimestamp [*DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp, *DocumentWithAdvancingTimestamp]
-  #Batch100x_AdvancingTimestamp: &Batch100x_AdvancingTimestamp {^FlattenOnce: [*Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp, *Batch10x_AdvancingTimestamp]}
-  #Batch1000x_AdvancingTimestamp: &Batch1000x_AdvancingTimestamp {^FlattenOnce: [*Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp, *Batch100x_AdvancingTimestamp]}
 
 Actors:
 - Name: Setup
@@ -107,9 +94,9 @@ Actors:
           { $emit: { connectionName: "__testMemory" } }
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
-  - Phase: 1..3
+  - Phase: 1..2
     Nop: true
-  - Phase: 4
+  - Phase: 3
     Repeat: 1
     Database: *DatabaseName
     Operations:
@@ -136,28 +123,17 @@ Actors:
         streams_testOnlyInsert: ""
         name: *StreamProcessorName
         documents: *Batch1000x_UniqueKey
-#  - Phase: 2
-#    Repeat: *NumBatch1000xPerThread
-#    Database: *DatabaseName
-#    Operations:
-#    - OperationMetricsName: Insert_ExistingKey
-#      OperationName: RunCommand
-#      OperationCommand:
-#        streams_testOnlyInsert: ""
-#        name: *StreamProcessorName
-#        documents: *Batch1000x_ExistingKey
   - Phase: 2
     Repeat: *NumBatch1000xPerThread
     Database: *DatabaseName
     Operations:
-    - OperationMetricsName: Insert_AdvancingTimestamp
+    - OperationMetricsName: Insert_ExistingKey
       OperationName: RunCommand
       OperationCommand:
         streams_testOnlyInsert: ""
         name: *StreamProcessorName
-        documents:
-        - *DocumentWithAdvancingTimestamp
-  - Phase: 3..4
+        documents: *Batch1000x_ExistingKey
+  - Phase: 3
     Nop: true
 
 - Name: Stats_UniqueKey
@@ -171,27 +147,13 @@ Actors:
   - Phase: 1
     Repeat: 1
     StreamProcessorName: *StreamProcessorName
-    ExpectedDocumentCount: 3200000
-  - Phase: 2..4
+    ExpectedDocumentCount: 8000000
+  - Phase: 2..3
     Nop: true
 
-#- Name: Stats_ExistingKey
-#  Type: StreamStatsReporter
-#  ClientName: Stream
-#  Database: *DatabaseName
-#  Threads: 1
-#  Phases:
-#  - Phase: 0..1
-#    Nop: true
-#  - Phase: 2
-#    Repeat: 1
-#    StreamProcessorName: *StreamProcessorName
-#    ExpectedDocumentCount: 16000000
-#  - Phase: 3..4
-#    Nop: true
-
-- Name: Stats_AdvancingTimestamp
+- Name: Stats_ExistingKey
   Type: StreamStatsReporter
+  ClientName: Stream
   Database: *DatabaseName
   Threads: 1
   Phases:
@@ -200,14 +162,14 @@ Actors:
   - Phase: 2
     Repeat: 1
     StreamProcessorName: *StreamProcessorName
-    ExpectedDocumentCount: 3200016
-  - Phase: 3..4
+    ExpectedDocumentCount: 16000000
+  - Phase: 3
     Nop: true
 
 AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - standalone-streams
+      - streams
     branch_name:
       $gte: v7.2
