@@ -26,7 +26,7 @@ def dry_run_workload(
         "ClusteredCollectionLargeRecordIds.yml",
         "CreateIndex.yml",
     ]:
-        SLOG.info(f"TIG-3290 skipping dry run for {yaml_file_basename}.", file=yaml_file_path)
+        SLOG.info(f"EVG-21054 skipping dry run for {yaml_file_basename}.", file=yaml_file_path)
         return
 
     if is_darwin and yaml_file_basename in [
