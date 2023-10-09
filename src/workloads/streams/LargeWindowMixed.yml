@@ -2,13 +2,12 @@ SchemaVersion: 2018-07-01
 Owner: "@10gen/altas-streams"
 Description: |
   Pipeline: Memory -> Tumbling Window (Group) -> Memory
-  Documents: 16M
+  Input Documents: 16M
   BatchSize: 1k
-  The tumbling window will group by the auction ID. The first 8M documents will all have unique
-  auction IDs and will measure the performance of the scenario where every document results in
-  inserting a new key into the window. The latter 8M documents will all have an existing auction ID
-  and will measure the performance of the scenario where every document results in updating an
-  existing key in the window.
+
+  Simulates the scenario where the watermark is constantly advancing every some documents
+  and constantly opening and closing window. Each window will ingest 1.6M documents, with
+  ~400k unique keys, so each window on close will output atmost 400k documents.
 Keywords:
 - streams
 
@@ -83,7 +82,7 @@ Actors:
               ]
             }
           },
-          { $emit: { connectionName: "__testMemory" } }
+          { $emit: { connectionName: "__noopSink" } }
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
   - Phase: 1

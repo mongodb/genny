@@ -5,7 +5,7 @@ Description: |
   Documents: 8M
   BatchSize: 1k
 
-  This tests the scenario where the input and output of documents for a stream processor is a
+  Simulates the scenario where the input and output of documents for a stream processor is a
   one-to-one ratio. This applies a simple projection on incoming documents (currency conversion).
 
 Keywords:
@@ -65,7 +65,7 @@ Actors:
               price: { $multiply: ["$price", 0.908] }
             }
           },
-          { $emit: { connectionName: "__testMemory" } }
+          { $emit: { connectionName: "__noopSink" } }
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
   - Phase: 1

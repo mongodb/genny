@@ -21,6 +21,7 @@ GlobalDefaults:
   # for the window so this will generate 8M keys on the open window.
   NumThreads: &NumThreads 16
   NumBatch1000xPerThread: &NumBatch1000xPerThread 500
+  ExpectedDocumentCount: &ExpectedDocumentCount 8000000
 
   Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
   Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
@@ -83,7 +84,7 @@ Actors:
               ]
             }
           },
-          { $emit: { connectionName: "__testMemory" } }
+          { $emit: { connectionName: "__noopSink" } }
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
   - Phase: 1

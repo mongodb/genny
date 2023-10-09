@@ -22,8 +22,10 @@ GlobalDefaults:
   # 500 batches of 1k documents, so a total of 8M documents, which will all have unique keys
   # for the window so this will generate 8M keys on the open window.
   NumThreads: &NumThreads 16
-  NumBatch1000xPerThread: &NumBatch1000xPerThread 500
-  NumDocumentsPerThread: &NumDocumentsPerThread 500000 # NumBatch1000xPerThread * 1000
+  NumBatch1000xPerThread: &NumBatch1000xPerThread 50
+  NumDocumentsPerThread: &NumDocumentsPerThread 50000 # NumBatch1000xPerThread * 1000
+  ExpectedDocumentCount: &ExpectedDocumentCount 800000
+  ExpectedDocumentCountAfterFlush: &ExpectedDocumentCountAfterFlush 800001 # ExpectedDocumentCount + 1
 
   Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
   Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
@@ -33,7 +35,7 @@ GlobalDefaults:
     *Channel
   ]}}
 
-  DocumentWithUniqueKey: &DocumentWithUniqueKey
+  Document: &Document
     auction: {^Inc: { start: 1000, multiplier: *NumDocumentsPerThread }}
     bidder: {^Inc: { start: 1000, multiplier: 1 }}
     price: {^RandomDouble: {min: 100, max: 100000000}}
@@ -41,16 +43,15 @@ GlobalDefaults:
     url: *Url
     dateTime: "2023-01-01T00:00:00.000"
 
-  DocumentWithExistingKey: &DocumentWithExistingKey
+  FlushDocument: &FlushDocument
     auction: {^RandomInt: { min: 1000, max: 8001000 }}
     bidder: {^Inc: { start: 1000, multiplier: 1 }}
     price: {^RandomDouble: {min: 100, max: 100000000}}
     channel: *Channel
     url: *Url
-    dateTime: "2023-01-01T00:00:00.000"
+    dateTime: "2023-01-01T00:00:05.000"
 
-  Batch1000x_UniqueKey: &Batch1000x_UniqueKey {^Array: { of: *DocumentWithUniqueKey, number: 1000 }}
-  Batch1000x_ExistingKey: &Batch1000x_ExistingKey {^Array: { of: *DocumentWithExistingKey, number: 1000 }}
+  Batch1000x: &Batch1000x {^Array: { of: *Document, number: 1000 }}
 
 Actors:
 - Name: Setup
@@ -76,12 +77,16 @@ Actors:
             }
           },
           {
-            $tumblingWindow: {
+            $hoppingWindow: {
               interval: { size: 1, unit: "second" },
+              hopSize: { size: 250, unit: "millisecond" },
               pipeline: [
                 { 
                   $group: {
-                    _id: "$auction",
+                    _id: {
+                      auction: "$auction",
+                      url: "$url"
+                    },
                     minPrice: { $min: "$price" },
                     maxPrice: { $max: "$price" },
                     sumPrice: { $sum: "$price" },
@@ -91,7 +96,7 @@ Actors:
               ]
             }
           },
-          { $emit: { connectionName: "__testMemory" } }
+          { $emit: { connectionName: "__noopSink" } }
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
   - Phase: 1..2
@@ -117,26 +122,27 @@ Actors:
     Repeat: *NumBatch1000xPerThread
     Database: *DatabaseName
     Operations:
-    - OperationMetricsName: Insert_UniqueKey
+    - OperationMetricsName: Insert
       OperationName: RunCommand
       OperationCommand:
         streams_testOnlyInsert: ""
         name: *StreamProcessorName
-        documents: *Batch1000x_UniqueKey
+        documents: *Batch1000x
   - Phase: 2
-    Repeat: *NumBatch1000xPerThread
+    Repeat: 1
     Database: *DatabaseName
     Operations:
-    - OperationMetricsName: Insert_ExistingKey
+    - OperationMetricsName: Insert_Flush
       OperationName: RunCommand
       OperationCommand:
         streams_testOnlyInsert: ""
         name: *StreamProcessorName
-        documents: *Batch1000x_ExistingKey
+        documents:
+        - *FlushDocument
   - Phase: 3
     Nop: true
 
-- Name: Stats_UniqueKey
+- Name: Stats
   Type: StreamStatsReporter
   ClientName: Stream
   Database: *DatabaseName
@@ -147,11 +153,11 @@ Actors:
   - Phase: 1
     Repeat: 1
     StreamProcessorName: *StreamProcessorName
-    ExpectedDocumentCount: 8000000
+    ExpectedDocumentCount: *ExpectedDocumentCount
   - Phase: 2..3
     Nop: true
 
-- Name: Stats_ExistingKey
+- Name: Stats_Flush
   Type: StreamStatsReporter
   ClientName: Stream
   Database: *DatabaseName
@@ -162,7 +168,7 @@ Actors:
   - Phase: 2
     Repeat: 1
     StreamProcessorName: *StreamProcessorName
-    ExpectedDocumentCount: 16000000
+    ExpectedDocumentCount: 8000001
   - Phase: 3
     Nop: true
 

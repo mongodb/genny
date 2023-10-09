@@ -2,11 +2,13 @@ SchemaVersion: 2018-07-01
 Owner: "@10gen/altas-streams"
 Description: |
   Pipeline: Memory -> Match -> Project -> Memory
-  Documents: 8M
+  Input Documents: 8M
   BatchSize: 1k
 
-  This tests the scenario where the stream processor is looking for a needle in a haystack
-  and only looking for a single digit number of documents among 8M documents.
+  Simulates the scenario where the stream processor only needs to match a
+  small portion of the ingested documents. In this specific case, 8M documents
+  are ingested but the $match stage will only match against ~0.3% of the ingested
+  documents.
 
 Keywords:
 - streams
@@ -69,7 +71,7 @@ Actors:
             }
           },
           { $project: { auction: 1, price: 1 } },
-          { $emit: { connectionName: "__testMemory" } }
+          { $emit: { connectionName: "__noopSink" } }
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
   - Phase: 1
