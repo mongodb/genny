@@ -25,6 +25,7 @@ def dry_run_workload(
         "ClusteredCollection.yml",
         "ClusteredCollectionLargeRecordIds.yml",
         "Lookup.yml",
+        "GraphLookup.yml",
     ]:
         SLOG.info(f"TIG-3290 skipping dry run for {yaml_file_basename}.", file=yaml_file_path)
         return

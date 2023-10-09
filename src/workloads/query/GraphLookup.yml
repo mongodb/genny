@@ -1,5 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
+# TODO Update description
 Description: |
   This test exercises the behavior of $graphLookup where either the local or foreign collection is
   sharded. When both collections are unsharded, the pipeline should be moved to the
@@ -24,6 +25,8 @@ GlobalDefaults:
   ShardedColl0: &ShardedColl0 Collection0
   UnshardedColl1: &UnshardedColl1 Collection1
   ShardedColl2: &ShardedColl2 Collection2
+  Database: &Database test
+  NumChunks: &NumChunks 6
 
 Actors:
 - Name: CreateShardedCollections
@@ -32,19 +35,20 @@ Actors:
   Phases:
   - Repeat: 1
     Database: admin
+    OnlyRunInInstance: sharded
     Operations:
     # Shard Collection0 and Collection2 using hashed sharding to ensure that the chunks are evenly
     # distributed across the shards.
     - OperationMetricsName: EnableSharding
       OperationName: AdminCommand
       OperationCommand:
-        enableSharding: &Database test
+        enableSharding: *Database
     - OperationMetricsName: ShardLocalCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0
         key: {b: hashed}
-        numInitialChunks: &NumChunks 6
+        numInitialChunks: *NumChunks
     - OperationMetricsName: ShardForeignCollection
       OperationName: AdminCommand
       OperationCommand:
@@ -70,6 +74,7 @@ Actors:
   # where 'maxDepth' is not specified, so we first populate all three collections with the number of
   # documents we want in 'Collection2' and then in the next phase add more to 'Collection0' and
   # 'Collection1'.
+  # TODO Load phase is slightly different between GraphLookupWithOnlyUnshardedColls and GraphLookup.
   - Repeat: 1
     BatchSize: 1000
     Threads: 1
@@ -119,6 +124,43 @@ Actors:
   - Repeat: 10
     Database: *Database
     Operations:
+    # TODO The following two tests currently run in a sharded environment in GraphLookUpWithOnlyUnshardedColls.yml
+    # Collection0 is now sharded, Collection1 is not sharded
+    # Check same tests being carried out
+    - OperationMetricsName: GraphLookupUnshardedToUnshardedOneToFew
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$graphLookup: {
+              from: "Collection1",
+              startWith: "$matchOne",
+              connectFromField: "matchOne",
+              connectToField: "secondMatchOne",
+              as: "matches",
+              maxDepth: 1
+            }},
+            {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}
+          ]
+        cursor: {batchSize: *num_docs_total}
+    - OperationMetricsName: GraphLookupUnshardedToUnshardedOneToMany
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline:
+          [
+            {$graphLookup: {
+              from: "Collection1",
+              startWith: "$matchFive",
+              connectFromField: "matchFive",
+              connectToField: "secondMatchFive",
+              as: "matches",
+              maxDepth: 1
+            }},
+            {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}
+          ]
+        cursor: {batchSize: *num_docs_total}
     # The recursive targeted queries below work as follows: for each document X in Collection0
     # we find any document Y in Collection0 where X's 'c' field (startWith) is equal to Y's 'b'
     # (connectToField). Then, we look at Y's 'a' (connectFromField) value and find any document Z in
@@ -151,6 +193,7 @@ Actors:
     # Targeted $graphLookup from sharded collection to sharded collection, no recursion
     - OperationMetricsName: TargetedGraphLookupShardedToShardedNoRecursion
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -172,6 +215,7 @@ Actors:
     # Targeted $graphLookup from sharded collection to sharded collection, depth limited
     - OperationMetricsName: TargetedGraphLookupShardedToShardedDepthLimited
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -193,6 +237,7 @@ Actors:
     # Untargeted $graphLookup from sharded collection to sharded collection, no recursion
     - OperationMetricsName: UntargetedGraphLookupShardedToShardedNoRecursion
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -214,6 +259,7 @@ Actors:
     # Untargeted $graphLookup from sharded collection to sharded collection, depth limited
     - OperationMetricsName: UntargetedGraphLookupShardedToShardedDepthLimited
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -235,6 +281,7 @@ Actors:
     # Targeted $graphLookup from unsharded collection to sharded collection, no recursion
     - OperationMetricsName: TargetedGraphLookupUnshardedToShardedNoRecursion
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *UnshardedColl1
         pipeline:
@@ -256,6 +303,7 @@ Actors:
     # Targeted $graphLookup from unsharded collection to sharded collection, depth limited
     - OperationMetricsName: TargetedGraphLookupUnshardedToShardedDepthLimited
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *UnshardedColl1
         pipeline:
@@ -277,6 +325,7 @@ Actors:
     # Untargeted $graphLookup from unsharded collection to sharded collection, no recursion
     - OperationMetricsName: UntargetedGraphLookupUnshardedToShardedNoRecursion
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *UnshardedColl1
         pipeline:
@@ -298,6 +347,7 @@ Actors:
     # Untargeted $graphLookup from unsharded collection to sharded collection, depth limited
     - OperationMetricsName: UntargetedGraphLookupUnshardedToShardedDepthLimited
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *UnshardedColl1
         pipeline:
@@ -324,6 +374,7 @@ Actors:
     # Targeted $graphLookup from sharded collection to sharded collection, depth unlimited
     - OperationMetricsName: TargetedGraphLookupShardedToShardedDepthUnlimited
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -344,6 +395,7 @@ Actors:
     # Untargeted $graphLookup from sharded collection to sharded collection, depth unlimited
     - OperationMetricsName: UntargetedGraphLookupShardedToShardedDepthUnlimited
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -364,6 +416,7 @@ Actors:
     # Targeted $graphLookup from unsharded collection to sharded collection, depth unlimited
     - OperationMetricsName: TargetedGraphLookupUnshardedToShardedDepthUnlimited
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *UnshardedColl1
         pipeline:
@@ -384,6 +437,7 @@ Actors:
     # Untargeted $graphLookup from unsharded collection to sharded collection, depth unlimited
     - OperationMetricsName: UntargetedGraphLookupUnshardedToShardedDepthUnlimited
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *UnshardedColl1
         pipeline:
@@ -402,6 +456,7 @@ Actors:
         cursor: {batchSize: *num_docs_total}
     - OperationMetricsName: GraphLookupShardedToUnshardedOneToFew
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -419,6 +474,7 @@ Actors:
         cursor: {batchSize: *num_docs_total}
     - OperationMetricsName: GraphLookupShardedToUnshardedOneToMany
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -436,6 +492,7 @@ Actors:
         cursor: {batchSize: *num_docs_total}
     - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroOneToOne
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -453,6 +510,7 @@ Actors:
         cursor: {batchSize: *num_docs_total}
     - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroOneToTwo
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -470,6 +528,7 @@ Actors:
         cursor: {batchSize: *num_docs_total}
     - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroOneToFive
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -487,6 +546,7 @@ Actors:
         cursor: {batchSize: *num_docs_total}
     - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroOneToOneHundred
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -504,6 +564,7 @@ Actors:
         cursor: {batchSize: *num_docs_total}
     - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroMatchAllShards
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -522,6 +583,7 @@ Actors:
         cursor: {batchSize: *num_docs_total}
     - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroMatchSomeShards
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -540,6 +602,7 @@ Actors:
         cursor: {batchSize: *num_docs_total}
     - OperationMetricsName: GraphLookupShardedToUnshardedMatchAllShards
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -558,6 +621,7 @@ Actors:
         cursor: {batchSize: *num_docs_total}
     - OperationMetricsName: GraphLookupShardedToUnshardedMatchSomeShards
       OperationName: RunCommand
+      OnlyRunInInstance: sharded
       OperationCommand:
         aggregate: *ShardedColl0
         pipeline:
@@ -578,12 +642,16 @@ Actors:
 AutoRun:
 - When:
     branch_name:
+      # TODO $neq not in GraphLookupWithOnlyUnshardedColls.yml
       $neq:
       - v4.0
       - v4.2
       - v4.4
       - v5.0
     mongodb_setup:
-      $eq:
+      - replica
       - shard-lite
       - shard-lite-all-feature-flags
+      - single-replica
+      - single-replica-classic-query-engine
+      - single-replica-sbe
