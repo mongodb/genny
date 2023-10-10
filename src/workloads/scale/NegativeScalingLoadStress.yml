@@ -50,9 +50,13 @@ Clients:
   Find:
     QueryOptions:
       maxPoolSize: 2500
+    AccessOptions:
+      CAFile: './mongodb/root.crt'
   Insert:
     QueryOptions:
       maxPoolSize: 2500
+    AccessOptions:
+      CAFile: './mongodb/root.crt'
 
 ActorTemplates:
 
@@ -121,3 +125,17 @@ Actors:
       PhaseConfig:
         LogEvery: 10 seconds
         Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas
+      - replica
+      - replica-disable-execution-control
+      - atlas-like-replica.2022-10
+      - atlas-like-replica
+      - atlas-like-replica.2023-09
+    atlas_setup:
+      $neq:
+      - M30-repl
