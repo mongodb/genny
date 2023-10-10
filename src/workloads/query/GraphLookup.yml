@@ -1,18 +1,17 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-# TODO Update description
 Description: |
-  This test exercises the behavior of $graphLookup where either the local or foreign collection is
-  sharded. When both collections are unsharded, the pipeline should be moved to the
-  GraphLookupWithOnlyUnshardedColls workload, so the query can be tested on replica sets as well. We
-  may want to compare results across the two files, so the loading stage (and some queries) should
-  be kept as similar as possible.
+  This test exercises the behavior of $graphLookup when both the local and foreign collection are
+  sharded, when either the local or foreign collection is sharded, and when both the local and
+  foreign collection are unsharded. This test was originally two separate files, GraphLookup.yml
+  and GraphLookupWithOnlyUnshardedColls.yml, but was merged into one as part of PERF-4347.
 
-  Note: this workload runs only on sharded clusters.
+  Note: this workload runs on replica sets and sharded clusters.
 
   The workload consists of the following phases:
-    1. Creating empty sharded collections distributed across all shards in the cluster.
-    2. Populating collections with data.
+    1. Creating empty sharded collections distributed across all shards in the cluster, when
+       run in a sharded environment.
+    2. Populating both sharded and unsharded collections with data.
     3. Fsync.
     4. Running $graphLookups. This includes but is not limited to cases where the top-level
        pipelines are targeted and untargeted, the 'maxDepth' recursion parameter takes on different
@@ -24,7 +23,8 @@ GlobalDefaults:
   NumDocsTotal: &num_docs_total 3000  # Should be *num_docs_base + *num_docs_added
   ShardedColl0: &ShardedColl0 Collection0
   UnshardedColl1: &UnshardedColl1 Collection1
-  ShardedColl2: &ShardedColl2 Collection2
+  UnshardedColl2: &UnshardedColl2 Collection2
+  ShardedColl3: &ShardedColl3 Collection3
   Database: &Database test
   NumChunks: &NumChunks 6
 
@@ -35,9 +35,10 @@ Actors:
   Phases:
   - Repeat: 1
     Database: admin
+    # Until EVG-21054 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs
     OnlyRunInInstance: sharded
     Operations:
-    # Shard Collection0 and Collection2 using hashed sharding to ensure that the chunks are evenly
+    # Shard Collection0 and Collection3 using hashed sharding to ensure that the chunks are evenly
     # distributed across the shards.
     - OperationMetricsName: EnableSharding
       OperationName: AdminCommand
@@ -52,7 +53,7 @@ Actors:
     - OperationMetricsName: ShardForeignCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection2
+        shardCollection: test.Collection3
         key: {b: hashed}
         numInitialChunks: *NumChunks
     # Disable the balancer so that it can't skew results while the $lookups are running.
@@ -70,17 +71,16 @@ Actors:
   Threads: 1
   Phases:
   - *Nop
-  # We want the size of 'Collection2' to be smaller than the other two collections for the queries
+  # We want the size of 'Collection3' to be smaller than the other two collections for the queries
   # where 'maxDepth' is not specified, so we first populate all three collections with the number of
-  # documents we want in 'Collection2' and then in the next phase add more to 'Collection0' and
-  # 'Collection1'.
-  # TODO Load phase is slightly different between GraphLookupWithOnlyUnshardedColls and GraphLookup.
+  # documents we want in 'Collection3' and then in the next phase add more to 'Collection0',
+  # 'Collection1', and 'Collection2'.
   - Repeat: 1
     BatchSize: 1000
     Threads: 1
     DocumentCount: *num_docs_base
     Database: *Database
-    CollectionCount: 3  # Loader will populate 'Collection0', 'Collection1', and 'Collection2'.
+    CollectionCount: 4  # Loader will populate 'Collection0', 'Collection1', 'Collection2', and 'Collection3'.
     Document: &Document
       a: {^RandomInt: {min: 1, max: 100}}
       b: {^RandomInt: {min: 1, max: 100}}
@@ -97,7 +97,7 @@ Actors:
     Threads: 1
     DocumentCount: *num_docs_added
     Database: *Database
-    CollectionCount: 2  # Loader will add additional documents to 'Collection0' and 'Collection1'.
+    CollectionCount: 3  # Loader will add additional documents to 'Collection0', 'Collection1', and 'Collection2'.
     Document: *Document  # Documents will have the same schema.
   - *Nop
   - *Nop
@@ -124,43 +124,6 @@ Actors:
   - Repeat: 10
     Database: *Database
     Operations:
-    # TODO The following two tests currently run in a sharded environment in GraphLookUpWithOnlyUnshardedColls.yml
-    # Collection0 is now sharded, Collection1 is not sharded
-    # Check same tests being carried out
-    - OperationMetricsName: GraphLookupUnshardedToUnshardedOneToFew
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
-          [
-            {$graphLookup: {
-              from: "Collection1",
-              startWith: "$matchOne",
-              connectFromField: "matchOne",
-              connectToField: "secondMatchOne",
-              as: "matches",
-              maxDepth: 1
-            }},
-            {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}
-          ]
-        cursor: {batchSize: *num_docs_total}
-    - OperationMetricsName: GraphLookupUnshardedToUnshardedOneToMany
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
-          [
-            {$graphLookup: {
-              from: "Collection1",
-              startWith: "$matchFive",
-              connectFromField: "matchFive",
-              connectToField: "secondMatchFive",
-              as: "matches",
-              maxDepth: 1
-            }},
-            {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}
-          ]
-        cursor: {batchSize: *num_docs_total}
     # The recursive targeted queries below work as follows: for each document X in Collection0
     # we find any document Y in Collection0 where X's 'c' field (startWith) is equal to Y's 'b'
     # (connectToField). Then, we look at Y's 'a' (connectFromField) value and find any document Z in
@@ -380,7 +343,7 @@ Actors:
         pipeline:
           [
             {$graphLookup: {
-              from: *ShardedColl2,
+              from: *ShardedColl3,
               startWith: "$c",
               connectFromField: "a",
               connectToField: "b",
@@ -401,7 +364,7 @@ Actors:
         pipeline:
           [
             {$graphLookup: {
-              from: *ShardedColl2,
+              from: *ShardedColl3,
               startWith: "$c",
               connectFromField: "b",
               connectToField: "a",
@@ -422,7 +385,7 @@ Actors:
         pipeline:
           [
             {$graphLookup: {
-              from: *ShardedColl2,
+              from: *ShardedColl3,
               startWith: "$c",
               connectFromField: "a",
               connectToField: "b",
@@ -443,7 +406,7 @@ Actors:
         pipeline:
           [
             {$graphLookup: {
-              from: *ShardedColl2,
+              from: *ShardedColl3,
               startWith: "$c",
               connectFromField: "b",
               connectToField: "a",
@@ -638,17 +601,51 @@ Actors:
             {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}
           ]
         cursor: {batchSize: *num_docs_total}
+    - OperationMetricsName: GraphLookupUnshardedToUnshardedOneToFew
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *UnshardedColl1
+        pipeline:
+          [
+            {$graphLookup: {
+              from: *UnshardedColl2,
+              startWith: "$matchOne",
+              connectFromField: "matchOne",
+              connectToField: "secondMatchOne",
+              as: "matches",
+              maxDepth: 1
+            }},
+            {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}
+          ]
+        cursor: {batchSize: *num_docs_total}
+    - OperationMetricsName: GraphLookupUnshardedToUnshardedOneToMany
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *UnshardedColl1
+        pipeline:
+          [
+            {$graphLookup: {
+              from: *UnshardedColl2,
+              startWith: "$matchFive",
+              connectFromField: "matchFive",
+              connectToField: "secondMatchFive",
+              as: "matches",
+              maxDepth: 1
+            }},
+            {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}
+          ]
+        cursor: {batchSize: *num_docs_total}
 
 AutoRun:
 - When:
     branch_name:
-      # TODO $neq not in GraphLookupWithOnlyUnshardedColls.yml
       $neq:
       - v4.0
       - v4.2
       - v4.4
       - v5.0
     mongodb_setup:
+      $eq:
       - replica
       - shard-lite
       - shard-lite-all-feature-flags
