@@ -1,8 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
-  This workload created to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
-  low performance with secondaryPreferred reads
+  This workload was created to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
+  low performance with secondaryPreferred reads. For running both with and without sharding enabled.
+  Note that this test was originally two separate files, ConnectionsBuildup.yml and ConnectionsBuildupNoSharding.yml,
+  but was merged into one as part of PERF-4347.
 
 Keywords:
 - reproducer
@@ -21,10 +23,13 @@ phasePath: &phasePath ../../phases/issues/ConnectionsBuildup.yml
 # Operations reused in multiple Phases.
 Nop: &Nop {Nop: true}
 EnableSharding: &EnableSharding
+  # Until EVG-21054 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs
+  OnlyRunInInstance: sharded
   LoadConfig:
     Key: EnableSharding
     Path: *phasePath
 ShardCollection: &ShardCollection
+  OnlyRunInInstance: sharded
   LoadConfig:
     Path: *phasePath
     Key: ShardCollection
@@ -93,4 +98,8 @@ Actors:
 AutoRun:
 - When:
     mongodb_setup:
-      $eq: shard-single
+      $eq:
+      - atlas-like-replica.2022-10
+      - replica
+      - replica-all-feature-flags
+      - shard-single
