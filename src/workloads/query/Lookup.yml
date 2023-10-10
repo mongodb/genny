@@ -239,6 +239,24 @@ Actors:
           },
            {$project: {str: 0, "joined.str": 0}}]
         cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: LookupWithCachedPrefixUnshardedToUnsharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *UnshardedColl2
+        pipeline:
+          [{
+            $lookup: {
+              from: *UnshardedColl3,
+              let: {localInt: "$int"},
+              pipeline: [
+                {$group: {_id: {$sum: ["$int", 1]}}},
+                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
+              ],
+              as: joined
+            }
+          },
+           {$project: {str: 0, "joined.str": 0}}]
+        cursor: {batchSize: *NumDocs}
     - OperationMetricsName: LookupMatchAllShardsShardedToUnsharded
       OperationName: RunCommand
       OnlyRunInInstance: sharded
@@ -272,24 +290,6 @@ Actors:
             }},
             {$project: {str: 0, "joined.str": 0}}
           ]
-        cursor: {batchSize: *NumDocs}
-    - OperationMetricsName: LookupWithCachedPrefixUnshardedToUnsharded
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: *UnshardedColl2
-        pipeline:
-          [{
-            $lookup: {
-              from: *UnshardedColl3,
-              let: {localInt: "$int"},
-              pipeline: [
-                {$group: {_id: {$sum: ["$int", 1]}}},
-                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
-              ],
-              as: joined
-            }
-          },
-           {$project: {str: 0, "joined.str": 0}}]
         cursor: {batchSize: *NumDocs}
     - OperationMetricsName: LookupOneToFewUnshardedToUnsharded
       OperationName: RunCommand
