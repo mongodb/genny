@@ -1,28 +1,27 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-# TODO Update description
 Description: |
-  This test exercises the behavior of $lookup where either the local or foreign collection is
-  sharded. When both collections are unsharded, the pipeline should be moved to the
-  LookupWithOnlyUnshardedColls workload, so the query can be tested on replica sets as well. We may
-  want to compare results across the two files, so the loading stage (and some queries) should be
-  kept as similar as possible.
+  This test exercises the behavior of $lookup when both the local and foreign collection are
+  sharded, when either the local or foreign collection is sharded, and when both the local and
+  foreign collection are unsharded. This test was originally two separate files, Lookup.yml and
+  LookupWithOnlyUnshardedColls.yml, but was merged into one as part of PERF-4347.
 
-  Note: this workload runs only on sharded clusters.
+  Note: this workload runs on replica sets and sharded clusters.
 
   The workload consists of the following phases:
-    1. Creating empty sharded collections distributed across all shards in the cluster.
-    2. Populating collections with data.
+    1. Creating empty sharded collections distributed across all shards in the cluster, when
+       run in a sharded environment.
+    2. Populating both sharded and unsharded collections with data.
     3. Fsync.
     4. Running $lookups. This includes but is not limited to cases where the top-level pipelines are
        targeted and untargeted, the subpipelines are targeted and untargeted, and the subpipelines
        have cacheable prefixes.
 
 GlobalDefaults:
-  # TODO Fix sharded and unsharded colls
   ShardedColl0: &ShardedColl0 Collection0
   ShardedColl1: &ShardedColl1 Collection1
   UnshardedColl2: &UnshardedColl2 Collection2
+  UnshardedColl3: &UnshardedColl3 Collection3
   Database: &Database test
   NumChunks: &NumChunks 6
 
@@ -33,6 +32,7 @@ Actors:
   Phases:
   - Repeat: 1
     Database: admin
+    # Until EVG-21054 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs
     OnlyRunInInstance: sharded
     Operations:
     # Shard Collection0 and Collection1 using hashed sharding to ensure that the chunks are evenly
@@ -72,9 +72,8 @@ Actors:
     Threads: 1
     DocumentCount: &NumDocs 3000
     Database: *Database
-    CollectionCount: 3    # Loader will populate 'Collection0', 'Collection1' and 'Collection2'.
+    CollectionCount: 4    # Loader will populate 'Collection0', 'Collection1', 'Collection2', and 'Collection3'.
     Document:
-      # TODO LookupWithOnlyUnshardedColls has key instead of shardKey
       shardKey: {^RandomInt: {min: 1, max: 100}}
       smallInt: {^RandomInt: {min: 1, max: 10}}
       int: {^RandomInt: {min: 1, max: 100}}
@@ -102,57 +101,6 @@ Actors:
   - Repeat: 10
     Database: *Database
     Operations:
-    # TODO Check the unsharded tests (top 3) are still doing the same thing as in LookupWithOnlyUnshardedColls
-    - OperationMetricsName: LookupWithCachedPrefixUnshardedToUnsharded
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
-          [{
-            $lookup: {
-              from: Collection1,
-              let: {localInt: "$int"},
-              pipeline: [
-                {$group: {_id: {$sum: ["$int", 1]}}},
-                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
-              ],
-              as: joined
-            }
-          },
-           {$project: {str: 0, "joined.str": 0}}]
-        cursor: {batchSize: *NumDocs}
-    - OperationMetricsName: LookupOneToFewUnshardedToUnsharded
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
-          [
-            {$match: {int: {$lte: 4}}},
-            {$lookup: {
-              from: Collection1,
-              let: {int0: "$int"},
-              pipeline: [{$match: {$expr: {$eq: ["$$int0", "$int"]}}}],
-              as: "joined"
-            }},
-            {$project: {str: 0, "joined.str": 0}}
-          ]
-        cursor: {batchSize: *NumDocs}
-    - OperationMetricsName: LookupOneToManyUnshardedToUnsharded
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
-          [
-            {$match: {int: {$lte: 4}}},
-            {$lookup: {
-              from: Collection1,
-              let: {smallInt0: "$smallInt"},
-              pipeline: [{$match: {$expr: {$eq: ["$$smallInt0", "$smallInt"]}}}],
-              as: "joined"
-            }},
-            {$project: {str: 0, "joined.str": 0}}
-          ]
-        cursor: {batchSize: *NumDocs}
     - OperationMetricsName: TargetedLookupShardedToSharded
       OperationName: RunCommand
       OnlyRunInInstance: sharded
@@ -185,6 +133,7 @@ Actors:
             {$project: {str: 0, "joined.str": 0}}
           ]
         cursor: {batchSize: *NumDocs}
+    # TODO Why is there no TargetedLookupShardedToUnsharded test?
     - OperationMetricsName: UntargetedLookupShardedToUnsharded
       OperationName: RunCommand
       OnlyRunInInstance: sharded
@@ -324,11 +273,60 @@ Actors:
             {$project: {str: 0, "joined.str": 0}}
           ]
         cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: LookupWithCachedPrefixUnshardedToUnsharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *UnshardedColl2
+        pipeline:
+          [{
+            $lookup: {
+              from: *UnshardedColl3,
+              let: {localInt: "$int"},
+              pipeline: [
+                {$group: {_id: {$sum: ["$int", 1]}}},
+                {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}
+              ],
+              as: joined
+            }
+          },
+           {$project: {str: 0, "joined.str": 0}}]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: LookupOneToFewUnshardedToUnsharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *UnshardedColl2
+        pipeline:
+          [
+            {$match: {int: {$lte: 4}}},
+            {$lookup: {
+              from: *UnshardedColl3,
+              let: {int0: "$int"},
+              pipeline: [{$match: {$expr: {$eq: ["$$int0", "$int"]}}}],
+              as: "joined"
+            }},
+            {$project: {str: 0, "joined.str": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
+    - OperationMetricsName: LookupOneToManyUnshardedToUnsharded
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *UnshardedColl2
+        pipeline:
+          [
+            {$match: {int: {$lte: 4}}},
+            {$lookup: {
+              from: *UnshardedColl3,
+              let: {smallInt0: "$smallInt"},
+              pipeline: [{$match: {$expr: {$eq: ["$$smallInt0", "$smallInt"]}}}],
+              as: "joined"
+            }},
+            {$project: {str: 0, "joined.str": 0}}
+          ]
+        cursor: {batchSize: *NumDocs}
 
 AutoRun:
 - When:
     branch_name:
-      # TODO check $neqs
       $neq:
       - v4.0
       - v4.2
