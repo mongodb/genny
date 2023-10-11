@@ -25,6 +25,12 @@ def dry_run_workload(
         "ClusteredCollection.yml",
         "ClusteredCollectionLargeRecordIds.yml",
         "CreateIndex.yml",
+        "YCSBLikeQueryableEncrypt1Cf16.ym dl",
+        "YCSBLikeQueryableEncrypt1Cf32.yml",
+        "YCSBLikeQueryableEncrypt1Cfdefault.yml",
+        "YCSBLikeQueryableEncrypt5Cf16.yml",
+        "YCSBLikeQueryableEncrypt5Cf32.yml",
+        "YCSBLikeQueryableEncrypt5Cfdefault.yml"
     ]:
         SLOG.info(f"EVG-21054 skipping dry run for {yaml_file_basename}.", file=yaml_file_path)
         return
