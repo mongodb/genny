@@ -1,9 +1,18 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-integration"
 Description: |
-  This workload runs queries from the tsbs_query benchmark in Genny. It allows us to cross-check the results of the TSBS benchmarks, collect additional measurements, profile individual queries, and extend some of the queries as needed. The data is preloaded by the dsi configuration. See 'configurations/test_control/test_control.tsbs_query.yml' for all  the details. There are 20736000 documents in the collection. There are some differences between the queries in this workload and tsbs, but we do not expect these differences to significantly affect runtime:
-  1. TSBS will generate a random start time between the start/end time of the workload for every query type. We hard code our time values, since genny does not currently support date arithmetic, nor storing a fixed value from randomized generation.
-  2. TSBS randomizes which measurement fields to group by, we do not randomize these fields. Since all the fields are random integers between 0-100 we don't expect different fields to have significant runtime differences.
+  This workload runs different time-series optimizations with the tsbs dataset. During development,
+  This workload runs queries from the tsbs_query benchmark in Genny. It allows us to cross-check
+  the results of the TSBS benchmarks, collect additional measurements, profile individual queries,
+  and extend some of the queries as needed. The data is preloaded by the dsi configuration. See
+  'configurations/test_control/test_control.tsbs_query.yml' for all  the details. There are 20736000
+  documents in the collection. There are some differences between the queries in this workload and tsbs,
+  but we do not expect these differences to significantly affect runtime:
+  1. TSBS will generate a random start time between the start/end time of the workload for every query type.
+  We hard code our time values, since genny does not currently support date arithmetic, nor storing a fixed 
+  value from randomized generation.
+  2. TSBS randomizes which measurement fields to group by, we do not randomize these fields. Since all the fields
+  are random integers between 0-100 we don't expect different fields to have significant runtime differences.
 
 Keywords:
   - timeseries

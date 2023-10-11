@@ -1,8 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-integration"
 Description: |
-  This workload runs different time-series optimizations with the tsbs dataset. During development, we targeted optimizations that are most relevant to pushdown time-series queries to SBE. Further optimizations should be added to this workload. The data is preloaded by the dsi configuration. See 'configurations/test_control/test_control.tsbs_query.yml' for all 
-  the details. Below are helpful statistics about the collection:
+  This workload runs different time-series optimizations with the tsbs dataset. During development, 
+  we targeted optimizations that are most relevant to pushdown time-series queries to SBE. Further 
+  optimizations should be added to this workload. The data is preloaded by the dsi configuration. 
+  See 'configurations/test_control/test_control.tsbs_query.yml' for all  the details. 
+  
+  Below are helpful statistics about the collection:
   1. There are 20736000 documents and 161448 buckets in the collection. 
   2. "tags" is the metaField and "time" is the timeField. 
   3. "tags.hostname" has 100 values that are uniformly distributed. 
@@ -100,7 +104,8 @@ Actors:
                     },
                   ]
 
-  # If the following stages after unpack doesn't depend on the fields of the documents, the unpack stage will only return empty documents. The following task tests this optimization.
+  # If the following stages after unpack doesn't depend on the fields of the documents, the unpack stage 
+  # will only return empty documents. The following task tests this optimization.
   - Name: EmptyUnpackWithGroupSum
     Type: CrudActor
     Database: *database
@@ -166,7 +171,7 @@ Actors:
                     },
                   ]
 
-  # Predicates generated for a $match on the timeField are not applied to the unpacked documents if 
+  # Predicates generated for a $match on the timeField are not applied to the unpacked documents if
   # the entire bucket matches the predicate. This task tests that optimization.
   - Name: WholeBucketFilter
     Type: CrudActor
