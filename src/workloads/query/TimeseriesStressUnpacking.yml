@@ -72,7 +72,7 @@ ActorTemplates:
                           "measurement0": { ^Parameter: { Name: "Predicate", Default: 0 } },
                         },
                     },
-                    {$project: { ^Parameter: { Name: "FieldsToUnpack", Default: {} }}}
+                    {$project: { ^Parameter: { Name: "FieldsToProject", Default: {} }}}
                   ]
 
 Actors:
@@ -166,7 +166,7 @@ Actors:
         # With 600 documents per bucket, 10 buckets will have 'measurement0' <= 6000 (600 * 10).
         Predicate: {$lte: 6000 }
         # Even though we only call $project on one field, the $match stage will require unpacking the "measurement0" field.
-        FieldsToUnpack: { payload1: 1 }
+        FieldsToProject: { payload1: 1 }
 
   - ActorFromTemplate:
       TemplateName: RunMatchProjectPipeline
@@ -176,7 +176,7 @@ Actors:
         # With 600 documents per bucket, 10 buckets will have 'measurement0' <= 6000 (600 * 10).
         Predicate: {$lte: 6000}
         # Even though we only call $project on 10 fields, the $match stage will require unpacking the "measurement0" field.
-        FieldsToUnpack: {
+        FieldsToProject: {
           _id: 1,
           time: 1,
           payload1: 1,
@@ -207,7 +207,7 @@ Actors:
         # With 600 documents per bucket, 100 buckets will have 'measurement0' <= 60000 (600 * 100).
         Predicate: {$lte: 60000}
         # Even though we only call $project on 1 field, the $match stage will require unpacking the "measurement0" field.
-        FieldsToUnpack: { payload1: 1 }
+        FieldsToProject: { payload1: 1 }
 
   - ActorFromTemplate:
       TemplateName: RunMatchProjectPipeline
@@ -217,7 +217,7 @@ Actors:
         # With 600 documents per bucket, 100 buckets will have 'measurement0' <= 60000 (600 * 100).
         Predicate: {$lte: 60000}
         # Even though we only call $project on 10 fields, the $match stage will require unpacking the "measurement0" field.
-        FieldsToUnpack: {
+        FieldsToProject: {
           _id: 1,
           time: 1,
           payload1: 1,
@@ -248,7 +248,7 @@ Actors:
         # With 600 documents per bucket, 1000 buckets will have 'measurement0' <= 600000 (600 * 1000).
         Predicate: {$lte: 600000}
          # Even though we only call $project on 1 field, the $match stage will require unpacking the "measurement0" field.
-        FieldsToUnpack: { payload1: 1 }
+        FieldsToProject: { payload1: 1 }
 
 
   - ActorFromTemplate:
@@ -259,7 +259,7 @@ Actors:
         # With 600 documents per bucket, 1000 buckets will have 'measurement0' <= 600000 (600 * 1000).
         Predicate: {$lte: 600000}
         # Even though we only call $project on 10 fields, the $match stage will require unpacking the "measurement0" field.
-        FieldsToUnpack: {
+        FieldsToProject: {
           _id: 1,
           time: 1,
           payload1: 1,
