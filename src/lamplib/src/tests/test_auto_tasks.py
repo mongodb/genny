@@ -4,7 +4,8 @@ import unittest
 import os
 from typing import NamedTuple, List, Optional
 from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
+from shrub.config import Configuration
 import structlog
 
 from genny.tasks.auto_tasks import (
@@ -894,6 +895,17 @@ class AutoTasksTests(BaseTestClass):
             },
             to_file="./build/TaskJSON/Tasks.json",
         )
+
+    def test_later_execution(self):
+        """Ensures that we exercise the code path warning about task generation not working
+        on later executions and don't throw exceptions."""
+        with patch("builtins.open", mock_open()) as open_mock, patch(
+            "os.makedirs"
+        ) as makedirs_mock, patch("os.unlink") as unlink_mock, patch(
+            "os.path.exists", return_value=False
+        ) as exists_mock:
+            config = Configuration()
+            ConfigWriter.write_config(execution=5, config=config, output_file="fakefile123")
 
 
 def test_dry_run_all_tasks():

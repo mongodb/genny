@@ -1,0 +1,173 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/altas-streams"
+Description: |
+  Pipeline: Memory -> Tumbling Window (Group) -> Memory
+  Input Documents: 3.2M
+  BatchSize: 1k
+
+  Simulates the scenario where the input to output ratio is 1 to 1 using a tumbling window. The
+  tumbling window has an interval of one second. Each of the ingested 3.2M documents have a unique
+  group key, so this will produce 3.2M output documents for the 3.2M input documents. The first part
+  of this workload tests the ingestion throughput when the window is open and never closes, the second
+  part of this workload tests the flush throughput when the window is closed and all the group documents
+  are flushed to the sink.
+
+Keywords:
+- streams
+
+GlobalDefaults:
+  DatabaseName: &DatabaseName test
+  StreamProcessorName: &StreamProcessorName sp
+
+  # Genny workload client typically has 16 CPUs, so use 16 inserter threads each inserting
+  # 500 batches of 1k documents, so a total of 8M documents, which will all have unique keys
+  # for the window so this will generate 8M keys on the open window.
+  NumThreads: &NumThreads 16
+  NumBatch1000xPerThread: &NumBatch1000xPerThread 200
+  NumDocumentsPerThread: &NumDocumentsPerThread 200000  # NumBatch1000xPerThread * 1000
+  ExpectedDocumentCount: &ExpectedDocumentCount 3200000  # NumDocumentsPerThread * NumThreads
+  ExpectedDocumentCountAfterFlush: &ExpectedDocumentCountAfterFlush 3200016  # ExpectedDocumentCount + NumThreads
+
+  Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
+  Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    *Channel
+  ]}}
+
+  Document: &Document
+    auction: {^Inc: { start: 1000, multiplier: *NumDocumentsPerThread }}
+    bidder: {^Inc: { start: 1000, multiplier: 1 }}
+    price: {^RandomDouble: {min: 100, max: 100000000}}
+    channel: *Channel
+    url: *Url
+    dateTime: "2023-01-01T00:00:00.000"
+
+  FlushDocument: &FlushDocument
+    auction: {^RandomInt: { min: 1000, max: 3201000 }}
+    bidder: {^Inc: { start: 1000, multiplier: 1 }}
+    price: {^RandomDouble: { min: 100, max: 100000000 }}
+    channel: *Channel
+    url: *Url
+    dateTime: "2023-01-01T00:00:05.000"
+
+  Batch1000x: &Batch1000x {^Array: { of: *Document, number: 1000 }}
+
+Actors:
+- Name: Setup
+  Type: RunCommand
+  ClientName: Stream
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: CreateStreamProcessor
+      OperationName: RunCommand
+      OperationCommand:
+        streams_startStreamProcessor: ""
+        name: *StreamProcessorName
+        pipeline: [
+          {
+            $source: {
+              connectionName: "__testMemory",
+              timeField: { $convert: { input: "$dateTime", to: "date" }},
+              allowedLateness: { size: 1, unit: "second" },
+            }
+          },
+          {
+            $tumblingWindow: {
+              interval: { size: 1, unit: "second" },
+              pipeline: [
+                {
+                  $group: {
+                    _id: {
+                      auction: "$auction",
+                      url: "$url"
+                    },
+                    minPrice: { $min: "$price" },
+                    maxPrice: { $max: "$price" },
+                    sumPrice: { $sum: "$price" },
+                    avgPrice: { $avg: "$price" }
+                  }
+                }
+              ]
+            }
+          },
+          { $emit: { connectionName: "__noopSink" } }
+        ]
+        connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
+  - Phase: 1..2
+    Nop: true
+  - Phase: 3
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Stop
+      OperationName: RunCommand
+      OperationCommand:
+        streams_stopStreamProcessor: ""
+        name: *StreamProcessorName
+
+- Name: Insert_Batch1000x
+  Type: RunCommand
+  ClientName: Stream
+  Threads: *NumThreads
+  Phases:
+  - Phase: 0
+    Nop: true
+  - Phase: 1
+    Repeat: *NumBatch1000xPerThread
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Insert
+      OperationName: RunCommand
+      OperationCommand:
+        streams_testOnlyInsert: ""
+        name: *StreamProcessorName
+        documents: *Batch1000x
+  - Phase: 2
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Insert_Flush
+      OperationName: RunCommand
+      OperationCommand:
+        streams_testOnlyInsert: ""
+        name: *StreamProcessorName
+        documents:
+        - *FlushDocument
+  - Phase: 3
+    Nop: true
+
+- Name: LargeTumblingWindow.MemorySource.Insert.Stats
+  Type: StreamStatsReporter
+  ClientName: Stream
+  Database: *DatabaseName
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Nop: true
+  - Phase: 1
+    Repeat: 1
+    StreamProcessorName: *StreamProcessorName
+    ExpectedDocumentCount: *ExpectedDocumentCount
+  - Phase: 2..3
+    Nop: true
+
+- Name: LargeTumblingWindow.MemorySource.Flush.Stats
+  Type: StreamStatsReporter
+  ClientName: Stream
+  Database: *DatabaseName
+  Threads: 1
+  Phases:
+  - Phase: 0..1
+    Nop: true
+  - Phase: 2
+    Repeat: 1
+    StreamProcessorName: *StreamProcessorName
+    ExpectedDocumentCount: *ExpectedDocumentCountAfterFlush
+  - Phase: 3
+    Nop: true

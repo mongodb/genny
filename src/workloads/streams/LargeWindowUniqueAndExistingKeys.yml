@@ -1,0 +1,170 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/altas-streams"
+Description: |
+  Pipeline: Memory -> Tumbling Window (Group) -> Memory
+  Documents: 16M
+  BatchSize: 1k
+
+  Simulates the scenario where only unique keys are inserted into a window group operator, and then
+  simulates the scenario where only existing keys are inserted in the same window group oeprator.
+  The first 8M documents will all have unique auction IDs and will measure the performance of the
+  scenario where every document results in inserting a new key into the window. The latter 8M
+  documents will all have an existing auction ID will measure the performance of the scenario where
+  every document results in updating an existing key in the window.
+
+Keywords:
+- streams
+
+GlobalDefaults:
+  DatabaseName: &DatabaseName test
+  StreamProcessorName: &StreamProcessorName sp
+
+  # Genny workload client typically has 16 CPUs, so use 16 inserter threads each inserting
+  # 500 batches of 1k documents, so a total of 8M documents, which will all have unique keys
+  # for the window so this will generate 8M keys on the open window.
+  NumThreads: &NumThreads 16
+  NumBatch1000xPerThread: &NumBatch1000xPerThread 500
+  NumDocumentsPerThread: &NumDocumentsPerThread 500000  # NumBatch1000xPerThread * 1000
+  ExpectedDocumentCount: &ExpectedDocumentCount 8000000  # NumDocumentsPerThread * NumThreads
+  ExpectedDocumentCountWithExistingKey: &ExpectedDocumentCountWithExistingKey 16000000
+
+  Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
+  Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    *Channel
+  ]}}
+
+  DocumentWithUniqueKey: &DocumentWithUniqueKey
+    auction: {^Inc: { start: 1000, multiplier: *NumDocumentsPerThread }}
+    bidder: {^Inc: { start: 1000, multiplier: 1 }}
+    price: {^RandomDouble: {min: 100, max: 100000000}}
+    channel: *Channel
+    url: *Url
+    dateTime: "2023-01-01T00:00:00.000"
+
+  DocumentWithExistingKey: &DocumentWithExistingKey
+    auction: {^RandomInt: { min: 1000, max: 8001000 }}
+    bidder: {^Inc: { start: 1000, multiplier: 1 }}
+    price: {^RandomDouble: {min: 100, max: 100000000}}
+    channel: *Channel
+    url: *Url
+    dateTime: "2023-01-01T00:00:00.000"
+
+  Batch1000x_UniqueKey: &Batch1000x_UniqueKey {^Array: { of: *DocumentWithUniqueKey, number: 1000 }}
+  Batch1000x_ExistingKey: &Batch1000x_ExistingKey {^Array: { of: *DocumentWithExistingKey, number: 1000 }}
+
+Actors:
+- Name: Setup
+  Type: RunCommand
+  ClientName: Stream
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: CreateStreamProcessor
+      OperationName: RunCommand
+      OperationCommand:
+        streams_startStreamProcessor: ""
+        name: *StreamProcessorName
+        pipeline: [
+          {
+            $source: {
+              connectionName: "__testMemory",
+              timeField: { $convert: { input: "$dateTime", to: "date" }},
+              allowedLateness: { size: 1, unit: "second" },
+            }
+          },
+          {
+            $tumblingWindow: {
+              interval: { size: 1, unit: "second" },
+              pipeline: [
+                {
+                  $group: {
+                    _id: "$auction",
+                    minPrice: { $min: "$price" },
+                    maxPrice: { $max: "$price" },
+                    sumPrice: { $sum: "$price" },
+                    avgPrice: { $avg: "$price" }
+                  }
+                }
+              ]
+            }
+          },
+          { $emit: { connectionName: "__noopSink" } }
+        ]
+        connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
+  - Phase: 1..2
+    Nop: true
+  - Phase: 3
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Stop
+      OperationName: RunCommand
+      OperationCommand:
+        streams_stopStreamProcessor: ""
+        name: *StreamProcessorName
+
+- Name: Insert_Batch1000x
+  Type: RunCommand
+  ClientName: Stream
+  Threads: *NumThreads
+  Phases:
+  - Phase: 0
+    Nop: true
+  - Phase: 1
+    Repeat: *NumBatch1000xPerThread
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Insert_UniqueKey
+      OperationName: RunCommand
+      OperationCommand:
+        streams_testOnlyInsert: ""
+        name: *StreamProcessorName
+        documents: *Batch1000x_UniqueKey
+  - Phase: 2
+    Repeat: *NumBatch1000xPerThread
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Insert_ExistingKey
+      OperationName: RunCommand
+      OperationCommand:
+        streams_testOnlyInsert: ""
+        name: *StreamProcessorName
+        documents: *Batch1000x_ExistingKey
+  - Phase: 3
+    Nop: true
+
+- Name: LargeWindowUniqueAndExistingKeys.MemorySource.InsertUniqueKeys.Stats
+  Type: StreamStatsReporter
+  ClientName: Stream
+  Database: *DatabaseName
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Nop: true
+  - Phase: 1
+    Repeat: 1
+    StreamProcessorName: *StreamProcessorName
+    ExpectedDocumentCount: *ExpectedDocumentCount
+  - Phase: 2..3
+    Nop: true
+
+- Name: LargeWindowUniqueAndExistingKeys.MemorySource.InsertExistingKeys.Stats
+  Type: StreamStatsReporter
+  ClientName: Stream
+  Database: *DatabaseName
+  Threads: 1
+  Phases:
+  - Phase: 0..1
+    Nop: true
+  - Phase: 2
+    Repeat: 1
+    StreamProcessorName: *StreamProcessorName
+    ExpectedDocumentCount: *ExpectedDocumentCountWithExistingKey
+  - Phase: 3
+    Nop: true

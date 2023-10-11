@@ -516,7 +516,7 @@ class ConfigWriter:
             if execution != 0:
                 SLOG.warning(
                     "Repeated executions will not re-generate tasks.",
-                    execution=build.execution,
+                    execution=execution,
                 )
 
     @staticmethod

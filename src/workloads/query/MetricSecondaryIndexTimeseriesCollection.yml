@@ -101,6 +101,7 @@ AutoRun:
       $eq:
       - replica
       - replica-all-feature-flags
+      - replica-query-stats
     branch_name:
       $neq:
       - v4.0
