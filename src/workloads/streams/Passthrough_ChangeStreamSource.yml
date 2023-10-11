@@ -1,0 +1,121 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/altas-streams"
+Description: |
+  Pipeline: Mongo Change Stream -> Project -> Memory
+  Documents: 800k
+  BatchSize: 1k
+
+  Simulates the scenario where the input and output of documents for a stream processor is a
+  one-to-one ratio. This applies a simple projection on incoming documents (currency conversion).
+  The difference with this workload versus Passthrough.yml is that this uses a mongo change stream
+  as the source rather than the in-memory source operator.
+
+Keywords:
+- streams
+
+GlobalDefaults:
+  DatabaseName: &DatabaseName test
+  InputCollectionName: &InputCollectionName input
+  StreamProcessorName: &StreamProcessorName sp
+
+  # Genny workload client typically has 16 CPUs, so use 16 inserter threads each inserting
+  # 500 batches of 1k documents, so a total of 8M documents, which will all have unique keys
+  # for the window so this will generate 8M keys on the open window.
+  NumThreads: &NumThreads 16
+  NumInputDocumentsPerThread: &NumInputDocumentsPerThread 50000
+  ExpectedDocumentCount: &ExpectedDocumentCount 800000  # NumThreads * NumInputDocumentsPerThread
+
+  Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
+  Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    *Channel
+  ]}}
+
+  Document: &Document
+    auction: {^Inc: { start: 1000, multipler: 1 }}
+    bidder: {^Inc: { start: 1000, multipler: 1 }}
+    price: {^RandomDouble: {min: 100, max: 100000000 }}
+    channel: *Channel
+    url: *Url
+    dateTime: {^IncDate: { start: "2023-01-01T00:00:00.000", step: 10 }}
+
+Actors:
+- Name: CollectionLoader
+  Type: CrudActor
+  ClientName: Default
+  Database: *DatabaseName
+  Threads: *NumThreads
+  Phases:
+  - Phase: 0
+    Nop: true
+  - Phase: 1
+    Repeat: *NumInputDocumentsPerThread
+    Collection: *InputCollectionName
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *Document
+  - Phase: 2
+    Nop: true
+
+- Name: Setup
+  Type: RunCommand
+  ClientName: Stream
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: CreateStreamProcessor
+      OperationName: RunCommand
+      OperationCommand:
+        streams_startStreamProcessor: ""
+        name: *StreamProcessorName
+        pipeline: [
+          {
+            $source: {
+              connectionName: "db",
+              db: *DatabaseName,
+              coll: *InputCollectionName
+            }
+          },
+          {
+            $project: {
+              auction: 1,
+              bidder: 1,
+              dateTime: 1,
+              price: { $multiply: ["$price", 0.908] }
+            }
+          },
+          { $emit: { connectionName: "__noopSink" } }
+        ]
+        connections: [{ name: "db", type: "atlas", options: { uri: {^ClientURI: { Name: "Default" }}}}]
+  - Phase: 1
+    Nop: true
+  - Phase: 2
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Stop
+      OperationName: RunCommand
+      OperationCommand:
+        streams_stopStreamProcessor: ""
+        name: *StreamProcessorName
+
+- Name: Passthrough.ChangeStreamSource.Stats
+  Type: StreamStatsReporter
+  ClientName: Stream
+  Database: *DatabaseName
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Nop: true
+  - Phase: 1
+    Repeat: 1
+    StreamProcessorName: *StreamProcessorName
+    ExpectedDocumentCount: *ExpectedDocumentCount
+  - Phase: 2
+    Nop: true
