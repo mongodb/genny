@@ -21,6 +21,9 @@ GlobalDefaults:
   ShardedColl0: &ShardedColl0 Collection0
   ShardedColl1: &ShardedColl1 Collection1
   UnshardedColl2: &UnshardedColl2 Collection2
+  # TODO it might be better to not add another collection and to still use Collection0 and Collection1
+  # for the unsharded tests (since Coll0 and Coll1) won't have been sharded.
+  # But then in sharded environments the results of the unsharded ones are wrong.
   UnshardedColl3: &UnshardedColl3 Collection3
   Database: &Database test
   NumChunks: &NumChunks 6

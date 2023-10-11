@@ -25,8 +25,6 @@ GlobalDefaults:
   UnshardedColl1: &UnshardedColl1 Collection1
   UnshardedColl2: &UnshardedColl2 Collection2
   ShardedColl3: &ShardedColl3 Collection3
-  Database: &Database test
-  NumChunks: &NumChunks 6
 
 Actors:
 - Name: CreateShardedCollections
@@ -43,13 +41,13 @@ Actors:
     - OperationMetricsName: EnableSharding
       OperationName: AdminCommand
       OperationCommand:
-        enableSharding: *Database
+        enableSharding: &Database test
     - OperationMetricsName: ShardLocalCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection0
         key: {b: hashed}
-        numInitialChunks: *NumChunks
+        numInitialChunks: &NumChunks 6
     - OperationMetricsName: ShardForeignCollection
       OperationName: AdminCommand
       OperationCommand:
