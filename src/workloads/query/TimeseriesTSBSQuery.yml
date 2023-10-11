@@ -5,7 +5,7 @@ Description: |
   This workload runs queries from the tsbs_query benchmark in Genny. It allows us to cross-check
   the results of the TSBS benchmarks, collect additional measurements, profile individual queries,
   and extend some of the queries as needed. The data is preloaded by the dsi configuration. See
-  'configurations/test_control/test_control.tsbs_query.yml' for all  the details. There are 20736000
+  'configurations/test_control/test_control.tsbs_query_genny.yml' for all  the details. There are 20736000
   documents in the collection. There are some differences between the queries in this workload and tsbs,
   but we do not expect these differences to significantly affect runtime:
   1. TSBS will generate a random start time between the start/end time of the workload for every query type.
@@ -70,7 +70,8 @@ Actors:
         PhaseConfig:
           Repeat: 1
 
-  # single_groupby_M_H_T family of queries computes the per-minute max of M(1|5) metrics for H(1|8) # hosts in a random time window of size T(1h|12h).
+  # single_groupby_M_H_T family of queries computes the per-minute max of M(1|5) metrics for H(1|8)
+  # hosts in a random time window of size T(1h|12h).
   - Name: single_groupby_1_1_1
     Type: CrudActor
     Threads: 8
@@ -421,7 +422,8 @@ Actors:
                     { $sort: { _id: 1 } },
                   ]
 
-  # double-groupby-M computes the per-host, per-hour mean of M(1|5|all=10) metrics in a random 12h # time window.
+  # double-groupby-M computes the per-host, per-hour mean of M(1|5|all=10) metrics in a random 12h
+  # time window.
   - Name: double_groupby_1
     Type: CrudActor
     Threads: 8
@@ -630,7 +632,8 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                # It is unclear how TSBS evaluates the endpoint, but the range is often wide. So we # pick a time close to the max time.
+                # It is unclear how TSBS evaluates the endpoint, but the range is often wide.
+                # So we pick a time close to the max time.
                 Pipeline:
                   [
                     {
@@ -671,7 +674,8 @@ Actors:
                     { $limit: 5 },
                   ]
 
-  # cpu_max_all_H family of queries computes per-hour max of all(10) metrics for H(1|8) hosts for a # randomly chosen 8h time window.
+  # cpu_max_all_H family of queries computes per-hour max of all(10) metrics for H(1|8) hosts for a
+  # randomly chosen 8h time window.
   - Name: cpu_max_all_1
     Type: CrudActor
     Threads: 8

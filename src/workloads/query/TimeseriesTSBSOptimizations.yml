@@ -4,7 +4,7 @@ Description: |
   This workload runs different time-series optimizations with the tsbs dataset. During development, 
   we targeted optimizations that are most relevant to pushdown time-series queries to SBE. Further 
   optimizations should be added to this workload. The data is preloaded by the dsi configuration. 
-  See 'configurations/test_control/test_control.tsbs_query.yml' for all  the details. 
+  See 'configurations/test_control/test_control.tsbs_query_genny.yml' for all  the details.
   
   Below are helpful statistics about the collection:
   1. There are 20736000 documents and 161448 buckets in the collection. 

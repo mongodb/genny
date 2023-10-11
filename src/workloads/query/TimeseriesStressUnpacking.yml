@@ -25,7 +25,7 @@ Clients:
 
 Project1Field: &Project1Field { _id: 0, measurement: 1 }
 
-ProjectAllFields:
+Project10Fields:
   &Project10Fields {
     _id: 1,
     time: 1,
