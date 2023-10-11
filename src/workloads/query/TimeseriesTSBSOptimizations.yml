@@ -1,21 +1,21 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-integration"
 Description: |
-  This workload runs different time-series optimizations with the tsbs dataset. During development, 
-  we targeted optimizations that are most relevant to pushdown time-series queries to SBE. Further 
-  optimizations should be added to this workload. The data is preloaded by the dsi configuration. 
+  This workload runs different time-series optimizations with the tsbs dataset. During development,
+  we targeted optimizations that are most relevant to pushdown time-series queries to SBE. Further
+  optimizations should be added to this workload. The data is preloaded by the dsi configuration.
   See 'configurations/test_control/test_control.tsbs_query_genny.yml' for all  the details.
   
   Below are helpful statistics about the collection:
-  1. There are 20736000 documents and 161448 buckets in the collection. 
-  2. "tags" is the metaField and "time" is the timeField. 
-  3. "tags.hostname" has 100 values that are uniformly distributed. 
+  1. There are 20736000 documents and 161448 buckets in the collection.
+  2. "tags" is the metaField and "time" is the timeField.
+  3. "tags.hostname" has 100 values that are uniformly distributed.
   4. The 50th percentile of the number of documents per bucket is 93.
   5. The 80th percentile of the number of document per bucket is 274.96.
   6. 40435 buckets are version 1 and 121013 buckets are version 2.
   7. Predicates on a single measurement value, such as {usage_nice: 5} will hit around 18% of buckets.
   8. All measurement fields vary from [0, 100] and have similar distributions.
-  9. Predicates of bucket at a time window of 1 hour is expected to hit 0.2% of buckets. 
+  9. Predicates of bucket at a time window of 1 hour is expected to hit 0.2% of buckets.
   10. The earliest date is  "2016-01-01T00:00:00Z" and the latest date is "2016-01-24T23:59:50Z".
 
 Keywords:
