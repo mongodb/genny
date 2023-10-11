@@ -1,16 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-integration"
 Description: |
-  This workload runs queries from the tsbs_query benchmark in Genny. It allows us to cross-check the results of the TSBS 
-  benchmarks, collect additional measurements, profile individual queries, and extend some of the queries as needed.
-  The data is preloaded by the dsi configuration. See 'configurations/test_control/test_control.tsbs_query.yml' for all 
-  the details. There are 20736000 documents in the collection.
-  There are some differences between the queries in this workload and tsbs, but we do not expect these differences to significantly
-  affect runtime:
-  1. TSBS will generate a random start time between the start/end time of the workload for every query type. We hard code
-  our time values, since genny does not currently support date arithmetic, nor storing a fixed value from randomized generation.
-  2. TSBS randomizes which measurement fields to group by, we do not randomize these fields. Since all the fields are random integers
-  between 0-100 we don't expect different fields to have significant runtime differences.
+  This workload runs queries from the tsbs_query benchmark in Genny. It allows us to cross-check the results of the TSBS benchmarks, collect additional measurements, profile individual queries, and extend some of the queries as needed. The data is preloaded by the dsi configuration. See 'configurations/test_control/test_control.tsbs_query.yml' for all  the details. There are 20736000 documents in the collection. There are some differences between the queries in this workload and tsbs, but we do not expect these differences to significantly affect runtime:
+  1. TSBS will generate a random start time between the start/end time of the workload for every query type. We hard code our time values, since genny does not currently support date arithmetic, nor storing a fixed value from randomized generation.
+  2. TSBS randomizes which measurement fields to group by, we do not randomize these fields. Since all the fields are random integers between 0-100 we don't expect different fields to have significant runtime differences.
 
 Keywords:
   - timeseries
@@ -28,9 +21,10 @@ GlobalDefaults:
   Collection: &collection point_data
   maxPhases: &maxPhases 20
   Repeat: &repeat 500
-  # TSBS constructs a time windows of various sizes (1 hour, 8 hours, 12 hours) from a uniformly random start-time within
-  # this time-period. Ideally, we would do this as well, but currently genny doesn't support storing randomized date values as
-  # variables, so we will fix a starting value and increment it each time the query runs.
+  # TSBS constructs a time windows of various sizes (1 hour, 8 hours, 12 hours) from a uniformly 
+  # random start-time within this time-period. Ideally, we would do this as well, but currently 
+  # genny doesn't support storing randomized date values as variables, so we will fix a starting 
+  # value and increment it each time the query runs.
   StartDate: &startDate "2016-01-04T21:49:27Z"
   startDatePlusOneHour: &startDatePlusOneHour "2016-01-04T22:49:27Z"
   startDatePlusEightHours: &startDatePlusEightHours "2016-01-05T05:49:27Z"
@@ -67,8 +61,7 @@ Actors:
         PhaseConfig:
           Repeat: 1
 
-# single_groupby_M_H_T family of queries computes the per-minute max of M(1|5) metrics for H(1|8) hosts 
-# in a random time window of size T(1h|12h).
+  # single_groupby_M_H_T family of queries computes the per-minute max of M(1|5) metrics for H(1|8) # hosts in a random time window of size T(1h|12h).
   - Name: single_groupby_1_1_1
     Type: CrudActor
     Threads: 8
@@ -86,13 +79,32 @@ Actors:
                 Pipeline:
                   [
                     {
-                      $match: 
+                      $match:
                         {
                           measurement: "cpu",
                           "tags.hostname": { $in: *HostName1 },
-                          time:  { 
-                            $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000, } } } },
-                            $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusOneHour, step: 2520000 } } } }
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator: 
+                                        { ^IncDate: { start: *startDate,step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                        },
+                                    },
+                                },
                             },
                         },
                     },
@@ -129,8 +141,26 @@ Actors:
                           "tags.hostname": { $in: *HostName8 },
                           time:
                             {
-                              $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000, } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusOneHour, step: 2520000 } } } },
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                        },
+                                    },
+                                },
                             },
                         },
                     },
@@ -167,8 +197,26 @@ Actors:
                           "tags.hostname": { $in: *HostName1 },
                           time:
                             {
-                              $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000, } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusOneHour, step: 2520000 } } } },
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                        },
+                                    },
+                                },
                             },
                         },
                     },
@@ -209,8 +257,26 @@ Actors:
                           "tags.hostname": { $in: *HostName8 },
                           time:
                             {
-                              $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000 } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusOneHour, step: 2520000 } } } },
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator: 
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                        },
+                                    },
+                                },
                             },
                         },
                     },
@@ -251,10 +317,29 @@ Actors:
                           "tags.hostname": { $in: *HostName1 },
                           time:
                             {
-                              $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000 } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusTwelveHours, step: 2520000 }, }, } }
-                            }
-                        }
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator: 
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: 
+                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
                     },
                     {
                       $group:
@@ -289,9 +374,28 @@ Actors:
                           "tags.hostname": { $in: *HostName1 },
                           time:
                             {
-                              $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000 } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusTwelveHours, step: 2520000 }, }, } }
-                            }
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator: 
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: 
+                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                     {
@@ -308,7 +412,7 @@ Actors:
                     { $sort: { _id: 1 } },
                   ]
 
-# double-groupby-M computes the per-host, per-hour mean of M(1|5|all=10) metrics in a random 12h time window.
+  # double-groupby-M computes the per-host, per-hour mean of M(1|5|all=10) metrics in a random 12h # time window.
   - Name: double_groupby_1
     Type: CrudActor
     Threads: 8
@@ -331,17 +435,36 @@ Actors:
                           measurement: "cpu",
                           time:
                             {
-                              $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000 } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusTwelveHours, step: 2520000 }, }, } }
-                            }
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: 
+                                            {  start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                     {
                       $group:
                         {
-                          _id: 
-                            { 
-                              time: { $dateTrunc: { date: "$time", unit: "hour" } }, 
+                          _id:
+                            {
+                              time: { $dateTrunc: { date: "$time", unit: "hour" } },
                               hostname: "$tags.hostname",
                             },
                           avg_usage_softirq: { $avg: "$usage_softirq" },
@@ -372,9 +495,28 @@ Actors:
                           measurement: "cpu",
                           time:
                             {
-                              $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000 } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusTwelveHours, step: 2520000 }, }, } }
-                            }
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                     {
@@ -417,9 +559,28 @@ Actors:
                           measurement: "cpu",
                           time:
                             {
-                              $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000 } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusTwelveHours, step: 2520000 }, }, } }
-                            }
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                     {
@@ -427,8 +588,7 @@ Actors:
                         {
                           _id:
                             {
-                              time:
-                                { $dateTrunc: { date: "$time", unit: "hour" } },
+                              time: { $dateTrunc: { date: "$time", unit: "hour" } },
                               hostname: "$tags.hostname",
                             },
                           avg_usage_softirq: { $avg: "$usage_softirq" },
@@ -446,7 +606,7 @@ Actors:
                     { $sort: { "_id.time": 1, "_id.hostname": 1 } },
                   ]
 
-# groupby-orderby-limit computes the per-minute max of a single metric for the last five minutes.
+  # groupby-orderby-limit computes the per-minute max of a single metric for the last five minutes.
   - Name: groupby_orderby_limit
     Type: CrudActor
     Threads: 8
@@ -461,7 +621,7 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                # It is unclear how TSBS evaluates the endpoint, but the range is often wide. So we pick a time close to the max time.
+                # It is unclear how TSBS evaluates the endpoint, but the range is often wide. So we # pick a time close to the max time.
                 Pipeline:
                   [
                     {
@@ -469,10 +629,27 @@ Actors:
                         {
                           measurement: "cpu",
                           time:
-                            { $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000 } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *closeToEndTime, step: 2520000 } } } }
-                            }
-                        }
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *closeToEndTime, step: 2520000 } },
+                                    },
+                                },
+                            },
+                        },
                     },
                     {
                       $group:
@@ -485,7 +662,7 @@ Actors:
                     { $limit: 5 },
                   ]
 
-# cpu_max_all_H family of queries computes per-hour max of all(10) metrics for H(1|8) hosts for a randomly chosen 8h time window.
+  # cpu_max_all_H family of queries computes per-hour max of all(10) metrics for H(1|8) hosts for a # randomly chosen 8h time window.
   - Name: cpu_max_all_1
     Type: CrudActor
     Threads: 8
@@ -509,8 +686,27 @@ Actors:
                           "tags.hostname": { $in: *HostName1 },
                           time:
                             {
-                              $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000, } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusEightHours, step: 2520000 } } } },
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator: 
+                                      {
+                                          ^IncDate: 
+                                            { start: *startDatePlusEightHours, step: 2520000 },
+                                        },
+                                    },
+                                },
                             },
                         },
                     },
@@ -556,8 +752,27 @@ Actors:
                           "tags.hostname": { $in: *HostName8 },
                           time:
                             {
-                              $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000, } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusEightHours, step: 2520000 } } } },
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *startDatePlusEightHours, step: 2520000 },
+                                        },
+                                    },
+                                },
                             },
                         },
                     },
@@ -580,7 +795,8 @@ Actors:
                     { $sort: { _id: 1 } },
                   ]
 
-  # high-cpu-H: finds events with high “usage_user” metric in a random 12h window for H(1|all) hosts.
+  # high-cpu-H: finds events with high “usage_user” metric in a random 12h window for H(1|all)
+  # hosts.
   - Name: high_cpu_1
     Type: CrudActor
     Threads: 8
@@ -595,21 +811,41 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline: [
+                Pipeline:
+                  [
                     {
                       $match:
                         {
                           measurement: "cpu",
                           "tags.hostname": { $in: *HostName1 },
                           time:
-                            { 
-                              $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000 } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusTwelveHours, step: 2520000 } }}}
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
                             },
                           usage_user: { $gt: 90 }, # 90 is hard-coded in TSBS.
-                        }
+                        },
                     },
-                    { $set: { tags: "$tags.hostname" } }
+                    { $set: { tags: "$tags.hostname" } },
                   ]
 
   - Name: high_cpu_all
@@ -634,8 +870,27 @@ Actors:
                           measurement: "cpu",
                           time:
                             {
-                              $gte: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDate, step: 2520000 } } } },
-                              $lt: { ^Cycle: { ofLength: 100, fromGenerator: { ^IncDate: { start: *startDatePlusTwelveHours, step: 2520000 } } } }
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator: 
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
                             },
                           usage_user: { $gt: 90 }, # 90 is hard-coded in TSBS.
                         },
@@ -643,7 +898,7 @@ Actors:
                     { $set: { tags: "$tags.hostname" } },
                   ]
 
-# lastpoint computes the last row per host.
+  # lastpoint computes the last row per host.
   - Name: lastpoint
     Type: CrudActor
     Threads: 8

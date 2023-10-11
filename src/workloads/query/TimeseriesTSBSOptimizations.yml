@@ -1,18 +1,18 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-integration"
 Description: |
-  This workload runs different time-series optimizations with the tsbs dataset. During development, we targeted optimizations
-  that are most relevant to pushdown time-series queries to SBE. Further optimizations should be added to this workload.
-  The data is preloaded by the dsi configuration. See 'configurations/test_control/test_control.tsbs_query.yml' for all 
+  This workload runs different time-series optimizations with the tsbs dataset. During development, we targeted optimizations that are most relevant to pushdown time-series queries to SBE. Further optimizations should be added to this workload. The data is preloaded by the dsi configuration. See 'configurations/test_control/test_control.tsbs_query.yml' for all 
   the details. Below are helpful statistics about the collection:
   1. There are 20736000 documents and 161448 buckets in the collection. 
-  2. "tags" is the metaField and "time" is the timeField.
-  2. The 50th percentile of the number of documents per bucket is 93.
-  4. The 80th percentile of the number of document per bucket is 274.96.
-  3. 40435 buckets are version 1 and 121013 buckets are version 2.
-  4. Predicates of bucket at a time window of 1 hour is expected to hit 0.2% of buckets.
-  5. Predicates on a single measurement value, such as {usage_nice: 5} will hit around 18% of buckets.
-  6. The earliest date is  "2016-01-01T00:00:00Z" and the latest date is "2016-01-24T23:59:50Z".
+  2. "tags" is the metaField and "time" is the timeField. 
+  3. "tags.hostname" has 100 values that are uniformly distributed. 
+  4. The 50th percentile of the number of documents per bucket is 93.
+  5. The 80th percentile of the number of document per bucket is 274.96.
+  6. 40435 buckets are version 1 and 121013 buckets are version 2.
+  7. Predicates on a single measurement value, such as {usage_nice: 5} will hit around 18% of buckets.
+  8. All measurement fields vary from [0, 100] and have similar distributions.
+  9. Predicates of bucket at a time window of 1 hour is expected to hit 0.2% of buckets. 
+  10. The earliest date is  "2016-01-01T00:00:00Z" and the latest date is "2016-01-24T23:59:50Z".
 
 Keywords:
   - timeseries
@@ -39,7 +39,7 @@ Actors:
         PhaseConfig:
           Repeat: 1
 
-# The following two tasks test the $group rewrite for the $min and $max accumulators.
+  # The following two tasks test the $group rewrite for the $min and $max accumulators.
   - Name: GroupRewriteMax
     Type: CrudActor
     Database: *database
@@ -56,18 +56,19 @@ Actors:
             - OperationMetricsName:
               OperationName: aggregate
               OperationCommand:
-                Pipeline: [
-                  { 
-                    $group: 
-                    { 
-                      _id: "$tags",  
-                      max_usage_user: { $max: "$usage_user" },
-                      max_usage_iowait: { $max: "$usage_iowait" },
-                      max_usage_irq: { $max: "$usage_irq" },
-                      max_usage_steal: {$max: "$usage_steal"}
-                    }
-                  }
-                ]
+                Pipeline:
+                  [
+                    {
+                      $group:
+                        {
+                          _id: "$tags.hostname",
+                          max_usage_user: { $max: "$usage_user" },
+                          max_usage_iowait: { $max: "$usage_iowait" },
+                          max_usage_irq: { $max: "$usage_irq" },
+                          max_usage_steal: { $max: "$usage_steal" },
+                        },
+                    },
+                  ]
 
   - Name: GroupRewriteMin
     Type: CrudActor
@@ -85,21 +86,21 @@ Actors:
             - OperationMetricsName:
               OperationName: aggregate
               OperationCommand:
-                Pipeline: [
-                  { 
-                    $group: 
-                    { 
-                      _id: "$tags.hostname",  
-                      min_usage_user: { $min: "$usage_user" },
-                      min_usage_iowait: { $min: "$usage_iowait" },
-                      min_usage_irq: { $min: "$usage_irq" },
-                      min_usage_steal: {$min: "$usage_steal"}
-                    }
-                  }
-                ]
+                Pipeline:
+                  [
+                    {
+                      $group:
+                        {
+                          _id: "$tags.hostname",
+                          min_usage_user: { $min: "$usage_user" },
+                          min_usage_iowait: { $min: "$usage_iowait" },
+                          min_usage_irq: { $min: "$usage_irq" },
+                          min_usage_steal: { $min: "$usage_steal" },
+                        },
+                    },
+                  ]
 
-# If the following stages after unpack doesn't depend on the fields of the documents, the unpack stage will only
-# return empty documents. The following task tests this optimization.
+  # If the following stages after unpack doesn't depend on the fields of the documents, the unpack stage will only return empty documents. The following task tests this optimization.
   - Name: EmptyUnpackWithGroupSum
     Type: CrudActor
     Database: *database
@@ -116,18 +117,10 @@ Actors:
             - OperationMetricsName:
               OperationName: aggregate
               OperationCommand:
-                Pipeline: [
-                  { 
-                    $group: 
-                    { 
-                      _id: 5,
-                      new_count: {$sum: 2},
-                    }
-                  }
-                ]
+                Pipeline: [{ $group: { _id: null, new_count: { $sum: 2 } } }]
 
-# A new optimization for $count was added in 7.1 Below are tasks that test the $count stage and accumulator
-# optimization. We expect these tasks to run faster on version >=7.1.
+  # A new optimization for $count was added in 7.1 Below are tasks that test the $count stage and
+  # accumulator optimization. We expect these tasks to run faster on version >=7.1.
   - Name: EmptyUnpackWithCountStage
     Type: CrudActor
     Database: *database
@@ -144,7 +137,7 @@ Actors:
             - OperationMetricsName:
               OperationName: aggregate
               OperationCommand:
-                Pipeline:  [{ $count: "count" }]
+                Pipeline: [{ $count: "count" }]
 
   - Name: GroupRewriteCount
     Type: CrudActor
@@ -162,18 +155,19 @@ Actors:
             - OperationMetricsName:
               OperationName: aggregate
               OperationCommand:
-                Pipeline: [
-                  { 
-                    $group: 
-                    { 
-                      _id: "$tags.hostname",  
-                      document_count: { $count: {} }
-                    }
-                  }
-                ]
+                Pipeline:
+                  [
+                    {
+                      $group:
+                        {
+                          _id: "$tags.hostname",
+                          document_count: { $count: {} },
+                        },
+                    },
+                  ]
 
-# Predicates generated for a $match on the timeField are not applied to the unpacked documents if the entire bucket
-# matches the predicate. This task tests that optimization.
+  # Predicates generated for a $match on the timeField are not applied to the unpacked documents if 
+  # the entire bucket matches the predicate. This task tests that optimization.
   - Name: WholeBucketFilter
     Type: CrudActor
     Database: *database
@@ -190,21 +184,24 @@ Actors:
             - OperationMetricsName:
               OperationName: aggregate
               OperationCommand:
-                Pipeline:  [ 
-                  { 
-                    $match: { "time": { $lt: {^Date: "2016-01-15T01:49:23"} } } 
-                  },
-                  {
-                    $project:
-                      {
-                        _id: 1,
-                        tags: 1,
-                        usage_softirq: 1, 
-                        usage_steal: 1,
-                        usage_guest: 1
-                      }
-                  }
-                ]
+                # The $match stage will hit ~115,000 or ~71% of buckets.
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        { "time": { $lt: { ^Date: "2016-01-18T01:49:23" } } },
+                    },
+                    {
+                      $project:
+                        {
+                          _id: 1,
+                          tags: 1,
+                          usage_softirq: 1,
+                          usage_steal: 1,
+                          usage_guest: 1,
+                        },
+                    },
+                  ]
 
   # These queries test bucket-targeting, and we want to target a small percentage of buckets.
   # The task below will target ~300 buckets or .1%.
@@ -226,23 +223,17 @@ Actors:
                   # All usage_* fields are random integers between 0-100.
                   # Verify before adding to this workload how many buckets each query targets.
                   [
-                    {
-                      $match: 
-                        {
-                          usage_guest: 88,
-                          usage_nice: 50,
-                        }
-                    },
+                    { $match: { usage_guest: 88, usage_nice: 50 } },
                     {
                       $project:
                         {
                           _id: 1,
                           tags: 1,
-                          usage_softirq: 1, 
+                          usage_softirq: 1,
                           usage_steal: 1,
-                          usage_guest: 1
+                          usage_guest: 1,
                         },
-                    }
+                    },
                   ]
 
   # The task below will target ~580 buckets or .3%.
@@ -278,9 +269,9 @@ Actors:
                         {
                           _id: 1,
                           tags: 1,
-                          usage_softirq: 1, 
+                          usage_softirq: 1,
                           usage_steal: 1,
-                          usage_guest: 1
+                          usage_guest: 1,
                         },
-                    }
+                    },
                   ]
