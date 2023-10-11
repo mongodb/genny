@@ -23,7 +23,7 @@ phasePath: &phasePath ../../phases/issues/ConnectionsBuildup.yml
 # Operations reused in multiple Phases.
 Nop: &Nop {Nop: true}
 EnableSharding: &EnableSharding
-  # Until EVG-21054 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs
+  # Until EVG-21054 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs.
   OnlyRunInInstance: sharded
   LoadConfig:
     Key: EnableSharding
@@ -102,4 +102,5 @@ AutoRun:
       - atlas-like-replica.2022-10
       - replica
       - replica-all-feature-flags
+      - single-replica
       - shard-single
