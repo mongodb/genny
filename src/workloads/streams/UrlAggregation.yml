@@ -12,9 +12,14 @@ GlobalDefaults:
   DatabaseName: &DatabaseName "test"
   StreamProcessorName: &StreamProcessorName "sp"
 
+  # Use 16 inserter threads that insert 100 batches of 1k documents, so
+  # total of 1.6M documents.
+  NumThreads: &NumThreads 16
+
 Actors:
 - Name: Setup
   Type: RunCommand
+  ClientName: Stream
   Threads: 1
   Phases:
   - Phase: 0
@@ -77,9 +82,10 @@ Actors:
         streams_stopStreamProcessor: ""
         name: *StreamProcessorName
 
-- Name: Insert_Batch1000x
+- Name: Insert_Batch100x
   Type: RunCommand
-  Threads: 32
+  ClientName: Stream
+  Threads: *NumThreads
   Phases:
   - Phase: 0
     Nop: true
@@ -90,7 +96,20 @@ Actors:
       Parameters:
         Database: *DatabaseName
         StreamProcessorName: *StreamProcessorName
-        Duration: 1 minute
+  - Phase: 2
+    Nop: true
+
+- Name: Stats
+  Type: StreamStatsReporter
+  Database: *DatabaseName
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Nop: true
+  - Phase: 1
+    Repeat: 1
+    StreamProcessorName: *StreamProcessorName
+    ExpectedDocumentCount: 1600000
   - Phase: 2
     Nop: true
 
