@@ -26,19 +26,19 @@ Clients:
       maxPoolSize: 4000 # With 8 threads we need a larger pool.
 
 GlobalDefaults:
-  Database: &database cpu
-  Collection: &collection point_data
+  database: &database cpu
+  collection: &collection point_data
   maxPhases: &maxPhases 20
-  Repeat: &repeat 500
+  repeat: &repeat 500
   # TSBS constructs a time windows of various sizes (1 hour, 8 hours, 12 hours) from a uniformly 
   # random start-time within this time-period. Ideally, we would do this as well, but currently 
   # genny doesn't support storing randomized date values as variables, so we will fix a starting 
   # value and increment it each time the query runs.
-  StartDate: &startDate "2016-01-04T21:49:27Z"
+  startDate: &startDate "2016-01-04T21:49:27Z"
   startDatePlusOneHour: &startDatePlusOneHour "2016-01-04T22:49:27Z"
   startDatePlusEightHours: &startDatePlusEightHours "2016-01-05T05:49:27Z"
   startDatePlusTwelveHours: &startDatePlusTwelveHours "2016-01-05T09:49:27Z"
-  CloseToEndTime: &closeToEndTime "2016-01-20T09:49:27Z"
+  closeToEndTime: &closeToEndTime "2016-01-20T09:49:27Z"
 
 # Create variables to mimic the randomness of tsbs_generate_queries.
 # Generates a single string like "host_42", with random integer in range [0,99].

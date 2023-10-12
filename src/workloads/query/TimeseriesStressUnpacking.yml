@@ -13,10 +13,10 @@ Keywords:
   - aggregate
 
 GlobalDefaults:
-  Database: &database test
-  Collection: &collection Collection0
+  database: &database test
+  collection: &collection Collection0
   maxPhases: &maxPhases 20
-  Repeat: &repeat 100
+  repeat: &repeat 100
 
 Clients:
   Default:

@@ -14,7 +14,8 @@ Description: |
   5. The 80th percentile of the number of document per bucket is 274.96.
   6. 40435 buckets are version 1 and 121013 buckets are version 2.
   7. Predicates on a single measurement value, such as {usage_nice: 5} will hit around 18% of buckets.
-  8. All measurement fields vary from [0, 100] and have similar distributions.
+  8. All measurement fields vary from [0, 100]. Not all measurement fields have similar distributions.
+  You need to verify how many buckets are hit for each measurement field predicate written.
   9. Predicates of bucket at a time window of 1 hour is expected to hit 0.2% of buckets.
   10. The earliest date is  "2016-01-01T00:00:00Z" and the latest date is "2016-01-24T23:59:50Z".
 
@@ -25,8 +26,8 @@ Keywords:
   - sort
 
 GlobalDefaults:
-  Database: &database cpu
-  Collection: &collection point_data
+  database: &database cpu
+  collection: &collection point_data
   maxPhases: &maxPhases 10
   repeat: &repeat 50
 
