@@ -1,0 +1,90 @@
+SchemaVersion: 2018-07-01
+Owner: Service Architecture
+Description: |
+  Used to test performance of the server under heavy memory pressure.
+
+GlobalDefaults:
+  dbname: &DBName memorystress
+  MaxPhases: &MaxPhases 20
+
+  LoadThreads: &LoadThreads 128
+  LoadBatchSize: &LoadBatchSize 500
+
+  NumberOfDocuments: &NumDocs 20096
+  # NumberOfDocumentsPerWorker = NumberOfDocuments / LoadThreads.
+  NumberOfDocumentsPerWorker: &DocsPerThread 157
+  DocSize: &DocSize 520000
+  Document: &Doc
+    # Document number/ID.
+    a: {^Inc: {start: -157, step: 1, multiplier: *DocsPerThread}}
+    # Random number from [0, NumberOfDocuments].
+    b: {^RandomInt: {min: 0, max: *NumDocs}}
+    # Fill 520 KB.
+    c: {^RandomString: {length: *DocSize}}
+
+  # Number of documents to sort by each thread. Tuned so that *SortStep * *DocSize < 100 MB,
+  # which is the maximum memory a sort query is allowed to use before spilling to disk.
+  SortStep: &SortStep 180
+  SortBatchSize: &SortBatchSize 180
+  SortThreads: &SortThreads 250
+  SortRepeat: &SortRepeat 5
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+      maxPoolSize: 500
+    
+Actors:
+- Name: LoadDocuments
+  Type: Loader
+  Threads: *LoadThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        CollectionCount: 1
+        Database: *DBName
+        Repeat: 1
+        Document: *Doc
+        MultipleThreadsPerCollection: true
+        DocumentCount: *NumDocs
+        BatchSize: *LoadBatchSize
+
+- Name: SortMany
+  Type: RunCommand
+  Threads: *SortThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *SortRepeat
+        Database: *DBName
+        Operations:
+        - OperationMetricsName: SortMany
+          OperationName: RunCommand
+          OperationCommand:
+            # Loader default collection name.
+            aggregate: Collection0
+            # Sort *SortStep number of documents starting from a randomly chosen 'a'.
+            pipeline:
+              [{$match:
+                {$expr:
+                  {$let:
+                    {vars:
+                      {start: {^RandomInt: {min: 0, max: *NumDocs}}},
+                    in: {$and: [$gte: ["$a", "$$start"], $lt: ["$a", {$add: ["$$start", *SortStep]}]]}
+                    }
+                  }
+                }
+              },
+              {$sort: {b: 1}}]
+            cursor: {batchSize: *SortBatchSize}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard-lite
