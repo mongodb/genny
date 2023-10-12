@@ -59,6 +59,7 @@ Ensure you have installed [Homebrew](https://brew.sh/)
 
 xcode-select --install
 brew install zstd
+brew install snappy
 
 # Necessary because the cmake in vcpkg is unsigned and can't be copied between machines
 brew install cmake
@@ -85,15 +86,13 @@ unsure. (mongodbtoolchain is internal to MongoDB).
 
 ## Run the installer
 ```sh
-./run-genny install -d [ubuntu2204_arm64|ubuntu2204|ubuntu2004|ubuntu1804|ubuntu1604|archlinux|rhel8|rhel70|rhel62|amazon2|not-linux]
+./run-genny install 
 ```
 
-This command downloads Genny's toolchain, compiles Genny, creates its
+This command autodetects and downloads the appropriate Genny toolchain, compiles Genny, creates its
 virtualenv, and installs Genny to `dist/`. You can rerun this command
 at any time to rebuild Genny. If your OS isn't the supported, please let us know in
 `#workload-generation` slack or on GitHub.
-
-Note that the `--linux-distro` argument is not needed on macOS.
 
 You can also specify `--build-system make` if you prefer to build
 using `make` rather than `ninja`. Building using `make` may make

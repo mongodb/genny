@@ -2,6 +2,7 @@ from typing import List
 
 import structlog
 import os
+import platform
 import subprocess
 
 from genny.cmd_runner import run_command
@@ -30,6 +31,109 @@ def _sanitizer_flags(sanitizer: str, genny_repo_root: str):
 
     # arg parser should prevent us from getting here
     raise ValueError("Unknown sanitizer {}".format(sanitizer))
+
+
+class DistroDetectionError(Exception):
+    pass
+
+
+def _detect_distro_ubuntu(machine, freedesktop_version):
+    if freedesktop_version == "22.04":
+        if machine == "aarch64":
+            return "ubuntu2204_arm64"
+        elif machine == "x86_64":
+            return "ubuntu2204"
+        else:
+            raise DistroDetectionError(f"Invalid machine type for Ubuntu 22.04: {machine}")
+    elif freedesktop_version == "20.04":
+        if machine == "aarch64":
+            return "ubuntu2004_arm64"
+        elif machine == "x86_64":
+            return "ubuntu2004"
+        else:
+            raise DistroDetectionError(f"Invalid machine type for Ubunutu 20.04: {machine}")
+    elif freedesktop_version == "18.04":
+        if machine == "x86_64":
+            return "ubuntu1804"
+        else:
+            raise DistroDetectionError(f"Invalid machine type for Ubuntu 18.04: {machine}")
+    else:
+        raise DistroDetectionError(f"Invalid version for Ubuntu: {freedesktop_version}")
+
+
+def _detect_distro_rhel(machine, freedesktop_version):
+    # We only distinguish between major versions of RHEL, but they include minor versions in their version_id
+    if freedesktop_version.startswith("7."):
+        if machine == "x86_64":
+            return "rhel70"
+        else:
+            raise DistroDetectionError(f"Invalid machine type for RHEL 7.x: {machine}")
+    elif freedesktop_version.startswith("8."):
+        if machine == "x86_64":
+            return "rhel8"
+        else:
+            raise DistroDetectionError(f"Invalid machine type for RHEL 8.x: {machine}")
+    else:
+        raise DistroDetectionError(f"Invalid version for RHEL: {freedesktop_version}")
+
+
+def _detect_distro_amazon(machine, freedesktop_version):
+    if freedesktop_version == "2":
+        if machine == "aarch64":
+            return "amazon2_arm64"
+        elif machine == "x86_64":
+            return "amazon2"
+        else:
+            raise DistroDetectionError(f"Invalid machine type for Amazon 2: {machine}")
+    else:
+        raise DistroDetectionError(f"Invalid version for Amazon Linux: {freedesktop_version}")
+
+
+def _freedesktop_os_release():
+    """
+    Best effort parser of the freedesktop.org os-release file.
+
+    This is a little imprecise, but works well enough for all three Linux
+    distros we support.
+
+    This exists to support Python versions less than 3.10. Otherwise it
+    can be replaced with platform.freedesktop_os_release().
+    """
+    result = {}
+    with open("/etc/os-release") as os_release_file:
+        for line in os_release_file:
+            if "=" not in line:
+                # Skip blank lines and any other lines that don't obviously set a value.
+                continue
+            key, value = line.strip("\n").split("=", 1)
+            value = value.strip("'\"")
+            result[key] = value
+    return result
+
+
+def detect_distro():
+    SLOG.info(f"Distro not specified. Detecting distro.")
+
+    system = platform.system()
+    if system == "Darwin":
+        distro = "not-linux"
+    elif system == "Linux":
+        freedesktop_release = _freedesktop_os_release()
+        freedesktop_id = freedesktop_release["ID"]
+        freedesktop_version = freedesktop_release["VERSION_ID"]
+        machine = platform.machine()
+        if freedesktop_id == "ubuntu":
+            distro = _detect_distro_ubuntu(machine, freedesktop_version)
+        elif freedesktop_id == "rhel":
+            distro = _detect_distro_rhel(machine, freedesktop_version)
+        elif freedesktop_id == "amzn":
+            distro = _detect_distro_amazon(machine, freedesktop_version)
+        else:
+            raise DistroDetectionError(f"Unrecognized Linux distro: {freedesktop_id}")
+    else:
+        raise DistroDetectionError(f"Cannot determine distro for system {platform.system()}")
+    SLOG.info(f"Found distro for installation.", distro=distro)
+    return distro
 
 
 def cmake(

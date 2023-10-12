@@ -53,8 +53,6 @@ buildvariants:
   modules: [mongo]
   run_on:
   - amazon2-build
-  expansions:
-    distro: amazon2
   tasks:
   - name: tg_compile_and_test_with_server
   - name: t_compile_and_dry_run_asan
@@ -64,8 +62,6 @@ buildvariants:
   modules: [mongo]
   run_on:
   - amazon2-arm64-large
-  expansions:
-    distro: amazon2_arm64
   tasks:
   - name: tg_compile_and_test_with_server
   - name: t_compile_and_dry_run_asan
@@ -73,8 +69,6 @@ buildvariants:
 - name: rhel70
   display_name: RHEL 7
   modules: [mongo]
-  expansions:
-    distro: rhel70
   run_on:
   - rhel70
   tasks:
@@ -83,8 +77,6 @@ buildvariants:
 - name: rhel8
   display_name: RHEL 8
   modules: [mongo]
-  expansions:
-    distro: rhel8
   run_on:
   - rhel80-test
   tasks:
@@ -93,8 +85,6 @@ buildvariants:
 - name: ubuntu2204
   display_name: Ubuntu 22.04
   modules: [mongo]
-  expansions:
-    distro: ubuntu2204
   run_on:
   - ubuntu2204-large
   tasks:
@@ -103,8 +93,6 @@ buildvariants:
 - name: ubuntu1804
   display_name: Ubuntu 18.04
   modules: [mongo]
-  expansions:
-    distro: ubuntu1804
   run_on:
   - ubuntu1804-build
   tasks:
@@ -125,16 +113,6 @@ buildvariants:
   - macos-1100-arm64
   tasks:
   - name: tg_compile_and_test_with_server_on_macos
-
-# - name: centos6-perf
-#   display_name: CentOS 6 for Performance
-#   modules: [mongo]
-#   expansions:
-#     distro: rhel62
-#   run_on:
-#   - centos6-perf
-#   tasks:
-#   - name: tg_compile_and_benchmark
 
 
 ##                ⚡️ Tasks ⚡️
@@ -316,7 +294,6 @@ functions:
       args:
       - -v
       - install
-      - --linux-distro=${distro|not-linux}
 
   f_compile_asan:
   - command: subprocess.exec
@@ -325,7 +302,6 @@ functions:
       args:
       - -v
       - install
-      - --linux-distro=${distro|not-linux}
       - --sanitizer=asan
 
   ##
