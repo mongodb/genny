@@ -25,7 +25,7 @@ def dry_run_workload(
         "ClusteredCollection.yml",
         "ClusteredCollectionLargeRecordIds.yml",
         "CreateIndex.yml",
-        "YCSBLikeQueryableEncrypt1Cf16.ym dl",
+        "YCSBLikeQueryableEncrypt1Cf16.yml",
         "YCSBLikeQueryableEncrypt1Cf32.yml",
         "YCSBLikeQueryableEncrypt1Cfdefault.yml",
         "YCSBLikeQueryableEncrypt5Cf16.yml",
