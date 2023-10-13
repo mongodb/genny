@@ -664,6 +664,18 @@ template <typename T, typename F>
 std::vector<T> Node::getPlural(const std::string& singular,
                                const std::string& plural,
                                F&& f) const {
+
+    if (this->isSequence()) {
+        BOOST_THROW_EXCEPTION(
+            InvalidKeyException(
+                "Try to access key '" + singular + "' or '" + plural + "',"
+                + " but this node is a Sequence not a Map."
+                + " Please double check your config file."
+                + " (see the path to the preprocessed YAML file below.)",
+                singular + "/"+ plural,
+                this));
+    }
+
     std::vector<T> out;
     const auto& pluralValue = (*this)[plural];
     const auto& singValue = (*this)[singular];
