@@ -119,7 +119,7 @@ TEST_CASE("Correctness for N milliseconds, IgnoredOnMacOs") {
     }
 }
 
-TEST_CASE("Correctness for N milliseconds with sleepNonBlocking") {
+TEST_CASE("Correctness for N milliseconds with sleepNonBlocking, IgnoredOnMacOs") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
     o.awaitPhaseStart(true, 1);
@@ -508,7 +508,7 @@ TEST_CASE("Actual Actor Example") {
     }
 }
 
-TEST_CASE("Actual Actor Example IgnoredOnMacOs") {
+TEST_CASE("Actual Actor Example, IgnoredOnMacOs") {
 
     SECTION("SleepBefore and SleepAfter") {
         using namespace std::literals::chrono_literals;

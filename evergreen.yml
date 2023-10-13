@@ -353,7 +353,7 @@ functions:
       - -v
       - cmake-test
       - --regex-exclude
-      - "(sleepNonBlocking|Non-Blocking end|IgnoredOnMacOs)"
+      - "IgnoredOnMacOs"
 
   ##
   # Runs benchmarks via ctest.

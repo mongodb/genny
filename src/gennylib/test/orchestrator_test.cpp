@@ -104,7 +104,7 @@ TEST_CASE("Non-Blocking start") {
     t1.join();
 }
 
-TEST_CASE("Non-Blocking end (background progression)") {
+TEST_CASE("Non-Blocking end (background progression), IgnoredOnMacOs") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
     o.addRequiredTokens(2);
