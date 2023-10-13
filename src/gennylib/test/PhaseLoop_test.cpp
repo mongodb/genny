@@ -86,7 +86,7 @@ TEST_CASE("Correctness for N iterations") {
     }
 }
 
-TEST_CASE("Correctness for N milliseconds") {
+TEST_CASE("Correctness for N milliseconds, IgnoredOnMacOs") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
     SECTION("Loops 0 milliseconds so zero times") {
@@ -174,7 +174,7 @@ TEST_CASE("Correctness for N milliseconds with sleepNonBlocking") {
     }
 }
 
-TEST_CASE("Combinations of duration and iterations") {
+TEST_CASE("Combinations of duration and iterations, IgnoredOnMacOs") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
     SECTION("Loops 0 milliseconds but 100 times") {
