@@ -115,7 +115,6 @@ Actors:
   - *Nop
   - Repeat: 1
     Database: admin
-    # Until EVG-21054 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs.
     OnlyRunInInstance: sharded
     Operations:
     - OperationMetricsName: EnableSharding
