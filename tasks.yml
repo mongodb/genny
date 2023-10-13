@@ -1,0 +1,4504 @@
+buildvariants:
+- name: linux-intel-standalone-classic-query-engine
+  tasks:
+  - name: cumulative_windows
+  - name: lookup_sbe_pushdown_inlj_misc
+  - name: run_command__simple
+  - name: repeated_path_traversal
+  - name: aggregate_expressions
+  - name: sliding_windows_multi_accums
+  - name: multi_planning
+  - name: set_window_fields_unbounded
+  - name: sliding_windows
+  - name: locf
+  - name: variadic_aggregate_expressions
+  - name: cumulative_windows_multi_accums
+  - name: lookup_nlj
+  - name: sort_by_expression
+  - name: external_sort
+  - name: window_with_nested_field_projection
+  - name: lookup_sbe_pushdown
+  - name: union_with
+  - name: group_stages_on_computed_fields
+  - name: array_traversal
+  - name: linear_fill
+  - name: big_update
+  - name: match_filters
+  - name: window_with_complex_partition_expression
+  - name: group_spill_to_disk
+  - name: large_scale_long_lived
+  - name: time_series_group_stages_on_computed_fields
+  - name: filter_with_complex_logical_expression
+  - name: expressive_queries
+- name: linux-intel-standalone-sbe
+  tasks:
+  - name: cumulative_windows
+  - name: lookup_sbe_pushdown_inlj_misc
+  - name: run_command__simple
+  - name: repeated_path_traversal
+  - name: aggregate_expressions
+  - name: sliding_windows_multi_accums
+  - name: multi_planning
+  - name: set_window_fields_unbounded
+  - name: sliding_windows
+  - name: locf
+  - name: variadic_aggregate_expressions
+  - name: cumulative_windows_multi_accums
+  - name: lookup_nlj
+  - name: sort_by_expression
+  - name: external_sort
+  - name: window_with_nested_field_projection
+  - name: lookup_sbe_pushdown
+  - name: union_with
+  - name: group_stages_on_computed_fields
+  - name: array_traversal
+  - name: linear_fill
+  - name: big_update
+  - name: match_filters
+  - name: window_with_complex_partition_expression
+  - name: group_spill_to_disk
+  - name: large_scale_long_lived
+  - name: filter_with_complex_logical_expression
+  - name: expressive_queries
+- name: linux-intel-1-node-replSet-classic-query-engine
+  tasks:
+  - name: llt_mixed
+  - name: large_indexed_ins
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: mixed_workloads_genny_rate_limited
+  - name: scan_with_long_lived
+  - name: mixed_workloads_genny
+  - name: lookup_with_only_unsharded_colls
+  - name: constant_fold_arithmetic
+  - name: majority_reads10_k_threads
+- name: linux-intel-1-node-replSet-sbe
+  tasks:
+  - name: llt_mixed
+  - name: large_indexed_ins
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: mixed_workloads_genny_rate_limited
+  - name: scan_with_long_lived
+  - name: mixed_workloads_genny
+  - name: lookup_with_only_unsharded_colls
+  - name: constant_fold_arithmetic
+  - name: majority_reads10_k_threads
+- name: atlas-like-replica.2022-10
+  tasks:
+  - name: mixed_workloads_genny_stress
+  - name: ten_m_doc_collection__object_id
+  - name: llt_mixed
+  - name: insert_remove
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: load_test
+  - name: pipeline_update
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: mixed_workloads_genny
+  - name: insert_big_docs
+  - name: service_architecture_workloads
+  - name: connections_buildup_no_sharding
+  - name: llt_mixed_small
+  - name: query_stats_query_shapes
+  - name: mixed_workloads_genny_stress_with_scans
+  - name: create_big_index
+  - name: union_with
+  - name: big_update
+  - name: large_scale_long_lived
+  - name: expressive_queries
+  - name: create_index
+  - name: many_update
+- name: atlas-like-replica-query-stats.2022-10
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: query_stats_query_shapes
+  - name: large_scale_long_lived
+- name: atlas-M60-real
+  tasks:
+  - name: mixed_workloads_genny_stress
+  - name: insert_remove
+  - name: load_test
+  - name: pipeline_update
+  - name: mixed_workloads_genny
+  - name: insert_big_docs
+  - name: service_architecture_workloads
+  - name: mixed_workloads_genny_stress_with_scans
+  - name: create_big_index
+  - name: union_with
+  - name: big_update
+  - name: match_filters
+  - name: large_scale_long_lived
+  - name: expressive_queries
+  - name: create_index
+  - name: many_update
+- name: atlas-M60-shard-real-aws-multi-client.2023-09
+  tasks:
+  - name: mongos_latency
+- name: atlas-M60-real-azure
+  tasks:
+  - name: mixed_workloads_genny_stress
+  - name: insert_remove
+  - name: load_test
+  - name: pipeline_update
+  - name: mixed_workloads_genny
+  - name: insert_big_docs
+  - name: service_architecture_workloads
+  - name: mixed_workloads_genny_stress_with_scans
+  - name: create_big_index
+  - name: union_with
+  - name: big_update
+  - name: match_filters
+  - name: large_scale_long_lived
+  - name: expressive_queries
+  - name: create_index
+  - name: many_update
+- name: linux-standalone.2022-11
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: insert_remove
+  - name: cumulative_windows
+  - name: lookup_sbe_pushdown_inlj_misc
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: run_command__simple
+  - name: repeated_path_traversal
+  - name: aggregate_expressions
+  - name: sliding_windows_multi_accums
+  - name: pipeline_update
+  - name: validate_cmd
+  - name: background_validate_cmd
+  - name: multi_planning
+  - name: set_window_fields_unbounded
+  - name: mixed_workloads_genny_rate_limited
+  - name: ten_m_doc_collection__int_id
+  - name: sinusoidal_read_writes
+  - name: sliding_windows
+  - name: background_ttl_deletions
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: densify_timeseries_collection
+  - name: densify_fill_combo
+  - name: mixed_workloads_genny
+  - name: locf
+  - name: variadic_aggregate_expressions
+  - name: cumulative_windows_multi_accums
+  - name: lookup_nlj
+  - name: sort_by_expression
+  - name: validate_cmd_full
+  - name: update_with_secondary_indexes
+  - name: external_sort
+  - name: window_with_nested_field_projection
+  - name: query_stats_query_shapes
+  - name: lookup_sbe_pushdown
+  - name: genny_overhead
+  - name: write_one_replica_set
+  - name: create_big_index
+  - name: union_with
+  - name: group_stages_on_computed_fields
+  - name: array_traversal
+  - name: linear_fill
+  - name: big_update
+  - name: match_filters
+  - name: fill_timeseries_collection
+  - name: window_with_complex_partition_expression
+  - name: group_spill_to_disk
+  - name: ping_command
+  - name: large_scale_long_lived
+  - name: time_series_group_stages_on_computed_fields
+  - name: time_series_lastpoint
+  - name: filter_with_complex_logical_expression
+  - name: expressive_queries
+  - name: create_index
+  - name: many_update
+- name: linux-standalone-all-feature-flags.2022-11
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: cumulative_windows
+  - name: lookup_sbe_pushdown_inlj_misc
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: repeated_path_traversal
+  - name: aggregate_expressions
+  - name: sliding_windows_multi_accums
+  - name: csi_fragmented_inserts_nested
+  - name: multi_planning
+  - name: set_window_fields_unbounded
+  - name: ten_m_doc_collection__int_id
+  - name: sinusoidal_read_writes
+  - name: sliding_windows
+  - name: background_ttl_deletions
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: locf
+  - name: variadic_aggregate_expressions
+  - name: cumulative_windows_multi_accums
+  - name: lookup_nlj
+  - name: sort_by_expression
+  - name: update_with_secondary_indexes
+  - name: window_with_nested_field_projection
+  - name: query_stats_query_shapes
+  - name: csi_fragmented_inserts_flat
+  - name: lookup_sbe_pushdown
+  - name: group_stages_on_computed_fields
+  - name: array_traversal
+  - name: linear_fill
+  - name: match_filters
+  - name: window_with_complex_partition_expression
+  - name: group_spill_to_disk
+  - name: time_series_lastpoint
+  - name: filter_with_complex_logical_expression
+- name: linux-standalone-classic-query-engine.2022-11
+  tasks:
+  - name: cumulative_windows
+  - name: lookup_sbe_pushdown_inlj_misc
+  - name: run_command__simple
+  - name: repeated_path_traversal
+  - name: aggregate_expressions
+  - name: sliding_windows_multi_accums
+  - name: multi_planning
+  - name: set_window_fields_unbounded
+  - name: sliding_windows
+  - name: locf
+  - name: variadic_aggregate_expressions
+  - name: cumulative_windows_multi_accums
+  - name: lookup_nlj
+  - name: sort_by_expression
+  - name: external_sort
+  - name: window_with_nested_field_projection
+  - name: lookup_sbe_pushdown
+  - name: union_with
+  - name: group_stages_on_computed_fields
+  - name: array_traversal
+  - name: linear_fill
+  - name: big_update
+  - name: match_filters
+  - name: window_with_complex_partition_expression
+  - name: group_spill_to_disk
+  - name: large_scale_long_lived
+  - name: time_series_group_stages_on_computed_fields
+  - name: filter_with_complex_logical_expression
+  - name: expressive_queries
+- name: linux-standalone-sbe.2022-11
+  tasks:
+  - name: cumulative_windows
+  - name: lookup_sbe_pushdown_inlj_misc
+  - name: run_command__simple
+  - name: repeated_path_traversal
+  - name: aggregate_expressions
+  - name: sliding_windows_multi_accums
+  - name: multi_planning
+  - name: set_window_fields_unbounded
+  - name: sliding_windows
+  - name: locf
+  - name: variadic_aggregate_expressions
+  - name: cumulative_windows_multi_accums
+  - name: lookup_nlj
+  - name: sort_by_expression
+  - name: external_sort
+  - name: window_with_nested_field_projection
+  - name: lookup_sbe_pushdown
+  - name: union_with
+  - name: group_stages_on_computed_fields
+  - name: array_traversal
+  - name: linear_fill
+  - name: big_update
+  - name: match_filters
+  - name: window_with_complex_partition_expression
+  - name: group_spill_to_disk
+  - name: large_scale_long_lived
+  - name: filter_with_complex_logical_expression
+  - name: expressive_queries
+- name: linux-standalone-sampling-bonsai.2022-11
+  tasks:
+  - name: repeated_path_traversal
+  - name: array_traversal
+  - name: match_filters
+  - name: filter_with_complex_logical_expression
+- name: linux-intel-standalone-sampling-bonsai
+  tasks:
+  - name: repeated_path_traversal
+  - name: array_traversal
+  - name: match_filters
+  - name: filter_with_complex_logical_expression
+- name: linux-standalone-heuristic-bonsai.2022-11
+  tasks:
+  - name: repeated_path_traversal
+  - name: array_traversal
+  - name: match_filters
+  - name: filter_with_complex_logical_expression
+- name: linux-intel-standalone-heuristic-bonsai
+  tasks:
+  - name: repeated_path_traversal
+  - name: array_traversal
+  - name: match_filters
+  - name: filter_with_complex_logical_expression
+- name: linux-1-node-replSet-classic-query-engine.2022-11
+  tasks:
+  - name: llt_mixed
+  - name: large_indexed_ins
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: mixed_workloads_genny_rate_limited
+  - name: scan_with_long_lived
+  - name: mixed_workloads_genny
+  - name: lookup_with_only_unsharded_colls
+  - name: constant_fold_arithmetic
+  - name: majority_reads10_k_threads
+- name: linux-1-node-replSet-sbe.2022-11
+  tasks:
+  - name: llt_mixed
+  - name: large_indexed_ins
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: mixed_workloads_genny_rate_limited
+  - name: scan_with_long_lived
+  - name: mixed_workloads_genny
+  - name: lookup_with_only_unsharded_colls
+  - name: constant_fold_arithmetic
+  - name: majority_reads10_k_threads
+- name: linux-standalone-query-stats
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: lookup_sbe_pushdown_inlj_misc
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: run_command__simple
+  - name: repeated_path_traversal
+  - name: aggregate_expressions
+  - name: multi_planning
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: variadic_aggregate_expressions
+  - name: lookup_nlj
+  - name: external_sort
+  - name: query_stats_query_shapes
+  - name: lookup_sbe_pushdown
+  - name: union_with
+  - name: array_traversal
+  - name: big_update
+  - name: match_filters
+  - name: group_spill_to_disk
+  - name: large_scale_long_lived
+  - name: filter_with_complex_logical_expression
+  - name: expressive_queries
+- name: linux-standalone-limited-query-stats
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: query_stats_query_shapes
+- name: linux-1-node-replSet.2022-11
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: llt_mixed
+  - name: insert_remove
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: large_indexed_ins
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: mixed_workloads_genny_rate_limited
+  - name: scan_with_long_lived
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: densify_timeseries_collection
+  - name: densify_fill_combo
+  - name: mixed_workloads_genny
+  - name: insert_big_docs
+  - name: connections_buildup_no_sharding
+  - name: llt_mixed_small
+  - name: query_stats_query_shapes
+  - name: write_one_replica_set
+  - name: create_big_index
+  - name: lookup_with_only_unsharded_colls
+  - name: big_update
+  - name: fill_timeseries_collection
+  - name: ping_command
+  - name: large_scale_long_lived
+  - name: constant_fold_arithmetic
+  - name: majority_reads10_k_threads
+  - name: expressive_queries
+  - name: create_index
+  - name: many_update
+- name: linux-1-node-replSet-test-commands.2022-11
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: llt_mixed
+  - name: insert_remove
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: large_indexed_ins
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: mixed_workloads_genny_rate_limited
+  - name: scan_with_long_lived
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: densify_timeseries_collection
+  - name: densify_fill_combo
+  - name: mixed_workloads_genny
+  - name: insert_big_docs
+  - name: connections_buildup_no_sharding
+  - name: llt_mixed_small
+  - name: query_stats_query_shapes
+  - name: write_one_replica_set
+  - name: create_big_index
+  - name: lookup_with_only_unsharded_colls
+  - name: big_update
+  - name: fill_timeseries_collection
+  - name: ping_command
+  - name: large_scale_long_lived
+  - name: constant_fold_arithmetic
+  - name: majority_reads10_k_threads
+  - name: expressive_queries
+  - name: create_index
+  - name: many_update
+- name: linux-1-node-replSet-query-stats
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: query_stats_query_shapes
+- name: linux-1-node-15gbwtcache.2022-11
+  tasks:
+  - name: large_scale_long_lived
+  - name: out_of_cache_scanner
+- name: linux-3-node-1dayhistory-15gbwtcache.2022-11
+  tasks:
+  - name: insert_remove
+  - name: in_cache_snapshot_reads
+  - name: mixed_workloads_genny_rate_limited
+  - name: mixed_workloads_genny
+  - name: out_of_cache_snapshot_reads
+  - name: big_update
+  - name: many_update
+- name: linux-3-shard.2022-11
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: insert_remove
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: ten_m_doc_collection__object_id__sharded
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: lookup_colocated_data
+  - name: create_index_sharded
+  - name: reshard_collection_read_heavy
+  - name: reshard_collection_mixed
+  - name: large_scale_long_lived
+  - name: would_change_owning_shard_batch_write
+- name: linux-3-shard-query-stats
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: ten_m_doc_collection__object_id__sharded
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+- name: linux-3-shard-limited-query-stats
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: ten_m_doc_collection__object_id__sharded
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+- name: linux-3-shard-heuristic-bonsai.2022-11
+  tasks:
+  - name: reshard_collection_read_heavy
+- name: linux-shard-lite.2022-11
+  tasks:
+  - name: lookup
+  - name: ten_m_doc_collection__object_id
+  - name: cumulative_windows
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: graph_lookup
+  - name: sliding_windows_multi_accums
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: set_window_fields_unbounded
+  - name: ten_m_doc_collection__object_id__sharded
+  - name: ten_m_doc_collection__int_id
+  - name: sliding_windows
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: locf
+  - name: cumulative_windows_multi_accums
+  - name: sort_by_expression
+  - name: window_with_nested_field_projection
+  - name: lookup_colocated_data
+  - name: union_with
+  - name: create_index_sharded
+  - name: lookup_with_only_unsharded_colls
+  - name: linear_fill
+  - name: reshard_collection_read_heavy
+  - name: window_with_complex_partition_expression
+  - name: reshard_collection_mixed
+  - name: would_change_owning_shard_batch_write
+  - name: update_large_documents
+  - name: time_series_lastpoint
+  - name: create_drop_view
+- name: linux-shard-lite-intel.2022-11
+  tasks:
+  - name: lookup
+  - name: ten_m_doc_collection__object_id
+  - name: cumulative_windows
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: graph_lookup
+  - name: sliding_windows_multi_accums
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: set_window_fields_unbounded
+  - name: ten_m_doc_collection__object_id__sharded
+  - name: ten_m_doc_collection__int_id
+  - name: sliding_windows
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: locf
+  - name: cumulative_windows_multi_accums
+  - name: sort_by_expression
+  - name: window_with_nested_field_projection
+  - name: lookup_colocated_data
+  - name: union_with
+  - name: create_index_sharded
+  - name: lookup_with_only_unsharded_colls
+  - name: linear_fill
+  - name: reshard_collection_read_heavy
+  - name: window_with_complex_partition_expression
+  - name: reshard_collection_mixed
+  - name: would_change_owning_shard_batch_write
+  - name: update_large_documents
+  - name: time_series_lastpoint
+  - name: create_drop_view
+- name: linux-shard-lite-all-feature-flags.2022-11
+  tasks:
+  - name: lookup
+  - name: graph_lookup
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: reshard_collection
+  - name: lookup_colocated_data
+  - name: lookup_with_only_unsharded_colls
+  - name: reshard_collection_read_heavy
+  - name: reshard_collection_mixed
+  - name: would_change_owning_shard_batch_write
+  - name: update_large_documents
+  - name: time_series_lastpoint
+- name: linux-shard-lite-query-stats
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: ten_m_doc_collection__object_id__sharded
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+- name: linux-shard-lite-limited-query-stats
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: ten_m_doc_collection__object_id__sharded
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+- name: linux-shard-single.2022-11
+  tasks:
+  - name: write_one_without_shard_key_unsharded_collection
+  - name: connections_buildup
+  - name: connection_pool_stress
+  - name: write_one_without_shard_key_sharded_collection
+- name: linux-3-node-replSet.2022-11
+  tasks:
+  - name: mixed_workloads_genny_stress
+  - name: ten_m_doc_collection__object_id
+  - name: llt_mixed
+  - name: insert_remove
+  - name: cumulative_windows
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: large_indexed_ins
+  - name: load_test
+  - name: sliding_windows_multi_accums
+  - name: connection_pool_stress
+  - name: pipeline_update
+  - name: mass_delete_regression
+  - name: secondary_reads_genny
+  - name: densify_months
+  - name: time_series_sort_compound
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: bulk_loading
+  - name: set_window_fields_unbounded
+  - name: majority_writes10_k_threads
+  - name: mixed_workloads_genny_rate_limited
+  - name: densify_hours
+  - name: ten_m_doc_collection__int_id
+  - name: sinusoidal_read_writes
+  - name: mixed_writes_replica
+  - name: mixed_writes_replica_delay_mixed
+  - name: sliding_windows
+  - name: background_ttl_deletions
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: mixed_multi_deletes_batched
+  - name: densify_timeseries_collection
+  - name: densify_fill_combo
+  - name: mixed_workloads_genny
+  - name: insert_big_docs
+  - name: locf
+  - name: cumulative_windows_multi_accums
+  - name: sort_by_expression
+  - name: service_architecture_workloads
+  - name: update_with_secondary_indexes
+  - name: metric_secondary_index_timeseries_collection
+  - name: connections_buildup_no_sharding
+  - name: window_with_nested_field_projection
+  - name: time_series_sort
+  - name: llt_mixed_small
+  - name: query_stats_query_shapes
+  - name: mixed_workloads_genny_stress_with_scans
+  - name: time_series_sort_overlapping_buckets
+  - name: write_one_replica_set
+  - name: create_big_index
+  - name: parallel_insert_replica
+  - name: parallel_insert_replica_delay_mixed
+  - name: union_with
+  - name: mixed_multi_deletes_doc_by_doc
+  - name: group_stages_on_computed_fields
+  - name: densify_milliseconds
+  - name: time_series_sort_scale
+  - name: densify_numeric
+  - name: lookup_with_only_unsharded_colls
+  - name: linear_fill
+  - name: big_update
+  - name: match_filters
+  - name: fill_timeseries_collection
+  - name: window_with_complex_partition_expression
+  - name: commit_latency
+  - name: mixed_multi_deletes_batched_with_secondary_indexes
+  - name: mixed_multi_deletes_doc_by_doc_with_secondary_indexes
+  - name: large_scale_long_lived
+  - name: time_series2dsphere
+  - name: constant_fold_arithmetic
+  - name: commit_latency_single_update
+  - name: majority_reads10_k_threads
+  - name: time_series_group_stages_on_computed_fields
+  - name: mixed10_k_threads
+  - name: update_large_documents
+  - name: time_series_lastpoint
+  - name: expressive_queries
+  - name: create_index
+  - name: create_drop_view
+  - name: many_update
+- name: linux-3-node-replSet-intel.2022-11
+  tasks:
+  - name: mixed_workloads_genny_stress
+  - name: ten_m_doc_collection__object_id
+  - name: llt_mixed
+  - name: insert_remove
+  - name: cumulative_windows
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: large_indexed_ins
+  - name: load_test
+  - name: sliding_windows_multi_accums
+  - name: connection_pool_stress
+  - name: pipeline_update
+  - name: mass_delete_regression
+  - name: secondary_reads_genny
+  - name: densify_months
+  - name: time_series_sort_compound
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: bulk_loading
+  - name: set_window_fields_unbounded
+  - name: majority_writes10_k_threads
+  - name: mixed_workloads_genny_rate_limited
+  - name: densify_hours
+  - name: ten_m_doc_collection__int_id
+  - name: sinusoidal_read_writes
+  - name: mixed_writes_replica
+  - name: mixed_writes_replica_delay_mixed
+  - name: sliding_windows
+  - name: background_ttl_deletions
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: mixed_multi_deletes_batched
+  - name: densify_timeseries_collection
+  - name: densify_fill_combo
+  - name: mixed_workloads_genny
+  - name: insert_big_docs
+  - name: locf
+  - name: cumulative_windows_multi_accums
+  - name: sort_by_expression
+  - name: service_architecture_workloads
+  - name: update_with_secondary_indexes
+  - name: metric_secondary_index_timeseries_collection
+  - name: connections_buildup_no_sharding
+  - name: window_with_nested_field_projection
+  - name: time_series_sort
+  - name: llt_mixed_small
+  - name: query_stats_query_shapes
+  - name: mixed_workloads_genny_stress_with_scans
+  - name: time_series_sort_overlapping_buckets
+  - name: write_one_replica_set
+  - name: create_big_index
+  - name: parallel_insert_replica
+  - name: parallel_insert_replica_delay_mixed
+  - name: union_with
+  - name: mixed_multi_deletes_doc_by_doc
+  - name: group_stages_on_computed_fields
+  - name: densify_milliseconds
+  - name: time_series_sort_scale
+  - name: densify_numeric
+  - name: lookup_with_only_unsharded_colls
+  - name: linear_fill
+  - name: big_update
+  - name: match_filters
+  - name: fill_timeseries_collection
+  - name: window_with_complex_partition_expression
+  - name: commit_latency
+  - name: mixed_multi_deletes_batched_with_secondary_indexes
+  - name: mixed_multi_deletes_doc_by_doc_with_secondary_indexes
+  - name: large_scale_long_lived
+  - name: time_series2dsphere
+  - name: constant_fold_arithmetic
+  - name: commit_latency_single_update
+  - name: majority_reads10_k_threads
+  - name: time_series_group_stages_on_computed_fields
+  - name: mixed10_k_threads
+  - name: update_large_documents
+  - name: time_series_lastpoint
+  - name: expressive_queries
+  - name: create_index
+  - name: create_drop_view
+  - name: many_update
+- name: linux-3-node-replSet-intel-query-stats.2022-11
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: large_indexed_ins
+  - name: mixed_workloads_genny_rate_limited
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: mixed_workloads_genny
+  - name: query_stats_query_shapes
+  - name: majority_reads10_k_threads
+  - name: expressive_queries
+- name: linux-3-node-replSet-all-feature-flags.2022-11
+  tasks:
+  - name: llt_mixed
+  - name: insert_remove
+  - name: cumulative_windows
+  - name: sliding_windows_multi_accums
+  - name: pipeline_update
+  - name: secondary_reads_genny
+  - name: densify_months
+  - name: time_series_sort_compound
+  - name: set_window_fields_unbounded
+  - name: majority_writes10_k_threads
+  - name: mixed_workloads_genny_rate_limited
+  - name: densify_hours
+  - name: sinusoidal_read_writes
+  - name: sliding_windows
+  - name: background_ttl_deletions
+  - name: mixed_workloads_genny
+  - name: insert_big_docs
+  - name: locf
+  - name: cumulative_windows_multi_accums
+  - name: sort_by_expression
+  - name: service_architecture_workloads
+  - name: update_with_secondary_indexes
+  - name: metric_secondary_index_timeseries_collection
+  - name: connections_buildup_no_sharding
+  - name: window_with_nested_field_projection
+  - name: time_series_sort
+  - name: llt_mixed_small
+  - name: time_series_sort_overlapping_buckets
+  - name: create_big_index
+  - name: union_with
+  - name: group_stages_on_computed_fields
+  - name: densify_milliseconds
+  - name: time_series_sort_scale
+  - name: densify_numeric
+  - name: linear_fill
+  - name: big_update
+  - name: window_with_complex_partition_expression
+  - name: commit_latency
+  - name: large_scale_long_lived
+  - name: time_series2dsphere
+  - name: commit_latency_single_update
+  - name: majority_reads10_k_threads
+  - name: time_series_group_stages_on_computed_fields
+  - name: mixed10_k_threads
+  - name: update_large_documents
+  - name: time_series_lastpoint
+  - name: many_update
+- name: linux-3-node-replSet-maintenance-events.2022-11
+  tasks:
+  - name: mixed_workloads_genny_rate_limited
+  - name: mixed_workloads_genny
+- name: linux-3-node-replSet-cpu-cycle-metrics.2023-06
+  tasks:
+  - name: cpu_cycle_metrics_insert
+  - name: cpu_cycle_metrics_find
+  - name: cpu_cycle_metrics_update
+  - name: cpu_cycle_metrics_delete
+- name: linux-replSet-auth-delay.2022-11
+  tasks:
+  - name: transport_layer_connect_timing
+- name: linux-3-node-replSet-query-stats
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: large_indexed_ins
+  - name: mixed_workloads_genny_rate_limited
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: mixed_workloads_genny
+  - name: query_stats_query_shapes
+  - name: majority_reads10_k_threads
+  - name: expressive_queries
+- name: linux-1-node-replSet-longRunning.2023-02
+  tasks:
+  - name: ten_m_doc_collection__object_id
+  - name: llt_mixed
+  - name: insert_remove
+  - name: ten_m_doc_collection__sub_doc_id
+  - name: large_indexed_ins
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: mixed_workloads_genny_rate_limited
+  - name: scan_with_long_lived
+  - name: ten_m_doc_collection__int_id
+  - name: one_m_doc_collection__large_doc_int_id
+  - name: densify_timeseries_collection
+  - name: densify_fill_combo
+  - name: mixed_workloads_genny
+  - name: insert_big_docs
+  - name: connections_buildup_no_sharding
+  - name: llt_mixed_small
+  - name: query_stats_query_shapes
+  - name: write_one_replica_set
+  - name: create_big_index
+  - name: lookup_with_only_unsharded_colls
+  - name: big_update
+  - name: fill_timeseries_collection
+  - name: ping_command
+  - name: large_scale_long_lived
+  - name: constant_fold_arithmetic
+  - name: majority_reads10_k_threads
+  - name: expressive_queries
+  - name: create_index
+  - name: many_update
+exec_timeout_secs: 64800
+tasks:
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/HotDocumentWriter.yml
+      test_control: hot_document_writer
+  name: hot_document_writer
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/medical_workload-diagnosis-100-0-unencrypted.yml
+      test_control: medical_workload_diagnosis_100_0_unencrypted
+  name: medical_workload_diagnosis_100_0_unencrypted
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q12.yml
+      test_control: normalized_10_q12
+  name: normalized_10_q12
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q11.yml
+      test_control: normalized_1_q11
+  name: normalized_1_q11
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q19.yml
+      test_control: normalized_1_q19
+  name: normalized_1_q19
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/PercentilesAgg.yml
+      test_control: percentiles_agg
+  name: percentiles_agg
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MixedWorkloadsGennyStress.yml
+      test_control: mixed_workloads_genny_stress
+  name: mixed_workloads_genny_stress
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q2.yml
+      test_control: denormalized_10_q2
+  name: denormalized_10_q2
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/Lookup.yml
+      test_control: lookup
+  name: lookup
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q8.yml
+      test_control: denormalized_1_q8
+  name: denormalized_1_q8
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q19.yml
+      test_control: denormalized_10_q19
+  name: denormalized_10_q19
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TenMDocCollection_ObjectId.yml
+      test_control: ten_m_doc_collection__object_id
+  name: ten_m_doc_collection__object_id
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/YCSBLikeQueryableEncrypt5Cf32Sharded.yml
+      test_control: ycsb_like_queryable_encrypt5_cf32_sharded
+  name: ycsb_like_queryable_encrypt5_cf32_sharded
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/RollingCollections.yml
+      test_control: rolling_collections
+  name: rolling_collections
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/filesystem/Flushing.yml
+      test_control: flushing
+  name: flushing
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/Deleter.yml
+      test_control: deleter
+  name: deleter
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/transactions/LLTMixed.yml
+      test_control: llt_mixed
+  name: llt_mixed
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/InsertRemove.yml
+      test_control: insert_remove
+  name: insert_remove
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CPUCycleMetricsInsert.yml
+      test_control: cpu_cycle_metrics_insert
+  name: cpu_cycle_metrics_insert
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q16.yml
+      test_control: denormalized_10_q16
+  name: denormalized_10_q16
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q10.yml
+      test_control: normalized_1_q10
+  name: normalized_1_q10
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/LongLivedCreator.yml
+      test_control: long_lived_creator
+  name: long_lived_creator
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/ExternalScriptActor.yml
+      test_control: external_script_actor
+  name: external_script_actor
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/AvgAcctBal.yml
+      test_control: denormalized_10_avg_acct_bal
+  name: denormalized_10_avg_acct_bal
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q17.yml
+      test_control: normalized_1_q17
+  name: normalized_1_q17
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CumulativeWindows.yml
+      test_control: cumulative_windows
+  name: cumulative_windows
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/LookupSBEPushdownINLJMisc.yml
+      test_control: lookup_sbe_pushdown_inlj_misc
+  name: lookup_sbe_pushdown_inlj_misc
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q5.yml
+      test_control: normalized_1_q5
+  name: normalized_1_q5
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/validate.yml
+      test_control: normalized_10_validate
+  name: normalized_10_validate
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/ClusteredCollectionLargeRecordIds.yml
+      test_control: clustered_collection_large_record_ids
+  name: clustered_collection_large_record_ids
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/WriteOneWithoutShardKeyUnshardedCollection.yml
+      test_control: write_one_without_shard_key_unsharded_collection
+  name: write_one_without_shard_key_unsharded_collection
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/CrudActor.yml
+      test_control: crud_actor
+  name: crud_actor
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q2.yml
+      test_control: normalized_1_q2
+  name: normalized_1_q2
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q1.yml
+      test_control: denormalized_1_q1
+  name: denormalized_1_q1
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/replication/startup/3_0_Reads.yml
+      test_control: startup_3_0__reads
+  name: startup_3_0__reads
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TimeseriesFixedBucketing.yml
+      test_control: timeseries_fixed_bucketing
+  name: timeseries_fixed_bucketing
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q6.yml
+      test_control: denormalized_1_q6
+  name: denormalized_1_q6
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TenMDocCollection_SubDocId.yml
+      test_control: ten_m_doc_collection__sub_doc_id
+  name: ten_m_doc_collection__sub_doc_id
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q12.yml
+      test_control: denormalized_10_q12
+  name: denormalized_10_q12
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/LargeIndexedIns.yml
+      test_control: large_indexed_ins
+  name: large_indexed_ins
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CPUCycleMetricsFind.yml
+      test_control: cpu_cycle_metrics_find
+  name: cpu_cycle_metrics_find
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/YCSBLikeQueryableEncrypt1Cf32Sharded.yml
+      test_control: ycsb_like_queryable_encrypt1_cf32_sharded
+  name: ycsb_like_queryable_encrypt1_cf32_sharded
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q6.yml
+      test_control: normalized_1_q6
+  name: normalized_1_q6
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/RunCommand-Simple.yml
+      test_control: run_command__simple
+  name: run_command__simple
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q7.yml
+      test_control: normalized_1_q7
+  name: normalized_1_q7
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/GraphLookup.yml
+      test_control: graph_lookup
+  name: graph_lookup
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/LoadTest.yml
+      test_control: load_test
+  name: load_test
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/RepeatedPathTraversal.yml
+      test_control: repeated_path_traversal
+  name: repeated_path_traversal
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/AggregateExpressions.yml
+      test_control: aggregate_expressions
+  name: aggregate_expressions
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/issues/ConnectionsBuildup.yml
+      test_control: connections_buildup
+  name: connections_buildup
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/CrudActorAggregate.yml
+      test_control: crud_actor_aggregate
+  name: crud_actor_aggregate
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/SlidingWindowsMultiAccums.yml
+      test_control: sliding_windows_multi_accums
+  name: sliding_windows_multi_accums
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/validate.yml
+      test_control: normalized_1_validate
+  name: normalized_1_validate
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/contrib/historystore/eMRCfPopulate.yml
+      test_control: historystore_e_mr_cf_populate
+  name: historystore_e_mr_cf_populate
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/MoveRandomChunkToRandomShard.yml
+      test_control: move_random_chunk_to_random_shard
+  name: move_random_chunk_to_random_shard
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/PercentilesExpr.yml
+      test_control: percentiles_expr
+  name: percentiles_expr
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q19.yml
+      test_control: denormalized_1_q19
+  name: denormalized_1_q19
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/LargeScaleParallel.yml
+      test_control: large_scale_parallel
+  name: large_scale_parallel
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q9.yml
+      test_control: denormalized_10_q9
+  name: denormalized_10_q9
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/issues/ConnectionPoolStress.yml
+      test_control: connection_pool_stress
+  name: connection_pool_stress
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q6.yml
+      test_control: denormalized_10_q6
+  name: denormalized_10_q6
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q22.yml
+      test_control: normalized_10_q22
+  name: normalized_10_q22
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/PipelineUpdate.yml
+      test_control: pipeline_update
+  name: pipeline_update
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CPUCycleMetricsUpdate.yml
+      test_control: cpu_cycle_metrics_update
+  name: cpu_cycle_metrics_update
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/BackgroundIndexConstruction.yml
+      test_control: background_index_construction
+  name: background_index_construction
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CsiFragmentedInsertsNested.yml
+      test_control: csi_fragmented_inserts_nested
+  name: csi_fragmented_inserts_nested
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q16.yml
+      test_control: normalized_10_q16
+  name: normalized_10_q16
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/UserAcquisition.yml
+      test_control: user_acquisition
+  name: user_acquisition
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/medical_workload-diagnosis-50-50-unencrypted.yml
+      test_control: medical_workload_diagnosis_50_50_unencrypted
+  name: medical_workload_diagnosis_50_50_unencrypted
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/LargeScaleModel.yml
+      test_control: large_scale_model
+  name: large_scale_model
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q4.yml
+      test_control: normalized_1_q4
+  name: normalized_1_q4
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/YCSBLikeQueryableEncrypt1CfdefaultSharded.yml
+      test_control: ycsb_like_queryable_encrypt1_cfdefault_sharded
+  name: ycsb_like_queryable_encrypt1_cfdefault_sharded
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q11.yml
+      test_control: denormalized_1_q11
+  name: denormalized_1_q11
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MassDeleteRegression.yml
+      test_control: mass_delete_regression
+  name: mass_delete_regression
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/YCSBLikeQueryableEncrypt5Cfdefault.yml
+      test_control: ycsb_like_queryable_encrypt5_cfdefault
+  name: ycsb_like_queryable_encrypt5_cfdefault
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/InCacheSnapshotReads.yml
+      test_control: in_cache_snapshot_reads
+  name: in_cache_snapshot_reads
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/YCSBLikeQueryableEncrypt5Cf16.yml
+      test_control: ycsb_like_queryable_encrypt5_cf16
+  name: ycsb_like_queryable_encrypt5_cf16
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/medical_workload-guid-50-50.yml
+      test_control: medical_workload_guid_50_50
+  name: medical_workload_guid_50_50
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/streams/Selection.yml
+      test_control: selection
+  name: selection
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/CrudActorFSMAdvanced.yml
+      test_control: crud_actor_fsm_advanced
+  name: crud_actor_fsm_advanced
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q5.yml
+      test_control: denormalized_1_q5
+  name: denormalized_1_q5
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q12.yml
+      test_control: normalized_1_q12
+  name: normalized_1_q12
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/RunCommand.yml
+      test_control: run_command
+  name: run_command
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/SecondaryReadsGenny.yml
+      test_control: secondary_reads_genny
+  name: secondary_reads_genny
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/c2c/MongosyncScripts.yml
+      test_control: mongosync_scripts
+  name: mongosync_scripts
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/DensifyMonths.yml
+      test_control: densify_months
+  name: densify_months
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/YCSBLikeQueryableEncrypt5Cf32.yml
+      test_control: ycsb_like_queryable_encrypt5_cf32
+  name: ycsb_like_queryable_encrypt5_cf32
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/ValidateCmd.yml
+      test_control: validate_cmd
+  name: validate_cmd
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q3.yml
+      test_control: normalized_10_q3
+  name: normalized_10_q3
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/BackgroundValidateCmd.yml
+      test_control: background_validate_cmd
+  name: background_validate_cmd
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TimeSeriesSortCompound.yml
+      test_control: time_series_sort_compound
+  name: time_series_sort_compound
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q14.yml
+      test_control: normalized_1_q14
+  name: normalized_1_q14
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/replication/startup/1_0_5GB.yml
+      test_control: startup_1_0_5_gb
+  name: startup_1_0_5_gb
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/streams/YahooBenchmark.yml
+      test_control: yahoo_benchmark
+  name: yahoo_benchmark
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/UniqueIndexStress.yml
+      test_control: unique_index_stress
+  name: unique_index_stress
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/MultiPlanning.yml
+      test_control: multi_planning
+  name: multi_planning
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q12.yml
+      test_control: denormalized_1_q12
+  name: denormalized_1_q12
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/ReshardCollectionWithIndexes.yml
+      test_control: reshard_collection_with_indexes
+  name: reshard_collection_with_indexes
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q15.yml
+      test_control: normalized_1_q15
+  name: normalized_1_q15
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/GraphLookupWithOnlyUnshardedColls.yml
+      test_control: graph_lookup_with_only_unsharded_colls
+  name: graph_lookup_with_only_unsharded_colls
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/PercentilesWindow.yml
+      test_control: percentiles_window
+  name: percentiles_window
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q13.yml
+      test_control: denormalized_1_q13
+  name: denormalized_1_q13
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q5.yml
+      test_control: denormalized_10_q5
+  name: denormalized_10_q5
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/RandomSampler.yml
+      test_control: random_sampler
+  name: random_sampler
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q11.yml
+      test_control: denormalized_10_q11
+  name: denormalized_10_q11
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/BulkLoading.yml
+      test_control: bulk_loading
+  name: bulk_loading
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q20.yml
+      test_control: normalized_10_q20
+  name: normalized_10_q20
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/SetWindowFieldsUnbounded.yml
+      test_control: set_window_fields_unbounded
+  name: set_window_fields_unbounded
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MajorityWrites10KThreads.yml
+      test_control: majority_writes10_k_threads
+  name: majority_writes10_k_threads
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/StreamStatsReporter.yml
+      test_control: stream_stats_reporter
+  name: stream_stats_reporter
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q14.yml
+      test_control: denormalized_1_q14
+  name: denormalized_1_q14
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MixedWorkloadsGennyRateLimited.yml
+      test_control: mixed_workloads_genny_rate_limited
+  name: mixed_workloads_genny_rate_limited
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/ContentionTTLDeletions.yml
+      test_control: contention_ttl_deletions
+  name: contention_ttl_deletions
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/YCSBLikeQueryableEncrypt1Cf32.yml
+      test_control: ycsb_like_queryable_encrypt1_cf32
+  name: ycsb_like_queryable_encrypt1_cf32
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/validate.yml
+      test_control: denormalized_1_validate
+  name: denormalized_1_validate
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q21.yml
+      test_control: denormalized_10_q21
+  name: denormalized_10_q21
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/streams/HighestBid.yml
+      test_control: highest_bid
+  name: highest_bid
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q18.yml
+      test_control: denormalized_10_q18
+  name: denormalized_10_q18
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TimeseriesCount.yml
+      test_control: timeseries_count
+  name: timeseries_count
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q17.yml
+      test_control: denormalized_10_q17
+  name: denormalized_10_q17
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/validate.yml
+      test_control: denormalized_10_validate
+  name: denormalized_10_validate
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/DensifyHours.yml
+      test_control: densify_hours
+  name: densify_hours
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/ScanWithLongLived.yml
+      test_control: scan_with_long_lived
+  name: scan_with_long_lived
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TenMDocCollection_ObjectId_Sharded.yml
+      test_control: ten_m_doc_collection__object_id__sharded
+  name: ten_m_doc_collection__object_id__sharded
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/replication/startup/1_1_5GB_crud.yml
+      test_control: startup_1_1_5_gb_crud
+  name: startup_1_1_5_gb_crud
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/ProjectParse.yml
+      test_control: project_parse
+  name: project_parse
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TenMDocCollection_IntId.yml
+      test_control: ten_m_doc_collection__int_id
+  name: ten_m_doc_collection__int_id
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/SinusoidalReadWrites.yml
+      test_control: sinusoidal_read_writes
+  name: sinusoidal_read_writes
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/DistinctCommands.yml
+      test_control: distinct_commands
+  name: distinct_commands
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q15.yml
+      test_control: denormalized_1_q15
+  name: denormalized_1_q15
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MixedWrites.yml
+      mongodb_setup: replica
+      test_control: mixed_writes_replica
+  name: mixed_writes_replica
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MixedWrites.yml
+      mongodb_setup: replica-delay-mixed
+      test_control: mixed_writes_replica_delay_mixed
+  name: mixed_writes_replica_delay_mixed
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/SlidingWindows.yml
+      test_control: sliding_windows
+  name: sliding_windows
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/BackgroundTTLDeletions.yml
+      test_control: background_ttl_deletions
+  name: background_ttl_deletions
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/OneMDocCollection_LargeDocIntId.yml
+      test_control: one_m_doc_collection__large_doc_int_id
+  name: one_m_doc_collection__large_doc_int_id
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/MultiShardTransactionsWithManyNamespaces.yml
+      test_control: multi_shard_transactions_with_many_namespaces
+  name: multi_shard_transactions_with_many_namespaces
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q18.yml
+      test_control: normalized_1_q18
+  name: normalized_1_q18
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q17.yml
+      test_control: denormalized_1_q17
+  name: denormalized_1_q17
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/ExponentialCompact.yml
+      test_control: exponential_compact
+  name: exponential_compact
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/MixedMultiDeletesBatched.yml
+      test_control: mixed_multi_deletes_batched
+  name: mixed_multi_deletes_batched
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/networking/SecondaryAllowed.yml
+      test_control: secondary_allowed
+  name: secondary_allowed
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q9.yml
+      test_control: normalized_10_q9
+  name: normalized_10_q9
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/QuiesceActor.yml
+      test_control: quiesce_actor
+  name: quiesce_actor
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q20.yml
+      test_control: denormalized_1_q20
+  name: denormalized_1_q20
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/WriteOneWithoutShardKeyShardedCollection.yml
+      test_control: write_one_without_shard_key_sharded_collection
+  name: write_one_without_shard_key_sharded_collection
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q21.yml
+      test_control: normalized_1_q21
+  name: normalized_1_q21
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/RandomStringFromDataset.yml
+      test_control: random_string_from_dataset
+  name: random_string_from_dataset
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q1.yml
+      test_control: denormalized_10_q1
+  name: denormalized_10_q1
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/DensifyTimeseriesCollection.yml
+      test_control: densify_timeseries_collection
+  name: densify_timeseries_collection
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/DensifyFillCombo.yml
+      test_control: densify_fill_combo
+  name: densify_fill_combo
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q13.yml
+      test_control: denormalized_10_q13
+  name: denormalized_10_q13
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/MonotonicSingleLoader.yml
+      test_control: monotonic_single_loader
+  name: monotonic_single_loader
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MixedWorkloadsGenny.yml
+      test_control: mixed_workloads_genny
+  name: mixed_workloads_genny
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q20.yml
+      test_control: denormalized_10_q20
+  name: denormalized_10_q20
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/InsertBigDocs.yml
+      test_control: insert_big_docs
+  name: insert_big_docs
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/medical_workload-load.yml
+      test_control: medical_workload_load
+  name: medical_workload_load
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q22.yml
+      test_control: denormalized_10_q22
+  name: denormalized_10_q22
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q21.yml
+      test_control: normalized_10_q21
+  name: normalized_10_q21
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/locf.yml
+      test_control: locf
+  name: locf
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q4.yml
+      test_control: denormalized_1_q4
+  name: denormalized_1_q4
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/VariadicAggregateExpressions.yml
+      test_control: variadic_aggregate_expressions
+  name: variadic_aggregate_expressions
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q3.yml
+      test_control: normalized_1_q3
+  name: normalized_1_q3
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q14.yml
+      test_control: normalized_10_q14
+  name: normalized_10_q14
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/MongosMerging.yml
+      test_control: mongos_merging
+  name: mongos_merging
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q4.yml
+      test_control: normalized_10_q4
+  name: normalized_10_q4
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CumulativeWindowsMultiAccums.yml
+      test_control: cumulative_windows_multi_accums
+  name: cumulative_windows_multi_accums
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/HelloWorld-MultiplePhases.yml
+      test_control: hello_world__multiple_phases
+  name: hello_world__multiple_phases
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/replication/startup/2_1_50GB_crud.yml
+      test_control: startup_2_1_50_gb_crud
+  name: startup_2_1_50_gb_crud
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/CollScan.yml
+      test_control: coll_scan
+  name: coll_scan
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/YCSBLikeQueryableEncrypt1Cf16.yml
+      test_control: ycsb_like_queryable_encrypt1_cf16
+  name: ycsb_like_queryable_encrypt1_cf16
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/SSBColumnStoreIndex.yml
+      test_control: ssb_column_store_index
+  name: ssb_column_store_index
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/LookupNLJ.yml
+      test_control: lookup_nlj
+  name: lookup_nlj
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q9.yml
+      test_control: normalized_1_q9
+  name: normalized_1_q9
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/HelloWorld.yml
+      test_control: hello_world
+  name: hello_world
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q13.yml
+      test_control: normalized_1_q13
+  name: normalized_1_q13
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/SortByExpression.yml
+      test_control: sort_by_expression
+  name: sort_by_expression
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/AvgItemCost.yml
+      test_control: denormalized_10_avg_item_cost
+  name: denormalized_10_avg_item_cost
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/CrudFSMTrivial.yml
+      test_control: crud_fsm_trivial
+  name: crud_fsm_trivial
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/QueryStats.yml
+      test_control: query_stats
+  name: query_stats
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/contrib/historystore/eMRCfGrow.yml
+      test_control: historystore_e_mr_cf_grow
+  name: historystore_e_mr_cf_grow
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/networking/ServiceArchitectureWorkloads.yml
+      test_control: service_architecture_workloads
+  name: service_architecture_workloads
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q15.yml
+      test_control: denormalized_10_q15
+  name: denormalized_10_q15
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/Loader.yml
+      test_control: loader
+  name: loader
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/LongLivedReader.yml
+      test_control: long_lived_reader
+  name: long_lived_reader
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CsiHeavyDiskUsage.yml
+      test_control: csi_heavy_disk_usage
+  name: csi_heavy_disk_usage
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/ValidateCmdFull.yml
+      test_control: validate_cmd_full
+  name: validate_cmd_full
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/OutOfCacheSnapshotReads.yml
+      test_control: out_of_cache_snapshot_reads
+  name: out_of_cache_snapshot_reads
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/UpdateWithSecondaryIndexes.yml
+      test_control: update_with_secondary_indexes
+  name: update_with_secondary_indexes
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/ExternalSort.yml
+      test_control: external_sort
+  name: external_sort
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/MetricSecondaryIndexTimeseriesCollection.yml
+      test_control: metric_secondary_index_timeseries_collection
+  name: metric_secondary_index_timeseries_collection
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/issues/ConnectionsBuildupNoSharding.yml
+      test_control: connections_buildup_no_sharding
+  name: connections_buildup_no_sharding
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/TimeSeriesArbitraryUpdate.yml
+      test_control: time_series_arbitrary_update
+  name: time_series_arbitrary_update
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/WindowWithNestedFieldProjection.yml
+      test_control: window_with_nested_field_projection
+  name: window_with_nested_field_projection
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TimeSeriesSort.yml
+      test_control: time_series_sort
+  name: time_series_sort
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q22.yml
+      test_control: normalized_1_q22
+  name: normalized_1_q22
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q1.yml
+      test_control: normalized_1_q1
+  name: normalized_1_q1
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/ReshardCollection.yml
+      test_control: reshard_collection
+  name: reshard_collection
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/LoggingActorExample.yml
+      test_control: logging_actor_example
+  name: logging_actor_example
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/transactions/LLTMixedSmall.yml
+      test_control: llt_mixed_small
+  name: llt_mixed_small
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q8.yml
+      test_control: normalized_1_q8
+  name: normalized_1_q8
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/QueryStatsQueryShapes.yml
+      test_control: query_stats_query_shapes
+  name: query_stats_query_shapes
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/LongLivedWriter.yml
+      test_control: long_lived_writer
+  name: long_lived_writer
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CsiFragmentedInsertsFlat.yml
+      test_control: csi_fragmented_inserts_flat
+  name: csi_fragmented_inserts_flat
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q2.yml
+      test_control: normalized_10_q2
+  name: normalized_10_q2
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/TotalLineitemRevenue.yml
+      test_control: denormalized_10_total_lineitem_revenue
+  name: denormalized_10_total_lineitem_revenue
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/replication/startup/2_3_50GB_index.yml
+      test_control: startup_2_3_50_gb_index
+  name: startup_2_3_50_gb_index
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/YCSBLikeQueryableEncrypt1Cf16Sharded.yml
+      test_control: ycsb_like_queryable_encrypt1_cf16_sharded
+  name: ycsb_like_queryable_encrypt1_cf16_sharded
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MixedWorkloadsGennyStressWithScans.yml
+      test_control: mixed_workloads_genny_stress_with_scans
+  name: mixed_workloads_genny_stress_with_scans
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/medical_workload-load-unencrypted.yml
+      test_control: medical_workload_load_unencrypted
+  name: medical_workload_load_unencrypted
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TimeSeriesSortOverlappingBuckets.yml
+      test_control: time_series_sort_overlapping_buckets
+  name: time_series_sort_overlapping_buckets
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/LookupColocatedData.yml
+      test_control: lookup_colocated_data
+  name: lookup_colocated_data
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/c2c/CollectionCopy.yml
+      test_control: collection_copy
+  name: collection_copy
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/LookupSBEPushdown.yml
+      test_control: lookup_sbe_pushdown
+  name: lookup_sbe_pushdown
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/selftests/GennyOverhead.yml
+      test_control: genny_overhead
+  name: genny_overhead
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/WriteOneReplicaSet.yml
+      test_control: write_one_replica_set
+  name: write_one_replica_set
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/CreateBigIndex.yml
+      test_control: create_big_index
+  name: create_big_index
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/CrudActorTransaction.yml
+      test_control: crud_actor_transaction
+  name: crud_actor_transaction
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/ParallelInsert.yml
+      mongodb_setup: replica
+      test_control: parallel_insert_replica
+  name: parallel_insert_replica
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/ParallelInsert.yml
+      mongodb_setup: replica-delay-mixed
+      test_control: parallel_insert_replica_delay_mixed
+  name: parallel_insert_replica_delay_mixed
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/issues/MongosLatency.yml
+      test_control: mongos_latency
+  name: mongos_latency
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q4.yml
+      test_control: denormalized_10_q4
+  name: denormalized_10_q4
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q10.yml
+      test_control: denormalized_10_q10
+  name: denormalized_10_q10
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/UnionWith.yml
+      test_control: union_with
+  name: union_with
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/MixedMultiDeletesDocByDoc.yml
+      test_control: mixed_multi_deletes_doc_by_doc
+  name: mixed_multi_deletes_doc_by_doc
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/GroupStagesOnComputedFields.yml
+      test_control: group_stages_on_computed_fields
+  name: group_stages_on_computed_fields
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/DensifyMilliseconds.yml
+      test_control: densify_milliseconds
+  name: densify_milliseconds
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/TimeSeriesSortScale.yml
+      test_control: time_series_sort_scale
+  name: time_series_sort_scale
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q7.yml
+      test_control: denormalized_1_q7
+  name: denormalized_1_q7
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/contrib/qe_test_gen/maps_medical.yml
+      test_control: qe_test_gen_maps_medical
+  name: qe_test_gen_maps_medical
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/contrib/historystore/eMRCfBench.yml
+      test_control: historystore_e_mr_cf_bench
+  name: historystore_e_mr_cf_bench
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q19.yml
+      test_control: normalized_10_q19
+  name: normalized_10_q19
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q14.yml
+      test_control: denormalized_10_q14
+  name: denormalized_10_q14
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q7.yml
+      test_control: denormalized_10_q7
+  name: denormalized_10_q7
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q7.yml
+      test_control: normalized_10_q7
+  name: normalized_10_q7
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q17.yml
+      test_control: normalized_10_q17
+  name: normalized_10_q17
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/replication/startup/2_2_50GB_ddl.yml
+      test_control: startup_2_2_50_gb_ddl
+  name: startup_2_2_50_gb_ddl
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q20.yml
+      test_control: normalized_1_q20
+  name: normalized_1_q20
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/CreateIndexSharded.yml
+      test_control: create_index_sharded
+  name: create_index_sharded
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/DensifyNumeric.yml
+      test_control: densify_numeric
+  name: densify_numeric
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/medical_workload-guid-50-50-unencrypted.yml
+      test_control: medical_workload_guid_50_50_unencrypted
+  name: medical_workload_guid_50_50_unencrypted
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/replication/startup/2_0_50GB.yml
+      test_control: startup_2_0_50_gb
+  name: startup_2_0_50_gb
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/replication/startup/1_3_5GB_index.yml
+      test_control: startup_1_3_5_gb_index
+  name: startup_1_3_5_gb_index
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/GeneratorsSeeded.yml
+      test_control: generators_seeded
+  name: generators_seeded
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/replication/dbcheck/dbcheck_40GB.yml
+      test_control: dbcheck_dbcheck_40_gb
+  name: dbcheck_dbcheck_40_gb
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q3.yml
+      test_control: denormalized_10_q3
+  name: denormalized_10_q3
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/CollectionScanner.yml
+      test_control: collection_scanner
+  name: collection_scanner
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/MultiShardTransactions.yml
+      test_control: multi_shard_transactions
+  name: multi_shard_transactions
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/ArrayTraversal.yml
+      test_control: array_traversal
+  name: array_traversal
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/BigUpdate10k.yml
+      test_control: big_update10k
+  name: big_update10k
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/HelloWorld-ActorTemplate.yml
+      test_control: hello_world__actor_template
+  name: hello_world__actor_template
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/streams/UrlAggregation.yml
+      test_control: url_aggregation
+  name: url_aggregation
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/LookupWithOnlyUnshardedColls.yml
+      test_control: lookup_with_only_unsharded_colls
+  name: lookup_with_only_unsharded_colls
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/linearFill.yml
+      test_control: linear_fill
+  name: linear_fill
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/CrudActorEncrypted.yml
+      test_control: crud_actor_encrypted
+  name: crud_actor_encrypted
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/BigUpdate.yml
+      test_control: big_update
+  name: big_update
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/ReshardCollectionReadHeavy.yml
+      test_control: reshard_collection_read_heavy
+  name: reshard_collection_read_heavy
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q10.yml
+      test_control: normalized_10_q10
+  name: normalized_10_q10
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/replication/startup/1_2_5GB_ddl.yml
+      test_control: startup_1_2_5_gb_ddl
+  name: startup_1_2_5_gb_ddl
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/serverless/IndexStress.yml
+      test_control: index_stress
+  name: index_stress
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q18.yml
+      test_control: normalized_10_q18
+  name: normalized_10_q18
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/ColumnStoreIndex.yml
+      test_control: column_store_index
+  name: column_store_index
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/MatchFilters.yml
+      test_control: match_filters
+  name: match_filters
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/FillTimeseriesCollection.yml
+      test_control: fill_timeseries_collection
+  name: fill_timeseries_collection
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q3.yml
+      test_control: denormalized_1_q3
+  name: denormalized_1_q3
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/SamplingLoader.yml
+      test_control: sampling_loader
+  name: sampling_loader
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/WindowWithComplexPartitionExpression.yml
+      test_control: window_with_complex_partition_expression
+  name: window_with_complex_partition_expression
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/MatchWithLargeExpression.yml
+      test_control: match_with_large_expression
+  name: match_with_large_expression
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CPUCycleMetricsDelete.yml
+      test_control: cpu_cycle_metrics_delete
+  name: cpu_cycle_metrics_delete
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/PercentilesWindowSpillToDisk.yml
+      test_control: percentiles_window_spill_to_disk
+  name: percentiles_window_spill_to_disk
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/networking/CommitLatency.yml
+      test_control: commit_latency
+  name: commit_latency
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/TotalOrderRevenue.yml
+      test_control: denormalized_10_total_order_revenue
+  name: denormalized_10_total_order_revenue
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/MixedMultiDeletesBatchedWithSecondaryIndexes.yml
+      test_control: mixed_multi_deletes_batched_with_secondary_indexes
+  name: mixed_multi_deletes_batched_with_secondary_indexes
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q11.yml
+      test_control: normalized_10_q11
+  name: normalized_10_q11
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/BiggestOrders.yml
+      test_control: denormalized_10_biggest_orders
+  name: denormalized_10_biggest_orders
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/YCSBLikeQueryableEncrypt5Cf16Sharded.yml
+      test_control: ycsb_like_queryable_encrypt5_cf16_sharded
+  name: ycsb_like_queryable_encrypt5_cf16_sharded
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/ReplaceMillionDocsInSeparateTxns.yml
+      test_control: replace_million_docs_in_separate_txns
+  name: replace_million_docs_in_separate_txns
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q5.yml
+      test_control: normalized_10_q5
+  name: normalized_10_q5
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/YCSBLikeQueryableEncrypt5CfdefaultSharded.yml
+      test_control: ycsb_like_queryable_encrypt5_cfdefault_sharded
+  name: ycsb_like_queryable_encrypt5_cfdefault_sharded
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q2.yml
+      test_control: denormalized_1_q2
+  name: denormalized_1_q2
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/MixedMultiDeletesDocByDocWithSecondaryIndexes.yml
+      test_control: mixed_multi_deletes_doc_by_doc_with_secondary_indexes
+  name: mixed_multi_deletes_doc_by_doc_with_secondary_indexes
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q9.yml
+      test_control: denormalized_1_q9
+  name: denormalized_1_q9
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/1/Q16.yml
+      test_control: normalized_1_q16
+  name: normalized_1_q16
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/medical_workload-diagnosis-100-0.yml
+      test_control: medical_workload_diagnosis_100_0
+  name: medical_workload_diagnosis_100_0
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/ClusteredCollection.yml
+      test_control: clustered_collection
+  name: clustered_collection
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/10/Q8.yml
+      test_control: denormalized_10_q8
+  name: denormalized_10_q8
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/ReshardCollectionMixed.yml
+      test_control: reshard_collection_mixed
+  name: reshard_collection_mixed
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/YCSBLikeQueryableEncrypt1Cfdefault.yml
+      test_control: ycsb_like_queryable_encrypt1_cfdefault
+  name: ycsb_like_queryable_encrypt1_cfdefault
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/GroupSpillToDisk.yml
+      test_control: group_spill_to_disk
+  name: group_spill_to_disk
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/transactions/LLTAnalytics.yml
+      test_control: llt_analytics
+  name: llt_analytics
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q21.yml
+      test_control: denormalized_1_q21
+  name: denormalized_1_q21
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/PingCommand.yml
+      test_control: ping_command
+  name: ping_command
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/encrypted/medical_workload-diagnosis-50-50.yml
+      test_control: medical_workload_diagnosis_50_50
+  name: medical_workload_diagnosis_50_50
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/LargeScaleLongLived.yml
+      test_control: large_scale_long_lived
+  name: large_scale_long_lived
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/LargeScaleSerial.yml
+      test_control: large_scale_serial
+  name: large_scale_serial
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TimeSeries2dsphere.yml
+      test_control: time_series2dsphere
+  name: time_series2dsphere
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q6.yml
+      test_control: normalized_10_q6
+  name: normalized_10_q6
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/c2c/ChangeEventApplication.yml
+      test_control: change_event_application
+  name: change_event_application
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/HelloWorld-LoadConfig.yml
+      test_control: hello_world__load_config
+  name: hello_world__load_config
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q15.yml
+      test_control: normalized_10_q15
+  name: normalized_10_q15
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/ConstantFoldArithmetic.yml
+      test_control: constant_fold_arithmetic
+  name: constant_fold_arithmetic
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/Generators.yml
+      test_control: generators
+  name: generators
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/networking/CommitLatencySingleUpdate.yml
+      test_control: commit_latency_single_update
+  name: commit_latency_single_update
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q10.yml
+      test_control: denormalized_1_q10
+  name: denormalized_1_q10
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q16.yml
+      test_control: denormalized_1_q16
+  name: denormalized_1_q16
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q8.yml
+      test_control: normalized_10_q8
+  name: normalized_10_q8
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/streams/InsertBidsTemplate.yml
+      test_control: insert_bids_template
+  name: insert_bids_template
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/CrudActorFSM.yml
+      test_control: crud_actor_fsm
+  name: crud_actor_fsm
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MajorityReads10KThreads.yml
+      test_control: majority_reads10_k_threads
+  name: majority_reads10_k_threads
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TimeSeriesGroupStagesOnComputedFields.yml
+      test_control: time_series_group_stages_on_computed_fields
+  name: time_series_group_stages_on_computed_fields
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/TimeSeriesRangeDelete.yml
+      test_control: time_series_range_delete
+  name: time_series_range_delete
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/contrib/qe_test_gen/patchConfig.yml
+      test_control: qe_test_gen_patch_config
+  name: qe_test_gen_patch_config
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/streams/CurrencyConversion.yml
+      test_control: currency_conversion
+  name: currency_conversion
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/InsertWithNop.yml
+      test_control: insert_with_nop
+  name: insert_with_nop
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/WouldChangeOwningShardBatchWrite.yml
+      test_control: would_change_owning_shard_batch_write
+  name: would_change_owning_shard_batch_write
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q1.yml
+      test_control: normalized_10_q1
+  name: normalized_10_q1
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/Mixed10KThreads.yml
+      test_control: mixed10_k_threads
+  name: mixed10_k_threads
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/UpdateLargeDocuments.yml
+      test_control: update_large_documents
+  name: update_large_documents
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/normalized/10/Q13.yml
+      test_control: normalized_10_q13
+  name: normalized_10_q13
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/OutOfCacheScanner.yml
+      test_control: out_of_cache_scanner
+  name: out_of_cache_scanner
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/UpdateMillionDocsInTxn.yml
+      test_control: update_million_docs_in_txn
+  name: update_million_docs_in_txn
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TimeSeriesLastpoint.yml
+      test_control: time_series_lastpoint
+  name: time_series_lastpoint
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/FilterWithComplexLogicalExpression.yml
+      test_control: filter_with_complex_logical_expression
+  name: filter_with_complex_logical_expression
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/ExpressiveQueries.yml
+      test_control: expressive_queries
+  name: expressive_queries
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q22.yml
+      test_control: denormalized_1_q22
+  name: denormalized_1_q22
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/CreateIndex.yml
+      test_control: create_index
+  name: create_index
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/CreateDropView.yml
+      test_control: create_drop_view
+  name: create_drop_view
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/HotCollectionWriter.yml
+      test_control: hot_collection_writer
+  name: hot_collection_writer
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/tpch/denormalized/1/Q18.yml
+      test_control: denormalized_1_q18
+  name: denormalized_1_q18
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/networking/TransportLayerConnectTiming.yml
+      test_control: transport_layer_connect_timing
+  name: transport_layer_connect_timing
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/ManyUpdate.yml
+      test_control: many_update
+  name: many_update
+  priority: 5
