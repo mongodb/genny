@@ -24,6 +24,7 @@ def dry_run_workload(
         "MixedWorkloadsGennyStress.yml",
         "ClusteredCollection.yml",
         "ClusteredCollectionLargeRecordIds.yml",
+        "ConnectionsBuildup.yml",
         "CreateIndex.yml",
         "YCSBLikeQueryableEncrypt1Cf16.yml",
         "YCSBLikeQueryableEncrypt1Cf32.yml",
