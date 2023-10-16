@@ -4,7 +4,8 @@ Description: |
   This test exercises the behavior of $graphLookup when both the local and foreign collection are
   sharded, when either the local or foreign collection is sharded, and when both the local and
   foreign collection are unsharded. This test was originally two separate files, GraphLookup.yml
-  and GraphLookupWithOnlyUnshardedColls.yml, but was merged into one as part of PERF-4347.
+  and GraphLookupWithOnlyUnshardedColls.yml. It was merged into a single file when "OnlyRunInInstance:
+  sharded" became an option.
 
   Note: this workload runs on replica sets and sharded clusters.
 
@@ -33,7 +34,6 @@ Actors:
   Phases:
   - Repeat: 1
     Database: admin
-    # Until EVG-21054 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs
     OnlyRunInInstance: sharded
     Operations:
     # Shard Collection0 and Collection3 using hashed sharding to ensure that the chunks are evenly

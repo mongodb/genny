@@ -4,7 +4,8 @@ Description: |
   This test exercises the behavior of $lookup when both the local and foreign collection are
   sharded, when either the local or foreign collection is sharded, and when both the local and
   foreign collection are unsharded. This test was originally two separate files, Lookup.yml and
-  LookupWithOnlyUnshardedColls.yml, but was merged into one as part of PERF-4347.
+  LookupWithOnlyUnshardedColls.yml. It was merged into a single file when "OnlyRunInInstance:
+  sharded" became an option.
 
   Note: this workload runs on replica sets and sharded clusters.
 
@@ -21,9 +22,6 @@ GlobalDefaults:
   ShardedColl0: &ShardedColl0 Collection0
   ShardedColl1: &ShardedColl1 Collection1
   UnshardedColl2: &UnshardedColl2 Collection2
-  # TODO it might be better to not add another collection and to still use Collection0 and Collection1
-  # for the unsharded tests (since Coll0 and Coll1) won't have been sharded.
-  # But then in sharded environments the results of the unsharded ones are wrong.
   UnshardedColl3: &UnshardedColl3 Collection3
   Database: &Database test
   NumChunks: &NumChunks 6
@@ -35,7 +33,6 @@ Actors:
   Phases:
   - Repeat: 1
     Database: admin
-    # Until EVG-21054 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs
     OnlyRunInInstance: sharded
     Operations:
     # Shard Collection0 and Collection1 using hashed sharding to ensure that the chunks are evenly
