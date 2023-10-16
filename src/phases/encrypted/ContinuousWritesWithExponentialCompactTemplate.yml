@@ -81,7 +81,7 @@ Actors:
           OperationName: AdminCommand
           OperationCommand:
             shardCollection: *encrypted_ns
-            key: {field9: hashed}
+            key: {field1: hashed}
 
 # This actor runs the inserts and updates to increase the size of the ECOC collection before
 # running compaction. On every phase, the number of iterations is roughly twice that of the
