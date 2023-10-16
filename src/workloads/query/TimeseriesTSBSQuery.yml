@@ -28,7 +28,7 @@ Clients:
 GlobalDefaults:
   database: &database cpu
   collection: &collection point_data
-  maxPhases: &maxPhases 20
+  maxPhases: &maxPhases 30
   repeat: &repeat 500
   # TSBS constructs a time windows of various sizes (1 hour, 8 hours, 12 hours) from a uniformly 
   # random start-time within this time-period. Ideally, we would do this as well, but currently 
@@ -59,13 +59,14 @@ HostName8:
 
 Actors:
   # The data is already loaded into the collection from the dsi configuration.
+  # We will Quiesce before each query.
   - Name: Quiesce
     Type: QuiesceActor
     Threads: 1
     Database: *database
     Phases:
       OnlyActiveInPhases:
-        Active: [0]
+        Active: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 1
@@ -133,7 +134,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [2]
+        Active: [3]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -189,7 +190,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [3]
+        Active: [5]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -249,7 +250,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [4]
+        Active: [7]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -309,7 +310,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [5]
+        Active: [9]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -366,7 +367,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [6]
+        Active: [11]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -429,7 +430,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [7]
+        Active: [13]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 100 # Repeat slow queries just 100 times.
@@ -489,7 +490,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [8]
+        Active: [15]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 100 # Repeat slow queries just 100 times.
@@ -553,7 +554,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [9]
+        Active: [17]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 100 # Repeat slow queries just 100 times.
@@ -623,7 +624,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [10]
+        Active: [19]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 100 # Repeat slow queries just 100 times.
@@ -681,7 +682,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [11]
+        Active: [21]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -747,7 +748,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [12]
+        Active: [23]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -815,7 +816,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [13]
+        Active: [25]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -866,7 +867,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [14]
+        Active: [27]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 100 # Repeat slow queries just 100 times.
@@ -917,7 +918,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [15]
+        Active: [29]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat

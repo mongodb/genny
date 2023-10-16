@@ -170,13 +170,14 @@ Actors:
             payload6: { ^RandomInt: { min: -10, max: 100 } }
             payload7: { ^RandomInt: { min: -10, max: 100 } }
 
+  # We will Quiesce before each query.
   - Name: Quiesce
     Type: QuiesceActor
     Threads: 1
     Database: *database
     Phases:
       OnlyActiveInPhases:
-        Active: [3]
+        Active: [3, 5, 7, 9, 11, 13, 15, 17, 19]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 1
@@ -195,7 +196,7 @@ Actors:
       TemplateName: RunMatchProjectPipeline
       TemplateParameters:
         Name: "match_10_buckets_include_10_fields"
-        Active: [5]
+        Active: [6]
         # With 988 documents per bucket, 10 buckets will have 'measurement' <= 9880 (988 * 10).
         Predicate: { $lte: 9880 }
         FieldsToProject: *Project10Fields
@@ -204,7 +205,7 @@ Actors:
       TemplateName: RunMatchPipeline
       TemplateParameters:
         Name: "match_10_buckets_exclude"
-        Active: [6]
+        Active: [8]
         # With 988 documents per bucket, 10 buckets will have 'measurement' <= 9880 (988 * 10).
         Predicate: { $lte: 9880 }
 
@@ -212,7 +213,7 @@ Actors:
       TemplateName: RunMatchProjectPipeline
       TemplateParameters:
         Name: "match_100_buckets_include_1_field"
-        Active: [7]
+        Active: [10]
         # With 988 documents per bucket, 100 buckets will have 'measurement' <= 98800 (988 * 100).
         Predicate: { $lte: 98800 }
         FieldsToProject: *Project1Field
@@ -221,7 +222,7 @@ Actors:
       TemplateName: RunMatchProjectPipeline
       TemplateParameters:
         Name: "match_100_buckets_include_10_fields"
-        Active: [8]
+        Active: [12]
         # With 988 documents per bucket, 100 buckets will have 'measurement' <= 98800 (988 * 100).
         Predicate: { $lte: 98800 }
         FieldsToProject: *Project10Fields
@@ -230,7 +231,7 @@ Actors:
       TemplateName: RunMatchPipeline
       TemplateParameters:
         Name: "match_100_buckets_exclude"
-        Active: [9]
+        Active: [14]
         # With 988 documents per bucket, 100 buckets will have 'measurement' <= 98800 (988 * 100).
         Predicate: { $lte: 98800 }
         # Without a $project stage, $_internalUnpackBucket will have an "exclude" parameter.
@@ -239,7 +240,7 @@ Actors:
       TemplateName: RunMatchProjectPipeline
       TemplateParameters:
         Name: "match_1000_buckets_include_1_field"
-        Active: [10]
+        Active: [16]
         # With 988 documents per bucket, 1000 buckets will have 'measurement' <= 988000 (988 * 1000).
         Predicate: { $lte: 988000 }
         FieldsToProject: *Project1Field
@@ -248,7 +249,7 @@ Actors:
       TemplateName: RunMatchProjectPipeline
       TemplateParameters:
         Name: "match_1000_buckets_include_10_fields"
-        Active: [11]
+        Active: [18]
         # With 988 documents per bucket, 1000 buckets will have 'measurement' <= 988000 (988 * 1000).
         Predicate: { $lte: 988000 }
         FieldsToProject: *Project10Fields
@@ -257,7 +258,7 @@ Actors:
       TemplateName: RunMatchPipeline
       TemplateParameters:
         Name: "match_1000_buckets_exclude"
-        Active: [12]
+        Active: [20]
         # With 988 documents per bucket, 1000 buckets will have 'measurement' <= 988000 (988 * 1000).
         Predicate: { $lte: 988000 }
         # Without a $project stage, $_internalUnpackBucket will have an "exclude" parameter.
@@ -269,9 +270,4 @@ AutoRun:
           - replica-all-feature-flags
           - replica
       branch_name:
-        $neq:
-          - v4.0
-          - v4.2
-          - v4.4
-          - v5.0
-          - v6.0
+        $gte: v6.0

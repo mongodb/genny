@@ -28,18 +28,19 @@ Keywords:
 GlobalDefaults:
   database: &database cpu
   collection: &collection point_data
-  maxPhases: &maxPhases 10
+  maxPhases: &maxPhases 20
   repeat: &repeat 50
 
 Actors:
   # The data is already loaded into the collection from the dsi configuration.
+  # We will Quiesce before each query.
   - Name: Quiesce
     Type: QuiesceActor
     Threads: 1
     Database: *database
     Phases:
       OnlyActiveInPhases:
-        Active: [0]
+        Active: [0, 2, 4, 6, 8, 10, 12, 14]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 1
@@ -58,8 +59,7 @@ Actors:
           Database: *database
           Collection: *collection
           Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
+            - OperationName: aggregate
               OperationCommand:
                 Pipeline:
                   [
@@ -81,15 +81,14 @@ Actors:
     Threads: 10
     Phases:
       OnlyActiveInPhases:
-        Active: [2]
+        Active: [3]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
           Database: *database
           Collection: *collection
           Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
+            - OperationName: aggregate
               OperationCommand:
                 Pipeline:
                   [
@@ -113,15 +112,14 @@ Actors:
     Threads: 10
     Phases:
       OnlyActiveInPhases:
-        Active: [3]
+        Active: [5]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
           Database: *database
           Collection: *collection
           Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
+            - OperationName: aggregate
               OperationCommand:
                 Pipeline: [{ $group: { _id: null, new_count: { $sum: 2 } } }]
 
@@ -133,15 +131,14 @@ Actors:
     Threads: 10
     Phases:
       OnlyActiveInPhases:
-        Active: [4]
+        Active: [7]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
           Database: *database
           Collection: *collection
           Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
+            - OperationName: aggregate
               OperationCommand:
                 Pipeline: [{ $count: "count" }]
 
@@ -151,15 +148,14 @@ Actors:
     Threads: 10
     Phases:
       OnlyActiveInPhases:
-        Active: [5]
+        Active: [9]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
           Database: *database
           Collection: *collection
           Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
+            - OperationName: aggregate
               OperationCommand:
                 Pipeline:
                   [
@@ -180,15 +176,14 @@ Actors:
     Threads: 10
     Phases:
       OnlyActiveInPhases:
-        Active: [6]
+        Active: [11]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
           Database: *database
           Collection: *collection
           Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
+            - OperationName: aggregate
               OperationCommand:
                 # The $match stage will hit ~115,000 or ~71% of buckets.
                 Pipeline:
@@ -216,7 +211,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [7]
+        Active: [13]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 100
@@ -248,7 +243,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [8]
+        Active: [15]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 100
