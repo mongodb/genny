@@ -1,7 +1,7 @@
-# SchemaVersion: 2018-07-01
-# Owner: Service Architecture
-# Description: |
-#   Used to test performance of the server under heavy memory pressure.
+SchemaVersion: 2018-07-01
+Owner: Service Architecture
+Description: |
+  Used to test performance of the server under heavy memory pressure.
 
 # GlobalDefaults:
 #   dbname: &DBName memorystress
