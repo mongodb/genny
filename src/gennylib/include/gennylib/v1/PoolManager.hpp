@@ -130,7 +130,7 @@ public:
      * Obtain a connection or throw if none available.
      *
      * This connection will be pre-warmed by default, unless "NoPreWarm" is set to true, e.g.:
-     * 
+     *
      * ```yaml
      * Clients:
      *   Default:
@@ -155,7 +155,7 @@ public:
     mongocxx::pool::entry createClient(const std::string& name,
                                        size_t instance,
                                        const Node& workloadCtx);
-    
+
     mongocxx::pool::entry _preWarm(mongocxx::pool::entry connection);
 
     // Only used for testing
