@@ -1,0 +1,250 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This is a template library of actors for QueryStats workloads.
+
+  Actors (in the order they should appear in the workload)
+  ClearCollection (requires MaxPhase, Phase)
+    deletes the working collection, should only need to be run once.
+  InsertData (requires MaxPhase, Phase)
+    populates the working collection, should only need to be run once.
+  CacheSizeActor (requires MaxPhase, Phases, CacheSizeMb)
+    changes the QueryStats cache size.
+  RateLimitActor (requires MaxPhase, Phases, RateLimitHz)
+    changes the QueryStates rate limit. Should be set to -1 before each QueryStats cache
+    prepopulation to speed things up.
+  QuiesceActor (requires MaxPhase, Phases)
+    ensures that actors quiesce before continuing.
+  PrepopulateActor (requires MaxPhase, Phases, CacheSizeMb)
+    prepopulates the QueryStats cache to ensure that it is filled with similarish shapes before
+    every workload execution.
+  FindCommandActor (requires MaxPhase, Phase, CacheSizeMb, Payload; optional Suffix)
+    runs find commands to generate query stats.
+  AggregateActor (requires MaxPhase, Phase, CacheSizeMb; optional Suffix, QueryStatsParameters)
+    runs $queryStats.
+
+GlobalDefaults:
+  # Workload constants.
+  Database: &Database test
+  Collection: &Collection Collection0
+
+  # Required template variables.
+  # These parameters have a default value of {unused: }. This results in a runtime
+  # error if they are used in an actor. Any actor that uses one of these parameters
+  # needs to have the parameter value explicitly set to avoid runtime errors.
+
+  # (integer) QueryStats cache size in MB.
+  CacheSizeMb: &CacheSizeMb {^Parameter: {Name: CacheSizeMb, Default: {unused: "Need to specify the query stats cache size, in MB."}}}
+
+  # (integer) largest phase number in the workload.
+  MaxPhase: &MaxPhase {^Parameter: {Name: MaxPhase, Default: {unused: "Need to specify the max phase number."}}}
+
+  # (string) string name of the CrudActor.
+  Name: &Name {^Parameter: {Name: Name, Default: {unused: "Need to specify the actor name."}}}
+
+  # (integer) phase in which the actor runs.
+  Phase: &Phase {^Parameter: {Name: Phase, Default: {unused: "Need to specify the actor's phase."}}}
+
+  # (integer | array[integer]) phase(s) in which the actor runs.
+  Phases: &Phases {^FlattenOnce: [{^Parameter: {Name: Phases, Default: {unused: "Need to specify the actor's phase(s)."}}}]}
+
+  # (integer) QueryStats rate limit value in Hz.
+  RateLimitHz: &RateLimitHz {^Parameter: {Name: RateLimitHz, Default: {unused: "Need to specify the query stats rate limit to change to."}}}
+
+  # Optional template variables.
+
+  # (integer | float; default 1e6) number of documents to insert into the database.
+  DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: 1e6}}
+
+  # (time; default 100 seconds) how long to run the workload.
+  Duration: &Duration {^Parameter: {Name: Duration, Default: 100 seconds}}
+
+  # (object; default {}) additional query components to the find command CrudActor.
+  Payload: &Payload {^Parameter: {Name: Payload, Default: {}}}
+
+  # (object; default {}) additional query components to $queryStats.
+  QueryStatsParameters: &QueryStatsParameters {^Parameter: {Name: "QueryStatsParameters", Default: {}}}
+
+  # (string; default "") additional suffix arguments.
+  Suffix: &Suffix {^Parameter: {Name: Suffix, Default: ""}}
+
+  # (integer; default 1) the number of concurrently-running $queryStats threads.
+  Threads: &Threads {^Parameter: {Name: Threads, Default: 1}}
+
+  # Syntactic sugar.
+  CacheSize: &CacheSize {^PreprocessorFormatString: {format: "%dMB", withArgs: [*CacheSizeMb]}}
+  FormattedSuffix: &FormattedSuffix
+    ^PreprocessorFormatString:
+      format: "%s-CacheSize%s-Phase%s"
+      withArgs: [*Suffix, *CacheSize, *Phase]
+
+# One-time setup for the workload, run at the beginning of the workload.
+ClearCollection:
+  Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*Phase]
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+InsertData:
+  Name: InsertData
+  Type: Loader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*Phase]
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: *DocumentCount
+        BatchSize: 1000
+        Document:
+          a1: {^RandomInt: {min: -100, max: 100}}
+          a2: {^RandomInt: {min: -100, max: 100}}
+          string: {^RandomString: {length: 5}}
+        Indexes:
+          - keys: {a1: 1, a2: 1}
+
+CacheSizeActor:
+  Name: {^PreprocessorFormatString: {format: "CacheSize-%s", withArgs: [*CacheSize]}}
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: *Phases
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            # Configuring the queryStats store size to an arbitrary value which seems reasonable.
+            # This ensures that if run on different sized machines, the test will remain the same.
+            setParameter: 1
+            internalQueryStatsCacheSize: *CacheSize
+
+RateLimitActor:
+  Name: {^PreprocessorFormatString: {format: "RateLimit-%dHz", withArgs: [*RateLimitHz]}}
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: *Phases
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            internalQueryStatsRateLimit: *RateLimitHz
+
+QuiesceActor:
+  Name: "QuiesceActor"
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: *Phases
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat: 1
+
+PrepopulateActor:
+  Name: "PrepopulateActor"
+  Type: CrudActor
+  Threads: 32
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: *Phases
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Repeat:
+          ^NumExpr:
+            # 320B per query shape * 32 threads = 10KB for each Repeat.
+            # So, this creates ~1MB of query shape data with a Repeat value of 100.
+            withExpression: "mb * 100"
+            andValues:
+              mb: *CacheSizeMb
+        Collection: *Collection
+        Operations:
+          ^FlattenOnce:
+          - OperationName: find
+            OperationCommand:
+              Filter:
+                $and:
+                # So that this can use an index scan and immediately return. We don't want to be
+                # spending actual time on this query, we just want it to generate entries in the
+                # query stats store.
+                - a1: {^RandomDouble: {min: 1000000, max: 10000000000}}
+                # This will send a find command that is a little over 320B per query shape key.
+                - ^Object:
+                    withNEntries: 10
+                    havingKeys:
+                      ^FormatString:
+                        format: "%32d"
+                        withArgs: [{^Inc: {start: 0, multiplier: 1, step: 32}}]
+                    andValues: {$exists: true}
+                    duplicatedKeys: skip
+
+FindCommandActor:
+  Name: {^PreprocessorFormatString: {format: "FindCommand-%s", withArgs: [*FormattedSuffix]}}
+  Type: CrudActor
+  Threads: 32
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*Phase]
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Duration: *Duration
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            # This will create a find command with a random number of fields from 3 to 350, to create varying query shapes and sizes.
+            Filter:
+              $and:
+                - a1: 1
+                - a2: 1
+                - *Payload
+
+QueryStatsActor:
+  Name: {^PreprocessorFormatString: {format: "QueryStatsAggregate-%s", withArgs: [*FormattedSuffix]}}
+  Type: AdminCommand
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [*Phase]
+      NopInPhasesUpTo: *MaxPhase
+      PhaseConfig:
+        Duration: *Duration
+        # Sleep for 1 second to ensure that find commands have started running.
+        SleepBefore: 1 second
+        Database: admin
+        Operations:
+        - OperationMetricsName: QueryStatsMetrics
+          OperationName: AdminCommand
+          OperationCommand:
+            aggregate: 1
+            pipeline:
+            - $queryStats: *QueryStatsParameters
+              # The purpose of $count is to ensure we've exhausted the cursor/ data stream and looked at each partition.
+            - $count: "numDocuments"
+            cursor: {}

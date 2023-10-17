@@ -1,0 +1,136 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/altas-streams"
+Description: |
+  Pipeline: Memory -> Tumbling Window (Group, Sort, Limit 1k) -> Memory
+  Input Documents: 8M
+  BatchSize: 1k
+
+  Simulates the scenario where input documents are fed into a tumlbing window that
+  groups by a large key (URL), then sorts by the aggregated price, and only emits
+  the top 1k aggregated documents by price. All 8M documents will have a random URL
+  assigned to them.
+
+Keywords:
+- streams
+
+GlobalDefaults:
+  DatabaseName: &DatabaseName test
+  StreamProcessorName: &StreamProcessorName sp
+
+  # Genny workload client typically has 16 CPUs, so use 16 inserter threads each inserting
+  # 500 batches of 1k documents, so a total of 8M documents, which will all have unique keys
+  # for the window so this will generate 8M keys on the open window.
+  NumThreads: &NumThreads 16
+  NumBatch1000xPerThread: &NumBatch1000xPerThread 500
+  ExpectedDocumentCount: &ExpectedDocumentCount 8000000
+
+  Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
+  Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
+    *Channel
+  ]}}
+
+  Document: &Document
+    auction: {^Inc: { start: 1000, multipler: 1 }}
+    bidder: {^Inc: { start: 1000, multipler: 1 }}
+    price: {^RandomDouble: {min: 100, max: 100000000 }}
+    channel: *Channel
+    url: *Url
+    dateTime: {^IncDate: { start: "2023-01-01T00:00:00.000", step: 10 }}
+
+  Batch10x: &Batch10x [*Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document, *Document]
+  Batch100x: &Batch100x {^FlattenOnce: [*Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x, *Batch10x]}
+  Batch1000x: &Batch1000x {^FlattenOnce: [*Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x]}
+
+Actors:
+- Name: Setup
+  Type: RunCommand
+  ClientName: Stream
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: CreateStreamProcessor
+      OperationName: RunCommand
+      OperationCommand:
+        streams_startStreamProcessor: ""
+        name: *StreamProcessorName
+        pipeline: [
+          {
+            $source: {
+              connectionName: "__testMemory",
+              timeField: { $convert: { input: "$dateTime", to: "date" }},
+              allowedLateness: { size: 1, unit: "second" },
+            }
+          },
+          {
+            $tumblingWindow: {
+              interval: { size: 1, unit: "second" },
+              pipeline: [
+                {
+                  $group: {
+                    _id: "$url",
+                    minPrice: { $min: "$price" },
+                    maxPrice: { $max: "$price" },
+                    sumPrice: { $sum: "$price" },
+                    avgPrice: { $avg: "$price" }
+                  },
+                },
+                { $sort: { sumPrice: -1 } },
+                { $limit: 1000 }
+              ]
+            }
+          },
+          { $emit: { connectionName: "__noopSink" } }
+        ]
+        connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
+  - Phase: 1
+    Nop: true
+  - Phase: 2
+    Repeat: 1
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Stop
+      OperationName: RunCommand
+      OperationCommand:
+        streams_stopStreamProcessor: ""
+        name: *StreamProcessorName
+
+- Name: Insert_Batch1000x
+  Type: RunCommand
+  ClientName: Stream
+  Threads: *NumThreads
+  Phases:
+  - Phase: 0
+    Nop: true
+  - Phase: 1
+    Repeat: *NumBatch1000xPerThread
+    Database: *DatabaseName
+    Operations:
+    - OperationMetricsName: Insert
+      OperationName: RunCommand
+      OperationCommand:
+        streams_testOnlyInsert: ""
+        name: *StreamProcessorName
+        documents: *Batch1000x
+  - Phase: 2
+    Nop: true
+
+- Name: TopKPerWindow.MemorySource.Stats
+  Type: StreamStatsReporter
+  ClientName: Stream
+  Database: *DatabaseName
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Nop: true
+  - Phase: 1
+    Repeat: 1
+    StreamProcessorName: *StreamProcessorName
+    ExpectedDocumentCount: 8000000
+  - Phase: 2
+    Nop: true

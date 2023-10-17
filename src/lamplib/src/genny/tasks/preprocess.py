@@ -11,7 +11,13 @@ from omegaconf import OmegaConf
 import yaml
 import structlog
 import numexpr
-from typing import Union
+from typing import Any, Dict, Optional, Union
+
+
+class ClientType(str, Enum):
+    MONGODB = "mongo"
+    MONGOSTREAM = "mongostream"
+
 
 SLOG = structlog.get_logger(__name__)
 # Cannot be in the default config because yaml merges overwrite lists instead of appending.
@@ -22,7 +28,16 @@ DEFAULT_CONFIG = {
     # later URI injection can configure it. It's okay if the Default
     # pool isn't actually used in a workload, since they're constructed
     # lazily.
-    "Clients": {"Default": {"QueryOptions": {"maxPoolSize": 100}}}
+    "Clients": {
+        "Default": {
+            "Type": ClientType.MONGODB.value,
+            "QueryOptions": {"maxPoolSize": 100},
+        },
+        "Stream": {
+            "Type": ClientType.MONGOSTREAM.value,
+            "QueryOptions": {"maxPoolSize": 100},
+        },
+    },
 }
 
 
@@ -31,7 +46,12 @@ class ParseException(Exception):
 
 
 def evaluate(
-    workload_path: str, default_uri: str, smoke: bool, output: str, override_file_path=None
+    workload_path: str,
+    default_uri: str,
+    smoke: bool,
+    output: str,
+    override_file_path: Optional[str] = None,
+    mongostream_uri: Optional[str] = None,
 ):
     """CLI-friendly wrapper for preprocess."""
     if output is not None:
@@ -42,6 +62,7 @@ def evaluate(
                 smoke=smoke,
                 output_file=f,
                 override_file_path=override_file_path,
+                mongostream_uri=mongostream_uri,
             )
     else:
         preprocess(
@@ -49,6 +70,7 @@ def evaluate(
             default_uri=default_uri,
             smoke=smoke,
             override_file_path=override_file_path,
+            mongostream_uri=mongostream_uri,
         )
 
 
@@ -60,6 +82,7 @@ def preprocess(
     default_uri: str,
     output_file=sys.stdout,
     override_file_path=None,
+    mongostream_uri: Optional[str] = None,
 ):
     """Evaluate a workload and output it to a file (or stdout)."""
     mode = _ParseMode.Smoke if smoke else _ParseMode.Normal
@@ -79,7 +102,13 @@ def preprocess(
         OmegaConf.save(config=conf, f=fp.name)
         parser = _WorkloadParser()
         path = Path(workload_path)
-        raw_parsed = parser.parse(fp.name, path=path, parse_mode=mode, default_uri=default_uri)
+        raw_parsed = parser.parse(
+            fp.name,
+            path=path,
+            parse_mode=mode,
+            default_uri=default_uri,
+            mongostream_uri=mongostream_uri,
+        )
         conf = OmegaConf.create(raw_parsed)
 
     output_logger = structlog.PrintLogger(output_file)
@@ -98,6 +127,7 @@ class _ContextType(Enum):
 
     Parameter = (1,)
     ActorTemplate = (2,)
+    Client = (3,)
 
 
 class _ParseMode(Enum):
@@ -192,7 +222,8 @@ class _WorkloadParser(object):
         default_uri: str,
         source: YamlSource = YamlSource.File,
         path: Union[Path, str] = "",
-        parse_mode: _ParseMode =_ParseMode.Normal,
+        parse_mode: _ParseMode = _ParseMode.Normal,
+        mongostream_uri: Optional[str] = None,
     ):
         """Parse the yaml input, assumed to be a file by default."""
 
@@ -201,6 +232,7 @@ class _WorkloadParser(object):
         path = Path(path)  # Path("") is equivalent to Path("./")
 
         self._default_uri = default_uri
+        self._mongostream_uri = mongostream_uri
         with self._context.enter():
             if source == _WorkloadParser.YamlSource.File:
                 workload = _load_file(yaml_input)
@@ -243,6 +275,8 @@ class _WorkloadParser(object):
             out = self._replace_flattenonce(value)
         elif key == "^PreprocessorFormatString":
             out = self._replace_formatstr(value)
+        elif key == "^ClientURI":
+            out = self._replace_clienturi(value)
         elif key == "ActorTemplates":
             self._parse_templates(value)
         elif key == "ActorFromTemplate":
@@ -338,9 +372,11 @@ class _WorkloadParser(object):
         parsed_values = self._recursive_parse(input)
 
         try:
-            return [value
-                    for parsed_value in parsed_values
-                    for value in (parsed_value if type(parsed_value) == list else [parsed_value])]
+            return [
+                value
+                for parsed_value in parsed_values
+                for value in (parsed_value if type(parsed_value) == list else [parsed_value])
+            ]
         except TypeError as e:
             msg = f"Invalid value type for '{OP_KEY}', which must be iterable: {input}"
             raise ParseException(msg)
@@ -351,7 +387,9 @@ class _WorkloadParser(object):
         ARGS_KEY = "withArgs"
 
         if FORMAT_KEY not in input:
-            msg = f"Invalid keys for '{OP_KEY}', please set '{FORMAT_KEY}' in following node: {input}"
+            msg = (
+                f"Invalid keys for '{OP_KEY}', please set '{FORMAT_KEY}' in following node: {input}"
+            )
             raise ParseException(msg)
 
         if type(input[FORMAT_KEY]) != str:
@@ -381,6 +419,29 @@ class _WorkloadParser(object):
             )
             raise ParseException(msg)
 
+    def _replace_clienturi(self, input):
+        OP_KEY = "^ClientURI"
+
+        name: Optional[str] = input.get("Name", None)
+        if not name:
+            msg = (
+                "Invalid keys for '^ClientURI', please set the client name as "
+                f"'Name' in the following node: {input}"
+            )
+            raise ParseException(msg)
+
+        client: Optional[Dict[str, Any]] = self._context.get(f"client/{name}", _ContextType.Client)
+        if not client:
+            msg = f"Invalid client name for '^ClientURI', {name} not found"
+            raise ParseException(msg)
+
+        uri: Optional[str] = client.get("URI", None)
+        if not uri:
+            msg = f"Client {name} does not have 'URI' set"
+            raise ParseException(msg)
+
+        return uri
+
     def _parse_templates(self, templates):
         for template_node in templates:
             self._context.insert(
@@ -396,15 +457,22 @@ class _WorkloadParser(object):
 
     def _parse_clients(self, clients):
         clients_dict = self._recursive_parse(clients)
-        for _, client in clients_dict.items():
-            client.setdefault("URI", self._default_uri)
+        for name, client in clients_dict.items():
+            client_type: Optional[ClientType] = client.get("Type")
+            if self._mongostream_uri and client_type == ClientType.MONGOSTREAM:
+                client.setdefault("URI", self._mongostream_uri)
+            else:
+                client.setdefault("URI", self._default_uri)
+            self._context.insert(f"client/{name}", client, _ContextType.Client)
         return clients_dict
 
     def _parse_instance(self, instance):
         actor = {}
 
         with self._context.enter():
-            templateNode = self._context.get(self._recursive_parse(instance["TemplateName"]), _ContextType.ActorTemplate)
+            templateNode = self._context.get(
+                self._recursive_parse(instance["TemplateName"]), _ContextType.ActorTemplate
+            )
             if templateNode is None:
                 name = instance["TemplateName"]
                 msg = f"Expected template named {name} but could not be found."
