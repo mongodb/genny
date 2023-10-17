@@ -162,11 +162,9 @@ Actors:
             Options:
               Ordered: true
               MaxTime: 0
-            OnSession: true
         - OperationName: insertMany
           OperationCommand:
             Documents: *DocumentList
-            OnSession: true
   - Repeat: 1
     Collection: *Coll
     Operation:
