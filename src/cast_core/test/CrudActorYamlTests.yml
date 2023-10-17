@@ -612,7 +612,7 @@ Tests:
         Count: 1
     AssertNumTransactionsCommitted: 0
 
-  - Description: simple findOneAndReplace in a withTransaction without OnSession
+  - Description: simple findOneAndReplace in a withTransaction without session
     Operations:
       - OperationName: withTransaction
         OperationCommand:
@@ -620,10 +620,12 @@ Tests:
             - OperationName: insertOne
               OperationCommand:
                 Document: {a: 100}
+                OnSession: false
             - OperationName: findOneAndReplace
               OperationCommand:
                 Filter: {a: 100}
                 Replacement: {a: 30}
+                OnSession: false
     OutcomeCounts:
       - Filter: {a: 100}
         Count: 0
@@ -631,11 +633,10 @@ Tests:
         Count: 1
     AssertNumTransactionsCommitted: 0
 
-  - Description: simple findOneAndReplace in a withTransaction with OnSession
+  - Description: simple findOneAndReplace in a withTransaction with session
     Operations:
       - OperationName: withTransaction
         OperationCommand:
-          OnSession: true
           OperationsInTransaction:
             - OperationName: insertOne
               OperationCommand:
@@ -651,13 +652,14 @@ Tests:
         Count: 1
     AssertNumTransactionsCommitted: 1
 
-  - Description: WithTransaction, BulkWrite insert, delete, then re-insert without OnSession on bulkWrite
+  - Description: WithTransaction, BulkWrite insert, delete, then re-insert without session on bulkWrite
     Operations:
       - OperationName: withTransaction
         OperationCommand:
           OperationsInTransaction:
           - OperationName: bulkWrite
             OperationCommand:
+              OnSession: false
               WriteOperations:
                 - WriteCommand: insertOne
                   Document: { a: 1 }
@@ -669,15 +671,13 @@ Tests:
       - {a: 2}
     AssertNumTransactionsCommitted: 0
 
-  - Description: WithTransaction, BulkWrite insert, delete, then re-insert with OnSession on bulkWrite
+  - Description: WithTransaction, BulkWrite insert, delete, then re-insert with session on bulkWrite
     Operations:
       - OperationName: withTransaction
         OperationCommand:
-          OnSession: false
           OperationsInTransaction:
           - OperationName: bulkWrite
             OperationCommand:
-              OnSession: true
               WriteOperations:
                 - WriteCommand: insertOne
                   Document: { a: 1 }
