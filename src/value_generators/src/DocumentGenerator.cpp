@@ -1125,7 +1125,11 @@ public:
         // Only the first thread should ever get here. It should load the data, set the done flag to
         // true, and signal cond waiters that a dataset has been loaded.
         loader(&_all_datasets[path].data);
-        _all_datasets[path].done = true;
+        {
+            // We have to lock while setting done to avoid a waiting thread missing the done flag.
+            std::unique_lock<std::mutex> lk(_dataset_mutex);
+            _all_datasets[path].done = true;
+        }
         _dataset_done_cv.notify_all();
         return _all_datasets[path].data;
     }

@@ -92,7 +92,7 @@ Encryption:
       patient_id: { type: "string", queries: [{queryType: "equality"}] }
       insurance: { type: "string", queries: [{queryType: "equality", contention: 16}] }
       a1c: { type: "long", queries: [{queryType: "equality", contention: 10}] }
-      a2c: { type: "double", queries: [{queryType: "rangePreview", min: 0, max: 1, precision: 1, sparsity: 1, contention: 8}] }
+      spO2: { type: "double", queries: [{queryType: "rangePreview", min: 0, max: 1, precision: 1, sparsity: 1, contention: 8}] }
 
 Clients:
   Default:
@@ -205,7 +205,7 @@ Actors:
           patient_id: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}
           patient_id_plain: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}
           a1c: {^RandomInt: {min: 2, max: 12}}
-          a2c: {^RandomDouble: {min: 0, max: 1}}
+          spO2: {^RandomDouble: {min: 0, max: 1}}
           _id: {^Inc: {start: -10, multiplier: 10}}
   - Repeat: 10
     Collection: medical
@@ -217,7 +217,7 @@ Actors:
           $set:
             insurance: "none"
             a1c: {^RandomInt: {min: 2, max: 12}}
-            a2c: {^RandomDouble: {min: 0, max: 1}}
+            spO2: {^RandomDouble: {min: 0, max: 1}}
   - *nop
 
 - Name: Compactor

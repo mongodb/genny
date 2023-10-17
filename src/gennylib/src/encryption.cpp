@@ -385,7 +385,8 @@ void QueryableEncryptedField::appendEncryptInfo(sub_document subdoc) const {
                     queryDoc.append(kvp("contention", query.contention.value()));
                 }
 
-                auto append_string_as_number_with_correct_type = [&](const std::string& s, const std::string& n) {
+                auto append_string_as_number_with_correct_type =
+                        [&](const std::string& s, const std::string& n) {
                     if(_type == "double") {
                         queryDoc.append(kvp(s, std::stod(n)));
                     } else if(_type == "decimal") {
@@ -395,6 +396,8 @@ void QueryableEncryptedField::appendEncryptInfo(sub_document subdoc) const {
                     } else if(_type == "int") {
                         queryDoc.append(kvp(s, std::stoi(n)));
                     } else {
+                        // XXX Eventually might need to handle dates as well, depending on what
+                        // tests we run.
                         std::ostringstream ss;
                         ss << "Expected number bsonType, but got: \"" << _type << "\"";
                         throw InvalidConfigurationException(ss.str());
