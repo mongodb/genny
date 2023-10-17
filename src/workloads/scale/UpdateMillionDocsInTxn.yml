@@ -78,7 +78,6 @@ Actors:
             Options:
               Ordered: true
               MaxTime: 0
-            OnSession: true
   - Repeat: 1
     Collection: *Coll
     Operation:

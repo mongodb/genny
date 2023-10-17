@@ -1048,11 +1048,15 @@ struct StartTransactionOperation : public BaseOperation {
 
     StartTransactionOperation(const Node& opNode,
                               bool onSession,
-                              mongocxx::collection collection,
+                              [[maybe_unused]] mongocxx::collection collection,
                               metrics::Operation operation,
                               PhaseContext& context,
                               ActorId id)
         : BaseOperation(context, opNode), _operation{operation} {
+        if (!onSession) {
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("'startTransaction' expects 'OnSession: true'."));
+        };
         if (!opNode.isMap())
             return;
         if (opNode["Options"]) {
@@ -1082,11 +1086,16 @@ struct CommitTransactionOperation : public BaseOperation {
 
     CommitTransactionOperation(const Node& opNode,
                                bool onSession,
-                               mongocxx::collection collection,
+                               [[maybe_unused]] mongocxx::collection collection,
                                metrics::Operation operation,
                                PhaseContext& context,
                                ActorId id)
-        : BaseOperation(context, opNode), _operation{operation} {}
+        : BaseOperation(context, opNode), _operation{operation} {
+        if (!onSession) {
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("'commitTransaction' expects 'OnSession: true'."));
+        };
+    }
 
     void run(mongocxx::client_session& session) override {
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
@@ -1123,13 +1132,17 @@ struct WithTransactionOperation : public BaseOperation {
                              PhaseContext& context,
                              ActorId id)
         : BaseOperation(context, opNode),
-          _onSession{onSession},
           _collectionHandle{std::move(collectionHandle)},
           _operation{operation} {
+        if (!onSession) {
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("'withTransaction' expects 'OnSession: true'."));
+        };
+        _onSession = onSession;
         auto& opsInTxn = opNode["OperationsInTransaction"];
         if (!opsInTxn.isSequence()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                "'WithTransaction' requires an 'OperationsInTransaction' node of sequence type."));
+                "'withTransaction' requires an 'OperationsInTransaction' list of operations."));
         }
         for (const auto&& [k, txnOp] : opsInTxn) {
             createTxnOps(txnOp, context, id);
@@ -1273,8 +1286,12 @@ private:
 std::unordered_map<std::string, OpCallback&> getOpConstructors() {
     // Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
     std::unordered_map<std::string, OpCallback&> opConstructors = {
-        {"aggregate", baseCallback<BaseOperation, OpCallback, AggregateOperation>},
         {"bulkWrite", collectionHandleCallback<BaseOperation, OpCallback, BulkWriteOperation>},
+        {"withTransaction",
+         collectionHandleCallback<BaseOperation, OpCallback, WithTransactionOperation>},
+        {"startTransaction", baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
+        {"commitTransaction", baseCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
+        {"aggregate", baseCallback<BaseOperation, OpCallback, AggregateOperation>},
         {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
         {"estimatedDocumentCount",
          baseCallback<BaseOperation, OpCallback, EstimatedDocumentCountOperation>},
@@ -1285,10 +1302,6 @@ std::unordered_map<std::string, OpCallback&> getOpConstructors() {
         {"findOneAndDelete", baseCallback<BaseOperation, OpCallback, FindOneAndDeleteOperation>},
         {"findOneAndReplace", baseCallback<BaseOperation, OpCallback, FindOneAndReplaceOperation>},
         {"insertMany", baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
-        {"startTransaction", baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
-        {"commitTransaction", baseCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
-        {"withTransaction",
-         collectionHandleCallback<BaseOperation, OpCallback, WithTransactionOperation>},
         {"setReadConcern", baseCallback<BaseOperation, OpCallback, SetReadConcernOperation>},
         {"drop", baseCallback<BaseOperation, OpCallback, DropOperation>},
         {"insertOne", baseCallback<BaseOperation, OpCallback, InsertOneOperation>},
@@ -1622,7 +1635,10 @@ struct CrudActor::PhaseConfig {
         auto& yamlCommand = node["OperationCommand"];
         auto opName = node["OperationName"].to<std::string>();
         auto opMetricsName = node["OperationMetricsName"].maybe<std::string>().value_or(opName);
-        auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
+        std::set<std::string> transactionOps = {
+            "startTransaction", "commitTransaction", "withTransaction"};
+        bool isTransactionOp = transactionOps.find(opName) != transactionOps.end();
+        auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(isTransactionOp);
 
         auto opConstructors = getOpConstructors();
         // Grab the appropriate Operation struct defined by 'OperationName'.
@@ -1631,6 +1647,28 @@ struct CrudActor::PhaseConfig {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException("Operation '" + opName +
                                                                 "' not supported in Crud Actor."));
         }
+
+        /*
+        The code section below is equivalent to the following pseudocode (because
+        `metrics::Operation` doesn't currently allow declaration without initialization):
+
+        metrics::Operation opMetrics;
+        auto metricsName = phaseContext["MetricsName"].maybe<std::string>();
+        auto opMetricsName = node["OperationMetricsName"].maybe<std::string>();
+        if (metricsName && opMetricsName) {
+            opMetrics = phaseContext.actor().operation(*metricsName + "." + *opMetricsName, id);
+        } else if (metricsName) {
+            opMetrics = phaseContext.operation(opName, id);
+        }
+        else if (opMetricsName) {
+            opMetrics = phaseContext.actor().operation(*opMetricsName, id);
+        } else {
+            opMetrics = phaseContext.actor().operation(opName, id);
+        }
+        auto opCreator = op->second;
+        return opCreator(yamlCommand, onSession, std::move(collectionHandle), opMetrics,
+                         phaseContext, id);
+        */
 
         // If the yaml specified MetricsName in the Phase block, then associate the metrics
         // with the Phase; otherwise, associate with the Actor (e.g. all bulkWrite
