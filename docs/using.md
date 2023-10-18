@@ -620,7 +620,7 @@ It is often necessary to use Genny to operate with large amounts of data which w
 
 Value generators are not a builtin feature of Genny, but must be integrated by each Actor for the configuration values that accept them. For examples of using value generators, see [./src/workloads/docs/Generators.yml](../src/workloads/docs/Generators.yml). To integrate generators into an Actor, use the [DocumentGenerator](../src/value_generators/include/value_generators/DocumentGenerator.hpp) with the yaml node you intend to generate documents from. (And see [here](#org7e6c6bd) for more details on creating an Actor in the first place.)
 
-You can also find some example datasets that can be used with generators like `ChooseStringFromDataset`. For more information check [./src/workloads/datasets/README.md](../src/workloads/datasets/README.md).
+You can also find some example datasets that can be used with generators like `ChooseFromDataset`. For more information check [./src/workloads/datasets/README.md](../src/workloads/datasets/README.md).
 
 <a id="org2078b23"></a>
 

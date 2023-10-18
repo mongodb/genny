@@ -20,4 +20,5 @@ Actors:
       name: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/names.txt"}}  #  Susan
       familyname: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/familynames.txt"}}  #  Calhoun
       airport: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/airports_codes.txt"}}  #  MBI
+      airport_ordered_skipfirst: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/airports_codes.txt", "sequential": true, "startFromLine": 1}}
     Repeat: 10
