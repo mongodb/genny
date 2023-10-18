@@ -1,8 +1,20 @@
+from io import StringIO
+import re
 import sys
 
 import structlog
 import colorama as c
 from typing import Any
+
+
+# Reuse compiled regex patterns throughout for efficiency
+REGEX_TO_REDACTION: dict[re.Pattern[str], str] = {
+    re.compile(r"://([^:@]*):([^@]*)@"): r"://\g<1>:[REDACTED]@",  # password in URLs
+    re.compile(r"mongo(.+?)-p ([^;' ]*)"): r"mongo\g<1>-p [REDACTED]",  # -p flag of mongo
+    re.compile(
+        r"--password ([^;' ]*)"
+    ): r"--password [REDACTED]",  # --password flag of mongo & mongosh
+}
 
 
 def setup_logging(verbose: bool = False) -> None:
@@ -39,7 +51,8 @@ def setup_logging(verbose: bool = False) -> None:
             structlog.processors.TimeStamper(fmt="%Y-%m-%dT%H:%M:%SZ"),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            structlog.dev.ConsoleRenderer(pad_event=20, colors=True, force_colors=True),
+            StringifyAndRedact(),
+            CustomConsoleRenderer(pad_event=20, colors=True, force_colors=True),
         ],
         context_class=dict,
         logger_factory=structlog.stdlib.LoggerFactory(),
@@ -50,35 +63,47 @@ def setup_logging(verbose: bool = False) -> None:
     # so we don't get colors on Evergreen pages (which usually doesn't give us a TTY).
     c.init(strip=False)  # Don't strip ansi colors even if we're not on a tty.
 
-    _tweak_structlog_log_line()
 
-
-def _tweak_structlog_log_line() -> None:
+class StringifyAndRedact:
     """
-    Unfortunately structlog's ConsoleRenderer doesn't give us any ability to format the log message.
-    This changes the format by monkeypatching the __call__ method.
+    Force all values in `event_dict` to be string, and redact secrets in those values.
+    This ensures that all secrets are redacted, regardless of how nested they are in
+    data structures. (Custom)ConsoleRenderer would convert all the values to string in order
+    to print them to stdout anyway.
 
-    Default:
-        timestamp [level] event [logger] params exc_info
-    Changed to:
-        timestamp [level] [logger] event params exc_info
-
-    Also tweaked a couple padding values:
-
-      level:  Default pads to longest level (e.g. len('exception')=9).
-              Changed to pad to 5 (we usually only use info and debug)
-
-      logger: Default pads to 30.
-              Changed from 30 to 27 after running a few common DSI commands.
-
-    :return: None
+    Put this in the processor chain just before (Custom)ConsoleRenderer.
     """
 
-    from io import StringIO
+    def __call__(self, logger: Any, name: str, event_dict: dict) -> dict:
+        for key, value in event_dict.items():
+            value = str(value)
+            for regex, redaction in REGEX_TO_REDACTION.items():
+                value = re.sub(regex, redaction, value)
+            event_dict[key] = value
+        return event_dict
 
-    def _override_call(
-        self: structlog.dev.ConsoleRenderer, _: Any, __: Any, event_dict: dict
-    ) -> str:
+
+class CustomConsoleRenderer(structlog.dev.ConsoleRenderer):
+    def __call__(self: structlog.dev.ConsoleRenderer, _: Any, __: Any, event_dict: dict) -> str:
+        """
+        Unfortunately structlog's ConsoleRenderer doesn't let us format the log message.
+        This changes the format by overriding the __call__ method.
+
+        Default:
+            timestamp [level] event [logger] params exc_info
+        Changed to:
+            timestamp [level] [logger] event params exc_info
+
+        Also tweaked a couple padding values:
+
+        level:  Default pads to longest level (e.g. len('exception')=9).
+                Changed to pad to 5 (we usually only use info and debug)
+
+        logger: Default pads to 30.
+                Changed from 30 to 27 after running a few common DSI commands.
+
+        :return: None
+        """
         # Initialize lazily to prevent import side-effects.
         if self._init_colorama:
             structlog.dev._init_colorama(self._force_colors)
@@ -118,11 +143,7 @@ def _tweak_structlog_log_line() -> None:
                     + "] "
                 )
 
-            # force event to str for compatibility with standard library
             event = event_dict.pop("event")
-            if not isinstance(event, str):
-                event = str(event)
-
             if event_dict:
                 event = structlog.dev._pad(event, self._pad_event) + self._styles.reset + " "
             else:
@@ -155,5 +176,3 @@ def _tweak_structlog_log_line() -> None:
             return out
         finally:
             sio.close()
-
-    structlog.dev.ConsoleRenderer.__call__ = _override_call
