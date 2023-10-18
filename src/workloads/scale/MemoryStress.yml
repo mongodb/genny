@@ -1,7 +1,17 @@
 SchemaVersion: 2018-07-01
 Owner: Service Architecture
 Description: |
-  Used to test performance of the server under heavy memory pressure.
+  Used to test performance of the server under heavy memory pressure. This workload is
+  expected to fail due to hosts being unreachable as a result of mongod(s) running out
+  of memory. When the server becomes more suited to handle memory pressure, the
+  expectation of failure can be removed.
+
+Keywords:
+- scale
+- memory
+- aggregate
+- sort
+- insert
 
 GlobalDefaults:
   dbname: &DBName memorystress
@@ -20,7 +30,7 @@ GlobalDefaults:
     # Random number from [0, NumberOfDocuments].
     b: {^RandomInt: {min: 0, max: *NumDocs}}
     # Fill 520 KB.
-    c: {^RandomString: {length: *DocSize}}
+    c: {^FastRandomString: {length: *DocSize}}
 
   # Number of documents to sort by each thread. Tuned so that *SortStep * *DocSize < 100 MB,
   # which is the maximum memory a sort query is allowed to use before spilling to disk.
