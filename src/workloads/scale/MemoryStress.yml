@@ -2,16 +2,17 @@ SchemaVersion: 2018-07-01
 Owner: Service Architecture
 Description: |
   Used to test performance of the server under heavy memory pressure. This workload is
-  expected to fail due to hosts being unreachable as a result of mongod(s) running out
+  expected to fail due to host(s) being unreachable as a result of mongod(s) running out
   of memory. When the server becomes more suited to handle memory pressure, the
   expectation of failure can be removed.
 
 Keywords:
 - scale
-- memory
+- memory stress
 - aggregate
 - sort
 - insert
+- fail
 
 GlobalDefaults:
   dbname: &DBName memorystress
@@ -25,7 +26,9 @@ GlobalDefaults:
   NumberOfDocumentsPerWorker: &DocsPerThread 157
   DocSize: &DocSize 520000
   Document: &Doc
-    # Document number/ID.
+    # Document number/ID. Starts at -*DocsPerThread because ActorId starts at 1, and therefore
+    # in order for the first output of ^Inc to be 0, "start" would need to be offset by
+    # ActorId * *DocsPerThread.
     a: {^Inc: {start: -157, step: 1, multiplier: *DocsPerThread}}
     # Random number from [0, NumberOfDocuments].
     b: {^RandomInt: {min: 0, max: *NumDocs}}
