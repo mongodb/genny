@@ -1152,12 +1152,15 @@ int32_t convertToNumeric(convert<std::string, int32_t>, const std::string& s) {
 }
 
 // This is the only overload we run directly, and it will route to the correct template.
+// By constructing and passing a convert struct with the <F, T> type, we will route to the desired
+// overload of convertToNumeric matching that type.
 template <typename F, typename T>
 T convertToNumeric(const F& from) {
     return convertToNumeric(convert<F, T>{}, from);
 }
 
 // overloaded struct for use with std::variants.
+// Reference: https://en.cppreference.com/w/cpp/utility/variant/visit
 template<class... Ts>
 struct overloaded : Ts... { using Ts::operator()...; };
 
@@ -1167,45 +1170,69 @@ overloaded(Ts...) -> overloaded<Ts...>;
 // Generator to convert from any numeric type except decimal or string to specific numeric type.
 template<typename T>
 class NumericConversionGenerator : public Generator<T> {
+private:
+    static inline void fail_multiple_convert() {
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+            "When determining type of the from generator, multiple conversions succeeded -- "
+            "generator type is ambiguous. This should not happen."));
+    }
 public:
     NumericConversionGenerator(const Node& node, GeneratorArgs generatorArgs) {
-        // Try all of the possible generators for from, return when we find one that works.
+        // Try all of the possible generators for from, and ensure that exactly one works.
+        bool succeeded = false;
         try {
             _generator = stringGenerator(node["from"], generatorArgs);
-            return;
+            succeeded = true;
         } catch (const InvalidConversionException& e) {}
           catch (const UnknownParserException& e) {}
         try {
-            _generator = intGenerator(node["from"], generatorArgs);
-            return;
+            auto generator = intGenerator(node["from"], generatorArgs);
+            if(succeeded) {
+                // generator conversion has succeeded more than once, so node["from"] is ambiguous.
+                // This is bad; panic.
+                fail_multiple_convert();
+            }
+            _generator = std::move(generator);
+            succeeded = true;
         } catch (const InvalidConversionException& e) {}
           catch (const UnknownParserException& e) {}
         try {
-            _generator = doubleGenerator(node["from"], generatorArgs);
-            return;
+            auto generator = doubleGenerator(node["from"], generatorArgs);
+            if(succeeded) {
+                fail_multiple_convert();
+            }
+            _generator = std::move(generator);
+            succeeded = true;
         } catch (const InvalidConversionException& e) {}
           catch (const UnknownParserException& e) {}
         try {
-            _generator = int32Generator(node["from"], generatorArgs);
-            return;
+            auto generator = doubleGenerator(node["from"], generatorArgs);
+            if(succeeded) {
+                fail_multiple_convert();
+            }
+            _generator = std::move(generator);
+            succeeded = true;
         } catch (const InvalidConversionException& e) {}
           catch (const UnknownParserException& e) {}
-        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-            "Numeric conversion generator only supports conversions from the string, double, int, "
-            "and int32 types. The type of the \"from\" field did not match any of those types."));
+        if(!succeeded) {
+            // No generator conversion was successful, this is a failure.
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                "Numeric conversion generator only supports conversions from the string, double, int, "
+                "and int32 types. The type of the \"from\" field did not match any of those types."));
+        }
     }
     T evaluate() override {
         return std::visit(overloaded{
-            [&](UniqueGenerator<std::string>& gen) {
+            [](UniqueGenerator<std::string>& gen) {
                 return convertToNumeric<std::string, T>(gen->evaluate());
             },
-            [&](UniqueGenerator<int64_t>& gen) {
+            [](UniqueGenerator<int64_t>& gen) {
                 return convertToNumeric<int64_t, T>(gen->evaluate());
             },
-            [&](UniqueGenerator<double>& gen) {
+            [](UniqueGenerator<double>& gen) {
                 return convertToNumeric<double, T>(gen->evaluate());
             },
-            [&](UniqueGenerator<int32_t>& gen) {
+            [](UniqueGenerator<int32_t>& gen) {
                 return convertToNumeric<int32_t, T>(gen->evaluate());
             }
         }, _generator);
