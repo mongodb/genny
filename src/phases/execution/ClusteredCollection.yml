@@ -60,7 +60,7 @@ Actors:
       Active: [1]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        # Until TIG-3290 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs
+        # Until EVG-21054 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs
         OnlyRunInInstance: sharded
         Repeat: 1
         Operations:

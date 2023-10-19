@@ -106,7 +106,7 @@ ActorTemplates:
                 [
                   {$lookup: {
                     from: {^Parameter: {Name: "Coll", Default: "localColl"}},
-                    let: {local_field: "localField"},
+                    let: {local_field: "$localField"},
                     pipeline: [
                       {$match: 
                         {

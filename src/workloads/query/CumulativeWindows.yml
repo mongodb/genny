@@ -10,7 +10,7 @@ Description: >
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
-  MaxPhases: &MaxPhases 21
+  MaxPhases: &MaxPhases 14
 
 Actors:
 # Clear any pre-existing collection state.
@@ -295,159 +295,12 @@ Actors:
             }
           }]
 
-- TopCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: TopCumulative
-      active: [14]
-      operationMetricsName: TopCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                top: {
-                  $top: {sortBy: {time: 1}, output: "$x"},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
-
-- BottomCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: BottomCumulative
-      active: [15]
-      operationMetricsName: BottomCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                bottom: {
-                  $bottom: {sortBy: {time: 1}, output: "$x"},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
-
-- MaxNCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: MaxNCumulative
-      active: [16]
-      operationMetricsName: MaxNCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                maxN: {
-                  $maxN: {input: "$x", n: 4},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
-
-- MinNCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: MinNCumulative
-      active: [17]
-      operationMetricsName: MinNCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                minN: {
-                  $minN: {input: "$x", n: 4},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
-
-- TopNCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: TopNCumulative
-      active: [18]
-      operationMetricsName: TopNCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                topN: {
-                  $topN: {sortBy: {time: 1}, output: "$x", n: 4},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
-
-- BottomNCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: BottomNCumulative
-      active: [19]
-      operationMetricsName: BottomNCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                bottomN: {
-                  $bottomN: {sortBy: {time: 1}, output: "$x", n: 4},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
-
-- DerivativeCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: DerivativeCumulative
-      active: [20]
-      operationMetricsName: DerivativeCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                derivative: {
-                  $derivative: {input: "$x", unit: "second"},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
-
 - IntegralCumulative:
   LoadConfig:
     <<: *loadConfig
     Parameters:
       name: IntegralCumulative
-      active: [21]
+      active: [14]
       operationMetricsName: IntegralCumulative
       nopInPhasesUpTo: *MaxPhases
       Pipeline:

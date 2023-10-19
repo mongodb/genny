@@ -291,7 +291,7 @@ public:
             _onlyRunInInstancesContext = Options::getCodesFromStrings(stringOptions);
             _adminDB = (*client)["admin"];
 
-            // Query type in constructor, this way query is done in context build. Until TIG-3290 is
+            // Query type in constructor, this way query is done in context build. Until EVG-21054 is
             // done this requires excluding workloads using this functionality from the dry-run.
             _type = getInstanceType(_adminDB);
             _typeFoundInConfig = false;

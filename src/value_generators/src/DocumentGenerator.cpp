@@ -22,6 +22,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <regex>
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
@@ -941,6 +942,139 @@ private:
     const UniqueGenerator<std::string> _hexGen;
 };
 
+
+std::string validUuidChars{"0123456789abcdefABCDEF-"};
+std::string validateUuidPattern{"^([0-9a-f]{8}\\-[0-9a-f]{4}\\-[0-9a-f]{4}\\-[0-9a-f]{4}\\-[0-9a-f]{12})$"};
+std::regex validateUuidRegex{validateUuidPattern, std::regex_constants::icase};
+
+/**
+ * Validate the uuid hex format.
+ * @param hex
+ *   the hex string
+ * @raises InvalidValueGeneratorSyntax if the format is not correct
+ *  The correct format is an 8-4-4-4-12 hex string (case is ignored)
+ */
+void validateUuidHex(std::string hex) {
+
+    auto pos = hex.find_first_not_of(validUuidChars);
+    if ( pos != std::string::npos ) {
+        std::stringstream msg;
+        std::string invalid(hex);
+        invalid.erase(std::remove_if(invalid.begin(), invalid.end(),
+                                 [&](char c) { return validUuidChars.find(c) != std::string::npos; } ),
+                      invalid.end());
+
+        msg << "'" << hex << "' contains invalid characters '" << invalid << "'";
+        BOOST_LOG_TRIVIAL(warning) << " UuidGenerator " << msg.str();
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+    }
+
+    std::smatch match;
+    if (!std::regex_search(hex, match, validateUuidRegex)) {
+        std::stringstream msg;
+        msg << "'" << hex << "' is not a valid format. The format must match: '" << validateUuidPattern << "'";
+        BOOST_LOG_TRIVIAL(warning) << " UuidGenerator " << msg.str();
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+    }
+}
+
+/**
+ * Validate that the uuid sub type is correct.
+ * @param sub_type
+ *   the binary sub type value
+ * @raises InvalidValueGeneratorSyntax if the sub type is not correct
+*  Currntly only supports sub type 4.
+ */
+void validateUuidSubType(bsoncxx::binary_sub_type sub_type) {
+
+    if (bsoncxx::binary_sub_type::k_uuid != sub_type) {
+        std::stringstream msg;
+        msg << "Invalid binary sub_type. UUID only supports bsoncxx::binary_sub_type::k_uuid("
+            << static_cast<int64_t>(bsoncxx::binary_sub_type::k_uuid) << "), got " << static_cast<int64_t>(sub_type);
+        BOOST_LOG_TRIVIAL(warning) << " UuidGenerator " << msg.str();
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+    }
+}
+
+/**
+ * Convert ascii hex nibble to binary.
+ * @param c
+ *   the ascii hex nibble
+ * @return
+ *   the binary version of the hex nibble
+ */
+uint8_t hexNibbleToBin(uint8_t c) {
+    if (c >= '0' && c <= '9') {
+        c -= '0';
+    } else  if (c >= 'a' && c <= 'f') {
+        c = c - 'a' + 10;
+    } else  if (c >= 'A' && c <= 'F') {
+        c = c - 'A' + 10;
+    }
+    return c;
+}
+
+/**
+ * Convert hex string Uuid to binary.
+ * @param hex
+ *   the input hex string, '-' will be ignored.
+ * @param uuid
+ *   the array to store the uuid.
+ * @return the output array
+ */
+uint8_t* hex2BinUuid(std::string hex, uint8_t* uuid) {
+    hex.erase(std::remove_if(hex.begin(), hex.end(),
+                             [&](char c) { return c == '-'; } ),
+              hex.end());
+
+    auto i = 0;
+    for(std::string::iterator it = hex.begin(); it != hex.end(); ++it) {
+        uuid[i++] = (hexNibbleToBin(*it) << 4) + hexNibbleToBin(*++it);
+    }
+    return uuid;
+}
+
+/**
+ * `{^UUID: {hex: "3b241101-e2bb-4255-8caf-4136c566a962"} }`
+ *  Generator for non-legacy UUIDs (0x04). hex can itself be a generator so the string can be
+ *  generated in many fashions ^Join, ^FormatString, ... etc.
+ *
+ *  The input format accepted for the hex field is 8-4-4-4-12 format. The code is agnostic as to the
+ *  UUID version.
+ *
+ *  see https://en.wikipedia.org/wiki/Universally_unique_identifier
+ */
+class UuidGenerator : public Generator<bsoncxx::types::b_binary> {
+public:
+    UuidGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _rng{generatorArgs.rng},
+          _node{node},
+          _hexGen{stringGenerator(node["hex"], generatorArgs)},
+          // If there is no subType then use bsoncxx::binary_sub_type::k_uuid
+          _subTypeGen{node["subType"]
+                          ? intGenerator(node["subType"], generatorArgs)
+                          : std::make_unique<ConstantAppender<int64_t>>(
+                                static_cast<int64_t>(bsoncxx::binary_sub_type::k_uuid))} {}
+
+    bsoncxx::types::b_binary evaluate() override {
+        auto hex = _hexGen->evaluate();
+        validateUuidHex(hex);
+
+        auto sub_type = static_cast<bsoncxx::binary_sub_type>(_subTypeGen->evaluate());
+        validateUuidSubType(sub_type);
+
+        return bsoncxx::types::b_binary{sub_type, 16, hex2BinUuid(hex, uuid)};
+    }
+
+private:
+    DefaultRandom& _rng;
+    const Node& _node;
+    const UniqueGenerator<std::string> _hexGen;
+    const UniqueGenerator<int64_t> _subTypeGen;
+    uint8_t uuid[16];
+
+};
+
 class StringGenerator : public Generator<std::string> {
 public:
     StringGenerator(const Node& node, GeneratorArgs generatorArgs)
@@ -968,68 +1102,78 @@ class DataSetCache {
 public:
     DataSetCache() {}
 
-    /* The dataset is stored in a map, using the path of the file as the key and a vector of strings
-    with file's content as the value. In this method the empty vector is created and return its
-    pointer. getDataSetForPath method doesn't need the lock because loading and evaluating are
-    separate stages in Genny */
-    std::vector<std::string>* createMemoryForDataset(const std::string& path) {
-        std::lock_guard<std::mutex> lk(_dataset_mutex);
-        if (_all_datasets.count(path) > 0) {
-            /* When multiple threads try to load a dataset, all but the first thread will return
-               and do nothing. This way only the first thread will actually load the data.
-               Once the first vector is inserted and the first thread has finished running the
-               threads that were waiting on this mutex will find that there is already one element
-               for that _path and return a null pointer */
-            return nullptr;
-        }
+    using LoadFunction = std::function<void(std::vector<std::string>*)>;
+    /* The dataset is stored in a map, using the path of the file as the key and a Dataset object,
+    which contains the actual data as well as whether it is done being loaded,as the value.
+    In this method, the dataset at the given path is filled by the load function, and a reference
+    to the data is returned. getDataSetForPath method doesn't need the lock because loading and
+    evaluating are separate stages in Genny */
+    std::vector<std::string>& loadDataset(const std::string& path, LoadFunction loader) {
+        {
+            std::unique_lock<std::mutex> lk(_dataset_mutex);
+            /* If the path already exists, it is either loaded or being loaded, so this thread
+            should not do any loading. However, it should wait until loading is finished. */
+            if (_all_datasets.count(path) > 0) {
+                /* When multiple threads try to load a dataset, all but the first thread will just
+                wait for the loading to finish. This way only the first thread will actually load
+                the data. Once the first vector is inserted and the first thread has finished
+                loading, it will signal all waiting threads, and those that were waiting on the
+                same path as was loaded will finish waiting and return the data. */
+                _dataset_done_cv.wait(lk, [&]() {return _all_datasets[path].done; });
+                return _all_datasets[path].data;
+            }
 
-        /* Insert an empty vector and return its pointer */
-        _all_datasets[path] = std::vector<std::string>();
-        return &_all_datasets[path];
+            /* Insert an empty vector to denote that we have won the race */
+            _all_datasets[path] = {false, std::vector<std::string>()};
+        }
+        // Only the first thread should ever get here. It should load the data, set the done flag to
+        // true, and signal cond waiters that a dataset has been loaded.
+        loader(&_all_datasets[path].data);
+        {
+            // We have to lock while setting done to avoid a waiting thread missing the done flag.
+            std::unique_lock<std::mutex> lk(_dataset_mutex);
+            _all_datasets[path].done = true;
+        }
+        _dataset_done_cv.notify_all();
+        return _all_datasets[path].data;
     }
 
     const std::vector<std::string>& getDatasetForPath(const std::string& path) {
-        return _all_datasets[path];
+        return _all_datasets[path].data;
     }
 
 private:
-    std::unordered_map<std::string, std::vector<std::string>> _all_datasets;
+    struct Dataset {
+        bool done;
+        std::vector<std::string> data;
+    };
+    std::unordered_map<std::string, Dataset> _all_datasets;
     std::mutex _dataset_mutex;
+    std::condition_variable _dataset_done_cv;
 };
 
-/** `{^ChooseFromDataset:{...}` */
-class RandomStringFromDataset : public Generator<std::string> {
-
-public:
-    RandomStringFromDataset(const Node& node, GeneratorArgs generatorArgs)
-        : _rng{generatorArgs.rng},
-          _id{generatorArgs.actorId},
-          _path{node["path"].maybe<std::string>().value()} {
+// The ChooseStringFromDataset* generators will use the same static dataset stored in this class.
+class WithDatasetStorage {
+protected:
+    WithDatasetStorage(const std::string& path) : _path(path) {
         if (_path.empty()) {
             BOOST_THROW_EXCEPTION(
-                InvalidValueGeneratorSyntax("ChooseFromDataset requieres non-empty path"));
+                InvalidValueGeneratorSyntax("Dataset requires non-empty path"));
         }
         loadDataset();
+        // We can store a pointer to this data because the dataset never moves once created.
+        _dataset = &_datasets.getDatasetForPath(_path);
     }
 
-    std::string evaluate() {
-        auto dataset = _datasets.getDatasetForPath(_path);
-        auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataset.size() - 1};
-        return dataset[distribution(_rng)];
+    const std::vector<std::string>& getDataset() {
+        return *_dataset;
     }
 
 private:
     void loadDataset() {
-        auto pd = _datasets.createMemoryForDataset(_path);
+        auto& dataset = _datasets.loadDataset(_path, [this](std::vector<std::string>* to) { readFile(to); });
 
-        if (pd == nullptr) {
-            /* No need to load the dataset because another thread is doing it */
-            return;
-        }
-
-        readFile(pd);
-
-        if (pd->empty()) {
+        if (dataset.empty()) {
             boost::filesystem::path cwd(boost::filesystem::current_path());
 
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
@@ -1058,12 +1202,48 @@ private:
             }
         }
     }
+private:
+    std::string _path;
+    static inline DataSetCache _datasets;
+    const std::vector<std::string>* _dataset;
+};
+
+class ChooseStringFromDatasetRandomly : public Generator<std::string>, private WithDatasetStorage {
+public:
+    ChooseStringFromDatasetRandomly(const Node& node, GeneratorArgs generatorArgs)
+        : WithDatasetStorage(node["path"].maybe<std::string>().value()),
+          _rng{generatorArgs.rng} {}
+
+    std::string evaluate() {
+        const auto& dataset = getDataset();
+        auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataset.size() - 1};
+        return dataset[distribution(_rng)];
+    }
 
 private:
     DefaultRandom& _rng;
-    ActorId _id;
-    std::string _path;
-    static inline DataSetCache _datasets;
+};
+
+class ChooseStringFromDatasetSequentially : public Generator<std::string>, private WithDatasetStorage {
+public:
+    ChooseStringFromDatasetSequentially(const Node& node, GeneratorArgs generatorArgs)
+        : WithDatasetStorage(node["path"].maybe<std::string>().value()),
+          _line(node["startFromLine"].maybe<uint64_t>().value_or(0)) {
+        if(_line >= getDataset().size()) {
+            BOOST_THROW_EXCEPTION(
+                InvalidValueGeneratorSyntax("In ChooseFromDataset, startFromLine was out of range of the provided file"));
+        }
+    }
+
+    std::string evaluate() {
+        const auto& dataset = getDataset();
+        auto next = dataset[_line];
+        _line = (_line + 1) % dataset.size();
+        return next;
+    }
+
+private:
+    uint64_t _line;
 };
 
 /** `{^RandomString:{...}` */
@@ -1276,6 +1456,15 @@ public:
 
 private:
     int64_t _actorId;
+};
+
+/** `{^Null: {}}` */
+class NullGenerator : public Generator<bsoncxx::types::b_null> {
+public:
+    NullGenerator(const Node& node, GeneratorArgs generatorArgs) {}
+    bsoncxx::types::b_null evaluate() override {
+        return bsoncxx::types::b_null{};
+    }
 };
 
 /** `{^ActorIdString: {}}` */
@@ -1968,6 +2157,14 @@ const auto [allParsers,
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ObjectIdGenerator>(node, generatorArgs);
          }},
+        {"^UUID",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<UuidGenerator>(node, generatorArgs);
+         }},
+        {"^Null",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NullGenerator>(node, generatorArgs);
+         }},
         {"^Verbatim",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return valueGenerator<true, UniqueAppendable>(node, generatorArgs, allParsers);
@@ -2085,8 +2282,12 @@ const auto [allParsers,
              return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
          }},
         {"^ChooseFromDataset",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
+         [](const Node& node, GeneratorArgs generatorArgs) -> UniqueGenerator<std::string> {
+            if(node["sequential"].maybe<bool>().value_or(false)) {
+                return std::make_unique<ChooseStringFromDatasetSequentially>(node, generatorArgs);
+            } else {
+                return std::make_unique<ChooseStringFromDatasetRandomly>(node, generatorArgs);
+            }
          }},
         {"^Join",
          [](const Node& node, GeneratorArgs generatorArgs) {

@@ -572,26 +572,59 @@ Tests:
       - {a: yz}
       - {a: xyxyx}
 
-  - Name: RandomDataFromDataset requires a path
+  - Name: ChooseFromDataset requires a path
     GivenTemplate:
       a: {^ChooseFromDataset: {}}
     ThenThrows: InvalidValueGeneratorSyntax
 
-  - Name: RandomDataFromDataset requires a file that exists
+  - Name: ChooseFromDataset requires a file that exists
     GivenTemplate:
       a: {^ChooseFromDataset: {"path": "/tmp/itdoesnotexist"}}
     ThenThrows: InvalidValueGeneratorSyntax
 
-  - Name: RandomDataFromDataset requires a non-empty file
+  - Name: ChooseFromDataset requires a non-empty file
     GivenTemplate:
       a: {^ChooseFromDataset: {"path": "../../../src/workloads/datasets/empty_test.txt"}}
     ThenThrows: InvalidValueGeneratorSyntax
 
-  - Name: RandomDataFromDataset returns airport code
+  - Name: ChooseFromDataset returns airport code
     GivenTemplate:
       a: {^ChooseFromDataset: {"path": "../../../src/workloads/datasets/airports_codes.txt"}}
     ThenReturns:
       - {a: CRF}
+
+  - Name: Sequential ChooseFromDataset requires startFromLine in range of file
+    GivenTemplate:
+      a: {^ChooseFromDataset: {"path": "../../../src/workloads/datasets/airports_codes_short.txt", "sequential": true, "startFromLine": 2}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Sequential ChooseFromDataset returns airport codes in order
+    GivenTemplate:
+      a: {^ChooseFromDataset: {"path": "../../../src/workloads/datasets/airports_codes.txt", "sequential": true}}
+    ThenReturns:
+      - {a: AAC}
+      - {a: AAE}
+      - {a: AAF}
+      - {a: AAH}
+      - {a: AAI}
+
+  - Name: Sequential ChooseFromDataset starts from startFromLine
+    GivenTemplate:
+      a: {^ChooseFromDataset: {"path": "../../../src/workloads/datasets/airports_codes.txt", "sequential": true, "startFromLine": 2}}
+    ThenReturns:
+      - {a: AAF}
+      - {a: AAH}
+      - {a: AAI}
+
+  - Name: Sequential ChooseFromDataset cycles when it reaches the end of dataset
+    GivenTemplate:
+      a: {^ChooseFromDataset: {"path": "../../../src/workloads/datasets/airports_codes_short.txt", "sequential": true}}
+    ThenReturns:
+      - {a: AAC}
+      - {a: AAE}
+      - {a: AAC}
+      - {a: AAE}
+      - {a: AAC}
 
   - Name: FastRandom string
     GivenTemplate:
@@ -626,6 +659,12 @@ Tests:
       a: {^Verbatim: {^RandomInt: {min: 10000000050, max: 10000000060}}}
     ThenReturns:
       - a: {^RandomInt: {min: 10000000050, max: 10000000060}}
+
+  - Name: Null
+    GivenTemplate:
+      a: {^Null: {}}
+    ThenReturns:
+      - a: null
 
   - Name: Verbatim can break all the rules
     GivenTemplate:
@@ -1439,6 +1478,132 @@ Tests:
     ThenReturns:
         - foo:
           - "1.0"
+
+  # https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_(random)
+  # Check uuid with the following python:
+  #   # "3b241101-e2bb-4255-8caf-4136c566a962"
+  #   import base64
+  #   from hexdump import hexdump
+  #   s = "OyQRAeK7QlWMr0E2xWapYg=="
+  #   b = base64.b64decode(s)
+  #   print(hexdump(b))
+  #   00000000: 3B 24 11 01 E2 BB 42 55  8C AF 41 36 C5 66 A9 62  ;$....BU..A6.f.b
+  #
+  #   b = b"\x3b\x24\x11\x01\xe2\xbb\x42\x55\x8c\xaf\x41\x36\xc5\x66\xa9\x62"
+  #   s = base64.b64encode(b)
+  #   print(s.decode())
+  #   OyQRAeK7QlWMr0E2xWapYg==
+  - Name: Uuid Invalid subType
+    GivenTemplate:
+      a: {^UUID: {hex: "", subType: 5}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Uuid Invalid Ascii chars
+    GivenTemplate:
+      a: {^UUID: {hex: "t0000000-0000-0000-0000-00000000000g" }}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Uuid Invalid Unicode char
+    GivenTemplate:
+      a: {^UUID: {hex: "00000000-0000-0000-0000-00000000000ф" }}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Uuid Invalid 7 char format
+    GivenTemplate:
+      a: {^UUID: {hex: "0000000" }}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Uuid Invalid Long format
+    GivenTemplate:
+      a: {^UUID: {hex: "00000000-0000-0000-0000-00000000000" }}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Uuid Empty
+    GivenTemplate:
+      a: {^UUID: {hex: ""}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Uuid Nil
+    GivenTemplate:
+      a: {^UUID: {hex: "00000000-0000-0000-0000-000000000000" }}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "AAAAAAAAAAAAAAAAAAAAAA==", "subType": "04" } } }   # 00000000000000000000000000000000
+
+  - Name: Uuid Max
+    GivenTemplate:
+      a: {^UUID: {hex: "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF" }}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "/////////////////////w==", "subType": "04" } } }   # FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+
+  - Name: Uuid Value
+    GivenTemplate:
+      a: {^UUID: {hex: "3b241101-e2bb-4255-8caf-4136c566a962" }}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "OyQRAeK7QlWMr0E2xWapYg==", "subType": "04" } } }
+
+  - Name: Uuid Fixed
+    GivenTemplate:
+      a: {^UUID: {hex: "00000000-4000-8000-0000-000000000021" }}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "AAAAAEAAgAAAAAAAAAAAIQ==", "subType": "04" } } }   # 00000000400080000000000000000021
+
+  - Name: Uuid RandomString
+    GivenTemplate:
+      a: {^UUID: {hex: { ^Join: { array: [ "00000000-4000-8000-0000-0000000000", { ^RandomString: { length: 2, alphabet: "0123456789abcdef" } } ], sep: "" } }}}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "AAAAAEAAgAAAAAAAAAAAIQ==", "subType": "04" } } }   # 00000000400080000000000000000021
+      - { "a": { "$binary": { "base64": "AAAAAEAAgAAAAAAAAAAAAQ==", "subType": "04" } } }   # 00000000400080000000000000000001
+      - { "a": { "$binary": { "base64": "AAAAAEAAgAAAAAAAAAAAXQ==", "subType": "04" } } }   # 0000000040008000000000000000005D
+      - { "a": { "$binary": { "base64": "AAAAAEAAgAAAAAAAAAAAxA==", "subType": "04" } } }   # 000000004000800000000000000000C4
+
+  - Name: Uuid FormatRandom
+    GivenTemplate:
+      a: {^UUID: {hex: {^FormatString: {format: "3b241101-e2bb-4255-8caf-4136c566a9%02x",  withArgs: [{^RandomInt: {min: 0, max: 255}}]}}}}
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "OyQRAeK7QlWMr0E2xWapJw==", "subType": "04" } } }   # 3b241101e2bb42558caf4136c566a927
+      - { "a": { "$binary": { "base64": "OyQRAeK7QlWMr0E2xWapGw==", "subType": "04" } } }   # 3b241101e2bb42558caf4136c566a91b
+      - { "a": { "$binary": { "base64": "OyQRAeK7QlWMr0E2xWapBQ==", "subType": "04" } } }   # 3b241101e2bb42558caf4136c566a905
+      - { "a": { "$binary": { "base64": "OyQRAeK7QlWMr0E2xWapEg==", "subType": "04" } } }   # 3b241101e2bb42558caf4136c566a912
+
+  - Name: Uuid FormatRandomFull
+    GivenTemplate:
+      a: {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x",
+                                        withArgs: [
+                                          {^RandomInt: {min: 0, max: 0xFFFFFFFF}},         #      4294967295
+                                          {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
+                                          {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
+                                          {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
+                                          {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}}]}}}} # 281474976710655
+    ThenReturns:
+      - { "a": { "$binary": { "base64": "J8eVixtuBawStlftyS4a5A==", "subType": "04" } } }   # 27c7958b1b6e05ac12b657edc92e1ae4
+      - { "a": { "$binary": { "base64": "058zeM2kQpZmGyNWFG7qAg==", "subType": "04" } } }   # d39f3378cda44296661b2356146eea02
+      - { "a": { "$binary": { "base64": "e0Hs8TTRbWe30YZ1Aj82fg==", "subType": "04" } } }   # 7b41ecf134d16d67b7d18675023f367e
+      - { "a": { "$binary": { "base64": "BfYiXLZtmMit32Y4tA1rFw==", "subType": "04" } } }   # 05f6225cb66d98c8addf6638b40d6b17
+
+  - Name: Uuids Random
+    GivenTemplate:
+      a: [
+        {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x",
+                                       withArgs: [
+                                         {^RandomInt: {min: 0, max: 0xFFFFFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}}]}}}},
+        {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x",
+                                       withArgs: [
+                                         {^RandomInt: {min: 0, max: 0xFFFFFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFF}},
+                                         {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}}]}}}},
+      ]
+    ThenReturns:
+      - {
+          "a": [ { "$binary": { "base64": "J8eVixtuBawStlftyS4a5A==", "subType": "04" } },  # 27c7958b1b6e05ac12b657edc92e1ae4
+                 { "$binary": { "base64": "058zeM2kQpZmGyNWFG7qAg==", "subType": "04" } }   # d39f3378cda44296661b2356146eea02
+          ]
+        }
 
   - Name: Conversions from string
     GivenTemplate:

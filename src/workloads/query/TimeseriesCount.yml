@@ -1,0 +1,129 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  The queries in this workload exercise group stage that uses the $count accumulator and the $count 
+  aggregation stage. On FCV greater than or equal to 7.1 $group using $count is optimized to remove 
+  the $unpack stage.
+
+Keywords:
+  - timeseries
+  - aggregate
+  - group
+
+GlobalDefaults:
+  Database: &database test
+  Collection: &collection Collection0
+  MaxPhases: &maxPhases 10
+  repeat: &repeat 10
+
+Actors:
+  # Clear any pre-existing collection state. Helpful to avoid errors during local testing.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *collection
+          Operations:
+            - OperationName: drop
+
+  # Testing during development showed the runtime is greatly affected by the number of measurements per bucket.
+  # There is on average 103  measurements per bucket when granularity = "seconds", which was determined is a
+  # typical customer bucket.
+  - Name: CreateTimeseriesCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *database
+          Operation:
+            OperationMetricsName: CreateTimeseriesCollection
+            OperationName: RunCommand
+            OperationCommand:
+              {
+                create: *collection,
+                timeseries:
+                  {
+                    timeField: "time",
+                    metaField: "symbol",
+                    granularity: "seconds",
+                  },
+              }
+
+  # This template is used by other timeseries workloads and will add 1000000 documents to the collection.
+  - InsertData:
+    LoadConfig:
+      Path: "../../phases/query/GroupStagesOnComputedFields.yml"
+      Key: InsertDataTemplate
+      Parameters:
+        active: [2]
+        nopInPhasesUpTo: *maxPhases
+
+  # Phase 3: Ensure all data is synced to disk.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+
+  # Run queries with the optimization.
+  - Name: GroupCountAccumulatorOpt
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline: [{ $group: { _id: null, count: { $count: {} } } }]
+
+  - Name: GroupCountAggStageOpt
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName:
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline: [{ $count: "count" }]
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-all-feature-flags
+      branch_name:
+        $gte: v7.1

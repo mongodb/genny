@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: mongodb/server-replication"
 Description: >
-  Measures the performance of running dbcheck and its effect on crud operations.
+  Measures the performance of running dbcheck's modes and its effect on crud operations.
 
 Keywords:
 - dbcheck
@@ -12,17 +12,60 @@ Keywords:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 300
+      maxPoolSize: 600
       # Allow for longer duration since index builds may take a while.
       socketTimeoutMS: 7_200_000  # = 2 hour
       connectTimeoutMS: 7_200_000
 
 GlobalDefaults:
-  - NumPhases: &max_phase 2
+  - NumPhases: &max_phase 15
   - Database: &database "testDB"
   - CollectionCount: &collectionCount 1
   - CollectionName: &coll "Collection0"
   - CrudGlobalRate: &globalRate 100 per 31 milliseconds
+  - CrudOperations: &crudOperations
+    - OperationName: updateOne
+      OperationMetricsName: update
+      OperationCommand:    
+        Filter: {y: 1000}
+        Update: {$inc: {x: 1}}
+    - OperationName: findOne
+      OperationMetricsName: find
+      OperationCommand:
+        Filter: {y: 1000}
+
+ActorTemplates:
+- TemplateName: NoneBlockingCrudOperations
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "NoneBlockingCrudOperations"}}
+    Type: CrudActor
+    Threads: 32
+    Database: *database
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "Active", Default: [0]}}
+        NopInPhasesUpTo: *max_phase
+        PhaseConfig:
+          Blocking: None
+          GlobalRate: *globalRate
+          Collection: *coll
+          Operations: *crudOperations
+
+- TemplateName: DbCheck
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "DbCheckDefaultName"}}
+    Type: DbCheckActor
+    Threads: 1
+    Database: *database
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "Active", Default: [0]}}
+        NopInPhasesUpTo: *max_phase
+        PhaseConfig:
+          Repeat: 1
+          Collection: *coll
+          ValidateMode: {^Parameter: {Name: "ValidateMode", Default: "dataConsistency"}}
+          SecondaryIndex: {^Parameter: {Name: "SecondaryIndex", Default: ""}}
 
 Actors:
 # Phase0: Load initial data.
@@ -36,12 +79,12 @@ Actors:
       database: *database
       collectionCount: 1
       approxDocumentSize: 2000  # 2kB.
-      documentCount: 20000000  #20000000 for an approximate total of ~40GB.
+      documentCount: 20000000  # for an approximate total of ~40GB.
 
 # Phase1: Measure the perf of crud operations before running dbcheck.
-- Name: CrudOperationsWithoutDbCheck
+- Name: WithoutDbCheck
   Type: CrudActor
-  Threads: 1
+  Threads: 32
   Database: *database
   Phases:
     OnlyActiveInPhases:
@@ -51,54 +94,118 @@ Actors:
         Duration: 15 minutes
         GlobalRate: *globalRate
         Collection: *coll
-        Operations:
-          - OperationName: updateMany
-            OperationMetricsName: "updateWithoutDbcheck"
-            OperationCommand:    
-              Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
-              Update: {$inc: {x: 1}}
-          - OperationName: find
-            OperationMetricsName: "findWithoutDbcheck"
-            OperationCommand:
-              Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
-              Options:
-                Limit: 100
+        Operations: *crudOperations
 
-# Phase2: Measure the perf of crud operations while running dbcheck.
-- Name: CrudOperationsWithDbCheck
-  Type: CrudActor
+- Name: QuiescePhase
+  Type: QuiesceActor
   Threads: 1
   Database: *database
   Phases:
     OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *max_phase
-      PhaseConfig:
-        Blocking: None
-        GlobalRate: *globalRate
-        Collection: *coll
-        Operations:
-          - OperationName: updateMany
-            OperationMetricsName: "updateWithDbcheck"
-            OperationCommand:    
-              Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
-              Update: {$inc: {x: 1}}
-          - OperationName: find
-            OperationMetricsName: "findWithDbcheck"
-            OperationCommand:
-              Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
-              Options:
-                Limit: 100
-
-- Name: DbCheckActor
-  Type: DbCheckActor
-  Threads: 1
-  Database: *database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
+      Active: [2,4,6,8,10,12,14]
       NopInPhasesUpTo: *max_phase
       PhaseConfig:
         Repeat: 1
-        Collection: *coll
-        ValidateMode: dataConsistency
+
+# Phase3: Measure the perf of crud operations while running dbcheck with dataConsistency.
+- ActorFromTemplate:
+    TemplateName: DbCheck
+    TemplateParameters:
+      Name: DbCheck_dataConsistency
+      Active: [3]
+      ValidateMode: dataConsistency
+
+- ActorFromTemplate:
+    TemplateName: NoneBlockingCrudOperations
+    TemplateParameters:
+      Name: DbCheck_dataConsistency
+      Active: [3]
+
+# Phase5: Measure the perf of crud operations while running dbcheck with dataConsistencyAndMissingIndexKeysCheck.
+- ActorFromTemplate:
+    TemplateName: DbCheck
+    TemplateParameters:
+      Name: DbCheck_dataConsistencyAndMissingIndexKeysCheck
+      Active: [5]
+      ValidateMode: dataConsistencyAndMissingIndexKeysCheck
+
+- ActorFromTemplate:
+    TemplateName: NoneBlockingCrudOperations
+    TemplateParameters:
+      Name: DbCheck_dataConsistencyAndMissingIndexKeysCheck
+      Active: [5]
+
+# Phase7: Measure the perf of crud operations while running dbcheck with extra index check using 3-Int index.
+- ActorFromTemplate:
+    TemplateName: DbCheck
+    TemplateParameters:
+      Name: DbCheck_extraIndexKeysCheck_3Int
+      Active: [7]
+      ValidateMode: extraIndexKeysCheck
+      SecondaryIndex: "int0_1_int1_1_int2_1"
+
+- ActorFromTemplate:
+    TemplateName: NoneBlockingCrudOperations
+    TemplateParameters:
+      Name: DbCheck_extraIndexKeysCheck_3Int
+      Active: [7]
+
+# Phase9: Measure the perf of crud operations while running dbcheck with extra index check using 1-Int index.
+- ActorFromTemplate:
+    TemplateName: DbCheck
+    TemplateParameters:
+      Name: DbCheck_extraIndexKeysCheck_1Int
+      Active: [9]
+      ValidateMode: extraIndexKeysCheck
+      SecondaryIndex: "int4_1"
+
+- ActorFromTemplate:
+    TemplateName: NoneBlockingCrudOperations
+    TemplateParameters:
+      Name: DbCheck_extraIndexKeysCheck_1Int
+      Active: [9]
+
+# Phase11: Measure the perf of crud operations while running dbcheck with extra index check using a short string index.
+- ActorFromTemplate:
+    TemplateName: DbCheck
+    TemplateParameters:
+      Name: DbCheck_extraIndexKeysCheck_stringShort
+      Active: [11]
+      ValidateMode: extraIndexKeysCheck
+      SecondaryIndex: "string0_1"
+
+- ActorFromTemplate:
+    TemplateName: NoneBlockingCrudOperations
+    TemplateParameters:
+      Name: DbCheck_extraIndexKeysCheck_stringShort
+      Active: [11]
+
+# Phase13: Measure the perf of crud operations while running dbcheck with extra index check using a long string index.
+- ActorFromTemplate:
+    TemplateName: DbCheck
+    TemplateParameters:
+      Name: DbCheck_extraIndexKeysCheck_stringLong
+      Active: [13]
+      ValidateMode: extraIndexKeysCheck
+      SecondaryIndex: "stringLong_1"
+
+- ActorFromTemplate:
+    TemplateName: NoneBlockingCrudOperations
+    TemplateParameters:
+      Name: DbCheck_extraIndexKeysCheck_stringLong
+      Active: [13]
+
+# Phase15: Measure the perf of crud operations while running dbcheck with extra index check using a same value integer index.
+- ActorFromTemplate:
+    TemplateName: DbCheck
+    TemplateParameters:
+      Name: DbCheck_extraIndexKeysCheck_SameKey
+      Active: [15]
+      ValidateMode: extraIndexKeysCheck
+      SecondaryIndex: "int3_1"
+
+- ActorFromTemplate:
+    TemplateName: NoneBlockingCrudOperations
+    TemplateParameters:
+      Name: DbCheck_extraIndexKeysCheck_SameKey
+      Active: [15]
