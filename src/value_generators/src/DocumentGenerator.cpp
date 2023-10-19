@@ -107,25 +107,25 @@ protected:
     // Custom hasher to enable hashing for BSON types.
     struct SetHasher {
         template <typename T>
-        size_t operator() (const T& v) const {
+        size_t operator()(const T& v) const {
             return std::hash<T>{}(v);
         }
 
-        size_t operator() (const bsoncxx::array::value& value) const {
+        size_t operator()(const bsoncxx::array::value& value) const {
             // Hash the view as a string.
             const auto v = value.view();
-            std::string_view sv {reinterpret_cast<const char*>(v.data()), v.length()};
+            std::string_view sv{reinterpret_cast<const char*>(v.data()), v.length()};
             return std::hash<std::string_view>{}(sv);
         }
 
-        size_t operator() (const bsoncxx::document::value& value) const {
+        size_t operator()(const bsoncxx::document::value& value) const {
             // Hash the view as a string.
             const auto v = value.view();
-            std::string_view sv {reinterpret_cast<const char*>(v.data()), v.length()};
+            std::string_view sv{reinterpret_cast<const char*>(v.data()), v.length()};
             return std::hash<std::string_view>{}(sv);
         }
 
-        size_t operator() (const bsoncxx::types::b_date& value) const {
+        size_t operator()(const bsoncxx::types::b_date& value) const {
             return std::hash<int64_t>{}(value.to_int64());
         }
     };
@@ -133,11 +133,11 @@ protected:
     // Custom equals comparator to enable comparison for certain BSON types.
     struct SetKeyEq {
         template <typename T>
-        bool operator() (const T& lhs, const T& rhs) const {
+        bool operator()(const T& lhs, const T& rhs) const {
             return lhs == rhs;
         }
 
-        bool operator() (const bsoncxx::array::value& lhs, const bsoncxx::array::value& rhs) const {
+        bool operator()(const bsoncxx::array::value& lhs, const bsoncxx::array::value& rhs) const {
             return lhs.view() == rhs.view();
         }
     };
@@ -677,7 +677,7 @@ public:
     }
 
     std::string evaluate() override {
-      return evaluateWithRng(_rng);
+        return evaluateWithRng(_rng);
     };
 
 private:
@@ -694,7 +694,8 @@ private:
  */
 class FrequencyMapSingletonGenerator : public Generator<std::string> {
 public:
-    FrequencyMapSingletonGenerator(const Node& node, GeneratorArgs generatorArgs) : _rng{generatorArgs.rng} {
+    FrequencyMapSingletonGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _rng{generatorArgs.rng} {
         _id = node["id"].maybe<std::string>().value();
 
         // Keep a singleton of these generators by id
@@ -1119,17 +1120,16 @@ public:
 // The following is a replacement for partial template specialization for functions, which is not
 // currently supported in C++.
 template <typename F, typename T>
-struct convert{};
+struct convert {};
 
 // Conversion used between int, long, double
 template <typename F, typename T>
-T convertToNumeric(convert<F, T>, const F& from)
-{
+T convertToNumeric(convert<F, T>, const F& from) {
     return (T)from;
 }
 
 // Special conversion for decimal
-template<typename F>
+template <typename F>
 bsoncxx::decimal128 convertToNumeric(convert<F, bsoncxx::decimal128>, const F& from) {
     // mongocxx doesn't define nice converters from numeric types to decimal, so we convert first
     // to string and then to decimal
@@ -1138,7 +1138,7 @@ bsoncxx::decimal128 convertToNumeric(convert<F, bsoncxx::decimal128>, const F& f
 
 // String conversions
 bsoncxx::decimal128 convertToNumeric(convert<std::string, bsoncxx::decimal128>,
-        const std::string& s) {
+                                     const std::string& s) {
     return bsoncxx::decimal128(s);
 }
 double convertToNumeric(convert<std::string, double>, const std::string& s) {
@@ -1161,14 +1161,16 @@ T convertToNumeric(const F& from) {
 
 // overloaded struct for use with std::variants.
 // Reference: https://en.cppreference.com/w/cpp/utility/variant/visit
-template<class... Ts>
-struct overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts>
+struct overloaded : Ts... {
+    using Ts::operator()...;
+};
 
-template<class... Ts>
+template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
 // Generator to convert from any numeric type except decimal or string to specific numeric type.
-template<typename T>
+template <typename T>
 class NumericConversionGenerator : public Generator<T> {
 private:
     static inline void fail_multiple_convert() {
@@ -1176,73 +1178,91 @@ private:
             "When determining type of the from generator, multiple conversions succeeded -- "
             "generator type is ambiguous. This should not happen."));
     }
+
 public:
     NumericConversionGenerator(const Node& node, GeneratorArgs generatorArgs) {
-        // Try all of the possible generators for from, and ensure that exactly one works.
+        // First, if "from" is a constant, we can always parse it as a constant string generator,
+        // even if it also parses as a constant numeric generator.
+        try {
+            _generator =
+                std::make_unique<ConstantAppender<std::string>>(node["from"].to<std::string>());
+            return;
+        } catch (const InvalidConversionException& e) {
+        } catch (const UnknownParserException& e) {
+        }
+
+        // Otherwise, "from" should be a generator -- try all of the possible generators for from,
+        // and ensure that exactly one works.
         bool succeeded = false;
         try {
             _generator = stringGenerator(node["from"], generatorArgs);
             succeeded = true;
-        } catch (const InvalidConversionException& e) {}
-          catch (const UnknownParserException& e) {}
+        } catch (const InvalidConversionException& e) {
+        } catch (const UnknownParserException& e) {
+        }
         try {
             auto generator = intGenerator(node["from"], generatorArgs);
-            if(succeeded) {
+            if (succeeded) {
                 // generator conversion has succeeded more than once, so node["from"] is ambiguous.
                 // This is bad; panic.
                 fail_multiple_convert();
             }
             _generator = std::move(generator);
             succeeded = true;
-        } catch (const InvalidConversionException& e) {}
-          catch (const UnknownParserException& e) {}
+        } catch (const InvalidConversionException& e) {
+        } catch (const UnknownParserException& e) {
+        }
         try {
             auto generator = doubleGenerator(node["from"], generatorArgs);
-            if(succeeded) {
+            if (succeeded) {
                 fail_multiple_convert();
             }
             _generator = std::move(generator);
             succeeded = true;
-        } catch (const InvalidConversionException& e) {}
-          catch (const UnknownParserException& e) {}
+        } catch (const InvalidConversionException& e) {
+        } catch (const UnknownParserException& e) {
+        }
         try {
-            auto generator = doubleGenerator(node["from"], generatorArgs);
-            if(succeeded) {
+            auto generator = int32Generator(node["from"], generatorArgs);
+            if (succeeded) {
                 fail_multiple_convert();
             }
             _generator = std::move(generator);
             succeeded = true;
-        } catch (const InvalidConversionException& e) {}
-          catch (const UnknownParserException& e) {}
-        if(!succeeded) {
+        } catch (const InvalidConversionException& e) {
+        } catch (const UnknownParserException& e) {
+        }
+        if (!succeeded) {
             // No generator conversion was successful, this is a failure.
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                "Numeric conversion generator only supports conversions from the string, double, int, "
-                "and int32 types. The type of the \"from\" field did not match any of those types."));
+            BOOST_THROW_EXCEPTION(
+                InvalidValueGeneratorSyntax("Numeric conversion generator only supports "
+                                            "conversions from the string, double, int, "
+                                            "and int32 types. The type of the \"from\" field did "
+                                            "not match any of those types."));
         }
     }
     T evaluate() override {
-        return std::visit(overloaded{
-            [](UniqueGenerator<std::string>& gen) {
-                return convertToNumeric<std::string, T>(gen->evaluate());
-            },
-            [](UniqueGenerator<int64_t>& gen) {
-                return convertToNumeric<int64_t, T>(gen->evaluate());
-            },
-            [](UniqueGenerator<double>& gen) {
-                return convertToNumeric<double, T>(gen->evaluate());
-            },
-            [](UniqueGenerator<int32_t>& gen) {
-                return convertToNumeric<int32_t, T>(gen->evaluate());
-            }
-        }, _generator);
+        return std::visit(overloaded{[](UniqueGenerator<std::string>& gen) {
+                                         return convertToNumeric<std::string, T>(gen->evaluate());
+                                     },
+                                     [](UniqueGenerator<int64_t>& gen) {
+                                         return convertToNumeric<int64_t, T>(gen->evaluate());
+                                     },
+                                     [](UniqueGenerator<double>& gen) {
+                                         return convertToNumeric<double, T>(gen->evaluate());
+                                     },
+                                     [](UniqueGenerator<int32_t>& gen) {
+                                         return convertToNumeric<int32_t, T>(gen->evaluate());
+                                     }},
+                          _generator);
     }
+
 private:
-    std::variant<
-        UniqueGenerator<std::string>,
-        UniqueGenerator<int64_t>,
-        UniqueGenerator<double>,
-        UniqueGenerator<int32_t>> _generator;
+    std::variant<UniqueGenerator<std::string>,
+                 UniqueGenerator<int64_t>,
+                 UniqueGenerator<double>,
+                 UniqueGenerator<int32_t>>
+        _generator;
 };
 
 /** `{^ActorId: {}}` */
@@ -1352,7 +1372,8 @@ private:
     using bintype = bsoncxx::binary_sub_type;
 
 public:
-    BinDataGenerator(const Node& node, GeneratorArgs generatorArgs,
+    BinDataGenerator(const Node& node,
+                     GeneratorArgs generatorArgs,
                      const bintype binDataType = bintype::k_binary)
         : _node{node}, _binData(genRandBinData(node, binDataType)) {}
 
@@ -1366,9 +1387,8 @@ public:
         for (int i = 0; i < numBytes; i++) {
             bytesArr[i] = rand();
         }
-        return bsoncxx::types::b_binary{binDataType,
-                                        static_cast<uint32_t>(sizeof(bytesArr)),
-                                        bytesArr};
+        return bsoncxx::types::b_binary{
+            binDataType, static_cast<uint32_t>(sizeof(bytesArr)), bytesArr};
     }
 
 private:
@@ -1542,7 +1562,7 @@ public:
           _generatorArgs{generatorArgs},
           _valueGen{valueGenerator<false, UniqueAppendable>(node["of"], generatorArgs, parsers)},
           _nItemsGen{intGenerator(extract(node, "number", "^Array"), generatorArgs)},
-          _distinct {node["distinct"] ? node["distinct"].maybe<bool>().value_or(false) : false} {}
+          _distinct{node["distinct"] ? node["distinct"].maybe<bool>().value_or(false) : false} {}
 
     bsoncxx::array::value evaluate() override {
         bsoncxx::builder::basic::array builder{};
@@ -1569,7 +1589,8 @@ public:
          */
         if (_distinct) {
             // Choose initial bucket size of 2 * nItems to minimize hash collisions and resizes.
-            std::unordered_set<bsoncxx::array::value, SetHasher, SetKeyEq> distinctValues(2 * nItems);
+            std::unordered_set<bsoncxx::array::value, SetHasher, SetKeyEq> distinctValues(2 *
+                                                                                          nItems);
             // `consecutiveRepeats` and its corresponding threshold are used to set an upper bound
             // on how hard we should try to pull unique values before we give up.
             int8_t consecutiveRepeats = 0;
@@ -1587,16 +1608,17 @@ public:
                 if (succeeded) {
                     // Since there's only one element in the array, we just use the first element.
                     auto& element = *itr->view().begin();
-                    // Shamelessly stolen from the CXX driver library (bsoncxx/types/bson_value/view.cpp).
-                    // This will generate a case for each BSON value type, call the correct accessor
-                    // function, and append it to `builder`. It would be much nicer if this were
-                    // implemented with std::variant<>, so that we can use std::visit, but alas.
+                    // Shamelessly stolen from the CXX driver library
+                    // (bsoncxx/types/bson_value/view.cpp). This will generate a case for each BSON
+                    // value type, call the correct accessor function, and append it to `builder`.
+                    // It would be much nicer if this were implemented with std::variant<>, so that
+                    // we can use std::visit, but alas.
                     switch (static_cast<int>(element.type())) {
-#define BSONCXX_ENUM(type, val)                                     \
-                        case val: {                                 \
-                            builder.append(element.get_##type());   \
-                            break;                                  \
-                        }
+#define BSONCXX_ENUM(type, val)               \
+    case val: {                               \
+        builder.append(element.get_##type()); \
+        break;                                \
+    }
 #include <bsoncxx/enums/type.hpp>
 #undef BSONCXX_ENUM
                     }
@@ -1605,8 +1627,8 @@ public:
                 } else if (++consecutiveRepeats > consecutiveRepeatsThreshold) {
                     // If we hit the threshold, we just give up.
                     std::stringstream msg;
-                    msg << "Repeatedly failed to find a new distinct value "
-                        << consecutiveRepeats << " times. Terminating distinct array value "
+                    msg << "Repeatedly failed to find a new distinct value " << consecutiveRepeats
+                        << " times. Terminating distinct array value "
                         << "generation because we are likely to hit an infinite loop. Node: "
                         << _node;
                     BOOST_THROW_EXCEPTION(ValueGeneratorConvergenceTimeout(msg.str()));
@@ -1689,16 +1711,16 @@ public:
           _valueGen{
               valueGenerator<false, UniqueAppendable>(node["andValues"], generatorArgs, parsers)},
           _nTimesGen{intGenerator(extract(node, "withNEntries", "^Object"), generatorArgs)} {
-            const auto duplicatedKeys = _node["duplicatedKeys"].to<std::string>();
-            if (duplicatedKeys == "insert") {
-                _onDuplicatedKeys = OnDuplicatedKeys::insert;
-            } else if (duplicatedKeys == "skip") {
-                _onDuplicatedKeys = OnDuplicatedKeys::skip;
-            } else {
-                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                    "Unknown value for 'duplicatedKeys'"));
-            }
-          }
+        const auto duplicatedKeys = _node["duplicatedKeys"].to<std::string>();
+        if (duplicatedKeys == "insert") {
+            _onDuplicatedKeys = OnDuplicatedKeys::insert;
+        } else if (duplicatedKeys == "skip") {
+            _onDuplicatedKeys = OnDuplicatedKeys::skip;
+        } else {
+            BOOST_THROW_EXCEPTION(
+                InvalidValueGeneratorSyntax("Unknown value for 'duplicatedKeys'"));
+        }
+    }
 
     bsoncxx::document::value evaluate() override {
         bsoncxx::builder::basic::document builder;
@@ -1929,9 +1951,15 @@ Out valueGenerator(const Node& node,
  * If adding a new parsers map, remember to insert its entries into `allParsers` at the end of this
  * lambda function.
  */
-const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers,
-            stringParsers, int32Parsers, decimalParsers] = [] () {
-    static std::map<std::string, Parser<UniqueAppendable>> allParsers {
+const auto [allParsers,
+            arrayParsers,
+            dateParsers,
+            doubleParsers,
+            intParsers,
+            stringParsers,
+            int32Parsers,
+            decimalParsers] = []() {
+    static std::map<std::string, Parser<UniqueAppendable>> allParsers{
         {"^Choose",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ChooseGenerator>(node, generatorArgs);
@@ -1972,7 +2000,7 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers,
          [](const Node& node, GeneratorArgs generatorArgs) {
              // TODO: PERF-4467 Update this to bsoncxx::binary_sub_type::sensitive.
              return std::make_unique<BinDataGenerator>(
-                node, generatorArgs, bsoncxx::binary_sub_type(0x8));
+                 node, generatorArgs, bsoncxx::binary_sub_type(0x8));
          }},
     };
 
@@ -1985,7 +2013,8 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers,
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
          }},
-        {"^Verbatim", [](const Node& node, GeneratorArgs generatorArgs) {
+        {"^Verbatim",
+         [](const Node& node, GeneratorArgs generatorArgs) {
              if (!node.isSequence()) {
                  std::stringstream msg;
                  msg << "Malformed node array. Not a sequence " << node;
@@ -2104,7 +2133,7 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers,
         {"^ConvertToDecimal",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<NumericConversionGenerator<bsoncxx::decimal128>>(
-                node, generatorArgs);
+                 node, generatorArgs);
          }},
     };
 
@@ -2117,9 +2146,15 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers,
     allParsers.insert(int32Parsers.begin(), int32Parsers.end());
     allParsers.insert(decimalParsers.begin(), decimalParsers.end());
 
-    return std::tie(allParsers, arrayParsers, dateParsers, doubleParsers, intParsers,
-        stringParsers, int32Parsers, decimalParsers);
-} ();
+    return std::tie(allParsers,
+                    arrayParsers,
+                    dateParsers,
+                    doubleParsers,
+                    intParsers,
+                    stringParsers,
+                    int32Parsers,
+                    decimalParsers);
+}();
 
 /**
  * Used for top-level values that are of type Map.
