@@ -24,12 +24,14 @@ GlobalDefaults:
   NumberOfDocuments: &NumDocs 20096
   # NumberOfDocumentsPerWorker = NumberOfDocuments / LoadThreads.
   NumberOfDocumentsPerWorker: &DocsPerThread 157
+  # Used in Document: a to let the starting value of a = 0.
+  DocumentStartAt: &DocStartAt -157
   DocSize: &DocSize 520000
   Document: &Doc
-    # Document number/ID. Starts at -*DocsPerThread because ActorId starts at 1, and therefore
-    # in order for the first output of ^Inc to be 0, "start" would need to be offset by
-    # ActorId * *DocsPerThread.
-    a: {^Inc: {start: -157, step: 1, multiplier: *DocsPerThread}}
+    # Document number/ID. Starts at *DocStartAt = -*DocsPerThread = -157 because ActorId
+    # starts at 1, and therefore in order for the first output of ^Inc to be 0, "start"
+    # would need to be offset by ActorId * *DocsPerThread = 157.
+    a: {^Inc: {start: *DocStartAt, step: 1, multiplier: *DocsPerThread}}
     # Random number from [0, NumberOfDocuments].
     b: {^RandomInt: {min: 0, max: *NumDocs}}
     # Fill 520 KB.
@@ -49,12 +51,28 @@ Clients:
       maxPoolSize: 500
     
 Actors:
+# Drop database to get rid of stale data. Useful when running locally multiple times.
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *DBName
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand: {dropDatabase: 1}
+
+# Load 20,096 documents around 520KB as described by the structure in GlobalDefaults.
 - Name: LoadDocuments
   Type: Loader
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [0]
+      Active: [1]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         CollectionCount: 1
@@ -65,12 +83,13 @@ Actors:
         DocumentCount: *NumDocs
         BatchSize: *LoadBatchSize
 
+# Spawn many threads to sort 180 documents to test server's capacity to handle memory pressure.
 - Name: SortMany
   Type: RunCommand
   Threads: *SortThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [1]
+      Active: [2]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *SortRepeat
