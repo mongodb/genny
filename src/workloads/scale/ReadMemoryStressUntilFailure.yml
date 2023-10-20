@@ -10,8 +10,8 @@ Description: |
   documents. The document size and the number of documents to sort by each thread are
   tuned to be just under 100 MB, which is the memory limit for operations before
   spilling to disk. The threads would therefore each cause a close-to-max amount of
-  memory to be used. Increasing the number of threads should cause the hosts that process
-  the operations to fail due to out-of-memory errors.
+  memory to be used. Increasing the number of threads should cause the host(s) that
+  process the operations to fail due to out-of-memory errors.
 
 Keywords:
 - scale
