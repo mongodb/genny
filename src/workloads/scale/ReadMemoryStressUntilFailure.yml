@@ -1,10 +1,17 @@
 SchemaVersion: 2018-07-01
 Owner: Service Architecture
 Description: |
-  Used to test performance of the server under heavy memory pressure. This workload is
-  expected to fail due to host(s) being unreachable as a result of mongod(s) running out
-  of memory. When the server becomes more suited to handle memory pressure, the
-  expectation of failure can be removed.
+  Used to test performance of the server under heavy memory pressure caused by read
+  operations. This workload is expected to fail due to host(s) being unreachable as a
+  result of mongod(s) running out of memory.
+
+  To achieve this, documents are inserted in the form of {a: <id>, b: <random number>,
+  c: <fill 520 KB>}. Many threads are then spawned to run aggregate sort on a number of
+  documents. The document size and the number of documents to sort by each thread are
+  tuned to be just under 100 MB, which is the memory limit for operations before
+  spilling to disk. The threads would therefore each cause a close-to-max amount of
+  memory to be used. Increasing the number of threads should cause the hosts that process
+  the operations to fail due to out-of-memory errors.
 
 Keywords:
 - scale
@@ -13,6 +20,8 @@ Keywords:
 - sort
 - insert
 - fail
+- oom
+- out of memory
 
 GlobalDefaults:
   dbname: &DBName memorystress
