@@ -8,7 +8,6 @@ Description: |
     Collection:           name of encrypted collection
     ClientName:           name of encrypted client pool
     Field<n>Value:        value of the nth field (n is 1..8)
-    ShardCollectionPhase: must be set to {Nop: true} for unsharded tests
 
 GlobalDefaults:
   Database: &encrypted_db {^Parameter: {Name: "Database", Default: ""}}
@@ -59,22 +58,6 @@ GlobalDefaults:
     field6: {^Parameter: {Name: "Field6Value", Default: *rand_string}}
     field7: {^Parameter: {Name: "Field7Value", Default: *rand_string}}
     field8: {^Parameter: {Name: "Field8Value", Default: *rand_string}}
-  ShardCollectionPhase: &shard_or_nop
-    ^Parameter:
-      Name: "ShardCollectionPhase"
-      Default:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationMetricsName: EnableSharding
-          OperationName: AdminCommand
-          OperationCommand:
-            enableSharding: *encrypted_db
-        - OperationMetricsName: ShardCollection
-          OperationName: AdminCommand
-          OperationCommand:
-            shardCollection: *encrypted_ns
-            key: {field9: hashed}
 
 Actors:
 - LoadConfig:
@@ -130,7 +113,19 @@ Actors:
   Threads: 1
   Phases:
   - *Nop
-  - *shard_or_nop
+  - Repeat: 1
+    Database: admin
+    OnlyRunInInstance: sharded
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *encrypted_db
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: *encrypted_ns
+        key: {field9: hashed}
   - *Nop
   - *Nop
   - *Nop

@@ -2,7 +2,9 @@ SchemaVersion: 2018-07-01
 Owner: "@10gen/server-security"
 Description: |
   Mimics a YCSB workload, with queryable encryption enabled. Performs queries on an encrypted
-  field, instead of _id, during the read/update phase.
+  field, instead of _id, during the read/update phase. This workload was originally two separate
+  files, YCSBLikeQueryableEncrypt1Cf32.yml and YCSBLikeQueryableEncrypt1Cf32Sharded.yml. It was
+  merged into a single file when "OnlyRunInInstance: sharded" became an option.
 
 Encryption:
   UseCryptSharedLib: true
@@ -32,12 +34,12 @@ LoadConfig:
     Collection: testcoll
     Namespace: genny_qebench.testcoll
     ClientName: EncryptedPool
-    ShardCollectionPhase: {Nop: true}
 
 AutoRun:
 - When:
     mongodb_setup:
       $eq:
       - single-replica-fle
+      - shard-lite-fle
     branch_name:
       $gte: v7.0
