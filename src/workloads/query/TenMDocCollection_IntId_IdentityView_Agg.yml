@@ -1,0 +1,127 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: >
+  This workload tests the performance of IDHACK on queries with int _id over a no-op identity view.
+
+KeyWords:
+- IDHACK
+- View
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  View: &View View0
+  MaxPhases: &MaxPhases 6
+  DocumentCount: &DocumentCount 10000000
+
+Clients:
+  Default:
+    QueryOptions:
+      connectTimeoutMS: 3_600_000  # 1 hour
+      maxPoolSize: 2000
+      socketTimeoutMS: 3_600_000  # 1 hour
+
+Actors:
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+- CreateIdentityView:
+  LoadConfig:
+    Path: "../../phases/query/IDHack.yml"
+    Key: CreateIdentityView
+    Parameters:
+      Name: CreateIdentityView
+      OnlyActiveInPhase: 1
+      NopInPhasesUpTo: *MaxPhases
+      Database: *Database
+      Collection: *Collection
+      View: *View
+- Prepopulate:
+  LoadConfig:
+    Path: "../../phases/query/IDHack.yml"
+    Key: LoadIntIdTemplate
+    Parameters:
+      Name: Prepopulate
+      OnlyActiveInPhase: 2
+      NopInPhasesUpTo: *MaxPhases
+      Database: *Database
+      DocumentCount: 10000000
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+
+- IDHackIdentityViewAgg32Threads:
+  LoadConfig: &loadIdHackConfig
+    Path: "../../phases/query/IDHack.yml"
+    Key: IDHackIntIdAggTemplate
+    Parameters:
+      Name: IDHackIdentityViewAgg32Threads
+      Threads: 32
+      OnlyActiveInPhase: 4
+      NopInPhasesUpTo: *MaxPhases
+      Database: *Database
+      Collection: *View
+      DocumentCount: *DocumentCount
+
+- IDHackIdentityViewAgg128Threads:
+  LoadConfig:
+    <<: *loadIdHackConfig
+    Parameters:
+      Name: IDHackIdentityViewAgg128Threads
+      Threads: 128
+      OnlyActiveInPhase: 5
+      NopInPhasesUpTo: *MaxPhases
+      Database: *Database
+      Collection: *View
+      DocumentCount: *DocumentCount
+
+- IDHackIdentityViewAgg256Threads:
+  LoadConfig:
+    <<: *loadIdHackConfig
+    Parameters:
+      Name: IDHackIdentityViewAgg256Threads
+      Threads: 256
+      OnlyActiveInPhase: 6
+      NopInPhasesUpTo: *MaxPhases
+      Database: *Database
+      Collection: *View
+      DocumentCount: *DocumentCount
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-all-feature-flags
+      - standalone-query-stats
+      - standalone
+      - standalone-query-stats-small-rate-limit
+      - shard
+      - shard-query-stats
+      - shard-limited-query-stats
+      - shard-lite
+      - shard-lite-query-stats
+      - shard-lite-limited-query-stats
+      - single-replica
+      - single-replica-query-stats
+      - replica
+      - replica-query-stats
+      - atlas-like-replica.2022-10
+      - atlas-like-replica-query-stats.2022-10

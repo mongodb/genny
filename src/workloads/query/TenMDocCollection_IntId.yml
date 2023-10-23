@@ -54,33 +54,16 @@ Actors:
         Collection: *Collection
         Operations:
         - OperationName: drop
-- Name: Prepopulate
-  Type: Loader
-  Threads: 10
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
+- Prepopulate:
+  LoadConfig:
+    Path: "../../phases/query/IDHack.yml"
+    Key: LoadIntIdTemplate
+    Parameters:
+      Name: Prepopulate
+      OnlyActiveInPhase: 1
       NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: 10000000
-        BatchSize: 1000
-        Document:
-          # The multiplier is multiplied by the ActorID, and added to the value.
-          # Since this is the second actor, the ActorIDs increment for each thread starting at 2.
-          # e.g -2000000 + 2 * 1000000 = 0, -1999999 + 2 * 1000000 = 1, etc.
-          # Once complete, the ids in the collection will be the range 0-9999999.
-          _id: {^Inc: {start: -2000000, multiplier: 1000000}}
-          # [10M, 20M)
-          a: {^Inc: {start: -1000000, multiplier: 1000000}}
-          # [20M, 30M)
-          b: {^Inc: {start: 0, multiplier: 1000000}}
-        Indexes:
-          - keys: {a: 1}
-          - keys: {b: 1}
+      Database: *Database
+      DocumentCount: 10000000
 - Name: Quiesce
   Type: QuiesceActor
   Threads: 1
