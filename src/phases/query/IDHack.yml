@@ -3,6 +3,7 @@ Owner: "@mongodb/query"
 Description: |
   Defines common configurations for IDHack query workloads.
 
+# Runs IDHack find queries, matching an _id of type ObjectId.
 IDHackObjectIdTemplate:
   Name: {^Parameter: {Name: "Name", Default: "IDHackObjectId"}}
   Type: CrudActor
@@ -22,6 +23,7 @@ IDHackObjectIdTemplate:
           OperationCommand:
             Filter: {_id: {^ObjectId: {^FormatString: {"format": "%07d%s", "withArgs": [{^RandomInt: {min: 0, max: 9999999}}, "bbbbbbbbbbbbbbbbb"]}}}}
 
+# Runs IDHack find queries, matching an _id of type int.
 IDHackIntIdTemplate:
   Name: {^Parameter: {Name: "Name", Default: "IDHackIntId"}}
   Type: CrudActor
@@ -41,6 +43,7 @@ IDHackIntIdTemplate:
           OperationCommand:
             {Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}}
 
+# Runs IDHack aggregation queries, matching an _id of type int.
 IDHackIntIdAggTemplate:
   Name: {^Parameter: {Name: "Name", Default: "IDHackIntIdAgg"}}
   Type: CrudActor
@@ -110,6 +113,7 @@ LoadIntIdTemplate:
           - keys: {a: 1}
           - keys: {b: 1}
 
+# Creates an identity view (view with an empty pipeline that acts as a no-op) over the given collection.
 CreateIdentityView:
   Name: {^Parameter: {Name: "Name", Default: "CreateIdentityView"}}
   Type: RunCommand
