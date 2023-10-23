@@ -1,7 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  This workload tests the performance of IDHACK on queries with int _id over a no-op identity view.
+  This workload tests the performance of IDHACK on queries with int _id, using the aggregation
+  framework.
 
 KeyWords:
 - IDHACK
@@ -44,7 +45,7 @@ Actors:
       OnlyActiveInPhase: 1
       NopInPhasesUpTo: *MaxPhases
       Database: *Database
-      DocumentCount: 10000000
+      DocumentCount: *DocumentCount
 - Name: Quiesce
   Type: QuiesceActor
   Threads: 1
@@ -67,7 +68,6 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       Database: *Database
       Collection: *Collection
-      DocumentCount: *DocumentCount
 
 - IDHackAgg128Threads:
   LoadConfig:
@@ -79,7 +79,6 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       Database: *Database
       Collection: *Collection
-      DocumentCount: *DocumentCount
 
 - IDHackAgg256Threads:
   LoadConfig:
@@ -91,7 +90,6 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       Database: *Database
       Collection: *Collection
-      DocumentCount: *DocumentCount
 
 AutoRun:
 - When:
