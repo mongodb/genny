@@ -6,7 +6,6 @@ Description: >
 
 KeyWords:
 - IDHACK
-- View
 
 GlobalDefaults:
   Database: &Database test
