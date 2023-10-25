@@ -12,5 +12,3 @@ include(GetGRpc)
 # </gRPC>
 
 add_subdirectory(poplar)
-
-add_subdirectory(cppcodec)
