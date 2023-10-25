@@ -22,6 +22,5 @@ CreateGennyTargets(
     DEPENDS
         gennylib
         cppcodec::cppcodec
-        simple-beast-client
     TEST_DEPENDS    testlib
 )
