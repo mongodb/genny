@@ -38,7 +38,7 @@ Actors:
         - OperationName: drop
 - CreateIdentityView:
   LoadConfig:
-    Path: "../../phases/query/IDHack.yml"
+    Path: "../../phases/query/Views.yml"
     Key: CreateIdentityView
     Parameters:
       Name: CreateIdentityView
