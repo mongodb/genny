@@ -1,0 +1,15 @@
+cc_library(
+    name = "value_generators",
+    srcs = glob(["src/**/*.cpp"]),
+    hdrs = glob(["include/**/*.hpp"]),
+    copts = [
+        "-Isrc/value_generators/include",
+        "-std=c++17",
+    ],
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@genny_toolchain//:boost_throw_exception",
+        "@genny_toolchain//:bsoncxx",
+    ],
+)

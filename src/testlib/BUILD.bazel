@@ -1,0 +1,18 @@
+cc_library(
+    name = "testlib",
+    srcs = glob(["src/**/*.cpp"]),
+    hdrs = glob(["include/**/*.hpp"]),
+    copts = [
+        "-Isrc/testlib/include",
+        "-std=c++17",
+    ],
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//src/gennylib",
+        "@genny_toolchain//:boost_filesystem",
+        "@genny_toolchain//:boost_regex",
+        # "@genny_toolchain//:catch2",
+        "@catch2//:catch2_main",
+    ],
+)

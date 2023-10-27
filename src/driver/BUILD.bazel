@@ -1,0 +1,22 @@
+cc_binary(
+    name = "driver",
+    srcs = glob([
+        "src/**/*.cpp",
+        "include/**/*.hpp",
+    ]),
+    copts = [
+        "-Isrc/driver/include",
+        "-std=c++17",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//src/gennylib",
+        "//src/third_party/loki",
+        "@genny_toolchain//:boost_program_options",
+        "@genny_toolchain//:boost_stacktrace",
+    ],
+
+    # cast_core
+    #     gennylib
+    #     Boost::program_options
+)

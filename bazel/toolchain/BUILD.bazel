@@ -1,0 +1,151 @@
+load("@bazel_tools//tools/cpp:unix_cc_toolchain_config.bzl", "cc_toolchain_config")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_toolchain_suite(
+    name = "toolchain_suite",
+    toolchains = {
+        # "k8": ":cc_genny_toolchain",
+        "aarch64": ":cc_genny_toolchain",
+    },
+)
+
+platform(
+    name = "platform",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:arm64",
+        "@bazel_tools//tools/cpp:gcc",
+    ],
+)
+
+toolchain(
+    name = "genny_toolchain",
+    exec_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:arm64",
+        "@bazel_tools//tools/cpp:gcc",
+    ],
+    target_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:arm64",
+    ],
+    toolchain = ":cc_genny_toolchain",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+)
+
+filegroup(name = "empty")
+
+cc_toolchain(
+    name = "cc_genny_toolchain",
+    all_files = ":empty",
+    compiler_files = ":empty",
+    dwp_files = ":empty",
+    linker_files = ":empty",
+    objcopy_files = ":empty",
+    strip_files = ":empty",
+    supports_param_files = 0,
+    toolchain_config = ":cc_gcc_toolchain_config",
+    toolchain_identifier = "aarch64-genny-toolchain",
+)
+
+COMMON_COMPILER_FLAGS = []
+
+COMMON_INCLUDE_DIRECTORIES = []
+
+COMMON_UNFILTERED_COMPILER_FLAGS = []
+
+cc_toolchain_config(
+    name = "cc_gcc_toolchain_config",
+    abi_libc_version = "unknown",
+    abi_version = "unknown",
+    compile_flags = ["-std=c++17"],
+    # compile_flags = COMMON_COMPILER_FLAGS + [
+    #     # These isystems make sure that toolchain includes are used in place of any remote system
+    #     # "-isystem",
+    #     # "external/mongo_toolchain/stow/gcc-v4/lib/gcc/aarch64-mongodb-linux/11.3.0/include",
+    #     # "-isystem",
+    #     # "external/mongo_toolchain/stow/gcc-v4/lib/gcc/aarch64-mongodb-linux/11.3.0/include-fixed",
+    # ],
+    # linux-libc-dev
+    compiler = "g++",
+    cpu = "arm64",
+    cxx_builtin_include_directories = [
+        "/usr/include/c++/12",
+        "/usr/include/aarch64-linux-gnu/c++/12",
+        "/usr/include/c++/12/backward",
+        "/usr/lib/gcc/aarch64-linux-gnu/12/include",
+        "/usr/local/include",
+        "/usr/include/aarch64-linux-gnu",
+        "/usr/include",
+    ],
+    # cxx_builtin_include_directories = COMMON_INCLUDE_DIRECTORIES + [
+    #     # See undocumented %package() syntax: https://cs.opensource.google/bazel/bazel/+/6d448136d13ddab92da8bb29ea6e8387821369d9:src/main/java/com/google/devtools/build/lib/rules/cpp/CcToolchainProviderHelper.java;l=309-329
+    #     "%package(@mongo_toolchain//stow/gcc-v4/lib/gcc/aarch64-mongodb-linux/11.3.0/include)%",
+    #     "%package(@mongo_toolchain//stow/gcc-v4/lib/gcc/aarch64-mongodb-linux/11.3.0/include-fixed)%",
+    # ],
+    host_system_name = "local",
+    link_flags = [
+        # "-L/usr/lib/aarch64-linux-gnu/",
+        "-lstdc++",
+        # "-lsnappy",
+        # "-lsasl2",
+        "-std=c++17",
+    ],
+    target_libc = "unknown",
+    target_system_name = "local",
+    tool_paths = {
+        # Note: You might assume that the specification of `compiler_name` (above) would be sufficient to make Bazel
+        # use the correct binary. This is incorrect; Bazel appears to unconditionally use the `gcc` tool_path. As a result,
+        # we have to conditionally set the value pointed to by `gcc`.
+        # "g++": "/usr/bin/g++-12",
+        "gcc": "/usr/bin/g++-12",
+        "cpp": "/usr/bin/cpp-12",
+        "ar": "/usr/bin/ar",
+        "nm": "v4/bin/nm",
+        "ld": "/usr/bin/ld",
+        "as": "v4/bin/as",
+        "objcopy": "v4/bin/objcopy",
+        "objdump": "v4/bin/objdump",
+        "gcov": "v4/bin/gcov",
+        "strip": "v4/bin/strip",
+        "llvm-cov": "/bin/false",  # /bin/false = we're not using llvm-cov
+    },
+    toolchain_identifier = "mongo_v4_gcc",
+    unfiltered_compile_flags = COMMON_UNFILTERED_COMPILER_FLAGS,
+)
+
+# tool_paths = [
+#     tool_path(
+#         name = "gcc",
+#         path = "/usr/bin/gcc-12",
+#     ),
+#     tool_path(
+#         name = "ld",
+#         path = "/usr/bin/ld",
+#     ),
+#     tool_path(
+#         name = "ar",
+#         path = "/usr/bin/ar",
+#     ),
+#     tool_path(
+#         name = "cpp",
+#         path = "/usr/bin/cpp-12",
+#     ),
+#     tool_path(
+#         name = "gcov",
+#         path = "/bin/false",
+#     ),
+#     tool_path(
+#         name = "nm",
+#         path = "/bin/false",
+#     ),
+#     tool_path(
+#         name = "objdump",
+#         path = "/bin/false",
+#     ),
+#     tool_path(
+#         name = "strip",
+#         path = "/bin/false",
+#     ),
+# ]

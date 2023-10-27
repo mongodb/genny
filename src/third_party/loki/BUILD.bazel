@@ -1,0 +1,11 @@
+cc_library(
+    name = "loki",
+    srcs = glob(["src/**/*.cpp"]),
+    hdrs = glob(["include/**/*.h"]),
+    copts = [
+        "-Isrc/third_party/loki/include",
+        "-std=c++17",
+    ],
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"],
+)

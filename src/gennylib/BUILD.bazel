@@ -1,0 +1,34 @@
+cc_library(
+    name = "gennylib",
+    srcs = glob(["src/**/*.cpp"]),
+    hdrs = glob(["include/**/*.hpp"]),
+    copts = [
+        "-Isrc/gennylib/include",
+        "-std=c++17",
+    ],
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//src/metrics",
+        "@genny_toolchain//:boost_algorithm",
+        "@genny_toolchain//:boost_exception",
+        "@genny_toolchain//:boost_format",
+        "@genny_toolchain//:boost_function",
+        "@genny_toolchain//:boost_log",
+        "@genny_toolchain//:boost_random",
+        "@genny_toolchain//:boost_throw_exception",
+        "@genny_toolchain//:bsoncxx",
+        "@genny_toolchain//:mongocxx",
+        "@genny_toolchain//:yaml_cpp",
+    ],
+)
+
+cc_test(
+    name = "Cast_test",
+    srcs = ["test/Cast_test.cpp"],
+    deps = [
+        ":gennylib",
+        "//src/testlib",
+        "@genny_toolchain//:openssl",
+    ],
+)

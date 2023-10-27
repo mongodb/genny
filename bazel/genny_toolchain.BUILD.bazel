@@ -1,0 +1,1769 @@
+cc_library(
+    name = "boost_log",
+    strip_include_prefix = "packages/boost-log_arm64-linux/include",
+    hdrs = glob(["packages/boost-log_arm64-linux/include/**/*.hpp"]),
+    srcs = [
+        "packages/boost-log_arm64-linux/lib/libboost_log.a",
+        "packages/boost-log_arm64-linux/lib/libboost_log_setup.a",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_thread",
+        ":boost_parameter",
+        ":boost_move",
+        ":boost_smart_ptr",
+        ":boost_type_index",
+        ":boost_container_hash",
+        ":boost_phoenix",
+    ],
+)
+
+cc_library(
+    name = "boost_phoenix",
+    strip_include_prefix = "packages/boost-phoenix_arm64-linux/include",
+    hdrs = glob(["packages/boost-phoenix_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_assert",
+        ":boost_bind",
+        ":boost_config",
+        ":boost_core",
+        ":boost_function",
+        ":boost_fusion",
+        ":boost_mpl",
+        ":boost_predef",
+        ":boost_preprocessor",
+        ":boost_proto",
+        ":boost_range",
+        ":boost_smart_ptr",
+        ":boost_type_traits",
+        ":boost_utility",
+    ],
+)
+
+cc_library(
+    name = "boost_proto",
+    strip_include_prefix = "packages/boost-proto_arm64-linux/include",
+    hdrs = glob(["packages/boost-proto_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "boost_fusion",
+    strip_include_prefix = "packages/boost-fusion_arm64-linux/include",
+    hdrs = glob(["packages/boost-fusion_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "boost_config",
+        "boost_container_hash",
+        "boost_core",
+        "boost_function_types",
+        "boost_functional",
+        "boost_mpl",
+        "boost_preprocessor",
+        "boost_static_assert",
+        "boost_tuple",
+        "boost_type_traits",
+        "boost_typeof",
+        "boost_utility",
+    ],
+)
+
+cc_library(
+    name = "boost_function_types",
+    strip_include_prefix = "packages/boost-function-types_arm64-linux/include",
+    hdrs = glob(["packages/boost-function-types_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "boost_functional",
+    strip_include_prefix = "packages/boost-functional_arm64-linux/include",
+    hdrs = glob(["packages/boost-functional_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "boost_typeof",
+    strip_include_prefix = "packages/boost-typeof_arm64-linux/include",
+    hdrs = glob(["packages/boost-typeof_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "boost_config",
+    strip_include_prefix = "packages/boost-config_arm64-linux/include",
+    hdrs = glob(["packages/boost-config_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "boost_algorithm",
+    strip_include_prefix = "packages/boost-algorithm_arm64-linux/include",
+    hdrs = glob(["packages/boost-algorithm_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_range",
+    ],
+)
+
+cc_library(
+    name = "boost_exception",
+    strip_include_prefix = "packages/boost-exception_arm64-linux/include",
+    hdrs = glob(["packages/boost-exception_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_tuple",
+    ],
+)
+
+cc_library(
+    name = "boost_tuple",
+    strip_include_prefix = "packages/boost-tuple_arm64-linux/include",
+    hdrs = glob(["packages/boost-tuple_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+    ],
+)
+
+cc_library(
+    name = "boost_program_options",
+    strip_include_prefix = "packages/boost-program-options_arm64-linux/include",
+    hdrs = glob(["packages/boost-program-options_arm64-linux/include/**/*.hpp"]),
+    srcs = ["packages/boost-program-options_arm64-linux/lib/libboost_program_options.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_any",
+        ":boost_bind",
+        # ":boost_build",
+        ":boost_config",
+        ":boost_core",
+        ":boost_detail",
+        ":boost_function",
+        ":boost_iterator",
+        ":boost_lexical_cast",
+        # ":boost_modular_build_helper",
+        ":boost_smart_ptr",
+        ":boost_static_assert",
+        ":boost_throw_exception",
+        ":boost_tokenizer",
+        ":boost_type_traits",
+        # ":boost-vcpkg-helpers",
+        # ":vcpkg-cmake",
+    ],
+)
+
+cc_library(
+    name = "boost_any",
+    strip_include_prefix = "packages/boost-any_arm64-linux/include",
+    hdrs = glob(["packages/boost-any_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "boost_lexical_cast",
+    strip_include_prefix = "packages/boost-lexical-cast_arm64-linux/include",
+    hdrs = glob(["packages/boost-lexical-cast_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "boost_array",
+        "boost_assert",
+        "boost_config",
+        "boost_container",
+        "boost_core",
+        "boost_integer",
+        "boost_numeric_conversion",
+        "boost_range",
+        "boost_static_assert",
+        "boost_throw_exception",
+        "boost_type_traits",
+    ],
+)
+
+cc_library(
+    name = "boost_container",
+    strip_include_prefix = "packages/boost-container_arm64-linux/include",
+    hdrs = glob(["packages/boost-container_arm64-linux/include/**/*.hpp"]),
+    srcs = ["packages/boost-container_arm64-linux/lib/libboost_container.a"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "boost_stacktrace",
+    strip_include_prefix = "packages/boost-stacktrace_arm64-linux/include",
+    hdrs = glob([
+        "packages/boost-stacktrace_arm64-linux/include/**/*.hpp",
+        "packages/boost-stacktrace_arm64-linux/include/**/*.ipp",
+        "packages/boost-stacktrace_arm64-linux/include/**/*.h",
+    ]),
+    srcs = [
+        "packages/boost-stacktrace_arm64-linux/lib/libboost_stacktrace_addr2line.a",
+        "packages/boost-stacktrace_arm64-linux/lib/libboost_stacktrace_basic.a",
+        "packages/boost-stacktrace_arm64-linux/lib/libboost_stacktrace_noop.a",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "boost_array",
+        # "boost_build",
+        "boost_config",
+        "boost_container_hash",
+        "boost_core",
+        # "boost_modular_build_helper",
+        "boost_predef",
+        "boost_static_assert",
+        "boost_type_traits",
+        # "boost_vcpkg_helpers",
+        # "boost_winapi",
+    ],
+)
+
+cc_library(
+    name = "boost_numeric_conversion",
+    strip_include_prefix = "packages/boost-numeric-conversion_arm64-linux/include",
+    hdrs = glob(["packages/boost-numeric-conversion_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "boost_tokenizer",
+    strip_include_prefix = "packages/boost-tokenizer_arm64-linux/include",
+    hdrs = glob(["packages/boost-tokenizer_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "boost_range",
+    strip_include_prefix = "packages/boost-range_arm64-linux/include",
+    hdrs = glob(["packages/boost-range_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_iterator",
+        ":boost_concept_check",
+    ],
+)
+
+cc_library(
+    name = "boost_concept_check",
+    strip_include_prefix = "packages/boost-concept-check_arm64-linux/include",
+    hdrs = glob(["packages/boost-concept-check_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+    ],
+)
+
+cc_library(
+    name = "boost_iterator",
+    strip_include_prefix = "packages/boost-iterator_arm64-linux/include",
+    hdrs = glob(["packages/boost-iterator_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_detail",
+    ],
+)
+
+cc_library(
+    name = "boost_detail",
+    strip_include_prefix = "packages/boost-detail_arm64-linux/include",
+    hdrs = glob(["packages/boost-detail_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+    ],
+)
+
+cc_library(
+    name = "boost_smart_ptr",
+    strip_include_prefix = "packages/boost-smart-ptr_arm64-linux/include",
+    hdrs = glob(["packages/boost-smart-ptr_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+    ],
+)
+
+cc_library(
+    name = "boost_type_index",
+    strip_include_prefix = "packages/boost-type-index_arm64-linux/include",
+    hdrs = glob(["packages/boost-type-index_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+    ],
+)
+
+cc_library(
+    name = "boost_move",
+    strip_include_prefix = "packages/boost-move_arm64-linux/include",
+    hdrs = glob(["packages/boost-move_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+    ],
+)
+
+cc_library(
+    name = "boost_container_hash",
+    strip_include_prefix = "packages/boost-container-hash_arm64-linux/include",
+    hdrs = glob(["packages/boost-container-hash_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_describe",
+    ],
+)
+
+cc_library(
+    name = "boost_describe",
+    strip_include_prefix = "packages/boost-describe_arm64-linux/include",
+    hdrs = glob(["packages/boost-describe_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+    ],
+)
+
+cc_library(
+    name = "boost_throw_exception",
+    strip_include_prefix = "packages/boost-throw-exception_arm64-linux/include",
+    hdrs = glob(["packages/boost-throw-exception_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_assert",
+    ],
+)
+
+cc_library(
+    name = "boost_parameter",
+    strip_include_prefix = "packages/boost-parameter_arm64-linux/include",
+    hdrs = glob(["packages/boost-parameter_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_mpl",
+        ":boost_mp11",
+        ":boost_type_traits",
+    ],
+)
+
+cc_library(
+    name = "boost_type_traits",
+    strip_include_prefix = "packages/boost-type-traits_arm64-linux/include",
+    hdrs = glob(["packages/boost-type-traits_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+    ],
+)
+
+cc_library(
+    name = "boost_mpl",
+    strip_include_prefix = "packages/boost-mpl_arm64-linux/include",
+    hdrs = glob(["packages/boost-mpl_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_preprocessor",
+    ],
+)
+
+cc_library(
+    name = "boost_preprocessor",
+    strip_include_prefix = "packages/boost-preprocessor_arm64-linux/include",
+    hdrs = glob(["packages/boost-preprocessor_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_mp11",
+    strip_include_prefix = "packages/boost-mp11_arm64-linux/include",
+    hdrs = glob(["packages/boost-mp11_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_thread",
+    strip_include_prefix = "packages/boost-thread_arm64-linux/include",
+    hdrs = glob(["packages/boost-thread_arm64-linux/include/**/*.hpp"]),
+    srcs = ["packages/boost-thread_arm64-linux/lib/libboost_thread.a"],
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_assert",
+    strip_include_prefix = "packages/boost-assert_arm64-linux/include",
+    hdrs = glob(["packages/boost-assert_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_utility",
+    strip_include_prefix = "packages/boost-utility_arm64-linux/include",
+    hdrs = glob(["packages/boost-utility_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_io",
+    ],
+)
+
+cc_library(
+    name = "boost_io",
+    strip_include_prefix = "packages/boost-io_arm64-linux/include",
+    hdrs = glob(["packages/boost-io_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_function",
+    strip_include_prefix = "packages/boost-function_arm64-linux/include",
+    hdrs = glob(["packages/boost-function_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_bind",
+    ],
+)
+
+cc_library(
+    name = "boost_bind",
+    strip_include_prefix = "packages/boost-bind_arm64-linux/include",
+    hdrs = glob(["packages/boost-bind_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_filesystem",
+    strip_include_prefix = "packages/boost-filesystem_arm64-linux/include",
+    hdrs = glob(["packages/boost-filesystem_arm64-linux/include/**/*.hpp"]),
+    srcs = ["packages/boost-filesystem_arm64-linux/lib/libboost_filesystem.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_system",
+    ],
+)
+
+cc_library(
+    name = "boost_system",
+    strip_include_prefix = "packages/boost-system_arm64-linux/include",
+    hdrs = glob(["packages/boost-system_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_optional",
+    strip_include_prefix = "packages/boost-optional_arm64-linux/include",
+    hdrs = glob(["packages/boost-optional_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_core",
+        ":boost_static_assert",
+    ],
+)
+
+cc_library(
+    name = "boost_random",
+    strip_include_prefix = "packages/boost-random_arm64-linux/include",
+    hdrs = glob([
+        "packages/boost-random_arm64-linux/include/**/*.hpp",
+        "packages/boost-random_arm64-linux/include/**/*.ipp",
+    ]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_integer",
+        ":boost_array",
+    ],
+)
+
+cc_library(
+    name = "boost_integer",
+    strip_include_prefix = "packages/boost-integer_arm64-linux/include",
+    hdrs = glob(["packages/boost-integer_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_array",
+    strip_include_prefix = "packages/boost-array_arm64-linux/include",
+    hdrs = glob(["packages/boost-array_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_core",
+    strip_include_prefix = "packages/boost-core_arm64-linux/include",
+    hdrs = glob(["packages/boost-core_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_static_assert",
+    strip_include_prefix = "packages/boost-static-assert_arm64-linux/include",
+    hdrs = glob(["packages/boost-static-assert_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_format",
+    strip_include_prefix = "packages/boost-format_arm64-linux/include",
+    hdrs = glob(["packages/boost-format_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_regex",
+    strip_include_prefix = "packages/boost-regex_arm64-linux/include",
+    hdrs = glob(["packages/boost-regex_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":boost_common",
+        ":boost_predef",
+    ],
+)
+
+cc_library(
+    name = "boost_predef",
+    strip_include_prefix = "packages/boost-predef_arm64-linux/include",
+    hdrs = glob(["packages/boost-predef_arm64-linux/include/**/*.h"]),
+    visibility = ["//visibility:public"],
+    deps = [":boost_common"],
+)
+
+cc_library(
+    name = "boost_common",
+    strip_include_prefix = "packages/boost-config_arm64-linux/include",
+    hdrs = glob(["packages/boost-config_arm64-linux/include/**/*.hpp"]),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "mongocxx",
+    strip_include_prefix = "packages/libmongocxx_arm64-linux/include/mongocxx/v_noabi",
+    hdrs = glob(["packages/libmongocxx_arm64-linux/include/mongocxx/**/*.hpp"]),
+    srcs = ["packages/libmongocxx_arm64-linux/lib/libmongocxx-static.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":mongoc",
+        ":bsoncxx",
+    ],
+)
+
+cc_library(
+    name = "bsoncxx",
+    hdrs = glob(["packages/libmongocxx_arm64-linux/include/bsoncxx/**/*.hpp"]),
+    srcs = ["packages/libmongocxx_arm64-linux/lib/libbsoncxx-static.a"],
+    visibility = ["//visibility:public"],
+    strip_include_prefix = "packages/libmongocxx_arm64-linux/include/bsoncxx/v_noabi",
+    deps = [
+        ":boost_utility",
+        ":boost_optional",
+        ":bson",
+    ],
+)
+
+cc_library(
+    name = "bson",
+    hdrs = glob(["packages/libbson_arm64-linux/include/**/*.h"]),
+    # srcs = ["packages/libbson_arm64-linux/lib/libbson-static-1.0.a"],
+    srcs = ["packages/libbson_arm64-linux/lib/libbson-1.0.so"],
+    visibility = ["//visibility:public"],
+    strip_include_prefix = "packages/libbson_arm64-linux/include",
+)
+
+cc_library(
+    name = "mongoc",
+    hdrs = glob(["packages/libmongoc_arm64-linux/include/**/*.h"]),
+    # srcs = ["packages/libmongoc_arm64-linux/lib/libmongoc-static-1.0.a"],
+    srcs = ["packages/libmongoc_arm64-linux/lib/libmongoc-1.0.so"],
+    visibility = ["//visibility:public"],
+    strip_include_prefix = "packages/libmongoc_arm64-linux/include",
+    deps = [
+        ":mongocrypt",
+        ":zstd",
+        # "@local_packages//:sasl2",
+        # "@local_packages//:resolv",
+        # "@local_packages//:snappy",
+        ":openssl",
+    ],
+)
+
+cc_library(
+    name = "mongocrypt",
+    hdrs = glob(["packages/libmongocrypt_arm64-linux/include/**/*.h"]),
+    srcs = [
+        "packages/libmongocrypt_arm64-linux/lib/libmongocrypt-static.a",
+        # Difinition is duplicated here
+        "packages/libmongocrypt_arm64-linux/lib/libkms_message-static.a",
+        # Difinition is duplicated here
+        "packages/libmongocrypt_arm64-linux/lib/libbson-static-for-libmongocrypt.a",
+    ],
+    visibility = ["//visibility:public"],
+    strip_include_prefix = "packages/libmongocrypt_arm64-linux/include",
+)
+
+cc_library(
+    name = "zstd",
+    hdrs = glob(["packages/zstd_arm64-linux/include/**/*.h"]),
+    srcs = [
+        "packages/zstd_arm64-linux/lib/libzstd.a",
+    ],
+    visibility = ["//visibility:public"],
+    strip_include_prefix = "packages/zstd_arm64-linux/include",
+)
+
+cc_library(
+    name = "yaml_cpp",
+    strip_include_prefix = "packages/yaml-cpp_arm64-linux/include",
+    hdrs = glob(["packages/yaml-cpp_arm64-linux/include/**/*.h"]),
+    srcs = ["packages/yaml-cpp_arm64-linux/lib/libyaml-cpp.a"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "grpc",
+    srcs = [
+        "packages/grpc_arm64-linux/lib/libgrpc++_alts.a",
+        "packages/grpc_arm64-linux/lib/libgrpc++_error_details.a",
+        "packages/grpc_arm64-linux/lib/libgrpc++.a",
+        "packages/grpc_arm64-linux/lib/libgrpc++_reflection.a",
+        "packages/grpc_arm64-linux/lib/libgrpc++_unsecure.a",
+        "packages/grpc_arm64-linux/lib/libgrpcpp_channelz.a",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":protobuf",
+        ":grpclib",
+        ":grpcinc",
+    ],
+)
+
+cc_library(
+    name = "grpclib",
+    srcs = [
+        "packages/grpc_arm64-linux/lib/libgrpc.a",
+        "packages/grpc_arm64-linux/lib/libgrpc_unsecure.a",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil",
+        ":protobuf",
+        ":grpcinc",
+        ":grp",
+        ":upb",
+        ":openssl",
+        ":re2",
+        ":c_ares",
+        ":zlib",
+    ],
+)
+
+cc_library(
+    name = "re2",
+    strip_include_prefix = "packages/re2_arm64-linux/include",
+    hdrs = glob([
+        "packages/re2_arm64-linux/include/**/*.h",
+    ]),
+    srcs = [
+        "packages/re2_arm64-linux/lib/libre2.a",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "c_ares",
+    strip_include_prefix = "packages/c-ares_arm64-linux/include",
+    hdrs = glob([
+        "packages/c-ares_arm64-linux/include/**/*.h",
+    ]),
+    srcs = [
+        "packages/c-ares_arm64-linux/lib/libcares.a",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "zlib",
+    strip_include_prefix = "packages/zlib_arm64-linux/include",
+    hdrs = glob([
+        "packages/zlib_arm64-linux/include/**/*.h",
+    ]),
+    srcs = [
+        "packages/zlib_arm64-linux/lib/libz.a",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "grp",
+    srcs = [
+        "packages/grpc_arm64-linux/lib/libgpr.a",
+        "packages/grpc_arm64-linux/lib/libaddress_sorting.a",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil",
+        ":protobuf",
+        ":grpcinc",
+        ":upb",
+    ],
+)
+
+cc_library(
+    name = "grpcinc",
+    strip_include_prefix = "packages/grpc_arm64-linux/include",
+    hdrs = glob(["packages/grpc_arm64-linux/include/**/*.h"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":protobuf",
+    ],
+)
+
+cc_library(
+    name = "openssl",
+    hdrs = glob([
+        "packages/openssl_arm64-linux/include/**/*.h",
+    ]),
+    srcs = [
+        "packages/openssl_arm64-linux-dynamic/lib/libssl.so",
+        "packages/openssl_arm64-linux-dynamic/lib/libcrypto.so",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "protobuf",
+    strip_include_prefix = "packages/protobuf_arm64-linux/include",
+    hdrs = glob([
+        "packages/protobuf_arm64-linux/include/**/*.h",
+        "packages/protobuf_arm64-linux/include/**/*.inc",
+    ]),
+    srcs = glob(["packages/protobuf_arm64-linux/lib/*.a"]),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "abseil",
+    strip_include_prefix = "packages/abseil_arm64-linux/include",
+    hdrs = glob(["packages/abseil_arm64-linux/include/**/*.h"]),
+    # srcs = glob(
+    #     ["packages/abseil_arm64-linux/lib/*.a"],
+    #     exclude = [
+    #         "packages/abseil_arm64-linux/lib/libabsl_base.a",
+    #         # "packages/abseil_arm64-linux/lib/libabsl_synchronization.a",
+    #     ],
+    # ),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_synchronization",
+        ":abseil_strings",
+        ":abseil_status",
+        ":abseil_str_format_internal",
+        ":abseil_variant",
+        ":abseil_statusor",
+        ":abseil_random_distributions",
+        ":abseil_hash",
+        ":abseil_random_internal_randen",
+        ":abseil_random_internal_pool_urbg",
+        ":abseil_raw_hash_set",
+    ],
+)
+
+cc_library(
+    name = "abseil_random_internal_randen",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_randen.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_random_internal_platform",
+        ":abseil_random_internal_randen_hwaes",
+        ":abseil_random_internal_randen_slow",
+    ],
+)
+
+cc_library(
+    name = "abseil_random_internal_platform",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_platform.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_config"],
+)
+
+cc_library(
+    name = "abseil_random_internal_randen_hwaes",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_randen_hwaes.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_random_internal_platform",
+        ":abseil_random_internal_randen_hwaes_impl",
+        ":abseil_config",
+    ],
+)
+
+cc_library(
+    name = "abseil_random_internal_randen_slow",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_randen_slow.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_random_internal_platform",
+        ":abseil_config",
+    ],
+)
+
+cc_library(
+    name = "abseil_random_internal_randen_hwaes_impl",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_randen_hwaes_impl.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_random_internal_platform",
+        ":abseil_config",
+    ],
+)
+
+cc_library(
+    name = "abseil_random_distributions",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_distributions.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_random_internal_generate_real",
+        ":abseil_random_internal_distribution_caller",
+        ":abseil_random_internal_fast_uniform_bits",
+        ":abseil_random_internal_fastmath",
+        # ":abseil_random_internal_iostream_state_saver",
+        ":abseil_random_internal_traits",
+        ":abseil_random_internal_uniform_helper",
+        ":abseil_random_internal_wide_multiply",
+        ":abseil_strings",
+        ":abseil_type_traits",
+    ],
+)
+
+cc_library(
+    name = "abseil_random_internal_pool_urbg",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_pool_urbg.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_endian",
+        ":abseil_random_internal_randen",
+        ":abseil_random_internal_seed_material",
+        ":abseil_random_internal_traits",
+        ":abseil_random_seed_gen_exception",
+        ":abseil_raw_logging_internal",
+        ":abseil_span",
+    ],
+)
+
+cc_library(
+    name = "abseil_random_internal_seed_material",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_seed_material.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_core_headers",
+        ":abseil_optional",
+        ":abseil_random_internal_fast_uniform_bits",
+        ":abseil_raw_logging_internal",
+        ":abseil_span",
+        ":abseil_strings",
+    ],
+)
+
+cc_library(
+    name = "abseil_random_seed_gen_exception",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_seed_gen_exception.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+    ],
+)
+
+cc_library(
+    name = "abseil_raw_hash_set",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_raw_hash_set.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_bits",
+        ":abseil_compressed_tuple",
+        ":abseil_config",
+        # ":abseil_container_common",
+        # ":abseil_container_memory",
+        ":abseil_core_headers",
+        ":abseil_endian",
+        # ":abseil_hash_policy_traits",
+        # ":abseil_hashtable_debug_hooks",
+        ":abseil_memory",
+        ":abseil_meta",
+        ":abseil_optional",
+        # ":abseil_prefetch",
+        ":abseil_utility",
+        # ":abseil_hashtablez_sampler",
+    ],
+)
+
+# ":abseil_container_common",
+#         ":abseil_container_memory",
+#         "abseil_hash_policy_traits"
+#         "abseil_hashtable_debug_hooks"
+#         "abseil_prefetch"
+#         "abseil_hashtablez_sampler"
+
+cc_library(
+    name = "abseil_random_internal_generate_real",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_generate_real.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_bits",
+        ":abseil_random_internal_fastmath",
+        ":abseil_random_internal_traits",
+        ":abseil_type_traits",
+    ],
+)
+
+cc_library(
+    name = "abseil_random_internal_distribution_caller",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_distribution_caller.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_utility",
+        ":abseil_fast_type_id",
+    ],
+)
+
+cc_library(
+    name = "abseil_random_internal_fast_uniform_bits",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_fast_uniform_bits.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_config"],
+)
+
+cc_library(
+    name = "abseil_random_internal_fastmath",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_fastmath.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_bits"],
+)
+
+cc_library(
+    name = "abseil_fast_type_id",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_fast_type_id.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_config"],
+)
+
+# cc_library(
+#     name = "abseil_random_internal_iostream_state_saver",
+#     srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_iostream_state_saver.a"],
+#     visibility = ["//visibility:public"],
+#     deps = [":abseil_bits"]
+# )
+
+cc_library(
+    name = "abseil_random_internal_traits",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_traits.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_config"],
+)
+
+cc_library(
+    name = "abseil_random_internal_uniform_helper",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_uniform_helper.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_random_internal_traits",
+        ":abseil_type_traits",
+    ],
+)
+
+cc_library(
+    name = "abseil_random_internal_wide_multiply",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_random_internal_wide_multiply.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_bits",
+        ":abseil_config",
+        ":abseil_int128",
+    ],
+)
+
+cc_library(
+    name = "abseil_hash",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_hash.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_city",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_endian",
+        ":abseil_fixed_array",
+        ":abseil_function_ref",
+        ":abseil_meta",
+        ":abseil_int128",
+        ":abseil_strings",
+        ":abseil_optional",
+        ":abseil_variant",
+        ":abseil_utility",
+        ":abseil_low_level_hash",
+    ],
+)
+
+cc_library(
+    name = "abseil_city",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_city.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_endian",
+    ],
+)
+
+cc_library(
+    name = "abseil_low_level_hash",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_low_level_hash.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_bits",
+        ":abseil_config",
+        ":abseil_endian",
+        ":abseil_int128",
+    ],
+)
+
+cc_library(
+    name = "abseil_statusor",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_statusor.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_status",
+        ":abseil_core_headers",
+        ":abseil_raw_logging_internal",
+        ":abseil_type_traits",
+        ":abseil_strings",
+        ":abseil_utility",
+        ":abseil_variant",
+    ],
+)
+
+cc_library(
+    name = "abseil_synchronization",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_synchronization.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_graphcycles_internal",
+        ":abseil_kernel_timeout_internal",
+        ":abseil_atomic_hook",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_dynamic_annotations",
+        ":abseil_malloc_internal",
+        ":abseil_raw_logging_internal",
+        ":abseil_stacktrace",
+        ":abseil_symbolize",
+        ":abseil_time",
+    ],
+)
+
+cc_library(
+    name = "abseil_strings",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_strings.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_strings_internal",
+        ":abseil_bits",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_endian",
+        ":abseil_int128",
+        ":abseil_memory",
+        ":abseil_raw_logging_internal",
+        ":abseil_throw_delegate",
+        ":abseil_type_traits",
+    ],
+)
+
+cc_library(
+    name = "abseil_status",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_status.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_atomic_hook",
+        ":abseil_config",
+        ":abseil_cord",
+        ":abseil_core_headers",
+        ":abseil_function_ref",
+        ":abseil_inlined_vector",
+        ":abseil_optional",
+        ":abseil_raw_logging_internal",
+        ":abseil_stacktrace",
+        ":abseil_str_format",
+        ":abseil_strerror",
+        ":abseil_strings",
+        ":abseil_symbolize",
+    ],
+)
+
+cc_library(
+    name = "abseil_str_format_internal",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_str_format_internal.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_bits",
+        ":abseil_strings",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_numeric_representation",
+        ":abseil_type_traits",
+        ":abseil_utility",
+        ":abseil_int128",
+        ":abseil_span",
+    ],
+)
+
+cc_library(
+    name = "abseil_numeric_representation",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_numeric_representation.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+    ],
+)
+
+cc_library(
+    name = "abseil_variant",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_variant.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_bad_variant_access",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_type_traits",
+        ":abseil_utility",
+    ],
+)
+
+cc_library(
+    name = "abseil_bad_variant_access",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_bad_variant_access.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_raw_logging_internal",
+    ],
+)
+
+cc_library(
+    name = "abseil_utility",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_utility.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_type_traits",
+    ],
+)
+
+cc_library(
+    name = "abseil_span",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_span.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_algorithm",
+        ":abseil_core_headers",
+        ":abseil_throw_delegate",
+        ":abseil_type_traits",
+    ],
+)
+
+cc_library(
+    name = "abseil_algorithm",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_algorithm.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_config"],
+)
+
+cc_library(
+    name = "abseil_strerror",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_strerror.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_errno_saver",
+    ],
+)
+
+cc_library(
+    name = "abseil_str_format",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_str_format.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_str_format_internal"],
+)
+
+cc_library(
+    name = "abseil_optional",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_optional.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_bad_optional_access",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_memory",
+        ":abseil_type_traits",
+        ":abseil_utility",
+    ],
+)
+
+cc_library(
+    name = "abseil_bad_optional_access",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_bad_optional_access.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_raw_logging_internal",
+    ],
+)
+
+cc_library(
+    name = "abseil_inlined_vector",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_inlined_vector.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_algorithm",
+        ":abseil_core_headers",
+        ":abseil_inlined_vector_internal",
+        ":abseil_throw_delegate",
+        ":abseil_memory",
+    ],
+)
+
+cc_library(
+    name = "abseil_inlined_vector_internal",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_inlined_vector_internal.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_compressed_tuple",
+        ":abseil_core_headers",
+        ":abseil_memory",
+        ":abseil_span",
+        ":abseil_type_traits",
+    ],
+)
+
+cc_library(
+    name = "abseil_function_ref",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_function_ref.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_core_headers",
+        ":abseil_meta",
+    ],
+)
+
+cc_library(
+    name = "abseil_meta",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_meta.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_type_traits"],
+)
+
+cc_library(
+    name = "abseil_cord",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_cord.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_config",
+        ":abseil_cord_internal",
+        ":abseil_cordz_functions",
+        ":abseil_cordz_info",
+        ":abseil_cordz_update_scope",
+        ":abseil_cordz_update_tracker",
+        ":abseil_core_headers",
+        ":abseil_endian",
+        ":abseil_fixed_array",
+        ":abseil_function_ref",
+        ":abseil_inlined_vector",
+        ":abseil_optional",
+        ":abseil_raw_logging_internal",
+        ":abseil_span",
+        ":abseil_strings",
+        ":abseil_type_traits",
+    ],
+)
+
+cc_library(
+    name = "abseil_cord_internal",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_cord_internal.a"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "abseil_cordz_functions",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_cordz_functions.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_exponential_biased",
+        ":abseil_raw_logging_internal",
+    ],
+)
+
+cc_library(
+    name = "abseil_exponential_biased",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_exponential_biased.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_core_headers",
+    ],
+)
+
+cc_library(
+    name = "abseil_cordz_info",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_cordz_info.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_config",
+        ":abseil_cord_internal",
+        ":abseil_cordz_functions",
+        ":abseil_cordz_handle",
+        ":abseil_cordz_statistics",
+        ":abseil_cordz_update_tracker",
+        ":abseil_core_headers",
+        ":abseil_inlined_vector",
+        ":abseil_span",
+        ":abseil_raw_logging_internal",
+        ":abseil_stacktrace",
+        ":abseil_synchronization",
+    ],
+)
+
+cc_library(
+    name = "abseil_cordz_handle",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_cordz_handle.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_config",
+        ":abseil_raw_logging_internal",
+        ":abseil_synchronization",
+    ],
+)
+
+cc_library(
+    name = "abseil_cordz_statistics",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_cordz_statistics.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_cordz_update_tracker",
+        ":abseil_synchronization",
+    ],
+)
+
+cc_library(
+    name = "abseil_cordz_update_scope",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_cordz_update_scope.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_cord_internal",
+        ":abseil_cordz_info",
+        ":abseil_cordz_update_tracker",
+        ":abseil_core_headers",
+    ],
+)
+
+cc_library(
+    name = "abseil_cordz_update_tracker",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_cordz_update_tracker.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_config"],
+)
+
+cc_library(
+    name = "abseil_fixed_array",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_fixed_array.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_compressed_tuple",
+        ":abseil_algorithm",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_dynamic_annotations",
+        ":abseil_throw_delegate",
+        ":abseil_memory",
+    ],
+)
+
+cc_library(
+    name = "abseil_compressed_tuple",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_compressed_tuple.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_utility",
+    ],
+)
+
+cc_library(
+    name = "abseil_civil_time",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_civil_time.a"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "abseil_time_zone",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_time_zone.a"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "abseil_demangle_internal",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_demangle_internal.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_core_headers",
+    ],
+)
+
+cc_library(
+    name = "abseil_type_traits",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_type_traits.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_config"],
+)
+
+cc_library(
+    name = "abseil_debugging_internal",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_debugging_internal.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_core_headers",
+        ":abseil_config",
+        ":abseil_dynamic_annotations",
+        ":abseil_errno_saver",
+        ":abseil_raw_logging_internal",
+    ],
+)
+
+cc_library(
+    name = "abseil_throw_delegate",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_throw_delegate.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_raw_logging_internal",
+    ],
+)
+
+cc_library(
+    name = "abseil_memory",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_memory.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_core_headers",
+        ":abseil_meta",
+    ],
+)
+
+cc_library(
+    name = "abseil_int128",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_int128.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_bits",
+    ],
+)
+
+cc_library(
+    name = "abseil_endian",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_endian.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_config",
+        ":abseil_core_headers",
+    ],
+)
+
+cc_library(
+    name = "abseil_bits",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_bits.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_core_headers"],
+)
+
+cc_library(
+    name = "abseil_strings_internal",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_strings_internal.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_endian",
+        ":abseil_raw_logging_internal",
+        ":abseil_type_traits",
+    ],
+)
+
+cc_library(
+    name = "abseil_graphcycles_internal",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_graphcycles_internal.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_malloc_internal",
+        ":abseil_raw_logging_internal",
+    ],
+)
+
+cc_library(
+    name = "abseil_kernel_timeout_internal",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_kernel_timeout_internal.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_core_headers",
+        ":abseil_raw_logging_internal",
+        ":abseil_time",
+    ],
+)
+
+cc_library(
+    name = "abseil_atomic_hook",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_atomic_hook.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+        ":abseil_core_headers",
+    ],
+)
+
+cc_library(
+    name = "abseil_config",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_config.a"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "abseil_core_headers",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_core_headers.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_config"],
+)
+
+cc_library(
+    name = "abseil_dynamic_annotations",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_dynamic_annotations.a"],
+    visibility = ["//visibility:public"],
+    deps = [":abseil_config"],
+)
+
+cc_library(
+    name = "abseil_malloc_internal",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_malloc_internal.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_dynamic_annotations",
+        ":abseil_raw_logging_internal",
+    ],
+)
+
+cc_library(
+    name = "abseil_raw_logging_internal",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_raw_logging_internal.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_atomic_hook",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_errno_saver",
+        ":abseil_log_severity",
+    ],
+)
+
+cc_library(
+    name = "abseil_errno_saver",
+    # srcs = ["packages/abseil_arm64-linux/lib/libabsl_errno_saver.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_config",
+    ],
+)
+
+cc_library(
+    name = "abseil_stacktrace",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_stacktrace.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_debugging_internal",
+        ":abseil_config",
+        ":abseil_core_headers",
+    ],
+)
+
+cc_library(
+    name = "abseil_symbolize",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_symbolize.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_debugging_internal",
+        ":abseil_demangle_internal",
+        ":abseil_base",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_dynamic_annotations",
+        ":abseil_malloc_internal",
+        ":abseil_raw_logging_internal",
+        ":abseil_strings",
+    ],
+)
+
+cc_library(
+    name = "abseil_time",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_time.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_base",
+        ":abseil_civil_time",
+        ":abseil_core_headers",
+        ":abseil_int128",
+        ":abseil_raw_logging_internal",
+        ":abseil_strings",
+        ":abseil_time_zone",
+    ],
+)
+
+cc_library(
+    name = "abseil_base",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_base.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_atomic_hook",
+        ":abseil_config",
+        ":abseil_core_headers",
+        ":abseil_dynamic_annotations",
+        ":abseil_log_severity",
+        ":abseil_raw_logging_internal",
+        ":abseil_spinlock_wait",
+        ":abseil_type_traits",
+    ],
+)
+
+cc_library(
+    name = "abseil_spinlock_wait",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_spinlock_wait.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_core_headers",
+        ":abseil_errno_saver",
+    ],
+)
+
+cc_library(
+    name = "abseil_log_severity",
+    srcs = ["packages/abseil_arm64-linux/lib/libabsl_log_severity.a"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abseil_core_headers",
+    ],
+)
+
+cc_library(
+    name = "catch2",
+    strip_include_prefix = "packages/catch2_arm64-linux/include",
+    hdrs = glob(["packages/catch2_arm64-linux/include/**/*.hpp"]),
+    # srcs = ["packages/catch2_arm64-linux/lib/libCatch2.a"],
+    visibility = ["//visibility:public"],
+    alwayslink = 1,
+    deps = [":catch2_static"],
+)
+
+cc_import(
+    name = "catch2_static",
+    static_library = "packages/catch2_arm64-linux/lib/libCatch2.a",
+    visibility = ["//visibility:public"],
+    alwayslink = 1,
+)
+
+cc_library(
+    name = "upb",
+    strip_include_prefix = "packages/upb_arm64-linux/include",
+    hdrs = glob(["packages/upb_arm64-linux/include/**/*.h"]),
+    srcs = glob(
+        ["packages/upb_arm64-linux/lib/*.a"],
+        exclude = [
+            "packages/upb_arm64-linux/lib/libupb.a",
+            "packages/upb_arm64-linux/lib/libupb_utf8_range.a",
+            "packages/upb_arm64-linux/lib/libupb_extension_registry.a",
+            "packages/upb_arm64-linux/lib/libupb_collections.a",
+        ],
+    ),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":upb_base",
+        ":upb_collections",
+    ],
+)
+
+cc_library(
+    name = "upb_base",
+    srcs = ["packages/upb_arm64-linux/lib/libupb.a"],
+    deps = [
+        ":upb_utf8_range",
+        ":upb_extension_registry",
+    ],
+)
+
+cc_library(
+    name = "upb_extension_registry",
+    srcs = ["packages/upb_arm64-linux/lib/libupb_extension_registry.a"],
+)
+
+cc_library(
+    name = "upb_collections",
+    srcs = ["packages/upb_arm64-linux/lib/libupb_collections.a"],
+)
+
+cc_library(
+    name = "upb_utf8_range",
+    srcs = ["packages/upb_arm64-linux/lib/libupb_utf8_range.a"],
+)
