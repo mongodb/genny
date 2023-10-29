@@ -15,6 +15,7 @@
 project(cast_core VERSION 0.0.1 LANGUAGES CXX)
 
 find_package(cppcodec)
+find_package(RdKafka)
 
 CreateGennyTargets(
     NAME    cast_core
@@ -23,5 +24,7 @@ CreateGennyTargets(
         gennylib
         cppcodec::cppcodec
         simple-beast-client
+        RdKafka::rdkafka
+        RdKafka::rdkafka++
     TEST_DEPENDS    testlib
 )
