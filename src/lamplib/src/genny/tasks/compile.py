@@ -255,7 +255,7 @@ def clean(genny_repo_root: str):
 
     # Physically remove all built files.
     _run_command(cmd=["rm", "-rf", "build"])
-    _run_command(cmd=["rm", "-rf", "genny_venv"])
+    _run_command(cmd=["rm", "-rf", ".venv"])
     _run_command(cmd=["rm", "-rf", "dist"])
 
     # Put back build/.gitinore

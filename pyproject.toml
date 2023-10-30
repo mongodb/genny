@@ -1,3 +1,41 @@
+[tool.poetry]
+name = "genny"
+version = "4.0.0"
+description = "Genny is a workload-generator with first-class support for time-series data-collection of operations running against MongoDB."
+authors = ["Performance Tooling Team <performance-tooling-team@mongodb.com>"]
+license = "Apache License Version 2.0"
+readme = "README.md"
+packages = [{ include = "genny", from = "src/lamplib/src" }]
+
+[tool.poetry.scripts]
+genny               = "genny.cli:cli"
+genny-autocomplete  = "lamplib.src.genny.autocomplete:main"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"  # Minimum version is dictated by Numpy	
+# Fixed versions below inherited from pre-poetry config.
+black               = "22.10.0"
+click               = "8.1.2"
+click-option-group  = "0.5.5"
+colorama            = "0.4.3"
+numexpr             = "2.8.4"
+numpy               = "1.23.5"
+omegaconf           = "2.1.1"
+progressbar         = "2.5"
+pymongo             = "4.3.3"
+pytest              = "7.2.0"
+pyyaml              = "<=5.3.1"  # Last version compatible with Cython 3.0 (See EVG-20471)
+requests            = "2.31.0"
+setuptools          = "65.7.0"
+shrub-py            = "3.0.7"
+structlog           = "20.1.0"
+wheel               = "0.40.0"
+yamllint            = "1.15.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.black]
 line-length = 100
 target-version = ['py37']

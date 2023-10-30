@@ -5,7 +5,7 @@ _pip() {
     /usr/bin/env python3 -m pip "$@" --isolated -q -q
 }
 
-_genny_venv="genny_venv"
+_genny_venv=".venv"
 
 pushd "$(dirname "$0")" >/dev/null
     GENNY_REPO_ROOT="$(pwd -P)"
