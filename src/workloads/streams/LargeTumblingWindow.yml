@@ -23,10 +23,10 @@ GlobalDefaults:
   # 500 batches of 1k documents, so a total of 8M documents, which will all have unique keys
   # for the window so this will generate 8M keys on the open window.
   NumThreads: &NumThreads 16
-  NumBatch1000xPerThread: &NumBatch1000xPerThread 200
-  NumDocumentsPerThread: &NumDocumentsPerThread 200000  # NumBatch1000xPerThread * 1000
-  ExpectedDocumentCount: &ExpectedDocumentCount 3200000  # NumDocumentsPerThread * NumThreads
-  ExpectedDocumentCountAfterFlush: &ExpectedDocumentCountAfterFlush 3200016  # ExpectedDocumentCount + NumThreads
+  NumBatch1000xPerThread: &NumBatch1000xPerThread 150
+  NumDocumentsPerThread: &NumDocumentsPerThread 150000  # NumBatch1000xPerThread * 1000
+  ExpectedDocumentCount: &ExpectedDocumentCount 2400000  # NumDocumentsPerThread * NumThreads
+  ExpectedDocumentCountAfterFlush: &ExpectedDocumentCountAfterFlush 2400016  # ExpectedDocumentCount + NumThreads
 
   Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
   Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
@@ -45,7 +45,7 @@ GlobalDefaults:
     dateTime: "2023-01-01T00:00:00.000"
 
   FlushDocument: &FlushDocument
-    auction: {^RandomInt: { min: 1000, max: 3201000 }}
+    auction: {^RandomInt: { min: 1000, max: 2401000 }}
     bidder: {^Inc: { start: 1000, multiplier: 1 }}
     price: {^RandomDouble: { min: 100, max: 100000000 }}
     channel: *Channel
