@@ -1,0 +1,278 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-integration"
+Description: |
+  This workload runs different time-series optimizations with the tsbs dataset. During development,
+  we targeted optimizations that are most relevant to pushdown time-series queries to SBE. Further
+  optimizations should be added to this workload. The data is preloaded by the dsi configuration.
+  See 'configurations/test_control/test_control.tsbs_query_genny.yml' for all  the details.
+  
+  Below are helpful statistics about the collection:
+  1. There are 20736000 documents and 161448 buckets in the collection.
+  2. "tags" is the metaField and "time" is the timeField.
+  3. "tags.hostname" has 100 values that are uniformly distributed.
+  4. The 50th percentile of the number of documents per bucket is 93.
+  5. The 80th percentile of the number of document per bucket is 274.96.
+  6. 40435 buckets are version 1 and 121013 buckets are version 2.
+  7. Predicates on a single measurement value, such as {usage_nice: 5} will hit around 18% of buckets.
+  8. All measurement fields vary from [0, 100]. Not all measurement fields have similar distributions.
+  You need to verify how many buckets are hit for each measurement field predicate written.
+  9. Predicates of bucket at a time window of 1 hour is expected to hit 0.2% of buckets.
+  10. The earliest date is  "2016-01-01T00:00:00Z" and the latest date is "2016-01-24T23:59:50Z".
+
+Keywords:
+  - timeseries
+  - aggregate
+  - group
+  - sort
+
+GlobalDefaults:
+  database: &database cpu
+  collection: &collection point_data
+  maxPhases: &maxPhases 20
+  repeat: &repeat 50
+
+Actors:
+  # The data is already loaded into the collection from the dsi configuration.
+  # We will Quiesce before each query.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0, 2, 4, 6, 8, 10, 12, 14]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+
+  # The following two tasks test the $group rewrite for the $min and $max accumulators.
+  - Name: GroupRewriteMax
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $group:
+                        {
+                          _id: "$tags.hostname",
+                          max_usage_user: { $max: "$usage_user" },
+                          max_usage_iowait: { $max: "$usage_iowait" },
+                          max_usage_irq: { $max: "$usage_irq" },
+                          max_usage_steal: { $max: "$usage_steal" },
+                        },
+                    },
+                  ]
+
+  - Name: GroupRewriteMin
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $group:
+                        {
+                          _id: "$tags.hostname",
+                          min_usage_user: { $min: "$usage_user" },
+                          min_usage_iowait: { $min: "$usage_iowait" },
+                          min_usage_irq: { $min: "$usage_irq" },
+                          min_usage_steal: { $min: "$usage_steal" },
+                        },
+                    },
+                  ]
+
+  # If the following stages after unpack doesn't depend on the fields of the documents, the unpack stage 
+  # will only return empty documents. The following task tests this optimization.
+  - Name: EmptyUnpackWithGroupSum
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [{ $group: { _id: null, new_count: { $sum: 2 } } }]
+
+  # A new optimization for $count was added in 7.1 Below are tasks that test the $count stage and
+  # accumulator optimization. We expect these tasks to run faster on version >=7.1.
+  - Name: EmptyUnpackWithCountStage
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [{ $count: "count" }]
+
+  - Name: GroupRewriteCount
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [9]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $group:
+                        {
+                          _id: "$tags.hostname",
+                          document_count: { $count: {} },
+                        },
+                    },
+                  ]
+
+  # Predicates generated for a $match on the timeField are not applied to the unpacked documents if
+  # the entire bucket matches the predicate. This task tests that optimization.
+  - Name: WholeBucketFilter
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [11]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                # The $match stage will hit ~115,000 or ~71% of buckets.
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        { "time": { $lt: { ^Date: "2016-01-18T01:49:23" } } },
+                    },
+                    {
+                      $project:
+                        {
+                          _id: 1,
+                          tags: 1,
+                          usage_softirq: 1,
+                          usage_steal: 1,
+                          usage_guest: 1,
+                        },
+                    },
+                  ]
+
+  # These queries test bucket-targeting, and we want to target a small percentage of buckets.
+  # The task below will target ~300 buckets or .1%.
+  - Name: MatchOnMeasurement
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [13]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 100
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  # All usage_* fields are random integers between 0-100.
+                  # Verify before adding to this workload how many buckets each query targets.
+                  [
+                    { $match: { usage_guest: 88, usage_nice: 50 } },
+                    {
+                      $project:
+                        {
+                          _id: 1,
+                          tags: 1,
+                          usage_softirq: 1,
+                          usage_steal: 1,
+                          usage_guest: 1,
+                        },
+                    },
+                  ]
+
+  # The task below will target ~580 buckets or .3%.
+  - Name: MatchOnMeasurementMeta
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [15]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 100
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  # All usage_* fields are random integers between 0-100.
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              { usage_steal: { $gte: 5, $lt: 20 } },
+                              { "tags.hostname": "host_44" },
+                            ],
+                        },
+                    },
+                    {
+                      $project:
+                        {
+                          _id: 1,
+                          tags: 1,
+                          usage_softirq: 1,
+                          usage_steal: 1,
+                          usage_guest: 1,
+                        },
+                    },
+                  ]

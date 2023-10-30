@@ -1,0 +1,273 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-integration"
+Description: |
+  This test stress tests bucket unpacking. Each document has many top-level fields. Each query
+  targets a measurement, and cannot use the index on time/meta for time-series collections. Each
+  query will target a different number of buckets, and a different number of fields to unpack. We
+  should see the runtime for each query increase based on the number of buckets and fields to unpack.
+  We also compare the runtime of queries that project all fields explicitly vs returning the original
+  document "as is" with no projections defined.
+
+Keywords:
+  - timeseries
+  - aggregate
+
+GlobalDefaults:
+  database: &database test
+  collection: &collection Collection0
+  maxPhases: &maxPhases 20
+  repeat: &repeat 100
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 4000
+
+Project1Field: &Project1Field { _id: 0, measurement: 1 }
+
+Project10Fields:
+  &Project10Fields {
+    _id: 1,
+    time: 1,
+    measurement: 1,
+    payload1: 1,
+    payload2: 1,
+    payload3: 1,
+    payload4: 1,
+    payload5: 1,
+    payload6: 1,
+    payload7: 1,
+  }
+
+ActorTemplates:
+  - TemplateName: RunMatchPipeline
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "RunMatchPipeline" } }
+      Type: CrudActor
+      Threads: 10
+      Phases:
+        OnlyActiveInPhases:
+          Active: { ^Parameter: { Name: "Active", Default: [1000] } }
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: *repeat
+            Database: *database
+            Collection: *collection
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline:
+                    [
+                      {
+                        $match:
+                          {
+                            "measurement":
+                              { ^Parameter: { Name: "Predicate", Default: 0 } },
+                          },
+                      },
+                    ]
+
+  - TemplateName: RunMatchProjectPipeline
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "RunMatchProjectPipeline" } }
+      Type: CrudActor
+      Threads: 10
+      Phases:
+        OnlyActiveInPhases:
+          Active: { ^Parameter: { Name: "Active", Default: [1000] } }
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: *repeat
+            Database: *database
+            Collection: *collection
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline:
+                    [
+                      {
+                        $match:
+                          {
+                            "measurement":
+                              { ^Parameter: { Name: "Predicate", Default: 0 } },
+                          },
+                      },
+                      {
+                        $project:
+                          {
+                            ^Parameter:
+                              { Name: "FieldsToProject", Default: {} },
+                          },
+                      },
+                    ]
+
+Actors:
+  # Clear any pre-existing collection state. This is helpful to avoid errors during local testing.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *collection
+          Operations:
+            - OperationName: drop
+
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *database
+          Operation:
+            OperationMetricsName: CreateTimeSeriesCollection
+            OperationName: RunCommand
+            OperationCommand:
+              { create: *collection, timeseries: { timeField: "time" } }
+
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *database
+          CollectionCount: 1
+          Threads: 1
+          DocumentCount: 1000000
+          BatchSize: 1000
+          Document:
+            _id: { ^Inc: { start: 1 } }
+            # Since step = 900 ms and documentCount = 1,000,000, the first and last document would 
+            # be 900,000,000 ms apart (roughly 10 days). Adding events in this way means we have 
+            # neat buckets because all of our events are in order. However, this is acceptable for 
+            # this workload, because we are testing the speed of bucket unpacking. Inserting 
+            # documents in order allows us to deterministically control how many documents are in 
+            # each bucket, the number of overall buckets, and how many buckets each predicate will # unpack.
+            time: { ^IncDate: { start: "2022-01-01", step: 900 } }
+            # This is the value we are going to query against. We will have ~1013 buckets in this
+            # collection and 988 documents per bucket. By making this an increasing value, we can
+            # write predicates to target certain number of buckets.
+            measurement: { ^Inc: { start: 1 } }
+            # The fields below create larger documents to stress unpacking.
+            payload1: { ^RandomDouble: { min: -10, max: 100 } }
+            payload2: { ^RandomDouble: { min: -10, max: 100 } }
+            payload3: { ^RandomDouble: { min: -10, max: 100 } }
+            payload4: { ^RandomInt: { min: -10, max: 100 } }
+            payload5: { ^RandomInt: { min: -10, max: 100 } }
+            payload6: { ^RandomInt: { min: -10, max: 100 } }
+            payload7: { ^RandomInt: { min: -10, max: 100 } }
+
+  # We will Quiesce before each query.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3, 5, 7, 9, 11, 13, 15, 17, 19]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+
+  # Run queries that target a different number of buckets.
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_10_buckets_include_1_field"
+        Active: [4]
+        # With 988 documents per bucket, 10 buckets will have 'measurement' <= 9880 (988 * 10).
+        Predicate: { $lte: 9880 }
+        FieldsToProject: *Project1Field
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_10_buckets_include_10_fields"
+        Active: [6]
+        # With 988 documents per bucket, 10 buckets will have 'measurement' <= 9880 (988 * 10).
+        Predicate: { $lte: 9880 }
+        FieldsToProject: *Project10Fields
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipeline
+      TemplateParameters:
+        Name: "match_10_buckets_exclude"
+        Active: [8]
+        # With 988 documents per bucket, 10 buckets will have 'measurement' <= 9880 (988 * 10).
+        Predicate: { $lte: 9880 }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_100_buckets_include_1_field"
+        Active: [10]
+        # With 988 documents per bucket, 100 buckets will have 'measurement' <= 98800 (988 * 100).
+        Predicate: { $lte: 98800 }
+        FieldsToProject: *Project1Field
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_100_buckets_include_10_fields"
+        Active: [12]
+        # With 988 documents per bucket, 100 buckets will have 'measurement' <= 98800 (988 * 100).
+        Predicate: { $lte: 98800 }
+        FieldsToProject: *Project10Fields
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipeline
+      TemplateParameters:
+        Name: "match_100_buckets_exclude"
+        Active: [14]
+        # With 988 documents per bucket, 100 buckets will have 'measurement' <= 98800 (988 * 100).
+        Predicate: { $lte: 98800 }
+        # Without a $project stage, $_internalUnpackBucket will have an "exclude" parameter.
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_1000_buckets_include_1_field"
+        Active: [16]
+        # With 988 documents per bucket, 1000 buckets will have 'measurement' <= 988000 (988 * 1000).
+        Predicate: { $lte: 988000 }
+        FieldsToProject: *Project1Field
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_1000_buckets_include_10_fields"
+        Active: [18]
+        # With 988 documents per bucket, 1000 buckets will have 'measurement' <= 988000 (988 * 1000).
+        Predicate: { $lte: 988000 }
+        FieldsToProject: *Project10Fields
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipeline
+      TemplateParameters:
+        Name: "match_1000_buckets_exclude"
+        Active: [20]
+        # With 988 documents per bucket, 1000 buckets will have 'measurement' <= 988000 (988 * 1000).
+        Predicate: { $lte: 988000 }
+        # Without a $project stage, $_internalUnpackBucket will have an "exclude" parameter.
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica-all-feature-flags
+          - replica
+      branch_name:
+        $gte: v6.0
