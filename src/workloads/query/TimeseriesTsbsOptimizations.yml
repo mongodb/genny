@@ -206,7 +206,7 @@ Actors:
 
   # These queries test bucket-targeting, and we want to target a small percentage of buckets.
   # The task below will target ~300 buckets or .1%.
-  - Name: match_on_measurement
+  - Name: MatchOnMeasurement
     Type: CrudActor
     Threads: 8
     Phases:
@@ -238,7 +238,7 @@ Actors:
                   ]
 
   # The task below will target ~580 buckets or .3%.
-  - Name: match_on_measurement_meta
+  - Name: MatchOnMeasurementMeta
     Type: CrudActor
     Threads: 8
     Phases:
