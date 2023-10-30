@@ -335,6 +335,10 @@ Actors:
             # Maps are identified by their "id" are shared.
             freqmap_singleton: { ^TakeRandomStringFromFrequencyMapSingleton: { id: "some_string", from: { "string3":100, "string4":200 } } }
 
+            # The ConvertTo[Int, Int32, Double, Decimal] convert a numerical or string scalar or generator into the given type.
+            # This is important when strict typing is required.
+            convert: {^ConvertToInt32: {from: {^RandomString: {length: 6, alphabet: "13579"}}}}
+
             # UUID
             uuids: [
               # Long uuid
