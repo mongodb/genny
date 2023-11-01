@@ -7,7 +7,7 @@ Description: |
 GlobalDefaults:
   Nop: &Nop {Nop: true}
   Database: &Database test
-  WriteOp: &WriteOp { insert: 0, document: {a: 1} }
+  WriteOp: &WriteOp { update: 0, filter: {key: 1}, updateMods: {$inc: {a: 1}} }
   WriteOps1x: &WriteOps1x [
       *WriteOp
     ]
@@ -34,26 +34,40 @@ GlobalDefaults:
     }
 
 Actors:
-- Name: BulkWriteInserter
-  Type: AdminCommand
+# Insert one document for the bulkWrite update to operate on repeatedly.
+- Name: InsertOneDoc
+  Type: RunCommand
   Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [0]
-      NopInPhasesUpTo: 1
+      NopInPhasesUpTo: 2
       PhaseConfig:
-        # 10,000,000 documents inserted totally: Repeat * num ops per round trip
+        Repeat: 1
+        Database: *Database
+        Operations:
+        - OperationName: RunCommand
+          OperationMetricsName: InsertOneDocIgnore
+          OperationCommand:
+            insert: "bangalore"
+            documents: [{key: 1, a: 0}]
+            ordered: true
+- Name: BulkWriteUpdater
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: 2
+      PhaseConfig:
+        # One million updates: 10000 * 100
         Repeat: 10000
         Operations:
         - OperationName: AdminCommand
-          # Each invocation of bulkWrite calls bulkWrite once, i.e. it results
-          # in one exchange between the driver and the server to send a command
-          # and receive a response. (Under the hood several network round trips
-          # may be involved.)
-          OperationMetricsName: BulkWriteInsertRoundTrip
+          OperationMetricsName: BulkWriteUpdateRoundTrip
           OperationCommand:
             bulkWrite: 1
-            ops: *WriteOps1000x
+            ops: *WriteOps100x
             nsInfo:
               - {ns: "test.bangalore"}
             ordered: true
