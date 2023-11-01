@@ -45,22 +45,6 @@ class YamlReader:
     def exists(self, path: str) -> bool:
         return os.path.exists(path)
 
-    def load_set(self, workspace_root: str, files: List[str]) -> dict:
-        """
-        :param workspace_root:
-            effective cwd
-        :param files:
-            files to load relative to cwd
-        :return:
-            Key the basename (no extension) of the file and value the loaded contents.
-            E.g. load_set("expansions") => {"expansions": {"contents":["of","expansions.yml"]}}
-        """
-        out = dict()
-        for to_load in [f for f in files if self.exists(f)]:
-            basename = str(os.path.basename(to_load).split(".yml")[0])
-            out[basename] = self.load(workspace_root=workspace_root, path=to_load)
-        return out
-
 
 class WorkloadLister:
     """
