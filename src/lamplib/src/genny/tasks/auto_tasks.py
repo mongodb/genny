@@ -104,6 +104,7 @@ class OpName(enum.Enum):
         if mode_name == "variant_tasks":
             return OpName.VARIANT_TASKS
 
+
 class CurrentBuildInfo:
     def __init__(self, expansions: dict[str, str]):
         self.conts = expansions
@@ -449,23 +450,31 @@ class Repo:
 
     def all_tasks(self) -> List[GeneratedTask]:
         """
-        :return: All possible tasks fom all possible workloads
+        :return: All possible tasks from all possible workloads
         """
         # Double list-comprehensions always read backward to me :(
-        return [task for workload in self.all_workloads() for task in workload.all_tasks()]
+        return [
+            task for workload in self.all_workloads() for task in workload.all_tasks()
+        ]
 
     def variant_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
         :return: Tasks to schedule given the current variant (runtime)
         """
-        return [task for workload in self.all_workloads() for task in workload.variant_tasks(build)]
+        return [
+            task
+            for workload in self.all_workloads()
+            for task in workload.variant_tasks(build)
+        ]
 
     def patch_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
         :return: Tasks for modified workloads current variant (runtime)
         """
         return [
-            task for workload in self.modified_workloads() for task in workload.variant_tasks(build)
+            task
+            for workload in self.modified_workloads()
+            for task in workload.variant_tasks(build)
         ]
 
     def tasks(self, op: OpName, build: CurrentBuildInfo) -> List[GeneratedTask]:
@@ -534,7 +543,7 @@ class ConfigWriter:
     @staticmethod
     def create_config(op: OpName, build: CurrentBuildInfo, tasks: List[GeneratedTask]) -> Configuration:
         """
-        Creates a configuration for generated tasks to either execute particular tasks for 
+        Creates a configuration for generated tasks to either execute particular tasks for
         a variant or to define global tasks used by variants.
 
         :param op: Used to determine whether to write global config or tasks for a variant.
@@ -548,7 +557,6 @@ class ConfigWriter:
         else:
             ConfigWriter.configure_all_tasks_modern(config, tasks)
         return config
-
 
     @staticmethod
     def configure_variant_tasks(config: Configuration, tasks: List[GeneratedTask], variant: str, activate: bool = None) -> None:
