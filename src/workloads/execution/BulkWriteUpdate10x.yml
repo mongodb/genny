@@ -71,6 +71,9 @@ Actors:
             nsInfo:
               - {ns: "test.bangalore"}
             ordered: true
+            singleBatch: true
+            cursor:
+              batchSize: 0
 
 # Clients:
 #   Default:

@@ -60,7 +60,7 @@ Actors:
       Active: [1]
       NopInPhasesUpTo: 2
       PhaseConfig:
-        # One million updates.
+        # One million updates: 1000000 * 1
         Repeat: 1000000
         Operations:
         - OperationName: AdminCommand
@@ -71,6 +71,9 @@ Actors:
             nsInfo:
               - {ns: "test.bangalore"}
             ordered: true
+            singleBatch: true
+            cursor:
+              batchSize: 0
 
 # Clients:
 #   Default:
