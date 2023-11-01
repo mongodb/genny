@@ -351,8 +351,7 @@ class Workload:
             elif operator == "$lte":
                 return lhs <= rhs
         except TypeError as e:
-            e.add_note(f"lhs={lhs}, rhs={rhs}. Workload: {self.relative_path}")
-            raise e
+            raise TypeError(f"{e}: lhs={lhs}, rhs={rhs}. Workload: {self.relative_path}")
         raise ValueError(
             f"The only supported comparison operators are $gte, $lte, $gt, $lte. Got ${operator}"
         )
