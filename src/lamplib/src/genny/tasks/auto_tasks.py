@@ -6,6 +6,7 @@ import enum
 import glob
 import os
 import re
+import sys
 from typing import NamedTuple, List, Optional, Set
 import yaml
 import structlog
@@ -153,10 +154,18 @@ class Workload:
     auto_run_info: Optional[List[AutoRunBlock]] = None
     """The list of `When/ThenRun` blocks, if present"""
 
-    def __init__(self, workspace_root: str, file_path: str, is_modified: bool, reader: YamlReader):
+    def __init__(
+        self,
+        workspace_root: str,
+        file_path: str,
+        is_modified: bool,
+        reader: YamlReader,
+        dry_run: bool,
+    ):
         self.workspace_root = workspace_root
         self.file_path = file_path
         self.is_modified = is_modified
+        self.dry_run = dry_run
 
         conts = reader.load(workspace_root, self.file_path)
         SLOG.info(f"Running auto-tasks for workload: {self.file_path}")
@@ -402,13 +411,19 @@ class Repo:
     Represents the git checkout.
     """
 
-    def __init__(self, lister: WorkloadLister, reader: YamlReader, workspace_root: str):
+    def __init__(
+        self,
+        lister: WorkloadLister,
+        reader: YamlReader,
+        workspace_root: str,
+        dry_run: bool = False,
+    ):
         self._modified_repo_files = None
         self.workspace_root = workspace_root
         self.lister = lister
         self.reader = reader
+        self.dry_run = dry_run
         self._all_workloads = None
-
 
     def all_workloads(self) -> List[Workload]:
         if self._all_workloads is None:
@@ -420,6 +435,7 @@ class Repo:
                     file_path=fpath,
                     is_modified=fpath in modified,
                     reader=self.reader,
+                    dry_run=self.dry_run,
                 )
                 for fpath in all_files
             ]
@@ -472,31 +488,40 @@ class ConfigWriter:
     """
 
     @staticmethod
-    def write_config(execution: int, config: Configuration, output_file: str) -> None:
+    def write_config(
+        execution: int, config: Configuration, output_file: str, dry_run: bool = False
+    ) -> None:
         """
         :param config: The configuration to write
         :param output_file: What file to write to.
         """
-        
         success = False
         raised = None
         try:
             out_text = config.to_json()
+            if dry_run:
+                SLOG.debug("Task json content", contents=out_text)
+                success = None
+                return
             os.makedirs(os.path.dirname(output_file), exist_ok=True)
             if os.path.exists(output_file):
                 os.unlink(output_file)
             with open(output_file, "w") as output:
                 output.write(out_text)
-                SLOG.debug("Wrote task json", output_file=output_file, contents=out_text)
+                SLOG.debug(
+                    "Wrote task json", output_file=output_file, contents=out_text
+                )
             success = True
         except Exception as e:
             raised = e
             raise e
         finally:
-            SLOG.info(
-                f"{'Succeeded' if success else 'Failed'} to write to {output_file} from cwd={os.getcwd()}."
-                f"{raised if raised else ''}"
-            )
+            if success is not None:
+                SLOG.info(
+                    f"{'Succeeded' if success else 'Failed'} to write to {output_file} from cwd={os.getcwd()}."
+                )
+            if raised:
+                SLOG.error(raised)
             if execution != 0:
                 SLOG.warning(
                     "Repeated executions will not re-generate tasks.",
@@ -549,15 +574,31 @@ class ConfigWriter:
             )
 
 
-def main(mode_name: str, workspace_root: str) -> None:
+def main(mode_name: str, dry_run: bool, workspace_root: str) -> None:
     reader = YamlReader()
-    expansions = reader.load(workspace_root, "expansions.yml")
+    if dry_run:
+        expansions = {
+            "build_variant": "dryrun-variant",
+            "execution": "0",
+            "mongodb_setup": "dryrun-setup",
+            "branch_name": "v0.0",
+        }
+    else:
+        try:
+            expansions = reader.load(workspace_root, "expansions.yml")
+        except FileNotFoundError:
+            SLOG.error(
+                f"Evergreen expansions file {os.path.join(workspace_root, 'expansions.yml')} does not exist. Ensure this file exists and that it is in the correct location."
+            )
+            sys.exit(1)
     build = CurrentBuildInfo(expansions)
     op = OpName.from_flag(mode_name)
     lister = WorkloadLister(workspace_root=workspace_root)
-    repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
+    repo = Repo(
+        lister=lister, reader=reader, workspace_root=workspace_root, dry_run=dry_run
+    )
     tasks = repo.tasks(op=op, build=build)
 
     output_file = os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
     config = ConfigWriter.create_config(op, build, tasks)
-    ConfigWriter.write_config(build.execution, config, output_file)
+    ConfigWriter.write_config(build.execution, config, output_file, dry_run)
