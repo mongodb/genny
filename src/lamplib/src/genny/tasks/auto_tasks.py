@@ -339,16 +339,19 @@ class Workload:
     def _is_comparison_operator(self, operator: str):
         return operator in self._COMPARISON_OPERATORS
 
-    @staticmethod
-    def _compare(operator: str, lhs, rhs) -> bool:
-        if operator == "$gt":
-            return lhs > rhs
-        elif operator == "$gte":
-            return lhs >= rhs
-        elif operator == "$lt":
-            return lhs < rhs
-        elif operator == "$lte":
-            return lhs <= rhs
+    def _compare(self, operator: str, lhs, rhs) -> bool:
+        try:
+            if operator == "$gt":
+                return lhs > rhs
+            elif operator == "$gte":
+                return lhs >= rhs
+            elif operator == "$lt":
+                return lhs < rhs
+            elif operator == "$lte":
+                return lhs <= rhs
+        except TypeError as e:
+            e.add_note(f"lhs={lhs}, rhs={rhs}. Workload: {self.relative_path}")
+            raise e
         raise ValueError(
             f"The only supported comparison operators are $gte, $lte, $gt, $lte. Got ${operator}"
         )
