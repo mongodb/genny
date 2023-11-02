@@ -1,0 +1,172 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-integration"
+Description: |
+  This test tests performance of unpacking nested objects.
+
+Keywords:
+  - timeseries
+  - aggregate
+
+GlobalDefaults:
+  database: &database test
+  collection: &collection Collection0
+  maxPhases: &maxPhases 20
+  repeat: &repeat 100
+
+ActorTemplates:
+  - TemplateName: RunMatchProjectPipeline
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "RunMatchProjectPipeline" } }
+      Type: CrudActor
+      Threads: 10
+      Phases:
+        OnlyActiveInPhases:
+          Active: { ^Parameter: { Name: "Active", Default: [1000] } }
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: *repeat
+            Database: *database
+            Collection: *collection
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline:
+                    [
+                      {
+                        $match: { ^Parameter: { Name: "MatchQuery", Default: 0 } },
+                      },
+                      {
+                        $project:
+                          {
+                            ^Parameter:
+                              { Name: "FieldsToProject", Default: {} },
+                          },
+                      },
+                    ]
+
+Actors:
+  # Clear any pre-existing collection state. This is helpful to avoid errors during local testing.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *collection
+          Operations:
+            - OperationName: drop
+
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *database
+          Operation:
+            OperationMetricsName: CreateTimeSeriesCollection
+            OperationName: RunCommand
+            OperationCommand:
+              { create: *collection, timeseries: { timeField: "time" } }
+
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *database
+          CollectionCount: 1
+          Threads: 1
+          DocumentCount: 1000000
+          BatchSize: 1000
+          Document:
+            _id: { ^Inc: { start: 1 } }
+            # Since step = 900 ms and documentCount = 1,000,000, the first and last document would 
+            # be 900,000,000 ms apart (roughly 10 days). Adding events in this way means we have 
+            # neat buckets because all of our events are in order. However, this is acceptable for 
+            # this workload, because we are testing the speed of bucket unpacking. Inserting 
+            # documents in order allows us to deterministically control how many documents are in 
+            # each bucket, the number of overall buckets, and how many buckets each predicate will # unpack.
+            # There are 715 documents per bucket.
+            time: { ^IncDate: { start: "2022-01-01", step: 900 } }
+            measurement: { ^Inc: { start: 1 } }
+            # Documents below will have different level of nested objects. All of the values will be integers,
+            # so we can isolate the performance of unpacking nested objects.
+            nest1: {
+              int: 1,
+              a: { ^Inc: { start: 1 } }
+            }
+            nest10: {
+              int: 1,
+              a: {b: {c: {d: {e: {f: {g: {h: {i: {j: { ^Inc: { start: 1 } }}}}}}}}}}
+            }
+
+  # Run queries that target a different number of buckets and different level of nested objects.
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_10_buckets_nested_1_deep"
+        Active: [3]
+        MatchQuery: {"nest1.a": {$lte: 7490}}
+        FieldsToProject: {measurement: 1}
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_10_buckets_nested_10_deep"
+        Active: [4]
+        MatchQuery: {"nest10.a.b.c.d.e.f.g.h.i.j": {$lte: 7490}}
+        FieldsToProject: {measurement: 1}
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_100_buckets_nested_1_deep"
+        Active: [5]
+        MatchQuery: {"nest1.a": {$lte: 74900}}
+        FieldsToProject: {measurement: 1}
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_100_buckets_nested_10_deep"
+        Active: [6]
+        MatchQuery: {"nest10.a.b.c.d.e.f.g.h.i.j": {$lte: 74900}}
+        FieldsToProject: {measurement: 1}
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_1000_buckets_nested_1_deep"
+        Active: [7]
+        MatchQuery: {"nest1.a": {$lte: 749000}}
+        FieldsToProject: {measurement: 1}
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchProjectPipeline
+      TemplateParameters:
+        Name: "match_1000_buckets_nested_10_deep"
+        Active: [8]
+        MatchQuery: {"nest10.a.b.c.d.e.f.g.h.i.j": {$lte: 749000}}
+        FieldsToProject: {measurement: 1}
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica-all-feature-flags
+          - replica
+      branch_name:
+        $gte: v6.0
