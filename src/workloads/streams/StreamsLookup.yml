@@ -26,12 +26,14 @@ GlobalDefaults:
   NumAuctionDocuments: &NumAuctionDocuments 10000
 
   Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
-  Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
-    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
-    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
-    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
-    *Channel
-  ]}}
+  Url: &Url
+    ^FormatString:
+      format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d"
+      withArgs:
+        - ^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}
+        - ^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}
+        - ^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}
+        - *Channel
 
   AuctionCollectionName: &AuctionCollectionName auctions
   AuctionDocument: &AuctionDocument
@@ -43,7 +45,7 @@ GlobalDefaults:
   Document: &Document
     # There will only be `NumAuctionDocuments`, so generate a random auction ID b/w (1k, 1k + `NumAuctionDocuments`]
     auctionId: {^RandomInt: { min: 1000, max: 11000 }}
-    bidderId: {^Inc: { start: 1000, multipler: 1 }}
+    bidderId: {^Inc: { start: 1000, step: 1 }}
     price: {^RandomDouble: { min: 100, max: 100000000 }}
     channel: *Channel
     url: *Url

@@ -26,16 +26,18 @@ GlobalDefaults:
   ExpectedDocumentCount: &ExpectedDocumentCount 800000  # NumThreads * NumBatch1000xPerThread * 1000
 
   Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
-  Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
-    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
-    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
-    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
-    *Channel
-  ]}}
+  Url: &Url
+    ^FormatString:
+      format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d"
+      withArgs:
+        - ^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}
+        - ^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}
+        - ^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}
+        - *Channel
 
   Document: &Document
-    auction: {^Inc: { start: 1000, multipler: 1 }}
-    bidder: {^Inc: { start: 1000, multipler: 1 }}
+    auction: {^Inc: { start: 1000, step: 1 }}
+    bidder: {^Inc: { start: 1000, step: 1 }}
     price: {^RandomDouble: {min: 100, max: 100000000 }}
     channel: *Channel
     url: *Url

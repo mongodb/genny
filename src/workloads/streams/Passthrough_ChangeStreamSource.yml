@@ -22,24 +22,28 @@ GlobalDefaults:
   # 500 batches of 1k documents, so a total of 8M documents, which will all have unique keys
   # for the window so this will generate 8M keys on the open window.
   NumThreads: &NumThreads 16
-  NumInputDocumentsPerThread: &NumInputDocumentsPerThread 50000
-  ExpectedDocumentCount: &ExpectedDocumentCount 800000  # NumThreads * NumInputDocumentsPerThread
+  NumBatch1000xPerThread: &NumBatch1000xPerThread 500
+  ExpectedDocumentCount: &ExpectedDocumentCount 800000  # NumThreads * NumBatch1000xPerThread * 1000
 
   Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
-  Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
-    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
-    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
-    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
-    *Channel
-  ]}}
+  Url: &Url
+    ^FormatString:
+      format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d"
+      withArgs:
+        - ^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}
+        - ^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}
+        - ^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}
+        - *Channel
 
   Document: &Document
-    auction: {^Inc: { start: 1000, multipler: 1 }}
-    bidder: {^Inc: { start: 1000, multipler: 1 }}
+    auction: {^Inc: { start: 1000, step: 1 }}
+    bidder: {^Inc: { start: 1000, step: 1 }}
     price: {^RandomDouble: {min: 100, max: 100000000 }}
     channel: *Channel
     url: *Url
     dateTime: {^IncDate: { start: "2023-01-01T00:00:00.000", step: 10 }}
+
+  Batch1000x: &Batch1000x {^Array: { of: *Document, number: 1000 }}
 
 Actors:
 - Name: CollectionLoader
@@ -51,12 +55,12 @@ Actors:
   - Phase: 0
     Nop: true
   - Phase: 1
-    Repeat: *NumInputDocumentsPerThread
+    Repeat: *NumBatch1000xPerThread
     Collection: *InputCollectionName
     Operations:
-    - OperationName: insertOne
+    - OperationName: insertMany
       OperationCommand:
-        Document: *Document
+        Documents: *Batch1000x
   - Phase: 2
     Nop: true
 
