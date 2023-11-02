@@ -118,7 +118,7 @@ buildvariants:
 ##                ⚡️ Tasks ⚡️
 
 tasks:
-- name: t_compile
+- name: t_compile_and_dry_run
   commands:
   - func: f_fetch_source
   - func: f_compile
@@ -225,8 +225,8 @@ task_groups:
   # unexpected behavior.
   #
   # For this task group, the implicit dependency is that t_*_test has to
-  # run after t_compile.
-  - t_compile
+  # run after t_compile_and_dry_run.
+  - t_compile_and_dry_run
   - t_python_test
   #- t_lint_python
   #- t_lint_workloads
@@ -235,13 +235,13 @@ task_groups:
 - <<: *a_compile_and_test
   name: tg_compile_and_benchmark
   tasks:
-  - t_compile
+  - t_compile_and_dry_run
   - t_benchmark_test
 
 - <<: *a_compile_and_test
   name: tg_compile_and_test_with_server
   tasks:
-  - t_compile
+  - t_compile_and_dry_run
   - t_python_test
   #- t_lint_python
   #- t_lint_workloads
@@ -254,7 +254,7 @@ task_groups:
 - <<: *a_compile_and_test
   name: tg_compile_and_test_with_server_on_macos
   tasks:
-  - t_compile
+  - t_compile_and_dry_run
   - t_python_test
   - t_cmake_test_ignore_flaky
   - t_integration_test_single_node_replset
@@ -265,7 +265,7 @@ task_groups:
 - name: tg_compile
   max_hosts: 1
   tasks:
-  - t_compile
+  - t_compile_and_dry_run
 
 
 ##                ⚡️ Functions ⚡️
