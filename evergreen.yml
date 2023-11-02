@@ -54,7 +54,7 @@ buildvariants:
   run_on:
   - amazon2-build
   tasks:
-  - name: tg_compile_and_test_with_server
+  - name: tg_compile_and_test_with_server_on_amz
   - name: t_compile_and_dry_run_asan
 
 - name: amazon2_arm64
@@ -63,7 +63,7 @@ buildvariants:
   run_on:
   - amazon2-arm64-large
   tasks:
-  - name: tg_compile_and_test_with_server
+  - name: tg_compile_and_test_with_server_on_amz
   - name: t_compile_and_dry_run_asan
 
 - name: rhel70
@@ -118,6 +118,11 @@ buildvariants:
 ##                ⚡️ Tasks ⚡️
 
 tasks:
+- name: t_compile
+  commands:
+  - func: f_fetch_source
+  - func: f_compile
+
 - name: t_compile_and_dry_run
   commands:
   - func: f_fetch_source
@@ -239,9 +244,9 @@ task_groups:
   - t_benchmark_test
 
 - <<: *a_compile_and_test
-  name: tg_compile_and_test_with_server
+  name: tg_compile_and_test_with_server_on_amz
   tasks:
-  - t_compile_and_dry_run
+  - t_compile
   - t_python_test
   #- t_lint_python
   #- t_lint_workloads
