@@ -9,7 +9,7 @@ Description: |
 
 GlobalDefaults:
   dbname: &db test
-  batchSize: &batchSize 30000
+  limit: &limit 30000
   fieldName: &field "timestamp"
   index: &index
     keys: {timestamp: 1}
@@ -60,7 +60,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 10000
-    BatchSize: *batchSize
+    BatchSize: *limit
     Document:
       partitionKey: {^RandomInt: {min: 1, max: 10}}
       timestamp: {^RandomDate: {min: "2021-01-01T00:00:00.000Z", max: "2021-01-01T00:00:20.000Z"}}
@@ -171,7 +171,7 @@ Actors:
             }
           }
         ]
-        cursor: {batchSize: *batchSize}
+        cursor: {batchSize: *limit}
         allowDiskUse: true
   - *Nop
   - *Nop
@@ -216,9 +216,9 @@ Actors:
               toFillRandomType: {method: "locf"},
             },
             partitionByFields: ["partitionKey"]
-          }
+          },
+          $limit: *limit
         ]
-        cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - *Nop
   - *Nop
@@ -262,9 +262,9 @@ Actors:
               toFillRandomType: {method: "locf"},
             },
             partitionByFields: ["partitionKey"]
-          }
+          },
+          $limit: *limit
         ]
-        cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - *Nop
   - *Nop
@@ -309,9 +309,9 @@ Actors:
                 method: "linear"
               }
             },
-          }
+          },
+          $limit: *limit
         ]
-        cursor: {batchSize: *batchSize}
         allowDiskUse: true
   - *Nop
   - *Nop
@@ -355,9 +355,9 @@ Actors:
                 value: "0"
               },
             },
-          }
+          },
+          $limit: *limit
         ]
-        cursor: {batchSize: *batchSize}
         allowDiskUse: true
 
 AutoRun:

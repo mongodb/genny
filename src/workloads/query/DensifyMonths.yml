@@ -44,7 +44,7 @@ Description: |
 GlobalDefaults:
   dbname: &db test
   MaxPhases: &MaxPhases 20
-  batchSize: &batchSize 30000
+  limit: &limit 30000
   fieldName: &field "months"
   unitName: &unit "month"
   index: &index
@@ -68,7 +68,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 10000
-    BatchSize: *batchSize
+    BatchSize: *limit
     Document:
       partitionKey: {^RandomInt: {min: 1, max: 100}}
       # Test a subset of units that have different characteristics.
@@ -114,8 +114,9 @@ Actors:
               unit: *unit
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
     - OperationMetricsName: FullLargeStep
       OperationName: aggregate
       OperationCommand:
@@ -128,8 +129,9 @@ Actors:
               unit: *unit
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
     - OperationMetricsName: FullByPartitionSmallStep
       OperationName: aggregate
       OperationCommand:
@@ -143,8 +145,9 @@ Actors:
               unit: *unit
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
     - OperationMetricsName: FullByPartitionLargeStep
       OperationName: aggregate
       OperationCommand:
@@ -158,8 +161,9 @@ Actors:
               unit: *unit
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
     - OperationMetricsName: PartitionedByPartitionSmallStep
       OperationName: aggregate
       OperationCommand:
@@ -173,8 +177,9 @@ Actors:
               step: *smallStep
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
     - OperationMetricsName: PartitionedByPartitionLargeStep
       OperationName: aggregate
       OperationCommand:
@@ -188,8 +193,9 @@ Actors:
               step: *largeStep
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExplicitRangeSmallStep
       OperationName: aggregate
       OperationCommand:
@@ -202,8 +208,9 @@ Actors:
               bounds: *bounds
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExplicitRangeLargeStep
       OperationName: aggregate
       OperationCommand:
@@ -216,8 +223,9 @@ Actors:
               bounds: *bounds
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExplicitRangeByPartitionSmallStep
       OperationName: aggregate
       OperationCommand:
@@ -231,8 +239,9 @@ Actors:
               bounds: *bounds
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
     - OperationMetricsName: ExplicitRangeByPartitionLargeStep
       OperationName: aggregate
       OperationCommand:
@@ -246,8 +255,9 @@ Actors:
               bounds: *bounds
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
 
 AutoRun:
 - When:

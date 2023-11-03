@@ -138,7 +138,6 @@ Actors:
           ], 0.001]}}}},
           {$skip: 1e5},
         ]
-        cursor: {}
   - *Nop
   - Duration: 30 seconds
     Database: *db
@@ -160,7 +159,6 @@ Actors:
           }},
           {$skip: 1e5},
         ]
-        cursor: {}
 
 AutoRun:
 - When:

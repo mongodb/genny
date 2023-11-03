@@ -6,7 +6,7 @@ Description: |
 
 GlobalDefaults:
   dbname: &db test
-  batchSize: &batchSize 30000
+  limit: &limit 30000
   fieldName: &field "numeric"
   index: &index
     keys: {numeric: 1}
@@ -84,7 +84,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 100000
-    BatchSize: *batchSize
+    BatchSize: *limit
     Document:
       partitionKey: {^RandomInt: {min: 1, max: 100}}
       timestamp: {^IncDate: {start: "2021-01-01T00:00:00.000", step: 400}}
@@ -132,8 +132,9 @@ Actors:
               step: *smallStep,
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
   - *Nop
   - *Nop
   - *Nop
@@ -172,8 +173,9 @@ Actors:
               step: *smallStep,
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
   - *Nop
   - *Nop
   - *Nop
@@ -212,8 +214,9 @@ Actors:
               bounds: *bounds,
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
   - *Nop
   - *Nop
   - *Nop
@@ -252,8 +255,9 @@ Actors:
               bounds: *bounds
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
   - *Nop
   - *Nop
   - *Nop
@@ -293,8 +297,9 @@ Actors:
               bounds: *bounds
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
   - *Nop
   - *Nop
   - *Nop
@@ -333,8 +338,9 @@ Actors:
               bounds: "full"
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
   - *Nop
   - *Nop
 
@@ -374,8 +380,9 @@ Actors:
               bounds: "full"
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
 
 AutoRun:
 - When:
