@@ -46,7 +46,7 @@ ActorTemplates:
 
   - TemplateName: RunProjectPipeline
     Config:
-      Name: { ^Parameter: { Name: "Name", Default: "RunMatchProjectPipeline" } }
+      Name: { ^Parameter: { Name: "Name", Default: "RunProjectPipeline" } }
       Type: CrudActor
       Threads: 10
       Phases:
