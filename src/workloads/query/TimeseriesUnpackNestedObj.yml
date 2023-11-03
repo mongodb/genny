@@ -44,6 +44,33 @@ ActorTemplates:
                       },
                     ]
 
+  - TemplateName: RunProjectPipeline
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "RunMatchProjectPipeline" } }
+      Type: CrudActor
+      Threads: 10
+      Phases:
+        OnlyActiveInPhases:
+          Active: { ^Parameter: { Name: "Active", Default: [1000] } }
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: *repeat
+            Database: *database
+            Collection: *collection
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline:
+                    [
+                      {
+                        $project:
+                          {
+                            ^Parameter:
+                              { Name: "FieldsToProject", Default: {} },
+                          },
+                      },
+                    ]
+
 Actors:
   # Clear any pre-existing collection state. This is helpful to avoid errors during local testing.
   - Name: ClearCollection
@@ -120,7 +147,7 @@ Actors:
         Name: "match_10_buckets_nested_1_deep"
         Active: [3]
         MatchQuery: {"nest1.a": {$lte: 7490}}
-        FieldsToProject: {measurement: 1}
+        FieldsToProject: {"nest1.a": 1}
 
   - ActorFromTemplate:
       TemplateName: RunMatchProjectPipeline
@@ -128,7 +155,7 @@ Actors:
         Name: "match_10_buckets_nested_10_deep"
         Active: [4]
         MatchQuery: {"nest10.a.b.c.d.e.f.g.h.i.j": {$lte: 7490}}
-        FieldsToProject: {measurement: 1}
+        FieldsToProject: {"nest10.a.b.c.d.e.f.g.h.i.j": 1}
 
   - ActorFromTemplate:
       TemplateName: RunMatchProjectPipeline
@@ -136,7 +163,7 @@ Actors:
         Name: "match_100_buckets_nested_1_deep"
         Active: [5]
         MatchQuery: {"nest1.a": {$lte: 74900}}
-        FieldsToProject: {measurement: 1}
+        FieldsToProject: {"nest1.a": 1}
 
   - ActorFromTemplate:
       TemplateName: RunMatchProjectPipeline
@@ -144,7 +171,7 @@ Actors:
         Name: "match_100_buckets_nested_10_deep"
         Active: [6]
         MatchQuery: {"nest10.a.b.c.d.e.f.g.h.i.j": {$lte: 74900}}
-        FieldsToProject: {measurement: 1}
+        FieldsToProject: {"nest10.a.b.c.d.e.f.g.h.i.j": 1}
 
   - ActorFromTemplate:
       TemplateName: RunMatchProjectPipeline
@@ -152,7 +179,7 @@ Actors:
         Name: "match_1000_buckets_nested_1_deep"
         Active: [7]
         MatchQuery: {"nest1.a": {$lte: 749000}}
-        FieldsToProject: {measurement: 1}
+        FieldsToProject: {"nest1.a": 1}
 
   - ActorFromTemplate:
       TemplateName: RunMatchProjectPipeline
@@ -160,7 +187,22 @@ Actors:
         Name: "match_1000_buckets_nested_10_deep"
         Active: [8]
         MatchQuery: {"nest10.a.b.c.d.e.f.g.h.i.j": {$lte: 749000}}
-        FieldsToProject: {measurement: 1}
+        FieldsToProject: {"nest10.a.b.c.d.e.f.g.h.i.j": 1}
+
+  - ActorFromTemplate:
+      TemplateName: RunProjectPipeline
+      TemplateParameters:
+        Name: "only_project_nested_1_deep"
+        Active: [9]
+        FieldsToProject: {"nest1.a": 1}
+
+  - ActorFromTemplate:
+      TemplateName: RunProjectPipeline
+      TemplateParameters:
+        Name: "only_project_nested_10_deep"
+        Active: [10]
+        FieldsToProject: {"nest10.a.b.c.d.e.f.g.h.i.j": 1}
+
 
 AutoRun:
   - When:
