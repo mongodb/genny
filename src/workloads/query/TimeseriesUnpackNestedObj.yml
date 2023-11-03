@@ -14,35 +14,35 @@ GlobalDefaults:
   repeat: &repeat 100
 
 ActorTemplates:
-  - TemplateName: RunMatchProjectPipeline
-    Config:
-      Name: { ^Parameter: { Name: "Name", Default: "RunMatchProjectPipeline" } }
-      Type: CrudActor
-      Threads: 10
-      Phases:
-        OnlyActiveInPhases:
-          Active: { ^Parameter: { Name: "Active", Default: [1000] } }
-          NopInPhasesUpTo: *maxPhases
-          PhaseConfig:
-            Repeat: *repeat
-            Database: *database
-            Collection: *collection
-            Operations:
-              - OperationName: aggregate
-                OperationCommand:
-                  Pipeline:
-                    [
-                      {
-                        $match: { ^Parameter: { Name: "MatchQuery", Default: 0 } },
-                      },
-                      {
-                        $project:
-                          {
-                            ^Parameter:
-                              { Name: "FieldsToProject", Default: {} },
-                          },
-                      },
-                    ]
+  # - TemplateName: RunMatchProjectPipeline
+  #   Config:
+  #     Name: { ^Parameter: { Name: "Name", Default: "RunMatchProjectPipeline" } }
+  #     Type: CrudActor
+  #     Threads: 10
+  #     Phases:
+  #       OnlyActiveInPhases:
+  #         Active: { ^Parameter: { Name: "Active", Default: [1000] } }
+  #         NopInPhasesUpTo: *maxPhases
+  #         PhaseConfig:
+  #           Repeat: *repeat
+  #           Database: *database
+  #           Collection: *collection
+  #           Operations:
+  #             - OperationName: aggregate
+  #               OperationCommand:
+  #                 Pipeline:
+  #                   [
+  #                     {
+  #                       $match: { ^Parameter: { Name: "MatchQuery", Default: 0 } },
+  #                     },
+  #                     {
+  #                       $project:
+  #                         {
+  #                           ^Parameter:
+  #                             { Name: "FieldsToProject", Default: {} },
+  #                         },
+  #                     },
+  #                   ]
 
   - TemplateName: RunProjectPipeline
     Config:
@@ -128,81 +128,73 @@ Actors:
             # each bucket, the number of overall buckets, and how many buckets each predicate will # unpack.
             # There are 715 documents per bucket.
             time: { ^IncDate: { start: "2022-01-01", step: 900 } }
-            measurement: { ^Inc: { start: 1 } }
+            topLevel: { ^Inc: { start: 1 } }
             # Documents below will have different level of nested objects. All of the values will be integers,
             # so we can isolate the performance of unpacking nested objects.
-            nest1: {
+            skinnyNest: {
               int: 1,
-              a: { ^Inc: { start: 1 } }
+              a: {g: 1, b: {c: {d: {e: {f: {g: {h: {i: {j: { ^Inc: { start: 1 } }}}}}}}}}}
             }
-            nest10: {
+            fatNest: {
               int: 1,
-              a: {b: {c: {d: {e: {f: {g: {h: {i: {j: { ^Inc: { start: 1 } }}}}}}}}}}
+              a: {
+                g: { ^Inc: { start: 1 } }, 
+                p: { ^Inc: { start: 1 } }, 
+                q: { ^Inc: { start: 1 } }, 
+                z:  {^Array: {of: {^RandomInt: {min: 1000000, max: 10000000}}, number: 10}},
+                b: {
+                  c: {
+                    l: { ^Inc: { start: 1 } }, 
+                    z:  {^Array: {of: {^RandomInt: {min: 1000000, max: 10000000}}, number: 10}},
+                    d: {
+                      o: { ^Inc: { start: 1 } }, 
+                      m: {^Array: {of: {^RandomInt: {min: 1000000, max: 10000000}}, number: 10}},
+                      n: {^Array: {of: {^RandomInt: {min: 1000000, max: 10000000}}, number: 10}},
+                      e: {
+                        j: {^Array: {of: {^RandomInt: {min: 1000000, max: 10000000}}, number: 10}},
+                        f: {
+                          g: {
+                            i: { ^Inc: { start: 1 } }, 
+                            k: { ^Inc: { start: 1 } }, 
+                            h: {
+                              i: {j: { ^Inc: { start: 1 } }}}}}}}}}}
             }
 
   # Run queries that target a different number of buckets and different level of nested objects.
   - ActorFromTemplate:
-      TemplateName: RunMatchProjectPipeline
+      TemplateName: RunProjectPipeline
       TemplateParameters:
-        Name: "match_10_buckets_nested_1_deep"
+        Name: "only_project_top_level_field"
         Active: [3]
-        MatchQuery: {"nest1.a": {$lte: 7490}}
-        FieldsToProject: {"nest1.a": 1}
+        FieldsToProject: {"topLevel": 1}
 
   - ActorFromTemplate:
-      TemplateName: RunMatchProjectPipeline
+      TemplateName: RunProjectPipeline
       TemplateParameters:
-        Name: "match_10_buckets_nested_10_deep"
+        Name: "only_project_skinny_nested_10_deep"
         Active: [4]
-        MatchQuery: {"nest10.a.b.c.d.e.f.g.h.i.j": {$lte: 7490}}
-        FieldsToProject: {"nest10.a.b.c.d.e.f.g.h.i.j": 1}
+        FieldsToProject: {"skinnyNest.a.b.c.d.e.f.g.h.i.j": 1}
 
   - ActorFromTemplate:
-      TemplateName: RunMatchProjectPipeline
+      TemplateName: RunProjectPipeline
       TemplateParameters:
-        Name: "match_100_buckets_nested_1_deep"
+        Name: "only_project_skinny_nested_1_deep"
         Active: [5]
-        MatchQuery: {"nest1.a": {$lte: 74900}}
-        FieldsToProject: {"nest1.a": 1}
+        FieldsToProject: {"skinnyNest.a.g": 1}
 
   - ActorFromTemplate:
-      TemplateName: RunMatchProjectPipeline
+      TemplateName: RunProjectPipeline
       TemplateParameters:
-        Name: "match_100_buckets_nested_10_deep"
+        Name: "only_project_fat_nested_10_deep"
         Active: [6]
-        MatchQuery: {"nest10.a.b.c.d.e.f.g.h.i.j": {$lte: 74900}}
-        FieldsToProject: {"nest10.a.b.c.d.e.f.g.h.i.j": 1}
+        FieldsToProject: {"fatNest.a.b.c.d.e.f.g.h.i.j": 1}
 
   - ActorFromTemplate:
-      TemplateName: RunMatchProjectPipeline
+      TemplateName: RunProjectPipeline
       TemplateParameters:
-        Name: "match_1000_buckets_nested_1_deep"
+        Name: "only_project_fat_nested_1_deep"
         Active: [7]
-        MatchQuery: {"nest1.a": {$lte: 749000}}
-        FieldsToProject: {"nest1.a": 1}
-
-  - ActorFromTemplate:
-      TemplateName: RunMatchProjectPipeline
-      TemplateParameters:
-        Name: "match_1000_buckets_nested_10_deep"
-        Active: [8]
-        MatchQuery: {"nest10.a.b.c.d.e.f.g.h.i.j": {$lte: 749000}}
-        FieldsToProject: {"nest10.a.b.c.d.e.f.g.h.i.j": 1}
-
-  - ActorFromTemplate:
-      TemplateName: RunProjectPipeline
-      TemplateParameters:
-        Name: "only_project_nested_1_deep"
-        Active: [9]
-        FieldsToProject: {"nest1.a": 1}
-
-  - ActorFromTemplate:
-      TemplateName: RunProjectPipeline
-      TemplateParameters:
-        Name: "only_project_nested_10_deep"
-        Active: [10]
-        FieldsToProject: {"nest10.a.b.c.d.e.f.g.h.i.j": 1}
-
+        FieldsToProject: {"fatNest.a.q": 1}
 
 AutoRun:
   - When:
