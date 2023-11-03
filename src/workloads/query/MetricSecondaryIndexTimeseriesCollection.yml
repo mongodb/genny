@@ -46,7 +46,7 @@ Actors:
     # To get a good signal we need this to be at least bucket size squared.
     # The bucket size is 360. This is 360 * 360 *8. The 8 is just for safety.
     DocumentCount: 1036800
-    BatchSize: *batchSize
+    BatchSize: *limit
     Document:
       # start "2022-01-01" = "2022-01-01T00:00:00Z", step 10000 = size of step 10 seconds or 10,000 millis
       timestamp: {^IncDate: {start: "2022-01-01", step: 40000}}
