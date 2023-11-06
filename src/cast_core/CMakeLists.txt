@@ -14,14 +14,10 @@
 
 project(cast_core VERSION 0.0.1 LANGUAGES CXX)
 
-find_package(cppcodec)
-
 CreateGennyTargets(
     NAME    cast_core
     TYPE    SHARED
     DEPENDS
         gennylib
-        cppcodec::cppcodec
-        simple-beast-client
     TEST_DEPENDS    testlib
 )
