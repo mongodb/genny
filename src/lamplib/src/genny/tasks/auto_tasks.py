@@ -161,12 +161,10 @@ class Workload:
         file_path: str,
         is_modified: bool,
         reader: YamlReader,
-        dry_run: bool,
     ):
         self.workspace_root = workspace_root
         self.file_path = file_path
         self.is_modified = is_modified
-        self.dry_run = dry_run
 
         conts = reader.load(workspace_root, self.file_path)
         SLOG.info(f"Running auto-tasks for workload: {self.file_path}")
@@ -419,13 +417,11 @@ class Repo:
         lister: WorkloadLister,
         reader: YamlReader,
         workspace_root: str,
-        dry_run: bool = False,
     ):
         self._modified_repo_files = None
         self.workspace_root = workspace_root
         self.lister = lister
         self.reader = reader
-        self.dry_run = dry_run
         self._all_workloads = None
 
     def all_workloads(self) -> List[Workload]:
@@ -438,7 +434,6 @@ class Repo:
                     file_path=fpath,
                     is_modified=fpath in modified,
                     reader=self.reader,
-                    dry_run=self.dry_run,
                 )
                 for fpath in all_files
             ]
@@ -605,7 +600,7 @@ def main(mode_name: str, dry_run: bool, workspace_root: str) -> None:
     op = OpName.from_flag(mode_name)
     lister = WorkloadLister(workspace_root=workspace_root)
     repo = Repo(
-        lister=lister, reader=reader, workspace_root=workspace_root, dry_run=dry_run
+        lister=lister, reader=reader, workspace_root=workspace_root
     )
     tasks = repo.tasks(op=op, build=build)
 
