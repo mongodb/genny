@@ -26,6 +26,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
+#include <variant>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/date_time.hpp>
@@ -36,6 +37,7 @@
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
+#include <bsoncxx/decimal128.hpp>
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/oid.hpp>
 #include <bsoncxx/types/bson_value/view.hpp>
@@ -106,25 +108,25 @@ protected:
     // Custom hasher to enable hashing for BSON types.
     struct SetHasher {
         template <typename T>
-        size_t operator() (const T& v) const {
+        size_t operator()(const T& v) const {
             return std::hash<T>{}(v);
         }
 
-        size_t operator() (const bsoncxx::array::value& value) const {
+        size_t operator()(const bsoncxx::array::value& value) const {
             // Hash the view as a string.
             const auto v = value.view();
-            std::string_view sv {reinterpret_cast<const char*>(v.data()), v.length()};
+            std::string_view sv{reinterpret_cast<const char*>(v.data()), v.length()};
             return std::hash<std::string_view>{}(sv);
         }
 
-        size_t operator() (const bsoncxx::document::value& value) const {
+        size_t operator()(const bsoncxx::document::value& value) const {
             // Hash the view as a string.
             const auto v = value.view();
-            std::string_view sv {reinterpret_cast<const char*>(v.data()), v.length()};
+            std::string_view sv{reinterpret_cast<const char*>(v.data()), v.length()};
             return std::hash<std::string_view>{}(sv);
         }
 
-        size_t operator() (const bsoncxx::types::b_date& value) const {
+        size_t operator()(const bsoncxx::types::b_date& value) const {
             return std::hash<int64_t>{}(value.to_int64());
         }
     };
@@ -132,11 +134,11 @@ protected:
     // Custom equals comparator to enable comparison for certain BSON types.
     struct SetKeyEq {
         template <typename T>
-        bool operator() (const T& lhs, const T& rhs) const {
+        bool operator()(const T& lhs, const T& rhs) const {
             return lhs == rhs;
         }
 
-        bool operator() (const bsoncxx::array::value& lhs, const bsoncxx::array::value& rhs) const {
+        bool operator()(const bsoncxx::array::value& lhs, const bsoncxx::array::value& rhs) const {
             return lhs.view() == rhs.view();
         }
     };
@@ -268,6 +270,7 @@ UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node,
 UniqueGenerator<double> doubleGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<double> doubleGeneratorBasedOnDistribution(const Node& node,
                                                            GeneratorArgs generatorArgs);
+UniqueGenerator<int32_t> int32Generator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs generatorArgs);
 UniqueGenerator<int64_t> dateGenerator(const Node& node,
                                        GeneratorArgs generatorArgs,
@@ -675,7 +678,7 @@ public:
     }
 
     std::string evaluate() override {
-      return evaluateWithRng(_rng);
+        return evaluateWithRng(_rng);
     };
 
 private:
@@ -692,7 +695,8 @@ private:
  */
 class FrequencyMapSingletonGenerator : public Generator<std::string> {
 public:
-    FrequencyMapSingletonGenerator(const Node& node, GeneratorArgs generatorArgs) : _rng{generatorArgs.rng} {
+    FrequencyMapSingletonGenerator(const Node& node, GeneratorArgs generatorArgs)
+        : _rng{generatorArgs.rng} {
         _id = node["id"].maybe<std::string>().value();
 
         // Keep a singleton of these generators by id
@@ -1098,68 +1102,78 @@ class DataSetCache {
 public:
     DataSetCache() {}
 
-    /* The dataset is stored in a map, using the path of the file as the key and a vector of strings
-    with file's content as the value. In this method the empty vector is created and return its
-    pointer. getDataSetForPath method doesn't need the lock because loading and evaluating are
-    separate stages in Genny */
-    std::vector<std::string>* createMemoryForDataset(const std::string& path) {
-        std::lock_guard<std::mutex> lk(_dataset_mutex);
-        if (_all_datasets.count(path) > 0) {
-            /* When multiple threads try to load a dataset, all but the first thread will return
-               and do nothing. This way only the first thread will actually load the data.
-               Once the first vector is inserted and the first thread has finished running the
-               threads that were waiting on this mutex will find that there is already one element
-               for that _path and return a null pointer */
-            return nullptr;
-        }
+    using LoadFunction = std::function<void(std::vector<std::string>*)>;
+    /* The dataset is stored in a map, using the path of the file as the key and a Dataset object,
+    which contains the actual data as well as whether it is done being loaded,as the value.
+    In this method, the dataset at the given path is filled by the load function, and a reference
+    to the data is returned. getDataSetForPath method doesn't need the lock because loading and
+    evaluating are separate stages in Genny */
+    std::vector<std::string>& loadDataset(const std::string& path, LoadFunction loader) {
+        {
+            std::unique_lock<std::mutex> lk(_dataset_mutex);
+            /* If the path already exists, it is either loaded or being loaded, so this thread
+            should not do any loading. However, it should wait until loading is finished. */
+            if (_all_datasets.count(path) > 0) {
+                /* When multiple threads try to load a dataset, all but the first thread will just
+                wait for the loading to finish. This way only the first thread will actually load
+                the data. Once the first vector is inserted and the first thread has finished
+                loading, it will signal all waiting threads, and those that were waiting on the
+                same path as was loaded will finish waiting and return the data. */
+                _dataset_done_cv.wait(lk, [&]() {return _all_datasets[path].done; });
+                return _all_datasets[path].data;
+            }
 
-        /* Insert an empty vector and return its pointer */
-        _all_datasets[path] = std::vector<std::string>();
-        return &_all_datasets[path];
+            /* Insert an empty vector to denote that we have won the race */
+            _all_datasets[path] = {false, std::vector<std::string>()};
+        }
+        // Only the first thread should ever get here. It should load the data, set the done flag to
+        // true, and signal cond waiters that a dataset has been loaded.
+        loader(&_all_datasets[path].data);
+        {
+            // We have to lock while setting done to avoid a waiting thread missing the done flag.
+            std::unique_lock<std::mutex> lk(_dataset_mutex);
+            _all_datasets[path].done = true;
+        }
+        _dataset_done_cv.notify_all();
+        return _all_datasets[path].data;
     }
 
     const std::vector<std::string>& getDatasetForPath(const std::string& path) {
-        return _all_datasets[path];
+        return _all_datasets[path].data;
     }
 
 private:
-    std::unordered_map<std::string, std::vector<std::string>> _all_datasets;
+    struct Dataset {
+        bool done;
+        std::vector<std::string> data;
+    };
+    std::unordered_map<std::string, Dataset> _all_datasets;
     std::mutex _dataset_mutex;
+    std::condition_variable _dataset_done_cv;
 };
 
-/** `{^ChooseFromDataset:{...}` */
-class RandomStringFromDataset : public Generator<std::string> {
-
-public:
-    RandomStringFromDataset(const Node& node, GeneratorArgs generatorArgs)
-        : _rng{generatorArgs.rng},
-          _id{generatorArgs.actorId},
-          _path{node["path"].maybe<std::string>().value()} {
+// The ChooseStringFromDataset* generators will use the same static dataset stored in this class.
+class WithDatasetStorage {
+protected:
+    WithDatasetStorage(const std::string& path) : _path(path) {
         if (_path.empty()) {
             BOOST_THROW_EXCEPTION(
-                InvalidValueGeneratorSyntax("ChooseFromDataset requieres non-empty path"));
+                InvalidValueGeneratorSyntax("Dataset requires non-empty path"));
         }
         loadDataset();
+        // We can store a pointer to this data because the dataset never moves once created.
+        _dataset = &_datasets.getDatasetForPath(_path);
     }
 
-    std::string evaluate() {
-        auto dataset = _datasets.getDatasetForPath(_path);
-        auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataset.size() - 1};
-        return dataset[distribution(_rng)];
+    const std::vector<std::string>& getDataset() {
+        return *_dataset;
     }
 
 private:
     void loadDataset() {
-        auto pd = _datasets.createMemoryForDataset(_path);
+        auto& dataset = _datasets.loadDataset(_path, [this](std::vector<std::string>* to) { readFile(to); });
 
-        if (pd == nullptr) {
-            /* No need to load the dataset because another thread is doing it */
-            return;
-        }
-
-        readFile(pd);
-
-        if (pd->empty()) {
+        if (dataset.empty()) {
             boost::filesystem::path cwd(boost::filesystem::current_path());
 
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
@@ -1188,12 +1202,48 @@ private:
             }
         }
     }
+private:
+    std::string _path;
+    static inline DataSetCache _datasets;
+    const std::vector<std::string>* _dataset;
+};
+
+class ChooseStringFromDatasetRandomly : public Generator<std::string>, private WithDatasetStorage {
+public:
+    ChooseStringFromDatasetRandomly(const Node& node, GeneratorArgs generatorArgs)
+        : WithDatasetStorage(node["path"].maybe<std::string>().value()),
+          _rng{generatorArgs.rng} {}
+
+    std::string evaluate() {
+        const auto& dataset = getDataset();
+        auto distribution = boost::random::uniform_int_distribution<size_t>{0, dataset.size() - 1};
+        return dataset[distribution(_rng)];
+    }
 
 private:
     DefaultRandom& _rng;
-    ActorId _id;
-    std::string _path;
-    static inline DataSetCache _datasets;
+};
+
+class ChooseStringFromDatasetSequentially : public Generator<std::string>, private WithDatasetStorage {
+public:
+    ChooseStringFromDatasetSequentially(const Node& node, GeneratorArgs generatorArgs)
+        : WithDatasetStorage(node["path"].maybe<std::string>().value()),
+          _line(node["startFromLine"].maybe<uint64_t>().value_or(0)) {
+        if(_line >= getDataset().size()) {
+            BOOST_THROW_EXCEPTION(
+                InvalidValueGeneratorSyntax("In ChooseFromDataset, startFromLine was out of range of the provided file"));
+        }
+    }
+
+    std::string evaluate() {
+        const auto& dataset = getDataset();
+        auto next = dataset[_line];
+        _line = (_line + 1) % dataset.size();
+        return next;
+    }
+
+private:
+    uint64_t _line;
 };
 
 /** `{^RandomString:{...}` */
@@ -1245,6 +1295,154 @@ public:
         }
         return str;
     }
+};
+
+// The following is a replacement for partial template specialization for functions, which is not
+// currently supported in C++.
+template <typename F, typename T>
+struct convert {};
+
+// Conversion used between int, long, double
+template <typename F, typename T>
+T convertToNumeric(convert<F, T>, const F& from) {
+    return (T)from;
+}
+
+// Special conversion for decimal
+template <typename F>
+bsoncxx::decimal128 convertToNumeric(convert<F, bsoncxx::decimal128>, const F& from) {
+    // mongocxx doesn't define nice converters from numeric types to decimal, so we convert first
+    // to string and then to decimal
+    return bsoncxx::decimal128(std::to_string(from));
+}
+
+// String conversions
+bsoncxx::decimal128 convertToNumeric(convert<std::string, bsoncxx::decimal128>,
+                                     const std::string& s) {
+    return bsoncxx::decimal128(s);
+}
+double convertToNumeric(convert<std::string, double>, const std::string& s) {
+    return stod(s);
+}
+int64_t convertToNumeric(convert<std::string, int64_t>, const std::string& s) {
+    return stol(s);
+}
+int32_t convertToNumeric(convert<std::string, int32_t>, const std::string& s) {
+    return stoi(s);
+}
+
+// This is the only overload we run directly, and it will route to the correct template.
+// By constructing and passing a convert struct with the <F, T> type, we will route to the desired
+// overload of convertToNumeric matching that type.
+template <typename F, typename T>
+T convertToNumeric(const F& from) {
+    return convertToNumeric(convert<F, T>{}, from);
+}
+
+// overloaded struct for use with std::variants.
+// Reference: https://en.cppreference.com/w/cpp/utility/variant/visit
+template <class... Ts>
+struct overloaded : Ts... {
+    using Ts::operator()...;
+};
+
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
+// Generator to convert from any numeric type except decimal or string to specific numeric type.
+template <typename T>
+class NumericConversionGenerator : public Generator<T> {
+private:
+    static inline void fail_multiple_convert() {
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+            "When determining type of the from generator, multiple conversions succeeded -- "
+            "generator type is ambiguous. This should not happen."));
+    }
+
+public:
+    NumericConversionGenerator(const Node& node, GeneratorArgs generatorArgs) {
+        // First, if "from" is a constant, we can always parse it as a constant string generator,
+        // even if it also parses as a constant numeric generator.
+        try {
+            _generator =
+                std::make_unique<ConstantAppender<std::string>>(node["from"].to<std::string>());
+            return;
+        } catch (const InvalidConversionException& e) {
+        } catch (const UnknownParserException& e) {
+        }
+
+        // Otherwise, "from" should be a generator -- try all of the possible generators for from,
+        // and ensure that exactly one works.
+        bool succeeded = false;
+        try {
+            _generator = stringGenerator(node["from"], generatorArgs);
+            succeeded = true;
+        } catch (const InvalidConversionException& e) {
+        } catch (const UnknownParserException& e) {
+        }
+        try {
+            auto generator = intGenerator(node["from"], generatorArgs);
+            if (succeeded) {
+                // generator conversion has succeeded more than once, so node["from"] is ambiguous.
+                // This is bad; panic.
+                fail_multiple_convert();
+            }
+            _generator = std::move(generator);
+            succeeded = true;
+        } catch (const InvalidConversionException& e) {
+        } catch (const UnknownParserException& e) {
+        }
+        try {
+            auto generator = doubleGenerator(node["from"], generatorArgs);
+            if (succeeded) {
+                fail_multiple_convert();
+            }
+            _generator = std::move(generator);
+            succeeded = true;
+        } catch (const InvalidConversionException& e) {
+        } catch (const UnknownParserException& e) {
+        }
+        try {
+            auto generator = int32Generator(node["from"], generatorArgs);
+            if (succeeded) {
+                fail_multiple_convert();
+            }
+            _generator = std::move(generator);
+            succeeded = true;
+        } catch (const InvalidConversionException& e) {
+        } catch (const UnknownParserException& e) {
+        }
+        if (!succeeded) {
+            // No generator conversion was successful, this is a failure.
+            BOOST_THROW_EXCEPTION(
+                InvalidValueGeneratorSyntax("Numeric conversion generator only supports "
+                                            "conversions from the string, double, int, "
+                                            "and int32 types. The type of the \"from\" field did "
+                                            "not match any of those types."));
+        }
+    }
+    T evaluate() override {
+        return std::visit(overloaded{[](UniqueGenerator<std::string>& gen) {
+                                         return convertToNumeric<std::string, T>(gen->evaluate());
+                                     },
+                                     [](UniqueGenerator<int64_t>& gen) {
+                                         return convertToNumeric<int64_t, T>(gen->evaluate());
+                                     },
+                                     [](UniqueGenerator<double>& gen) {
+                                         return convertToNumeric<double, T>(gen->evaluate());
+                                     },
+                                     [](UniqueGenerator<int32_t>& gen) {
+                                         return convertToNumeric<int32_t, T>(gen->evaluate());
+                                     }},
+                          _generator);
+    }
+
+private:
+    std::variant<UniqueGenerator<std::string>,
+                 UniqueGenerator<int64_t>,
+                 UniqueGenerator<double>,
+                 UniqueGenerator<int32_t>>
+        _generator;
 };
 
 /** `{^ActorId: {}}` */
@@ -1363,7 +1561,8 @@ private:
     using bintype = bsoncxx::binary_sub_type;
 
 public:
-    BinDataGenerator(const Node& node, GeneratorArgs generatorArgs,
+    BinDataGenerator(const Node& node,
+                     GeneratorArgs generatorArgs,
                      const bintype binDataType = bintype::k_binary)
         : _node{node}, _binData(genRandBinData(node, binDataType)) {}
 
@@ -1377,9 +1576,8 @@ public:
         for (int i = 0; i < numBytes; i++) {
             bytesArr[i] = rand();
         }
-        return bsoncxx::types::b_binary{binDataType,
-                                        static_cast<uint32_t>(sizeof(bytesArr)),
-                                        bytesArr};
+        return bsoncxx::types::b_binary{
+            binDataType, static_cast<uint32_t>(sizeof(bytesArr)), bytesArr};
     }
 
 private:
@@ -1553,7 +1751,7 @@ public:
           _generatorArgs{generatorArgs},
           _valueGen{valueGenerator<false, UniqueAppendable>(node["of"], generatorArgs, parsers)},
           _nItemsGen{intGenerator(extract(node, "number", "^Array"), generatorArgs)},
-          _distinct {node["distinct"] ? node["distinct"].maybe<bool>().value_or(false) : false} {}
+          _distinct{node["distinct"] ? node["distinct"].maybe<bool>().value_or(false) : false} {}
 
     bsoncxx::array::value evaluate() override {
         bsoncxx::builder::basic::array builder{};
@@ -1580,7 +1778,8 @@ public:
          */
         if (_distinct) {
             // Choose initial bucket size of 2 * nItems to minimize hash collisions and resizes.
-            std::unordered_set<bsoncxx::array::value, SetHasher, SetKeyEq> distinctValues(2 * nItems);
+            std::unordered_set<bsoncxx::array::value, SetHasher, SetKeyEq> distinctValues(2 *
+                                                                                          nItems);
             // `consecutiveRepeats` and its corresponding threshold are used to set an upper bound
             // on how hard we should try to pull unique values before we give up.
             int8_t consecutiveRepeats = 0;
@@ -1598,16 +1797,17 @@ public:
                 if (succeeded) {
                     // Since there's only one element in the array, we just use the first element.
                     auto& element = *itr->view().begin();
-                    // Shamelessly stolen from the CXX driver library (bsoncxx/types/bson_value/view.cpp).
-                    // This will generate a case for each BSON value type, call the correct accessor
-                    // function, and append it to `builder`. It would be much nicer if this were
-                    // implemented with std::variant<>, so that we can use std::visit, but alas.
+                    // Shamelessly stolen from the CXX driver library
+                    // (bsoncxx/types/bson_value/view.cpp). This will generate a case for each BSON
+                    // value type, call the correct accessor function, and append it to `builder`.
+                    // It would be much nicer if this were implemented with std::variant<>, so that
+                    // we can use std::visit, but alas.
                     switch (static_cast<int>(element.type())) {
-#define BSONCXX_ENUM(type, val)                                     \
-                        case val: {                                 \
-                            builder.append(element.get_##type());   \
-                            break;                                  \
-                        }
+#define BSONCXX_ENUM(type, val)               \
+    case val: {                               \
+        builder.append(element.get_##type()); \
+        break;                                \
+    }
 #include <bsoncxx/enums/type.hpp>
 #undef BSONCXX_ENUM
                     }
@@ -1616,8 +1816,8 @@ public:
                 } else if (++consecutiveRepeats > consecutiveRepeatsThreshold) {
                     // If we hit the threshold, we just give up.
                     std::stringstream msg;
-                    msg << "Repeatedly failed to find a new distinct value "
-                        << consecutiveRepeats << " times. Terminating distinct array value "
+                    msg << "Repeatedly failed to find a new distinct value " << consecutiveRepeats
+                        << " times. Terminating distinct array value "
                         << "generation because we are likely to hit an infinite loop. Node: "
                         << _node;
                     BOOST_THROW_EXCEPTION(ValueGeneratorConvergenceTimeout(msg.str()));
@@ -1700,16 +1900,16 @@ public:
           _valueGen{
               valueGenerator<false, UniqueAppendable>(node["andValues"], generatorArgs, parsers)},
           _nTimesGen{intGenerator(extract(node, "withNEntries", "^Object"), generatorArgs)} {
-            const auto duplicatedKeys = _node["duplicatedKeys"].to<std::string>();
-            if (duplicatedKeys == "insert") {
-                _onDuplicatedKeys = OnDuplicatedKeys::insert;
-            } else if (duplicatedKeys == "skip") {
-                _onDuplicatedKeys = OnDuplicatedKeys::skip;
-            } else {
-                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                    "Unknown value for 'duplicatedKeys'"));
-            }
-          }
+        const auto duplicatedKeys = _node["duplicatedKeys"].to<std::string>();
+        if (duplicatedKeys == "insert") {
+            _onDuplicatedKeys = OnDuplicatedKeys::insert;
+        } else if (duplicatedKeys == "skip") {
+            _onDuplicatedKeys = OnDuplicatedKeys::skip;
+        } else {
+            BOOST_THROW_EXCEPTION(
+                InvalidValueGeneratorSyntax("Unknown value for 'duplicatedKeys'"));
+        }
+    }
 
     bsoncxx::document::value evaluate() override {
         bsoncxx::builder::basic::document builder;
@@ -1940,8 +2140,15 @@ Out valueGenerator(const Node& node,
  * If adding a new parsers map, remember to insert its entries into `allParsers` at the end of this
  * lambda function.
  */
-const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, stringParsers] = [] () {
-    static std::map<std::string, Parser<UniqueAppendable>> allParsers {
+const auto [allParsers,
+            arrayParsers,
+            dateParsers,
+            doubleParsers,
+            intParsers,
+            stringParsers,
+            int32Parsers,
+            decimalParsers] = []() {
+    static std::map<std::string, Parser<UniqueAppendable>> allParsers{
         {"^Choose",
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ChooseGenerator>(node, generatorArgs);
@@ -1990,7 +2197,7 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
          [](const Node& node, GeneratorArgs generatorArgs) {
              // TODO: PERF-4467 Update this to bsoncxx::binary_sub_type::sensitive.
              return std::make_unique<BinDataGenerator>(
-                node, generatorArgs, bsoncxx::binary_sub_type(0x8));
+                 node, generatorArgs, bsoncxx::binary_sub_type(0x8));
          }},
     };
 
@@ -2003,7 +2210,8 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<ArrayGenerator>(node, generatorArgs, allParsers);
          }},
-        {"^Verbatim", [](const Node& node, GeneratorArgs generatorArgs) {
+        {"^Verbatim",
+         [](const Node& node, GeneratorArgs generatorArgs) {
              if (!node.isSequence()) {
                  std::stringstream msg;
                  msg << "Malformed node array. Not a sequence " << node;
@@ -2037,6 +2245,10 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
     // see doubleGenerator
     const static std::map<std::string, Parser<UniqueGenerator<double>>> doubleParsers{
         {"^RandomDouble", doubleGeneratorBasedOnDistribution},
+        {"^ConvertToDouble",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NumericConversionGenerator<double>>(node, generatorArgs);
+         }},
     };
 
     // Set of parsers to look when we request an int parser
@@ -2052,6 +2264,10 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
          [](const Node& node, GeneratorArgs generatorArgs) {
              return std::make_unique<IncGenerator>(node, generatorArgs);
          }},
+        {"^ConvertToInt",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NumericConversionGenerator<int64_t>>(node, generatorArgs);
+         }},
     };
 
     // Set of parsers to look when we request an string parser
@@ -2066,8 +2282,12 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
              return std::make_unique<NormalRandomStringGenerator>(node, generatorArgs);
          }},
         {"^ChooseFromDataset",
-         [](const Node& node, GeneratorArgs generatorArgs) {
-             return std::make_unique<RandomStringFromDataset>(node, generatorArgs);
+         [](const Node& node, GeneratorArgs generatorArgs) -> UniqueGenerator<std::string> {
+            if(node["sequential"].maybe<bool>().value_or(false)) {
+                return std::make_unique<ChooseStringFromDatasetSequentially>(node, generatorArgs);
+            } else {
+                return std::make_unique<ChooseStringFromDatasetRandomly>(node, generatorArgs);
+            }
          }},
         {"^Join",
          [](const Node& node, GeneratorArgs generatorArgs) {
@@ -2099,15 +2319,43 @@ const auto [allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, st
          }},
     };
 
+    // Set of parsers to look when we request an int32 parser
+    // see int32Generator
+    const static std::map<std::string, Parser<UniqueGenerator<int32_t>>> int32Parsers{
+        {"^ConvertToInt32",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NumericConversionGenerator<int32_t>>(node, generatorArgs);
+         }},
+    };
+
+    // Set of parsers to look when we request a decimal parser
+    // see decimalGenerator
+    const static std::map<std::string, Parser<UniqueGenerator<bsoncxx::decimal128>>> decimalParsers{
+        {"^ConvertToDecimal",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NumericConversionGenerator<bsoncxx::decimal128>>(
+                 node, generatorArgs);
+         }},
+    };
+
     // Only nonexistent keys are inserted.
     allParsers.insert(arrayParsers.begin(), arrayParsers.end());
     allParsers.insert(dateParsers.begin(), dateParsers.end());
     allParsers.insert(doubleParsers.begin(), doubleParsers.end());
     allParsers.insert(intParsers.begin(), intParsers.end());
     allParsers.insert(stringParsers.begin(), stringParsers.end());
+    allParsers.insert(int32Parsers.begin(), int32Parsers.end());
+    allParsers.insert(decimalParsers.begin(), decimalParsers.end());
 
-    return std::tie(allParsers, arrayParsers, dateParsers, doubleParsers, intParsers, stringParsers);
-} ();
+    return std::tie(allParsers,
+                    arrayParsers,
+                    dateParsers,
+                    doubleParsers,
+                    intParsers,
+                    stringParsers,
+                    int32Parsers,
+                    decimalParsers);
+}();
 
 /**
  * Used for top-level values that are of type Map.
@@ -2296,6 +2544,21 @@ UniqueGenerator<std::string> stringGenerator(const Node& node, GeneratorArgs gen
         return parserPair->first(node[parserPair->second], generatorArgs);
     }
     return std::make_unique<ConstantAppender<std::string>>(node.to<std::string>());
+}
+
+/**
+ * @param node
+ *   a top-level document value i.e. either a scalar or an int32 generator value
+ * @return
+ *   either a `^ConvertToInt32` generator (etc--see `int32Parsers`)
+ *   or a constant generator if given a constant/scalar.
+ */
+UniqueGenerator<int32_t> int32Generator(const Node& node, GeneratorArgs generatorArgs) {
+    if (auto parserPair = extractKnownParser(node, generatorArgs, int32Parsers)) {
+        // known parser type
+        return parserPair->first(node[parserPair->second], generatorArgs);
+    }
+    return std::make_unique<ConstantAppender<int32_t>>(node.to<int32_t>());
 }
 
 /**

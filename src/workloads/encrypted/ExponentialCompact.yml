@@ -35,7 +35,6 @@ LoadConfig:
     Collection: testcoll
     Namespace: genny_qebench.testcoll
     ClientName: EncryptedPool
-    ShardCollectionPhase: {Nop: true}
 
 AutoRun:
 - When:

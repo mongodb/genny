@@ -10,7 +10,6 @@ Description: |
     Collection:           name of encrypted collection
     ClientName:           name of encrypted client pool
     Namespace:            namespace of the encrypted collection
-    ShardCollectionPhase: must be set to {Nop: true} for unsharded tests
 
 GlobalDefaults:
   # Parameters
@@ -19,22 +18,6 @@ GlobalDefaults:
   Namespace: &encrypted_ns {^Parameter: {Name: "Namespace", Default: ""}}
   ClientName: &encrypted_pool {^Parameter: {Name: "ClientName", Default: "Default"}}
   MaxPhases: &max_phases 6
-  ShardCollectionPhase: &shard_or_nop
-    ^Parameter:
-      Name: "ShardCollectionPhase"
-      Default:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationMetricsName: EnableSharding
-          OperationName: AdminCommand
-          OperationCommand:
-            enableSharding: *encrypted_db
-        - OperationMetricsName: ShardCollection
-          OperationName: AdminCommand
-          OperationCommand:
-            shardCollection: *encrypted_ns
-            key: {field1: hashed}
 
   # Constants
   RandomPrimaryKey: &rand_primary_key {^FormatString: {"format": "%0100d", "withArgs": [{^RandomInt: {min: 1, max: 2048}}]}}
@@ -85,7 +68,20 @@ Actors:
     OnlyActiveInPhases:
       Active: [1]
       NopInPhasesUpTo: *max_phases
-      PhaseConfig: *shard_or_nop
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        OnlyRunInInstance: sharded
+        Operations:
+        - OperationMetricsName: EnableSharding
+          OperationName: AdminCommand
+          OperationCommand:
+            enableSharding: *encrypted_db
+        - OperationMetricsName: ShardCollection
+          OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: *encrypted_ns
+            key: {field1: hashed}
 
 # This actor runs the inserts and updates to increase the size of the ECOC collection before
 # running compaction. On every phase, the number of iterations is roughly twice that of the
