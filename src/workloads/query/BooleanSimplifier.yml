@@ -1,0 +1,103 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-optimization"
+
+Description: |
+  This workload measures performance of boolean expressions which can be simplified by
+  the Boolean Simplifier. 
+
+GlobalDefaults:
+  Database: &Database test
+  DocumentCount: &DocumentCount 1e5
+  Threads: &Threads 1
+  MaxPhases: &MaxPhases 5
+  Duration: &Duration 2 seconds
+
+Actors:
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: Collection0
+        Operations:
+        - OperationName: drop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: *DocumentCount
+        BatchSize: 1000
+        Document:
+          a: {^RandomInt: {min: 0, max: 100}}
+          b: {^Inc: {start: 11, step: 2}}
+          c: {^RandomInt: {min: 0, max: 100}}
+          d: {^RandomInt: {min: 0, max: 100}}
+          e: {^RandomInt: {min: 0, max: 10000}}
+          f: {^RandomInt: {min: 0, max: 10000}}
+        Indexes:
+        - keys: {b: 1}
+        - keys: {e: 1, f: 1}
+
+# Ensure all data is synced to disk.
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+
+# The simplifier optimizes out an $or's branch and makes an Index Scan plan possible instead of 
+# CollectionScan one
+- Name: SimplifiedOurOrBranch
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *Duration
+        Collection: Collection0
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter:  {"$or": [{"$and": [{"a": 1}, {"a": {"$ne": 1}}]}, {"b": 2}]}
+
+# The simplifier factorizes out common terms and makes a plan with one fetch possible
+# instead of a plan with two fetches.
+- Name: SimplifierCollapsesTwoFetchesIntoOne
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *Duration
+        Collection: Collection0
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter:  {c: 1, $or: [{e:1, f:2, d:3}, {e:1, f:2, e:4}]}
