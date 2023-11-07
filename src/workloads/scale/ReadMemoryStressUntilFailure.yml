@@ -27,6 +27,10 @@ GlobalDefaults:
   dbname: &DBName memorystress
   MaxPhases: &MaxPhases 20
 
+  # Many of these values are either arbitrary or multiples of other variables. It is only
+  # important to keep the DocSize and SortStep (number of documents to sort) close to 100 MB
+  # so each thread can use as much memory as possible when sorting.
+
   LoadThreads: &LoadThreads 128
   LoadBatchSize: &LoadBatchSize 500
 
@@ -92,7 +96,7 @@ Actors:
         DocumentCount: *NumDocs
         BatchSize: *LoadBatchSize
 
-# Spawn many threads to sort 180 documents to test server's capacity to handle memory pressure.
+# Spawn many threads to sort enough documents to test server's capacity to handle memory pressure.
 - Name: SortMany
   Type: RunCommand
   Threads: *SortThreads
@@ -124,6 +128,8 @@ Actors:
               {$sort: {b: 1}}]
             cursor: {batchSize: *SortBatchSize}
 
+# Commented out because this should not be regularly scheduled, as the task is expected to fail.
+# Uncomment the lines below (and possibly change the build variant) to run the workload.
 # AutoRun:
 # - When:
 #     mongodb_setup:
