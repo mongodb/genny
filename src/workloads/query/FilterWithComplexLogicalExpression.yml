@@ -785,6 +785,7 @@ AutoRun:
       - standalone-sampling-bonsai
       - standalone-sbe
       - standalone-query-stats
+      - replica
     branch_name:
       $neq:
       - v4.0

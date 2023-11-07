@@ -82,6 +82,7 @@ Actors:
               coll: *InputCollectionName
             }
           },
+          { $replaceRoot: { newRoot: "$fullDocument" } },
           {
             $project: {
               auction: 1,

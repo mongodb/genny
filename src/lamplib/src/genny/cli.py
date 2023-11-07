@@ -3,7 +3,7 @@ import structlog
 import sys
 import os
 
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import click
 from click_option_group import optgroup, RequiredMutuallyExclusiveOptionGroup
 
@@ -380,7 +380,7 @@ def benchmark_test(ctx: click.Context) -> None:
 @click.pass_context
 def workload(
     ctx: click.Context,
-    workload_yaml: tuple[str],
+    workload_yaml: Tuple[str],
     mongo_uri: str,
     mongostream_uri: Optional[str],
     verbosity: str,
