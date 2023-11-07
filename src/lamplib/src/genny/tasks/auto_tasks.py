@@ -495,7 +495,7 @@ class ConfigWriter:
 
     @staticmethod
     def write_config(
-        execution: int, config: Configuration, output_file: str, dry_run: bool = False
+        execution: int, config: Configuration, output_file: str
     ) -> None:
         """
         :param config: The configuration to write
@@ -505,10 +505,6 @@ class ConfigWriter:
         raised = None
         try:
             out_text = config.to_json()
-            if dry_run:
-                SLOG.debug("Task json content", contents=out_text)
-                success = None
-                return
             os.makedirs(os.path.dirname(output_file), exist_ok=True)
             if os.path.exists(output_file):
                 os.unlink(output_file)
@@ -522,12 +518,10 @@ class ConfigWriter:
             raised = e
             raise e
         finally:
-            if success is not None:
-                SLOG.info(
-                    f"{'Succeeded' if success else 'Failed'} to write to {output_file} from cwd={os.getcwd()}."
-                )
-            if raised:
-                SLOG.error(raised)
+            SLOG.info(
+                f"{'Succeeded' if success else 'Failed'} to write to {output_file} from cwd={os.getcwd()}."
+                f"{raised if raised else ''}"
+            )
             if execution != 0:
                 SLOG.warning(
                     "Repeated executions will not re-generate tasks.",
@@ -606,4 +600,7 @@ def main(mode_name: str, dry_run: bool, workspace_root: str) -> None:
 
     output_file = os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
     config = ConfigWriter.create_config(op, build, tasks)
-    ConfigWriter.write_config(build.execution, config, output_file, dry_run)
+    if dry_run:
+        SLOG.debug("Tasks json content", contents=config.to_json)
+    else:
+        ConfigWriter.write_config(build.execution, config, output_file)
