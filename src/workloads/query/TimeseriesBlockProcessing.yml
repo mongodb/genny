@@ -3,8 +3,8 @@ Owner: "@mongodb/query-execution"
 Description: |
   This workload runs queries on time-series collections that can at least partially run with block
   processing. At the moment, only queries with a $match prefix are eligible for block processing.
-  The dataset used for this workload is artificial/fabricated. Currently focuses on nested fields
-  since matching on top level fields is already tested in other workloads.
+  The dataset used for this workload has uniformly random data so bucket level filtering is
+  ineffective. This stresses turning buckets into blocks and running block based operations on them.
 
 Keywords:
   - timeseries
