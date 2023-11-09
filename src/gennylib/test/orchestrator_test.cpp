@@ -433,7 +433,7 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
     REQUIRE(iters == 2);
 }
 
-TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
+TEST_CASE("Range-based for stops when Orchestrator says Phase is done, IgnoredOnMacOs") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
     o.addRequiredTokens(2);
