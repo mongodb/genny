@@ -126,217 +126,222 @@ Actors:
           Repeat: 1
           Threads: 1
 
-  # Run queries that will at least partially run with block processing
-  - Name: BasicMatchOnNestedField
-    Type: CrudActor
-    Database: *database
-    Threads: *threads
-    Phases:
-      OnlyActiveInPhases:
-        Active: [4]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline:
-                  [
-                    { $match: { "obj.measurement2": { $gt: 50 } } },
-                    { $count: "count" },
-                  ]
+  # # Run queries that will at least partially run with block processing
+  # - Name: BasicMatchOnNestedField
+  #   Type: CrudActor
+  #   Database: *database
+  #   Threads: *threads
+  #   Phases:
+  #     OnlyActiveInPhases:
+  #       Active: [4]
+  #       NopInPhasesUpTo: *maxPhases
+  #       PhaseConfig:
+  #         Repeat: *repeat
+  #         Database: *database
+  #         Collection: *collection
+  #         Operations:
+  #           - OperationMetricsName:
+  #             OperationName: aggregate
+  #             OperationCommand:
+  #               Pipeline:
+  #                 [
+  #                   { $match: { "obj.measurement2": { $gt: 50 } } },
+  #                   { $count: "count" },
+  #                 ]
 
-  - Name: NarrowMatchOnNestedField
-    Type: CrudActor
-    Database: *database
-    Threads: *threads
-    Phases:
-      OnlyActiveInPhases:
-        Active: [5]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline:
-                  [
-                    { $match: { "obj.measurement2": { $gte: 45, $lt: 55 } } },
-                    { $count: "count" },
-                  ]
+  # - Name: NarrowMatchOnNestedField
+  #   Type: CrudActor
+  #   Database: *database
+  #   Threads: *threads
+  #   Phases:
+  #     OnlyActiveInPhases:
+  #       Active: [5]
+  #       NopInPhasesUpTo: *maxPhases
+  #       PhaseConfig:
+  #         Repeat: *repeat
+  #         Database: *database
+  #         Collection: *collection
+  #         Operations:
+  #           - OperationMetricsName:
+  #             OperationName: aggregate
+  #             OperationCommand:
+  #               Pipeline:
+  #                 [
+  #                   { $match: { "obj.measurement2": { $gte: 45, $lt: 55 } } },
+  #                   { $count: "count" },
+  #                 ]
 
-  - Name: AndMatchOnNestedField
-    Type: CrudActor
-    Database: *database
-    Threads: *threads
-    Phases:
-      OnlyActiveInPhases:
-        Active: [6]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          $and:
-                            [
-                              { "obj.measurement3": { $gt: 100 } },
-                              { "obj.measurement3": { $lt: 300 } },
-                            ],
-                        },
-                    },
-                    { $count: "count" },
-                  ]
+  # - Name: AndMatchOnNestedField
+  #   Type: CrudActor
+  #   Database: *database
+  #   Threads: *threads
+  #   Phases:
+  #     OnlyActiveInPhases:
+  #       Active: [6]
+  #       NopInPhasesUpTo: *maxPhases
+  #       PhaseConfig:
+  #         Repeat: *repeat
+  #         Database: *database
+  #         Collection: *collection
+  #         Operations:
+  #           - OperationMetricsName:
+  #             OperationName: aggregate
+  #             OperationCommand:
+  #               Pipeline:
+  #                 [
+  #                   {
+  #                     $match:
+  #                       {
+  #                         $and:
+  #                           [
+  #                             { "obj.measurement3": { $gt: 100 } },
+  #                             { "obj.measurement3": { $lt: 300 } },
+  #                           ],
+  #                       },
+  #                   },
+  #                   { $count: "count" },
+  #                 ]
 
-  - Name: OrMatchOnNestedField
-    Type: CrudActor
-    Database: *database
-    Threads: *threads
-    Phases:
-      OnlyActiveInPhases:
-        Active: [7]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          $or:
-                            [
-                              { "obj.measurement3": { $lt: 100 } },
-                              { "obj.measurement3": { $gt: 900 } },
-                            ],
-                        },
-                    },
-                    { $count: "count" },
-                  ]
+  # - Name: OrMatchOnNestedField
+  #   Type: CrudActor
+  #   Database: *database
+  #   Threads: *threads
+  #   Phases:
+  #     OnlyActiveInPhases:
+  #       Active: [7]
+  #       NopInPhasesUpTo: *maxPhases
+  #       PhaseConfig:
+  #         Repeat: *repeat
+  #         Database: *database
+  #         Collection: *collection
+  #         Operations:
+  #           - OperationMetricsName:
+  #             OperationName: aggregate
+  #             OperationCommand:
+  #               Pipeline:
+  #                 [
+  #                   {
+  #                     $match:
+  #                       {
+  #                         $or:
+  #                           [
+  #                             { "obj.measurement3": { $lt: 100 } },
+  #                             { "obj.measurement3": { $gt: 900 } },
+  #                           ],
+  #                       },
+  #                   },
+  #                   { $count: "count" },
+  #                 ]
 
-  - Name: MatchOnNestedFieldAndTime
-    Type: CrudActor
-    Database: *database
-    Threads: *threads
-    Phases:
-      OnlyActiveInPhases:
-        Active: [8]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          $and:
-                            [
-                              {
-                                "time":
-                                  { $lt: { ^Date: "2022-01-02T00:00:00" } },
-                              },
-                              { "obj.measurement2": { $gte: 25 } },
-                            ],
-                        },
-                    },
-                    { $count: "count" },
-                  ]
+  # - Name: MatchOnNestedFieldAndTime
+  #   Type: CrudActor
+  #   Database: *database
+  #   Threads: *threads
+  #   Phases:
+  #     OnlyActiveInPhases:
+  #       Active: [8]
+  #       NopInPhasesUpTo: *maxPhases
+  #       PhaseConfig:
+  #         Repeat: *repeat
+  #         Database: *database
+  #         Collection: *collection
+  #         Operations:
+  #           - OperationMetricsName:
+  #             OperationName: aggregate
+  #             OperationCommand:
+  #               Pipeline:
+  #                 [
+  #                   {
+  #                     $match:
+  #                       {
+  #                         $and:
+  #                           [
+  #                             {
+  #                               "time":
+  #                                 { $lt: { ^Date: "2022-01-02T00:00:00" } },
+  #                             },
+  #                             { "obj.measurement2": { $gte: 25 } },
+  #                           ],
+  #                       },
+  #                   },
+  #                   { $count: "count" },
+  #                 ]
 
-  - Name: MatchOnMuipleNestedFields
-    Type: CrudActor
-    Database: *database
-    Threads: *threads
-    Phases:
-      OnlyActiveInPhases:
-        Active: [9]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          $and:
-                            [
-                              {
-                                $or:
-                                  [
-                                    { "obj.measurement1": 4 },
-                                    { "obj.measurement1": 9 },
-                                  ],
-                              },
-                              { "obj.measurement2": { $lte: 175 } },
-                              { "obj.measurement3": { $gt: 100, $lt: 800 } },
-                            ],
-                        },
-                    },
-                    { $count: "count" },
-                  ]
+  # TODO: The $or $eq on obj.measurement1 gets converted to a $in so this query can't run in
+  # block processing. When it runs through SBE "normally", the filter gets created in a random order
+  # leading to consistently inconsistent query durations depending on which field gets evaluated
+  # first. Evaluating the filter on obj.measurement1 is fastest, while evaluating the filter on
+  # obj.measurement3 is slowest.
+  # - Name: MatchOnMuipleNestedFields
+  #   Type: CrudActor
+  #   Database: *database
+  #   Threads: *threads
+  #   Phases:
+  #     OnlyActiveInPhases:
+  #       Active: [9]
+  #       NopInPhasesUpTo: *maxPhases
+  #       PhaseConfig:
+  #         Repeat: *repeat
+  #         Database: *database
+  #         Collection: *collection
+  #         Operations:
+  #           - OperationMetricsName:
+  #             OperationName: aggregate
+  #             OperationCommand:
+  #               Pipeline:
+  #                 [
+  #                   {
+  #                     $match:
+  #                       {
+  #                         $and:
+  #                           [
+  #                             {
+  #                               $or:
+  #                                 [
+  #                                   { "obj.measurement1": 4 },
+  #                                   { "obj.measurement1": 9 },
+  #                                 ],
+  #                             },
+  #                             { "obj.measurement2": { $lte: 175 } },
+  #                             { "obj.measurement3": { $gt: 100, $lt: 800 } },
+  #                           ],
+  #                       },
+  #                   },
+  #                   { $count: "count" },
+  #                 ]
 
-  # The $match will be handled by block processing, but the pipeline from $group onwards will be
-  # handled by regular SBE execution.
-  - Name: MatchGroupSort
-    Type: CrudActor
-    Database: *database
-    Threads: *threads
-    Phases:
-      OnlyActiveInPhases:
-        Active: [10]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName:
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        { "time": { $lt: { ^Date: "2022-01-02T00:00:00" } } },
-                    },
-                    {
-                      $group:
-                        {
-                          "_id":
-                            { $dateTrunc: { "date": "$time", "unit": "hour" } },
-                          "max_measurement1": { $max: "$obj.measurement1" },
-                        },
-                    },
-                    { $sort: { "_id": 1 } },
-                    { $count: "count" },
-                  ]
+  # # The $match will be handled by block processing, but the pipeline from $group onwards will be
+  # # handled by regular SBE execution.
+  # - Name: MatchGroupSort
+  #   Type: CrudActor
+  #   Database: *database
+  #   Threads: *threads
+  #   Phases:
+  #     OnlyActiveInPhases:
+  #       Active: [10]
+  #       NopInPhasesUpTo: *maxPhases
+  #       PhaseConfig:
+  #         Repeat: *repeat
+  #         Database: *database
+  #         Collection: *collection
+  #         Operations:
+  #           - OperationMetricsName:
+  #             OperationName: aggregate
+  #             OperationCommand:
+  #               Pipeline:
+  #                 [
+  #                   {
+  #                     $match:
+  #                       { "time": { $lt: { ^Date: "2022-01-02T00:00:00" } } },
+  #                   },
+  #                   {
+  #                     $group:
+  #                       {
+  #                         "_id":
+  #                           { $dateTrunc: { "date": "$time", "unit": "hour" } },
+  #                         "max_measurement1": { $max: "$obj.measurement1" },
+  #                       },
+  #                   },
+  #                   { $sort: { "_id": 1 } },
+  #                   { $count: "count" },
+  #                 ]
