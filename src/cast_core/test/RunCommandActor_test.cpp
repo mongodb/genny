@@ -805,8 +805,8 @@ TEST_CASE_METHOD(MongoTestFixture,
 }
 
 TEST_CASE_METHOD(MongoTestFixture,
-                 "Check OnlyRunInInstance in standalone",
-                 "[standalone]") {
+                 "Check OnlyRunInInstance in single_node_replset",
+                 "[single_node_replset]") {
 
     dropAllDatabases();
     auto db = client.database("test");
