@@ -353,4 +353,4 @@ AutoRun:
           - replica
           - replica-all-feature-flags
       branch_name:
-        $gte: v7.1
+        $gte: v7.2
