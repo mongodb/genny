@@ -76,7 +76,7 @@ void testOneActor(genny::NodeSource& config,
 }
 
 
-TEST_CASE_METHOD(MongoTestFixture, "CollectionScanner", "[single_node_replset][CollectionScanner]") {
+TEST_CASE_METHOD(MongoTestFixture, "CollectionScanner", "[single_node_replset][three_node_replset][sharded][CollectionScanner]") {
 
     SECTION("Scan documents in all collections of a database") {
         genny::NodeSource config(R"(
@@ -129,7 +129,7 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScanner", "[single_node_replset][C
     }
 }
 
-TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerAll", "[single_node_replset][CollectionScanner]") {
+TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerAll", "[single_node_replset][three_node_replset][sharded][CollectionScanner]") {
 
     SECTION("Scan documents in all collections of multiple databases") {
         genny::NodeSource config2(R"(
@@ -188,7 +188,7 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerAll", "[single_node_replset
 }
 
 
-TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerGenerateCollectionNames", "[single_node_replset][CollectionScanner]") {
+TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerGenerateCollectionNames", "[single_node_replset][three_node_replset][sharded][CollectionScanner]") {
 
     SECTION("Scan no limits") {
         genny::NodeSource config2(R"(

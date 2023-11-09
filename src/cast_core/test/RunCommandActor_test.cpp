@@ -102,6 +102,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 }
 
+// Don't run in other configurations because we need secondaries for this test
 TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three_node_replset]") {
     auto events = ApmEvents{};
 

@@ -32,7 +32,7 @@ namespace bson_stream = bsoncxx::builder::stream;
 
 
 TEST_CASE_METHOD(MongoTestFixture, "DbCheckActor.",
-          "[single_node_replset][three_node_replset][DbCheckActor]") {
+          "[single_node_replset][three_node_replset][sharded][DbCheckActor]") {
 
     dropAllDatabases();
     auto db = client.database("mydb");
