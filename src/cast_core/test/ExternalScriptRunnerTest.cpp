@@ -31,7 +31,7 @@ using namespace genny::testing;
 namespace bson_stream = bsoncxx::builder::stream;
 
 TEST_CASE_METHOD(MongoTestFixture, "ExternalScriptRunner successfully executed.",
-          "[standalone][single_node_replset][three_node_replset][sharded][ExternalScriptRunner]") {
+          "[single_node_replset][three_node_replset][sharded][ExternalScriptRunner]") {
 
     dropAllDatabases();
     auto db = client.database("mydb");
