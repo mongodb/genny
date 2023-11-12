@@ -31,7 +31,7 @@ using namespace genny::testing;
 namespace bson_stream = bsoncxx::builder::stream;
 
 TEST_CASE_METHOD(MongoTestFixture, "StreamStatsReporter successfully connects to a MongoDB instance.",
-          "[single_node_replset][three_node_replset][sharded][streams][StreamStatsReporter]") {
+          "[streams][StreamStatsReporter]") {
 
     dropAllDatabases();
     auto db = client.database("mydb");
