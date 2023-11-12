@@ -593,12 +593,20 @@ def lint_yaml(ctx: click.Context):
     required=True,
     type=click.Choice(["all_tasks", "variant_tasks", "patch_tasks"]),
 )
+@click.option(
+    "--dry-run",
+    required=False,
+    default=False,
+    is_flag=True,
+    help=("Dry-run without generating tasks. Used for testing workload YAML files."),
+)
 @click.pass_context
-def auto_tasks(ctx: click.Context, tasks: str):
+def auto_tasks(ctx: click.Context, tasks: str, dry_run: bool):
     from genny.tasks import auto_tasks
 
     auto_tasks.main(
         mode_name=tasks,
+        dry_run=dry_run,
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
     )
 

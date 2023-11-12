@@ -1,0 +1,137 @@
+SchemaVersion: 2018-07-01
+Owner: Service Architecture
+Description: |
+  Used to test performance of the server under heavy memory pressure caused by read
+  operations. This workload is expected to fail due to host(s) being unreachable as a
+  result of mongod(s) running out of memory.
+
+  To achieve this, documents are inserted in the form of {a: <id>, b: <random number>,
+  c: <fill 520 KB>}. Many threads are then spawned to run aggregate sort on a number of
+  documents. The document size and the number of documents to sort by each thread are
+  tuned to be just under 100 MB, which is the memory limit for operations before
+  spilling to disk. The threads would therefore each cause a close-to-max amount of
+  memory to be used. Increasing the number of threads should cause the host(s) that
+  process the operations to fail due to out-of-memory errors.
+
+Keywords:
+- scale
+- memory stress
+- aggregate
+- sort
+- insert
+- fail
+- oom
+- out of memory
+
+GlobalDefaults:
+  dbname: &DBName memorystress
+  MaxPhases: &MaxPhases 20
+
+  # Many of these values are either arbitrary or multiples of other variables. It is only
+  # important to keep the DocSize and SortStep (number of documents to sort) close to 100 MB
+  # so each thread can use as much memory as possible when sorting.
+
+  LoadThreads: &LoadThreads 128
+  LoadBatchSize: &LoadBatchSize 500
+
+  NumberOfDocuments: &NumDocs 20096
+  # NumberOfDocumentsPerWorker = NumberOfDocuments / LoadThreads.
+  NumberOfDocumentsPerWorker: &DocsPerThread 157
+  # Used in Document: a to let the starting value of a = 0.
+  DocumentStartAt: &DocStartAt -157
+  DocSize: &DocSize 520000
+  Document: &Doc
+    # Document number/ID. Starts at *DocStartAt = -*DocsPerThread = -157 because ActorId
+    # starts at 1, and therefore in order for the first output of ^Inc to be 0, "start"
+    # would need to be offset by ActorId * *DocsPerThread = 157.
+    a: {^Inc: {start: *DocStartAt, step: 1, multiplier: *DocsPerThread}}
+    # Random number from [0, NumberOfDocuments].
+    b: {^RandomInt: {min: 0, max: *NumDocs}}
+    # Fill 520 KB.
+    c: {^FastRandomString: {length: *DocSize}}
+
+  # Number of documents to sort by each thread. Tuned so that *SortStep * *DocSize < 100 MB,
+  # which is the maximum memory a sort query is allowed to use before spilling to disk.
+  SortStep: &SortStep 180
+  SortBatchSize: &SortBatchSize 180
+  SortThreads: &SortThreads 250
+  SortRepeat: &SortRepeat 5
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+      maxPoolSize: 500
+    
+Actors:
+# Drop database to get rid of stale data. Useful when running locally multiple times.
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *DBName
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand: {dropDatabase: 1}
+
+# Load 20,096 documents around 520KB as described by the structure in GlobalDefaults.
+- Name: LoadDocuments
+  Type: Loader
+  Threads: *LoadThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        CollectionCount: 1
+        Database: *DBName
+        Repeat: 1
+        Document: *Doc
+        MultipleThreadsPerCollection: true
+        DocumentCount: *NumDocs
+        BatchSize: *LoadBatchSize
+
+# Spawn many threads to sort enough documents to test server's capacity to handle memory pressure.
+- Name: SortMany
+  Type: RunCommand
+  Threads: *SortThreads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *SortRepeat
+        Database: *DBName
+        Operations:
+        - OperationMetricsName: SortMany
+          OperationName: RunCommand
+          OperationCommand:
+            # Loader default collection name.
+            aggregate: Collection0
+            # Sort *SortStep number of documents starting from a randomly chosen 'a'.
+            pipeline:
+              [{$match:
+                {$expr:
+                  {$let:
+                    {vars:
+                      {start: {^RandomInt: {min: 0, max: *NumDocs}}},
+                    in: {$and: [$gte: ["$a", "$$start"], $lt: ["$a", {$add: ["$$start", *SortStep]}]]}
+                    }
+                  }
+                }
+              },
+              {$sort: {b: 1}}]
+            cursor: {batchSize: *SortBatchSize}
+
+# Commented out because this should not be regularly scheduled, as the task is expected to fail.
+# Uncomment the lines below (and possibly change the build variant) to run the workload.
+# AutoRun:
+# - When:
+#     mongodb_setup:
+#       $eq:
+#       - shard-lite
