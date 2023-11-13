@@ -30,7 +30,7 @@ using namespace genny::testing;
 
 TEST_CASE_METHOD(MongoTestFixture,
                  "CommitLatency",
-                 "[single_node_replset][three_node_replset][sharded][CommitLatency]") {
+                 "[single_node_replset][three_node_replset][CommitLatency]") {
 
     dropAllDatabases();
     auto db = client.database("mydb");
