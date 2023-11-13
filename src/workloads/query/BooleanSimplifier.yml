@@ -5,12 +5,25 @@ Description: |
   This workload measures performance of boolean expressions which can be simplified by
   the Boolean Simplifier. 
 
+RandomSeed: 172547222
+
 GlobalDefaults:
   Database: &Database test
   DocumentCount: &DocumentCount 1e5
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 5
+  MaxPhases: &MaxPhases 8
   Duration: &Duration 2 seconds
+  QueryStringIn: &QueryStringIn [ "HrHCEtBAGnv",
+                                  "pCqgFttJBou",
+                                  "tjOnAuHAOpi",
+                                  "PmqoJGpDFjB",
+                                  "jEkEGEBnICu",
+                                  "kjPIJuEMGjm",
+                                  "nBKiBqKPCJN",
+                                  "BFkCIrIECBt",
+                                  "glhsCMqJPEs",
+                                  "lEMoKmmCiKv"
+                                ]
 
 Actors:
 - Name: ClearCollection
@@ -43,15 +56,19 @@ Actors:
         DocumentCount: *DocumentCount
         BatchSize: 1000
         Document:
-          a: {^RandomInt: {min: 0, max: 100}}
-          b: {^Inc: {start: 11, step: 2}}
-          c: {^RandomInt: {min: 0, max: 100}}
-          d: {^RandomInt: {min: 0, max: 100}}
-          e: {^RandomInt: {min: 0, max: 10000}}
-          f: {^RandomInt: {min: 0, max: 10000}}
+          a1: {^RandomInt: {min: 0, max: 100}}
+          b1: {^Inc: {start: 11, step: 2}}
+          a2: {^RandomInt: {min: 0, max: 1000}}
+          b2: 3
+          c2: {^RandomInt: {min: 0, max: 5}}
+          d2: {^RandomInt: {min: 0, max: 5}}
+          e2: 4
+          a3: {^RandomInt: {min: 0, max: 100}}
+          b3: {^RandomInt: {min: 0, max: 100}}
+          c3: {^Array: {of: {^FastRandomString: {length: 11}}, number: 10}}
         Indexes:
-        - keys: {b: 1}
-        - keys: {e: 1, f: 1}
+        - keys: {b1: 1}
+        - keys: {c2: 1, d2: 1}
 
 # Ensure all data is synced to disk.
 - Name: Quiesce
@@ -68,7 +85,7 @@ Actors:
 
 # The simplifier optimizes out an $or's branch and makes an Index Scan plan possible instead of 
 # CollectionScan one
-- Name: SimplifiedOurOrBranch
+- Name: SimplifiedOutOrBranch.BM
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -82,11 +99,11 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter:  {"$or": [{"$and": [{"a": 1}, {"a": {"$ne": 1}}]}, {"b": 2}]}
+            Filter:  {$or: [{$and: [{a1: 1}, {a1: {$ne: 1}}]}, {b1: 2}]}
 
 # The simplifier factorizes out common terms and makes a plan with one fetch possible
 # instead of a plan with two fetches.
-- Name: SimplifierCollapsesTwoFetchesIntoOne
+- Name: SimplifierCollapsesTwoFetchesIntoOne.BM
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -100,7 +117,73 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter:  {c: 1, $or: [{e:1, f:2, d:3}, {e:1, f:2, e:4}]}
+            Filter:  {a2: 1, $or: [{c2: 1, d2: 2, b2: 3}, {c2: 1, d2: 2, e2: 4}]}
+
+- Name: SimplifiedCollScanFilter.BM
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *Duration
+        Collection: Collection0
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter:  {
+                $and: [
+                    {b3: 0},
+                    {
+                        $or: [
+                            {a3: 0},
+                            {
+                                $and: [
+                                    {c3: {$in: *QueryStringIn}},
+                                    {c3: {$nin: *QueryStringIn}},
+                                ]
+                            }
+                        ]
+                    },
+                ]
+            }
+
+
+- Name: TrivialOr.BM
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *Duration
+        Collection: Collection0
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter:  {$or: [{}, {}]}
+
+- Name: CoveredQuery.BM
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *Duration
+        Collection: Collection0
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter:  {$or: [{c3: "HrHCEtBAGnv", c2: 1, d2: 1}, {c3: {$ne: "HrHCEtBAGnv"}, c2: 1, d2: 1}]}
+            Projection: {_id: 0, c2: 1, d2: 1}
+
 
 AutoRun:
 - When:
@@ -111,10 +194,7 @@ AutoRun:
       - standalone
       - standalone-all-feature-flags
       - standalone-classic-query-engine
-      - standalone-heuristic-bonsai
-      - standalone-sampling-bonsai
       - standalone-sbe
-      - standalone-query-stats
     atlas_setup:
       $neq:
       - M30-repl
