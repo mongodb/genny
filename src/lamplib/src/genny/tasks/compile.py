@@ -85,6 +85,13 @@ def _detect_distro_amazon(machine, freedesktop_version):
             return "amazon2"
         else:
             raise DistroDetectionError(f"Invalid machine type for Amazon 2: {machine}")
+    elif freedesktop_version == "2023":
+        if machine == "aarch64":
+            return "amazon2023_arm64"
+        elif machine == "x86_64":
+            return "amazon2023"
+        else:
+            raise DistroDetectionError(f"Invalid machine type for Amazon 2023: {machine}")
     else:
         raise DistroDetectionError(f"Invalid version for Amazon Linux: {freedesktop_version}")
 
