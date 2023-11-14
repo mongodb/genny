@@ -14,7 +14,7 @@ GlobalDefaults:
   Database: &database test
   Collection: &collection Collection0
   DocumentCount: &documentCount 1e6
-  Repeat: &repeat 50
+  Repeat: &repeat 100
   Threads: &threads 1
   MaxPhases: &maxPhases 11
   MetaCount: &metaCount 10
