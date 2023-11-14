@@ -218,6 +218,8 @@ class CuratorDownloader(Downloader):
         "amazon2_arm64": "arm",
         "ubuntu2004_arm64": "arm",
         "ubuntu2204_arm64": "arm",
+        "amazon2023": "rhel70",
+        "amazon2023_arm64": "arm",
     }
 
     def __init__(
