@@ -86,6 +86,23 @@ Actors:
           OperationCommand:
             top: 1
 
+- Name: DiagnosticConcurrentTopCommand
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4, 6, 8, 10]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 100
+        Thread: 1
+        Database: admin
+        Operations:
+        - OperationMetricsName: DiagnosticTopCommand
+          OperationName: AdminCommand
+          OperationCommand:
+            top: 1
+
 - Name: AggForDiagnosticSetup
   Type: CrudActor
   Database: *Database
@@ -151,7 +168,7 @@ Actors:
   Threads: *CollectionCount
   Phases:
     OnlyActiveInPhases:
-      Active: [8]
+      Active: [10]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 5
@@ -167,6 +184,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
+      - replica
     branch_name:
       $neq:
       - v4.0
