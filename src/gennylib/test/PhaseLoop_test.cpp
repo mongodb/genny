@@ -86,6 +86,7 @@ TEST_CASE("Correctness for N iterations") {
     }
 }
 
+// Timing tests are ignored on MacOS, because we only target Linux for performance tests
 TEST_CASE("Correctness for N milliseconds, IgnoredOnMacOs") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
@@ -119,6 +120,7 @@ TEST_CASE("Correctness for N milliseconds, IgnoredOnMacOs") {
     }
 }
 
+// Timing tests are ignored on MacOS, because we only target Linux for performance tests
 TEST_CASE("Correctness for N milliseconds with sleepNonBlocking, IgnoredOnMacOs") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
@@ -174,6 +176,7 @@ TEST_CASE("Correctness for N milliseconds with sleepNonBlocking, IgnoredOnMacOs"
     }
 }
 
+// Timing tests are ignored on MacOS, because we only target Linux for performance tests
 TEST_CASE("Combinations of duration and iterations, IgnoredOnMacOs") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
@@ -508,6 +511,7 @@ TEST_CASE("Actual Actor Example") {
     }
 }
 
+// Timing tests are ignored on MacOS, because we only target Linux for performance tests
 TEST_CASE("Actual Actor Example, IgnoredOnMacOs") {
 
     SECTION("SleepBefore and SleepAfter") {
