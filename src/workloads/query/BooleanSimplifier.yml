@@ -12,7 +12,7 @@ GlobalDefaults:
   Collection: &Coll Collection0
   DocumentCount: &DocumentCount 1e5
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 8
+  MaxPhases: &MaxPhases 10
   Duration: &Duration 2 seconds
   QueryStringIn: &QueryStringIn [ "HrHCEtBAGnv",
                                   "pCqgFttJBou",
@@ -25,6 +25,7 @@ GlobalDefaults:
                                   "glhsCMqJPEs",
                                   "lEMoKmmCiKv"
                                 ]
+  LargeFilterTerms: &LargeFilterTerms 100
 
 Actors:
 - Name: ClearCollection
@@ -205,6 +206,48 @@ Actors:
           OperationCommand:
             Filter:  {$or: [{c3: "HrHCEtBAGnv", c2: 1, d2: 1}, {c3: {$ne: "HrHCEtBAGnv"}, c2: 1, d2: 1}]}
             Projection: {_id: 0, c2: 1, d2: 1}
+
+# Collection scan with very large filter.
+- Name: LargeFilterCollectionScan.BM
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [8]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *Duration
+        Collection: *Coll
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter:  {$or:
+                {^Array: {of: {$and: [
+                  {"a1": {^RandomInt: {min: 0, max: 5}}},
+                  {"c1": {^RandomInt: {min: 0, max: 5}}}]},
+                          number: 100}}}
+
+# Index scan with very large filter.
+- Name: LargeFilterIndexScan.BM
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: *Duration
+        Collection: *Coll
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter:  {$or:
+                {^Array: {of: {$and: [
+                  {"c2": {^RandomInt: {min: 0, max: 5}}},
+                  {"d2": {^RandomInt: {min: 0, max: 5}}}]},
+                          number: 100}}}
 
 AutoRun:
 - When:
