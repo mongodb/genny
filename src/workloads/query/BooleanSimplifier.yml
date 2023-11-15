@@ -226,7 +226,7 @@ Actors:
                 {^Array: {of: {$and: [
                   {"a1": {^RandomInt: {min: 0, max: 5}}},
                   {"c1": {^RandomInt: {min: 0, max: 5}}}]},
-                          number: 100}}}
+                          number: *LargeFilterTerms}}}
 
 # Index scan with very large filter.
 - Name: LargeFilterIndexScan.BM
@@ -247,7 +247,7 @@ Actors:
                 {^Array: {of: {$and: [
                   {"c2": {^RandomInt: {min: 0, max: 5}}},
                   {"d2": {^RandomInt: {min: 0, max: 5}}}]},
-                          number: 100}}}
+                          number: *LargeFilterTerms}}}
 
 AutoRun:
 - When:
