@@ -246,7 +246,7 @@ class Workload:
         :return: all possible tasks irrespective of the current build-variant etc.
         """
         if not self.auto_run_info:
-            return [GeneratedTask(self.snake_case_base_name, None, None, self)]
+            return []
 
         tasks = []
         for block in self.auto_run_info:
