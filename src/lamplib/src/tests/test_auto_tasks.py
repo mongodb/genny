@@ -161,34 +161,6 @@ class AutoTasksTests(BaseTestClass):
                 "exec_timeout_secs": 64800,
                 "tasks": [
                     {
-                        "name": "empty_unmodified",
-                        "commands": [
-                            TIMEOUT_COMMAND,
-                            {
-                                "func": "f_run_dsi_workload",
-                                "vars": {
-                                    "test_control": "empty_unmodified",
-                                    "auto_workload_path": "src/genny/src/workloads/scale/EmptyUnmodified.yml",
-                                },
-                            },
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "empty_unmodified_other",
-                        "commands": [
-                            TIMEOUT_COMMAND,
-                            {
-                                "func": "f_run_dsi_workload",
-                                "vars": {
-                                    "test_control": "empty_unmodified_other",
-                                    "auto_workload_path": "src/other/src/workloads/scale/EmptyUnmodifiedOther.yml",
-                                },
-                            },
-                        ],
-                        "priority": 5,
-                    },
-                    {
                         "name": "multi_a",
                         "commands": [
                             TIMEOUT_COMMAND,

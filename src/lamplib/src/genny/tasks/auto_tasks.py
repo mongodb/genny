@@ -243,7 +243,8 @@ class Workload:
 
     def all_tasks(self) -> List[GeneratedTask]:
         """
-        :return: all possible tasks irrespective of the current build-variant etc.
+        :return: all possible tasks that have an AutoRun block, irrespective of the current 
+        build-variant etc.
         """
         if not self.auto_run_info:
             return []
@@ -349,7 +350,9 @@ class Workload:
             elif operator == "$lte":
                 return lhs <= rhs
         except TypeError as e:
-            raise TypeError(f"{e}: lhs={lhs}, rhs={rhs}. Workload: {self.relative_path}").with_traceback(e.__traceback__)
+            raise TypeError(
+                f"{e}: lhs={lhs}, rhs={rhs}. Workload: {self.relative_path}"
+            ).with_traceback(e.__traceback__)
         raise ValueError(
             f"The only supported comparison operators are $gte, $lte, $gt, $lte. Got ${operator}"
         )
@@ -447,28 +450,20 @@ class Repo:
         :return: All possible tasks from all possible workloads
         """
         # Double list-comprehensions always read backward to me :(
-        return [
-            task for workload in self.all_workloads() for task in workload.all_tasks()
-        ]
+        return [task for workload in self.all_workloads() for task in workload.all_tasks()]
 
     def variant_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
         :return: Tasks to schedule given the current variant (runtime)
         """
-        return [
-            task
-            for workload in self.all_workloads()
-            for task in workload.variant_tasks(build)
-        ]
+        return [task for workload in self.all_workloads() for task in workload.variant_tasks(build)]
 
     def patch_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
         :return: Tasks for modified workloads current variant (runtime)
         """
         return [
-            task
-            for workload in self.modified_workloads()
-            for task in workload.variant_tasks(build)
+            task for workload in self.modified_workloads() for task in workload.variant_tasks(build)
         ]
 
     def tasks(self, op: OpName, build: CurrentBuildInfo) -> List[GeneratedTask]:
@@ -494,9 +489,7 @@ class ConfigWriter:
     """
 
     @staticmethod
-    def write_config(
-        execution: int, config: Configuration, output_file: str
-    ) -> None:
+    def write_config(execution: int, config: Configuration, output_file: str) -> None:
         """
         :param config: The configuration to write
         :param output_file: What file to write to.
@@ -510,9 +503,7 @@ class ConfigWriter:
                 os.unlink(output_file)
             with open(output_file, "w") as output:
                 output.write(out_text)
-                SLOG.debug(
-                    "Wrote task json", output_file=output_file, contents=out_text
-                )
+                SLOG.debug("Wrote task json", output_file=output_file, contents=out_text)
             success = True
         except Exception as e:
             raised = e
@@ -529,7 +520,9 @@ class ConfigWriter:
                 )
 
     @staticmethod
-    def create_config(op: OpName, build: CurrentBuildInfo, tasks: List[GeneratedTask]) -> Configuration:
+    def create_config(
+        op: OpName, build: CurrentBuildInfo, tasks: List[GeneratedTask]
+    ) -> Configuration:
         """
         Creates a configuration for generated tasks to either execute particular tasks for
         a variant or to define global tasks used by variants.
@@ -547,7 +540,9 @@ class ConfigWriter:
         return config
 
     @staticmethod
-    def configure_variant_tasks(config: Configuration, tasks: List[GeneratedTask], variant: str, activate: bool = None) -> None:
+    def configure_variant_tasks(
+        config: Configuration, tasks: List[GeneratedTask], variant: str, activate: bool = None
+    ) -> None:
         config.variant(variant).tasks([TaskSpec(task.name).activate(activate) for task in tasks])
 
     @staticmethod
@@ -593,9 +588,7 @@ def main(mode_name: str, dry_run: bool, workspace_root: str) -> None:
     build = CurrentBuildInfo(expansions)
     op = OpName.from_flag(mode_name)
     lister = WorkloadLister(workspace_root=workspace_root)
-    repo = Repo(
-        lister=lister, reader=reader, workspace_root=workspace_root
-    )
+    repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
     tasks = repo.tasks(op=op, build=build)
 
     output_file = os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
