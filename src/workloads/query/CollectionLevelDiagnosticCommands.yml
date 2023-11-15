@@ -98,7 +98,7 @@ Actors:
         Thread: 1
         Database: admin
         Operations:
-        - OperationMetricsName: DiagnosticTopCommand
+        - OperationMetricsName: DiagnosticConcurrentTopCommand
           OperationName: AdminCommand
           OperationCommand:
             top: 1
