@@ -8,8 +8,8 @@ Description: |
 LoadConfig:
   Path: ../../phases/query/BooleanSimplifier.yml
   Parameters:
-    Database: BooleanSimplifier
-    DocumentCount: 1e5
+    Database: BooleanSimplifierSmall
+    DocumentCount: 500
 
 AutoRun:
 - When:
