@@ -3,12 +3,13 @@ Owner: "@mongodb/query-optimization"
 
 Description: |
   This workload measures performance of boolean expressions which can be simplified by
-  the Boolean Simplifier. 
+  the Boolean Simplifier. It is designed to track effetiveness of the simplifier.
 
 RandomSeed: 172547222
 
 GlobalDefaults:
   Database: &Database test
+  Collection: &Coll Collection0
   DocumentCount: &DocumentCount 1e5
   Threads: &Threads 1
   MaxPhases: &MaxPhases 8
@@ -37,7 +38,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
         Threads: 1
-        Collection: Collection0
+        Collection: *Coll
         Operations:
         - OperationName: drop
 
@@ -83,8 +84,7 @@ Actors:
         Repeat: 1
         Threads: 1
 
-# The simplifier optimizes out an $or's branch and makes an Index Scan plan possible instead of 
-# CollectionScan one
+# The simplifier optimizes out an $or's branch to single predicate {b1: 2} and makes an Index Scan plan possible.
 - Name: SimplifiedOutOrBranch.BM
   Type: CrudActor
   Database: *Database
@@ -95,14 +95,15 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *Duration
-        Collection: Collection0
+        Collection: *Coll
         Operations:
         - OperationName: find
           OperationCommand:
             Filter:  {$or: [{$and: [{a1: 1}, {a1: {$ne: 1}}]}, {b1: 2}]}
 
-# The simplifier factorizes out common terms and makes a plan with one fetch possible
-# instead of a plan with two fetches.
+# The simplifier factorizes out common terms and makes a plan with one fetch possible instead
+# of a plan with two fetches. Reducing number of fetch stages can be very beneficial especially
+# if the down-the-plan-tree fetch is not selective.
 - Name: SimplifierCollapsesTwoFetchesIntoOne.BM
   Type: CrudActor
   Database: *Database
@@ -113,12 +114,14 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *Duration
-        Collection: Collection0
+        Collection: *Coll
         Operations:
         - OperationName: find
           OperationCommand:
             Filter:  {a2: 1, $or: [{c2: 1, d2: 2, b2: 3}, {c2: 1, d2: 2, e2: 4}]}
 
+# The simplifier simplifes the filter expression to {a3: 0, b3: 0} which makes evaluating the Filter
+# stage of Collection Scan plan mach cheaper.
 - Name: SimplifiedCollScanFilter.BM
   Type: CrudActor
   Database: *Database
@@ -129,7 +132,7 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *Duration
-        Collection: Collection0
+        Collection: *Coll
         Operations:
         - OperationName: find
           OperationCommand:
@@ -150,8 +153,9 @@ Actors:
                 ]
             }
 
-
-- Name: TrivialOr.BM
+# The simplifier simplifes the filter expression to {b2: 3, c2: 3, d2: 3} which makes evaluating
+# the Filter stage of Index Scan plan mach cheaper.
+- Name: SimplifiedIndexScanFilter.BM
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -161,12 +165,30 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *Duration
-        Collection: Collection0
+        Collection: *Coll
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter:  {$or: [{}, {}]}
+            Filter:  {
+                $and: [
+                    {b2: 3},
+                    {c2: 3},
+                    {
+                        $or: [
+                            {d2: 3},
+                            {
+                                $and: [
+                                    {c3: {$in: *QueryStringIn}},
+                                    {c3: {$nin: *QueryStringIn}},
+                                ]
+                            }
+                        ]
+                    },
+                ]
+            }
 
+# The simplifier reduces the filter expression to {c2: 1, d2: 1} which makes passible a covered
+# index scan plan.
 - Name: CoveredQuery.BM
   Type: CrudActor
   Database: *Database
@@ -177,32 +199,24 @@ Actors:
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Duration: *Duration
-        Collection: Collection0
+        Collection: *Coll
         Operations:
         - OperationName: find
           OperationCommand:
             Filter:  {$or: [{c3: "HrHCEtBAGnv", c2: 1, d2: 1}, {c3: {$ne: "HrHCEtBAGnv"}, c2: 1, d2: 1}]}
             Projection: {_id: 0, c2: 1, d2: 1}
 
-
 AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - atlas
       - replica
+      - single-replica
       - standalone
-      - standalone-all-feature-flags
+      - standalone-all-feature-flags 
       - standalone-classic-query-engine
-      - standalone-sbe
     atlas_setup:
       $neq:
       - M30-repl
     branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v7.0
-      - v7.1
+      $gte: v7.3
