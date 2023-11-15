@@ -309,8 +309,5 @@ AutoRun:
       - standalone
       - standalone-all-feature-flags 
       - standalone-classic-query-engine
-    atlas_setup:
-      $neq:
-      - M30-repl
     branch_name:
       $gte: v7.3
