@@ -45,6 +45,7 @@ ActorTemplates:
           - OperationName: find
             OperationCommand:
               Filter: {^Parameter: {Name: "Filter", Default: {unused: "please specify a valid filter"}}}
+              Projection: {^Parameter: {Name: "Projection", Default: None}}
 
 Actors:
 - Name: ClearCollection
@@ -173,22 +174,13 @@ Actors:
 
 # The simplifier reduces the filter expression to {c2: 1, d2: 1} which makes possible a covered
 # index scan plan.
-- Name: CoveredQuery.BM
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [7]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: *Duration
-        Collection: *Coll
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$or: [{c3: "HrHCEtBAGnv", c2: 1, d2: 1}, {c3: {$ne: "HrHCEtBAGnv"}, c2: 1, d2: 1}]}
-            Projection: {_id: 0, c2: 1, d2: 1}
+- ActorFromTemplate:
+    TemplateName: BenchmarkTemplate
+    TemplateParameters:
+      Name: CoveredQuery.BM
+      ActivePhase: 7
+      Filter: {$or: [{c3: "HrHCEtBAGnv", c2: 1, d2: 1}, {c3: {$ne: "HrHCEtBAGnv"}, c2: 1, d2: 1}]}
+      Projection: {_id: 0, c2: 1, d2: 1}
 
 # Collection scan with very large filter.
 - ActorFromTemplate:
