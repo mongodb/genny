@@ -3,7 +3,7 @@ Owner: "@mongodb/query-optimization"
 
 Description: |
   This workload measures performance of boolean expressions which can be simplified by
-  the Boolean Simplifier. It is designed to track effetiveness of the simplifier.
+  the Boolean Simplifier. It is designed to track effectiveness of the simplifier.
 
 RandomSeed: 172547222
 
@@ -121,7 +121,7 @@ Actors:
             Filter:  {a2: 1, $or: [{c2: 1, d2: 2, b2: 3}, {c2: 1, d2: 2, e2: 4}]}
 
 # The simplifier simplifes the filter expression to {a3: 0, b3: 0} which makes evaluating the Filter
-# stage of Collection Scan plan mach cheaper.
+# stage of Collection Scan plan much cheaper.
 - Name: SimplifiedCollScanFilter.BM
   Type: CrudActor
   Database: *Database
@@ -154,7 +154,7 @@ Actors:
             }
 
 # The simplifier simplifes the filter expression to {b2: 3, c2: 3, d2: 3} which makes evaluating
-# the Filter stage of Index Scan plan mach cheaper.
+# the Filter stage of Index Scan plan much cheaper.
 - Name: SimplifiedIndexScanFilter.BM
   Type: CrudActor
   Database: *Database
@@ -187,7 +187,7 @@ Actors:
                 ]
             }
 
-# The simplifier reduces the filter expression to {c2: 1, d2: 1} which makes passible a covered
+# The simplifier reduces the filter expression to {c2: 1, d2: 1} which makes possible a covered
 # index scan plan.
 - Name: CoveredQuery.BM
   Type: CrudActor
