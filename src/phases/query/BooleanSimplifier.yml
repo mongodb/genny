@@ -12,7 +12,7 @@ GlobalDefaults:
   Collection: &Coll Collection0
   DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: 1e5}}
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 13
+  MaxPhases: &MaxPhases 15
   Duration: &Duration 2 seconds
   QueryStringIn: &QueryStringIn [ "HrHCEtBAGnv",
                                   "pCqgFttJBou",
@@ -46,6 +46,20 @@ ActorTemplates:
             OperationCommand:
               Filter: {^Parameter: {Name: "Filter", Default: {unused: "please specify a valid filter"}}}
               Projection: {^Parameter: {Name: "Projection", Default: None}}
+
+- TemplateName: QuiesceTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
 
 Actors:
 - Name: ClearCollection
@@ -88,40 +102,16 @@ Actors:
           a3: {^RandomInt: {min: 0, max: 100}}
           b3: {^RandomInt: {min: 0, max: 100}}
           c3: {^Array: {of: {^FastRandomString: {length: 11}}, number: 10}}
-        Indexes:
-        - keys: {b1: 1}
-        - keys: {c2: 1, d2: 1}
 
 # Ensure all data is synced to disk.
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-
-# The simplifier optimizes out an $or's branch to single predicate {b1: 2} and makes an Index Scan plan possible.
 - ActorFromTemplate:
-    TemplateName: BenchmarkTemplate
+    TemplateName: QuiesceTemplate
     TemplateParameters:
-      Name: SimplifiedOutOrBranch.BM
-      ActivePhase: 3
-      Filter: {$or: [{$and: [{a1: 1}, {a1: {$ne: 1}}]}, {b1: 2}]}
+      Name: InsertDataQuiesce
+      ActivePhase: 2
 
-# The simplifier factorizes out common terms and makes a plan with one fetch possible instead
-# of a plan with two fetches. Reducing number of fetch stages can be very beneficial especially
-# if the down-the-plan-tree fetch is not selective.
-- ActorFromTemplate:
-    TemplateName: BenchmarkTemplate
-    TemplateParameters:
-      Name: SimplifierCollapsesTwoFetchesIntoOne.BM
-      ActivePhase: 4
-      Filter: {a2: 1, $or: [{c2: 1, d2: 2, b2: 3}, {c2: 1, d2: 2, e2: 4}]}
+##############################################
+# Run Collection Scan Bechmarks
 
 # The simplifier simplifes the filter expression to {a3: 0, b3: 0} which makes evaluating the Filter
 # stage of Collection Scan plan much cheaper.
@@ -129,7 +119,7 @@ Actors:
     TemplateName: BenchmarkTemplate
     TemplateParameters:
       Name: SimplifiedCollScanFilter.BM
-      ActivePhase: 5
+      ActivePhase: 3
       Filter: {
                 $and: [
                     {b3: 0},
@@ -147,13 +137,76 @@ Actors:
                 ]
             }
 
+# Collection scan with very large filter.
+- ActorFromTemplate:
+    TemplateName: BenchmarkTemplate
+    TemplateParameters:
+      Name: LargeFilterCollectionScan.BM
+      ActivePhase: 4
+      Filter: {$or:
+                {^Array: {of: {$and: [
+                  {"a1": {^RandomInt: {min: 0, max: 5}}},
+                  {"c1": {^RandomInt: {min: 0, max: 5}}}]},
+                          number: *LargeFilterTerms}}}
+
+##############################################
+# Create Indexes
+
+- Name: CreateIndexes
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *Coll
+            indexes:
+            - key: {b1: 1}
+              name: b1_1
+            - key: {c2: 1, d2: 1}
+              name: c2_1_d2_1
+
+# Ensure all data is synced to disk.
+- ActorFromTemplate:
+    TemplateName: QuiesceTemplate
+    TemplateParameters:
+      Name: CreateIndexesQuiesce
+      ActivePhase: 6
+
+##############################################
+# Run Index Scan Bechmarks
+
+# The simplifier optimizes out an $or's branch to single predicate {b1: 2} and makes an Index Scan plan possible.
+- ActorFromTemplate:
+    TemplateName: BenchmarkTemplate
+    TemplateParameters:
+      Name: SimplifiedOutOrBranch.BM
+      ActivePhase: 7
+      Filter: {$or: [{$and: [{a1: 1}, {a1: {$ne: 1}}]}, {b1: 2}]}
+
+# The simplifier factorizes out common terms and makes a plan with one fetch possible instead
+# of a plan with two fetches. Reducing number of fetch stages can be very beneficial especially
+# if the down-the-plan-tree fetch is not selective.
+- ActorFromTemplate:
+    TemplateName: BenchmarkTemplate
+    TemplateParameters:
+      Name: SimplifierCollapsesTwoFetchesIntoOne.BM
+      ActivePhase: 8
+      Filter: {a2: 1, $or: [{c2: 1, d2: 2, b2: 3}, {c2: 1, d2: 2, e2: 4}]}
+
 # The simplifier simplifes the filter expression to {b2: 3, c2: 3, d2: 3} which makes evaluating
 # the Filter stage of Index Scan plan much cheaper.
 - ActorFromTemplate:
     TemplateName: BenchmarkTemplate
     TemplateParameters:
       Name: SimplifiedIndexScanFilter.BM
-      ActivePhase: 6
+      ActivePhase: 9
       Filter: {
                 $and: [
                     {b2: 3},
@@ -178,28 +231,16 @@ Actors:
     TemplateName: BenchmarkTemplate
     TemplateParameters:
       Name: CoveredQuery.BM
-      ActivePhase: 7
+      ActivePhase: 10
       Filter: {$or: [{c3: "HrHCEtBAGnv", c2: 1, d2: 1}, {c3: {$ne: "HrHCEtBAGnv"}, c2: 1, d2: 1}]}
       Projection: {_id: 0, c2: 1, d2: 1}
-
-# Collection scan with very large filter.
-- ActorFromTemplate:
-    TemplateName: BenchmarkTemplate
-    TemplateParameters:
-      Name: LargeFilterCollectionScan.BM
-      ActivePhase: 8
-      Filter: {$or:
-                {^Array: {of: {$and: [
-                  {"a1": {^RandomInt: {min: 0, max: 5}}},
-                  {"c1": {^RandomInt: {min: 0, max: 5}}}]},
-                          number: *LargeFilterTerms}}}
 
 # Index scan with very large filter.
 - ActorFromTemplate:
     TemplateName: BenchmarkTemplate
     TemplateParameters:
       Name: LargeFilterIndexScan.BM
-      ActivePhase: 9
+      ActivePhase: 11
       Filter: {$or:
                 {^Array: {of: {$and: [
                   {"c2": {^RandomInt: {min: 0, max: 5}}},
@@ -211,7 +252,7 @@ Actors:
     TemplateName: BenchmarkTemplate
     TemplateParameters:
       Name: AlwaysFalse.BM
-      ActivePhase: 10
+      ActivePhase: 12
       Filter: {$or: [{a1: {$eq: 1, $ne: 1}, b1: 1}, {a1: {$eq: 1, $ne: 1}, b1: {$ne: 1}}]}
 
 # The simplifier reduces the filter expression to $alwaysFalse, which generates EOF plan.
@@ -219,7 +260,7 @@ Actors:
     TemplateName: BenchmarkTemplate
     TemplateParameters:
       Name: AlwaysTrue.BM
-      ActivePhase: 11
+      ActivePhase: 13
       Filter: {$or: [{b1: 1}, {b1: {$ne: 1}}]}
 
 # The simplifier opens up $nor which makes possible Index Scan plans.
@@ -227,5 +268,5 @@ Actors:
     TemplateName: BenchmarkTemplate
     TemplateParameters:
       Name: SimplifierOpenNOR.BM
-      ActivePhase: 12
+      ActivePhase: 14
       Filter: {$nor: [{$or: [{b1: {$ne: 1}}, {b1: {$ne: 1}}]}]}
