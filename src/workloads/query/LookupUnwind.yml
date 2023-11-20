@@ -1,0 +1,491 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of $lookup when followed by $unwind that immediately unwinds the
+  lookup result array, which is optimized in the execution engine to avoid materializing this array
+  as an intermediate step. We use one "local" collection with a single document {_id, join_val}, and
+  vary the "foreign" collection to test different document contents as well as different collection
+  sizes. The structure of documents in the foreign collection is {_id, join_val, <data>}, where
+  <data> is one of the following:
+  - an integer
+  - a short string (20 chars)
+  - a long string (100 chars)
+  - a small object (~500 bytes)
+  - a large object (~5,000 bytes)
+  For each case, we test with collections that have 100, 1000, or 10000 documents
+
+  The workload consists of the following phases and actors:
+    0. Cleans up database
+       - 'Setup' actor
+    1. Loads data into the local and foreign collections
+       - 'LoadXXX' actors
+    2. Calms down to isolate any trailing impacts from the load phase
+       - 'Quiesce' actor
+    3. Runs and measures the lookup/unwind performance
+       - 'LookupUnwindXXX' actors
+
+Keywords:
+- lookup
+- unwind
+- aggregate
+
+# Defines the database name.
+Database: &db lookup_unwind
+
+# Defines how many times each test operation is executed.
+TestRepeatCount: &TestRepeatCount 10
+
+# Defines join (lookup) field name. This field has the same name in both the local and the foreign
+# collections.
+JoinField: &JoinField join_val
+
+# Defines local collection name.
+LocalColl: &LocalColl local_coll
+
+# Defines a foreign collection with an int field in addition to the lookup field
+ForeignIntTemplate: &ForeignIntTemplate
+  join_val: {^RandomInt: {min: 1, max: 1}}
+  int_field: {^RandomInt: {min: 0, max: 2147483647}}
+
+# Defines a foreign collection with a short string field in addition to the lookup field
+ForeignShortStrTemplate: &ForeignShortStrTemplate
+  join_val: {^RandomInt: {min: 1, max: 1}}
+  str_field: {^RandomString: {length: 20}}
+
+# Defines a foreign collection with a long string field in addition to the lookup field
+ForeignLongStrTemplate: &ForeignLongStrTemplate
+  join_val: {^RandomInt: {min: 1, max: 1}}
+  str_field: {^RandomString: {length: 100}}
+
+# Defines a foreign collection with a small object field (10 key-value pairs, 50 bytes each) in
+# addition to the lookup field
+ForeignSmallObjTemplate: &ForeignSmallObjTemplate
+  join_val: {^RandomInt: {min: 1, max: 1}}
+  obj_field: {^Object: {
+              withNEntries: 10,
+              havingKeys: {^RandomString: {length: 20}},
+              andValues: {^RandomString: {length: 30}},
+              duplicatedKeys: insert
+            }}
+
+# Defines a foreign collection with a large object field (100 key-value pairs, 50 bytes each) in
+# addition to the lookup field
+ForeignLargeObjTemplate: &ForeignLargeObjTemplate
+  join_val: {^RandomInt: {min: 1, max: 1}}
+  obj_field: {^Object: {
+              withNEntries: 100,
+              havingKeys: {^RandomString: {length: 20}},
+              andValues: {^RandomString: {length: 30}},
+              duplicatedKeys: insert
+            }}
+
+# Defines foreign collection names.
+ForeignInt100: &ForeignInt100 foreign_int_100
+ForeignInt1000: &ForeignInt1000 foreign_int_1000
+ForeignInt10000: &ForeignInt10000 foreign_int_10000
+
+ForeignShortStr100: &ForeignShortStr100 foreign_shortstr_100
+ForeignShortStr1000: &ForeignShortStr1000 foreign_shortstr_1000
+ForeignShortStr10000: &ForeignShortStr10000 foreign_shortstr_10000
+
+ForeignLongStr100: &ForeignLongStr100 foreign_longstr_100
+ForeignLongStr1000: &ForeignLongStr1000 foreign_longstr_1000
+ForeignLongStr10000: &ForeignLongStr10000 foreign_longstr_10000
+
+ForeignSmallObj100: &ForeignSmallObj100 foreign_smallobj_100
+ForeignSmallObj1000: &ForeignSmallObj1000 foreign_smallobj_1000
+ForeignSmallObj10000: &ForeignSmallObj10000 foreign_smallobj_10000
+
+ForeignLargeObj100: &ForeignLargeObj100 foreign_largeobj_100
+ForeignLargeObj1000: &ForeignLargeObj1000 foreign_largeobj_1000
+ForeignLargeObj10000: &ForeignLargeObj10000 foreign_largeobj_10000
+
+# Defines Lookup/Unwind commands for different foreign collections and different sizes. See
+# 'LookupUnwindCmdTemplate' for details.
+# Integer
+LookupUnwindInt100: &LookupUnwindInt100
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignInt100
+
+LookupUnwindInt1000: &LookupUnwindInt1000
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignInt1000
+
+LookupUnwindInt10000: &LookupUnwindInt10000
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignInt10000
+
+# Short string
+LookupUnwindShortStr100: &LookupUnwindShortStr100
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignShortStr100
+
+LookupUnwindShortStr1000: &LookupUnwindShortStr1000
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignShortStr1000
+
+LookupUnwindShortStr10000: &LookupUnwindShortStr10000
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignShortStr10000
+
+# Long String
+LookupUnwindLongStr100: &LookupUnwindLongStr100
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignLongStr100
+
+LookupUnwindLongStr1000: &LookupUnwindLongStr1000
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignLongStr1000
+
+LookupUnwindLongStr10000: &LookupUnwindLongStr10000
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignLongStr10000
+
+# Small Object
+LookupUnwindSmallObj100: &LookupUnwindSmallObj100
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignSmallObj100
+
+LookupUnwindSmallObj1000: &LookupUnwindSmallObj1000
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignSmallObj1000
+
+LookupUnwindSmallObj10000: &LookupUnwindSmallObj10000
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignSmallObj10000
+
+# Large Object
+LookupUnwindLargeObj100: &LookupUnwindLargeObj100
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignLargeObj100
+
+LookupUnwindLargeObj1000: &LookupUnwindLargeObj1000
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignLargeObj1000
+
+LookupUnwindLargeObj10000: &LookupUnwindLargeObj10000
+  LoadConfig:
+    Path: "../../phases/query/LookupCommands.yml"
+    Key: LookupUnwindCmdTemplate
+    Parameters:
+      l: *LocalColl
+      f: *ForeignLargeObj10000
+
+ActorTemplates:
+# Template for loading data into the foreign collections.
+- TemplateName: LoadForeignTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "LoadForeignCollection"}}
+    Type: CrudActor
+    Database: *db
+    Threads: 1
+    Phases:
+    - Nop: true
+    - Repeat: {^Parameter: {Name: "Size", Default: 1}}
+      Threads: 1
+      Collection: {^Parameter: {Name: "Collection", Default: "ForeignInt"}}
+      Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {^Parameter: {Name: "CollectionTemplate", Default: "ForeignCollectionTemplate"}}
+    - Nop: true
+    - Nop: true
+
+# Template for running and measuring the lookup/unwind performances.
+- TemplateName: RunQueryTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "LoadForeignCollection"}}
+    Type: RunCommand
+    Database: *db
+    Phases:
+    - Phase: 0..2
+      Nop: true
+    - Repeat: *TestRepeatCount
+      Database: *db
+      Operations:
+      - OperationMetricsName: {^Parameter: {Name: "Metric100", Default: "Metric100"}}
+        OperationName: RunCommand
+        OperationCommand: {^Parameter: {Name: "Command100", Default: "Command100"}}
+      - OperationMetricsName: {^Parameter: {Name: "Metric1000", Default: "Metric1000"}}
+        OperationName: RunCommand
+        OperationCommand: {^Parameter: {Name: "Command1000", Default: "Command1000"}}
+      - OperationMetricsName: {^Parameter: {Name: "Metric10000", Default: "Metric10000"}}
+        OperationName: RunCommand
+        OperationCommand: {^Parameter: {Name: "Command10000", Default: "Command10000"}}
+
+Actors:
+# The 'Setup' actor drops the database and runs in the 0th phase.
+- Name: Setup
+  Type: RunCommand
+  Database: *db
+  Thread: 1
+  Phases:
+  - Repeat: 1
+    Threads: 1
+    Database: *db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+  - Phase: 1..3
+    Nop: true
+
+# The 'LoadLocal' and 'LoadForeign*' actors run in the 1st phase.
+- Name: LoadLocal
+  Type: CrudActor
+  Database: *db
+  Threads: 1
+  Phases:
+  - Nop: true
+  - Repeat: 1
+    Threads: 1
+    Collection: *LocalColl
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: {*JoinField: 1}
+  - Nop: true
+  - Nop: true
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignInt100
+      Size: 100
+      Collection: *ForeignInt100
+      CollectionTemplate: *ForeignIntTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignInt1000
+      Size: 1000
+      Collection: *ForeignInt1000
+      CollectionTemplate: *ForeignIntTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignInt10000
+      Size: 10000
+      Collection: *ForeignInt10000
+      CollectionTemplate: *ForeignIntTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignShortStr100
+      Size: 100
+      Collection: *ForeignShortStr100
+      CollectionTemplate: *ForeignShortStrTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignShortStr1000
+      Size: 1000
+      Collection: *ForeignShortStr1000
+      CollectionTemplate: *ForeignShortStrTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignShortStr10000
+      Size: 10000
+      Collection: *ForeignShortStr10000
+      CollectionTemplate: *ForeignShortStrTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignLongStr100
+      Size: 100
+      Collection: *ForeignLongStr100
+      CollectionTemplate: *ForeignLongStrTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignLongStr1000
+      Size: 1000
+      Collection: *ForeignLongStr1000
+      CollectionTemplate: *ForeignLongStrTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignLongStr10000
+      Size: 10000
+      Collection: *ForeignLongStr10000
+      CollectionTemplate: *ForeignLongStrTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignSmallObj100
+      Size: 100
+      Collection: *ForeignSmallObj100
+      CollectionTemplate: *ForeignSmallObjTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignSmallObj1000
+      Size: 1000
+      Collection: *ForeignSmallObj1000
+      CollectionTemplate: *ForeignSmallObjTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignSmallObj10000
+      Size: 10000
+      Collection: *ForeignSmallObj10000
+      CollectionTemplate: *ForeignSmallObjTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignLargeObj100
+      Size: 100
+      Collection: *ForeignLargeObj100
+      CollectionTemplate: *ForeignLargeObjTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignLargeObj1000
+      Size: 1000
+      Collection: *ForeignLargeObj1000
+      CollectionTemplate: *ForeignLargeObjTemplate
+
+- ActorFromTemplate:
+    TemplateName: LoadForeignTemplate
+    TemplateParameters:
+      Name: LoadForeignLargeObj10000
+      Size: 10000
+      Collection: *ForeignLargeObj10000
+      CollectionTemplate: *ForeignLargeObjTemplate
+
+# The 'Quiesce' actor calms down to avoid any trailing impacts from the previous phase and runs
+# in the 2nd phase
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+  - Nop: true
+  - Nop: true
+  - Repeat: 1
+  - Nop: true
+
+# The 'LookupUnwind*' actors measure the lookup/unwind performances and run in the 3rd phase.
+- ActorFromTemplate:
+    TemplateName: RunQueryTemplate
+    TemplateParameters:
+      Name: LookupUnwindInt
+      Metric100: LookupUnwind_ForeignInt100
+      Command100: *LookupUnwindInt100
+      Metric1000: LookupUnwind_ForeignInt1000
+      Command1000: *LookupUnwindInt1000
+      Metric10000: LookupUnwind_ForeignInt10000
+      Command10000: *LookupUnwindInt10000
+
+- ActorFromTemplate:
+    TemplateName: RunQueryTemplate
+    TemplateParameters:
+      Name: LookupUnwindShortStr
+      Metric100: LookupUnwind_ForeignShortStr100
+      Command100: *LookupUnwindShortStr100
+      Metric1000: LookupUnwind_ForeignShortStr1000
+      Command1000: *LookupUnwindShortStr1000
+      Metric10000: LookupUnwind_ForeignShortStr10000
+      Command10000: *LookupUnwindShortStr10000
+
+- ActorFromTemplate:
+    TemplateName: RunQueryTemplate
+    TemplateParameters:
+      Name: LookupUnwindLongStr
+      Metric100: LookupUnwind_ForeignLongStr100
+      Command100: *LookupUnwindLongStr100
+      Metric1000: LookupUnwind_ForeignLongStr1000
+      Command1000: *LookupUnwindLongStr1000
+      Metric10000: LookupUnwind_ForeignLongStr10000
+      Command10000: *LookupUnwindLongStr10000
+
+- ActorFromTemplate:
+    TemplateName: RunQueryTemplate
+    TemplateParameters:
+      Name: LookupUnwindSmallObj
+      Metric100: LookupUnwind_ForeignSmallObj100
+      Command100: *LookupUnwindSmallObj100
+      Metric1000: LookupUnwind_ForeignSmallObj1000
+      Command1000: *LookupUnwindSmallObj1000
+      Metric10000: LookupUnwind_ForeignSmallObj10000
+      Command10000: *LookupUnwindSmallObj10000
+
+- ActorFromTemplate:
+    TemplateName: RunQueryTemplate
+    TemplateParameters:
+      Name: LookupUnwindLargeObj
+      Metric100: LookupUnwind_ForeignLargeObj100
+      Command100: *LookupUnwindLargeObj100
+      Metric1000: LookupUnwind_ForeignLargeObj1000
+      Command1000: *LookupUnwindLargeObj1000
+      Metric10000: LookupUnwind_ForeignLargeObj10000
+      Command10000: *LookupUnwindLargeObj10000

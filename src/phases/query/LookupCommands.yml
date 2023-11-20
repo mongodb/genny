@@ -148,3 +148,18 @@ NLJLookupCmdTemplate:
     ]
   allowDiskUse: false
   cursor: {batchSize: 2000}
+
+# The command template for lookup/unwind.
+LookupUnwindCmdTemplate: &LookupUnwindCmdTemplate
+  aggregate: {^Parameter: {Name: "l", Default: "local"}}
+  pipeline:
+    [
+      {$lookup: {
+        from: {^Parameter: {Name: "f", Default: "foreign"}},
+        localField: {^Parameter: {Name: "lk", Default: "join_val"}},
+        foreignField: {^Parameter: {Name: "k", Default: "join_val"}},
+        as: "joined"
+      }},
+      {$unwind: "$joined"}
+    ]
+  cursor: {batchSize: 2000}
