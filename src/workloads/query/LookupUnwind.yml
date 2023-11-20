@@ -1,10 +1,12 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This test exercises the behavior of $lookup when followed by $unwind. We use a single "local"
-  collection with a single document {_id, join_val}, and vary the "foreign" collection to test
-  different document contents as well as different collection sizes. The structure of documents in
-  the foreign collection is {_id, join_val, <data>}, where <data> is one of the following:
+  This test exercises the behavior of $lookup when followed by $unwind that immediately unwinds the
+  lookup result array, which is optimized in the execution engine to avoid materializing this array
+  as an intermediate step. We use one "local" collection with a single document {_id, join_val}, and
+  vary the "foreign" collection to test different document contents as well as different collection
+  sizes. The structure of documents in the foreign collection is {_id, join_val, <data>}, where
+  <data> is one of the following:
   - an integer
   - a short string (20 chars)
   - a long string (100 chars)
