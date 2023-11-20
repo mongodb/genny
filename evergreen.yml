@@ -127,12 +127,14 @@ tasks:
   commands:
   - func: f_fetch_source
   - func: f_compile
+  - func: f_dry_run_variant_auto_tasks
   - func: f_dry_run_workloads
 
 - name: t_compile_and_dry_run_asan
   commands:
   - func: f_fetch_source
   - func: f_compile_asan
+  - func: f_dry_run_variant_auto_tasks
   - func: f_dry_run_workloads_asan
 
 - name: t_python_test
@@ -308,6 +310,21 @@ functions:
       - -v
       - install
       - --sanitizer=asan
+  
+  ##
+  # Runs schedule_variant_auto_tasks as a dry run
+  # to verify AutoRun logic in all workload YAML files.
+  ##
+  f_dry_run_variant_auto_tasks:
+  - command: subprocess.exec
+    params:
+      binary: ./src/genny/run-genny
+      args:
+      - auto-tasks
+      - --tasks
+      - variant_tasks
+      - --dry-run
+
 
   ##
   # Runs each workload as a dry run
@@ -372,7 +389,7 @@ functions:
       - -v
       - cmake-test
       - --regex-exclude
-      - "(sleepNonBlocking|Non-Blocking end|IgnoredOnMacOs)"
+      - "IgnoredOnMacOs"
 
   ##
   # Runs benchmarks via ctest.

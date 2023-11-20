@@ -1,0 +1,26 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-optimization"
+
+Description: |
+  This workload measures performance of boolean expressions which can be simplified by
+  the Boolean Simplifier. It is designed to track effectiveness of the simplifier.
+
+LoadConfig:
+  Path: ../../phases/query/BooleanSimplifier.yml
+  Parameters:
+    Database: BooleanSimplifier
+    DocumentCount: 1e5
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - single-replica
+      - standalone
+      - standalone-all-feature-flags 
+      - standalone-classic-query-engine
+      - standalone-heuristic-bonsai
+      - standalone-sampling-bonsai
+    branch_name:
+      $gte: v7.3

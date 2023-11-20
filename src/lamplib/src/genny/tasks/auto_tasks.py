@@ -6,6 +6,7 @@ import enum
 import glob
 import os
 import re
+import sys
 from typing import NamedTuple, List, Optional, Set
 import yaml
 import structlog
@@ -44,22 +45,6 @@ class YamlReader:
     # Really just here for easy mocking.
     def exists(self, path: str) -> bool:
         return os.path.exists(path)
-
-    def load_set(self, workspace_root: str, files: List[str]) -> dict:
-        """
-        :param workspace_root:
-            effective cwd
-        :param files:
-            files to load relative to cwd
-        :return:
-            Key the basename (no extension) of the file and value the loaded contents.
-            E.g. load_set("expansions") => {"expansions": {"contents":["of","expansions.yml"]}}
-        """
-        out = dict()
-        for to_load in [f for f in files if self.exists(f)]:
-            basename = str(os.path.basename(to_load).split(".yml")[0])
-            out[basename] = self.load(workspace_root=workspace_root, path=to_load)
-        return out
 
 
 class WorkloadLister:
@@ -119,6 +104,7 @@ class OpName(enum.Enum):
         if mode_name == "variant_tasks":
             return OpName.VARIANT_TASKS
 
+
 class CurrentBuildInfo:
     def __init__(self, expansions: dict[str, str]):
         self.conts = expansions
@@ -169,7 +155,13 @@ class Workload:
     auto_run_info: Optional[List[AutoRunBlock]] = None
     """The list of `When/ThenRun` blocks, if present"""
 
-    def __init__(self, workspace_root: str, file_path: str, is_modified: bool, reader: YamlReader):
+    def __init__(
+        self,
+        workspace_root: str,
+        file_path: str,
+        is_modified: bool,
+        reader: YamlReader,
+    ):
         self.workspace_root = workspace_root
         self.file_path = file_path
         self.is_modified = is_modified
@@ -251,10 +243,11 @@ class Workload:
 
     def all_tasks(self) -> List[GeneratedTask]:
         """
-        :return: all possible tasks irrespective of the current build-variant etc.
+        :return: all possible tasks that have an AutoRun block, irrespective of the current 
+        build-variant etc.
         """
         if not self.auto_run_info:
-            return [GeneratedTask(self.snake_case_base_name, None, None, self)]
+            return []
 
         tasks = []
         for block in self.auto_run_info:
@@ -346,16 +339,20 @@ class Workload:
     def _is_comparison_operator(self, operator: str):
         return operator in self._COMPARISON_OPERATORS
 
-    @staticmethod
-    def _compare(operator: str, lhs, rhs) -> bool:
-        if operator == "$gt":
-            return lhs > rhs
-        elif operator == "$gte":
-            return lhs >= rhs
-        elif operator == "$lt":
-            return lhs < rhs
-        elif operator == "$lte":
-            return lhs <= rhs
+    def _compare(self, operator: str, lhs, rhs) -> bool:
+        try:
+            if operator == "$gt":
+                return lhs > rhs
+            elif operator == "$gte":
+                return lhs >= rhs
+            elif operator == "$lt":
+                return lhs < rhs
+            elif operator == "$lte":
+                return lhs <= rhs
+        except TypeError as e:
+            raise TypeError(
+                f"{e}: lhs={lhs}, rhs={rhs}. Workload: {self.relative_path}"
+            ).with_traceback(e.__traceback__)
         raise ValueError(
             f"The only supported comparison operators are $gte, $lte, $gt, $lte. Got ${operator}"
         )
@@ -418,13 +415,17 @@ class Repo:
     Represents the git checkout.
     """
 
-    def __init__(self, lister: WorkloadLister, reader: YamlReader, workspace_root: str):
+    def __init__(
+        self,
+        lister: WorkloadLister,
+        reader: YamlReader,
+        workspace_root: str,
+    ):
         self._modified_repo_files = None
         self.workspace_root = workspace_root
         self.lister = lister
         self.reader = reader
         self._all_workloads = None
-
 
     def all_workloads(self) -> List[Workload]:
         if self._all_workloads is None:
@@ -446,7 +447,7 @@ class Repo:
 
     def all_tasks(self) -> List[GeneratedTask]:
         """
-        :return: All possible tasks fom all possible workloads
+        :return: All possible tasks from all possible workloads
         """
         # Double list-comprehensions always read backward to me :(
         return [task for workload in self.all_workloads() for task in workload.all_tasks()]
@@ -493,7 +494,6 @@ class ConfigWriter:
         :param config: The configuration to write
         :param output_file: What file to write to.
         """
-        
         success = False
         raised = None
         try:
@@ -520,9 +520,11 @@ class ConfigWriter:
                 )
 
     @staticmethod
-    def create_config(op: OpName, build: CurrentBuildInfo, tasks: List[GeneratedTask]) -> Configuration:
+    def create_config(
+        op: OpName, build: CurrentBuildInfo, tasks: List[GeneratedTask]
+    ) -> Configuration:
         """
-        Creates a configuration for generated tasks to either execute particular tasks for 
+        Creates a configuration for generated tasks to either execute particular tasks for
         a variant or to define global tasks used by variants.
 
         :param op: Used to determine whether to write global config or tasks for a variant.
@@ -537,9 +539,10 @@ class ConfigWriter:
             ConfigWriter.configure_all_tasks_modern(config, tasks)
         return config
 
-
     @staticmethod
-    def configure_variant_tasks(config: Configuration, tasks: List[GeneratedTask], variant: str, activate: bool = None) -> None:
+    def configure_variant_tasks(
+        config: Configuration, tasks: List[GeneratedTask], variant: str, activate: bool = None
+    ) -> None:
         config.variant(variant).tasks([TaskSpec(task.name).activate(activate) for task in tasks])
 
     @staticmethod
@@ -565,9 +568,23 @@ class ConfigWriter:
             )
 
 
-def main(mode_name: str, workspace_root: str) -> None:
+def main(mode_name: str, dry_run: bool, workspace_root: str) -> None:
     reader = YamlReader()
-    expansions = reader.load(workspace_root, "expansions.yml")
+    if dry_run:
+        expansions = {
+            "build_variant": "dryrun-variant",
+            "execution": "0",
+            "mongodb_setup": "dryrun-setup",
+            "branch_name": "v0.0",
+        }
+    else:
+        try:
+            expansions = reader.load(workspace_root, "expansions.yml")
+        except FileNotFoundError:
+            SLOG.error(
+                f"Evergreen expansions file {os.path.join(workspace_root, 'expansions.yml')} does not exist. Ensure this file exists and that it is in the correct location."
+            )
+            sys.exit(1)
     build = CurrentBuildInfo(expansions)
     op = OpName.from_flag(mode_name)
     lister = WorkloadLister(workspace_root=workspace_root)
@@ -576,4 +593,7 @@ def main(mode_name: str, workspace_root: str) -> None:
 
     output_file = os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
     config = ConfigWriter.create_config(op, build, tasks)
-    ConfigWriter.write_config(build.execution, config, output_file)
+    if dry_run:
+        SLOG.debug("Tasks json content", contents=config.to_json)
+    else:
+        ConfigWriter.write_config(build.execution, config, output_file)

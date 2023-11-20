@@ -104,7 +104,8 @@ TEST_CASE("Non-Blocking start") {
     t1.join();
 }
 
-TEST_CASE("Non-Blocking end (background progression)") {
+// Timing tests are ignored on MacOS, because we only target Linux for performance tests
+TEST_CASE("Non-Blocking end (background progression), IgnoredOnMacOs") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
     o.addRequiredTokens(2);
@@ -433,7 +434,8 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
     REQUIRE(iters == 2);
 }
 
-TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
+// Timing tests are ignored on MacOS, because we only target Linux for performance tests
+TEST_CASE("Range-based for stops when Orchestrator says Phase is done, IgnoredOnMacOs") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
     o.addRequiredTokens(2);
