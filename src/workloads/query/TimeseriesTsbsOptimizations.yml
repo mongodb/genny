@@ -276,3 +276,15 @@ Actors:
                         },
                     },
                   ]
+
+  # Prevent DSI from quitting the workload for not outputting anything to stdout.
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [11]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          LogEvery: 5 minutes
+          Blocking: None
