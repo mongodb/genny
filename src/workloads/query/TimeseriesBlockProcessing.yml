@@ -13,7 +13,7 @@ Keywords:
 GlobalDefaults:
   Database: &database test
   Collection: &collection Collection0
-  DocumentCount: &documentCount 1e6
+  DocumentCount: &documentCount 1e7
   Repeat: &repeat 20
   Threads: &threads 1
   MaxPhases: &maxPhases 10
@@ -330,7 +330,7 @@ Actors:
                   [
                     {
                       $match:
-                        { "time": { $lt: { ^Date: "2022-01-02T00:00:00" } } },
+                        { "time": { $lt: { ^Date: "2022-01-08T00:00:00" } } },
                     },
                     {
                       $group:
