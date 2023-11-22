@@ -14,15 +14,15 @@ GlobalDefaults:
   Database: &database test
   Collection: &collection Collection0
   DocumentCount: &documentCount 1e6
-  Repeat: &repeat 100
+  Repeat: &repeat 20
   Threads: &threads 1
-  MaxPhases: &maxPhases 11
+  MaxPhases: &maxPhases 10
   MetaCount: &metaCount 10
 
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 4000 # With 8 threads we need a larger pool.
+      maxPoolSize: 400
 
 Actors:
   # Clear any pre-existing collection state.
@@ -140,7 +140,7 @@ Actors:
           Database: *database
           Collection: *collection
           Operations:
-            - OperationMetricsName:
+            - OperationMetricsName: TsBPBasicMatchOnNestedField
               OperationName: aggregate
               OperationCommand:
                 Pipeline:
@@ -162,7 +162,7 @@ Actors:
           Database: *database
           Collection: *collection
           Operations:
-            - OperationMetricsName:
+            - OperationMetricsName: TsBPNarrowMatchOnNestedField
               OperationName: aggregate
               OperationCommand:
                 Pipeline:
@@ -184,7 +184,7 @@ Actors:
           Database: *database
           Collection: *collection
           Operations:
-            - OperationMetricsName:
+            - OperationMetricsName: TsBPAndMatchOnNestedFields
               OperationName: aggregate
               OperationCommand:
                 Pipeline:
@@ -215,7 +215,7 @@ Actors:
           Database: *database
           Collection: *collection
           Operations:
-            - OperationMetricsName:
+            - OperationMetricsName: TsBPOrMatchOnNestedField
               OperationName: aggregate
               OperationCommand:
                 Pipeline:
@@ -246,7 +246,7 @@ Actors:
           Database: *database
           Collection: *collection
           Operations:
-            - OperationMetricsName:
+            - OperationMetricsName: TsBPMatchOnNestedFieldAndTime
               OperationName: aggregate
               OperationCommand:
                 Pipeline:
@@ -267,12 +267,12 @@ Actors:
                     { $count: "count" },
                   ]
 
-  # TODO: The $or $eq on obj.measurement1 gets converted to a $in so this query can't run in
+  # TODO SERVER-83057: The $or $eq on obj.measurement1 gets converted to a $in so this query can't run in
   # block processing. When it runs through SBE "normally", the filter gets created in a random order
   # leading to consistently inconsistent query durations depending on which field gets evaluated
   # first. Evaluating the filter on obj.measurement1 is fastest, while evaluating the filter on
   # obj.measurement3 is slowest.
-  # - Name: MatchOnMuipleNestedFields
+  # - Name: MatchOnMultipleNestedFields
   #   Type: CrudActor
   #   Database: *database
   #   Threads: *threads
@@ -285,7 +285,7 @@ Actors:
   #         Database: *database
   #         Collection: *collection
   #         Operations:
-  #           - OperationMetricsName:
+  #           - OperationMetricsName: TsBPMatchOnMultipleNestedFields
   #             OperationName: aggregate
   #             OperationCommand:
   #               Pipeline:
@@ -310,8 +310,6 @@ Actors:
   #                   { $count: "count" },
   #                 ]
 
-  # The $match will be handled by block processing, but the pipeline from $group onwards will be
-  # handled by regular SBE execution.
   - Name: MatchGroupSort
     Type: CrudActor
     Database: *database
@@ -325,7 +323,7 @@ Actors:
           Database: *database
           Collection: *collection
           Operations:
-            - OperationMetricsName:
+            - OperationMetricsName: TsBPMatchGroupSort
               OperationName: aggregate
               OperationCommand:
                 Pipeline:
