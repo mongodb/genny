@@ -44,13 +44,11 @@ Actors:
       OperationCommand:
         shardCollection: test.Collection0
         key: {b: hashed}
-        numInitialChunks: &NumChunks 6
     - OperationMetricsName: ShardForeignCollection
       OperationName: AdminCommand
       OperationCommand:
         shardCollection: test.Collection2
         key: {b: hashed}
-        numInitialChunks: *NumChunks
     # Disable the balancer so that it can't skew results while the $lookups are running.
     - OperationMetricsName: DisableBalancer
       OperationName: AdminCommand

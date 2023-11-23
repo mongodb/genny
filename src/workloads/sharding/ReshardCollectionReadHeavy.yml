@@ -81,7 +81,6 @@ Actors:
         # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
         # the shards.
         key: {oldKey: hashed}
-        numInitialChunks: *NumChunks
   - *Nop
   - *Nop
   - *Nop
