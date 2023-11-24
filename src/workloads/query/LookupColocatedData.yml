@@ -138,7 +138,7 @@ Actors:
           OperationName: AdminCommand
           OperationCommand:
             enableSharding: *Database
-        # This collection will have data distributed across 6 chunks.
+        # This collection will have data distributed evenly across the shards.
         - OperationMetricsName: ShardLocalCollection
           OperationName: AdminCommand
           OperationCommand:
