@@ -30,7 +30,6 @@ GlobalDefaults:
   ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
   ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
   DocumentCount: &DocumentCount 2_000_000  # for an approximate total of 3GB
-  NumChunks: &NumChunks 60                 # with approximately 50MB per chunk
 
   ShardKeyValueMin: &ShardKeyValueMin 1
   # We use 100x the number of chunks so that the $sample aggregation to choose the new split points
