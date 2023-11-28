@@ -32,7 +32,6 @@ GlobalDefaults:
   # TODO: Increase DocumentCount to 4000000 so there will be ~20GB of data inserted on each shard
   # and increase NumReshardedChunks to 400 so there continue to be ~50MB of data per chunk.
   DocumentCount: &DocumentCount 100000  # for an approximate total of 1GB
-  NumChunks: &NumChunks 20              # with approximately 50MB per chunk
 
   ShardKeyValueMin: &ShardKeyValueMin 1
   ShardKeyValueMax: &ShardKeyValueMax 100
@@ -76,7 +75,6 @@ Actors:
         # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
         # the shards.
         key: {oldKey: hashed}
-        numInitialChunks: *NumChunks
   - *Nop
   - *Nop
   - *Nop

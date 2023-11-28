@@ -73,7 +73,6 @@ Actors:
           OperationCommand:
             shardCollection: *Namespace
             key: {_id: "hashed"}
-            numInitialChunks: 12
 
 - Name: Insert
   Type: Loader
