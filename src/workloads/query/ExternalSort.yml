@@ -103,9 +103,10 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
+      - standalone-all-feature-flags
       - standalone-classic-query-engine
-      - standalone-sbe
       - standalone-query-stats
+      - standalone-sbe
     branch_name:
       $neq:
       - v4.0
