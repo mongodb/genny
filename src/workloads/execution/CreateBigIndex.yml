@@ -103,6 +103,7 @@ AutoRun:
       - replica-all-feature-flags
       - single-replica
       - standalone
+      - standalone-all-feature-flags
     atlas_setup:
       $neq:
       - M30-repl
