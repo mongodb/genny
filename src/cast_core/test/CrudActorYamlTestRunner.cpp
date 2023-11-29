@@ -405,13 +405,13 @@ struct convert<genny::testing::CrudActorTestCase> {
 
 namespace {
 TEST_CASE("CrudActor YAML Tests",
-          "[standalone][single_node_replset][three_node_replset][CrudActor]") {
+          "[single_node_replset][three_node_replset][CrudActor]") {
 
     genny::testing::runTestCaseYaml<genny::testing::CrudActorTestCase>(
         "/src/cast_core/test/CrudActorYamlTests.yml");
 }
 TEST_CASE("CrudActor YAML FSM Tests",
-          "[standalone][single_node_replset][three_node_replset][CrudActor]") {
+          "[single_node_replset][three_node_replset][CrudActor]") {
 
     genny::testing::runTestCaseYaml<genny::testing::CrudActorTestCase>(
         "/src/cast_core/test/CrudActorFSMYamlTests.yml");

@@ -33,7 +33,7 @@ using namespace bsoncxx;
 
 TEST_CASE_METHOD(MongoTestFixture,
                  "SamplingLoader - demo",
-                 "[standalone][single_node_replset][three_node_replset][sharded][SamplingLoader]") {
+                 "[single_node_replset][three_node_replset][sharded][SamplingLoader]") {
 
     dropAllDatabases();
     auto db = client.database("test");

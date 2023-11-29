@@ -26,7 +26,7 @@ namespace {
 using namespace genny::testing;
 namespace BasicBson = bsoncxx::builder::basic;
 
-TEST_CASE_METHOD(MongoTestFixture, "MultiCollectionQuery", "[standalone][MultiCollectionQuery]") {
+TEST_CASE_METHOD(MongoTestFixture, "MultiCollectionQuery", "[single_node_replset][MultiCollectionQuery]") {
 
     dropAllDatabases();
     auto events = ApmEvents{};
