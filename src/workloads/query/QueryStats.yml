@@ -214,9 +214,10 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
-      # TODO PERF-4796 re-enable the sharded versions.
+      # TODO PERF-4951 Enable sharded versions with multiple mongos.
       # - shard
       # - shard-lite
+      - shard-single
       - single-replica
       - replica
       - atlas-like-replica.2022-10
