@@ -98,7 +98,7 @@ Actors:
   - Nop: true
 
 - Name: LocfSingleOutput
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -107,12 +107,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: *coll
     Operations:
     - OperationMetricsName: TestLocfSingleOutput
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: *coll
-        pipeline: [
+        Pipeline: [
           {
             $fill: {
               sortBy: {timestamp: 1},
@@ -135,7 +135,7 @@ Actors:
   - Nop: true
 
 - Name: LinearFillSingleOutput
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -146,12 +146,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: *coll
     Operations:
     - OperationMetricsName: TestLinearFillSingleOutput
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: *coll
-        pipeline: [
+        Pipeline: [
           {
             $fill: {
               sortBy: {timestamp: 1},
@@ -172,7 +172,7 @@ Actors:
   - Nop: true
 
 - Name: LocfMultipleOutputsWithMultiplePartitions
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -185,12 +185,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: *coll
     Operations:
     - OperationMetricsName: TestLocfMultipleOutputsWithMultiplePartitions
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: *coll
-        pipeline: [
+        Pipeline: [
           {
             $fill: {
               partitionBy: {part1: "$part1", part2: "$part2"},
@@ -212,7 +212,7 @@ Actors:
   - Nop: true
 
 - Name: LinearFillMultipleOutputsWithMultiplePartitions
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -227,12 +227,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: *coll
     Operations:
     - OperationMetricsName: TestMultipleOutputsWithMultiplePartitions
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: *coll
-        pipeline: [
+        Pipeline: [
           {
             $fill: {
               partitionBy: {part1: "$part1", part2: "$part2"},
@@ -252,7 +252,7 @@ Actors:
   - Nop: true
 
 - Name: MixedMethodsMultipleOutputsWithMultiplePartitions
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -269,12 +269,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: *coll
     Operations:
     - OperationMetricsName: TestMultipleOutputsWithMultiplePartitions
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: *coll
-        pipeline: [
+        Pipeline: [
           {
             $fill: {
               partitionBy: {part1: "$part1", part2: "$part2"},

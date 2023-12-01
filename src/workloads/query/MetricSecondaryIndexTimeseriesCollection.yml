@@ -11,7 +11,7 @@ Description: |
 
 GlobalDefaults:
   dbname: &db test
-  batchSize: &batchSize 30000
+  limit: &limit 30000
   fieldName: &field "numeric"
   index: &index
     keys: {numeric: 1}
@@ -46,7 +46,7 @@ Actors:
     # To get a good signal we need this to be at least bucket size squared.
     # The bucket size is 360. This is 360 * 360 *8. The 8 is just for safety.
     DocumentCount: 1036800
-    BatchSize: *batchSize
+    BatchSize: *limit
     Document:
       # start "2022-01-01" = "2022-01-01T00:00:00Z", step 10000 = size of step 10 seconds or 10,000 millis
       timestamp: {^IncDate: {start: "2022-01-01", step: 40000}}
@@ -70,7 +70,7 @@ Actors:
   - *Nop
 
 - Name: PointQueries
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -78,12 +78,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: PointQuery
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $match: {
             numeric: {^RandomInt: {min: 0, max: 259200}}
           }
@@ -92,8 +92,9 @@ Actors:
             _id: 0,
             numeric: 1
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
 
 AutoRun:
 - When:
