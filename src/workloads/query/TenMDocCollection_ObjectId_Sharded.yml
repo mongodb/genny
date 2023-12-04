@@ -101,7 +101,5 @@ AutoRun:
       $eq:
       - shard
       - shard-query-stats
-      - shard-limited-query-stats
       - shard-lite
       - shard-lite-query-stats
-      - shard-lite-limited-query-stats
