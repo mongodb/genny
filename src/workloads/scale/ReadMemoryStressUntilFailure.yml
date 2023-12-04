@@ -61,8 +61,8 @@ Clients:
   Default:
     QueryOptions:
       socketTimeoutMS: -1
-      maxPoolSize: 500
-    
+      maxPoolSize: 11000
+
 Actors:
 # Drop database to get rid of stale data. Useful when running locally multiple times.
 - Name: Setup
@@ -78,6 +78,21 @@ Actors:
         Operations:
         - OperationName: RunCommand
           OperationCommand: {dropDatabase: 1}
+
+# Profile everything, so we can see $currentOp executions stats. The workload will fail, analysis won't work.
+- Name: LogLevel
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand: { profile: 2 }
 
 # Load 20,096 documents around 520KB as described by the structure in GlobalDefaults.
 - Name: LoadDocuments
@@ -96,6 +111,26 @@ Actors:
         DocumentCount: *NumDocs
         BatchSize: *LoadBatchSize
 
+# Create 50k idle cursors, to simulate a situation where we have some big memory consumers and many small ops.
+- Name: CreateCursors
+  Type: CrudActor
+  Threads: 10000
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: someDb
+        Collection: doesNotMatter
+        ThrowOnFailure: false
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {}
+            Options:
+              BatchSize: 0 # We just want a cursor stablished, the collection does not contain data.
+
 # Spawn many threads to sort enough documents to test server's capacity to handle memory pressure.
 - Name: SortMany
   Type: RunCommand
@@ -105,8 +140,10 @@ Actors:
       Active: [2]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Repeat: *SortRepeat
+        Duration: 2 minutes
+        # Repeat: *SortRepeat
         Database: *DBName
+        ThrowOnFailure: false
         Operations:
         - OperationMetricsName: SortMany
           OperationName: RunCommand
@@ -127,6 +164,131 @@ Actors:
               },
               {$sort: {b: 1}}]
             cursor: {batchSize: *SortBatchSize}
+
+# - Name: currentOp
+#   Type: AdminCommand
+#   # Use a single thread. Multiple $currentOp will block due to the service context mutex (LockedClientCursor), which makes reported times meaningless.
+#   Threads: 1
+#   Phases:
+#     OnlyActiveInPhases:
+#       Active: [2]
+#       NopInPhasesUpTo: *MaxPhases
+#       PhaseConfig:
+#         Duration: 2 minutes
+#         Operations:
+#         - OperationMetricsName: currentOp
+#           OperationName: RunCommand
+#           OperationCommand:
+#             aggregate: 1
+#             pipeline:
+#               [{$currentOp: {allUsers: true, idleConnections: true, idleCursors: true, idleSessions: true}}, {$match: {type: "op"}}]
+#             cursor: {}
+
+# Force system.profile to be constantly flushed to disk
+- Name: fsync
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 2 minutes
+        Operations:
+        - OperationMetricsName: fsync
+          OperationName: RunCommand
+          OperationCommand:
+            fsync: 1
+
+# Connect to mongodb server and run JS script
+- Name: MongoshScriptRunnerWithDB
+  Type: ExternalScriptRunner
+  Threads: 1
+  Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 2 minutes
+          Command: "mongo"
+          MetricsName: ScriptMetrics
+          Script: |
+            function shouldShedOps() {
+              let residentMemMb = db.serverStatus().mem.resident;
+              //jsTestLog("Resident " + residentMemMb);
+              return residentMemMb > 55000;
+            }
+
+            function compareOps(a, b) {
+              return Date.parse(a.currentOpTime) - Date.parse(b.currentOpTime);
+            }
+
+            const testDB = db.getSiblingDB("memorystress");
+            function killCursors(cursorArr) {
+                //jsTestLog("Kill cursors " + cursorArr.length);
+                testDB.runCommand( { killCursors: "Collection0", cursors: cursorArr } );
+            }
+
+            function loadShedding() {
+              // Target only Collection0.
+              //jsTestLog("Running currentOp");
+              let pipeline = [{$currentOp: {allUsers: true, idleCursors: true}}, {$match: {ns: "memorystress.Collection0"}}];
+              let currOpResult = db.aggregate(pipeline);
+
+              // Do some sorting.
+              //jsTestLog("sorting");
+              let opsArr = currOpResult.toArray().sort(compareOps);
+              //jsTestLog("shedding");
+
+              let n = 0;
+              let cursorArr = [];
+
+              for (const op of opsArr) {
+                //printjson(op);
+                if(op.opid) {
+                  db.killOp(op.opid);
+                  n++;
+                } else if(op?.cursor?.cursorId) {
+                  cursorArr.push(op.cursor.cursorId);
+                  n++;
+                }
+
+                if(cursorArr.length >= 20 || (cursorArr.length && op.opid)) {
+                  killCursors(cursorArr);
+                  cursorArr = [];
+                }
+
+                if((n%20==0) && !shouldShedOps()) {
+                  sleep(1);
+                  if(shouldShedOps()) {
+                    n = 0;
+                    continue;
+                  }
+                  jsTestLog("Break shedding");
+                  cursorArr = [];
+                  break;
+                }
+              }
+              if(cursorArr.length) {
+                killCursors(cursorArr);
+              }
+            }
+
+            while(true) {
+              if(!shouldShedOps()) {
+                sleep(1);
+                continue;
+              }
+              loadShedding();
+            }
+
+
+
+
+
+
+
+
 
 # Commented out because this should not be regularly scheduled, as the task is expected to fail.
 # Uncomment the lines below (and possibly change the build variant) to run the workload.

@@ -18,7 +18,7 @@
 #include <string_view>
 #include <string>
 
-#include <mongocxx/pool.hpp>
+#include <mongocxx/uri.hpp>
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
@@ -50,6 +50,7 @@ private:
 
     /** @private */
     struct PhaseConfig;
+    mongocxx::pool::entry _client;
     PhaseLoop<PhaseConfig> _loop;
     std::string _command;
 };
