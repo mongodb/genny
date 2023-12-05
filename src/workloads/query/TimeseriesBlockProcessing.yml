@@ -202,6 +202,39 @@ Actors:
                     { $count: "count" },
                   ]
 
+# This query stresses the bucket level filter on nested fields.
+  - Name: AndOfSelectiveFiltersOnNestedFields
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPAndMatchOnNestedFields
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              { "obj.measurement1": 10 },
+                              { "obj.measurement2": { $gt: 99.9 } },
+                              { "obj.measurement3": { $gt: 999.9 } },
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
   - Name: OrMatchOnNestedField
     Type: CrudActor
     Database: *database
