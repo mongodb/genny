@@ -14,7 +14,7 @@ InsertData:
     loc2d: &loc2d [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
     loc2dSphere: &loc2dSphere [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
     point: &point { type: Point, coordinates: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}] }
-    randomString: &randomString {^RandomString: {length: 20}}
+    randomString: &randomString {^RandomString: {length: 16}}
     randomInt: &randomInt {^RandomInt: {min: -10000000, max: 10000000}}
     attributes: &attributes { color: *randomString, size: *randomString, inside: { bookmark: *randomInt, postitnote: *randomInt }, outside: { dustcover: *randomString }}
 
@@ -23,7 +23,7 @@ CreateIntegerIndexCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
   Database: *db
   Operations:
-  - OperationMetricsName: CreateIndexInt
+  - OperationMetricsName: CreateIntegerIndexCmd
     OperationName: RunCommand
     OperationCommand:
       createIndexes: Collection0
@@ -42,7 +42,7 @@ CreateStringIndexCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
   Dabatase: *db
   Operations:
-  - OperationMetricsName: CreateIndexString
+  - OperationMetricsName: CreateStringIndexCmd
     OperationName: RunCommand
     OperationCommand:
       createIndexes: Collection0
