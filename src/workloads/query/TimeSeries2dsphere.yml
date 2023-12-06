@@ -118,7 +118,7 @@ Actors:
   - *Nop
 
 - Name: GeoQueries
-  Type: CrudActor
+  Type: RunCommand
   Threads: 1
   Phases:
   - *Nop
@@ -126,27 +126,28 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: GeoWithinQuery
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [
+        aggregate: Collection0
+        pipeline: [
           {$match: {location: {$geoWithin: {$centerSphere: [[
             {^RandomDouble: { min: *minX, max: *maxX }},
             {^RandomDouble: { min: *minY, max: *maxY }},
           ], 0.001]}}}},
           {$skip: 1e5},
         ]
+        cursor: {}
   - *Nop
   - Duration: 30 seconds
     Database: *db
-    Collection: Collection0
     Operations:
     - OperationMetricsName: GeoNearQuery
-      OperationName: aggregate
+      OperationName: RunCommand
       OperationCommand:
-        Pipeline: [
+        aggregate: Collection0
+        pipeline: [
           {$geoNear: {
             key: 'location',
             near: [
@@ -159,6 +160,7 @@ Actors:
           }},
           {$skip: 1e5},
         ]
+        cursor: {}
 
 AutoRun:
 - When:
