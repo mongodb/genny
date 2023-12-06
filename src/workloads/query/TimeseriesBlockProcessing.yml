@@ -300,48 +300,43 @@ Actors:
                     { $count: "count" },
                   ]
 
-  # TODO SERVER-83057: The $or $eq on obj.measurement1 gets converted to a $in so this query can't run in
-  # block processing. When it runs through SBE "normally", the filter gets created in a random order
-  # leading to consistently inconsistent query durations depending on which field gets evaluated
-  # first. Evaluating the filter on obj.measurement1 is fastest, while evaluating the filter on
-  # obj.measurement3 is slowest.
-  # - Name: MatchOnMultipleNestedFields
-  #   Type: CrudActor
-  #   Database: *database
-  #   Threads: *threads
-  #   Phases:
-  #     OnlyActiveInPhases:
-  #       Active: [9]
-  #       NopInPhasesUpTo: *maxPhases
-  #       PhaseConfig:
-  #         Repeat: *repeat
-  #         Database: *database
-  #         Collection: *collection
-  #         Operations:
-  #           - OperationMetricsName: TsBPMatchOnMultipleNestedFields
-  #             OperationName: aggregate
-  #             OperationCommand:
-  #               Pipeline:
-  #                 [
-  #                   {
-  #                     $match:
-  #                       {
-  #                         $and:
-  #                           [
-  #                             {
-  #                               $or:
-  #                                 [
-  #                                   { "obj.measurement1": 4 },
-  #                                   { "obj.measurement1": 9 },
-  #                                 ],
-  #                             },
-  #                             { "obj.measurement2": { $lte: 175 } },
-  #                             { "obj.measurement3": { $gt: 100, $lt: 800 } },
-  #                           ],
-  #                       },
-  #                   },
-  #                   { $count: "count" },
-  #                 ]
+  - Name: MatchOnMultipleNestedFields
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [9]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPMatchOnMultipleNestedFields
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              {
+                                $or:
+                                  [
+                                    { "obj.measurement1": 4 },
+                                    { "obj.measurement1": 9 },
+                                  ],
+                              },
+                              { "obj.measurement2": { $lte: 175 } },
+                              { "obj.measurement3": { $gt: 100, $lt: 800 } },
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
 
   - Name: MatchGroupSort
     Type: CrudActor
