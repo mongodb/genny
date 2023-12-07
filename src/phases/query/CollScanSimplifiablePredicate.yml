@@ -1,0 +1,360 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload tests the performance of collection scan queries with complex predicates
+  that can be simplified by the optimizer.
+
+GlobalDefaults:
+  Database: &Database {^Parameter: {Name: Database, Default: unused}}
+  DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
+  Repeat: &Repeat {^Parameter: {Name: Repeat, Default: -1}}
+  Collection: &Collection Collection0
+  MaxPhases: &MaxPhases 20
+
+ActorTemplates:
+- TemplateName: FindQueryTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {^Parameter: {Name: "Filter", Default: {invalid: "invalid"}}}
+
+- TemplateName: SimplifiableConjunction
+  Config:
+    ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "Name", Default: "unused"}}
+        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+        Filter:
+          {$and:
+            {^Cycle: {
+              ofLength: 1,
+              fromGenerator:
+                {^Array: {of:
+                  {arr: {$gt: {^Inc: {start: 10, step: 1}}}},
+                  number: {^Parameter: {Name: "Width", Default: -1}}
+                }}
+            }}
+          }
+
+- TemplateName: SimplifiableCNF
+  Config:
+    ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "Name", Default: "unused"}}
+        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+        Filter:
+          {$and:
+            {^Cycle: {
+              ofLength: 1,
+              fromGenerator:
+                {^Array: {of:
+                  {$or: [
+                    {arr: {$gte: {^Inc: {start: 10}}}},
+                    {f1: {$gte: {^Inc: {start: 10}}}},
+                    {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
+                    {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
+                    {f4: {$gt: {^Inc: {start: 10}}}}
+                  ]},
+                  number: {^Parameter: {Name: "Width", Default: -1}}
+                }}
+            }}
+          }
+
+- TemplateName: SimplifiableDNF
+  Config:
+    ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "Name", Default: "unused"}}
+        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+        Filter:
+          {$or:
+            {^Cycle: {
+              ofLength: 1,
+              fromGenerator:
+                {^Array: {of:
+                  {$and: [
+                    {arr: {$gte: {^Inc: {start: 10}}}},
+                    {f1: {$gte: {^Inc: {start: 10}}}},
+                    {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
+                    {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
+                    {f4: {$gt: {^Inc: {start: 10}}}}
+                  ]},
+                  number: {^Parameter: {Name: "Width", Default: -1}}
+                }}
+            }}
+          }
+
+- TemplateName: SimplifiableElemMatchConjunction
+  Config:
+    ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "Name", Default: "unused"}}
+        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+        Filter:
+          {arr_of_objs: {$elemMatch: {$and:
+            {^Cycle: {
+              ofLength: 1,
+              fromGenerator:
+                {^Array: {of:
+                  {b: {$gt: {^Inc: {start: 10}}}},
+                  number: {^Parameter: {Name: "Width", Default: -1}}
+                }}
+            }}
+          }}}
+
+- TemplateName: SimplifiableElemMatchCNF
+  Config:
+    ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "Name", Default: "unused"}}
+        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+        Filter:
+          {arr_of_objs: {$elemMatch: {$and:
+            {^Cycle: {
+              ofLength: 1,
+              fromGenerator:
+                {^Array: {of:
+                  {$or: [
+                    {b: {$eq: -1}},
+                    {c: {$eq: 0}},
+                    {nested: {f1: {$gte: {^Inc: {start: 10}}}}},
+                    {nested: {f2: {$lte: {^Inc: {start: 0, step: -1}}}}},
+                    {nested: {f3: {$lt: {^Inc: {start: 0, step: -1}}}}},
+                    {nested: {f4: {$gt: {^Inc: {start: 10}}}}},
+                  ]},
+                  number: {^Parameter: {Name: "Width", Default: -1}}
+                }}
+            }}
+          }}}
+
+- TemplateName: SimplifiableElemMatchDNF
+  Config:
+    ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "Name", Default: "unused"}}
+        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+        Filter:
+          {arr_of_objs: {$elemMatch: {$or:
+            {^Cycle: {
+              ofLength: 1,
+              fromGenerator:
+                {^Array: {of:
+                  {$and: [
+                    {b: {$eq: -1}},
+                    {c: {$eq: 0}},
+                    {nested: {f1: {$gte: {^Inc: {start: 10}}}}},
+                    {nested: {f2: {$lte: {^Inc: {start: 0, step: -1}}}}},
+                    {nested: {f3: {$lt: {^Inc: {start: 0, step: -1}}}}},
+                    {nested: {f4: {$gt: {^Inc: {start: 10}}}}},
+                  ]},
+                  number: {^Parameter: {Name: "Width", Default: -1}}
+                }}
+            }}
+          }}}
+
+Actors:
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: *DocumentCount
+        BatchSize: 1000
+        Document:
+          # None of these match any of the filters in this workload, forcing each query to scan 
+          # the entire collection.
+          a: 1
+          arr: [0, 1]
+          f1: [1]
+          f2: [[1], 2]
+          f3: [[[1], 2], 3]
+          f4: [[[[1], 2], 3], 4]
+          arr_of_objs: [{^Repeat: {count: 10, fromGenerator: {
+            b: 0, c: 1, d: 2, nested: {
+              f1: [1], f2: [[1], 2], f3: [[[1], 2], 3], f4: [[[[1], 2], 3], 4]
+            }
+          }}}]
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableConjunction
+    TemplateParameters:
+      Name: SimplifiableConjunction100Clauses
+      ActivePhase: 3
+      Width: 100
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableConjunction
+    TemplateParameters:
+      Name: SimplifiableConjunction1KClauses
+      ActivePhase: 4
+      Width: 1000
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableConjunction
+    TemplateParameters:
+      Name: SimplifiedConjunction
+      ActivePhase: 5
+      # The above queries can be simplified to contain just 1 clause.
+      Width: 1
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableCNF
+    TemplateParameters:
+      Name: SimplifiableCNF100Clauses
+      ActivePhase: 6
+      Width: 100
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableCNF
+    TemplateParameters:
+      Name: SimplifiableCNF1KClauses
+      ActivePhase: 7
+      Width: 1000
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableCNF
+    TemplateParameters:
+      Name: SimplifiedCNF
+      ActivePhase: 8
+      # The above queries can be simplified to contain just 1 clause.
+      Width: 1
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableDNF
+    TemplateParameters:
+      Name: SimplifiableDNF100Clauses
+      ActivePhase: 9
+      Width: 100
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableDNF
+    TemplateParameters:
+      Name: SimplifiableDNF1KClauses
+      ActivePhase: 10
+      Width: 1000
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableDNF
+    TemplateParameters:
+      Name: SimplifiedDNF
+      ActivePhase: 11
+      # The above queries can be simplified to contain just 1 clause.
+      Width: 1
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableElemMatchConjunction
+    TemplateParameters:
+      Name: SimplifiableElemMatchConjunction100Clauses
+      ActivePhase: 12
+      Width: 100
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableElemMatchConjunction
+    TemplateParameters:
+      Name: SimplifiableElemMatchConjunction1KClauses
+      ActivePhase: 13
+      Width: 1000
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableElemMatchConjunction
+    TemplateParameters:
+      Name: SimplifiedElemMatchConjunction
+      ActivePhase: 14
+      # The above queries can be simplified to contain just 1 clause.
+      Width: 1
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableElemMatchCNF
+    TemplateParameters:
+      Name: SimplifiableElemMatchCNF100Clauses
+      ActivePhase: 15
+      Width: 100
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableElemMatchCNF
+    TemplateParameters:
+      Name: SimplifiableElemMatchCNF1KClauses
+      ActivePhase: 16
+      Width: 1000
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableElemMatchCNF
+    TemplateParameters:
+      Name: SimplifiedElemMatchCNF
+      ActivePhase: 17
+      # The above queries can be simplified to contain just 1 clause.
+      Width: 1
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableElemMatchDNF
+    TemplateParameters:
+      Name: SimplifiableElemMatchDNF100Clauses
+      ActivePhase: 18
+      Width: 100
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableElemMatchDNF
+    TemplateParameters:
+      Name: SimplifiableElemMatchDNF1KClauses
+      ActivePhase: 19
+      Width: 1000
+
+- ActorFromTemplate:
+    TemplateName: SimplifiableElemMatchDNF
+    TemplateParameters:
+      Name: SimplifiedElemMatchDNF
+      ActivePhase: 20
+      # The above queries can be simplified to contain just 1 clause.
+      Width: 1
