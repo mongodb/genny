@@ -23,7 +23,7 @@ CreateIntegerIndexCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
   Database: *db
   Operations:
-  - OperationMetricsName: CreateIntegerIndexCmd
+  - OperationMetricsName: CreateIndexInt
     OperationName: RunCommand
     OperationCommand:
       createIndexes: Collection0
@@ -42,7 +42,7 @@ CreateStringIndexCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
   Dabatase: *db
   Operations:
-  - OperationMetricsName: CreateStringIndexCmd
+  - OperationMetricsName: CreateIndexString
     OperationName: RunCommand
     OperationCommand:
       createIndexes: Collection0
