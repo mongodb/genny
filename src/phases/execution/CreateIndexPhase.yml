@@ -40,7 +40,7 @@ CreateIntegerIndexCmd:
 
 CreateStringIndexCmd:
   Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
-  Dabatase: *db
+  Database: *db
   Operations:
   - OperationMetricsName: CreateIndexString
     OperationName: RunCommand
