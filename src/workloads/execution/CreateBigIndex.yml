@@ -208,8 +208,8 @@ AutoRun:
       - atlas-like-replica.2022-10
       - replica
       - replica-all-feature-flags
-      # - shard
-      # - shard-lite
+      - shard
+      - shard-lite
       - single-replica
       - standalone
       - standalone-all-feature-flags
