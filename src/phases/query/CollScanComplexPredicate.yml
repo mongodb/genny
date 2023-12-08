@@ -1,0 +1,296 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload tests the performance of collection scan queries with complex predicates of
+  various shapes (CNF, DNF, and mixed predicates with different levels of nestedness).
+
+RandomSeed: 123123123
+
+GlobalDefaults:
+  Database: &Database {^Parameter: {Name: Database, Default: unused}}
+  DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
+  Repeat: &Repeat {^Parameter: {Name: Repeat, Default: -1}}
+  Collection: &Collection Collection0
+  MaxPhases: &MaxPhases 20
+  # These variables are reused in queries.
+  QueryFields: &QueryFields [
+    "a", 
+    "b", 
+    "c", 
+    "d", 
+    "f", 
+    "g", 
+    "h", 
+    "i",
+    "e.a", 
+    "e.b", 
+    "e.c", 
+    "e.d", 
+    "e.f", 
+    "e.g", 
+    "e.h", 
+    "e.i",
+    "nonexistent", 
+    "nullVal"
+  ]
+  QueryOps: &QueryOps ["$eq", "$lt", "$lte", "$gt", "$gte"]
+  CNFQuery: &CNFQuery 
+    {$and:
+      {^Array: {
+        of: {
+          $or: {^Array: {
+            of: {^Object: {
+              withNEntries: 1,
+              havingKeys: {^Choose: {from: *QueryFields}},
+              andValues: {^Object: {
+                withNEntries: 1,
+                havingKeys: {^Choose: {from: *QueryOps}},
+                andValues: {^RandomInt: {min: 0, max: 10000}},
+                duplicatedKeys: insert
+              }},
+              duplicatedKeys: insert
+            }},
+            number: {^RandomInt: {min: 1, max: 10}}
+          }}
+        },
+        number: {^Parameter: {Name: Width, Default: 1}}
+      }}
+    }
+  DNFQuery: &DNFQuery 
+    {$or:
+      {^Array: {
+        of: {
+          $and: {^Array: {
+            of: {^Object: {
+              withNEntries: 1,
+              havingKeys: {^Choose: {from: *QueryFields}},
+              andValues: {^Object: {
+                withNEntries: 1,
+                havingKeys: {^Choose: {from: *QueryOps}},
+                andValues: {^RandomInt: {min: 0, max: 10000}},
+                duplicatedKeys: insert
+              }},
+              duplicatedKeys: insert
+            }},
+            number: {^RandomInt: {min: 1, max: 10}}
+          }}
+        },
+        number: {^Parameter: {Name: Width, Default: 1}}
+      }}
+    }
+
+ActorTemplates:
+- TemplateName: FindQueryTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {^Parameter: {Name: "Filter", Default: {invalid: "invalid"}}}
+
+- TemplateName: CNFTemplate
+  Config:
+    ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: Name, Default: unused}}
+        ActivePhase: {^Parameter: {Name: ActivePhase, Default: -1}}
+        Filter: *CNFQuery
+
+- TemplateName: DNFTemplate
+  Config:
+    ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: Name, Default: unused}}
+        ActivePhase: {^Parameter: {Name: ActivePhase, Default: -1}}
+        Filter: *DNFQuery
+
+- TemplateName: ElemMatchCNFTemplate
+  Config:
+    ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: Name, Default: unused}}
+        ActivePhase: {^Parameter: {Name: ActivePhase, Default: -1}}
+        Filter:
+          {e: {$elemMatch: *CNFQuery}}
+
+- TemplateName: ElemMatchDNFTemplate
+  Config:
+    ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: Name, Default: unused}}
+        ActivePhase: {^Parameter: {Name: ActivePhase, Default: -1}}
+        Filter:
+          {e: {$elemMatch: *DNFQuery}}
+
+Actors:
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: *DocumentCount
+        BatchSize: 1000
+        Document:
+          a: {^RandomInt: {min: 0, max: 10}}
+          b: {^Inc: {start: 11, step: 2}}
+          c: {^RandomInt: {min: 0, max: 1000}}
+          d: {^RandomInt: {min: 0, max: 1000}}
+          e: 
+            a: {^RandomInt: {min: 0, max: 10}}
+            b: {^Inc: {start: 11, step: 2}}
+            c: {^RandomInt: {min: 0, max: 1000}}
+            d: {^RandomInt: {min: 0, max: 100}}
+            e: {
+              a: {^RandomInt: {min: 0, max: 10}},
+              b: {^Inc: {start: 11, step: 2}},
+              c: {^RandomInt: {min: 0, max: 1000}},
+              d: {^RandomInt: {min: 0, max: 100}},
+              e: {a: {^RandomInt: {min: 0, max: 1000}}, b: {^Inc: {start: 11, step: 2}}},
+              f: [{^RandomInt: {min: 0, max: 10}}, {^RandomInt: {min: 0, max: 10}}, {^RandomInt: {min: 0, max: 10}}],
+              g: {^RandomInt: {min: 0, max: 10}},
+              h: {^RandomInt: {min: 0, max: 1000}},
+              i: {^RandomInt: {min: 0, max: 10000}},
+            }
+            f: [{^RandomInt: {min: 0, max: 10}}, {^RandomInt: {min: 0, max: 10}}, {^RandomInt: {min: 0, max: 10}}]
+            g: {^RandomInt: {min: 0, max: 10}}
+            h: {^RandomInt: {min: 0, max: 1000}}
+            i: {^RandomInt: {min: 0, max: 10000}}
+          f: [{^RandomInt: {min: 0, max: 10}}, {^RandomInt: {min: 0, max: 10}}, {^RandomInt: {min: 0, max: 10}}]
+          g: {^RandomInt: {min: 0, max: 10}}
+          h: {^RandomInt: {min: 0, max: 1000}}
+          i: {^RandomInt: {min: 0, max: 10000}}
+          nullVal: null
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+
+- ActorFromTemplate:
+    TemplateName: CNFTemplate
+    TemplateParameters:
+      Name: CNF10Conjuncts
+      ActivePhase: 3
+      Width: 10
+
+- ActorFromTemplate:
+    TemplateName: CNFTemplate
+    TemplateParameters:
+      Name: CNF100Conjuncts
+      ActivePhase: 4
+      Width: 100
+
+- ActorFromTemplate:
+    TemplateName: CNFTemplate
+    TemplateParameters:
+      Name: CNF1KConjuncts
+      ActivePhase: 5
+      Width: 1000
+
+- ActorFromTemplate:
+    TemplateName: DNFTemplate
+    TemplateParameters:
+      Name: DNF10Disjuncts
+      ActivePhase: 6
+      Width: 10
+
+- ActorFromTemplate:
+    TemplateName: DNFTemplate
+    TemplateParameters:
+      Name: DNF100Disjuncts
+      ActivePhase: 7
+      Width: 100
+
+- ActorFromTemplate:
+    TemplateName: DNFTemplate
+    TemplateParameters:
+      Name: DNF1KDisjuncts
+      ActivePhase: 8
+      Width: 1000
+
+- ActorFromTemplate:
+    TemplateName: ElemMatchCNFTemplate
+    TemplateParameters:
+      Name: ElemMatchCNF10Conjuncts
+      ActivePhase: 9
+      Width: 10
+
+- ActorFromTemplate:
+    TemplateName: ElemMatchCNFTemplate
+    TemplateParameters:
+      Name: ElemMatchCNF100Conjuncts
+      ActivePhase: 10
+      Width: 100
+
+- ActorFromTemplate:
+    TemplateName: ElemMatchCNFTemplate
+    TemplateParameters:
+      Name: ElemMatchCNF1KConjuncts
+      ActivePhase: 11
+      Width: 1000
+
+- ActorFromTemplate:
+    TemplateName: ElemMatchDNFTemplate
+    TemplateParameters:
+      Name: ElemMatchDNF10Disjuncts
+      ActivePhase: 12
+      Width: 10
+
+- ActorFromTemplate:
+    TemplateName: ElemMatchDNFTemplate
+    TemplateParameters:
+      Name: ElemMatchDNF100Disjuncts
+      ActivePhase: 13
+      Width: 100
+
+- ActorFromTemplate:
+    TemplateName: ElemMatchDNFTemplate
+    TemplateParameters:
+      Name: ElemMatchDNF1KDisjuncts
+      ActivePhase: 14
+      Width: 1000
+
+# TODO: Add mixed, deeply nested queries.
