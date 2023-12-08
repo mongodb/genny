@@ -184,4 +184,3 @@ CreateWildCardIndexesCmd:
     OperationCommand:
       dropIndexes: Collection0
       index: wildCardIndex
-
