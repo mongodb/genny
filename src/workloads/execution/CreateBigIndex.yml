@@ -139,7 +139,7 @@ Actors:
   - *Nop
   - *Nop
 
-# Phases 4+: Build indexes on each field.
+# Phases 5+: Build indexes on each field.
 - Name: IndexCollection
   Type: RunCommand
   Threads: 1
