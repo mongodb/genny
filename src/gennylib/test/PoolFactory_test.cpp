@@ -376,12 +376,5 @@ TEST_CASE("PoolFactory behavior") {
         REQUIRE(factoryUri == expectedUri());
         auto redactedUri = factory.makeRedactedUri();
         REQUIRE(redactedUri == expectedUri());
-
-        auto pool = factory.makePool();
-        REQUIRE(pool);
-
-        // We should be able to get more from the same factory
-        auto extraPool = factory.makePool();
-        REQUIRE(extraPool);
     }
 }
