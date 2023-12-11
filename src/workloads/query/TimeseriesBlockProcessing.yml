@@ -16,7 +16,7 @@ GlobalDefaults:
   DocumentCount: &documentCount 1e7
   Repeat: &repeat 20
   Threads: &threads 1
-  MaxPhases: &maxPhases 10
+  MaxPhases: &maxPhases 12
   MetaCount: &metaCount 10
 
 Clients:
@@ -209,7 +209,7 @@ Actors:
     Threads: *threads
     Phases:
       OnlyActiveInPhases:
-        Active: [6]
+        Active: [7]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -241,7 +241,7 @@ Actors:
     Threads: *threads
     Phases:
       OnlyActiveInPhases:
-        Active: [7]
+        Active: [8]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -272,7 +272,7 @@ Actors:
     Threads: *threads
     Phases:
       OnlyActiveInPhases:
-        Active: [8]
+        Active: [9]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -306,7 +306,7 @@ Actors:
     Threads: *threads
     Phases:
       OnlyActiveInPhases:
-        Active: [9]
+        Active: [10]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -344,7 +344,7 @@ Actors:
     Threads: *threads
     Phases:
       OnlyActiveInPhases:
-        Active: [10]
+        Active: [11]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -369,6 +369,38 @@ Actors:
                         },
                     },
                     { $sort: { "_id": 1 } },
+                    { $count: "count" },
+                  ]
+
+  - Name: AndOfOrFiltersOnNestedFields
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [12]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPAndOrMatchOnNestedFields
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              {$or: [{ "obj.measurement1": {$lt: 10} }, { "obj.measurement1": {$ne: 7} }]},
+                              {$or: [{ "obj.measurement2": {$gt: 89.9} }, { "obj.measurement2": {$lte: 15.0} }]},
+                              {$or: [{ "obj.measurement3": {$gte: 909.9} }, { "obj.measurement3": {$eq: 270.8} }]},
+                            ],
+                        },
+                    },
                     { $count: "count" },
                   ]
 
