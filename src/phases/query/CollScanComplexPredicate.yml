@@ -4,8 +4,6 @@ Description: |
   This workload tests the performance of collection scan queries with complex predicates of
   various shapes (CNF, DNF, and mixed predicates with different levels of nestedness).
 
-RandomSeed: 123123123
-
 GlobalDefaults:
   Database: &Database {^Parameter: {Name: Database, Default: unused}}
   DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
