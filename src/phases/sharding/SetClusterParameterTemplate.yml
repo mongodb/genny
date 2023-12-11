@@ -1,0 +1,20 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: |
+  Template for setting a cluster parameter.
+
+SetClusterParameter:
+    Name: SetClusterParameter
+    Type: AdminCommand
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "Active", Default: []}}
+        NopInPhasesUpTo: {^Parameter: {Name: "MaxPhases", Default: -1}}
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          Operations:
+          - OperationMetricsName: SetClusterParameter
+            OperationName: AdminCommand
+            OperationCommand:
+              setClusterParameter: {^Parameter: {Name: "ClusterParameter", Default: {}}}

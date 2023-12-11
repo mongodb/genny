@@ -1,0 +1,21 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: |
+  Template for sharding a collection.
+
+ShardCollection:
+    Name: ShardCollection
+    Type: AdminCommand
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "Active", Default: []}}
+        NopInPhasesUpTo: {^Parameter: {Name: "MaxPhases", Default: -1}}
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          Operations:
+          - OperationMetricsName: ShardCollection
+            OperationName: AdminCommand
+            OperationCommand:
+              shardCollection: {^Parameter: {Name: "Namespace", Default: ""}}
+              key: {^Parameter: {Name: "ShardKey", Default: {}}}
