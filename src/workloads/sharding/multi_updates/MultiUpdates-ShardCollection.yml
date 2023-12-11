@@ -1,0 +1,84 @@
+# WARNING: This is a generated file. Do not modify. See templates directory for more information.
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: |
+  This workload does the following:
+    Create a sharded collection with a hashed shard key.
+    Insert 50k documents of around 20kb each.
+    Run updateMany as many times as possible for 5 minutes.
+    Each updateMany command will update only a single document.
+    The PauseMigrationsDuringMultiUpdates cluster parameter is disabled.
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+
+  Database: &Database test
+  Collection: &Collection coll
+  Namespace: &Namespace test.coll
+
+  ApproxDocumentSize: &ApproxDocumentSize 20_000
+  DocumentCount: &DocumentCount 50_000
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 1000
+
+Actors:
+- Name: Initialize
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *Database
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: *Namespace
+        key: {_id: hashed}
+  - *Nop
+  - *Nop
+
+- Name: LoadInitialData
+  Type: MonotonicSingleLoader
+  Threads: 100
+  Phases:
+  - *Nop
+  - Repeat: 1
+    BatchSize: 1000
+    DocumentCount: *DocumentCount
+    Database: *Database
+    Collection: *Collection
+    Document:
+      counter: 0
+      padding: {^FastRandomString: {length: *ApproxDocumentSize}}
+  - *Nop
+
+- Name: DocumentUpdater
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - Duration: 5 minutes
+    MetricsName: Update
+    Collection: *Collection
+    Operations:
+    - OperationName: updateMany
+      OperationCommand:
+        Filter: { _id: 0 }
+        Update: {$inc: {counter: 1}}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-lite
+      - shard-lite-all-feature-flags

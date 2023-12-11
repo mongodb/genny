@@ -1,0 +1,8 @@
+8c8
+<     Each updateMany command will update only a single document.
+---
+>     Each updateMany command will update all of the 50k documents.
+69c69
+<         Filter: { _id: 0 }
+---
+>         Filter: {}

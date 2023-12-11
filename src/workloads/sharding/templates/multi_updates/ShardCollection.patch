@@ -1,0 +1,10 @@
+5c5
+<     Create an unsharded collection.
+---
+>     Create a sharded collection with a hashed shard key.
+37a38,42
+>     - OperationMetricsName: ShardCollection
+>       OperationName: AdminCommand
+>       OperationCommand:
+>         shardCollection: *Namespace
+>         key: {_id: hashed}

@@ -1,0 +1,14 @@
+9c9
+<     The PauseMigrationsDuringMultiUpdates cluster parameter is disabled.
+---
+>     The PauseMigrationsDuringMultiUpdates cluster parameter is enabled.
+37a38,41
+>     - OperationMetricsName: SetClusterParameter
+>       OperationName: AdminCommand
+>       OperationCommand:
+>         setClusterParameter: { pauseMigrationsDuringMultiUpdates: { enabled: true } }
+76,77c80
+<       - shard
+<       - shard-lite
+---
+>       # TODO SERVER-73555: Run on all variants in the base workload, but only in branches where the feature flag is enabled.
