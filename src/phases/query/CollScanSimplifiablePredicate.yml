@@ -30,6 +30,7 @@ ActorTemplates:
             OperationCommand:
               Filter: {^Parameter: {Name: "Filter", Default: {invalid: "invalid"}}}
 
+# Test wide $and predicates with inequality terms that can be simplified.
 - TemplateName: SimplifiableConjunction
   Config:
     ActorFromTemplate:
@@ -49,6 +50,7 @@ ActorTemplates:
             }}
           }
 
+# Test wide $and of $or predicates with comparisons that can be simplified.
 - TemplateName: SimplifiableCNF
   Config:
     ActorFromTemplate:
@@ -74,6 +76,7 @@ ActorTemplates:
             }}
           }
 
+# Test wide $or of $and predicates with comparisons that can be simplified.
 - TemplateName: SimplifiableDNF
   Config:
     ActorFromTemplate:
@@ -99,6 +102,7 @@ ActorTemplates:
             }}
           }
 
+# Test $elemMatch with wide $and predicates with inequality terms that can be simplified.
 - TemplateName: SimplifiableElemMatchConjunction
   Config:
     ActorFromTemplate:
@@ -118,6 +122,7 @@ ActorTemplates:
             }}
           }}}
 
+# Test $elemMatch with wide $and of $or predicates with comparisons that can be simplified.
 - TemplateName: SimplifiableElemMatchCNF
   Config:
     ActorFromTemplate:
@@ -144,6 +149,7 @@ ActorTemplates:
             }}
           }}}
 
+# Test $elemMatch with wide $or of $and predicates with comparisons that can be simplified.
 - TemplateName: SimplifiableElemMatchDNF
   Config:
     ActorFromTemplate:
@@ -201,8 +207,7 @@ Actors:
         DocumentCount: *DocumentCount
         BatchSize: 1000
         Document:
-          # None of these match any of the filters in this workload, forcing each query to scan 
-          # the entire collection.
+          # None of these match any of the filters in this workload.
           a: 1
           arr: [0, 1]
           f1: [1]
