@@ -13,7 +13,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: 1e5}}
   Threads: &Threads 1
   MaxPhases: &MaxPhases 15
-  Duration: &Duration 2 seconds
+  Duration: &Duration {^Parameter: {Name: Duration, Default: 2 seconds}}
   QueryStringIn: &QueryStringIn [ "HrHCEtBAGnv",
                                   "pCqgFttJBou",
                                   "tjOnAuHAOpi",
