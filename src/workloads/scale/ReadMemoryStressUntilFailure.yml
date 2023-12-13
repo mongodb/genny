@@ -213,6 +213,13 @@ Actors:
           Command: "mongo"
           MetricsName: ScriptMetrics
           Script: |
+            const minutes = 4;
+            const startTime = new Date().getTime();
+            const targetEndTime = startTime + (1000 * 60 * minutes);
+            function shouldStopTest() {
+              return (new Date().getTime()) > targetEndTime;
+            }
+
             function shouldShedOps() {
               let residentMemMb = db.serverStatus().mem.resident;
               //jsTestLog("Resident " + residentMemMb);
@@ -274,12 +281,10 @@ Actors:
               }
             }
 
-            while(true) {
-              if(!shouldShedOps()) {
-                sleep(1);
-                continue;
+            while(!shouldStopTest()) {
+              if(shouldShedOps()) {
+                loadShedding();
               }
-              loadShedding();
             }
 
 
