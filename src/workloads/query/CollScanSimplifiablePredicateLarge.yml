@@ -1,0 +1,27 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload tests the performance of collection scan queries with complex predicates
+  that can be simplified by the optimizer against a large collection (1M documents).
+
+LoadConfig:
+  Path: ../../phases/query/CollScanSimplifiablePredicate.yml
+  Parameters:
+    Database: CollScanWithSimplifiablePredicateLarge
+    DocumentCount: 1e6
+    Repeat: 10
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-heuristic-bonsai
+      - standalone-sampling-bonsai
+      - standalone-sbe
+      - standalone-query-stats
+    branch_name:
+      $gte:
+        v7.3
