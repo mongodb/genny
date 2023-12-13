@@ -14,8 +14,8 @@ Keywords:
 LoadConfig:
   Path: ../../phases/query/MatchFilters.yml
   Parameters:
-    Database: MatchFiltersLarge
-    DocumentCount: 1e6
+    Database: MatchFiltersMedium
+    DocumentCount: 1e4
 
 AutoRun:
 - When:

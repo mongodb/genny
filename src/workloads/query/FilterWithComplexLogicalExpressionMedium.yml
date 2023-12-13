@@ -29,8 +29,8 @@ Keywords:
 LoadConfig:
   Path: ../../phases/query/FilterWithComplexLogicalExpression.yml
   Parameters:
-    Database: FilterWithComplexLogicalExpressionLarge
-    DocumentCount: 1e6
+    Database: FilterWithComplexLogicalExpressionMedium
+    DocumentCount: 1e4
 
 AutoRun:
 - When:
