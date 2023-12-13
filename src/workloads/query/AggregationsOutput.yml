@@ -1,7 +1,6 @@
 # Sharded collection -> Distributed chunk processing
 # coll -> $out (tests raw output)
 # coll -> coll updated with a new field (counter that starts at 0) not susceptible to halloween since it doesn't change recordid
-# coll -> coll with different shard key updated with a new field (counter that starts at 0) not susceptible to halloween since it doesn't change recordid
 # coll -> newColl with a new field (counter that starts at 0) non-merging output to new collection
 #         sharded and non-sharded versions
 
@@ -38,7 +37,7 @@ GlobalDefaults:
   Sharded16KNSS: &Sharded16KNSS test.Sharded16K
   NumDocs: &NumDocs 10_000
   Database: &Database test
-  NumPhases: &NumPhases 100
+  NumPhases: &NumPhases 80
   NumCombinations: &NumCombinations 18 # 3 threads * 3 data sizes * 2 collection source types
 
 Clients:
@@ -120,12 +119,12 @@ ActorTemplates:
       Database: *Database
       Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
       Operations:
-      - OperationMetricsName: {^PreprocessorFormatString: {format: "%s_newFieldWithShardKeyChange_%d", withArgs: [{^Parameter: {Name: "SrcCollection", Default: Collection0}}, {^Parameter: {Name: "Threads", Default: 1}}]}}
+      - OperationMetricsName: {^PreprocessorFormatString: {format: "%s_mergeToNewCollUnsharded_%d", withArgs: [{^Parameter: {Name: "SrcCollection", Default: Collection0}}, {^Parameter: {Name: "Threads", Default: 1}}]}}
         OperationName: aggregate
         OperationCommand:
           Pipeline: [
-            {$addFields: {counter: {$add: [1, '$counter']}, shardKey: {$add: [1, '$shardKey']}}},
-            {$merge: {into: {^Parameter: {Name: "SrcCollection", Default: Collection0}}}}
+            {$addFields: {counter: {$add: [1, '$counter']}}},
+            {$merge: {into: {^FormatString: {format: "%d", withArgs: [{^ActorId: {}}]}}}}
           ]
     - Phase: {^PreprocessorFormatString: {format: "%d..%d", withArgs: [
         {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 2 + 2", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}},
@@ -136,31 +135,15 @@ ActorTemplates:
       Database: *Database
       Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
       Operations:
-      - OperationMetricsName: {^PreprocessorFormatString: {format: "%s_mergeToNewCollUnsharded_%d", withArgs: [{^Parameter: {Name: "SrcCollection", Default: Collection0}}, {^Parameter: {Name: "Threads", Default: 1}}]}}
-        OperationName: aggregate
-        OperationCommand:
-          Pipeline: [
-            {$addFields: {counter: {$add: [1, '$counter']}, shardKey: {$add: [1, '$shardKey']}}},
-            {$merge: {into: {^FormatString: {format: "%d", withArgs: [{^ActorId: {}}]}}}}
-          ]
-    - Phase: {^PreprocessorFormatString: {format: "%d..%d", withArgs: [
-        {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 3 + 3", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}},
-        {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 4 + 2", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}}
-      ]}}
-      Nop: true
-    - Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
-      Database: *Database
-      Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
-      Operations:
       - OperationMetricsName: {^PreprocessorFormatString: {format: "%s_mergeToNewCollSharded_%d", withArgs: [{^Parameter: {Name: "SrcCollection", Default: Collection0}}, {^Parameter: {Name: "Threads", Default: 1}}]}}
         OperationName: aggregate
         OperationCommand:
           Pipeline: [
-            {$addFields: {counter: {$add: [1, '$counter']}, shardKey: {$add: [1, '$shardKey']}}},
+            {$addFields: {counter: {$add: [1, '$counter']}}},
             {$merge: {into: {^Parameter: {Name: ShardedCollOutput, Default: *ShardedCollOutput1}}}}
           ]
     - Phase: {^PreprocessorFormatString: {format: "%d..%d", withArgs: [
-        {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 4 + 4", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}},
+        {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 3 + 3", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}},
         *NumPhases
       ]}}
       Nop: true
