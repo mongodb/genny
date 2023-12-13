@@ -501,3 +501,11 @@ Actors:
       StartsAt: 19
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput18
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-lite
+      - shard-lite-all-feature-flags
