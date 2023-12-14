@@ -56,7 +56,25 @@ Documents:
     shardKey: {^RandomInt: {min: 0, max: 16}}
     text: {^FastRandomString: {length: 16384}}
 
-ShardedCollections:
+OutputCollections:
+  - &UnshardedCollOutput1 UnshardedCollOutput1
+  - &UnshardedCollOutput2 UnshardedCollOutput2
+  - &UnshardedCollOutput3 UnshardedCollOutput3
+  - &UnshardedCollOutput4 UnshardedCollOutput4
+  - &UnshardedCollOutput5 UnshardedCollOutput5
+  - &UnshardedCollOutput6 UnshardedCollOutput6
+  - &UnshardedCollOutput7 UnshardedCollOutput7
+  - &UnshardedCollOutput8 UnshardedCollOutput8
+  - &UnshardedCollOutput9 UnshardedCollOutput9
+  - &UnshardedCollOutput10 UnshardedCollOutput10
+  - &UnshardedCollOutput11 UnshardedCollOutput11
+  - &UnshardedCollOutput12 UnshardedCollOutput12
+  - &UnshardedCollOutput13 UnshardedCollOutput13
+  - &UnshardedCollOutput14 UnshardedCollOutput14
+  - &UnshardedCollOutput15 UnshardedCollOutput15
+  - &UnshardedCollOutput16 UnshardedCollOutput16
+  - &UnshardedCollOutput17 UnshardedCollOutput17
+  - &UnshardedCollOutput18 UnshardedCollOutput18
   - &ShardedCollOutput1 ShardedCollOutput1
   - &ShardedCollOutput2 ShardedCollOutput2
   - &ShardedCollOutput3 ShardedCollOutput3
@@ -124,24 +142,26 @@ ActorTemplates:
         OperationCommand:
           Pipeline: [
             {$addFields: {counter: {$add: [1, '$counter']}}},
-            {$merge: {into: {^FormatString: {format: "%d", withArgs: [{^ActorId: {}}]}}}}
+            {$merge: {into: {^Parameter: {Name: UnshardedCollOutput, Default: *UnshardedCollOutput1}}}}
           ]
     - Phase: {^PreprocessorFormatString: {format: "%d..%d", withArgs: [
         {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 2 + 2", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}},
         {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 3 + 1", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}}
       ]}}
       Nop: true
-    - Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
-      Database: *Database
-      Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
-      Operations:
-      - OperationMetricsName: {^PreprocessorFormatString: {format: "%s_mergeToNewCollSharded_%d", withArgs: [{^Parameter: {Name: "SrcCollection", Default: Collection0}}, {^Parameter: {Name: "Threads", Default: 1}}]}}
-        OperationName: aggregate
-        OperationCommand:
-          Pipeline: [
-            {$addFields: {counter: {$add: [1, '$counter']}}},
-            {$merge: {into: {^Parameter: {Name: ShardedCollOutput, Default: *ShardedCollOutput1}}}}
-          ]
+    # TODO SERVER-84185: Enable this and remove the Nop that follows when sharded output collections are supported without DuplicateKey errors.
+    # - Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+    #   Database: *Database
+    #   Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
+    #   Operations:
+    #   - OperationMetricsName: {^PreprocessorFormatString: {format: "%s_mergeToNewCollSharded_%d", withArgs: [{^Parameter: {Name: "SrcCollection", Default: Collection0}}, {^Parameter: {Name: "Threads", Default: 1}}]}}
+    #     OperationName: aggregate
+    #     OperationCommand:
+    #       Pipeline: [
+    #         {$addFields: {counter: {$add: [1, '$counter']}}},
+    #         {$merge: {into: {^Parameter: {Name: ShardedCollOutput, Default: *ShardedCollOutput1}}}}
+    #       ]
+    - Nop: true
     - Phase: {^PreprocessorFormatString: {format: "%d..%d", withArgs: [
         {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 3 + 3", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}},
         *NumPhases
@@ -346,6 +366,7 @@ Actors:
       StartsAt: 2
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput1
+      UnshardedCollOutput: *UnshardedCollOutput1
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -354,6 +375,7 @@ Actors:
       StartsAt: 3
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput2
+      UnshardedCollOutput: *UnshardedCollOutput2
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -362,6 +384,7 @@ Actors:
       StartsAt: 4
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput3
+      UnshardedCollOutput: *UnshardedCollOutput3
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -370,6 +393,7 @@ Actors:
       StartsAt: 5
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput4
+      UnshardedCollOutput: *UnshardedCollOutput4
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -378,6 +402,7 @@ Actors:
       StartsAt: 6
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput5
+      UnshardedCollOutput: *UnshardedCollOutput5
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -386,6 +411,7 @@ Actors:
       StartsAt: 7
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput6
+      UnshardedCollOutput: *UnshardedCollOutput6
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -394,6 +420,7 @@ Actors:
       StartsAt: 8
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput7
+      UnshardedCollOutput: *UnshardedCollOutput7
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -402,6 +429,7 @@ Actors:
       StartsAt: 9
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput8
+      UnshardedCollOutput: *UnshardedCollOutput8
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -410,6 +438,7 @@ Actors:
       StartsAt: 10
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput9
+      UnshardedCollOutput: *UnshardedCollOutput9
 
 # Sharded colls
 - ActorFromTemplate:
@@ -420,6 +449,7 @@ Actors:
       StartsAt: 11
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput10
+      UnshardedCollOutput: *UnshardedCollOutput10
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -428,6 +458,7 @@ Actors:
       StartsAt: 12
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput11
+      UnshardedCollOutput: *UnshardedCollOutput11
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -436,6 +467,7 @@ Actors:
       StartsAt: 13
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput12
+      UnshardedCollOutput: *UnshardedCollOutput12
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -444,6 +476,7 @@ Actors:
       StartsAt: 14
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput13
+      UnshardedCollOutput: *UnshardedCollOutput13
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -452,6 +485,7 @@ Actors:
       StartsAt: 15
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput14
+      UnshardedCollOutput: *UnshardedCollOutput14
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -460,6 +494,7 @@ Actors:
       StartsAt: 16
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput15
+      UnshardedCollOutput: *UnshardedCollOutput15
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -468,6 +503,7 @@ Actors:
       StartsAt: 17
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput16
+      UnshardedCollOutput: *UnshardedCollOutput16
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -476,6 +512,7 @@ Actors:
       StartsAt: 18
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput17
+      UnshardedCollOutput: *UnshardedCollOutput17
 - ActorFromTemplate:
     TemplateName: AggregationActor
     TemplateParameters:
@@ -484,6 +521,7 @@ Actors:
       StartsAt: 19
       NumCombinations: *NumCombinations
       ShardedCollOutput: *ShardedCollOutput18
+      UnshardedCollOutput: *UnshardedCollOutput18
 
 AutoRun:
 - When:
