@@ -104,7 +104,7 @@ ActorTemplates:
     Phases:
     - Phase: {^PreprocessorFormatString: {format: "0..%d", withArgs: [{^Parameter: {Name: StartsAt, Default: 2}}]}}
       Nop: true
-    - Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+    - Duration: 20 seconds
       Database: *Database
       Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
       Operations:
@@ -117,7 +117,7 @@ ActorTemplates:
         {^NumExpr: {withExpression: "startsAt + 2 + numCombinations - 1", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}}
       ]}}
       Nop: true
-    - Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+    - Duration: 20 seconds
       Database: *Database
       Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
       Operations:
@@ -133,7 +133,7 @@ ActorTemplates:
         {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 2 + 0", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}}
       ]}}
       Nop: true
-    - Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+    - Duration: 20 seconds
       Database: *Database
       Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
       Operations:
@@ -150,7 +150,7 @@ ActorTemplates:
       ]}}
       Nop: true
     # TODO SERVER-84185: Enable this and remove the Nop that follows when sharded output collections are supported without DuplicateKey errors.
-    # - Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+    # - Duration: 20 seconds
     #   Database: *Database
     #   Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
     #   Operations:
