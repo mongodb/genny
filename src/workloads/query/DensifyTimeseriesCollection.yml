@@ -6,7 +6,7 @@ Description: |
 
 GlobalDefaults:
   dbname: &db test
-  batchSize: &batchSize 30000
+  limit: &limit 30000
   fieldName: &field "numeric"
   index: &index
     keys: {numeric: 1}
@@ -84,7 +84,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 100000
-    BatchSize: *batchSize
+    BatchSize: *limit
     Document:
       partitionKey: {^RandomInt: {min: 1, max: 100}}
       timestamp: {^IncDate: {start: "2021-01-01T00:00:00.000", step: 400}}
@@ -110,7 +110,7 @@ Actors:
   - *Nop
 
 - Name: DensifyFullSmallStep
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -119,12 +119,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: FullSmallStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -132,8 +132,11 @@ Actors:
               step: *smallStep,
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
   - *Nop
   - *Nop
   - *Nop
@@ -148,7 +151,7 @@ Actors:
   - *Nop
 
 - Name: DensifyFullLargeStep
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -159,12 +162,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: FullLargeStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -172,8 +175,11 @@ Actors:
               step: *smallStep,
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
   - *Nop
   - *Nop
   - *Nop
@@ -186,7 +192,7 @@ Actors:
   - *Nop
 
 - Name: DensifyExplicitRangeSmallStep
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -199,12 +205,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: ExplicitRangeSmallStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -212,8 +218,11 @@ Actors:
               bounds: *bounds,
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
   - *Nop
   - *Nop
   - *Nop
@@ -224,7 +233,7 @@ Actors:
   - *Nop
 
 - Name: DensifyExplicitRangeLargeStep
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -239,12 +248,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: ExplicitRangeLargeStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -252,8 +261,11 @@ Actors:
               bounds: *bounds
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
   - *Nop
   - *Nop
   - *Nop
@@ -262,7 +274,7 @@ Actors:
   - *Nop
 
 - Name: DensifyExplicitRangeByPartitionSmallStep
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -279,12 +291,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: ExplicitRangeByPartitionSmallStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -293,15 +305,18 @@ Actors:
               bounds: *bounds
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
   - *Nop
   - *Nop
   - *Nop
   - *Nop
 
 - Name: DensifyExplicitRangeByPartitionLargeStep
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -320,12 +335,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: DensifyTimestamp
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -333,13 +348,16 @@ Actors:
               bounds: "full"
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
   - *Nop
   - *Nop
 
 - Name: DensifyTimestamp
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -360,12 +378,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: DensifyTimestamp
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: "timestamp",
             range: {
@@ -374,8 +392,11 @@ Actors:
               bounds: "full"
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
 
 AutoRun:
 - When:

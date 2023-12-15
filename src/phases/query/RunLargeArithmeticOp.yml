@@ -8,12 +8,12 @@ Description: |
 Multiply:
   Repeat: 10
   Database: {^Parameter: {Name: "Database", Default: "test"}}
+  Collection: {^Parameter: {Name: "Collection", Default: "Collection0"}}
   Operations:
   - OperationMetricsName: {^Parameter: {Name: "Name", Default: "RunMultiply"}}
-    OperationName: RunCommand
+    OperationName: aggregate
     OperationCommand:
-      aggregate: {^Parameter: {Name: "Collection", Default: "Collection0"}}
-      pipeline: [
+      Pipeline: [
         {
           $group: {
             _id: {
@@ -22,4 +22,5 @@ Multiply:
           }
         }
       ]
-      cursor: {batchSize: {^Parameter: {Name: "BatchSize", Default: 3000}}}
+      Options: 
+        BatchSize:  {^Parameter: {Name: "BatchSize", Default: 3000}}

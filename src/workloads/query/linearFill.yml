@@ -23,7 +23,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 600
-    BatchSize: &batchSize 100
+    BatchSize: &limit 100
     Document:
       part1: {^Choose: {from: [1, 2, 3, 4]}}
       part2: {^Choose: {from: [1, 2, 3, 4]}}
@@ -76,19 +76,19 @@ Actors:
   - Nop: true
 
 - Name: LinearFillWithoutPartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestSingleOutputWithoutPartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $setWindowFields: {
             sortBy: {sortField: 1},
             output: {
@@ -96,8 +96,11 @@ Actors:
                 $linearFill: "$numeric"}
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
   - Nop: true
   - Nop: true
   - Nop: true
@@ -110,7 +113,7 @@ Actors:
   - Nop: true
 
 - Name: LinearFillMultipleOutputWithoutPartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -119,12 +122,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestMultipleOutputWithoutPartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $setWindowFields: {
             sortBy: {sortDateField: 1},
             output: {
@@ -134,8 +137,11 @@ Actors:
                 $linearFill: "$double"},
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
   - Nop: true
   - Nop: true
   - Nop: true
@@ -146,7 +152,7 @@ Actors:
   - Nop: true
 
 - Name: LinearFillWithSinglePartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -157,12 +163,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestSingleOutputWithSinglePartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $setWindowFields: {
             sortBy: {sortField: 1},
             partitionBy: "$part1",
@@ -171,9 +177,12 @@ Actors:
                 $linearFill: "$numeric"}
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+        Options: 
+          BatchSize:  *limit
+          AllowDiskUse: true
   - Nop: true
   - Nop: true
   - Nop: true
@@ -182,7 +191,7 @@ Actors:
   - Nop: true
 
 - Name: LinearFillMultipleOutputWithSinglePartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -195,12 +204,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestMultipleOutputWithSinglePartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $setWindowFields: {
             sortBy: {sortDateField: 1},
             partitionBy: "$part1",
@@ -211,16 +220,19 @@ Actors:
                 $linearFill: "$integer"},
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+        Options: 
+          BatchSize:  *limit
+          AllowDiskUse: true
   - Nop: true
   - Nop: true
   - Nop: true
   - Nop: true
 
 - Name: LinearFillWithMultiplePartitions
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -235,12 +247,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestSingleOutputWithMultiplePartitions
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $setWindowFields: {
             sortBy: {sortField: 1},
             partitionBy: {part1: "$part1", part2: "$part2"},
@@ -249,14 +261,17 @@ Actors:
                 $linearFill: "$numeric"}
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+        Options: 
+          BatchSize:  *limit
+          AllowDiskUse: true
   - Nop: true
   - Nop: true
 
 - Name: LinearFillMultipleOutputWithMultiplePartitions
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - Nop: true
@@ -273,12 +288,12 @@ Actors:
   - Nop: true
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestMultipleOutputWithMultiplePartitions
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $setWindowFields: {
             sortBy: {sortDateField: 1},
             partitionBy: {part1: "$part1", part2: "$part2"},
@@ -289,9 +304,12 @@ Actors:
                 $linearFill: "$double"},
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+        Options: 
+          BatchSize:  *limit
+          AllowDiskUse: true
 
 AutoRun:
 - When:

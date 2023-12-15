@@ -43,7 +43,7 @@ Description: |
 GlobalDefaults:
   dbname: &db test
   MaxPhases: &MaxPhases 20
-  batchSize: &batchSize 30000
+  limit: &limit 30000
   fieldName: &field "hours"
   unitName: &unit "hour"
   index: &index
@@ -67,7 +67,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 10000
-    BatchSize: *batchSize
+    BatchSize: *limit
     Document:
       partitionKey: {^RandomInt: {min: 1, max: 100}}
       # Test a subset of units that have different characteristics.
@@ -92,19 +92,19 @@ Actors:
   - *Nop
 
 - Name: DensifyHours
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
   - *Nop
   - Repeat: 10
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: FullSmallStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -113,13 +113,15 @@ Actors:
               unit: *unit
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
     - OperationMetricsName: FullLargeStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -128,13 +130,15 @@ Actors:
               unit: *unit
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
     - OperationMetricsName: FullByPartitionSmallStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -144,13 +148,15 @@ Actors:
               unit: *unit
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
     - OperationMetricsName: FullByPartitionLargeStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -160,13 +166,15 @@ Actors:
               unit: *unit
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
     - OperationMetricsName: PartitionedByPartitionSmallStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -176,13 +184,15 @@ Actors:
               step: *smallStep
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
     - OperationMetricsName: PartitionedByPartitionLargeStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -192,13 +202,15 @@ Actors:
               step: *largeStep
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
     - OperationMetricsName: ExplicitRangeSmallStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -207,13 +219,15 @@ Actors:
               bounds: *bounds
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
     - OperationMetricsName: ExplicitRangeLargeStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             range: {
@@ -222,13 +236,15 @@ Actors:
               bounds: *bounds
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
     - OperationMetricsName: ExplicitRangeByPartitionSmallStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -238,13 +254,15 @@ Actors:
               bounds: *bounds
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
     - OperationMetricsName: ExplicitRangeByPartitionLargeStep
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [{
+        Pipeline: [{
           $densify: {
             field: *field,
             partitionByFields: ["partitionKey"],
@@ -254,8 +272,11 @@ Actors:
               bounds: *bounds
             }
           }
+        }, {
+          $limit: *limit
         }]
-        cursor: {batchSize: *batchSize}
+        Options: 
+          BatchSize:  *limit
 
 AutoRun:
 - When:
