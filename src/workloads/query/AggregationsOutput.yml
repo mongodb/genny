@@ -108,7 +108,7 @@ ActorTemplates:
       Database: *Database
       Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
       Operations:
-      - OperationMetricsName: {^PreprocessorFormatString: {format: "%s_out_%d", withArgs: [{^Parameter: {Name: "SrcCollection", Default: Collection0}}, {^Parameter: {Name: "Threads", Default: 1}}]}}
+      - OperationMetricsName: plainOutToUnshardedColl
         OperationName: aggregate
         OperationCommand:
           Pipeline: [{$out: {^FormatString: {format: "%d", withArgs: [{^ActorId: {}}]}}}]
@@ -121,7 +121,7 @@ ActorTemplates:
       Database: *Database
       Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
       Operations:
-      - OperationMetricsName: {^PreprocessorFormatString: {format: "%s_newField_%d", withArgs: [{^Parameter: {Name: "SrcCollection", Default: Collection0}}, {^Parameter: {Name: "Threads", Default: 1}}]}}
+      - OperationMetricsName: selfMergeWithNewField
         OperationName: aggregate
         OperationCommand:
           Pipeline: [
@@ -137,7 +137,7 @@ ActorTemplates:
       Database: *Database
       Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
       Operations:
-      - OperationMetricsName: {^PreprocessorFormatString: {format: "%s_mergeToNewCollUnsharded_%d", withArgs: [{^Parameter: {Name: "SrcCollection", Default: Collection0}}, {^Parameter: {Name: "Threads", Default: 1}}]}}
+      - OperationMetricsName: mergeToNewCollUnsharded
         OperationName: aggregate
         OperationCommand:
           Pipeline: [
@@ -154,7 +154,7 @@ ActorTemplates:
     #   Database: *Database
     #   Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
     #   Operations:
-    #   - OperationMetricsName: {^PreprocessorFormatString: {format: "%s_mergeToNewCollSharded_%d", withArgs: [{^Parameter: {Name: "SrcCollection", Default: Collection0}}, {^Parameter: {Name: "Threads", Default: 1}}]}}
+    #   - OperationMetricsName: mergeToNewCollSharded
     #     OperationName: aggregate
     #     OperationCommand:
     #       Pipeline: [
