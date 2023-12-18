@@ -129,6 +129,7 @@ Actors:
       OperationCommand:
         setParameter: 1
         maxIndexBuildMemoryUsageMegabytes: 100
+        help: true
   - *Nop
   - *Nop
   - *Nop
@@ -209,11 +210,9 @@ AutoRun:
       - replica
       - replica-all-feature-flags
       - shard
-      - shard-lite
       - single-replica
       - standalone
       - standalone-all-feature-flags
     atlas_setup:
       $neq:
       - M30-repl
-
