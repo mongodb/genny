@@ -31,7 +31,7 @@ using namespace genny::testing;
 TEST_CASE_METHOD(
     MongoTestFixture,
     "MonotonicSingleLoader",
-    "[standalone][single_node_replset][three_node_replset][sharded][MonotonicSingleLoader]") {
+    "[single_node_replset][three_node_replset][sharded][MonotonicSingleLoader]") {
 
     NodeSource nodes = NodeSource(R"(
         SchemaVersion: 2018-07-01

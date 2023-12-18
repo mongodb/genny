@@ -1,0 +1,414 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  This workload runs queries on time-series collections that can at least partially run with block
+  processing. At the moment, only queries with a $match prefix are eligible for block processing.
+  The dataset used for this workload has uniformly random data so bucket level filtering is
+  ineffective. This stresses turning buckets into blocks and running block based operations on them.
+
+Keywords:
+  - timeseries
+  - aggregate
+
+GlobalDefaults:
+  Database: &database test
+  Collection: &collection Collection0
+  DocumentCount: &documentCount 1e7
+  Repeat: &repeat 20
+  Threads: &threads 1
+  MaxPhases: &maxPhases 12
+  MetaCount: &metaCount 10
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+Actors:
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *collection
+          Operations:
+            - OperationName: drop
+
+  - Name: CreateTimeseriesCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *database
+          Operation:
+            OperationMetricsName: CreateTimeseriesCollection
+            OperationName: RunCommand
+            OperationCommand:
+              {
+                create: *collection,
+                timeseries:
+                  {
+                    timeField: "time",
+                    metaField: "meta",
+                    granularity: "seconds",
+                  },
+              }
+
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Database: *database
+          CollectionCount: 1
+          DocumentCount: *documentCount
+          BatchSize: 1000
+          Document:
+            time:
+              ^IncDate:
+                start: 2022-01-01
+                # 100ms step ensures full bucket of 1000 documents under the "seconds" granularity.
+                step: 100
+            meta:
+              metaField1:
+                ^Cycle:
+                  ofLength: *metaCount
+                  fromGenerator:
+                    ^RandomString:
+                      length: 6
+                      alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+              metaField2:
+                ^Cycle:
+                  ofLength: *metaCount
+                  fromGenerator:
+                    ^RandomString:
+                      length: 6
+                      alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            obj:
+              {
+                measurement1: { ^RandomInt: { min: 0, max: 10 } },
+                measurement2: { ^RandomDouble: { min: 0, max: 100 } },
+                measurement3: { ^RandomDouble: { min: 0, max: 1000 } },
+              }
+            array1:
+              [
+                { ^RandomDouble: { min: 0, max: 100 } },
+                { ^RandomDouble: { min: 0, max: 100 } },
+              ]
+
+  # Phase 2: Ensure all data is synced to disk.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+
+  # Run queries that will at least partially run with block processing
+  - Name: BasicMatchOnNestedField
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPBasicMatchOnNestedField
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { "obj.measurement2": { $gt: 50 } } },
+                    { $count: "count" },
+                  ]
+
+  - Name: NarrowMatchOnNestedField
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPNarrowMatchOnNestedField
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { "obj.measurement2": { $gte: 45, $lt: 55 } } },
+                    { $count: "count" },
+                  ]
+
+  - Name: AndMatchOnNestedField
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPAndMatchOnNestedFields
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              { "obj.measurement3": { $gt: 100 } },
+                              { "obj.measurement3": { $lt: 300 } },
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
+# This query stresses the bucket level filter on nested fields.
+  - Name: AndOfSelectiveFiltersOnNestedFields
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPAndMatchOnNestedFields
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              { "obj.measurement1": 10 },
+                              { "obj.measurement2": { $gt: 99.9 } },
+                              { "obj.measurement3": { $gt: 999.9 } },
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
+  - Name: OrMatchOnNestedField
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [8]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPOrMatchOnNestedField
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $or:
+                            [
+                              { "obj.measurement3": { $lt: 100 } },
+                              { "obj.measurement3": { $gt: 900 } },
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
+  - Name: MatchOnNestedFieldAndTime
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [9]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPMatchOnNestedFieldAndTime
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              {
+                                "time":
+                                  { $lt: { ^Date: "2022-01-02T00:00:00" } },
+                              },
+                              { "obj.measurement2": { $gte: 25 } },
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
+  - Name: MatchOnMultipleNestedFields
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [10]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPMatchOnMultipleNestedFields
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              {
+                                $or:
+                                  [
+                                    { "obj.measurement1": 4 },
+                                    { "obj.measurement1": 9 },
+                                  ],
+                              },
+                              { "obj.measurement2": { $lte: 175 } },
+                              { "obj.measurement3": { $gt: 100, $lt: 800 } },
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
+  - Name: MatchGroupSort
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [11]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPMatchGroupSort
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        { "time": { $lt: { ^Date: "2022-01-08T00:00:00" } } },
+                    },
+                    {
+                      $group:
+                        {
+                          "_id":
+                            { $dateTrunc: { "date": "$time", "unit": "hour" } },
+                          "max_measurement1": { $max: "$obj.measurement1" },
+                        },
+                    },
+                    { $sort: { "_id": 1 } },
+                    { $count: "count" },
+                  ]
+
+  - Name: AndOfOrFiltersOnNestedFields
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [12]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPAndOrMatchOnNestedFields
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              {$or: [{ "obj.measurement1": {$lt: 10} }, { "obj.measurement1": {$ne: 7} }]},
+                              {$or: [{ "obj.measurement2": {$gt: 89.9} }, { "obj.measurement2": {$lte: 15.0} }]},
+                              {$or: [{ "obj.measurement3": {$gte: 909.9} }, { "obj.measurement3": {$eq: 270.8} }]},
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-all-feature-flags
+      branch_name:
+        $gte: v7.2

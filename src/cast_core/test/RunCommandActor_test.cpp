@@ -57,7 +57,7 @@ const auto dropAdminTestCollConfig = YAML::Load(R"(
 // Don't run in a sharded cluster because the error message is different.
 TEST_CASE_METHOD(MongoTestFixture,
                  "RunCommandActor successfully connects to a MongoDB instance.",
-                 "[standalone][single_node_replset][three_node_replset]") {
+                 "[single_node_replset][three_node_replset]") {
 
     NodeSource config(R"(
         SchemaVersion: 2018-07-01
@@ -102,6 +102,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 }
 
+// Don't run in other configurations because we need secondaries for this test
 TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three_node_replset]") {
     auto events = ApmEvents{};
 
@@ -212,7 +213,7 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
 // not test any sharding-specific behavior.
 TEST_CASE_METHOD(MongoTestFixture,
                  "Perform a single RunCommand command.",
-                 "[standalone][single_node_replset][three_node_replset]") {
+                 "[single_node_replset][three_node_replset]") {
     dropAllDatabases();
     client.database("admin").collection("testCollection").drop();
 
@@ -419,7 +420,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 // not test any sharding-specific behavior.
 TEST_CASE_METHOD(MongoTestFixture,
                  "AdminCommand actor with a single operation.",
-                 "[standalone][single_node_replset][three_node_replset]") {
+                 "[single_node_replset][three_node_replset]") {
     dropAllDatabases();
     auto adminDb = client.database("admin");
 
@@ -528,7 +529,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 // not test any sharding-specific behavior.
 TEST_CASE_METHOD(MongoTestFixture,
                  "Performing multiple operations.",
-                 "[standalone][single_node_replset][three_node_replset]") {
+                 "[single_node_replset][three_node_replset]") {
     dropAllDatabases();
     auto adminDb = client.database("admin");
     auto db = client.database("test");
@@ -638,7 +639,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 // not test any sharding-specific behavior.
 TEST_CASE_METHOD(MongoTestFixture,
                  "Test metric reporting.",
-                 "[standalone][single_node_replset][three_node_replset]") {
+                 "[single_node_replset][three_node_replset]") {
     dropAllDatabases();
     auto db = client.database("test");
 
@@ -805,81 +806,6 @@ TEST_CASE_METHOD(MongoTestFixture,
 }
 
 TEST_CASE_METHOD(MongoTestFixture,
-                 "Check OnlyRunInInstance in standalone",
-                 "[standalone]") {
-
-    dropAllDatabases();
-    auto db = client.database("test");
-
-    SECTION("OnlyRunInInstance for sharded and replica_set instances skips operations") {
-        auto config = YAML::Load(R"(
-            SchemaVersion: 2018-07-01
-            Clients:
-              Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
-            Actors:
-            - Name: TestActor
-              Type: RunCommand
-              Threads: 1
-              Phases:
-              - OnlyRunInInstances: [sharded, replica_set]
-                Repeat: 1
-                Database: test
-                Operations:
-                - OperationName: RunCommand
-                  OperationCommand:
-                    insert: testCollection
-                    documents: [{rating: 10}]
-            Metrics:
-              Format: csv
-        )");
-        auto builder = bson_stream::document{};
-        bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
-        auto view = doc_value.view();
-        NodeSource nodeSource{YAML::Dump(config), ""};
-        ActorHelper ah(nodeSource.root(), 1);
-        auto verifyFn = [&db, view](const WorkloadContext& context) {
-            REQUIRE(db.collection("testCollection").count_documents(view) == 0);
-        };
-        ah.runDefaultAndVerify(verifyFn);
-    }
-
-    SECTION("OnlyRunInInstance for standalone (last) does operation") {
-        auto config = YAML::Load(R"(
-            SchemaVersion: 2018-07-01
-            Clients:
-              Default:
-                URI: )" + MongoTestFixture::connectionUri().to_string() + R"(
-            Actors:
-            - Name: TestActor
-              Type: RunCommand
-              Threads: 1
-              Phases:
-              - OnlyRunInInstances: [sharded, replica_set, standalone]
-                Repeat: 1
-                Database: test
-                Operations:
-                - OperationName: RunCommand
-                  OperationCommand:
-                    insert: testCollection
-                    documents: [{rating: 10}]
-            Metrics:
-              Format: csv
-        )");
-        auto builder = bson_stream::document{};
-        bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
-        auto view = doc_value.view();
-        NodeSource nodeSource{YAML::Dump(config), ""};
-        ActorHelper ah(nodeSource.root(), 1);
-        auto verifyFn = [&db, view](const WorkloadContext& context) {
-            REQUIRE(db.has_collection("testCollection"));
-            REQUIRE(db.collection("testCollection").count_documents(view) == 1);
-        };
-        ah.runDefaultAndVerify(verifyFn);
-    }
-}
-
-TEST_CASE_METHOD(MongoTestFixture,
                  "Check OnlyRunInInstance in replica_set",
                  "[single_node_replset][three_node_replset]") {
 
@@ -1031,7 +957,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 
 TEST_CASE_METHOD(MongoTestFixture,
                  "Check OnlyRunInInstance not specified runs unconditionally",
-                 "[standalone][sharded][single_node_replset][three_node_replset]") {
+                 "[sharded][single_node_replset][three_node_replset]") {
 
     dropAllDatabases();
     auto db = client.database("test");
@@ -1072,7 +998,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 
 TEST_CASE_METHOD(MongoTestFixture,
                  "Check OnlyRunInInstance inputs",
-                 "[standalone][sharded][single_node_replset][three_node_replset]") {
+                 "[sharded][single_node_replset][three_node_replset]") {
     SECTION("OnlyRunInInstances throws on non-existing type") {
         NodeSource config(R"(
             SchemaVersion: 2018-07-01

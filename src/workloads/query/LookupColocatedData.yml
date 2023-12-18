@@ -138,20 +138,18 @@ Actors:
           OperationName: AdminCommand
           OperationCommand:
             enableSharding: *Database
-        # This collection will have data distributed across 6 chunks.
+        # This collection will have data distributed evenly across the shards.
         - OperationMetricsName: ShardLocalCollection
           OperationName: AdminCommand
           OperationCommand:
             shardCollection: test.ShardedLocal
             key: {*LocalShardKey: hashed}
-            numInitialChunks: 6
         # Here we use 1 chunk. This ensures that all the data for this coll is on one shard.
         - OperationMetricsName: ShardLocalCollectionAllOnOneShard
           OperationName: AdminCommand
           OperationCommand:
             shardCollection: test.ShardedLocalAllOnOneShard
-            key: {*LocalShardKey: hashed}
-            numInitialChunks: 1
+            key: {*LocalShardKey: 1}
         # Disable the balancer so that it can't skew results while the $lookups are running.
         - OperationMetricsName: DisableBalancer
           OperationName: AdminCommand

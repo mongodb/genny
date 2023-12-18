@@ -118,7 +118,7 @@ public:
     }
 };
 
-TEST_CASE_METHOD(AssertiveActorTestFixture, "AssertiveActor passes an assert", "[standalone][single_node_replset][three_node_replset][sharded][AssertiveActor]") {
+TEST_CASE_METHOD(AssertiveActorTestFixture, "AssertiveActor passes an assert", "[single_node_replset][three_node_replset][sharded][AssertiveActor]") {
     // The test collections are empty, so this should trivially pass.
     prepareDatabase();
     SECTION("Assert passes because empty collections are equivalent") {
@@ -144,7 +144,7 @@ TEST_CASE_METHOD(AssertiveActorTestFixture, "AssertiveActor passes an assert", "
     }
 }
 
-TEST_CASE_METHOD(AssertiveActorTestFixture, "AssertiveActor fails an assert", "[standalone][single_node_replset][three_node_replset][sharded][AssertiveActor]") {
+TEST_CASE_METHOD(AssertiveActorTestFixture, "AssertiveActor fails an assert", "[single_node_replset][three_node_replset][sharded][AssertiveActor]") {
     prepareDatabase(
         {bson_builder::make_document(bson_builder::kvp("a", 1))},
         {bson_builder::make_document(bson_builder::kvp("a", 2))}
@@ -191,7 +191,7 @@ TEST_CASE_METHOD(AssertiveActorTestFixture, "AssertiveActor fails an assert", "[
     }
 }
 
-TEST_CASE_METHOD(AssertiveActorTestFixture, "AssertiveActor correctly uses IgnoreFields", "[standalone][single_node_replset][three_node_replset][sharded][AssertiveActor]") {
+TEST_CASE_METHOD(AssertiveActorTestFixture, "AssertiveActor correctly uses IgnoreFields", "[single_node_replset][three_node_replset][sharded][AssertiveActor]") {
     prepareDatabase(
         {bson_builder::make_document(bson_builder::kvp("a", 1))},
         {bson_builder::make_document(bson_builder::kvp("a", 1))}

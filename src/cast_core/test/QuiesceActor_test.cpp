@@ -29,7 +29,7 @@ using namespace genny::testing;
 TEST_CASE_METHOD(
     MongoTestFixture,
     "QuiesceActor",
-    "[standalone][single_node_replset][three_node_replset][sharded][QuiesceActor]") {
+    "[single_node_replset][three_node_replset][sharded][QuiesceActor]") {
 
     NodeSource config = NodeSource(R"(
         SchemaVersion: 2018-07-01

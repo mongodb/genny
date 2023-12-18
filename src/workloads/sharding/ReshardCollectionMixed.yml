@@ -30,10 +30,10 @@ GlobalDefaults:
   ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
   ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
   DocumentCount: &DocumentCount 2_000_000  # for an approximate total of 3GB
-  NumChunks: &NumChunks 60                 # with approximately 50MB per chunk
 
   ShardKeyValueMin: &ShardKeyValueMin 1
-  # We use 100x the number of chunks so that the $sample aggregation to choose the new split points
+  # We use a large value for 'ShardKeyValueMax', when compared to the number of chunks in the system.
+  # This ensures that the $sample aggregation to choose the new split points,
   # has a wide range of distinct values to choose from. It could be even larger.
   ShardKeyValueMax: &ShardKeyValueMax 6000
 
@@ -81,7 +81,6 @@ Actors:
         # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
         # the shards.
         key: {oldKey: hashed}
-        numInitialChunks: *NumChunks
   - *Nop
   - *Nop
   - *Nop

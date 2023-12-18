@@ -59,13 +59,15 @@ void ReplSetDescription::accept(TopologyVisitor& v) {
 }
 
 void ConfigSvrDescription::accept(TopologyVisitor& v) {
-    v.onBeforeConfigSvr(*this);
-    for (int i = 0; i < nodes.size() - 1; i++) {
-        nodes[i].accept(v);
-        v.onBetweenMongods(*this);
+    if (!nodes.empty()) {
+        v.onBeforeConfigSvr(*this);
+        for (int i = 0; i < nodes.size() - 1; i++) {
+            nodes[i].accept(v);
+            v.onBetweenMongods(*this);
+        }
+        nodes[nodes.size() - 1].accept(v);
+        v.onAfterConfigSvr(*this);
     }
-    nodes[nodes.size() - 1].accept(v);
-    v.onAfterConfigSvr(*this);
 }
 
 void ShardedDescription::accept(TopologyVisitor& v) {

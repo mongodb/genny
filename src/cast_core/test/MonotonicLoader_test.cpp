@@ -33,7 +33,7 @@ using std::regex_search;
 using namespace bsoncxx;
 
 TEST_CASE_METHOD(MongoTestFixture, "MonotonicLoader - create records and add indexes",
-          "[standalone][single_node_replset][three_node_replset][sharded][MonotonicLoader]") {
+          "[single_node_replset][three_node_replset][sharded][MonotonicLoader]") {
 
     dropAllDatabases();
     auto db = client.database("mydb");

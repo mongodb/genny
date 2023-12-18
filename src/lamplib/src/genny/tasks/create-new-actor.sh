@@ -534,7 +534,7 @@ namespace bson_stream = bsoncxx::builder::stream;
 //
 
 TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a MongoDB instance.",
-          "[standalone][single_node_replset][three_node_replset][sharded][${actor_name}]") {
+          "[single_node_replset][three_node_replset][sharded][${actor_name}]") {
 
     dropAllDatabases();
     auto db = client.database("mydb");

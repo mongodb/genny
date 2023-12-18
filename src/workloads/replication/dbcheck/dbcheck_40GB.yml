@@ -81,6 +81,23 @@ Actors:
       approxDocumentSize: 2000  # 2kB.
       documentCount: 20000000  # for an approximate total of ~40GB.
 
+- Name: SetMaxDbCheckMBperSec
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *max_phase
+      PhaseConfig:
+        Repeat: 1
+        Thread: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            maxDbCheckMBperSec: 1024 # 1GB/Sec.
+
 # Phase1: Measure the perf of crud operations before running dbcheck.
 - Name: WithoutDbCheck
   Type: CrudActor

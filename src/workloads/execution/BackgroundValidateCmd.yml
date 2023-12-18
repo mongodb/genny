@@ -113,7 +113,7 @@ Actors:
 AutoRun:
 - When:
     mongodb_setup:
-      $eq: standalone
+      $eq: replica
     branch_name:
       $neq:
       - v4.0
