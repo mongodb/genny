@@ -69,13 +69,13 @@ TEST_CASE_METHOD(MongoTestFixture, "MultiCollectionQuery", "[single_node_replset
                 config.root(), 1, apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
-            for (auto&& event : events) {
-                REQUIRE(event.command["limit"].get_int64() == 1);
-                REQUIRE(event.command["sort"].get_document().view() ==
-                        BasicBson::make_document(BasicBson::kvp("a", 1)));
-                auto readMode = event.command["$readPreference"]["mode"].get_string().value;
-                REQUIRE(std::string(readMode) == "primaryPreferred");
-            }
+            REQUIRE(events.size() == 2);
+            auto event = events[1];
+            REQUIRE(event.command["limit"].get_int64() == 1);
+            REQUIRE(event.command["sort"].get_document().view() ==
+                    BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto readMode = event.command["$readPreference"]["mode"].get_string().value;
+            REQUIRE(std::string(readMode) == "primaryPreferred");
 
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
