@@ -129,6 +129,7 @@ Actors:
       OperationCommand:
         setParameter: 1
         maxIndexBuildMemoryUsageMegabytes: 100
+        help: true
   - *Nop
   - *Nop
   - *Nop
@@ -200,6 +201,18 @@ Actors:
       Parameters:
         Repeat: 5
 
+# # Guard Against timeout for no output.
+# - Name: LoggingActor
+#   Type: LoggingActor
+#   Threads: 1
+#   Phases:
+#     OnlyActiveInPhases:
+#       Active: [2]
+#       NopInPhasesUpTo: 12
+#       PhaseConfig:
+#         LogEvery: 5 minutes
+#         Blocking: None
+
 AutoRun:
 - When:
     mongodb_setup:
@@ -209,11 +222,9 @@ AutoRun:
       - replica
       - replica-all-feature-flags
       - shard
-      - shard-lite
       - single-replica
       - standalone
       - standalone-all-feature-flags
     atlas_setup:
       $neq:
       - M30-repl
-
