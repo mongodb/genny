@@ -13,7 +13,6 @@ GlobalDefaults:
     caid: {^RandomInt: {min: 0, max: 1000}}
     cuid: {^RandomInt: {min: 0, max: 100000}}
     prod: {^RandomInt: {min: 0, max: 10000}}
-    prod2: {^RandomInt: {min: 0, max: 10000}}
     price: {^RandomDouble: {min: 0.0, max: 1000.0}}
     data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
     c: &string {^FastRandomString: {length: 75}}  # Adjust this so the doc comes out as 200 B.
@@ -25,12 +24,6 @@ GlobalDefaults:
   - keys: {price: 1, cuid: 1}            # Pc
   - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
 
-  EvenMoreIndexes: &EvenMoreIndexes
-  - keys: {prod: 1}
-  - keys: {cuid: 1}
-  - keys: {ts: 1}
-  - keys: {prod2: 1}
-
   # Loader Config.
   LoadThreads: &LoadThreads 8
   CollectionCount: &CollectionCount 8
@@ -38,8 +31,7 @@ GlobalDefaults:
 
   InitialDocumentCount: &InitialNumDocs 10000000
   SecondDocumentCount: &SecondNumDocs 6000000
-  ThirdDocumentCount: &ThirdDocumentCount 2000000
-  FinalDocumentCount: &FinalDocumentCount 1000000
+  FinalDocumentCount: &FinalDocumentCount 2000000
 
 Clients:
   Default:
@@ -95,23 +87,6 @@ Actors:
         Database: *dbname
         Repeat: 1
         Document: *Doc
-        DocumentCount: *ThirdDocumentCount
-        Indexes: *EvenMoreIndexes
-        BatchSize: *LoadBatchSize
-
-- Name: LoadWithEightIndexes
-  Type: Loader
-  Threads: *LoadThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [7]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Threads: *LoadThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Repeat: 1
-        Document: *Doc
         DocumentCount: *FinalDocumentCount
         BatchSize: *LoadBatchSize
 
@@ -121,7 +96,7 @@ Actors:
   Database: *dbname
   Phases:
     OnlyActiveInPhases:
-      Active: [0, 2, 4, 6]
+      Active: [0, 2, 4]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -132,7 +107,7 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [1, 3, 5, 7]
+      Active: [1, 3, 5]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         LogEvery: 10 seconds
