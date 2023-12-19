@@ -15,6 +15,7 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
+      - standalone
       - standalone-all-feature-flags
       - standalone-classic-query-engine
       - standalone-heuristic-bonsai
