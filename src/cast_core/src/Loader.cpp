@@ -170,9 +170,9 @@ void genny::actor::Loader::run() {
                 float seconds = duration.count();
                 BOOST_LOG_TRIVIAL(info) << "Done with load phase. All " << config->numDocuments
                                         << " documents loaded into " << collectionName
-                                        << " duration(seconds) " << seconds
-                                        << std::setprecision(4)
-                                        << " " << (((float) config->numDocuments) / 1000.0) / seconds << "k docs/s";
+                                        << " in " << seconds << " seconds"
+                                        << std::setprecision(5)
+                                        << " at " << ((float) config->numDocuments) / seconds << " docs/s";
                 // Make the index
                 bool _indexReq = false;
                 builder::stream::document builder{};
