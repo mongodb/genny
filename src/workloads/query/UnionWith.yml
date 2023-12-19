@@ -265,7 +265,6 @@ AutoRun:
       - standalone
       - standalone-classic-query-engine
       - standalone-sbe
-      - standalone-query-stats
     atlas_setup:
       $neq:
       - M30-repl

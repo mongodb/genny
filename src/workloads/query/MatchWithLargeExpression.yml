@@ -1,8 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests the performance of expression search for parameter re-use during parameterization. 
-  Before September 2023, parameter re-use had O(n^2) complexity due to using a vector for looking up equivalent expressions. 
+  This workload tests the performance of expression search for parameter re-use during parameterization.
+  Before September 2023, parameter re-use had O(n^2) complexity due to using a vector for looking up equivalent expressions.
   SERVER-79092 fixed this issue by switching over to a map once the amount of expressions reaches a threshold (currently 50).
 
 GlobalDefaults:
@@ -38,7 +38,7 @@ ActorTemplates:
           - OperationName: aggregate
             OperationCommand:
               Pipeline: [
-                {$match: {$or: {^Array: {of: 
+                {$match: {$or: {^Array: {of:
                   {$and: [
                     {a: {$gt: {^Inc: {start: 10}}}},
                     {b: {$gt: {^Inc: {start: 10}}}}
@@ -147,7 +147,6 @@ AutoRun:
       - standalone-heuristic-bonsai
       - standalone-sampling-bonsai
       - standalone-sbe
-      - standalone-query-stats
     branch_name:
       $gte:
         v7.2

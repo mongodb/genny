@@ -100,6 +100,4 @@ AutoRun:
     mongodb_setup:
       $eq:
       - shard
-      - shard-query-stats
       - shard-lite
-      - shard-lite-query-stats
