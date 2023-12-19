@@ -213,7 +213,6 @@ AutoRun:
       - standalone-heuristic-bonsai
       - standalone-sampling-bonsai
       - standalone-sbe
-      - standalone-query-stats
     branch_name:
       $neq:
       - v4.0

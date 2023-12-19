@@ -116,7 +116,7 @@ Actors:
     TemplateParameters:
       Name: "OneShape"
       Threads: 32
-      Filter: 
+      Filter:
         # This can be simplified to {a1: 1, a2: 2, x0: {$exists: false}} but we are keeping
         # it the same as the actor with oscillating shapes to rule out performance impact there.
         # Will find around 0.005 * 0.005 * 1e6 = 2.5 documents.
@@ -135,12 +135,8 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone-all-feature-flags
-      - standalone-query-stats
       - standalone
       - single-replica
-      - single-replica-query-stats
       - replica
-      - replica-query-stats
       - replica-query-stats-rate-limit
       - atlas-like-replica.2022-10
-      - atlas-like-replica-query-stats.2022-10

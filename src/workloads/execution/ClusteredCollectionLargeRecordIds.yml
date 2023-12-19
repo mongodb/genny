@@ -21,16 +21,11 @@ AutoRun:
       $eq:
       - standalone
       - standalone-all-feature-flags
-      - standalone-query-stats
       - replica
       - replica-all-feature-flags
-      - replica-query-stats
       - replica-query-stats-rate-limit
       - atlas-like-replica.2022-10
-      - atlas-like-replica-query-stats.2022-10
       - shard
-      - shard-query-stats
       - shard-lite-all-feature-flags
-      - shard-lite-query-stats
     branch_name:
       $gte: v5.3

@@ -271,7 +271,6 @@ AutoRun:
       - standalone-heuristic-bonsai
       - standalone-sampling-bonsai
       - standalone-sbe
-      - standalone-query-stats
       - replica
     branch_name:
       $neq:

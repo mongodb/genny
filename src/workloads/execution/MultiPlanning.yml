@@ -123,5 +123,4 @@ AutoRun:
         - standalone-all-feature-flags
         - standalone-classic-query-engine
         - standalone-sbe
-        - standalone-query-stats
 

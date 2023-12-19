@@ -189,12 +189,10 @@ AutoRun:
       - atlas
       - atlas-like-replica.2022-10
       - replica
-      - replica-query-stats
       - single-replica
       - standalone
       - standalone-classic-query-engine
       - standalone-sbe
-      - standalone-query-stats
     atlas_setup:
       $neq:
       - M30-repl

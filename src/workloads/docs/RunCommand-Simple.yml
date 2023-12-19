@@ -29,4 +29,3 @@ AutoRun:
       - standalone-classic-query-engine
       - standalone-dsi-integration-test
       - standalone-sbe
-      - standalone-query-stats

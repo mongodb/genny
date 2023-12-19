@@ -22,7 +22,6 @@ AutoRun:
       $eq:
       - replica
       - replica-all-feature-flags
-      - replica-query-stats
       - single-replica
       - single-replica-classic-query-engine
       - single-replica-sbe
