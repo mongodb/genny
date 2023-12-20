@@ -1,30 +1,18 @@
-# Sharded collection -> Distributed chunk processing
-# coll -> $out (tests raw output)
-# coll -> coll updated with a new field (counter that starts at 0) not susceptible to halloween since it doesn't change recordid
-# coll -> newColl with a new field (counter that starts at 0) non-merging output to new collection
-#         sharded and non-sharded versions
-
-# Same for unsharded
-# All of this with 1, 4, 16 threads AND 1k, 4k, 16k documents. 10k documents per collection should be enough
-# Repeat 5 times for value stability
-
-
-
-
-
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This test exercises the behavior of $lookup when the local and foreign collection data is
-  co-located. In the queries below, for each local document on each shard, the $lookup subpipeline
-  is targeted to the same shard.
-  The workload consists of the following steps:
-    A. Creating empty collections, some unsharded and some sharded.
-    B. Populating collections with data.
-    C. Fsync.
-    D. Running $lookups. This includes pipelines using let/pipeline syntax, pipelines with
-       local/foreign field syntax, pipelines with different $limits, and pipelines run against
-       sharded and unsharded colls.
+  This test exercises both $out and $merge aggregation stages. It does this based on all combinations of the following:
+    A. The src collection is sharded or unsharded
+    B. The document size is either 1K, 4K, or 16K.
+    C. There are 1 thread, 4 threads, or 16 threads doing the same operation.
+  Each actor does the following operations concurrently with other actors at the same stage:
+    A. $out to a collection unique amongst actors.
+       This measures $out performance.
+    B. $merge to the source collection with an updated field value.
+       This measures $merge contention on the same collection.
+    C. $merge to a different unsharded collection unique for each Actor with an updated field value.
+       This measures $merge contention on a separate collection shared by all threads of an Actor.
+
 GlobalDefaults:
   Unsharded1K: &Unsharded1K Unsharded1K
   Unsharded4K: &Unsharded4K Unsharded4K
