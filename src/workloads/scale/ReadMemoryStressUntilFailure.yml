@@ -64,13 +64,27 @@ Clients:
       maxPoolSize: 500
     
 Actors:
-# Drop database to get rid of stale data. Useful when running locally multiple times.
+
 - Name: Setup
   Type: RunCommand
   Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand: {test_psi: 1, window: 500, threshold: 100, some : false}
+
+# Drop database to get rid of stale data. Useful when running locally multiple times.
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
@@ -85,7 +99,7 @@ Actors:
   Threads: *LoadThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [1]
+      Active: [2]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         CollectionCount: 1
@@ -102,7 +116,7 @@ Actors:
   Threads: *SortThreads
   Phases:
     OnlyActiveInPhases:
-      Active: [2]
+      Active: [3]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *SortRepeat
