@@ -129,7 +129,6 @@ Actors:
       OperationCommand:
         setParameter: 1
         maxIndexBuildMemoryUsageMegabytes: 100
-        help: true
   - *Nop
   - *Nop
   - *Nop
