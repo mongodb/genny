@@ -276,7 +276,7 @@ Actors:
               &DoubleValue 9.5,
               &StringValue "abc",
               &ObjectValue {a: 1},
-              &ArrayValue {*IntValue},
+              &ArrayValue [*IntValue],
               &ObjectIdValue {^ObjectId: "5fd7c984e0f8d74bdb04d3b4"},
               &DateValue {^Date: "2015-01-01"},
               &ConstantsOfDifferentTypes [
