@@ -9,7 +9,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
   Repeat: &Repeat {^Parameter: {Name: Repeat, Default: -1}}
   Collection: &Collection Collection0
-  MaxPhases: &MaxPhases 20
+  MaxPhases: &MaxPhases 26
 
 ActorTemplates:
 - TemplateName: FindQueryTemplate
@@ -268,6 +268,31 @@ Actors:
           # None of these match any of the filters in this workload.
           a: 1
           arr: [0, 1]
+          b: {^Choose: {
+            from: [
+              null,
+              false,
+              &IntValue 10,
+              &DoubleValue 9.5,
+              &StringValue "abc",
+              &ObjectValue {a: 1},
+              &ArrayValue {*IntValue},
+              &ObjectIdValue {^ObjectId: "5fd7c984e0f8d74bdb04d3b4"},
+              &DateValue {^Date: "2015-01-01"},
+              &ConstantsOfDifferentTypes [
+                null,
+                false,
+                *IntValue,
+                *DoubleValue,
+                *StringValue,
+                *ObjectValue,
+                *ArrayValue,
+                *ObjectIdValue,
+                *DateValue
+              ]
+            ],
+            deterministic: true
+          }}
           f1: [1]
           f2: [[1], 2]
           f3: [[[1], 2], 3]
@@ -421,3 +446,89 @@ Actors:
       ActivePhase: 20
       # The above queries can be simplified to contain just 1 clause.
       Width: 1
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: TypeBracketedLt
+      ActivePhase: 21
+      Filter:
+        {
+          # YAML doesn't support duplicate keys so the object generator is required here as 
+          # we want to construct a query of the form: {b: {$lt: 10, $lt: "abc", ...}}.
+          b: &TypeBracketedLtQueryFilter {^Object: {
+            withNEntries: 9,
+            havingKeys: "$lt",
+            andValues: {^Choose: {
+              from: *ConstantsOfDifferentTypes,
+              deterministic: true
+            }},
+            duplicatedKeys: insert
+          }}
+        }
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: TypeBracketedGt
+      ActivePhase: 22
+      Filter:
+        {
+          # YAML doesn't support duplicate keys so the object generator is required here as 
+          # we want to construct a query of the form: {b: {$gt: 10, $gt: "abc", ...}}.
+          b: &TypeBracketedGtQueryFilter {^Object: {
+            withNEntries: 9,
+            havingKeys: "$gt",
+            andValues: {^Choose: {
+              from: *ConstantsOfDifferentTypes,
+              deterministic: true
+            }},
+            duplicatedKeys: insert
+          }}
+        }
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: TypeBracketedMixed
+      ActivePhase: 23
+      Filter:
+        {
+          # YAML doesn't support duplicate keys so the object generator is required here as 
+          # we want to construct a query of the form: {b: {$gt: 10, $lt: "abc", ...}}.
+          b: &TypeBracketedMixedQueryFilter {^Object: {
+            withNEntries: 9,
+            havingKeys: {^Choose: {from: ["$gt", "$lt"]}},
+            andValues: {^Choose: {
+              from: *ConstantsOfDifferentTypes,
+              deterministic: true
+            }},
+            duplicatedKeys: insert
+          }}
+        }
+
+# Note that due to array semantics, only the $elemMatch versions of the type bracketed queries
+# can be reduced to an empty query.
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchTypeBracketedLt
+      ActivePhase: 24
+      Filter:
+        {b: {$elemMatch: *TypeBracketedLtQueryFilter}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchTypeBracketedGt
+      ActivePhase: 25
+      Filter:
+        {b: {$elemMatch: *TypeBracketedGtQueryFilter}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchTypeBracketedMixed
+      ActivePhase: 26
+      Filter:
+        {b: {$elemMatch: *TypeBracketedMixedQueryFilter}}
