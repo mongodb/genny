@@ -300,9 +300,9 @@ Actors:
 - ActorFromTemplate:
     TemplateName: SimplifiableConjunction
     TemplateParameters:
-      Name: SimplifiableConjunction1KClauses
+      Name: SimplifiableConjunction400Clauses
       ActivePhase: 4
-      Width: 1000
+      Width: 400
 
 - ActorFromTemplate:
     TemplateName: SimplifiableConjunction
@@ -322,9 +322,9 @@ Actors:
 - ActorFromTemplate:
     TemplateName: SimplifiableCNF
     TemplateParameters:
-      Name: SimplifiableCNF1KClauses
+      Name: SimplifiableCNF400Clauses
       ActivePhase: 7
-      Width: 1000
+      Width: 400
 
 - ActorFromTemplate:
     TemplateName: SimplifiableCNF
@@ -344,9 +344,9 @@ Actors:
 - ActorFromTemplate:
     TemplateName: SimplifiableDNF
     TemplateParameters:
-      Name: SimplifiableDNF800Clauses
+      Name: SimplifiableDNF400Clauses
       ActivePhase: 10
-      Width: 800
+      Width: 400
 
 - ActorFromTemplate:
     TemplateName: SimplifiableDNF
@@ -366,9 +366,9 @@ Actors:
 - ActorFromTemplate:
     TemplateName: SimplifiableElemMatchConjunction
     TemplateParameters:
-      Name: SimplifiableElemMatchConjunction800Clauses
+      Name: SimplifiableElemMatchConjunction400Clauses
       ActivePhase: 13
-      Width: 800
+      Width: 400
 
 - ActorFromTemplate:
     TemplateName: SimplifiableElemMatchConjunction
@@ -388,9 +388,9 @@ Actors:
 - ActorFromTemplate:
     TemplateName: SimplifiableElemMatchCNF
     TemplateParameters:
-      Name: SimplifiableElemMatchCNF800Clauses
+      Name: SimplifiableElemMatchCNF400Clauses
       ActivePhase: 16
-      Width: 800
+      Width: 400
 
 - ActorFromTemplate:
     TemplateName: SimplifiableElemMatchCNF
@@ -410,9 +410,9 @@ Actors:
 - ActorFromTemplate:
     TemplateName: SimplifiableElemMatchDNF
     TemplateParameters:
-      Name: SimplifiableElemMatchDNF800Clauses
+      Name: SimplifiableElemMatchDNF400Clauses
       ActivePhase: 19
-      Width: 800
+      Width: 400
 
 - ActorFromTemplate:
     TemplateName: SimplifiableElemMatchDNF
