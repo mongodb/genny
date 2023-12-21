@@ -129,7 +129,7 @@ Actors:
       ActivePhase: 7
       NumberOfClauses: 10000
 
-// TODO: PERF-4993
+# TODO: PERF-4993
 #- ActorFromTemplate:
 #    TemplateName: MatchExpressionWithOrClausesTemplate
 #    TemplateParameters:
