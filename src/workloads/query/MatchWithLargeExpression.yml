@@ -129,13 +129,14 @@ Actors:
       ActivePhase: 7
       NumberOfClauses: 10000
 
-- ActorFromTemplate:
-    TemplateName: MatchExpressionWithOrClausesTemplate
-    TemplateParameters:
-      Name: RunMatchExpressionOrWith50000Clauses
-      Repeat: 10
-      ActivePhase: 8
-      NumberOfClauses: 50000
+// TODO: PERF-4993
+#- ActorFromTemplate:
+#    TemplateName: MatchExpressionWithOrClausesTemplate
+#    TemplateParameters:
+#      Name: RunMatchExpressionOrWith50000Clauses
+#      Repeat: 10
+#      ActivePhase: 8
+#      NumberOfClauses: 50000
 
 AutoRun:
 - When:
