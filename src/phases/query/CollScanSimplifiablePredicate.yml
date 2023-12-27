@@ -9,7 +9,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
   Repeat: &Repeat {^Parameter: {Name: Repeat, Default: -1}}
   Collection: &Collection Collection0
-  MaxPhases: &MaxPhases 26
+  MaxPhases: &MaxPhases 30
 
 ActorTemplates:
 - TemplateName: FindQueryTemplate
@@ -490,17 +490,69 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: TypeBracketedMixed
+      Name: TypeBracketedLte
       ActivePhase: 23
+      Filter:
+        {
+          # YAML doesn't support duplicate keys so the object generator is required here as 
+          # we want to construct a query of the form: {b: {$lte: 10, $lte: "abc", ...}}.
+          b: &TypeBracketedLteQueryFilter {^Object: {
+            withNEntries: 9,
+            havingKeys: "$lte",
+            andValues: {^Choose: {
+              # Pick constants that are not present in the collection as we don't want to match
+              # any documents.
+              from: &NonMatchingConstantsOfDifferentTypes [
+                null,
+                true,
+                1,
+                1.5,
+                "dfg",
+                {b: 2},
+                [1],
+                {^ObjectId: "3fd7c884e0f8d74cdb04d3b4"},
+                {^Date: "2023-02-03"}
+              ],
+              deterministic: true
+            }},
+            duplicatedKeys: insert
+          }}
+        }
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: TypeBracketedGte
+      ActivePhase: 24
+      Filter:
+        {
+          # YAML doesn't support duplicate keys so the object generator is required here as 
+          # we want to construct a query of the form: {b: {$gte: 10, $gte: "abc", ...}}.
+          b: &TypeBracketedGteQueryFilter {^Object: {
+            withNEntries: 9,
+            havingKeys: "$gte",
+            andValues: {^Choose: {
+              from: *NonMatchingConstantsOfDifferentTypes,
+              deterministic: true
+            }},
+            duplicatedKeys: insert
+          }}
+        }
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: TypeBracketedMixed
+      ActivePhase: 25
       Filter:
         {
           # YAML doesn't support duplicate keys so the object generator is required here as 
           # we want to construct a query of the form: {b: {$gt: 10, $lt: "abc", ...}}.
           b: &TypeBracketedMixedQueryFilter {^Object: {
             withNEntries: 9,
-            havingKeys: {^Choose: {from: ["$gt", "$lt"]}},
+            havingKeys: {^Choose: {from: ["$gt", "$lt", "$gte", "$lte"]}},
             andValues: {^Choose: {
-              from: *ConstantsOfDifferentTypes,
+              from: *NonMatchingConstantsOfDifferentTypes,
               deterministic: true
             }},
             duplicatedKeys: insert
@@ -513,7 +565,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchTypeBracketedLt
-      ActivePhase: 24
+      ActivePhase: 26
       Filter:
         {b: {$elemMatch: *TypeBracketedLtQueryFilter}}
 
@@ -521,14 +573,30 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchTypeBracketedGt
-      ActivePhase: 25
+      ActivePhase: 27
       Filter:
         {b: {$elemMatch: *TypeBracketedGtQueryFilter}}
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
+      Name: ElemMatchTypeBracketedLte
+      ActivePhase: 28
+      Filter:
+        {b: {$elemMatch: *TypeBracketedLteQueryFilter}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchTypeBracketedGte
+      ActivePhase: 29
+      Filter:
+        {b: {$elemMatch: *TypeBracketedGteQueryFilter}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
       Name: ElemMatchTypeBracketedMixed
-      ActivePhase: 26
+      ActivePhase: 30
       Filter:
         {b: {$elemMatch: *TypeBracketedMixedQueryFilter}}
