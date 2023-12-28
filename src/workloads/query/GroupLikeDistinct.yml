@@ -1,0 +1,157 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload tests performance of $group queries with distinct like semantics, meaning they will
+  execute with a DISTINCT_SCAN. Currently this is supported for $group + $sort and only with the
+  $first and $last accumulators. In PM-3163 this will be extended to $top, $topN and $bottom,
+  $bottomN accumulators so we are including those here in order to see performance changes once that
+  is implemented.
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 2000
+
+Keywords:
+- Distinct
+- Group
+- First
+- Last
+- Top
+- Bottom
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  MaxPhases: &MaxPhases 11
+
+ActorTemplates:
+- TemplateName: RunAggCommand
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "RunAggCommand"}}
+    Type: CrudActor
+    Database: *Database
+    Threads: 32
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 30 seconds
+          Collection: *Collection
+          Operations:
+          - OperationMetricsName: DistinctExecutionMetrics
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: {^Parameter: {Name: "Pipeline", Default: []}}
+
+Actors:
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: 5000
+        BatchSize: 1000
+        Document:
+          _id: {^Inc: {start: 0, step: 1}}
+          a: {^RandomInt: {min: 0, max: 500}}
+          b: {^RandomInt: {min: 0, max: 500}}
+          c: {^RandomInt: {min: 0, max: 500}}
+        Indexes:
+          - keys: {a: 1, b: 1, c: 1}
+
+# The following use a DISTINCT_SCAN.
+- ActorFromTemplate:
+    TemplateName: RunAggCommand
+    TemplateParameters:
+      Name: "DistinctGroup"
+      OnlyActiveInPhase: 2
+      Pipeline: [{$group: {_id: "$a"}}]
+
+- ActorFromTemplate:
+    TemplateName: RunAggCommand
+    TemplateParameters:
+      Name: "DistinctGroupSort"
+      OnlyActiveInPhase: 3
+      Pipeline: [{$sort: {a: 1}}, {$group: {_id: "$a"}}]
+
+- ActorFromTemplate:
+    TemplateName: RunAggCommand
+    TemplateParameters:
+      Name: "DistinctGroupSortFirst"
+      OnlyActiveInPhase: 4
+      Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$first: "$b"}}}]
+
+- ActorFromTemplate:
+    TemplateName: RunAggCommand
+    TemplateParameters:
+      Name: "DistinctGroupSortFirstFullDocument"
+      OnlyActiveInPhase: 5
+      Pipeline: [{$sort: {a: 1, b: 1, c: 1}}, {$group: {_id: "$a", accum: {$first: "$$ROOT"}}}]
+
+- ActorFromTemplate:
+    TemplateName: RunAggCommand
+    TemplateParameters:
+      Name: "DistinctGroupSortLast"
+      OnlyActiveInPhase: 6
+      Pipeline: [{$sort: {a: -1, b: -1}}, {$group: {_id: "$a", accum: {$last: "$b"}}}]
+
+- ActorFromTemplate:
+    TemplateName: RunAggCommand
+    TemplateParameters:
+      Name: "DistinctGroupSortLastFullDocument"
+      OnlyActiveInPhase: 7
+      Pipeline: [{$sort: {a: 1, b: 1, c: 1}}, {$group: {_id: "$a", accum: {$last: "$$ROOT"}}}]
+
+# The following do not yet use DISTINCT_SCAN, but they will after SERVER-84347.
+- ActorFromTemplate:
+    TemplateName: RunAggCommand
+    TemplateParameters:
+      Name: "GroupTop"
+      OnlyActiveInPhase: 8
+      Pipeline: [{$group: {_id: "$a", accum: {$top: {output: ["$b"], sortBy: {b: 1}}}}}]
+
+- ActorFromTemplate:
+    TemplateName: RunAggCommand
+    TemplateParameters:
+      Name: "GroupBottom"
+      OnlyActiveInPhase: 9
+      Pipeline: [{$group: {_id: "$a", accum: {$bottom: {output: ["$b"], sortBy: {b: 1}}}}}]
+
+- ActorFromTemplate:
+    TemplateName: RunAggCommand
+    TemplateParameters:
+      Name: "GroupTopN"
+      OnlyActiveInPhase: 10
+      Pipeline: [{$group: {_id: "$a", accum: {$topN: {n: 1, output: ["$b"], sortBy: {b: 1}}}}}]
+
+- ActorFromTemplate:
+    TemplateName: RunAggCommand
+    TemplateParameters:
+      Name: "GroupBottomN"
+      OnlyActiveInPhase: 11
+      Pipeline: [{$group: {_id: "$a", accum: {$bottomN: {n: 1, output: ["$b"], sortBy: {b: 1}}}}}]
