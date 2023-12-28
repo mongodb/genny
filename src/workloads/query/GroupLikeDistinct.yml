@@ -155,3 +155,15 @@ Actors:
       Name: "GroupBottomN"
       OnlyActiveInPhase: 11
       Pipeline: [{$group: {_id: "$a", accum: {$bottomN: {n: 1, output: ["$b"], sortBy: {b: 1}}}}}]
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-all-feature-flags
+      - standalone
+      - shard
+      - shard-lite
+      - single-replica
+      - replica
+      - atlas-like-replica.2022-10
