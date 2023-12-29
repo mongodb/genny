@@ -14,11 +14,14 @@
 
 #include <gennylib/Orchestrator.hpp>
 
-#include <boost/log/trivial.hpp>
-
 #include <algorithm>  // std::max
 #include <cassert>
 #include <chrono>
+#include <filesystem>
+#include <iomanip>
+
+#include <boost/log/trivial.hpp>
+#include <boost/process.hpp>
 
 namespace {
 
@@ -203,6 +206,59 @@ void Orchestrator::sleepUntilOrPhaseEnd(std::chrono::time_point<SteadyClock> dea
             return;
         }
         _phaseChange.wait_for(lock, waitTimeout);
+    }
+}
+
+static void managePerfProfiler(const int addMax, const bool kill, const PhaseNumber pn) {
+    static auto perfProcesses = std::vector<boost::process::child>{};
+
+    if (kill) {
+        // Send the kill signal first, then wait on everything all at once.
+        for (auto& perf : perfProcesses) {
+            // Search for all paths dynamically, in case locations change or something.
+            auto pkill = boost::process::child{boost::process::search_path("kill"),
+                                               "-SIGINT",
+                                               (std::stringstream{} << perf.id()).str()};
+            pkill.wait();
+        }
+        for (auto& perf : perfProcesses) {
+            perf.wait();
+        }
+        perfProcesses.clear();
+    }
+
+    if (addMax > 0) {
+        // Create the output directory.
+        const auto perfDir = std::filesystem::current_path() / "perf";
+        std::filesystem::create_directories(perfDir);
+
+        auto stream = boost::process::ipstream{};
+        // Search for all paths dynamically, in case locations change or something.
+        auto pgrep = boost::process::child{
+            boost::process::search_path("pgrep"), "mongod", boost::process::std_out > stream};
+        auto mongoPid = std::string{};
+
+        for (int index = 0; stream; ++index) {
+            stream >> mongoPid;
+            if (index < addMax) {
+                // Rename the perf output file.
+                auto ofileBuilder = std::stringstream{} << std::setw(4) << std::setfill('0') << pn
+                                                        << "." << perfProcesses.size() << ".data";
+
+                // Search for all paths dynamically, in case locations change or something.
+                perfProcesses.emplace_back(boost::process::search_path("perf"),
+                                           "record",
+                                           "-F",
+                                           "2400",
+                                           "-a",
+                                           "-g",
+                                           "-p",
+                                           mongoPid,
+                                           "-o",
+                                           (perfDir / ofileBuilder.str()).string());
+            }
+        }
+        pgrep.wait();
     }
 }
 

@@ -118,7 +118,30 @@ public:
      */
     void sleepUntilOrPhaseEnd(SteadyClock::time_point deadline, const PhaseNumber pn);
 
+    /**
+     * Start a new perf subprocess.
+     */
+    static void startPerfProfiler(const PhaseNumber pn) {
+        managePerfProfiler(1, false, pn);
+    }
+
+    /**
+     * Stop all spawned perf subprocess.
+     */
+    static void stopPerfProfiler(const PhaseNumber pn) {
+        managePerfProfiler(0, true, pn);
+    }
+
 private:
+    /**
+     * Manage the perf profilers run by this process.
+     *
+     * addMax: Add at most addMax perf profilers attached to mongod instances.
+     * kill: Whether to kill all previously-spawned perf profilers before attempting to add more.
+     * pn: The phase number.
+     */
+    static void managePerfProfiler(int addMax, bool kill, PhaseNumber pn);
+
     mutable std::shared_mutex _mutex;
     std::condition_variable_any _phaseChange;
 
@@ -136,11 +159,11 @@ private:
 
     State state = State::PhaseEnded;
 
-    // These hooks fire just before the current phase starts. The phase number in the invocation is the
-    // phase that is about to start, so 0, 1, 2 ... etc.
+    // These hooks fire just before the current phase starts. The phase number in the invocation is
+    // the phase that is about to start, so 0, 1, 2 ... etc.
     std::vector<OrchestratorCB> _prePhaseStartHooks;
-    // These hooks fire just after the current phase stops. The phase number in the invocation is the
-    // phase that just completed, so 0, 1, 2 ... etc.
+    // These hooks fire just after the current phase stops. The phase number in the invocation is
+    // the phase that just completed, so 0, 1, 2 ... etc.
     std::vector<OrchestratorCB> _postPhaseStopHooks;
 };
 
