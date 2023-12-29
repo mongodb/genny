@@ -21,6 +21,8 @@
 #include <shared_mutex>
 #include <vector>
 
+#include <boost/process.hpp>
+
 #include <gennylib/conventions.hpp>
 
 namespace genny {
@@ -121,6 +123,8 @@ public:
 private:
     mutable std::shared_mutex _mutex;
     std::condition_variable_any _phaseChange;
+
+    mutable std::unique_ptr<boost::process::child> _perf;
 
     int _requireTokens = 0;
     int _currentTokens = 0;

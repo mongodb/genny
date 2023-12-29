@@ -14,11 +14,13 @@
 
 #include <gennylib/Orchestrator.hpp>
 
-#include <boost/log/trivial.hpp>
-
 #include <algorithm>  // std::max
 #include <cassert>
 #include <chrono>
+#include <filesystem>
+#include <iomanip>
+
+#include <boost/log/trivial.hpp>
 
 namespace {
 
@@ -78,6 +80,15 @@ bool Orchestrator::morePhases() const {
 PhaseNumber Orchestrator::awaitPhaseStart(bool block, int addTokens) {
     writer lock{_mutex};
     assert(state == State::PhaseEnded || this->_errors);
+
+    {
+        auto stream = boost::process::ipstream{};
+        auto pgrep = boost::process::child{"/usr/bin/pgrep", "mongod", boost::process::std_out > stream};
+        std::string mongoPid;
+        stream >> mongoPid;
+        pgrep.wait();
+        _perf = std::make_unique<boost::process::child>("/usr/bin/perf", "record", "-a", "-g", "-p", mongoPid);
+    }
 
     _currentTokens += addTokens;
 
@@ -145,6 +156,19 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
         ++_current;
         _phaseChange.notify_all();
         state = State::PhaseEnded;
+
+        if (_perf) {
+            auto pkill = boost::process::child{"/usr/bin/kill", "-SIGINT", (std::stringstream{} << _perf->id()).str()};
+            pkill.wait();
+            _perf->wait();
+            _perf.reset();
+            auto pwd = std::filesystem::current_path();
+            if (std::filesystem::exists(pwd / "perf.data")) {
+                std::filesystem::create_directories(pwd / "perf");
+                auto phase = (std::stringstream() << std::setw(4) << std::setfill('0') << _current).str();
+                std::filesystem::rename(pwd / "perf.data", pwd / "perf" / (phase + ".data"));
+            }
+        }
     } else {
         if (block) {
             while (state != State::PhaseEnded && !this->_errors) {
