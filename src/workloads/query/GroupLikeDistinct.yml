@@ -1,11 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests performance of $group queries with distinct like semantics, meaning they will
-  execute with a DISTINCT_SCAN. Currently this is supported for $group + $sort and only with the
-  $first and $last accumulators. In PM-3163 this will be extended to $top, $topN and $bottom,
-  $bottomN accumulators so we are including those here in order to see performance changes once that
-  is implemented.
+  This workloads covers $group queries with distinct-like semantics, meaning that only a single document
+  is selected from each group. Depending on the details of the query and available indexes, the query might
+  be optimized to use DISTINCT_SCAN plan.
 
 Clients:
   Default:
@@ -37,11 +35,10 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
-          Duration: 30 seconds
+          Repeat: 100
           Collection: *Collection
           Operations:
-          - OperationMetricsName: DistinctExecutionMetrics
-            OperationName: aggregate
+          - OperationName: aggregate
             OperationCommand:
               Pipeline: {^Parameter: {Name: "Pipeline", Default: []}}
 
@@ -78,9 +75,9 @@ Actors:
         BatchSize: 1000
         Document:
           _id: {^Inc: {start: 0, step: 1}}
-          a: {^RandomInt: {min: 0, max: 500}}
-          b: {^RandomInt: {min: 0, max: 500}}
-          c: {^RandomInt: {min: 0, max: 500}}
+          a: {^RandomInt: {min: 0, max: 100}}
+          b: {^RandomInt: {min: 0, max: 100}}
+          c: {^RandomInt: {min: 0, max: 100}}
         Indexes:
           - keys: {a: 1, b: 1, c: 1}
 
@@ -88,44 +85,44 @@ Actors:
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
-      Name: "DistinctGroup"
+      Name: "Group"
       OnlyActiveInPhase: 2
       Pipeline: [{$group: {_id: "$a"}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
-      Name: "DistinctGroupSort"
+      Name: "GroupSort"
       OnlyActiveInPhase: 3
       Pipeline: [{$sort: {a: 1}}, {$group: {_id: "$a"}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
-      Name: "DistinctGroupSortFirst"
+      Name: "GroupSortFirst"
       OnlyActiveInPhase: 4
       Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$first: "$b"}}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
-      Name: "DistinctGroupSortFirstFullDocument"
+      Name: "GroupSortFirstFullDocument"
       OnlyActiveInPhase: 5
-      Pipeline: [{$sort: {a: 1, b: 1, c: 1}}, {$group: {_id: "$a", accum: {$first: "$$ROOT"}}}]
+      Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$first: "$$ROOT"}}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
-      Name: "DistinctGroupSortLast"
+      Name: "GroupSortLast"
       OnlyActiveInPhase: 6
-      Pipeline: [{$sort: {a: -1, b: -1}}, {$group: {_id: "$a", accum: {$last: "$b"}}}]
+      Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$last: "$b"}}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
-      Name: "DistinctGroupSortLastFullDocument"
+      Name: "GroupSortLastFullDocument"
       OnlyActiveInPhase: 7
-      Pipeline: [{$sort: {a: 1, b: 1, c: 1}}, {$group: {_id: "$a", accum: {$last: "$$ROOT"}}}]
+      Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$last: "$$ROOT"}}}]
 
 # The following do not yet use DISTINCT_SCAN, but they will after SERVER-84347.
 - ActorFromTemplate:
@@ -160,10 +157,5 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - standalone-all-feature-flags
-      - standalone
-      - shard
-      - shard-lite
-      - single-replica
       - replica
-      - atlas-like-replica.2022-10
+      - replica-all-feature-flags
