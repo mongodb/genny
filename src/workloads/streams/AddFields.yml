@@ -93,9 +93,9 @@ Actors:
           {
             $tumblingWindow: {
               interval: { size: 1, unit: "second" },
+              allowedLateness: { size: 1, unit: "second" },
               pipeline: [
                 {
-                  allowedLateness: { size: 1, unit: "second" },
                   $group: {
                     _id: "$auction",
                     minPrice: { $min: "$price" },
