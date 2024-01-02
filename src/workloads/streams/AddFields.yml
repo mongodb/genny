@@ -68,7 +68,6 @@ Actors:
             $source: {
               connectionName: "__testMemory",
               timeField: { $convert: { input: "$dateTime", to: "date" }},
-              allowedLateness: { size: 1, unit: "second" },
             }
           },
           { $addFields: { price1: { $multiply: ["$price", 1.75] }}},
@@ -96,6 +95,7 @@ Actors:
               interval: { size: 1, unit: "second" },
               pipeline: [
                 {
+                  allowedLateness: { size: 1, unit: "second" },
                   $group: {
                     _id: "$auction",
                     minPrice: { $min: "$price" },

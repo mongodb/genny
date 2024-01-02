@@ -75,13 +75,13 @@ Actors:
             $source: {
               connectionName: "__testMemory",
               timeField: { $convert: { input: "$dateTime", to: "date" }},
-              allowedLateness: { size: 1, unit: "second" },
             }
           },
           {
             $hoppingWindow: {
               interval: { size: 1, unit: "second" },
               hopSize: { size: 250, unit: "ms" },
+              allowedLateness: { size: 1, unit: "second" },
               pipeline: [
                 {
                   $group: {
