@@ -69,7 +69,7 @@ Actors:
   - *Nop
 
 - Name: Queries
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -77,18 +77,17 @@ Actors:
   - *Nop
   - Repeat: 50
     Database: *db
+    Collection: *coll
     Operations:
     - OperationMetricsName: SortCompound
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: *coll
-        pipeline: [
+        Pipeline: [
           {$sort: {m: 1, t: 1}},
           {$_internalInhibitOptimization: {}},
           {$skip: 1e10},
         ]
-        cursor: {}
-        hint: {m: 1, t: 1}
+        Hint: {m: 1, t: 1}
   - *Nop
 
 AutoRun:

@@ -9,7 +9,7 @@ Description: |
 
 GlobalDefaults:
   dbname: &db test
-  batchSize: &batchSize 30000
+  limit: &limit 30000
   fieldName: &field "timestamp"
   index: &index
     keys: {timestamp: 1}
@@ -60,7 +60,7 @@ Actors:
     Threads: 1
     CollectionCount: 1
     DocumentCount: 10000
-    BatchSize: *batchSize
+    BatchSize: *limit
     Document:
       partitionKey: {^RandomInt: {min: 1, max: 10}}
       timestamp: {^RandomDate: {min: "2021-01-01T00:00:00.000Z", max: "2021-01-01T00:00:20.000Z"}}
@@ -140,7 +140,7 @@ Actors:
   - *Nop
 
 - Name: DensifyTimestampFillWithoutPartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -151,12 +151,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestDensifyTimestampFillWithoutPartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           $densify: {
             field: *field,
             range: {
@@ -171,8 +171,9 @@ Actors:
             }
           }
         ]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+        Options: 
+          BatchSize:  *limit
+          AllowDiskUse: true
   - *Nop
   - *Nop
   - *Nop
@@ -183,7 +184,7 @@ Actors:
   - *Nop
 
 - Name: DensifyTimestampFillWithPartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -196,12 +197,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestDensifyTimestampFillWithPartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           $densify: {
             field: *field,
             range: {
@@ -216,10 +217,12 @@ Actors:
               toFillRandomType: {method: "locf"},
             },
             partitionByFields: ["partitionKey"]
-          }
+          },
+          $limit: *limit
         ]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+        Options: 
+          BatchSize:  *limit
+          AllowDiskUse: true
   - *Nop
   - *Nop
   - *Nop
@@ -228,7 +231,7 @@ Actors:
   - *Nop
 
 - Name: DensifyNumericFillWithPartition
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -243,12 +246,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestDensifyNumericFillWithPartition
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           $densify: {
             field: "numeric",
             range: {
@@ -262,17 +265,19 @@ Actors:
               toFillRandomType: {method: "locf"},
             },
             partitionByFields: ["partitionKey"]
-          }
+          },
+          $limit: *limit
         ]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+        Options: 
+          BatchSize:  *limit
+          AllowDiskUse: true
   - *Nop
   - *Nop
   - *Nop
   - *Nop
 
 - Name: DensifyNumericLinearFillNumeric
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -289,12 +294,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestDensifyNumericLinearFillNumeric
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           $densify: {
             field: "numeric",
             range: {
@@ -309,15 +314,17 @@ Actors:
                 method: "linear"
               }
             },
-          }
+          },
+          $limit: *limit
         ]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+        Options: 
+          BatchSize:  *limit
+          AllowDiskUse: true
   - *Nop
   - *Nop
 
 - Name: DensifyTimestampFillArbitraryValue
-  Type: RunCommand
+  Type: CrudActor
   Threads: 1
   Phases:
   - *Nop
@@ -336,12 +343,12 @@ Actors:
   - *Nop
   - Duration: 30 seconds
     Database: *db
+    Collection: Collection0
     Operations:
     - OperationMetricsName: TestDensifyNumericFillArbitraryValue
-      OperationName: RunCommand
+      OperationName: aggregate
       OperationCommand:
-        aggregate: Collection0
-        pipeline: [
+        Pipeline: [
           $densify: {
             field: "numeric",
             range: {
@@ -355,10 +362,12 @@ Actors:
                 value: "0"
               },
             },
-          }
+          },
+          $limit: *limit
         ]
-        cursor: {batchSize: *batchSize}
-        allowDiskUse: true
+        Options: 
+          BatchSize:  *limit
+          AllowDiskUse: true
 
 AutoRun:
 - When:
