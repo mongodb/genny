@@ -31,6 +31,7 @@
 
 #include <value_generators/DocumentGenerator.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
+#include <chrono>
 
 namespace genny::actor {
 
@@ -142,6 +143,7 @@ void genny::actor::Loader::run() {
                     << "Starting to insert: " << config->numDocuments << " docs "
                     << "into " << collectionName;
                 uint remainingInserts = config->numDocuments;
+                auto start = std::chrono::high_resolution_clock::now();
                 {
                     auto totalOpCtx = _totalBulkLoad.start();
                     while (remainingInserts > 0) {
@@ -163,6 +165,14 @@ void genny::actor::Loader::run() {
                     }
                     totalOpCtx.success();
                 }
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<float> duration = end - start;
+                float seconds = duration.count();
+                BOOST_LOG_TRIVIAL(info) << "Done with load phase. All " << config->numDocuments
+                                        << " documents loaded into " << collectionName
+                                        << " in " << seconds << " seconds"
+                                        << std::setprecision(5)
+                                        << " at " << ((float) config->numDocuments) / seconds << " docs/s";
                 // Make the index
                 bool _indexReq = false;
                 builder::stream::document builder{};
@@ -188,14 +198,12 @@ void genny::actor::Loader::run() {
                 }
                 auto doc = indexCmd << builder::stream::close_array << builder::stream::finalize;
                 if (_indexReq) {
-                    BOOST_LOG_TRIVIAL(debug)
+                    BOOST_LOG_TRIVIAL(info)
                             << "Building index" << to_json(doc.view());
                     auto indexOpCtx = _indexBuild.start();
                     config->database.run_command(doc.view());
                     indexOpCtx.success();
                 }
-                BOOST_LOG_TRIVIAL(info) << "Done with load phase. All " << config->numDocuments
-                                        << " documents loaded into " << collectionName;
             }
         }
     }
