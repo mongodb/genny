@@ -64,12 +64,12 @@ Actors:
             $source: {
               connectionName: "__testMemory",
               timeField: { $convert: { input: "$dateTime", to: "date" }},
-              allowedLateness: { size: 1, unit: "second" },
             }
           },
           {
             $tumblingWindow: {
               interval: { size: 1, unit: "second" },
+              allowedLateness: { size: 1, unit: "second" },
               pipeline: [
                 {
                   $group: {
