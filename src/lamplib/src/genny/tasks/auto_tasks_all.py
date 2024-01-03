@@ -47,7 +47,7 @@ def create_configuration(repo: Repo, builds: List[CurrentBuildInfo], no_activate
             SLOG.info(f"No auto-tasks for variant: {build.variant}")
     return config
 
-def main(project_file: str, workspace_root: str, no_activate: bool) -> None:
+def main(project_files: List[str], workspace_root: str, no_activate: bool) -> None:
     reader = YamlReader()
     try:
         global_expansions = reader.load(workspace_root, "expansions.yml")
@@ -55,7 +55,9 @@ def main(project_file: str, workspace_root: str, no_activate: bool) -> None:
         SLOG.error(f"Evergreen expansions file {os.path.join(workspace_root, 'expansions.yml')} does not exist. Ensure this file exists and that it is in the correct location.")
         sys.exit(1)
     execution = int(global_expansions["execution"])
-    builds = get_all_builds(global_expansions, project_file)
+    builds = []
+    for project_file in project_files:
+        builds.extend(get_all_builds(global_expansions, project_file))
 
     lister = WorkloadLister(workspace_root=workspace_root)
     repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
