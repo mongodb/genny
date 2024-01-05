@@ -1,0 +1,194 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: >
+  This workload stresses the query execution engine by running queries over a set of paths which
+  share a common prefix. Crucially, these queries never match a document in the collection.
+
+Keywords:
+- Loader
+- CrudActor
+- QuiesceActor
+- insert
+- find
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  DocumentCount: &DocumentCount 1e6
+  Repeat: &Repeat 50
+  Threads: &Threads 1
+  MaxPhases: &MaxPhases 9
+
+Actors:
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+# Insert documents with more than 20 fields for projection. The documents also contain 20 different
+# nested field path for projection.  This test targets workloads running queries with large
+# projections (inclusive, exclusive, dotted-path, and mixed).
+- Name: InsertDocumentWithManyFields
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: *DocumentCount
+        BatchSize: 1000
+        Document: {a: { b: { c: 0, d: 0, e: 0, f: 0, g: 0, h: 0, i: 0, j: 0, k: 0, l: 0, m: 0, n: 0, o: 0, p: 0, q: 0, r: 0, s: 0, t: 0, u: 0, v: 0}, }, c: 0, d: 0, e: 0, f: 0, g: 0, h: 0, i: 0, j: 0, k: 0, l: 0, m: 0, n: 0, o: 0, p: 0, q: 0, r: 0, s: 0, t: 0, u: 0, v: 0}
+
+- Name: QuiesceLargeProejction
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+
+- Name: LargeInclusiveProjection
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {}
+            Options:
+              Projection: {c: 1, d: 1, e: 1, f: 1, g: 1, h: 1, i: 1, j: 1, k: 1, l: 1, m: 1, n: 1, o: 1, p: 1, q: 1, r: 1, s: 1, t: 1, u: 1, v: 1}
+
+- Name: LargeRenamingProjection
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {}
+            Options:
+              Projection: {c1: '$c', d1: '$d', e1: '$e', f1: '$f', g1: '$g', h1: '$h', i1: '$i', j1: '$j', k1: '$k', l1: '$l', m1: '$m', n1: '$n', o1: '$o', p1: '$p', q1: '$q', r1: '$r', s1: '$s', t1: '$t', u1: '$u', v1: '$v'}
+
+- Name: LargeDottedPathProjection
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {}
+            Options:
+              Projection: {a: {b: {c: 1, d: 1, e: 1, f: 1, g: 1, h: 1, i: 1, j: 1, k: 1, l: 1, m: 1, n: 1, o: 1, p: 1, q: 1, r: 1, s: 1, t: 1, u: 1, v: 1}}}
+
+- Name: LargeDottedPathRenamingProjection
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {}
+            Options:
+              Projection: {a: {b: {c1: '$a.b.c', d1: '$a.b.d', e1: '$a.b.e', f1: '$a.b.f', g1: '$a.b.g', h1: '$a.b.h', i1: '$a.b.i', j1: '$a.b.j', k1: '$a.b.k', l1: '$a.b.l', m1: '$a.b.m', n1: '$a.b.n', o1: '$a.b.o', p1: '$a.b.p', q1: '$a.b.q', r1: '$a.b.r', s1: '$a.b.s', t1: '$a.b.t', u1: '$a.b.u', v1: '$a.b.v'}}}
+
+- Name: LargeMixedProjection
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {}
+            Options:
+              Projection: {a: {b: {c: 1, d: 1, e: 1, f: 1, g: 1, h: 1, i: 1, j: 1, k: 1, l: 1, m1: '$a.b.m', n1: '$a.b.n', o1: '$a.b.o', p1: '$a.b.p', q1: '$a.b.q', r1: '$a.b.r', s1: '$a.b.s', t1: '$a.b.t', u1: '$a.b.u', v1: '$a.b.v'}}}
+
+- Name: LargeCommonPathPrefixProjection
+  Type: CrudActor
+  Database: *Database
+  Threads: *Threads
+  Phases:
+    OnlyActiveInPhases:
+      Active: [8]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: *Repeat
+        Collection: *Collection
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: {}
+            Options:
+              Projection: {a: {b: {c: {d: {e: 1, f: 1, g: 1, h: 1, i: 1, j: 1, k: 1, l: 1, m: 1, n: 1, o: 1, p: 1, q: 1, r: 1, s: 1, t: 1, u: 1, v: 1}}}}}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-heuristic-bonsai
+      - standalone-sampling-bonsai
+      - standalone-sbe
+      - standalone-query-stats
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v6.0
