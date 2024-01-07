@@ -76,7 +76,7 @@ Actors:
         Repeat: 1
         Operations:
         - OperationName: RunCommand
-          OperationCommand: {test_psi: 1, window: 500, threshold: 100, some : false}
+          OperationCommand: {test_psi: 1, window: 500000, threshold: 20000, some : true}
 
 # Drop database to get rid of stale data. Useful when running locally multiple times.
 - Name: Setup
@@ -119,7 +119,8 @@ Actors:
       Active: [3]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Repeat: *SortRepeat
+        # Repeat: *SortRepeat
+        Duration: 2 minutes
         Database: *DBName
         Operations:
         - OperationMetricsName: SortMany
