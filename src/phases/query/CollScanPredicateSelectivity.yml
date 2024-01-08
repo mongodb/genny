@@ -188,7 +188,7 @@ Actors:
       Filter:
         &HighSelectivityGoodCaseFourClauses {
           onePercentConstantOne: 1, # Selectivity = .01
-          quarterPercentPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .25
+          quarterPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .25
           quarterNegativeInt: {$gt: 0}, # Selectivity = .75
           tenPercentConstantOne: {$ne: 1}, # Selectivity = .9
         }
