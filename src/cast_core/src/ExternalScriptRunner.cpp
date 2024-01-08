@@ -16,6 +16,7 @@
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
+#include <mongocxx/client.hpp>
 #include <cast_core/actors/ExternalScriptRunner.hpp>
 
 namespace genny::actor {
@@ -117,7 +118,7 @@ private:
 
 class GeneralRunner: public ScriptRunner {
 public:
-    GeneralRunner(PhaseContext& phaseContext, ActorId id, const std::string& workloadPath)
+    GeneralRunner(PhaseContext& phaseContext, ActorId id, const std::string& workloadPath, const mongocxx::uri& uri)
         : ScriptRunner(phaseContext, id, workloadPath),
           _script{phaseContext["Script"].to<std::string>()} {
         std::string command{phaseContext["Command"].to<std::string>()};
@@ -127,7 +128,10 @@ public:
             // No --file argument is required here, the script is run like
             // sh /path/to/file
             _invocation = "sh";
-        } else {
+        } else if (command == "mongo") {
+            _invocation = "/data/workdir/bin/mongo --quiet --tls --tlsAllowInvalidCertificates \"" + uri.to_string() + "\"";
+        }
+        else {
             throw std::runtime_error("Script type " + command + " is not supported.");
         }
     }
@@ -179,12 +183,12 @@ struct ExternalScriptRunner::PhaseConfig {
     // ignored.
     metrics::Operation operation;
 
-    PhaseConfig(PhaseContext& phaseContext, ActorId id, const std::string& workloadPath, const std::string& type)
+    PhaseConfig(PhaseContext& phaseContext, ActorId id, const std::string& workloadPath, const std::string& type, const mongocxx::uri& uri)
         : operation{phaseContext.operation("DefaultMetricsName", id)} {
             if(type == "Python") {
                 _scriptRunner = std::make_unique<PythonRunner>(phaseContext, id, workloadPath);
             } else {
-                _scriptRunner = std::make_unique<GeneralRunner>(phaseContext, id, workloadPath);
+                _scriptRunner = std::make_unique<GeneralRunner>(phaseContext, id, workloadPath, uri);
             }
         }
     std::string runScript() {
@@ -218,7 +222,8 @@ void ExternalScriptRunner::run() {
 ExternalScriptRunner::ExternalScriptRunner(genny::ActorContext& context)
     // These are the attributes for the actor.
     : Actor{context},
-      _loop{context, ExternalScriptRunner::id(), context.workload().workloadPath(), context["Type"].to<std::string>()}{}
+      _client{context.client()},
+      _loop{context, ExternalScriptRunner::id(), context.workload().workloadPath(), context["Type"].to<std::string>(), _client->uri()}{}
 
 namespace {
 auto registerExternalScriptRunner = Cast::registerDefault<ExternalScriptRunner>();
