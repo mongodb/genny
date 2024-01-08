@@ -302,7 +302,6 @@ Actors:
           OperationCommand:
             shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput18]}}
             key: {shardKey: "hashed"}
-# TODO: Make a lot of sharded collections
 - Name: Sharded1KLoader
   Type: MonotonicSingleLoader
   Threads: 5
