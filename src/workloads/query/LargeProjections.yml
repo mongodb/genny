@@ -1,8 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  This workload stresses the query execution engine by running queries over a set of paths which
-  share a common prefix. Crucially, these queries never match a document in the collection.
+  This workload runs collscan queries with a large projection on around 20 fields.
 
 Keywords:
 - Loader
@@ -52,7 +51,19 @@ Actors:
         CollectionCount: 1
         DocumentCount: *DocumentCount
         BatchSize: 1000
-        Document: {a: { b: { c: 0, d: 0, e: 0, f: 0, g: 0, h: 0, i: 0, j: 0, k: 0, l: 0, m: 0, n: 0, o: 0, p: 0, q: 0, r: 0, s: 0, t: 0, u: 0, v: 0}, }, c: 0, d: 0, e: 0, f: 0, g: 0, h: 0, i: 0, j: 0, k: 0, l: 0, m: 0, n: 0, o: 0, p: 0, q: 0, r: 0, s: 0, t: 0, u: 0, v: 0}
+        Document: {
+          a: {
+            b: {
+              c: {
+                d: {
+                  e: 1, f: 1, g: 1, h: 1, i: 1, j: 1, k: 1, l: 1, m: 1, n: 1, o: 1, p: 1, q: 1, r: 1, s: 1, t: 1, u: 1, v: 1
+                }
+              },
+              d: 2, e: 2, f: 2, g: 2, h: 2, i: 2, j: 2, k: 2, l: 2, m: 2, n: 2, o: 2, p: 2, q: 2, r: 2, s: 2, t: 2, u: 2, v: 2
+            }
+          },
+          c: 3, d: 3, e: 3, f: 3, g: 3, h: 3, i: 3, j: 3, k: 3, l: 3, m: 3, n: 3, o: 3, p: 3, q: 3, r: 3, s: 3, t: 3, u: 3, v: 3
+        }
 
 - Name: QuiesceLargeProejction
   Type: QuiesceActor
@@ -184,7 +195,6 @@ AutoRun:
       - standalone-heuristic-bonsai
       - standalone-sampling-bonsai
       - standalone-sbe
-      - standalone-query-stats
     branch_name:
       $neq:
       - v4.0
