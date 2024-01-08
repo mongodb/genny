@@ -1,0 +1,26 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload tests the performance of conjunctive collection scan queries where the order of
+  predicates matters due to selectivity of the predicates.
+
+LoadConfig:
+  Path: ../../phases/query/CollScanPredicateSelectivity.yml
+  Parameters:
+    Database: CollScanPredicateSelectivityMedium
+    DocumentCount: 1e4
+    Repeat: 100
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-heuristic-bonsai
+      - standalone-sampling-bonsai
+      - standalone-sbe
+    branch_name:
+      $gte:
+        v7.3
