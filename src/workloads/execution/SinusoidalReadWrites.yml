@@ -9,6 +9,9 @@ Description: |
   to effectively stop work on one actor while the other reaches its peak. We then
   alternate for a couple repetitions.
 
+  Simultaneously, we will run the TTL monitor in the background to test that it
+  is deprioritized when the system is under load.
+
   In this workload, we try to ensure that reads and writes do not overlap much.
 Keywords:
 - sinusoidal
@@ -16,19 +19,27 @@ Keywords:
 - insertMany
 - find
 - CrudActor
+- ttl
 
 dbname: &dbname mixed_sinusoidal
 DocumentCount: &NumDocs 500
 CollectionCount: &NumColls 1
 
-NumPhases: &NumPhases 2
+NumPhases: &NumPhases 3
+
 Document: &doc
-  a: {^RandomInt: {min: 0, max: *NumDocs}}
-  b: {^RandomString: {length: 16}}
+  a: {^RandomInt: {min: 0, max: 100000}}
+  b: {^RandomString: {length: 1000}}
+  c: 0
+
+ExpiredDocument: &expiredDoc
+  expireDate: {^Date: "1970-01-01"} # Instantly expire the document
+  x: 999
+
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 1001
+      maxPoolSize: 403
 
 ActorTemplates:
 - TemplateName: WritesActorWithSleepTemplate
@@ -42,16 +53,26 @@ ActorTemplates:
         Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
-          Duration: 1 minute
-          SleepAfter: 30 seconds
-          Repeat: 6
+          SleepBefore: 10 seconds
+          Repeat: 3
           CollectionCount: *NumColls
           Operations:
-          - OperationName: insertOne
+          - OperationName: insertMany
             OperationMetricsName: WriteDocs
             OperationCommand:
-              Document: *doc
+              Documents: # insert regular and expired docs
+              - *doc
+              - *doc
+              - *doc
+              - *doc
+              - *doc
+              - *expiredDoc
+              - *expiredDoc
+              - *expiredDoc
+              - *expiredDoc
+              - *expiredDoc
             ThrowOnFailure: false
+
 - TemplateName: ReadsActorWithSleepTemplate
   Config:
     Name: {^Parameter: {Name: "Name", Default: ReadsActorWithSleep}}
@@ -63,49 +84,116 @@ ActorTemplates:
         Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
-          SleepBefore: 30 seconds
-          Duration: 1 minute
-          Repeat: 6
+          SleepBefore: 15 seconds
+          Repeat: 3
           CollectionCount: *NumColls
           Operations:
           - OperationName: find
             OperationCommand:
-              Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
+              Filter: {a: {^RandomInt: {min: 0, max: 100000}}}
             OperationMetricsName: ReadDocs
             ThrowOnFailure: false
+
+- TemplateName: UpdatesActorWithSleepTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: UpdatesActorWithSleep}}
+    Type: CrudActor
+    Database: *dbname
+    Threads: {^Parameter: {Name: "Threads", Default: 100}}
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          SleepBefore: 20 seconds
+          Repeat: 3
+          CollectionCount: *NumColls
+          Operations:
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {a: {^RandomInt: {min: 0, max: 100000}}}
+              Update: {$set: {c: {^RandomInt: {min: 0, max: 100000}}}}
+            OperationMetricsName: UpdateDocs
+            ThrowOnFailure: false
+
 Actors:
 - Name: Setup
-  Type: Loader
+  Type: AdminCommand
   Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [0]
       NopInPhasesUpTo: *NumPhases
       PhaseConfig:
-        # Have 500 documents ready at start
         Repeat: 1
-        BatchSize: 100
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            setParameter: 1
+            ttlMonitorSleepSecs: 1
+        SleepAfter: 60 seconds  # Wait 60 seconds so that the new ttl sleep config is active.
+
+
+- Name: InsertTTLData
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        # Add a large set of expired documents at start to make sure TLL monitor doesn't catch up in future phases.
+        Repeat: 1
+        BatchSize: 10_000
         Threads: 1
-        DocumentCount: *NumDocs
+        DocumentCount: 200_000
+        Database: *dbname
+        CollectionCount: *NumColls
+        Document: *expiredDoc
+        Indexes:
+        - keys: {expireDate: 1}
+          options: {expireAfterSeconds: 0}
+
+- Name: InsertUpdateData
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        # Add a large number of regular documents with an index on 'a' and 'c'
+        Repeat: 1
+        BatchSize: 10_000
+        Threads: 1
+        DocumentCount: 10_000
         Database: *dbname
         CollectionCount: *NumColls
         Document: *doc
         Indexes:
-        - keys: {a: 1}
+         - keys: {a: 1, c: 1}
 
 - ActorFromTemplate:
     TemplateName: WritesActorWithSleepTemplate
     TemplateParameters:
       Name: {^Parameter: {Name: "WritingName", Default: WritingActor_50_50}}
-      Threads: {^Parameter: {Name: "WritingThreads", Default: 500}}
-      ActivePhases: [1]
+      Threads: {^Parameter: {Name: "WritingThreads", Default: 100}}
+      ActivePhases: [2]
 
 - ActorFromTemplate:
     TemplateName: ReadsActorWithSleepTemplate
     TemplateParameters:
       Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
-      Threads: {^Parameter: {Name: "ReadingThreads", Default: 500}}
-      ActivePhases: [1]
+      Threads: {^Parameter: {Name: "ReadingThreads", Default: 200}}
+      ActivePhases: [2]
+
+- ActorFromTemplate:
+    TemplateName: UpdatesActorWithSleepTemplate
+    TemplateParameters:
+      Name: {^Parameter: {Name: "UpdatingName", Default: UpdatesActor_50_50}}
+      Threads: {^Parameter: {Name: "UpdatingThreads", Default: 100}}
+      ActivePhases: [2]
 
 AutoRun:
 - When:
