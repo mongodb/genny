@@ -66,6 +66,24 @@ buildvariants:
   - name: tg_compile_and_test_with_server_on_amz
   - name: t_compile_and_dry_run_asan
 
+- name: amazon2023
+  display_name: Amazon Linux 2023 x64
+  modules: [mongo]
+  run_on:
+  - amazon2023.0-large
+  tasks:
+  - name: t_compile_and_dry_run
+  - name: t_compile_and_dry_run_asan
+
+- name: amazon2023_arm64
+  display_name: Amazon Linux 2023 arm64
+  modules: [mongo]
+  run_on:
+  - amazon2023.0-arm64-large
+  tasks:
+  - name: t_compile_and_dry_run
+  - name: t_compile_and_dry_run_asan
+
 - name: rhel70
   display_name: RHEL 7
   modules: [mongo]
