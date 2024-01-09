@@ -2,12 +2,23 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 Description: |
-  This workload does the following:
-    Create a sharded collection with a hashed shard key.
-    Insert 50k documents of around 20kb each.
-    Run updateMany as many times as possible for 5 minutes.
-    Each updateMany command will update only a single document.
-    The PauseMigrationsDuringMultiUpdates cluster parameter is disabled.
+  This workload does the following (with PauseMigrationsDuringMultiUpdates disabled):
+    * Create a sharded collection with a hashed shard key on _id.
+    * Insert 50k documents of around 20kB each using the monotonic loader.
+    * Run updateMany as many times as possible in two 5 minute phases, where
+      updateMany will update all of the 50k documents per command in the first
+      phase and only a single document per command in the second phase.
+  The intent of this workload is to measure the throughput of updateMany, so the
+  OperationThroughput and OperationsTotal metrics for DocumentUpdater.UpdateAll
+  and DocumentUpdater.UpdateOne should be used to evaluate performance when
+  updating all documents per command and a single document per command
+  respectively.
+Keywords:
+- AdminCommand
+- MonotonicSingleLoader
+- CrudActor
+- updateMany
+- sharding
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
@@ -16,7 +27,7 @@ GlobalDefaults:
   Collection: &Collection coll
   Namespace: &Namespace test.coll
 
-  ApproxDocumentSize: &ApproxDocumentSize 20_000
+  DocumentSize: &DocumentSize 20_000
   DocumentCount: &DocumentCount 50_000
 
 Clients:
@@ -43,6 +54,7 @@ Actors:
         key: {_id: hashed}
   - *Nop
   - *Nop
+  - *Nop
 
 - Name: LoadInitialData
   Type: MonotonicSingleLoader
@@ -56,7 +68,8 @@ Actors:
     Collection: *Collection
     Document:
       counter: 0
-      padding: {^FastRandomString: {length: *ApproxDocumentSize}}
+      padding: {^FastRandomString: {length: *DocumentSize}}
+  - *Nop
   - *Nop
 
 - Name: DocumentUpdater
@@ -67,7 +80,15 @@ Actors:
   - *Nop
   - *Nop
   - Duration: 5 minutes
-    MetricsName: Update
+    MetricsName: UpdateAll
+    Collection: *Collection
+    Operations:
+    - OperationName: updateMany
+      OperationCommand:
+        Filter: {}
+        Update: {$inc: {counter: 1}}
+  - Duration: 5 minutes
+    MetricsName: UpdateOne
     Collection: *Collection
     Operations:
     - OperationName: updateMany

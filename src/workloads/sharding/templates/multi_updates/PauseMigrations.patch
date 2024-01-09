@@ -1,13 +1,13 @@
-9c9
-<     The PauseMigrationsDuringMultiUpdates cluster parameter is disabled.
+4c4
+<   This workload does the following (with PauseMigrationsDuringMultiUpdates disabled):
 ---
->     The PauseMigrationsDuringMultiUpdates cluster parameter is enabled.
-37a38,41
+>   This workload does the following (with PauseMigrationsDuringMultiUpdates enabled):
+48a49,52
 >     - OperationMetricsName: SetClusterParameter
 >       OperationName: AdminCommand
 >       OperationCommand:
 >         setClusterParameter: { pauseMigrationsDuringMultiUpdates: { enabled: true } }
-76,77c80
+97,98c101
 <       - shard
 <       - shard-lite
 ---

@@ -21,7 +21,6 @@ def getWorkloadFilename(base, enabledPatches):
     patchStems = [patch.stem for patch in enabledPatches]
     patchStems.sort()
     for patchStem in patchStems:
-        print(patchStem)
         name = name.parent.joinpath(f"{name.stem}-{patchStem}.yml")
     return name
 
