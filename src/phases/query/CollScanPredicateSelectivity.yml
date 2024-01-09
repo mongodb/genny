@@ -1,17 +1,56 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload tests the performance of conjunctive collection scan queries where the order of
-  predicates matters due to selectivity of the predicates.
+  This workload tests the performance of collection scan queries which include conjunctions where the order of
+  predicates matters due to selectivity of the predicates. In actors' names, a 'good' case means that the ordering
+  of predicates defined by actual selectivities matches the ordering defined by heuristic selectivity estimation.
+  Similarly, an 'indistinguishable' case means that heuristic CE defines the same selectivity for all predicates
+  in the query. For this workload, average latency is the most important metric to look at.
+
 
 GlobalDefaults:
   Database: &Database {^Parameter: {Name: Database, Default: unused}}
   DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
   Repeat: &Repeat {^Parameter: {Name: Repeat, Default: -1}}
   Collection: &Collection Collection0
-  MaxPhases: &MaxPhases 31
+  MaxPhases: &MaxPhases 32
   Billion: &Billion 1_000_000_000
   NegativeBillion: &NegativeBillion -1_000_000_000
+  Document: &Document {
+    onePercentNull: {^Choose: {from: ["non-null", null], weights: [99, 1]}},
+    tenPercentNull: {^Choose: {from: ["non-null", null], weights: [90, 10]}},
+    quarterNull: {^Choose: {from: ["non-null", null], weights: [75, 25]}},
+    onePercentStr: {^Choose: {from: [null, "non-null"], weights: [99, 1]}},
+    tenPercentStr: {^Choose: {from: [null, "non-null"], weights: [90, 10]}},
+    quarterStr: {^Choose: {from: [null, "non-null"], weights: [75, 25]}},
+    onePercentPositiveInt: {^Choose: {
+      from: &PositiveAndNegativeIntegers [{^Inc: {start: 1, step: 1}}, {^Inc: {start: -1, step: -1}}], 
+      weights: [1, 99]
+    }},
+    tenPercentPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [10, 90]}},
+    quarterPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [25, 75]}},
+    halfPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [50, 50]}},
+    quarterNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [75, 25]}},
+    tenPercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [90, 10]}},
+    onePercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [99, 1]}},
+    nested: [
+      {
+        onePercentNull: {^Choose: {from: ["non-null", null], weights: [99, 1]}},
+        tenPercentNull: {^Choose: {from: ["non-null", null], weights: [90, 10]}},
+        quarterNull: {^Choose: {from: ["non-null", null], weights: [75, 25]}},
+        onePercentStr: {^Choose: {from: [null, "non-null"], weights: [99, 1]}},
+        tenPercentStr: {^Choose: {from: [null, "non-null"], weights: [90, 10]}},
+        quarterStr: {^Choose: {from: [null, "non-null"], weights: [75, 25]}},
+        onePercentPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [1, 99]}},
+        tenPercentPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [10, 90]}},
+        quarterPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [25, 75]}},
+        halfPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [50, 50]}},
+        quarterNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [75, 25]}},
+        tenPercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [90, 10]}},
+        onePercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [99, 1]}},
+      }
+    ]
+  }
 
 ActorTemplates:
 - TemplateName: FindQueryTemplate
@@ -30,7 +69,7 @@ ActorTemplates:
           Operations:
           - OperationName: find
             OperationCommand:
-              Filter: {^Parameter: {Name: "Filter", Default: {invalid: "invalid"}}}
+              Filter: {^Parameter: {Name: "Filter", Default: "undefinedFilter"}}
 
 Actors:
 - Name: ClearCollection
@@ -62,36 +101,7 @@ Actors:
         CollectionCount: 1
         DocumentCount: *DocumentCount
         BatchSize: 1000
-        Document:
-          {
-            onePercentNull: {^Choose: {from: ["non-null", null], weights: [99, 1]}},
-            tenPercentNull: {^Choose: {from: ["non-null", null], weights: [90, 10]}},
-            quarterNull: {^Choose: {from: ["non-null", null], weights: [75, 25]}},
-            onePercentPositiveInt: {^Choose: {
-              from: &PositiveAndNegativeIntegers [{^Inc: {start: 1, step: 1}}, {^Inc: {start: -1, step: -1}}], 
-              weights: [1, 99]
-            }},
-            tenPercentPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [10, 90]}},
-            quarterPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [25, 75]}},
-            halfPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [50, 50]}},
-            quarterNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [75, 25]}},
-            tenPercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [90, 10]}},
-            onePercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [99, 1]}},
-            nested: [
-              {
-                onePercentNull: {^Choose: {from: ["non-null", null], weights: [99, 1]}},
-                tenPercentNull: {^Choose: {from: ["non-null", null], weights: [90, 10]}},
-                quarterNull: {^Choose: {from: ["non-null", null], weights: [75, 25]}},
-                onePercentPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [1, 99]}},
-                tenPercentPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [10, 90]}},
-                quarterPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [25, 75]}},
-                halfPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [50, 50]}},
-                quarterNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [75, 25]}},
-                tenPercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [90, 10]}},
-                onePercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [99, 1]}},
-              }
-            ]
-          }
+        Document: *Document
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -105,20 +115,17 @@ Actors:
         Repeat: 1
         Threads: 1
 
-# In actors' names, a 'good case' means that the ordering of predicates defined by actual
-# selectivities matches the ordering defined by heuristic selectivity estimation. Heuristic CE 
-# defines the following selectivity order for predicates:
+# Heuristic CE defines the following selectivity order for predicates:
 # $eq < closed range (e.g. {$gt: 10, $lte: 20}) < open range (e.g. {$gt: 10}) < $ne
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: HighSelHeuristicGoodTwoClauses
+      Name: HighSelHeuristicGoodTwoRangeClauses
       ActivePhase: 3
       Filter:
         # Here (0, 1e9) is the most selective predicate, both in reality and according to heuristic CE.
-        # Note that without predicate reordering, predicates are ordered by first comparing field names.
-        &HighSelHeuristicGoodTwoClauses {
+        &HighSelHeuristicGoodTwoRangeClauses {
           onePercentPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .01
           onePercentNegativeInt: {$gt: 0}, # Selectivity = .99
         }
@@ -126,10 +133,21 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: MediumSelHeuristicGoodTwoClauses
+      Name: HighSelHeuristicGoodTwoEqClauses
       ActivePhase: 4
       Filter:
-        &MediumSelHeuristicGoodTwoClauses {
+        &HighSelHeuristicGoodTwoEqClauses {
+          onePercentNull: null, # Selectivity = .01
+          onePercentStr: {$ne: "non-null"}, # Selectivity = .99
+        }
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: MediumSelHeuristicGoodTwoRangeClauses
+      ActivePhase: 5
+      Filter:
+        &MediumSelHeuristicGoodTwoRangeClauses {
           tenPercentPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .1
           tenPercentNegativeInt: {$gt: 0}, # Selectivity = .9
         }
@@ -137,10 +155,21 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: LowSelHeuristicGoodTwoClauses
-      ActivePhase: 5
+      Name: MediumSelHeuristicGoodTwoEqClauses
+      ActivePhase: 6
       Filter:
-        &LowSelHeuristicGoodTwoClauses {
+        &MediumSelHeuristicGoodTwoEqClauses {
+          tenPercentNull: null, # Selectivity = .1
+          tenPercentStr: {$ne: "non-null"}, # Selectivity = .9
+        }
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: LowSelHeuristicGoodTwoRangeClauses
+      ActivePhase: 7
+      Filter:
+        &LowSelHeuristicGoodTwoRangeClauses {
           quarterPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .25
           quarterNegativeInt: {$gt: 0}, # Selectivity = .75
         }
@@ -148,12 +177,23 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: HighSelHeuristicBadTwoClauses
-      ActivePhase: 6
+      Name: LowSelHeuristicGoodTwoEqClauses
+      ActivePhase: 8
+      Filter:
+        &LowSelHeuristicGoodTwoEqClauses {
+          quarterNull: null, # Selectivity = .25
+          quarterStr: {$ne: "non-null"}, # Selectivity = .75
+        }
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: HighSelHeuristicBadTwoRangeClauses
+      ActivePhase: 9
       Filter:
         # Here (-1e9, 0) is the most selective predicate according to heuristic CE. However, (-inf, 0)
         # is more selective in reality.
-        &HighSelHeuristicBadTwoClauses {
+        &HighSelHeuristicBadTwoRangeClauses {
           onePercentPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .99
           onePercentNegativeInt: {$lt: 0}, # Selectivity = .01
         }
@@ -161,10 +201,21 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: MediumSelHeuristicBadTwoClauses
-      ActivePhase: 7
+      Name: HighSelHeuristicBadTwoEqClauses
+      ActivePhase: 10
       Filter:
-        &MediumSelHeuristicBadTwoClauses {
+        &HighSelHeuristicBadTwoEqClauses {
+          onePercentStr: null, # Selectivity = .99
+          onePercentNull: {$ne: "non-null"}, # Selectivity = .01
+        }
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: MediumSelHeuristicBadTwoRangeClauses
+      ActivePhase: 11
+      Filter:
+        &MediumSelHeuristicBadTwoRangeClauses {
           tenPercentPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .9
           tenPercentNegativeInt: {$lt: 0}, # Selectivity = .1
         }
@@ -172,10 +223,21 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: LowSelHeuristicBadTwoClauses
-      ActivePhase: 8
+      Name: MediumSelHeuristicBadTwoEqClauses
+      ActivePhase: 12
       Filter:
-        &LowSelHeuristicBadTwoClauses {
+        &MediumSelHeuristicBadTwoEqClauses {
+          tenPercentStr: null, # Selectivity = .9
+          tenPercentNull: {$ne: "non-null"}, # Selectivity = .1
+        }
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: LowSelHeuristicBadTwoRangeClauses
+      ActivePhase: 13
+      Filter:
+        &LowSelHeuristicBadTwoRangeClauses {
           quarterPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .75
           quarterNegativeInt: {$lt: 0}, # Selectivity = .25
         }
@@ -183,8 +245,19 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
+      Name: LowSelHeuristicBadTwoEqClauses
+      ActivePhase: 14
+      Filter:
+        &LowSelHeuristicBadTwoEqClauses {
+          quarterStr: null, # Selectivity = .75
+          quarterNull: {$ne: "non-null"}, # Selectivity = .25
+        }
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
       Name: HighSelHeuristicGoodFourClauses
-      ActivePhase: 9
+      ActivePhase: 15
       Filter:
         &HighSelHeuristicGoodFourClauses {
           onePercentNull: null, # Selectivity = .01
@@ -197,7 +270,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: MediumSelHeuristicGoodFourClauses
-      ActivePhase: 10
+      ActivePhase: 16
       Filter:
         &MediumSelHeuristicGoodFourClauses {
           tenPercentNull: null, # Selectivity = .1
@@ -210,7 +283,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: LowSelHeuristicGoodFourClauses
-      ActivePhase: 11
+      ActivePhase: 17
       Filter:
         &LowSelHeuristicGoodFourClauses {
           quarterNull: null, # Selectivity = .25
@@ -223,7 +296,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: HighSelHeuristicBadFourClauses
-      ActivePhase: 12
+      ActivePhase: 18
       Filter:
         &HighSelHeuristicBadFourClauses {
           tenPercentNull: "non-null", # Selectivity = .9
@@ -236,7 +309,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: MediumSelHeuristicBadFourClauses
-      ActivePhase: 13
+      ActivePhase: 19
       Filter:
         &MediumSelHeuristicBadFourClauses {
           onePercentNull: "non-null", # Selectivity = .99
@@ -249,7 +322,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: LowSelHeuristicBadFourClauses
-      ActivePhase: 14
+      ActivePhase: 20
       Filter:
         &LowSelHeuristicBadFourClauses {
           onePercentNull: "non-null", # Selectivity = .99
@@ -262,7 +335,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: HighSelIndistinguishableByHeuristics
-      ActivePhase: 15
+      ActivePhase: 21
       Filter:
         &HighSelIndistinguishableByHeuristics {
           onePercentPositiveInt: {$gt: 0}, # Selectivity = .01
@@ -278,7 +351,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: MediumSelIndistinguishableByHeuristics
-      ActivePhase: 16
+      ActivePhase: 22
       Filter:
         &MediumSelIndistinguishableByHeuristics {
           tenPercentPositiveInt: {$gt: 0}, # Selectivity = .1
@@ -294,7 +367,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: LowSelIndistinguishableByHeuristics
-      ActivePhase: 16
+      ActivePhase: 23
       Filter:
         &LowSelIndistinguishableByHeuristics {
           quarterPositiveInt: {$gt: 0}, # Selectivity = .25
@@ -309,56 +382,206 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchHighSelHeuristicGoodTwoClauses
-      ActivePhase: 17
+      Name: DNFHeuristicGood
+      ActivePhase: 24
       Filter:
-        {nested: {$elemMatch: *HighSelHeuristicGoodTwoClauses}}
+        &DNFHeuristicGood {
+          $or:
+          [
+            $and: [
+              onePercentNull: null, # Selectivity = .01
+              onePercentStr: {$ne: "non-null"}, # Selectivity = .99
+            ],
+            $and: [
+              tenPercentNull: null, # Selectivity = .1
+              tenPercentStr: {$ne: "non-null"}, # Selectivity = .9
+            ],
+            $and: [ # Least selective
+              quarterNull: null, # Selectivity = .25
+              quarterStr: {$ne: "non-null"}, # Selectivity = .75
+            ]
+          ],
+        }
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchMediumSelHeuristicGoodTwoClauses
-      ActivePhase: 18
+      Name: DNFHeuristicBad
+      ActivePhase: 25
       Filter:
-        {nested: {$elemMatch: *MediumSelHeuristicGoodTwoClauses}}
+        &DNFHeuristicBad {
+          $or:
+          [
+            $and: [
+              onePercentStr: null, # Selectivity = .99
+              onePercentNull: {$ne: "non-null"}, # Selectivity = .01
+            ],
+            $and: [
+              tenPercentStr: null, # Selectivity = .9
+              tenPercentNull: {$ne: "non-null"}, # Selectivity = .1
+            ],
+            $and: [
+              quarterStr: null, # Selectivity = .75
+              quarterNull: {$ne: "non-null"}, # Selectivity = .25
+            ]
+          ],
+        }
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchLowSelHeuristicGoodTwoClauses
-      ActivePhase: 19
+      Name: CNFHeuristicGood
+      ActivePhase: 26
       Filter:
-        {nested: {$elemMatch: *LowSelHeuristicGoodTwoClauses}}
+        &CNFHeuristicGood {
+          $and:
+          [
+            # Selectivity = .0099
+            $or: [
+              onePercentNull: null, # Selectivity = .01
+              onePercentStr: null, # Selectivity = .99
+            ],
+            # Selectivity = .09
+            $or: [
+              tenPercentNegativeInt: {$lt: 0}, # Selectivity = .1
+              tenPercentPositiveInt: {$lt: 0}, # Selectivity = .9
+            ],
+            # Selectivity = .1875
+            $or: [
+              quarterNull: {$ne: "non-null"}, # Selectivity = .25
+              quarterStr: {$ne: "non-null"}, # Selectivity = .75
+            ]
+          ],
+        }
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchHighSelHeuristicBadTwoClauses
-      ActivePhase: 20
+      Name: CNFHeuristicBad
+      ActivePhase: 27
       Filter:
-        {nested: {$elemMatch: *HighSelHeuristicBadTwoClauses}}
+        &CNFHeuristicBad {
+          $and:
+          [
+            # Selectivity = .1875
+            $or: [
+              quarterNull: null, # Selectivity = .25
+              quarterStr: null, # Selectivity = .75
+            ],
+            # Selectivity = .09
+            $or: [
+              tenPercentNegativeInt: {$lt: 0}, # Selectivity = .1
+              tenPercentPositiveInt: {$lt: 0}, # Selectivity = .9
+            ],
+            # Selectivity = .0099
+            $or: [
+              onePercentNull: {$ne: "non-null"}, # Selectivity = .01
+              onePercentStr: {$ne: "non-null"}, # Selectivity = .99
+            ]
+          ],
+        }
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchMediumSelHeuristicBadTwoClauses
-      ActivePhase: 21
+      Name: ElemMatchHighSelHeuristicGoodTwoRangeClauses
+      ActivePhase: 28
       Filter:
-        {nested: {$elemMatch: *MediumSelHeuristicBadTwoClauses}}
+        {nested: {$elemMatch: *HighSelHeuristicGoodTwoRangeClauses}}
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchLowSelHeuristicBadTwoClauses
-      ActivePhase: 22
+      Name: ElemMatchHighSelHeuristicGoodTwoEqClauses
+      ActivePhase: 29
       Filter:
-        {nested: {$elemMatch: *LowSelHeuristicBadTwoClauses}}
+        {nested: {$elemMatch: *HighSelHeuristicGoodTwoEqClauses}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchMediumSelHeuristicGoodTwoRangeClauses
+      ActivePhase: 30
+      Filter:
+        {nested: {$elemMatch: *MediumSelHeuristicGoodTwoRangeClauses}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchMediumSelHeuristicGoodTwoEqClauses
+      ActivePhase: 31
+      Filter:
+        {nested: {$elemMatch: *MediumSelHeuristicGoodTwoEqClauses}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchLowSelHeuristicGoodTwoRangeClauses
+      ActivePhase: 32
+      Filter:
+        {nested: {$elemMatch: *LowSelHeuristicGoodTwoRangeClauses}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchLowSelHeuristicGoodTwoEqClauses
+      ActivePhase: 33
+      Filter:
+        {nested: {$elemMatch: *LowSelHeuristicGoodTwoEqClauses}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchHighSelHeuristicBadTwoRangeClauses
+      ActivePhase: 34
+      Filter:
+        {nested: {$elemMatch: *HighSelHeuristicBadTwoRangeClauses}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchHighSelHeuristicBadTwoEqClauses
+      ActivePhase: 35
+      Filter:
+        {nested: {$elemMatch: *HighSelHeuristicBadTwoEqClauses}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchMediumSelHeuristicBadTwoRangeClauses
+      ActivePhase: 36
+      Filter:
+        {nested: {$elemMatch: *MediumSelHeuristicBadTwoRangeClauses}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchMediumSelHeuristicBadTwoEqClauses
+      ActivePhase: 37
+      Filter:
+        {nested: {$elemMatch: *MediumSelHeuristicBadTwoEqClauses}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchLowSelHeuristicBadTwoRangeClauses
+      ActivePhase: 38
+      Filter:
+        {nested: {$elemMatch: *LowSelHeuristicBadTwoRangeClauses}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchLowSelHeuristicBadTwoEqClauses
+      ActivePhase: 39
+      Filter:
+        {nested: {$elemMatch: *LowSelHeuristicBadTwoEqClauses}}
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchHighSelHeuristicGoodFourClauses
-      ActivePhase: 23
+      ActivePhase: 40
       Filter:
         {nested: {$elemMatch: *HighSelHeuristicGoodFourClauses}}
 
@@ -366,7 +589,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchMediumSelHeuristicGoodFourClauses
-      ActivePhase: 24
+      ActivePhase: 41
       Filter:
         {nested: {$elemMatch: *MediumSelHeuristicGoodFourClauses}}
 
@@ -374,7 +597,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchLowSelHeuristicGoodFourClauses
-      ActivePhase: 25
+      ActivePhase: 42
       Filter:
         {nested: {$elemMatch: *LowSelHeuristicGoodFourClauses}}
 
@@ -382,7 +605,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchHighSelHeuristicBadFourClauses
-      ActivePhase: 26
+      ActivePhase: 43
       Filter:
         {nested: {$elemMatch: *HighSelHeuristicBadFourClauses}}
 
@@ -390,7 +613,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchMediumSelHeuristicBadFourClauses
-      ActivePhase: 27
+      ActivePhase: 44
       Filter:
         {nested: {$elemMatch: *MediumSelHeuristicBadFourClauses}}
 
@@ -398,7 +621,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchLowSelHeuristicBadFourClauses
-      ActivePhase: 28
+      ActivePhase: 45
       Filter:
         {nested: {$elemMatch: *LowSelHeuristicBadFourClauses}}
 
@@ -406,7 +629,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchHighSelIndistinguishableByHeuristics
-      ActivePhase: 29
+      ActivePhase: 46
       Filter:
         {nested: {$elemMatch: *HighSelIndistinguishableByHeuristics}}
 
@@ -414,7 +637,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchMediumSelIndistinguishableByHeuristics
-      ActivePhase: 30
+      ActivePhase: 47
       Filter:
         {nested: {$elemMatch: *MediumSelIndistinguishableByHeuristics}}
 
@@ -422,6 +645,38 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchLowSelIndistinguishableByHeuristics
-      ActivePhase: 31
+      ActivePhase: 48
       Filter:
         {nested: {$elemMatch: *LowSelIndistinguishableByHeuristics}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchDNFHeuristicGood
+      ActivePhase: 49
+      Filter:
+        {nested: {$elemMatch: *DNFHeuristicGood}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchDNFHeuristicBad
+      ActivePhase: 50
+      Filter:
+        {nested: {$elemMatch: *DNFHeuristicBad}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchCNFHeuristicGood
+      ActivePhase: 51
+      Filter:
+        {nested: {$elemMatch: *CNFHeuristicGood}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchCNFHeuristicBad
+      ActivePhase: 52
+      Filter:
+        {nested: {$elemMatch: *CNFHeuristicBad}}
