@@ -863,7 +863,7 @@ Actors:
                                     },
                                 },
                             },
-                          usage_user: { $gt: 90 }, # 90 is hard-coded in TSBS.
+                          "fields.usage_user": { $gt: 90 }, # 90 is hard-coded in TSBS.
                         },
                     },
                     { $set: { tags: "$tags.hostname" } },
