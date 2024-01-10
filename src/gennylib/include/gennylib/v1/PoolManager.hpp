@@ -88,7 +88,7 @@ private:
  */
 class EncryptionManager {
 public:
-    EncryptionManager(const Node& yaml, bool dryRun = false);
+    EncryptionManager(const Node& workloadCtx, bool dryRun = false);
     ~EncryptionManager();
 
     EncryptionContext createEncryptionContext(const std::string& uri,
@@ -114,7 +114,7 @@ public:
 
     /**
      *  Connection/query-string parameters can be added via `Clients` configuration
-     *  passed in when calling `client()`.
+     *  passed in when calling `createClient()`.
      *  See PoolFactory for how this can be configured.
      *
      * @param callback
@@ -129,7 +129,16 @@ public:
     /**
      * Obtain a connection or throw if none available.
      *
-     * This is allowed to be called from multiple threads simultaneously.
+     * This connection will be pre-warmed by default, unless "NoPreWarm" is set to true, e.g.:
+     *
+     * ```yaml
+     * Clients:
+     *   Default:
+     *     NoPreWarm: true
+     *     QueryOptions:
+     * ...
+     * ```
+     * This function could be called from multiple threads simultaneously.
      *
      * @warning it is advised to only call this during setup since creating a connection pool
      * can be an expensive operation
@@ -139,11 +148,15 @@ public:
      * @param instance
      *   which instance of the named pool to use. Will be created on-demand the first time the
      *   (name,instance) pair is used.
-     * @param context
+     * @param workloadCtx
      *   the WorkloadContext used to look up the configurations
      * @return a connection from the pool or throw if none available
      */
-    mongocxx::pool::entry client(const std::string& name, size_t instance, const Node& context);
+    mongocxx::pool::entry createClient(const std::string& name,
+                                       size_t instance,
+                                       const Node& workloadCtx);
+
+    mongocxx::pool::entry _preWarm(mongocxx::pool::entry connection);
 
     // Only used for testing
     /** @private */

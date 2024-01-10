@@ -41,9 +41,11 @@ Constants:
 
 Clients:
   Default:
+    NoPreWarm: true
     QueryOptions:
       maxPoolSize: *GlobalMaxPoolSize
   PerThread:
+    NoPreWarm: true
     QueryOptions:
       maxPoolSize: *GlobalMaxPoolSize
 

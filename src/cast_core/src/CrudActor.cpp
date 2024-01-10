@@ -1760,8 +1760,7 @@ void CrudActor::run() {
 
 CrudActor::CrudActor(genny::ActorContext& context)
     : Actor(context),
-      _client{std::move(
-          context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
+      _client{std::move(context.client())},
       _loop{context, _client, CrudActor::id()},
       _rng{context.workload().getRNGForThread(CrudActor::id())} {}
 
