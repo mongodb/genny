@@ -139,10 +139,10 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: HighSelHeuristicGoodTwoEqClauses
+      Name: HighSelHeuristicGoodEqNe
       ActivePhase: 4
       Filter:
-        &HighSelHeuristicGoodTwoEqClauses {
+        &HighSelHeuristicGoodEqNe {
           onePercentNull: null, # Selectivity = .01
           onePercentStr: {$ne: "non-null"}, # Selectivity = .99
         }
@@ -161,10 +161,10 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: MediumSelHeuristicGoodTwoEqClauses
+      Name: MediumSelHeuristicGoodEqNe
       ActivePhase: 6
       Filter:
-        &MediumSelHeuristicGoodTwoEqClauses {
+        &MediumSelHeuristicGoodEqNe {
           tenPercentNull: null, # Selectivity = .1
           tenPercentStr: {$ne: "non-null"}, # Selectivity = .9
         }
@@ -183,10 +183,10 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: LowSelHeuristicGoodTwoEqClauses
+      Name: LowSelHeuristicGoodEqNe
       ActivePhase: 8
       Filter:
-        &LowSelHeuristicGoodTwoEqClauses {
+        &LowSelHeuristicGoodEqNe {
           quarterNull: null, # Selectivity = .25
           quarterStr: {$ne: "non-null"}, # Selectivity = .75
         }
@@ -207,10 +207,10 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: HighSelHeuristicBadTwoEqClauses
+      Name: HighSelHeuristicBadEqNe
       ActivePhase: 10
       Filter:
-        &HighSelHeuristicBadTwoEqClauses {
+        &HighSelHeuristicBadEqNe {
           onePercentStr: null, # Selectivity = .99
           onePercentNull: {$ne: "non-null"}, # Selectivity = .01
         }
@@ -229,10 +229,10 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: MediumSelHeuristicBadTwoEqClauses
+      Name: MediumSelHeuristicBadEqNe
       ActivePhase: 12
       Filter:
-        &MediumSelHeuristicBadTwoEqClauses {
+        &MediumSelHeuristicBadEqNe {
           tenPercentStr: null, # Selectivity = .9
           tenPercentNull: {$ne: "non-null"}, # Selectivity = .1
         }
@@ -251,10 +251,10 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: LowSelHeuristicBadTwoEqClauses
+      Name: LowSelHeuristicBadEqNe
       ActivePhase: 14
       Filter:
-        &LowSelHeuristicBadTwoEqClauses {
+        &LowSelHeuristicBadEqNe {
           quarterStr: null, # Selectivity = .75
           quarterNull: {$ne: "non-null"}, # Selectivity = .25
         }
@@ -498,10 +498,10 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchHighSelHeuristicGoodTwoEqClauses
+      Name: ElemMatchHighSelHeuristicGoodEqNe
       ActivePhase: 29
       Filter:
-        {nested: {$elemMatch: *HighSelHeuristicGoodTwoEqClauses}}
+        {nested: {$elemMatch: *HighSelHeuristicGoodEqNe}}
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
@@ -514,10 +514,10 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchMediumSelHeuristicGoodTwoEqClauses
+      Name: ElemMatchMediumSelHeuristicGoodEqNe
       ActivePhase: 31
       Filter:
-        {nested: {$elemMatch: *MediumSelHeuristicGoodTwoEqClauses}}
+        {nested: {$elemMatch: *MediumSelHeuristicGoodEqNe}}
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
@@ -530,10 +530,10 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchLowSelHeuristicGoodTwoEqClauses
+      Name: ElemMatchLowSelHeuristicGoodEqNe
       ActivePhase: 33
       Filter:
-        {nested: {$elemMatch: *LowSelHeuristicGoodTwoEqClauses}}
+        {nested: {$elemMatch: *LowSelHeuristicGoodEqNe}}
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
@@ -546,10 +546,10 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchHighSelHeuristicBadTwoEqClauses
+      Name: ElemMatchHighSelHeuristicBadEqNe
       ActivePhase: 35
       Filter:
-        {nested: {$elemMatch: *HighSelHeuristicBadTwoEqClauses}}
+        {nested: {$elemMatch: *HighSelHeuristicBadEqNe}}
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
@@ -562,10 +562,10 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchMediumSelHeuristicBadTwoEqClauses
+      Name: ElemMatchMediumSelHeuristicBadEqNe
       ActivePhase: 37
       Filter:
-        {nested: {$elemMatch: *MediumSelHeuristicBadTwoEqClauses}}
+        {nested: {$elemMatch: *MediumSelHeuristicBadEqNe}}
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
@@ -578,10 +578,10 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchLowSelHeuristicBadTwoEqClauses
+      Name: ElemMatchLowSelHeuristicBadEqNe
       ActivePhase: 39
       Filter:
-        {nested: {$elemMatch: *LowSelHeuristicBadTwoEqClauses}}
+        {nested: {$elemMatch: *LowSelHeuristicBadEqNe}}
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
