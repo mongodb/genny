@@ -127,13 +127,23 @@ Actors:
                         },
                     },
                     {
+                      $project: {
+                        _id: 0,
+                        time_bucket: { $dateTrunc: { date: "$time", unit: "minute" }},
+                        "fields.usage_user": 1,
+                      }
+                    },
+                    {
+                      $unwind: "$fields",
+                    },
+                    {
                       $group:
                         {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          _id: { time_bucket: "$time_bucket" },
                           max_usage_user: { $max: "$fields.usage_user" },
                         },
                     },
-                    { $sort: { _id: 1 } },
+                    { $sort: { "_id.time_bucket": 1 } },
                   ]
 
   - Name: single_groupby_1_8_1
