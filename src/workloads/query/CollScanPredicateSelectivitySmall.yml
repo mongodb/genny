@@ -9,7 +9,7 @@ LoadConfig:
   Parameters:
     Database: CollScanPredicateSelectivitySmall
     DocumentCount: 100
-    Repeat: 1000
+    Repeat: 20000
 
 AutoRun:
 - When:
