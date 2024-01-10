@@ -43,6 +43,8 @@ find_package(Catch2 3 REQUIRED)
 include(GetSsl)
 
 # <Boost>
+set(Boost_NO_WARN_NEW_VERSIONS 1)
+
 if(GENNY_STATIC_BOOST_PATH)
     set(Boost_USE_STATIC_LIBS ON
         CACHE BOOL "Use static Boost"

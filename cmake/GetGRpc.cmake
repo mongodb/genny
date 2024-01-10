@@ -14,7 +14,7 @@
 
 find_package(gRPC REQUIRED)
 
-find_package(protobuf REQUIRED)
+find_package(Protobuf REQUIRED)
 
 add_library(protobuf INTERFACE IMPORTED)
 target_link_libraries(protobuf INTERFACE

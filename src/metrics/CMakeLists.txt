@@ -18,11 +18,11 @@ CreateGennyTargets(
     NAME    metrics
     TYPE    INTERFACE
     DEPENDS
-        MongoCxx::bsoncxx
-        yaml-cpp
+        yaml-cpp::yaml-cpp
         Boost::boost
         Boost::log
         poplarlib
+        MongoCxx::bsoncxx
     TEST_DEPENDS
         testlib
 )
