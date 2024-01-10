@@ -5,7 +5,7 @@ Description: |
   predicates matters due to selectivity of the predicates. In actors' names, a 'good' case means that the ordering
   of predicates defined by actual selectivities matches the ordering defined by heuristic selectivity estimation.
   Similarly, an 'indistinguishable' case means that heuristic CE defines the same selectivity for all predicates
-  in the query. For this workload, average latency is the most important metric to look at.
+  in the query. For this workload, the important metrics to look at are OperationThroughput and all latency measurements.
 
 Keywords:
 - Loader
