@@ -1,0 +1,958 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  This  workload is mostly same as TimseriesTsbsQuery but the underlying timeseries data is stored in a
+  non-optimal schema where the measurements are stored inside a top-level field called 'fields'. The
+  queries are changed accordingly. The data is preloaded by the dsi configuration. See
+  'configurations/test_control/test_control.tsbs_query_non_optimal_schema.yml. There are 20736000
+  documents in the collection. A sample document: 
+    {
+      "time" : ISODate("2016-01-01T00:00:00Z"),
+      "tags" : {
+        "measurement" : "cpu",
+        "arch" : "x86",
+        ...
+      },
+      "_id" : ObjectId("659d7bbb35bc0cf1dbd5e7f2"),
+      "fields" : {
+        "usage_user" : 58,
+        "usage_system" : 2,
+        ...
+      }
+    }
+
+Keywords:
+  - timeseries
+  - aggregate
+  - group
+  - sort
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 4000 # With 8 threads we need a larger pool.
+
+GlobalDefaults:
+  database: &database cpu_non_optimal_schema
+  collection: &collection point_data
+  maxPhases: &maxPhases 30
+  repeat: &repeat 500
+  # TSBS constructs a time windows of various sizes (1 hour, 8 hours, 12 hours) from a uniformly 
+  # random start-time within this time-period. Ideally, we would do this as well, but currently 
+  # genny doesn't support storing randomized date values as variables, so we will fix a starting 
+  # value and increment it each time the query runs.
+  startDate: &startDate "2016-01-04T21:49:27Z"
+  startDatePlusOneHour: &startDatePlusOneHour "2016-01-04T22:49:27Z"
+  startDatePlusEightHours: &startDatePlusEightHours "2016-01-05T05:49:27Z"
+  startDatePlusTwelveHours: &startDatePlusTwelveHours "2016-01-05T09:49:27Z"
+  closeToEndTime: &closeToEndTime "2016-01-20T09:49:27Z"
+
+# Create variables to mimic the randomness of tsbs_generate_queries.
+# Generates a single string like "host_42", with random integer in range [0,99].
+GenHostNames:
+  &GenHostNames {
+    ^FormatString:
+      {
+        "format": "host_%d",
+        "withArgs": [{ ^RandomInt: { min: 0, max: 99 } }],
+      },
+  }
+
+# Generates an array of strings like "host_42", with random integer in range [0,99].
+HostName1:
+  &HostName1 { ^Array: { of: *GenHostNames, number: 1, distinct: true } }
+HostName8:
+  &HostName8 { ^Array: { of: *GenHostNames, number: 8, distinct: true } }
+
+Actors:
+  # The data is already loaded into the collection from the dsi configuration.
+  # We will Quiesce before each query.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+
+  # single_groupby_M_H_T family of queries computes the per-minute max of M(1|5) metrics for H(1|8)
+  # hosts in a random time window of size T(1h|12h).
+  - Name: single_groupby_1_1_1
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          "tags.hostname": { $in: *HostName1 },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator: 
+                                        { ^IncDate: { start: *startDate,step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          max_usage_user: { $max: "$fields.usage_user" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: single_groupby_1_8_1
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          "tags.hostname": { $in: *HostName8 },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          max_usage_user: { $max: "$fields.usage_user" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: single_groupby_5_1_1
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          "tags.hostname": { $in: *HostName1 },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          max_usage_user: { $max: "$fields.usage_user" },
+                          max_usage_guest: { $max: "$fields.usage_guest" },
+                          max_usage_system: { $max: "$fields.usage_system" },
+                          max_usage_iowait: { $max: "$fields.usage_iowait" },
+                          max_usage_irq: { $max: "$fields.usage_irq" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: single_groupby_5_8_1
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          "tags.hostname": { $in: *HostName8 },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator: 
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          max_usage_user: { $max: "$fields.usage_user" },
+                          max_usage_guest: { $max: "$fields.usage_guest" },
+                          max_usage_system: { $max: "$fields.usage_system" },
+                          max_usage_iowait: { $max: "$fields.usage_iowait" },
+                          max_usage_irq: { $max: "$fields.usage_irq" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: single_groupby_1_1_12
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [9]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          "tags.hostname": { $in: *HostName1 },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator: 
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: 
+                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { "date": "$time", "unit": "minute" } },
+                          max_usage_user: { $max: "$fields.usage_user" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: single_groupby_5_1_12
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [11]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          "tags.hostname": { $in: *HostName1 },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator: 
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: 
+                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { "date": "$time", "unit": "minute" } },
+                          max_usage_user: { $max: "$fields.usage_user" },
+                          max_usage_guest: { $max: "$fields.usage_guest" },
+                          max_usage_system: { $max: "$fields.usage_system" },
+                          max_usage_iowait: { $max: "$fields.usage_iowait" },
+                          max_usage_irq: { $max: "$fields.usage_irq" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  # double-groupby-M computes the per-host, per-hour mean of M(1|5|all=10) metrics in a random 12h
+  # time window.
+  - Name: double_groupby_1
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [13]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 100 # Repeat slow queries just 100 times.
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate: 
+                                            {  start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              time: { $dateTrunc: { date: "$time", unit: "hour" } },
+                              hostname: "$tags.hostname",
+                            },
+                          avg_usage_softirq: { $avg: "$fields.usage_softirq" },
+                        },
+                    },
+                    { $sort: { "_id.time": 1, "_id.hostname": 1 } },
+                  ]
+
+  - Name: double_groupby_5
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [15]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 100 # Repeat slow queries just 100 times.
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              time: { $dateTrunc: { date: "$time", unit: "hour" } },
+                              hostname: "$tags.hostname",
+                            },
+                          avg_usage_softirq: { $avg: "$fields.usage_softirq" },
+                          avg_usage_steal: { $avg: "$fields.usage_steal" },
+                          avg_usage_guest: { $avg: "$fields.usage_guest" },
+                          avg_usage_user: { $avg: "$fields.usage_user" },
+                          avg_usage_system: { $avg: "$fields.usage_system" },
+                        },
+                    },
+                    { $sort: { "_id.time": 1, "_id.hostname": 1 } },
+                  ]
+
+  - Name: double_groupby_all
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [17]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 100 # Repeat slow queries just 100 times.
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id:
+                            {
+                              time: { $dateTrunc: { date: "$time", unit: "hour" } },
+                              hostname: "$tags.hostname",
+                            },
+                          avg_usage_softirq: { $avg: "$fields.usage_softirq" },
+                          avg_usage_steal: { $avg: "$fields.usage_steal" },
+                          avg_usage_guest: { $avg: "$fields.usage_guest" },
+                          avg_usage_user: { $avg: "$fields.usage_user" },
+                          avg_usage_system: { $avg: "$fields.usage_system" },
+                          avg_usage_iowait: { $avg: "$fields.usage_iowait" },
+                          avg_usage_irq: { $avg: "$fields.usage_irq" },
+                          avg_usage_nice: { $avg: "$fields.usage_nice" },
+                          avg_usage_idle: { $avg: "$fields.usage_idle" },
+                          avg_usage_guest_nice: { $avg: "$fields.usage_guest_nice" },
+                        },
+                    },
+                    { $sort: { "_id.time": 1, "_id.hostname": 1 } },
+                  ]
+
+  # groupby-orderby-limit computes the per-minute max of a single metric for the last five minutes.
+  - Name: groupby_orderby_limit
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [19]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 100 # Repeat slow queries just 100 times.
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                # It is unclear how TSBS evaluates the endpoint, but the range is often wide.
+                # So we pick a time close to the max time.
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *closeToEndTime, step: 2520000 } },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          max_usage_user: { $max: "$fields.usage_user" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                    { $limit: 5 },
+                  ]
+
+  # cpu_max_all_H family of queries computes per-hour max of all(10) metrics for H(1|8) hosts for a
+  # randomly chosen 8h time window.
+  - Name: cpu_max_all_1
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [21]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          "tags.hostname": { $in: *HostName1 },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator: 
+                                      {
+                                          ^IncDate: 
+                                            { start: *startDatePlusEightHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { date: "$time", unit: "hour" } },
+                          max_usage_softirq: { $max: "$fields.usage_softirq" },
+                          max__usage_steal: { $max: "$fields.usage_steal" },
+                          max_usage_guest: { $max: "$fields.usage_guest" },
+                          max_usage_user: { $max: "$fields.usage_user" },
+                          max_usage_system: { $max: "$fields.usage_system" },
+                          max_usage_iowait: { $max: "$fields.usage_iowait" },
+                          max_usage_irq: { $max: "$fields.usage_irq" },
+                          max_usage_nice: { $max: "$fields.usage_nice" },
+                          max_usage_idle: { $max: "$fields.usage_idle" },
+                          max_usage_guest_nice: { $max: "$fields.usage_guest_nice" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  - Name: cpu_max_all_8
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [23]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          "tags.hostname": { $in: *HostName8 },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *startDatePlusEightHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: { $dateTrunc: { date: "$time", unit: "hour" } },
+                          max_usage_softirq: { $max: "$fields.usage_softirq" },
+                          max__usage_steal: { $max: "$fields.usage_steal" },
+                          max_usage_guest: { $max: "$fields.usage_guest" },
+                          max_usage_user: { $max: "$fields.usage_user" },
+                          max_usage_system: { $max: "$fields.usage_system" },
+                          max_usage_iowait: { $max: "$fields.usage_iowait" },
+                          max_usage_irq: { $max: "$fields.usage_irq" },
+                          max_usage_nice: { $max: "$fields.usage_nice" },
+                          max_usage_idle: { $max: "$fields.usage_idle" },
+                          max_usage_guest_nice: { $max: "$fields.usage_guest_nice" },
+                        },
+                    },
+                    { $sort: { _id: 1 } },
+                  ]
+
+  # high-cpu-H: finds events with high “usage_user” metric in a random 12h window for H(1|all)
+  # hosts.
+  - Name: high_cpu_1
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [25]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          "tags.hostname": { $in: *HostName1 },
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                          usage_user: { $gt: 90 }, # 90 is hard-coded in TSBS.
+                        },
+                    },
+                    { $set: { tags: "$tags.hostname" } },
+                  ]
+
+  - Name: high_cpu_all
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [27]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 100 # Repeat slow queries just 100 times.
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          "tags.measurement": "cpu",
+                          time:
+                            {
+                              $gte:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator: 
+                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                    },
+                                },
+                              $lt:
+                                {
+                                  ^Cycle:
+                                    {
+                                      ofLength: 100,
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                        },
+                                    },
+                                },
+                            },
+                          "fields.usage_user": { $gt: 90 }, # 90 is hard-coded in TSBS.
+                        },
+                    },
+                    { $set: { tags: "$tags.hostname" } },
+                  ]
+
+  # lastpoint computes the last row per host.
+  - Name: lastpoint
+    Type: CrudActor
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [29]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $sort: { "tags.hostname": 1, "time": -1 } },
+                    {
+                      $group:
+                        {
+                          _id: { "hostname": "$tags.hostname" },
+                          time: { $first: "$time" },
+                          measurement: { $first: "$tags.measurement" },
+                          usage_softirq: { $first: "$fields.usage_softirq" },
+                          musage_steal: { $first: "$fields.usage_steal" },
+                          usage_guest: { $first: "$fields.usage_guest" },
+                          usage_user: { $first: "$fields.usage_user" },
+                          usage_system: { $first: "$fields.usage_system" },
+                          usage_iowait: { $first: "$fields.usage_iowait" },
+                          usage_irq: { $first: "$fields.usage_irq" },
+                          usage_nice: { $first: "$fields.usage_nice" },
+                          usage_idle: { $first: "$fields.usage_idle" },
+                          usage_guest_nice: { $first: "$fields.usage_guest_nice" },
+                        },
+                    },
+                  ]
