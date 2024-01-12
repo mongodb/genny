@@ -71,10 +71,14 @@ def main(project_files: List[str], workspace_root: str, no_activate: bool) -> No
         )
         sys.exit(1)
     execution = int(global_expansions["execution"])
-    activate_tasks = set(
-        VariantTask(*item.strip().split(":"))
-        for item in global_expansions.get("activate_generated_tasks", "").split(",")
-    )
+
+    variant_task_names = global_expansions.get("activate_generated_tasks", "").split(",")
+    activate_tasks = set()
+    for name in variant_task_names:
+        variant_name, task_name = name.strip().split(":")
+        variant_task = VariantTask(variant_name, task_name)
+        activate_tasks.add(variant_task)
+
     builds = []
     for project_file in project_files:
         builds.extend(get_all_builds(global_expansions, project_file))
