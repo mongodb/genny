@@ -489,3 +489,17 @@ Actors:
       Command1000: *LookupUnwindLargeObj1000
       Metric10000: LookupUnwind_ForeignLargeObj10000
       Command10000: *LookupUnwindLargeObj10000
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-sbe
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
