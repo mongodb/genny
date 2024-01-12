@@ -165,6 +165,7 @@ tasks:
 
 - name: t_lint_python
   commands:
+  - func: f_fetch_source
   - func: f_lint_python
 
 - name: t_cmake_test
@@ -253,7 +254,7 @@ task_groups:
   # run after t_compile_and_dry_run.
   - t_compile_and_dry_run
   - t_python_test
-  #- t_lint_python
+  - t_lint_python
   #- t_lint_workloads
   - t_cmake_test
 
@@ -268,7 +269,7 @@ task_groups:
   tasks:
   - t_compile
   - t_python_test
-  #- t_lint_python
+  - t_lint_python
   #- t_lint_workloads
   - t_cmake_test
   - t_integration_test_single_node_replset
