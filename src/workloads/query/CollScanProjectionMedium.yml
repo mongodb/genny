@@ -1,0 +1,26 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This workload runs collscan queries with a large projection on around 20 fields against a
+  collection of 10,000 documents.
+
+LoadConfig:
+  Path: ../../phases/query/CollScanProjection.yml
+  Parameters:
+    Database: CollScanProjectionMedium
+    DocumentCount: 10000
+    Repeat: 100
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-heuristic-bonsai
+      - standalone-sampling-bonsai
+      - standalone-sbe
+    branch_name:
+      $gte:
+        v7.0
