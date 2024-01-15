@@ -2,14 +2,14 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
   This workload runs collscan queries with a large projection on around 20 fields against a
-  collection of 10,000 documents.
+  collection of 1M documents.
 
 LoadConfig:
-  Path: ../../phases/query/CollScanLargeProjection.yml
+  Path: ../../phases/query/CollScanProjection.yml
   Parameters:
-    Database: CollScanLargeProjectionMedium
-    DocumentCount: 10000
-    Repeat: 100
+    Database: CollScanProjectionLarge
+    DocumentCount: 1e6
+    Repeat: 10
 
 AutoRun:
 - When:

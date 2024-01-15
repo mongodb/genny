@@ -5,9 +5,9 @@ Description: |
   collection of 100 documents.
 
 LoadConfig:
-  Path: ../../phases/query/CollScanLargeProjection.yml
+  Path: ../../phases/query/CollScanProjection.yml
   Parameters:
-    Database: CollScanLargeProjectionSmall
+    Database: CollScanProjectionSmall
     DocumentCount: 100
     Repeat: 100
 
