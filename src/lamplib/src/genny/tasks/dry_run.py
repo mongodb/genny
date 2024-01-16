@@ -22,6 +22,7 @@ def dry_run_workload(
 
     if yaml_file_basename in [
         "MixedWorkloadsGennyStress.yml",
+        "AggregationsOutput.yml",
         "ClusteredCollection.yml",
         "ClusteredCollectionLargeRecordIds.yml",
         "ConnectionsBuildup.yml",
