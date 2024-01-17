@@ -16,7 +16,11 @@ from genny.tasks.auto_tasks import (
     YamlReader,
     VariantTask,
 )
-from genny.tasks.auto_tasks_all import create_configuration, get_all_builds
+from genny.tasks.auto_tasks_all import (
+    create_configuration,
+    get_all_builds,
+    parse_activate_generated_tasks,
+)
 import genny.tasks.auto_tasks_all
 from tests.test_auto_tasks import MockFile, MockReader
 
@@ -423,6 +427,22 @@ buildvariants:
                     }
                 ),
             ],
+        )
+
+    def test_parse_activate_generated_tasks(self):
+        parsed_tasks = parse_activate_generated_tasks("")
+        self.assertEqual(parsed_tasks, set())
+
+        def try_invalid_string():
+            parse_activate_generated_tasks("a:b,c")
+
+        self.assertRaisesRegex(
+            ValueError, "Invalid value for 'activate_generated_tasks'", try_invalid_string
+        )
+
+        parsed_tasks = parse_activate_generated_tasks("variant1:task1,variant2:task2")
+        self.assertEqual(
+            parsed_tasks, set([VariantTask("variant1", "task1"), VariantTask("variant2", "task2")])
         )
 
 
