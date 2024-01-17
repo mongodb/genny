@@ -77,6 +77,7 @@ Actors:
           c: {^RandomInt: {min: 0, max: 100}}
         Indexes:
           - keys: {a: 1, b: 1}
+          - keys: {b: 1}
 
 # The following use a DISTINCT_SCAN.
 - ActorFromTemplate:
