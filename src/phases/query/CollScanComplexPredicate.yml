@@ -33,21 +33,6 @@ GlobalDefaults:
     number: 10000,
   }}}
 
-  # LargeInContainingDuplicates: &LargeInContainingDuplicates {$in: {^Array: {
-  #   of: {^RandomInt: {min: 0, max: 50}},
-  #   number: 1000,
-  # }}}
-
-  # LargeOr: &LargeOr {$or: {^Array: {
-  #   of: {i: {^RandomInt: {min: 0, max: *Billion}}},
-  #   number: 1000,
-  # }}}
-
-  # LargeOrContainingDuplicates: &LargeOrContainingDuplicates {$or: {^Array: {
-  #   of: {i: {^RandomInt: {min: 0, max: 50}}},
-  #   number: 1000,
-  # }}} 
-
   CNFQuery10Conjuncts: &CNFQuery10Conjuncts
     LoadConfig:
       Path: ../../phases/query/CollScanComplexPredicateQueries.yml
