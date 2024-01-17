@@ -75,6 +75,7 @@ you consider more useful.''')
         The results for ExampleActor will be stored in something like
         '.../WorkloadOutput/CedarMetrics/ExampleActor.ftdc. Your regex should assume it is working
         with just the actor name: "ExampleActor" in this case.""")
+    parser.add_argument('--export-path', default=None)
     return parser.parse_args()
 
 
@@ -371,6 +372,13 @@ def parse_actor_regex(args):
 
     return actor_regex
 
+def write_json_to_file(data, file_path):
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    # Write the data to the file
+    with open(file_path, 'w') as file:
+        json.dump(data, file, indent=2)
 
 def main():
     args = parse_args()
@@ -413,6 +421,21 @@ def main():
             print("\t%s:" % metric_name)
             pretty_print_summary(args, summary_data, "\t\t")
         print("\n")
+
+    if args.export_path:        
+        summary_json = {}
+        for actor_name, metrics in global_summaries.items():
+            if any(x in actor_name for x in ("Insert", ".Crud", "Clear", "Quiesce")):
+                continue
+            
+            summary_json[actor_name] = {}
+            for metric_name, summary_data in metrics.items():
+                metric_key = metric_name.split(" ")[0]
+                summary_json[actor_name][metric_key] = {
+                    k: v for k, v in summary_data.items() if k != "sorted_raw_data"
+                }
+        
+        write_json_to_file(summary_json, args.export_path)
 
 
 if __name__ == "__main__":
