@@ -178,6 +178,7 @@ Actors:
       OnlyActiveInPhase: 15
       Pipeline: [{$group: {_id: "$a", accum: {$bottomN: {n: 1, output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
 
+# Min and max are not included in SERVER-84347, but are here for completeness and for future work.
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
