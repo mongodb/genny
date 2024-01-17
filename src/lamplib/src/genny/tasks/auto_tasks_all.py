@@ -61,6 +61,23 @@ def create_configuration(
     return config
 
 
+def parse_activate_generated_tasks(activate_generated_tasks_param):
+    activate_tasks = set()
+    if not activate_generated_tasks_param:
+        return activate_tasks
+    variant_task_names = activate_generated_tasks_param.split(",")
+    for name in variant_task_names:
+        if ":" not in name:
+            raise ValueError(
+                "Invalid value for 'activate_generated_tasks' param. Value must be of the form 'variant1:task1,variant2:task2'"
+            )
+        variant_name, task_name = name.strip().split(":")
+        variant_task = VariantTask(variant_name, task_name)
+        activate_tasks.add(variant_task)
+
+    return activate_tasks
+
+
 def main(project_files: List[str], workspace_root: str, no_activate: bool) -> None:
     reader = YamlReader()
     try:
@@ -72,12 +89,9 @@ def main(project_files: List[str], workspace_root: str, no_activate: bool) -> No
         sys.exit(1)
     execution = int(global_expansions["execution"])
 
-    variant_task_names = global_expansions.get("activate_generated_tasks", "").split(",")
-    activate_tasks = set()
-    for name in variant_task_names:
-        variant_name, task_name = name.strip().split(":")
-        variant_task = VariantTask(variant_name, task_name)
-        activate_tasks.add(variant_task)
+    activate_tasks = parse_activate_generated_tasks(
+        global_expansions.get("activate_generated_tasks", "")
+    )
 
     builds = []
     for project_file in project_files:
