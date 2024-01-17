@@ -109,7 +109,9 @@ def _create_metrics():
     os.makedirs(_METRICS_PATH, exist_ok=True)
 
 
-def export(workspace_root: str, genny_repo_root: str, input_path: str, output_path: Optional[str] = None):
+def export(
+    workspace_root: str, genny_repo_root: str, input_path: str, output_path: Optional[str] = None
+):
     args = _get_export_args(
         workspace_root=workspace_root,
         genny_repo_root=genny_repo_root,
@@ -119,7 +121,9 @@ def export(workspace_root: str, genny_repo_root: str, input_path: str, output_pa
     subprocess.run(args, check=True)
 
 
-def translate(workspace_root: str, genny_repo_root: str, input_path: str, output_path: Optional[str] = None):
+def translate(
+    workspace_root: str, genny_repo_root: str, input_path: str, output_path: Optional[str] = None
+):
     args = _get_translate_args(
         workspace_root=workspace_root,
         genny_repo_root=genny_repo_root,
