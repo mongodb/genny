@@ -9,7 +9,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
   Repeat: &Repeat {^Parameter: {Name: Repeat, Default: -1}}
   Collection: &Collection Collection0
-  MaxPhases: &MaxPhases 20
+  MaxPhases: &MaxPhases 32
 
   # Generates a random numerical string of 1-10 characters.
   RandomShortStringValue: &RandomShortStringValue {^FastRandomString: {
@@ -19,6 +19,34 @@ GlobalDefaults:
   RandomLongStringValue: &RandomLongStringValue {^FastRandomString: {
     length: {^RandomInt: {min: 50, max: 250}}, alphabet: "0123456789"
   }}
+
+  LargeIn: &LargeIn {$in: {^Array: {
+    of: &IntOrString {^Choose: {from: [
+        {^RandomInt: {min: 0, max: &Billion 1_000_000_000}},
+        *RandomLongStringValue
+    ]}},
+    number: 1000,
+  }}}
+
+  VeryLargeIn: &VeryLargeIn {$in: {^Array: {
+    of: *IntOrString,
+    number: 10000,
+  }}}
+
+  # LargeInContainingDuplicates: &LargeInContainingDuplicates {$in: {^Array: {
+  #   of: {^RandomInt: {min: 0, max: 50}},
+  #   number: 1000,
+  # }}}
+
+  # LargeOr: &LargeOr {$or: {^Array: {
+  #   of: {i: {^RandomInt: {min: 0, max: *Billion}}},
+  #   number: 1000,
+  # }}}
+
+  # LargeOrContainingDuplicates: &LargeOrContainingDuplicates {$or: {^Array: {
+  #   of: {i: {^RandomInt: {min: 0, max: 50}}},
+  #   number: 1000,
+  # }}} 
 
   CNFQuery10Conjuncts: &CNFQuery10Conjuncts
     LoadConfig:
@@ -60,6 +88,22 @@ GlobalDefaults:
               {a: 2}, {a: 1},
               {$and: [
                   {c: {$in: [34, 35, 42, 23, 17, 19, 'abc']}},
+                  {a: {$in: [34, 35, 36, 37, 'xyz']}}
+              ]}
+          ]}
+      ]}
+    ]}
+
+  MixedQuery3LevelsDeepWithVeryLargeIn: &MixedQuery3LevelsDeepWithVeryLargeIn
+    {$and: [
+      {b: 0},
+      {$or: [{a: *VeryLargeIn}, {c: {$in: ['ab', 17, 'ef']}}]},
+      {$and: [
+          {a: {$gt: 'ab'}}, {c: {$lte: 'ef'}},
+          {$or: [
+              {a: 2}, {a: 1},
+              {$and: [
+                  {c: *VeryLargeIn},
                   {a: {$in: [34, 35, 36, 37, 'xyz']}}
               ]}
           ]}
@@ -109,6 +153,69 @@ GlobalDefaults:
                           {f: 99},
                           {$and: [{f: {$lt: 1}}, {h: {$eq: 12}}, {f: {$in: ["abc", "2", 1, 2]}}, {a: {$lte: null}}]}]}]},
                   {$or: [{$and: [{f: {$gt: 0}}, {f: {$lt: 100}}, {p: 99}]},
+                        {$and: [{f: {$gt: 90}}, {f: {$lt: 200}}, {q: 99}]},
+                        {$and: [{f: {$gt: 190}}, {f: {$lt: 300}}, {r: 99}]}]},
+                  {$or: [{$and: [{b: {$gt: 0}}, {b: {$lt: 100}}, {a: 999}]},
+                        {$and: [{b: {$gt: 90}}, {b: {$lt: 200}}, {b: 999}]},
+                        {$and: [{b: {$gt: 190}}, {b: {$lt: 300}}, {c: '999'}]}]}
+                  ]},
+          {$and: [{h: {$in: [123, 321]}},
+                  {$or: [{$and: [{h: {$gt: 23}}, {h: {$lt: 1023}}, {f: 99}]},
+                        {$and: [{h: {$gt: 923}}, {h: {$lt: 2023}}, {b: 99}]},
+                        {$and: [{h: {$gt: 1923}}, {h: {$lt: 3023}}, {a: 99}]}]},
+                  {$and: [{$and: [{f: {$gt: 23}}, {f: {$lt: 1023}}, {p: 99}]},
+                        {$and: [{f: {$gt: 923}}, {f: {$lt: 2023}}, {q: 99}]},
+                        {$and: [{f: {$gt: 1923}}, {f: {$lt: 3023}}, {r: 99}]}]},
+                  {$or: [{$and: [{d: {$gt: 23}}, {d: {$lt: 1023}}, {d: 'fhr'}]},
+                        {$and: [{d: {$gt: 923}}, {d: {$lt: 2023}}, {e: 9}]},
+                        {$and: [{d: {$gt: 1923}}, {d: {$lt: 3023}}, {f: 11}]}]}
+                  ]}
+        ]}
+    ]}
+  
+  MixedQuery5LevelsDeepWithVeryLargeIn: &MixedQuery5LevelsDeepWithVeryLargeIn
+    {$and: [
+      {b: 0},
+      {$or: [{a: {$in: [17, 15, 1, 8, 2]}}, {c: {$in: ['ab', 'dh', 'ef']}}]},
+      {$and: [
+          {a: {$gt: 42}}, {c: {$lte: 'ef'}},
+          {$or: [
+              {a: 2}, {a: 1},
+              {$and: [
+                  {c: *VeryLargeIn}, {a: {$in: [34, 35, 36, 37, 67]}}
+              ]},
+              {$and: [
+                  {a: *VeryLargeIn},
+                  {$or: [{$and: [{d: {$gt: '123hab'}}, {d: {$in: ['aaa', '13217', 'zzz13']}}]},
+                    {$and: [{a: {$in: [34, 35, 46, 57]}}, {b: 1}, {c: '42123'}]},
+                    {$and: [{f: {$in: [1, 3, 7, 8]}}, {e: 'vbg321'}, {d: 'hbr321'}]},
+                    {d: {$gt: 'habasdf'}}, {d: {$lte: 'hia123'}},
+                    {$and: [{d: {$in: ["7", "5", "6", "9", "2"]}}, {d: {$in: ['123123', 109, 110]}}]}, {f: 3.142}
+                  ]}
+              ]}
+          ]}
+      ]},
+      {$or: [{$and: [{d: {$gt: 'hab'}}, {d: {$in: ['aaa', '17', 'zzz']}}]},
+            {$and: [{a: {$in: [34, 35, 46, 57]}}, {b: 1}, {c: '42'}]},
+            {$and: [{f: {$in: [1, 3, 7, 8]}}, {e: 'vbg'}, {d: 'hbr'}]},
+            {d: {$gt: 'hab'}}, {d: {$lte: 'hia'}},
+            {$and: [{d: {$in: [7, 5, 6, 9, 2]}}, {d: {$in: ['99', '109', '110']}}]}, {f: 3.14}]},
+      {$or: [
+          {$and: [{$or: [{$and: [
+                          {$or: [{a: *VeryLargeIn}, {c: {$gt: 12}}, {f: {$in: ["abc", "2", 1, 2]}}, {d: null}]},
+                          {h: {$gt: 0}},
+                          {h: {$lt: 100}},
+                          {f: 99},
+                          {$and: [{f: {$lt: 1}}, {h: {$eq: 12}}, {f: {$in: ["abc", "2", 1, 2]}}, {a: {$lte: null}}]}
+                        ]},
+                        {$and: [{h: {$gt: 90}}, {h: {$lt: 200}}, {b: 99}]},
+                        {$and: [
+                          {$or: [{a: {$lt: 11}}, {c: {$gt: 12}}, {f: {$in: ["abc", "2", 1, 2]}}, {d: null}]},
+                          {h: {$gt: 0}},
+                          {h: {$lt: 100}},
+                          {f: 99},
+                          {$and: [{f: {$lt: 1}}, {h: {$eq: 12}}, {f: {$in: ["abc", "2", 1, 2]}}, {a: {$lte: null}}]}]}]},
+                  {$or: [{$and: [{f: *VeryLargeIn}, {f: {$lt: 100}}, {p: 99}]},
                         {$and: [{f: {$gt: 90}}, {f: {$lt: 200}}, {q: 99}]},
                         {$and: [{f: {$gt: 190}}, {f: {$lt: 300}}, {r: 99}]}]},
                   {$or: [{$and: [{b: {$gt: 0}}, {b: {$lt: 100}}, {a: 999}]},
@@ -477,3 +584,215 @@ Actors:
       ActivePhase: 20
       Filter:
         {e: {$elemMatch: *MixedQuery11LevelsDeep}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: LargeIn
+      ActivePhase: 21
+      Filter:
+        {i: *LargeIn}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: VeryLargeIn
+      ActivePhase: 22
+      Filter:
+        {i: *VeryLargeIn}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: CNFWithLargeIns
+      ActivePhase: 23
+      Filter:
+        &CNFWithLargeIns {
+          "$and":[
+            {"$or":[
+              {"d": *LargeIn},
+              {"b":{"$lte": "612"}}
+            ]},
+            {"$or":[
+              {"b": *LargeIn},
+              {"f": *LargeIn}]},
+            {"$or":[
+              {"nonexistent": *LargeIn},
+              {"g":{"$lt":"82374842"}}
+            ]},
+            {"$or":[
+              {"i": *LargeIn},
+              {"e.c":{"$eq":"7032421248"}}
+            ]},
+            {"$or":[
+              {"e.c":{"$lt":"0372040"}},
+              {"d":{"$gt":"7032423848"}},
+              {"e.b": *LargeIn},
+              {"b":{"$lt":"068"}},
+              {"e.c":{"$gt":"955"}},
+              {"e.c":{"$lt":6348}},
+              {"a":{"$lt":"365"}}
+            ]},
+            {"$or": [
+              {"e.d": *LargeIn},
+              {"h":{"$gt":5285}},
+              {"e.f": *LargeIn},
+              {"e.b":{"$gte":"7463785"}},
+              {"g":{"$lt":"83374846"}},
+              {"e.d":{"$lt":"66294685"}}
+            ]},
+            {"$or":[
+              {"e.h": *LargeIn},
+              {"d":{"$gt": 156}},
+              {"h":{"$gte":4308}},
+              {"nonexistent":{"$eq":4106}}
+            ]},
+            {"$or":[
+              {"e.d":{"$lte": 4907}},
+              {"c": *LargeIn},
+              {"e.b": *LargeIn},
+              {"d":{"$gte":"7"}},
+              {"d":{"$lte": 4199}}
+            ]},
+            {"$or":[
+              {"c":{"$gt":"2"}},
+              {"e.g":{"$eq":5383}},
+              {"nullVal": *LargeIn},
+              {"e.h":{"$lte":"593"}},
+              {"g": *LargeIn}
+            ]},
+            {"$or":[
+              {"e.g":{"$lte":"73114315"}},
+              {"e.h": *LargeIn}
+            ]}
+          ]
+        }
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: DNFWithLargeIns
+      ActivePhase: 24
+      Filter:
+        &DNFWithLargeIns {
+          "$or":[
+            {"$and":[
+              {"d": *LargeIn},
+              {"b":{"$lte": "612"}}
+            ]},
+            {"$and":[
+              {"b": *LargeIn},
+              {"f": *LargeIn}]},
+            {"$and":[
+              {"nonexistent": *LargeIn},
+              {"g":{"$lt":"82374842"}}
+            ]},
+            {"$and":[
+              {"i": *LargeIn},
+              {"e.c":{"$eq":"7032421248"}}
+            ]},
+            {"$and":[
+              {"e.c":{"$lt":"0372040"}},
+              {"d":{"$gt":"7032423848"}},
+              {"e.b": *LargeIn},
+              {"b":{"$lt":"068"}},
+              {"e.c":{"$gt":"955"}},
+              {"e.c":{"$lt":6348}},
+              {"a":{"$lt":"365"}}
+            ]},
+            {"$and": [
+              {"e.d": *LargeIn},
+              {"h":{"$gt":5285}},
+              {"e.f": *LargeIn},
+              {"e.b":{"$gte":"7463785"}},
+              {"g":{"$lt":"83374846"}},
+              {"e.d":{"$lt":"66294685"}}
+            ]},
+            {"$and":[
+              {"e.h": *LargeIn},
+              {"d":{"$gt": 156}},
+              {"h":{"$gte":4308}},
+              {"nonexistent":{"$eq":4106}}
+            ]},
+            {"$and":[
+              {"e.d":{"$lte": 4907}},
+              {"c": *LargeIn},
+              {"e.b": *LargeIn},
+              {"d":{"$gte":"7"}},
+              {"d":{"$lte": 4199}}
+            ]},
+            {"$and":[
+              {"c":{"$gt":"2"}},
+              {"e.g":{"$eq":5383}},
+              {"nullVal": *LargeIn},
+              {"e.h":{"$lte":"593"}},
+              {"g": *LargeIn}
+            ]},
+            {"$and":[
+              {"e.g":{"$lte":"73114315"}},
+              {"e.h": *LargeIn}
+            ]}
+          ]
+        }
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: Mixed3LevelsDeepWithVeryLargeIn
+      ActivePhase: 25
+      Filter: *MixedQuery3LevelsDeepWithVeryLargeIn
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: Mixed5LevelsDeepWithVeryLargeIn
+      ActivePhase: 26
+      Filter: *MixedQuery5LevelsDeepWithVeryLargeIn
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchLargeIn
+      ActivePhase: 27
+      Filter:
+        {e: {$elemMatch: {i: *LargeIn}}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchVeryLargeIn
+      ActivePhase: 28
+      Filter:
+        {e: {$elemMatch: {i: *VeryLargeIn}}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchCNFWithLargeIns
+      ActivePhase: 29
+      Filter:
+        {e: {$elemMatch: *CNFWithLargeIns}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchDNFWithLargeIns
+      ActivePhase: 30
+      Filter:
+        {e: {$elemMatch: *DNFWithLargeIns}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchMixed3LevelsDeepWithVeryLargeIn
+      ActivePhase: 31
+      Filter:
+        {e: {$elemMatch: *MixedQuery3LevelsDeepWithVeryLargeIn}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ElemMatchMixed5LevelsDeepWithVeryLargeIn
+      ActivePhase: 32
+      Filter:
+        {e: {$elemMatch: *MixedQuery5LevelsDeepWithVeryLargeIn}}
