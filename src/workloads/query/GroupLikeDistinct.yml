@@ -127,57 +127,58 @@ Actors:
     TemplateParameters:
       Name: "GroupTopCovered"
       OnlyActiveInPhase: 8
-      Pipeline: [{$group: {_id: "$a", accum: {$top: {output: ["$b"], sortBy: {b: 1}}}}}]
+      Pipeline: [{$group: {_id: "$a", accum: {$top: {output: ["$b"], sortBy: {a: 1, b: 1}}}}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
       Name: "GroupTopFetched"
       OnlyActiveInPhase: 9
-      Pipeline: [{$group: {_id: "$a", accum: {$top: {output: ["$c"], sortBy: {b: 1}}}}}]
+      Pipeline: [{$group: {_id: "$a", accum: {$top: {output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
       Name: "GroupBottomCovered"
       OnlyActiveInPhase: 10
-      Pipeline: [{$group: {_id: "$a", accum: {$bottom: {output: ["$b"], sortBy: {b: 1}}}}}]
+      Pipeline: [{$group: {_id: "$a", accum: {$bottom: {output: ["$b"], sortBy: {a: 1, b: 1}}}}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
       Name: "GroupBottomFetched"
       OnlyActiveInPhase: 11
-      Pipeline: [{$group: {_id: "$a", accum: {$bottom: {output: ["$c"], sortBy: {b: 1}}}}}]
+      Pipeline: [{$group: {_id: "$a", accum: {$bottom: {output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
       Name: "GroupTopNCovered"
       OnlyActiveInPhase: 12
-      Pipeline: [{$group: {_id: "$a", accum: {$topN: {n: 1, output: ["$b"], sortBy: {b: 1}}}}}]
+      Pipeline: [{$group: {_id: "$a", accum: {$topN: {n: 1, output: ["$b"], sortBy: {a: 1, b: 1}}}}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
       Name: "GroupTopNFetched"
       OnlyActiveInPhase: 13
-      Pipeline: [{$group: {_id: "$a", accum: {$topN: {n: 1, output: ["$c"], sortBy: {b: 1}}}}}]
+      Pipeline: [{$group: {_id: "$a", accum: {$topN: {n: 1, output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
       Name: "GroupBottomNCovered"
       OnlyActiveInPhase: 14
-      Pipeline: [{$group: {_id: "$a", accum: {$bottomN: {n: 1, output: ["$b"], sortBy: {b: 1}}}}}]
+      Pipeline: [{$group: {_id: "$a", accum: {$bottomN: {n: 1, output: ["$b"], sortBy: {a: 1, b: 1}}}}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
       Name: "GroupBottomNFetched"
       OnlyActiveInPhase: 15
-      Pipeline: [{$group: {_id: "$a", accum: {$bottomN: {n: 1, output: ["$c"], sortBy: {b: 1}}}}}]
+      Pipeline: [{$group: {_id: "$a", accum: {$bottomN: {n: 1, output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
 
+# Min and max are not included in SERVER-84347, but are here for completeness and for future work.
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
