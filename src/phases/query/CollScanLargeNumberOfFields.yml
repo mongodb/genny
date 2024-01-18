@@ -294,8 +294,6 @@ Actors:
       Filter:
         &MixedComparisonsOn50FieldsSameTypeQuery {$and: [*MixedComparisonsOn50FieldsSameType]}
 
-# ELEMMATCH
-
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
