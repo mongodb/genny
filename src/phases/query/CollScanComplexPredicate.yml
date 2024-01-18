@@ -79,6 +79,7 @@ GlobalDefaults:
       ]}
     ]}
 
+  # Similar to 'MixedQuery3LevelsDeep' but with two large $in predicates added into the query.
   MixedQuery3LevelsDeepWithVeryLargeIn: &MixedQuery3LevelsDeepWithVeryLargeIn
     {$and: [
       {b: 0},
@@ -157,7 +158,8 @@ GlobalDefaults:
                   ]}
         ]}
     ]}
-  
+
+  # Similar to 'MixedQuery3LevelsDeep' but with two large $in predicates added into the query.
   MixedQuery5LevelsDeepWithVeryLargeIn: &MixedQuery5LevelsDeepWithVeryLargeIn
     {$and: [
       {b: 0},
