@@ -61,7 +61,7 @@ Clients:
   Default:
     QueryOptions:
       socketTimeoutMS: -1
-      maxPoolSize: 500
+      maxPoolSize: 11000
     
 Actors:
 
@@ -76,7 +76,7 @@ Actors:
         Repeat: 1
         Operations:
         - OperationName: RunCommand
-          OperationCommand: {test_psi: 1, window: 500000, threshold: 20000, some : true}
+          OperationCommand: {test_psi: 1, window: 500000, threshold: 10000, some : true}
 
 # Drop database to get rid of stale data. Useful when running locally multiple times.
 - Name: Setup
