@@ -5,7 +5,7 @@ Description: |
 
 GlobalDefaults:
   dbname: &dbname perf2330
-  MaxPhases: &MaxPhases 20
+  MaxPhases: &MaxPhases 6
 
   # The Sample Document Shape.
   Document: &Doc
