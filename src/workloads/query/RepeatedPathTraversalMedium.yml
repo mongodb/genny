@@ -8,8 +8,8 @@ LoadConfig:
   Path: ../../phases/query/RepeatedPathTraversal.yml
   Parameters:
     Database: RepeatedPathTraversalLarge
-    DocumentCount: 1e6
-    Repeat: 50
+    DocumentCount: 10000
+    Repeat: 1000
 
 AutoRun:
 - When:
