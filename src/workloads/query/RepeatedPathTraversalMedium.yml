@@ -7,7 +7,7 @@ Description: >
 LoadConfig:
   Path: ../../phases/query/RepeatedPathTraversal.yml
   Parameters:
-    Database: RepeatedPathTraversalLarge
+    Database: RepeatedPathTraversalMedium
     DocumentCount: 10000
     Repeat: 1000
 
