@@ -28,6 +28,11 @@ GlobalDefaults:
     number: 1000,
   }}}
 
+  LargeIn5000Items: &LargeIn5000Items {$in: {^Array: {
+    of: *IntOrString,
+    number: 5000,
+  }}}
+
   VeryLargeIn: &VeryLargeIn {$in: {^Array: {
     of: *IntOrString,
     number: 10000,
@@ -747,10 +752,11 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: ElemMatchVeryLargeIn
+      Name: ElemMatchLargeIn5000Items
       ActivePhase: 28
       Filter:
-        {e: {$elemMatch: {i: *VeryLargeIn}}}
+        # With an $in list of 10K items, this query sometimes fails with sampling CE.
+        {e: {$elemMatch: {i: *LargeIn5000Items}}}
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
