@@ -16,7 +16,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
   Repeat: &Repeat {^Parameter: {Name: Repeat, Default: -1}}
   Collection: &Collection Collection0
-  MaxPhases: &MaxPhases 18
+  MaxPhases: &MaxPhases 26
 
   # Generates a random string of 5-50 characters.
   RandomShortString: &RandomShortString {^FastRandomString: {
@@ -162,6 +162,48 @@ GlobalDefaults:
     duplicatedKeys: insert,
   }}
 
+  ExclusionProjection99Fields: &ExclusionProjection99Fields {^Object: {
+    withNEntries: 99,
+    havingKeys: *GenNumberedFieldNames,
+    andValues: 0,
+    duplicatedKeys: insert,
+  }}
+
+  InclusionProjection99Fields: &InclusionProjection99Fields {^Object: {
+    withNEntries: 99,
+    havingKeys: *GenNumberedFieldNames,
+    andValues: 1,
+    duplicatedKeys: insert,
+  }}
+
+  ExclusionProjection50Fields: &ExclusionProjection50Fields {^Object: {
+    withNEntries: 50,
+    havingKeys: *GenNumberedFieldNames,
+    andValues: 0,
+    duplicatedKeys: insert,
+  }}
+
+  InclusionProjection50Fields: &InclusionProjection50Fields {^Object: {
+    withNEntries: 50,
+    havingKeys: *GenNumberedFieldNames,
+    andValues: 1,
+    duplicatedKeys: insert,
+  }}
+
+  ExclusionProjection10Fields: &ExclusionProjection10Fields {^Object: {
+    withNEntries: 10,
+    havingKeys: *GenNumberedFieldNames,
+    andValues: 0,
+    duplicatedKeys: insert,
+  }}
+
+  InclusionProjection10Fields: &InclusionProjection10Fields {^Object: {
+    withNEntries: 10,
+    havingKeys: *GenNumberedFieldNames,
+    andValues: 1,
+    duplicatedKeys: insert,
+  }}
+
 ActorTemplates:
 - TemplateName: FindQueryTemplate
   Config:
@@ -180,6 +222,7 @@ ActorTemplates:
           - OperationName: find
             OperationCommand:
               Filter: {^Parameter: {Name: "Filter", Default: "undefinedFilter"}}
+              Options: {^Parameter: {Name: "Options", Default: {}}}
 
 Actors:
 - Name: ClearCollection
@@ -265,8 +308,16 @@ Actors:
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
-      Name: MixedComparisonsOn100FieldsAnyType
+      Name: EqOn1Field
       ActivePhase: 7
+      Filter:
+        &EqOn1FieldQuery {string1: *RandomLongString}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: MixedComparisonsOn100FieldsAnyType
+      ActivePhase: 8
       Filter:
         &MixedComparisonsOn100FieldsAnyTypeQuery {$and: [*MixedComparisonsOn100FieldsAnyType]}
 
@@ -274,7 +325,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: MixedComparisonsOn50FieldsAnyType
-      ActivePhase: 8
+      ActivePhase: 9
       Filter:
         &MixedComparisonsOn50FieldsAnyTypeQuery {$and: [*MixedComparisonsOn50FieldsAnyType]}
 
@@ -282,7 +333,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: MixedComparisonsOn100FieldsSameType
-      ActivePhase: 9
+      ActivePhase: 10
       Filter:
         &MixedComparisonsOn100FieldsSameTypeQuery {$and: [*MixedComparisonsOn100FieldsSameType]}
 
@@ -290,7 +341,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: MixedComparisonsOn50FieldsSameType
-      ActivePhase: 10
+      ActivePhase: 11
       Filter:
         &MixedComparisonsOn50FieldsSameTypeQuery {$and: [*MixedComparisonsOn50FieldsSameType]}
 
@@ -298,7 +349,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchDocumentEq100Fields
-      ActivePhase: 11
+      ActivePhase: 12
       Filter:
         {arr: {$elemMatch: *DocumentEq100FieldsQuery}}
 
@@ -306,7 +357,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchDocumentEq50Fields
-      ActivePhase: 12
+      ActivePhase: 13
       Filter:
         {arr: {$elemMatch: *DocumentEq50FieldsQuery}}
 
@@ -314,7 +365,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchEqOn100Fields
-      ActivePhase: 13
+      ActivePhase: 14
       Filter:
         {arr: {$elemMatch: *EqOn100FieldsQuery}}
 
@@ -322,15 +373,23 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchEqOn50Fields
-      ActivePhase: 14
+      ActivePhase: 15
       Filter:
         {arr: {$elemMatch: *EqOn50FieldsQuery}}
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
+      Name: ElemMatchEqOn1Field
+      ActivePhase: 16
+      Filter:
+        {arr: {$elemMatch: *EqOn1FieldQuery}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
       Name: ElemMatchMixedComparisonsOn100FieldsAnyType
-      ActivePhase: 15
+      ActivePhase: 17
       Filter:
         {arr: {$elemMatch: *MixedComparisonsOn100FieldsAnyTypeQuery}}
 
@@ -338,7 +397,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchMixedComparisonsOn50FieldsAnyType
-      ActivePhase: 16
+      ActivePhase: 18
       Filter:
         {arr: {$elemMatch: *MixedComparisonsOn50FieldsAnyTypeQuery}}
 
@@ -346,7 +405,7 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchMixedComparisonsOn100FieldsSameType
-      ActivePhase: 17
+      ActivePhase: 19
       Filter:
         {arr: {$elemMatch: *MixedComparisonsOn100FieldsSameTypeQuery}}
 
@@ -354,6 +413,66 @@ Actors:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       Name: ElemMatchMixedComparisonsOn50FieldsSameType
-      ActivePhase: 18
+      ActivePhase: 20
       Filter:
         {arr: {$elemMatch: *MixedComparisonsOn50FieldsSameTypeQuery}}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ExclusionProjection99Fields
+      ActivePhase: 21
+      Filter: {}
+      Options:
+        Projection:
+          {a: *ExclusionProjection99Fields}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: InclusionProjection99Fields
+      ActivePhase: 22
+      Filter: {}
+      Options:
+        Projection:
+          {a: *InclusionProjection99Fields}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ExclusionProjection50Fields
+      ActivePhase: 23
+      Filter: {}
+      Options:
+        Projection:
+          {a: *ExclusionProjection50Fields}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: InclusionProjection50Fields
+      ActivePhase: 24
+      Filter: {}
+      Options:
+        Projection:
+          {a: *InclusionProjection50Fields}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: ExclusionProjection10Fields
+      ActivePhase: 25
+      Filter: {}
+      Options:
+        Projection:
+          {a: *ExclusionProjection10Fields}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      Name: InclusionProjection10Fields
+      ActivePhase: 26
+      Filter: {}
+      Options:
+        Projection:
+          {a: *InclusionProjection10Fields}
