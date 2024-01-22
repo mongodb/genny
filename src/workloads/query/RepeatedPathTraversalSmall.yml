@@ -9,7 +9,7 @@ LoadConfig:
   Parameters:
     Database: RepeatedPathTraversalSmall
     DocumentCount: 100
-    Repeat: 1
+    Repeat: 10000
 
 AutoRun:
 - When:
