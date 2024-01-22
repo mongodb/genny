@@ -71,14 +71,14 @@ Actors:
         DocumentCount: *DocumentCount
         BatchSize: 1000
         Document: {
-          a: [{ ^Repeat: { count: 3, fromGenerator: { b: [&NestedDoc { c: 0, d: 0, e: 0, f: 0, g: 0, h: 0, i: 0, j: 0, k: 0, l: 0}]}}}],
-          # 5 levels deep, every other level repeat twice.
+          a: [{ ^Repeat: { count: 3, fromGenerator: { b: [&InnerDoc { c: 0, d: 0, e: 0, f: 0, g: 0, h: 0, i: 0, j: 0, k: 0, l: 0}]}}}],
+          # 5 levels deep, every other level repeats twice.
           deep5: [
             &f1_ {f1: [
               {f2: [
                 &f3_ {f3: [
                   {f4: [
-                    &f5_ {f5: [*NestedDoc]},
+                    &f5_ {f5: [*InnerDoc]},
                     *f5_,
                   ]},
                 ]},
@@ -98,7 +98,7 @@ Actors:
                         &f7 {f7: [
                           {f8: [
                             &f9 {f9: [
-                              {f10: [*NestedDoc]},
+                              {f10: [*InnerDoc]},
                             ]},
                             *f9,
                           ]},
