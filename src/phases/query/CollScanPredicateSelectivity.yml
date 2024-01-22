@@ -24,35 +24,35 @@ GlobalDefaults:
   NegativeBillion: &NegativeBillion -1_000_000_000
   Document: &Document {
     onePercentNull: {^Choose: {from: ["non-null", null], weights: [99, 1]}},
+    fivePercentNull: {^Choose: {from: ["non-null", null], weights: [95, 5]}},
     tenPercentNull: {^Choose: {from: ["non-null", null], weights: [90, 10]}},
-    quarterNull: {^Choose: {from: ["non-null", null], weights: [75, 25]}},
     onePercentStr: {^Choose: {from: [null, "non-null"], weights: [99, 1]}},
+    fivePercentStr: {^Choose: {from: [null, "non-null"], weights: [95, 5]}},
     tenPercentStr: {^Choose: {from: [null, "non-null"], weights: [90, 10]}},
-    quarterStr: {^Choose: {from: [null, "non-null"], weights: [75, 25]}},
     onePercentPositiveInt: {^Choose: {
       from: &PositiveAndNegativeIntegers [{^Inc: {start: 1, step: 1}}, {^Inc: {start: -1, step: -1}}], 
       weights: [1, 99]
     }},
+    fivePercentPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [5, 95]}},
     tenPercentPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [10, 90]}},
-    quarterPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [25, 75]}},
     halfPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [50, 50]}},
-    quarterNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [75, 25]}},
     tenPercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [90, 10]}},
+    fivePercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [95, 5]}},
     onePercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [99, 1]}},
     nested: [
       {
         onePercentNull: {^Choose: {from: ["non-null", null], weights: [99, 1]}},
+        fivePercentNull: {^Choose: {from: ["non-null", null], weights: [95, 5]}},
         tenPercentNull: {^Choose: {from: ["non-null", null], weights: [90, 10]}},
-        quarterNull: {^Choose: {from: ["non-null", null], weights: [75, 25]}},
         onePercentStr: {^Choose: {from: [null, "non-null"], weights: [99, 1]}},
+        fivePercentStr: {^Choose: {from: [null, "non-null"], weights: [95, 5]}},
         tenPercentStr: {^Choose: {from: [null, "non-null"], weights: [90, 10]}},
-        quarterStr: {^Choose: {from: [null, "non-null"], weights: [75, 25]}},
         onePercentPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [1, 99]}},
+        fivePercentPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [5, 95]}},
         tenPercentPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [10, 90]}},
-        quarterPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [25, 75]}},
         halfPositiveInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [50, 50]}},
-        quarterNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [75, 25]}},
         tenPercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [90, 10]}},
+        fivePercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [95, 5]}},
         onePercentNegativeInt: {^Choose: {from: *PositiveAndNegativeIntegers, weights: [99, 1]}},
       }
     ]
@@ -154,8 +154,8 @@ Actors:
       ActivePhase: 5
       Filter:
         &MediumSelHeuristicGoodTwoRangeClauses {
-          tenPercentPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .1
-          tenPercentNegativeInt: {$gt: 0}, # Selectivity = .9
+          fivePercentPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .05
+          fivePercentNegativeInt: {$gt: 0}, # Selectivity = .95
         }
 
 - ActorFromTemplate:
@@ -165,8 +165,8 @@ Actors:
       ActivePhase: 6
       Filter:
         &MediumSelHeuristicGoodEqNe {
-          tenPercentNull: null, # Selectivity = .1
-          tenPercentStr: {$ne: "non-null"}, # Selectivity = .9
+          fivePercentNull: null, # Selectivity = .05
+          fivePercentStr: {$ne: "non-null"}, # Selectivity = .95
         }
 
 - ActorFromTemplate:
@@ -176,8 +176,8 @@ Actors:
       ActivePhase: 7
       Filter:
         &LowSelHeuristicGoodTwoRangeClauses {
-          quarterPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .25
-          quarterNegativeInt: {$gt: 0}, # Selectivity = .75
+          tenPercentPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .1
+          tenPercentNegativeInt: {$gt: 0}, # Selectivity = .9
         }
 
 - ActorFromTemplate:
@@ -187,8 +187,8 @@ Actors:
       ActivePhase: 8
       Filter:
         &LowSelHeuristicGoodEqNe {
-          quarterNull: null, # Selectivity = .25
-          quarterStr: {$ne: "non-null"}, # Selectivity = .75
+          tenPercentNull: null, # Selectivity = .1
+          tenPercentStr: {$ne: "non-null"}, # Selectivity = .9
         }
 
 - ActorFromTemplate:
@@ -222,8 +222,8 @@ Actors:
       ActivePhase: 11
       Filter:
         &MediumSelHeuristicBadTwoRangeClauses {
-          tenPercentPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .9
-          tenPercentNegativeInt: {$lt: 0}, # Selectivity = .1
+          fivePercentPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .95
+          fivePercentNegativeInt: {$lt: 0}, # Selectivity = .05
         }
 
 - ActorFromTemplate:
@@ -233,8 +233,8 @@ Actors:
       ActivePhase: 12
       Filter:
         &MediumSelHeuristicBadEqNe {
-          tenPercentStr: null, # Selectivity = .9
-          tenPercentNull: {$ne: "non-null"}, # Selectivity = .1
+          fivePercentStr: null, # Selectivity = .95
+          fivePercentNull: {$ne: "non-null"}, # Selectivity = .05
         }
 
 - ActorFromTemplate:
@@ -244,8 +244,8 @@ Actors:
       ActivePhase: 13
       Filter:
         &LowSelHeuristicBadTwoRangeClauses {
-          quarterPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .75
-          quarterNegativeInt: {$lt: 0}, # Selectivity = .25
+          tenPercentPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .9
+          tenPercentNegativeInt: {$lt: 0}, # Selectivity = .1
         }
 
 - ActorFromTemplate:
@@ -255,8 +255,8 @@ Actors:
       ActivePhase: 14
       Filter:
         &LowSelHeuristicBadEqNe {
-          quarterStr: null, # Selectivity = .75
-          quarterNull: {$ne: "non-null"}, # Selectivity = .25
+          tenPercentStr: null, # Selectivity = .9
+          tenPercentNull: {$ne: "non-null"}, # Selectivity = .1
         }
 
 - ActorFromTemplate:
@@ -267,9 +267,9 @@ Actors:
       Filter:
         &HighSelHeuristicGoodFourClauses {
           onePercentNull: null, # Selectivity = .01
-          quarterPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .25
-          quarterNegativeInt: {$gt: 0}, # Selectivity = .75
-          tenPercentNull: {$ne: null}, # Selectivity = .9
+          tenPercentPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .1
+          tenPercentNegativeInt: {$gt: 0}, # Selectivity = .9
+          fivePercentNull: {$ne: null}, # Selectivity = .95
         }
 
 - ActorFromTemplate:
@@ -279,9 +279,9 @@ Actors:
       ActivePhase: 16
       Filter:
         &MediumSelHeuristicGoodFourClauses {
-          tenPercentNull: null, # Selectivity = .1
-          quarterPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .25
-          quarterNegativeInt: {$gt: 0}, # Selectivity = .75
+          fivePercentNull: null, # Selectivity = .05
+          tenPercentPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .1
+          tenPercentNegativeInt: {$gt: 0}, # Selectivity = .9
           onePercentNull: {$ne: null}, # Selectivity = .99
         }
 
@@ -292,9 +292,9 @@ Actors:
       ActivePhase: 17
       Filter:
         &LowSelHeuristicGoodFourClauses {
-          quarterNull: null, # Selectivity = .25
+          tenPercentNull: null, # Selectivity = .1
           halfPositiveInt: {$gt: 0, $lt: *Billion}, # Selectivity = .5
-          quarterNegativeInt: {$gt: 0}, # Selectivity = .75
+          tenPercentNegativeInt: {$gt: 0}, # Selectivity = .9
           onePercentNull: {$ne: null}, # Selectivity = .99
         }
 
@@ -305,9 +305,9 @@ Actors:
       ActivePhase: 18
       Filter:
         &HighSelHeuristicBadFourClauses {
-          tenPercentNull: "non-null", # Selectivity = .9
-          quarterPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .75
-          quarterNegativeInt: {$lt: 0}, # Selectivity = .25
+          fivePercentNull: "non-null", # Selectivity = .95
+          tenPercentPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .9
+          tenPercentNegativeInt: {$lt: 0}, # Selectivity = .1
           onePercentNull: {$ne: "non-null"}, # Selectivity = .01
         }
 
@@ -319,9 +319,9 @@ Actors:
       Filter:
         &MediumSelHeuristicBadFourClauses {
           onePercentNull: "non-null", # Selectivity = .99
-          quarterPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .75
-          quarterNegativeInt: {$lt: 0}, # Selectivity = .25
-          tenPercentNull: {$ne: "non-null"}, # Selectivity = .1
+          tenPercentPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .9
+          tenPercentNegativeInt: {$lt: 0}, # Selectivity = .1
+          fivePercentNull: {$ne: "non-null"}, # Selectivity = .05
         }
 
 - ActorFromTemplate:
@@ -332,9 +332,9 @@ Actors:
       Filter:
         &LowSelHeuristicBadFourClauses {
           onePercentNull: "non-null", # Selectivity = .99
-          quarterPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .75
+          tenPercentPositiveInt: {$gt: *NegativeBillion, $lt: 0}, # Selectivity = .9
           halfNegativeInt: {$lt: 0}, # Selectivity = .5
-          quarterNull: {$ne: "non-null"}, # Selectivity = .25
+          tenPercentNull: {$ne: "non-null"}, # Selectivity = .1
         }
 
 - ActorFromTemplate:
@@ -345,11 +345,11 @@ Actors:
       Filter:
         &HighSelIndistinguishableByHeuristics {
           onePercentPositiveInt: {$gt: 0}, # Selectivity = .01
+          fivePercentPositiveInt: {$gt: 0}, # Selectivity = .05
           tenPercentPositiveInt: {$gt: 0}, # Selectivity = .1
-          quarterPositiveInt: {$gt: 0}, # Selectivity = .25
           halfPositiveInt: {$gt: 0}, # Selectivity = .5
-          quarterNegativeInt: {$gt: 0}, # Selectivity = .75
           tenPercentNegativeInt: {$gt: 0}, # Selectivity = .9
+          fivePercentNegativeInt: {$gt: 0}, # Selectivity = .95
           onePercentNegativeInt: {$gt: 0}, # Selectivity = .99
         }
 
@@ -360,11 +360,11 @@ Actors:
       ActivePhase: 22
       Filter:
         &MediumSelIndistinguishableByHeuristics {
+          fivePercentPositiveInt: {$gt: 0}, # Selectivity = .05
           tenPercentPositiveInt: {$gt: 0}, # Selectivity = .1
-          quarterPositiveInt: {$gt: 0}, # Selectivity = .25
           halfPositiveInt: {$gt: 0}, # Selectivity = .5
-          quarterNegativeInt: {$gt: 0}, # Selectivity = .75
           tenPercentNegativeInt: {$gt: 0}, # Selectivity = .9
+          fivePercentNegativeInt: {$gt: 0}, # Selectivity = .95
           onePercentNegativeInt: {$gt: 0}, # Selectivity = .99
           onePercentPositiveInt: {$lt: 0}, # Selectivity = .99
         }
@@ -376,12 +376,12 @@ Actors:
       ActivePhase: 23
       Filter:
         &LowSelIndistinguishableByHeuristics {
-          quarterPositiveInt: {$gt: 0}, # Selectivity = .25
+          tenPercentPositiveInt: {$gt: 0}, # Selectivity = .1
           halfPositiveInt: {$gt: 0}, # Selectivity = .5
-          quarterNegativeInt: {$gt: 0}, # Selectivity = .75
           tenPercentNegativeInt: {$gt: 0}, # Selectivity = .9
+          fivePercentNegativeInt: {$gt: 0}, # Selectivity = .95
           onePercentNegativeInt: {$gt: 0}, # Selectivity = .99
-          tenPercentPositiveInt: {$lt: 0}, # Selectivity = .9
+          fivePercentPositiveInt: {$lt: 0}, # Selectivity = .95
           onePercentPositiveInt: {$lt: 0}, # Selectivity = .99
         }
 
@@ -395,16 +395,16 @@ Actors:
           $or:
           [
             $and: [
-              onePercentNull: null, # Selectivity = .01
-              onePercentStr: {$ne: "non-null"}, # Selectivity = .99
+              onePercentStr: "non-null", # Selectivity = .01
+              onePercentNull: {$ne: null}, # Selectivity = .99
             ],
             $and: [
-              tenPercentNull: null, # Selectivity = .1
-              tenPercentStr: {$ne: "non-null"}, # Selectivity = .9
+              onePercentNegativeInt: {$lt: 0}, # Selectivity = .01
+              tenPercentNull: {$ne: "non-null"}, # Selectivity = .1
             ],
-            $and: [ # Least selective
-              quarterNull: null, # Selectivity = .25
-              quarterStr: {$ne: "non-null"}, # Selectivity = .75
+            $and: [
+              onePercentNull: null, # Selectivity = .01
+              fivePercentNegativeInt: {$lt: 0}, # Selectivity = .05
             ]
           ],
         }
@@ -423,12 +423,12 @@ Actors:
               onePercentNull: {$ne: "non-null"}, # Selectivity = .01
             ],
             $and: [
-              tenPercentStr: null, # Selectivity = .9
-              tenPercentNull: {$ne: "non-null"}, # Selectivity = .1
+              tenPercentNull: null, # Selectivity = .1
+              onePercentNegativeInt: {$lt: 0}, # Selectivity = .01
             ],
             $and: [
-              quarterStr: null, # Selectivity = .75
-              quarterNull: {$ne: "non-null"}, # Selectivity = .25
+              fivePercentNegativeInt: {$lt: 0}, # Selectivity = .05
+              onePercentStr: {$ne: null}, # Selectivity = .01
             ]
           ],
         }
@@ -442,20 +442,17 @@ Actors:
         &CNFHeuristicGood {
           $and:
           [
-            # Selectivity = .0099
             $or: [
               onePercentNull: null, # Selectivity = .01
-              onePercentStr: null, # Selectivity = .99
+              onePercentStr: "non-null", # Selectivity = .01
             ],
-            # Selectivity = .09
             $or: [
-              tenPercentNegativeInt: {$lt: 0}, # Selectivity = .1
-              tenPercentPositiveInt: {$lt: 0}, # Selectivity = .9
+              fivePercentNegativeInt: {$lt: 0}, # Selectivity = .05
+              fivePercentPositiveInt: {$gt: 0}, # Selectivity = .05
             ],
-            # Selectivity = .1875
             $or: [
-              quarterNull: {$ne: "non-null"}, # Selectivity = .25
-              quarterStr: {$ne: "non-null"}, # Selectivity = .75
+              tenPercentNull: {$ne: "non-null"}, # Selectivity = .1
+              tenPercentStr: {$ne: null}, # Selectivity = .1
             ]
           ],
         }
@@ -469,20 +466,17 @@ Actors:
         &CNFHeuristicBad {
           $and:
           [
-            # Selectivity = .1875
             $or: [
-              quarterNull: null, # Selectivity = .25
-              quarterStr: null, # Selectivity = .75
+              tenPercentNull: null, # Selectivity = .1
+              tenPercentStr: "non-null", # Selectivity = .1
             ],
-            # Selectivity = .09
             $or: [
-              tenPercentNegativeInt: {$lt: 0}, # Selectivity = .1
-              tenPercentPositiveInt: {$lt: 0}, # Selectivity = .9
+              fivePercentNegativeInt: {$lt: 0}, # Selectivity = .05
+              fivePercentPositiveInt: {$gt: 0}, # Selectivity = .05
             ],
-            # Selectivity = .0099
             $or: [
               onePercentNull: {$ne: "non-null"}, # Selectivity = .01
-              onePercentStr: {$ne: "non-null"}, # Selectivity = .99
+              onePercentStr: {$ne: null}, # Selectivity = .01
             ]
           ],
         }
