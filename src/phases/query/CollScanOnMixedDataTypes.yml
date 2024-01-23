@@ -123,7 +123,7 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: { "numInt": {$gt: 10} }
+            Filter: { "numInt": {$gte: 0} }
 
 - Name: CollScanQueryOnDouble
   Type: CrudActor
@@ -155,7 +155,7 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: { "numDecimal": {$lt: Decimal128("5000.0001")} }
+            Filter: { "numDecimal": {$lt: Decimal128("10000.0001")} }
 
 - Name: CollScanQueryOnShortString
   Type: CrudActor
@@ -221,8 +221,8 @@ Actors:
           OperationCommand:
             Filter: {
               "date": {
-                $gte: {^Date: "2024-01-01T00:00:00.001"},
-                $lte: {^Date: "2044-01-01T00:00:00.001"} 
+                $gte: {^Date: "2021-01-01T00:00:02.000"},
+                $lte: {^Date: "2054-01-01T00:00:10.000"}
               },
             }
 
@@ -240,7 +240,7 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: { "arr": { $elemMatch: { $gte: 8, $lt: 16 } } }
+            Filter: { "arr": { $elemMatch: { $gte: 0, $lt: 20 } } }
 
 - Name: CollScanQueryOnNestedObject
   Type: CrudActor
