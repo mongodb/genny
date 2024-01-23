@@ -72,47 +72,41 @@ Actors:
         BatchSize: 1000
         Document: {
           a: [{ ^Repeat: { count: 3, fromGenerator: { b: [&InnerDoc { c: 0, d: 0, e: 0, f: 0, g: 0, h: 0, i: 0, j: 0, k: 0, l: 0}]}}}],
-          # 5 levels deep, every other level repeats twice.
+          # 5 levels deep
           deep5: [
-            &f1_ {f1: [
+            {f1: [
               {f2: [
-                &f3_ {f3: [
+                {f3: [
                   {f4: [
-                    &f5_ {f5: [*InnerDoc]},
-                    *f5_,
+                    {f5: [*InnerDoc]},
+                    {f5: [*InnerDoc]},
                   ]},
                 ]},
-                *f3_,
               ]},
             ]},
-            *f1_,
           ],
-          # 10 levels deep, every other level repeats twice.
+          # 10 levels deep
           deep10: [
-            &f1 {f1: [
+            {f1: [
               {f2: [
-                &f3 {f3: [
+                {f3: [
                   {f4: [
-                    &f5 {f5: [
+                    {f5: [
                       {f6: [
-                        &f7 {f7: [
+                        {f7: [
                           {f8: [
-                            &f9 {f9: [
+                            {f9: [
+                              {f10: [*InnerDoc]},
                               {f10: [*InnerDoc]},
                             ]},
-                            *f9,
                           ]},
                         ]},
-                        *f7,
                       ]},
                     ]},
-                    *f5,
                   ]},
                 ]},
-                *f3,
               ]},
             ]},
-            *f1,
           ],
         }
 
