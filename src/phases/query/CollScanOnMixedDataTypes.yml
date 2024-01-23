@@ -139,7 +139,7 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: { "numDouble": {"$numberDouble": "4987.1234"} }
+            Filter: { "numDouble": 4987.1234 }
 
 - Name: CollScanQueryOnDecimal
   Type: CrudActor
@@ -155,7 +155,7 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: { "numDecimal": {$lt: {"$numberDecimal": "5000.0001"}} }
+            Filter: { "numDecimal": {$lt: Decimal128("5000.0001")} }
 
 - Name: CollScanQueryOnShortString
   Type: CrudActor
