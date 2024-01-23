@@ -7,9 +7,9 @@ Description: >
 LoadConfig:
   Path: ../../phases/query/RepeatedPathTraversal.yml
   Parameters:
-    Database: RepeatedPathTraversalLarge
-    DocumentCount: 1e6
-    Repeat: 50
+    Database: RepeatedPathTraversalSmall
+    DocumentCount: 100
+    Repeat: 10000
 
 AutoRun:
 - When:
@@ -22,8 +22,4 @@ AutoRun:
       - standalone-sampling-bonsai
       - standalone-sbe
     branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
+      $gte: v5.0
