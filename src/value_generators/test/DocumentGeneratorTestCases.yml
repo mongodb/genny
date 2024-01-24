@@ -879,6 +879,11 @@ Tests:
     ThenReturns:
     - { "int" : { "$numberLong" : "2000000000"}}
 
+  - Name: NowTimestamp
+    GivenTemplate:
+      date: {^NowTimestamp: {}}
+    ThenExecuteAndIgnore: true
+
   - Name: Now
     GivenTemplate:
       date: {^Now: {}}

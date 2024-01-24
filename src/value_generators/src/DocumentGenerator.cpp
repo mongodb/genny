@@ -1480,6 +1480,17 @@ private:
     std::string _actorId;
 };
 
+/** `{^NowTimestamp: {}}` */
+class NowTimestampGenerator : public Generator<bsoncxx::types::b_timestamp> {
+public:
+    NowTimestampGenerator(const Node& node, GeneratorArgs generatorArgs) {}
+    bsoncxx::types::b_timestamp evaluate() override {
+        auto now = std::chrono::system_clock::now();
+        uint32_t nowSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+        return bsoncxx::types::b_timestamp{.increment = 1, .timestamp = nowSinceEpoch};
+    }
+};
+
 /** `{^Now: {}}` */
 class NowGenerator : public Generator<bsoncxx::types::b_date> {
 public:
@@ -2142,6 +2153,7 @@ Out valueGenerator(const Node& node,
  */
 const auto [allParsers,
             arrayParsers,
+            timestampParsers,
             dateParsers,
             doubleParsers,
             intParsers,
@@ -2218,6 +2230,14 @@ const auto [allParsers,
                  BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
              }
              return literalArrayGenerator<true>(node, generatorArgs);
+         }},
+    };
+
+    // Set of parsers to look when we request a date parser
+    const static std::map<std::string, Parser<UniqueGenerator<bsoncxx::types::b_timestamp>>> timestampParsers{
+        {"^NowTimestamp",
+         [](const Node& node, GeneratorArgs generatorArgs) {
+             return std::make_unique<NowTimestampGenerator>(node, generatorArgs);
          }},
     };
 
@@ -2340,6 +2360,7 @@ const auto [allParsers,
 
     // Only nonexistent keys are inserted.
     allParsers.insert(arrayParsers.begin(), arrayParsers.end());
+    allParsers.insert(timestampParsers.begin(), timestampParsers.end());
     allParsers.insert(dateParsers.begin(), dateParsers.end());
     allParsers.insert(doubleParsers.begin(), doubleParsers.end());
     allParsers.insert(intParsers.begin(), intParsers.end());
@@ -2349,6 +2370,7 @@ const auto [allParsers,
 
     return std::tie(allParsers,
                     arrayParsers,
+                    timestampParsers,
                     dateParsers,
                     doubleParsers,
                     intParsers,

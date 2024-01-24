@@ -149,6 +149,9 @@ Actors:
             # See ChooseFromDataset.yml for full documentation on this generator
             airportDataSet: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/airports_codes.txt"}}
 
+            # Generate the current timestamp
+            nowTimestamp: {^NowTimestamp: {}}
+
             # Generate the current Date
             now: {^Now: {}}
 
