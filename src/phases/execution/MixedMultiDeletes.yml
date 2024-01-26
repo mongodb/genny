@@ -39,7 +39,7 @@ GlobalDefaults:
   ConcurrentWritesColl: &ConcurrentWritesColl concurrentWritesColl
   Database: &Database test
   MassDeletionsColl: &MassDeletionsColl Collection0
-  NumPhases: &NumPhases 11
+  NumPhases: &NumPhases 20
   LoaderThreads: &LoaderThreads 4
   # Delete by primary index always.
   DeleteQuery: &DeleteQuery
@@ -152,6 +152,7 @@ ActorTemplates:
   Config:
     Name: {^Parameter: {Name: "Name", Default: "ConcurrentWritesDefaultName"}}
     Type: CrudActor
+    Threads: 16
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
@@ -174,8 +175,8 @@ Actors:
   Database: *Database
   Phases:
     OnlyActiveInPhases:
-      Active: [0,3,5,7,9,11,13,15,17,19,21]
-      NopInPhasesUpTo: *MaxPhases
+      Active: [0,3,5,7,9,11,13,15,17,19]
+      NopInPhasesUpTo: *NumPhases
       PhaseConfig:
         Repeat: 1
         Threads: 1
@@ -222,7 +223,7 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [4, 8, 16, 20]
+      Active: [4, 8, 14, 18]
       NopInPhasesUpTo: *NumPhases
       PhaseConfig:
         LogEvery: 9 minutes
@@ -255,22 +256,22 @@ Actors:
       Name: LargeMultiDelete1_1KB
       OnlyActiveInPhase: 10
 
-# Phase 12: Perform some write operations - see how write latency is impacted on ConcurrentWritesColl by the large delete on MassDeletionsColl.
+# Phase 10: Perform some write operations - see how write latency is impacted on ConcurrentWritesColl by the large delete on MassDeletionsColl.
 - ActorFromTemplate:
     TemplateName: ConcurrentWrites
     TemplateParameters:
       Name: ConcurrentWrites_1KB
       DocumentToInsert: *DocumentToInsert_1KB
-      OnlyActiveInPhase: 12
+      OnlyActiveInPhase: 10
 
-# Phase 14: Initialize the database.
+# Phase 12: Initialize the database.
 - ActorFromTemplate:
     TemplateName: InitializeDatabase
     TemplateParameters:
       Name: InitializeDatabase0_10MB
-      OnlyActiveInPhases: 14
+      OnlyActiveInPhases: 12
 
-# Phase 16: Populate for First Round of Deletes without Concurrent Writes.
+# Phase 14: Populate for First Round of Deletes without Concurrent Writes.
 - ActorFromTemplate:
     TemplateName: PopulateInitialData
     TemplateParameters:
@@ -278,17 +279,17 @@ Actors:
       BatchSize: *InsertBatchSize_10MB
       DocumentCount: *DocumentCount_10MB
       DocumentToInsert: *DocumentToInsert_10MB
-      OnlyActiveInPhase: 16
+      OnlyActiveInPhase: 14
 
-# Phase 18: Issue a large delete that should take a considerable amount of time to run. This delete
+# Phase 16: Issue a large delete that should take a considerable amount of time to run. This delete
 # will run with no concurrent writes to the database.
 - ActorFromTemplate:
     TemplateName: LargeMultiDelete
     TemplateParameters:
       Name: LargeMultiDelete0_10MB
-      OnlyActiveInPhase: 18
+      OnlyActiveInPhase: 16
 
-# Phase 20: Populate the collection for mass deletion again, in preparation for phase 6 when concurrent writes will be
+# Phase 18: Populate the collection for mass deletion again, in preparation for phase 6 when concurrent writes will be
 # issued to another collection in the same database.
 - ActorFromTemplate:
     TemplateName: PopulateInitialData
@@ -297,21 +298,21 @@ Actors:
       BatchSize: *InsertBatchSize_10MB
       DocumentCount: *DocumentCount_10MB
       DocumentToInsert: *DocumentToInsert_10MB
-      OnlyActiveInPhase: 20
+      OnlyActiveInPhase: 18
 
-# Phase 22: Issue a large delete that should take a considerable amount of time to run. This delete
+# Phase 20: Issue a large delete that should take a considerable amount of time to run. This delete
 # will run with concurrent writes to another collection.
 - ActorFromTemplate:
     TemplateName: LargeMultiDelete
     TemplateParameters:
       Name: LargeMultiDelete1_10MB
-      OnlyActiveInPhase: 22
+      OnlyActiveInPhase: 20
 
-# Phase 22: Perform some write operations - see how write latency is impacted on ConcurrentWritesColl by the large delete on MassDeletionsColl.
+# Phase 20: Perform some write operations - see how write latency is impacted on ConcurrentWritesColl by the large delete on MassDeletionsColl.
 - ActorFromTemplate:
     TemplateName: ConcurrentWrites
     TemplateParameters:
       Name: ConcurrentWrites_10MB
       DocumentToInsert: *DocumentToInsert_10MB
-      OnlyActiveInPhase: 22
+      OnlyActiveInPhase: 20
 
