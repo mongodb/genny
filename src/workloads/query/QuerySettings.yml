@@ -1,0 +1,162 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  Measure the performance for find command with-/out query settings as well as checking both hit and miss cases.
+
+KeyWords:
+- querySettings
+- find
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  DocumentCount: &DocumentCount 100000
+  MaxPhases: &MaxPhases 12
+  HitFilter: &HitFilter {a1: {^RandomInt: {min: 1, max: 350}}}
+  MissFilter: &MissFilter {a2: {^RandomInt: {min: 1, max: 350}}}
+  Threads: &Threads 64
+
+Actors:
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: *DocumentCount
+        BatchSize: 1000
+        Document:
+          a1: &integer {^RandomInt: {min: -100, max: 100}}
+        Indexes:
+        - keys: {a1: 1}
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2, 4, 6, 8, 10, 12]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+
+- Name: FindWithoutQuerySettings
+  Type: CrudActor
+  Threads: 8
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [3]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
+        Collection: *Collection
+        Operations:
+        - OperationName: findOne
+          OperationCommand:
+            Filter: *HitFilter
+
+- Name: SetQuerySettings
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            setQuerySettings:
+              find: *Collection
+              $db: *Database
+              filter: *HitFilter
+            settings:
+              indexHints:
+                allowedIndexes: ["a1_1_a2_1"]
+
+- Name: FindWithQuerySettingsHit
+  Type: CrudActor
+  Threads: 8
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
+        Collection: *Collection
+        Operations:
+        - OperationName: findOne
+          OperationCommand:
+            Filter: *HitFilter
+
+- Name: FindWithQuerySettingsMiss
+  Type: CrudActor
+  Threads: 8
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Duration: 1 minute
+        Collection: *Collection
+        Operations:
+        - OperationName: findOne
+          OperationCommand:
+            Filter: *MissFilter
+
+- Name: RemoveQuerySettings
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [11]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: AdminCommand
+          OperationCommand:
+            removeQuerySettings:
+              find: *Collection
+              $db: *Database
+              filter: *HitFilter
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica-all-feature-flags
+      - replica-query-settings
