@@ -772,4 +772,4 @@ Actors:
         - OperationMetricsName: RunRootedOrQuery
           OperationName: find
           OperationCommand:
-            Filter: {a:1, $or:[{b:2, c:2},{b:3,c:3},{b:4,c:4},{b:5,c:5}]}
+            Filter: {a: 1, $or: [{b: 2, c: 2}, {b: 3,c: 3}, {b: 4,c: 4}, {b: 5,c: 5}]}
