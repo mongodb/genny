@@ -1,12 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This test exercises the behavior of $lookup when followed by $unwind that immediately unwinds the
-  lookup result array, which is optimized in the execution engine to avoid materializing this array
-  as an intermediate step. We use one "local" collection with 20000 documents {_id, join_val}, and
-  vary the "foreign" collection to test different document contents as well as different collection
-  sizes. The structure of documents in the foreign collection is {_id, join_val, <data>}, where
-  <data> is one of the following:
+  This test exercises the behavior of a $lookup-only pipeline. We use one "local" collection with
+  20000 documents {_id, join_val}, and vary the "foreign" collection to test different document
+  contents as well as different collection sizes. The structure of documents in the foreign
+  collection is {_id, join_val, <data>}, where <data> is one of the following:
   - an integer
   - a short string (20 chars)
   - a long string (100 chars)
@@ -21,16 +19,15 @@ Description: |
        - 'LoadXXX' actors
     2. Calms down to isolate any trailing impacts from the load phase
        - 'Quiesce' actor
-    3. Runs and measures the lookup/unwind performance
-       - 'LookupUnwindXXX' actors
+    3. Runs and measures the lookup performance
+       - 'LookupOnlyXXX' actors
 
 Keywords:
 - lookup
-- unwind
 - aggregate
 
 # Defines the database name.
-Database: &db lookup_unwind
+Database: &db lookup
 
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 10
@@ -104,129 +101,129 @@ ForeignLargeObj100: &ForeignLargeObj100 foreign_largeobj_100
 ForeignLargeObj1000: &ForeignLargeObj1000 foreign_largeobj_1000
 ForeignLargeObj10000: &ForeignLargeObj10000 foreign_largeobj_10000
 
-# Defines Lookup/Unwind commands for different foreign collections and different sizes. See
-# 'LookupUnwindCmdTemplate' for details.
+# Defines Lookup commands for different foreign collections and different sizes. See
+# 'LookupOnlyCmdTemplate' for details.
 # Integer
-LookupUnwindInt100: &LookupUnwindInt100
+LookupOnlyInt100: &LookupOnlyInt100
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignInt100
 
-LookupUnwindInt1000: &LookupUnwindInt1000
+LookupOnlyInt1000: &LookupOnlyInt1000
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignInt1000
 
-LookupUnwindInt10000: &LookupUnwindInt10000
+LookupOnlyInt10000: &LookupOnlyInt10000
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignInt10000
 
 # Short string
-LookupUnwindShortStr100: &LookupUnwindShortStr100
+LookupOnlyShortStr100: &LookupOnlyShortStr100
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignShortStr100
 
-LookupUnwindShortStr1000: &LookupUnwindShortStr1000
+LookupOnlyShortStr1000: &LookupOnlyShortStr1000
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignShortStr1000
 
-LookupUnwindShortStr10000: &LookupUnwindShortStr10000
+LookupOnlyShortStr10000: &LookupOnlyShortStr10000
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignShortStr10000
 
 # Long String
-LookupUnwindLongStr100: &LookupUnwindLongStr100
+LookupOnlyLongStr100: &LookupOnlyLongStr100
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignLongStr100
 
-LookupUnwindLongStr1000: &LookupUnwindLongStr1000
+LookupOnlyLongStr1000: &LookupOnlyLongStr1000
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignLongStr1000
 
-LookupUnwindLongStr10000: &LookupUnwindLongStr10000
+LookupOnlyLongStr10000: &LookupOnlyLongStr10000
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignLongStr10000
 
 # Small Object
-LookupUnwindSmallObj100: &LookupUnwindSmallObj100
+LookupOnlySmallObj100: &LookupOnlySmallObj100
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignSmallObj100
 
-LookupUnwindSmallObj1000: &LookupUnwindSmallObj1000
+LookupOnlySmallObj1000: &LookupOnlySmallObj1000
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignSmallObj1000
 
-LookupUnwindSmallObj10000: &LookupUnwindSmallObj10000
+LookupOnlySmallObj10000: &LookupOnlySmallObj10000
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignSmallObj10000
 
 # Large Object
-LookupUnwindLargeObj100: &LookupUnwindLargeObj100
+LookupOnlyLargeObj100: &LookupOnlyLargeObj100
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignLargeObj100
 
-LookupUnwindLargeObj1000: &LookupUnwindLargeObj1000
+LookupOnlyLargeObj1000: &LookupOnlyLargeObj1000
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignLargeObj1000
 
-LookupUnwindLargeObj10000: &LookupUnwindLargeObj10000
+LookupOnlyLargeObj10000: &LookupOnlyLargeObj10000
   LoadConfig:
     Path: "../../phases/query/LookupCommands.yml"
-    Key: LookupUnwindCmdTemplate
+    Key: LookupOnlyCmdTemplate
     Parameters:
       l: *LocalColl
       f: *ForeignLargeObj10000
@@ -270,7 +267,7 @@ ActorTemplates:
     - Nop: true
     - Nop: true
 
-# Template for running and measuring the lookup/unwind performances.
+# Template for running and measuring the lookup performances.
 - TemplateName: RunQueryTemplate
   Config:
     Name: {^Parameter: {Name: "Name", Default: "LoadForeignCollection"}}
@@ -449,61 +446,61 @@ Actors:
   - Repeat: 1
   - Nop: true
 
-# The 'LookupUnwind*' actors measure the lookup/unwind performances and run in the 3rd phase.
+# The 'LookupOnly*' actors measure the lookup performances and run in the 3rd phase.
 - ActorFromTemplate:
     TemplateName: RunQueryTemplate
     TemplateParameters:
-      Name: LookupUnwindInt
-      Metric100: LookupUnwind_ForeignInt100
-      Command100: *LookupUnwindInt100
-      Metric1000: LookupUnwind_ForeignInt1000
-      Command1000: *LookupUnwindInt1000
-      Metric10000: LookupUnwind_ForeignInt10000
-      Command10000: *LookupUnwindInt10000
+      Name: LookupOnlyInt
+      Metric100: LookupOnly_ForeignInt100
+      Command100: *LookupOnlyInt100
+      Metric1000: LookupOnly_ForeignInt1000
+      Command1000: *LookupOnlyInt1000
+      Metric10000: LookupOnly_ForeignInt10000
+      Command10000: *LookupOnlyInt10000
 
 - ActorFromTemplate:
     TemplateName: RunQueryTemplate
     TemplateParameters:
-      Name: LookupUnwindShortStr
-      Metric100: LookupUnwind_ForeignShortStr100
-      Command100: *LookupUnwindShortStr100
-      Metric1000: LookupUnwind_ForeignShortStr1000
-      Command1000: *LookupUnwindShortStr1000
-      Metric10000: LookupUnwind_ForeignShortStr10000
-      Command10000: *LookupUnwindShortStr10000
+      Name: LookupOnlyShortStr
+      Metric100: LookupOnly_ForeignShortStr100
+      Command100: *LookupOnlyShortStr100
+      Metric1000: LookupOnly_ForeignShortStr1000
+      Command1000: *LookupOnlyShortStr1000
+      Metric10000: LookupOnly_ForeignShortStr10000
+      Command10000: *LookupOnlyShortStr10000
 
 - ActorFromTemplate:
     TemplateName: RunQueryTemplate
     TemplateParameters:
-      Name: LookupUnwindLongStr
-      Metric100: LookupUnwind_ForeignLongStr100
-      Command100: *LookupUnwindLongStr100
-      Metric1000: LookupUnwind_ForeignLongStr1000
-      Command1000: *LookupUnwindLongStr1000
-      Metric10000: LookupUnwind_ForeignLongStr10000
-      Command10000: *LookupUnwindLongStr10000
+      Name: LookupOnlyLongStr
+      Metric100: LookupOnly_ForeignLongStr100
+      Command100: *LookupOnlyLongStr100
+      Metric1000: LookupOnly_ForeignLongStr1000
+      Command1000: *LookupOnlyLongStr1000
+      Metric10000: LookupOnly_ForeignLongStr10000
+      Command10000: *LookupOnlyLongStr10000
 
 - ActorFromTemplate:
     TemplateName: RunQueryTemplate
     TemplateParameters:
-      Name: LookupUnwindSmallObj
-      Metric100: LookupUnwind_ForeignSmallObj100
-      Command100: *LookupUnwindSmallObj100
-      Metric1000: LookupUnwind_ForeignSmallObj1000
-      Command1000: *LookupUnwindSmallObj1000
-      Metric10000: LookupUnwind_ForeignSmallObj10000
-      Command10000: *LookupUnwindSmallObj10000
+      Name: LookupOnlySmallObj
+      Metric100: LookupOnly_ForeignSmallObj100
+      Command100: *LookupOnlySmallObj100
+      Metric1000: LookupOnly_ForeignSmallObj1000
+      Command1000: *LookupOnlySmallObj1000
+      Metric10000: LookupOnly_ForeignSmallObj10000
+      Command10000: *LookupOnlySmallObj10000
 
 - ActorFromTemplate:
     TemplateName: RunQueryTemplate
     TemplateParameters:
-      Name: LookupUnwindLargeObj
-      Metric100: LookupUnwind_ForeignLargeObj100
-      Command100: *LookupUnwindLargeObj100
-      Metric1000: LookupUnwind_ForeignLargeObj1000
-      Command1000: *LookupUnwindLargeObj1000
-      Metric10000: LookupUnwind_ForeignLargeObj10000
-      Command10000: *LookupUnwindLargeObj10000
+      Name: LookupOnlyLargeObj
+      Metric100: LookupOnly_ForeignLargeObj100
+      Command100: *LookupOnlyLargeObj100
+      Metric1000: LookupOnly_ForeignLargeObj1000
+      Command1000: *LookupOnlyLargeObj1000
+      Metric10000: LookupOnly_ForeignLargeObj10000
+      Command10000: *LookupOnlyLargeObj10000
 
 AutoRun:
 - When:
