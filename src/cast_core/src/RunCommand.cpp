@@ -188,7 +188,7 @@ public:
                     maybeWatch->success();
                 }
             } catch (mongocxx::operation_exception& e) {
-                // BOOST_THROW_EXCEPTION(MongoException(e, view));
+                BOOST_THROW_EXCEPTION(MongoException(e, view));
             }
         } catch (...) {
             if (maybeWatch) {
