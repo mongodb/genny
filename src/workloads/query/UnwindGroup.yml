@@ -77,14 +77,8 @@ Actors:
       OperationCommand:
         aggregate: *coll
         pipeline: [
-          {
-            "$unwind": {"path": "$arr"}
-          },
-          {
-            "$group": {
-              "_id": "$arr",
-            }
-          },
+          {"$unwind": {"path": "$arr"}},
+          {"$group": {"_id": "$arr"}},
         ]
         cursor: {}
 
