@@ -90,7 +90,7 @@ class BaseTestClass(unittest.TestCase):
 
 TIMEOUT_COMMAND = {
     "command": "timeout.update",
-    "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
+    "params": {"exec_timeout_secs": 86400, "timeout_secs": 86400},
 }
 
 

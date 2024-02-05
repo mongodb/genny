@@ -578,7 +578,7 @@ class ConfigWriter:
                 [
                     CommandDefinition()
                     .command("timeout.update")
-                    .params({"exec_timeout_secs": 86400, "timeout_secs": 7200}),  # 24 hours
+                    .params({"exec_timeout_secs": 86400, "timeout_secs": 86400}),  # 24 hours
                     CommandDefinition().function("f_run_dsi_workload").vars(bootstrap),
                 ]
             )
