@@ -68,11 +68,6 @@ class BaseTestClass(unittest.TestCase):
             raise
 
 
-TIMEOUT_COMMAND = {
-    "command": "timeout.update",
-    "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
-}
-
 
 def expansions_mock(exp_vars) -> MockFile:
     yaml_conts = {"build_variant": "some-build-variant", "execution": "0"}
@@ -105,7 +100,6 @@ class AutoTasksTests(BaseTestClass):
                 {
                     "name": "task_a",
                     "commands": [
-                        TIMEOUT_COMMAND,
                         {
                             "func": "f_run_dsi_workload",
                             "vars": {
@@ -119,7 +113,6 @@ class AutoTasksTests(BaseTestClass):
                 {
                     "name": "task_b",
                     "commands": [
-                        TIMEOUT_COMMAND,
                         {
                             "func": "f_run_dsi_workload",
                             "vars": {
@@ -133,7 +126,6 @@ class AutoTasksTests(BaseTestClass):
                 {
                     "name": "task_c",
                     "commands": [
-                        TIMEOUT_COMMAND,
                         {
                             "func": "f_run_dsi_workload",
                             "vars": {
@@ -147,7 +139,6 @@ class AutoTasksTests(BaseTestClass):
                 {
                     "name": "task_c2",
                     "commands": [
-                        TIMEOUT_COMMAND,
                         {
                             "func": "f_run_dsi_workload",
                             "vars": {
@@ -162,7 +153,6 @@ class AutoTasksTests(BaseTestClass):
                     # This task is generated  but not included in any variants.
                     "name": "task_d",
                     "commands": [
-                        TIMEOUT_COMMAND,
                         {
                             "func": "f_run_dsi_workload",
                             "vars": {
@@ -179,7 +169,6 @@ class AutoTasksTests(BaseTestClass):
                 {"name": "b", "tasks": [{"name": "task_b"}]},
                 {"name": "c", "tasks": [{"name": "task_c"}, {"name": "task_c2"}]},
             ],
-            "exec_timeout_secs": 64800,
         }
 
         workload_files = [
@@ -241,7 +230,6 @@ class AutoTasksTests(BaseTestClass):
                 {
                     "name": "task_a",
                     "commands": [
-                        TIMEOUT_COMMAND,
                         {
                             "func": "f_run_dsi_workload",
                             "vars": {
@@ -255,7 +243,6 @@ class AutoTasksTests(BaseTestClass):
                 {
                     "name": "task_b",
                     "commands": [
-                        TIMEOUT_COMMAND,
                         {
                             "func": "f_run_dsi_workload",
                             "vars": {
@@ -279,7 +266,6 @@ class AutoTasksTests(BaseTestClass):
                 },
                 {"name": "b", "tasks": [{"name": "task_b"}]},
             ],
-            "exec_timeout_secs": 64800,
         }
 
         workload_files = [

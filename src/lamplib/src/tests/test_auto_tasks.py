@@ -88,11 +88,6 @@ class BaseTestClass(unittest.TestCase):
             raise
 
 
-TIMEOUT_COMMAND = {
-    "command": "timeout.update",
-    "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
-}
-
 
 def expansions_mock(exp_vars) -> MockFile:
     yaml_conts = {"build_variant": "some-build-variant", "execution": "0"}
@@ -163,7 +158,6 @@ class AutoTasksTests(BaseTestClass):
                     {
                         "name": "multi_a",
                         "commands": [
-                            TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
@@ -178,7 +172,6 @@ class AutoTasksTests(BaseTestClass):
                     {
                         "name": "multi_b",
                         "commands": [
-                            TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
@@ -193,7 +186,6 @@ class AutoTasksTests(BaseTestClass):
                     {
                         "name": "multi_other_a",
                         "commands": [
-                            TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
@@ -208,7 +200,6 @@ class AutoTasksTests(BaseTestClass):
                     {
                         "name": "multi_other_b",
                         "commands": [
-                            TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
@@ -223,7 +214,6 @@ class AutoTasksTests(BaseTestClass):
                     {
                         "name": "nested_directory_unmodified_a",
                         "commands": [
-                            TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
@@ -238,7 +228,6 @@ class AutoTasksTests(BaseTestClass):
                     {
                         "name": "nested_directory_unmodified_b",
                         "commands": [
-                            TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
@@ -253,7 +242,6 @@ class AutoTasksTests(BaseTestClass):
                     {
                         "name": "nested_directory_unmodified_other_a",
                         "commands": [
-                            TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
@@ -268,7 +256,6 @@ class AutoTasksTests(BaseTestClass):
                     {
                         "name": "nested_directory_unmodified_other_b",
                         "commands": [
-                            TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
