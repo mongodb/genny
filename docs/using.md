@@ -48,7 +48,7 @@
 
 Hello! These are the docs for Genny specifically. Genny is a workload-generator with first-class support for time-series data-collection of operations running against MongoDB. It is recommended for use in all MongoDB load generation. For an overall view of MongoDB's performance testing infrastructure, please look at the [Performance Tooling Docs](https://github.com/10gen/performance-tooling-docs) and the [architecture diagram](https://github.com/10gen/performance-tooling-docs/blob/main/perf_pipeline.md) that shows how Genny fits in the overall performance pipeline with other tools.
 
-If you have any questions, please reach out to the TIPS team in our dedicated slack channel: [#ask-devprod-performance](https://mongodb.slack.com/archives/C01VD0LQZED). If you feel like these docs can be improved in any way, feel free to open a PR and assign someone from TIPS. No ticket necessary. This document is intended to be readable straight-through, in addition to serving as a reference on an as-needed basis. If there are any difficulties in flow or discoverability, please let us know.
+If you have any questions, please reach out to the DEVPROD team in our dedicated slack channel: [#ask-devprod-performance](https://mongodb.slack.com/archives/C01VD0LQZED). If you feel like these docs can be improved in any way, feel free to open a PR and assign someone from DEVPROD. No ticket necessary. This document is intended to be readable straight-through, in addition to serving as a reference on an as-needed basis. If there are any difficulties in flow or discoverability, please let us know.
 
 
 <a id="org35e6dff"></a>
@@ -491,7 +491,7 @@ This would set up the workload and print it as a list of Phases with the Actors 
 
 For more details on workload development, please check out our general docs on [Developing and Modifying Workloads](https://github.com/10gen/performance-tooling-docs/blob/main/new_workloads.md) and on [Basic Performance Patch Testing](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md).
 
-Users who would like a second look at their workloads can ask product performance. Users who have questions about their Genny usage can ask TIPS (@dev-prod-tips).
+Users who would like a second look at their workloads can ask product performance. Users who have questions about their Genny usage can ask DEVPROD in #ask-devprod-performance.
 
 Users who would like a private workload should consider putting it in the [PrivateWorkloads repo](https://github.com/10gen/PrivateWorkloads).
 
@@ -505,7 +505,7 @@ Users who would like a private workload should consider putting it in the [Priva
 
 ## Common Actors
 
-There are several Actors owned by TIPS which are intended for widespread use:
+There are several Actors owned by DEVPROD which are intended for widespread use:
 
 -   CrudActor - Used to perform CRUD operations, recording client-side metrics.
 -   RunCommand - Execute a command against the remote server. Often used for utility purposes, but metrics are collected as well.
@@ -860,7 +860,7 @@ Genny also has an override syntax for configuring workloads. When invoking Genny
 This uses [OmegaConf](https://omegaconf.readthedocs.io/en/2.1_branch/) to merge the override file onto the workload. This functionality
 should only be used to set values that absolutely need to be specified at runtime, such as URIs for systems under test. (See [Connecting to the Server](#orgd6b0450) for details.)
 
-*Warning* - Using overrides and omegaconf syntax and greatly increase workload complexity. Users interested in using overrides files or OmegaConf functionality should come talk to the TIPS team.
+*Warning* - Using overrides and omegaconf syntax and greatly increase workload complexity. Users interested in using overrides files or OmegaConf functionality should come talk to the DEVPROD team.
 
 Furthermore, there is a default Actor that is injected during preprocessing, which has the following configuration:
 
@@ -998,7 +998,7 @@ Creating new Actors is a common and encouraged workflow in Genny. To create one,
 
 This will create new Actor .cpp and .h files, an example workload yaml, as well as Actor integration tests, all with inline comments guiding you through the Actor creation process. You might want to take a look at [Developing Genny](./developing.md) and the [Contribution Guidelines](../CONTRIBUTING.md).
 
-If your configuration wants to use logic, ifs, or anything beyond simple or existing commands in a loop, then consider writing your own Actor. It doesn't need to be super general or even super well-tested or refactored. Genny is open to submissions and you own whatever Actor you write. No need to loop TIPS in to your custom actor's PR unless you'd just like a second look.
+If your configuration wants to use logic, ifs, or anything beyond simple or existing commands in a loop, then consider writing your own Actor. It doesn't need to be super general or even super well-tested or refactored. Genny is open to submissions and you own whatever Actor you write. No need to loop DEVPROD in to your custom actor's PR unless you'd just like a second look.
 
 
 <a id="org627591d"></a>

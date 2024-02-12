@@ -144,7 +144,7 @@ void reportUnused(const NodeSource& nodeSource, const bool dryrun) {
     message << "\n\t" << boost::algorithm::join(ignored, "\n\t") << std::endl;
 
     message << "Incorrect results are possible. "
-            << "Please file a TIG ticket on the TIPS backlog, or otherwise let us know in the "
+            << "Please file a DEVPROD ticket on the DEVPROD backlog, or otherwise let us know in the "
             << "#ask-devprod-performance slack channel if this looks wrong." << std::endl;
     message << "</BETA FEATURE>";
     if (unused.empty()) {
