@@ -73,7 +73,7 @@ Actors:
 
   - Name: single_groupby_5_8_1
     Type: CrudActor
-    Threads: 1
+    Threads: 4
     Phases:
       OnlyActiveInPhases:
         Active: [1]
