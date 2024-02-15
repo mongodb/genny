@@ -1,11 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  The workload tests the server under a "multi-plan storm" situation, by using a query which
-  requires a multi-plan. The same query is executed by many threads, each of them triggering a
-  multi-plan. This eventually causes an OOM kill due to the memory footprint of multi-planning,
-  which is considerable due to each of the plans index scanning a large number of documents, while
-  maintaining a RecordId set.
+  The workload tests the server under a "multi-plan storm" situation. The same query requiring a
+  multi-plan is executed by many threads, each of them triggering a multi-plan. Each of the plans in
+  the multi-plan, on each thread, is index scanning a large number of documents, while maintaining a
+  RecordId set. This causes the memory footprint to increase until the server is eventually OOM
+  killed.
 
 GlobalDefaults:
   MaxPhases: &MaxPhases 2
@@ -69,7 +69,7 @@ Actors:
       Active: [1]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Duration: 10 minutes
+        Duration: 30 minutes
         Collection: Collection0
         Operations:
         - OperationName: find
