@@ -1,0 +1,100 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: >
+  The workload tests the server under a "multi-plan storm" situation, by using a query which
+  requires a multi-plan. The same query is executed by many threads, each of them triggering a
+  multi-plan. This eventually causes an OOM kill due to the memory footprint of multi-planning,
+  which is considerable due to each of the plans index scanning a large number of documents.
+
+GlobalDefaults:
+  MaxPhases: &MaxPhases 2
+  # The amount of documents here is important, since trial-runs in the query planner "tournament"
+  # will only use ~30% of total document count increasing the number of total documents helps
+  # reproduce the issue.
+  TotalDocs: &TotalDocs 10000000
+  MatchingDocs: &MatchingDocs 22000
+  RandomDocs: &RandomDocs
+    ^NumExpr:
+      withExpression: "num_total_docs - num_matching_docs"
+      andValues: {num_total_docs: *TotalDocs, num_matching_docs: *MatchingDocs}
+  SkippedDocs: &SkippedDocs 20000
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 2000
+      socketTimeoutMS: 7_200_000  # = 2 hour
+      connectTimeoutMS: 7_200_000
+
+Actors:
+
+- Name: InsertData
+  Type: Loader
+  Threads: 100
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        # Repeat: 1
+        Database: &DB test
+        Blocking: None
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1  # Collection name will be Collection0, this is not configurable.
+        DocumentCount: *TotalDocs
+        BatchSize: 1000
+        Document:
+          uniqueId: {^Inc: {start: 1}}
+          media: {^FastRandomString: {length: 5120}}
+          hasDeducteeChanged: true
+          hasPanChanged: false
+          codes: {^Choose: {from: [{
+              tdsReturnId: "ffffffffffffffffffffffff",
+              tanId: "abcdefgh"}
+            ,{
+              tdsReturnId: {^FastRandomString: {length: 24}},
+              tanId: {^FastRandomString: {length: 8}}
+            }], 
+            weights: [*MatchingDocs, *RandomDocs]}
+          }
+        Indexes:
+          - keys: { codes.tdsReturnId: 1 }
+          - keys: { codes.tanId: 1 }
+          - keys: { uniqueId: 1 }
+          - keys: { codes.tdsReturnId: 1, hasDeducteeChanged: 1 }
+          - keys: { codes.tanId: 1, codes.tdsReturnId: 1 }
+          - keys: { codes.tanId: 1, hasPanChanged: 1}
+          - keys: { codes.tdsReturnId: 1, codes.uniqueId: 1}
+          - keys: { codes.tanId: 1, uniqueId: 1}
+
+- Name: MultiPlanStorm
+  Type: CrudActor
+  Database: *DB
+  Threads: 1000
+  Phases:
+    OnlyActiveInPhases: 
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Collection: Collection0
+        Operations:
+        - OperationName: find
+          OperationCommand:
+            Filter: { 
+              $and:
+              [
+                { "codes.tdsReturnId": "ffffffffffffffffffffffff"}, 
+                { "codes.tanId": "abcdefgh" }
+              ]}
+            Options:
+              Sort: '{"_id": {"$numberInt": "-1"}}'
+              Skip: *SkippedDocs
+
+# The workload is expected to cause an OOM kill. Keep AutoRun disabled.
+# AutoRun:
+# - When:
+#     mongodb_setup:
+#       $eq:
+#       - single-replica
+
