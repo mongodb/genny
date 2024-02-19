@@ -1,17 +1,18 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  The workload tests the server under a "multi-plan storm" situation. The same query requiring a
-  multi-plan is executed by many threads, each of them triggering a multi-plan. Each of the plans in
-  the multi-plan, on each thread, is index scanning a large number of documents, while maintaining a
+  The workload tests the server under a "multi-plan storm" which results in unbounded growth of the
+  deduplicated set of RecordIds during an index scan. The same query requiring a multi-plan is
+  executed by many threads, each of them triggering a multi-plan. Each of the plans in the
+  multi-plan, on each thread, is index scanning a large number of documents, while maintaining a
   RecordId set. This causes the memory footprint to increase until the server is eventually OOM
   killed.
 
 GlobalDefaults:
   MaxPhases: &MaxPhases 2
-  # The amount of documents here is important, since trial-runs in the query planner "tournament"
-  # will only use ~30% of total document count increasing the number of total documents helps
-  # reproduce the issue.
+  # The amount of documents here is important. Since trial-runs in the query planner "tournament"
+  # will only use ~30% of total document count, increasing the number of total documents helps
+  # reproduce the issue sooner.
   NumDocuments: &NumDocuments 30000000
   PerfTagDocs: &PerfTagDocs 300
   RandomTagDocs: &RandomTagDocs
@@ -22,7 +23,7 @@ GlobalDefaults:
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 6000
+      maxPoolSize: 1100
       socketTimeoutMS: 7_200_000  # = 2 hour
       connectTimeoutMS: 7_200_000
 
@@ -78,9 +79,9 @@ Actors:
               [
               { SpaceId: { $eq: 5 } },
               { Type: { $eq: 6 } },
-              { Tags: { $regex: /erf$/, $options: "i"}},
-              { Tags: { $regex: /^per$/, $options: "i"}},
-              { Tags: { $regex: /^perf$/, $options: "i"}},
+              { Tags: { $regex: "/erf$/", $options: "i"}},
+              { Tags: { $regex: "/^per$/", $options: "i"}},
+              { Tags: { $regex: "/^perf$/", $options: "i"}},
               ]
             }
 
