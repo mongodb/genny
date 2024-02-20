@@ -809,54 +809,41 @@ Tests:
       - a: [1,2,3,4,5,5,5]
 
   - Name: Double Generator
+    # We'll round the results of these to 3 decimal places to make the test deterministic.
     GivenTemplate:
-      a: {^RandomDouble: {min: 1.0, max: 20.0}}
-      uniform: {^RandomDouble: {distribution: uniform, min: 1.0, max: 20.0}}
-      exponential: {^RandomDouble: {distribution: exponential, lambda: 1.0}}
-      gamma: {^RandomDouble: {distribution: gamma, alpha: 1.0, beta: 2.0}}
-      weibull: {^RandomDouble: {distribution: weibull, a: 1.0, b: 2.0}}
-      extremeValue: {^RandomDouble: {distribution: extreme_value, a: 1.0, b: 2.0}}
-      beta: {^RandomDouble: {distribution: beta, alpha: 1.0}}
-      laplace: {^RandomDouble: {distribution: laplace, mean: 10.1, beta: 2.1}}
-      normal: {^RandomDouble: {distribution: normal, mean: 50, sigma: 10.0}}
-      lognormal: {^RandomDouble: {distribution: lognormal, m: 1.0, s: 2.0}}
-      chisquared: {^RandomDouble: {distribution: chi_squared, n: 10}}
-      cauchy: {^RandomDouble: {distribution: cauchy, median: 17.2, sigma: 2.3}}
-# The fisherf, studentt, and noncentralchi distributions give different results on different platforms.
-#      fisherf: {^RandomDouble: {distribution: fisher_f, m: 12, n: 7}}
-#      studentt: {^RandomDouble: {distribution: student_t, n: 17}}
-#      noncentralchi: {^RandomDouble: {distribution: non_central_chi_squared, k: 7, lambda: 2}}
+      # This first test doesn't convert to a string just to check our return type is correct
+      string:  {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {min: 1.0, max: 20.0}}]}}
+      uniform: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: uniform, min: 1.0, max: 20.0}}]}}
+      exponential: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: exponential, lambda: 1.0}}]}}
+      gamma: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: gamma, alpha: 1.0, beta: 2.0}}]}}
+      weibull: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: weibull, a: 1.0, b: 2.0}}]}}
+      extremeValue: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: extreme_value, a: 1.0, b: 2.0}}]}}
+      beta: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: beta, alpha: 1.0}}]}}
+      laplace: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: laplace, mean: 10.1, beta: 2.1}}]}}
+      normal: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: normal, mean: 50, sigma: 10.0}}]}}
+      lognormal: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: lognormal, m: 1.0, s: 2.0}}]}}
+      chisquared: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: chi_squared, n: 10}}]}}
+      cauchy: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: cauchy, median: 17.2, sigma: 2.3}}]}}
+      # These give inconsistent results across platforms. The numbers here are from aarch64-darwin
+      fisherf: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: fisher_f, m: 12, n: 7}}]}}
+      studentt: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: student_t, n: 17}}]}}
+      noncentralchi: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: non_central_chi_squared, k: 7, lambda: 2}}]}}
     ThenReturns:
-    -  "a" : { "$numberDouble" : "3.952394090941460103" }
-       "uniform" : { "$numberDouble" : "3.0360695791166998347" }
-       "exponential" : { "$numberDouble" : "0.070786395988993736084" }
-       "gamma" : { "$numberDouble" : "0.2668568736212015291" }
-       "weibull" : { "$numberDouble" : "0.84158009772916297919" }
-       "extremeValue" : { "$numberDouble" : "4.3175047395265959693" }
-       "beta" : { "$numberDouble" : "0.65807401245179697469" }
-       "laplace" : { "$numberDouble" : "8.7629362545759938996" }
-       "normal" : { "$numberDouble" : "56.862224120853824161" }
-       "lognormal" : { "$numberDouble" : "3.3101941543832040793" }
-       "chisquared" : { "$numberDouble" : "8.4397336386305426004" }
-       "cauchy" : { "$numberDouble" : "17.921856487345845466" }
-#       "fisherf" : { "$numberDouble" : "-36.841317455674790438" }
-#       "studentt" : { "$numberDouble" : "0.038230102370708597681" }
-#       "noncentralchi" : { "$numberDouble" : "3.4312021039705653536" }
-    -  "a" : { "$numberDouble" : "13.904678399652809162" }
-       "uniform" : { "$numberDouble" : "8.5867517588073649648" }
-       "exponential" : { "$numberDouble" : "0.28141743293595811171" }
-       "gamma" : { "$numberDouble" : "2.3605635416844354957" }
-       "weibull" : { "$numberDouble" : "3.295743805625172218" }
-       "extremeValue" : { "$numberDouble" : "2.1015762758649403352" }
-       "beta" : { "$numberDouble" : "0.44276477004055364572" }
-       "laplace" : { "$numberDouble" : "9.2638579646169727511" }
-       "normal" : { "$numberDouble" : "42.833886919235141022" }
-       "lognormal" : { "$numberDouble" : "48.802737274357745889" }
-       "chisquared" : { "$numberDouble" : "15.57650159382534838" }
-       "cauchy" : { "$numberDouble" : "24.815926471674302434" }
-#      "fisherf": { "$numberDouble": "-14.948314077879224726" }
-#      "studentt": { "$numberDouble": "-0.14294359511856821743" }
-#      "noncentralchi": { "$numberDouble": "13.356763702336033717" }
+    - "string" : "3.952"
+      "uniform" : "3.036"
+      "exponential" : "0.071"
+      "gamma" : "0.267"
+      "weibull" : "0.842"
+      "extremeValue" : "4.318"
+      "beta" : "0.658" 
+      "laplace" : "8.763"
+      "normal" : "56.862"
+      "lognormal" : "3.310"
+      "chisquared" : "8.440"
+      "cauchy" : "17.922"
+      "fisherf" : "16.417"
+      "studentt" : "0.589"
+      "noncentralchi" : "10.440"
 
   - Name: IP Generator
     GivenTemplate:
