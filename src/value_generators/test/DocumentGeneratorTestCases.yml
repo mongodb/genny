@@ -811,7 +811,6 @@ Tests:
   - Name: Double Generator
     # We'll round the results of these to 3 decimal places to make the test deterministic.
     GivenTemplate:
-      # This first test doesn't convert to a string just to check our return type is correct
       string:  {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {min: 1.0, max: 20.0}}]}}
       uniform: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: uniform, min: 1.0, max: 20.0}}]}}
       exponential: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: exponential, lambda: 1.0}}]}}
