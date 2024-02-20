@@ -809,7 +809,7 @@ Tests:
       - a: [1,2,3,4,5,5,5]
 
   - Name: Double Generator
-    # R the results to 3 decimal places to make the test deterministic across platforms and compiler settings
+    # Round the results to 3 decimal places to make the test deterministic across platforms and compiler settings
     GivenTemplate:
       string:  {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {min: 1.0, max: 20.0}}]}}
       uniform: {^FormatString: {format: "%.3f", withArgs: [{^RandomDouble: {distribution: uniform, min: 1.0, max: 20.0}}]}}
