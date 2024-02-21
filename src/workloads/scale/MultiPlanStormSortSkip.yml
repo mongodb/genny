@@ -79,8 +79,8 @@ Actors:
             }
           }
         Indexes:
-          # 7 indexes will be considered during multi-planning,
-          # such that up to 700MB can be consumed per query.
+          # 7 indexes will be considered during multi-planning.
+          # 5 indexes involve the sorter, consuming up to 500MB per query.
           - keys: {codes.tdsReturnId: 1, _id: -1}
           - keys: {codes.tanId: 1, _id: -1}
           - keys: {uniqueId: 1}
