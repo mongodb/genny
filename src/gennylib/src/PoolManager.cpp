@@ -15,31 +15,31 @@
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/v1/PoolFactory.hpp>
 #include <gennylib/v1/PoolManager.hpp>
+#include <mongocxx/client.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
 
 namespace genny::v1 {
 namespace {
 
-auto createPool(const std::string& name,
+auto createPool(const Node& clientNode,
                 PoolManager::OnCommandStartCallback& apmCallback,
-                EncryptionManager& encryptionManager,
-                const Node& context) {
+                EncryptionManager& encryptionManager) {
 
-    auto mongoUri = context["Clients"][name]["URI"].to<std::string>();
+    auto mongoUri = clientNode["URI"].to<std::string>();
+
     auto poolFactory = PoolFactory(mongoUri, apmCallback);
 
-    auto queryOpts =
-        context["Clients"][name]["QueryOptions"].maybe<std::map<std::string, std::string>>();
+    auto queryOpts = clientNode["QueryOptions"].maybe<std::map<std::string, std::string>>();
     if (queryOpts) {
         poolFactory.setOptions(PoolFactory::kQueryOption, *queryOpts);
     }
 
-    auto accessOpts =
-        context["Clients"][name]["AccessOptions"].maybe<std::map<std::string, std::string>>();
+    auto accessOpts = clientNode["AccessOptions"].maybe<std::map<std::string, std::string>>();
     if (accessOpts) {
         poolFactory.setOptions(genny::v1::PoolFactory::kAccessOption, *accessOpts);
     }
 
-    auto encryptOpts = context["Clients"][name]["EncryptionOptions"].maybe<EncryptionOptions>();
+    auto encryptOpts = clientNode["EncryptionOptions"].maybe<EncryptionOptions>();
     if (encryptOpts) {
         poolFactory.setEncryptionContext(
             encryptionManager.createEncryptionContext(poolFactory.makeUri(), *encryptOpts));
@@ -53,19 +53,19 @@ auto createPool(const std::string& name,
 }  // namespace genny::v1
 
 
-mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
-                                                     size_t instance,
-                                                     const Node& context) {
+mongocxx::pool::entry genny::v1::PoolManager::createClient(const std::string& name,
+                                                           size_t instance,
+                                                           const Node& workloadCtx) {
     // Only one thread can access pools.operator[] at a time...
     std::unique_lock<std::mutex> getLock{this->_poolsLock};
     LockAndPools& lap = this->_pools[name];
 
     if (!_encryptionManager) {
-        _encryptionManager = std::make_unique<EncryptionManager>(context, _dryRun);
+        _encryptionManager = std::make_unique<EncryptionManager>(workloadCtx, _dryRun);
     }
 
     // ...but no need to keep the lock open past this.
-    // Two threads trying access client("foo",0) at the same
+    // Two threads trying access createClient("foo",0) at the same
     // time will subsequently block on the unique_lock.
     getLock.unlock();
 
@@ -74,9 +74,11 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
 
     Pools& pools = lap.second;
 
+    auto& clientNode = workloadCtx["Clients"][name];
+    bool shouldPrewarm = !_dryRun && !clientNode["NoPreWarm"].maybe<bool>().value_or(false);
     auto& pool = pools[instance];
     if (pool == nullptr) {
-        pool = createPool(name, this->_apmCallback, *_encryptionManager, context);
+        pool = createPool(clientNode, this->_apmCallback, *_encryptionManager);
     }
 
     // no need to keep it past this point; pool is thread-safe
@@ -84,14 +86,22 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
 
     if (_apmCallback) {
         // TODO: Remove this conditional when TIG-1396 is resolved.
-        return pool->acquire();
+        auto connection = pool->acquire();
+        return shouldPrewarm ? _preWarm(std::move(connection)) : std::move(connection);
+    } else {
+        auto opEntry = pool->try_acquire();
+        if (!opEntry) {
+            // TODO: better error handling
+            throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
+        }
+        return shouldPrewarm ? _preWarm(std::move(*opEntry)) : std::move(*opEntry);
     }
-    auto entry = pool->try_acquire();
-    if (!entry) {
-        // TODO: better error handling
-        throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
-    }
-    return std::move(*entry);
+}
+
+mongocxx::pool::entry genny::v1::PoolManager::_preWarm(mongocxx::pool::entry connection) {
+    auto ping = bsoncxx::builder::stream::document{} << "ping" << 1 << bsoncxx::builder::stream::finalize;
+    connection->database("admin").run_command(ping.view());
+    return std::move(connection);
 }
 
 std::unordered_map<std::string, size_t> genny::v1::PoolManager::instanceCount() {

@@ -200,7 +200,7 @@ Actors:
               OperationCommand:
                 Pipeline:
                   [
-                    { $match: {state: {$nin: [2,7]}} },
+                    { $match: {state: {$nin: [1,2,4,6,7]}} },
                     { $group: {_id: "$state", "avgHR": {$avg: "$heartrate"}} }
                   ]
 
@@ -245,7 +245,7 @@ Actors:
               OperationCommand:
                 Pipeline:
                   [
-                    { $match: {state: {$nin: [2,7]}} },
+                    { $match: {state: {$nin: [1,2,4,6,7]}} },
                     { $lookup: {from: *enumCollection, localField: "state", foreignField: "id", as: "stateDoc"} },
                     { $group: {_id: "$stateDoc.description", "avgHR": {$avg: "$heartrate"}} }
                   ]

@@ -62,8 +62,8 @@ def cli(ctx: click.Context, verbose: bool) -> None:
     ),
     help=(
         "Specify the linux distro you're on; if your system isn't available,"
-        " please contact us at #performance-tooling-users. Specify not-linux for macOS."
-        " If no value is specified, it will be autodetected." 
+        " please contact us at #ask-devprod-performance. Specify not-linux for macOS."
+        " If no value is specified, it will be autodetected."
     ),
 )
 @click.option(

@@ -1,0 +1,21 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: See phases/sharding/multi_updates/MultiUpdatesTemplate.yml.
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 1000
+
+LoadConfig:
+  Path: "../../../phases/sharding/multi_updates/MultiUpdatesTemplate.yml"
+  Parameters:
+    ShardCollectionPhases: []
+    PauseMigrationsPhases: [1]
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      # TODO SERVER-73555: Run on all variants in MultiUpdates.yml, but only in branches where the feature flag is enabled.
+      - shard-lite-all-feature-flags

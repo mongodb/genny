@@ -129,6 +129,11 @@ class CurrentBuildInfo:
         return f"CurrentBuildInfo: {self.conts}"
 
 
+class VariantTask(NamedTuple):
+    variant: str
+    task: str
+
+
 class GeneratedTask(NamedTuple):
     name: str
     bootstrap_key: Optional[str]
@@ -243,7 +248,7 @@ class Workload:
 
     def all_tasks(self) -> List[GeneratedTask]:
         """
-        :return: all possible tasks that have an AutoRun block, irrespective of the current 
+        :return: all possible tasks that have an AutoRun block, irrespective of the current
         build-variant etc.
         """
         if not self.auto_run_info:
@@ -541,9 +546,20 @@ class ConfigWriter:
 
     @staticmethod
     def configure_variant_tasks(
-        config: Configuration, tasks: List[GeneratedTask], variant: str, activate: bool = None
+        config: Configuration,
+        tasks: List[GeneratedTask],
+        variant: str,
+        activate_all: Optional[bool] = None,
+        activate_tasks: Set[VariantTask] = frozenset(),
     ) -> None:
-        config.variant(variant).tasks([TaskSpec(task.name).activate(activate) for task in tasks])
+        all_tasks = []
+        for task in tasks:
+            if VariantTask(variant, task.name) in activate_tasks:
+                should_activate = True
+            else:
+                should_activate = activate_all
+            all_tasks.append(TaskSpec(task.name).activate(should_activate))
+        config.variant(variant).tasks(all_tasks)
 
     @staticmethod
     def configure_all_tasks_modern(config: Configuration, tasks: List[GeneratedTask]) -> None:
@@ -562,7 +578,7 @@ class ConfigWriter:
                 [
                     CommandDefinition()
                     .command("timeout.update")
-                    .params({"exec_timeout_secs": 86400, "timeout_secs": 7200}),  # 24 hours
+                    .params({"exec_timeout_secs": 86400, "timeout_secs": 86400}),  # 24 hours
                     CommandDefinition().function("f_run_dsi_workload").vars(bootstrap),
                 ]
             )

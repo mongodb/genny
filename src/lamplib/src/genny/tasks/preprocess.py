@@ -458,6 +458,7 @@ class _WorkloadParser(object):
     def _parse_clients(self, clients):
         clients_dict = self._recursive_parse(clients)
         for name, client in clients_dict.items():
+            client.setdefault("NoPreWarm", False)
             client_type: Optional[ClientType] = client.get("Type")
             if self._mongostream_uri and client_type == ClientType.MONGOSTREAM:
                 client.setdefault("URI", self._mongostream_uri)

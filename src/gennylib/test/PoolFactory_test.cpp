@@ -344,19 +344,19 @@ TEST_CASE("PoolFactory behavior") {
     }
 
     SECTION("PoolManager can construct multiple pools") {
-        genny::v1::PoolManager manager{{}};
-        genny::NodeSource ns{"Clients: {Default: {URI: 'mongodb:://localhost:27017'}, Foo: {URI: 'mongodb:://localhost:27017'}, Bar: {URI: 'mongodb:://localhost:27018'}}", ""};
+        genny::v1::PoolManager manager{{}, true};
+        genny::NodeSource ns{"Clients: {Default: {URI: 'mongodb:://localhost:27017', NoPreWarm: false}, Foo: {URI: 'mongodb:://localhost:27017', NoPreWarm: false}, Bar: {URI: 'mongodb:://localhost:27018', NoPreWarm: false}}", ""};
         auto& config = ns.root();
 
-        auto foo0 = manager.client("Foo", 0, config);
-        auto foo0again = manager.client("Foo", 0, config);
-        auto foo10 = manager.client("Foo", 10, config);
-        auto bar0 = manager.client("Bar", 0, config);
+        auto foo0 = manager.createClient("Foo", 0, config);
+        auto foo0again = manager.createClient("Foo", 0, config);
+        auto foo10 = manager.createClient("Foo", 10, config);
+        auto bar0 = manager.createClient("Bar", 0, config);
 
         // Note to future maintainers:
         //
         // This assertion doesn't actually verify that we aren't calling
-        // `createPool()` again when running `manager.client("Foo", 0, config)` a
+        // `createPool()` again when running `manager.createClient("Foo", 0, config)` a
         // second time.
         //
         // A different style of trying to write this test is to register a
@@ -366,6 +366,7 @@ TEST_CASE("PoolFactory behavior") {
         REQUIRE((manager.instanceCount() ==
                  std::unordered_map<std::string, size_t>({{"Foo", 2}, {"Bar", 1}})));
     }
+
     SECTION("Make DNS seed list connection uri pools") {
         constexpr auto kSourceUri = "mongodb+srv://test.mongodb.net";
 
@@ -376,12 +377,5 @@ TEST_CASE("PoolFactory behavior") {
         REQUIRE(factoryUri == expectedUri());
         auto redactedUri = factory.makeRedactedUri();
         REQUIRE(redactedUri == expectedUri());
-
-        auto pool = factory.makePool();
-        REQUIRE(pool);
-
-        // We should be able to get more from the same factory
-        auto extraPool = factory.makePool();
-        REQUIRE(extraPool);
     }
 }

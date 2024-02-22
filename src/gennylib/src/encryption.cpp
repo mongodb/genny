@@ -608,9 +608,9 @@ private:
     std::string _cryptSharedLibPath;
 };
 
-EncryptionManager::EncryptionManagerImpl::EncryptionManagerImpl(const Node& yaml, bool dryRun)
+EncryptionManager::EncryptionManagerImpl::EncryptionManagerImpl(const Node& workloadCtx, bool dryRun)
     : _dryRun(dryRun) {
-    const auto& encryptionNode = yaml["Encryption"];
+    const auto& encryptionNode = workloadCtx["Encryption"];
     if (!encryptionNode) {
         return;
     }
@@ -744,8 +744,8 @@ void EncryptionManager::EncryptionManagerImpl::createDataKeys(
     }
 }
 
-EncryptionManager::EncryptionManager(const Node& yaml, bool dryRun)
-    : _impl(std::make_unique<EncryptionManagerImpl>(yaml, dryRun)) {}
+EncryptionManager::EncryptionManager(const Node& workloadCtx, bool dryRun)
+    : _impl(std::make_unique<EncryptionManagerImpl>(workloadCtx, dryRun)) {}
 
 EncryptionManager::~EncryptionManager() {}
 

@@ -117,6 +117,7 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScanner", "[single_node_replset][t
             // only do a find on the first collection.
             testOneActor(config,
                          10,
+                         "ping:"
                          "listCollections:find:find:commitTransaction:"  // 1st phase, 1st call
                          "listCollections:find:find:commitTransaction:"  // 1st phase, 2nd call
                          "listCollections:find:commitTransaction:"       // 2nd phase, 1st call
@@ -171,6 +172,7 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerAll", "[single_node_replset
             // we'll satisfy that in the middle of the 4th collection scan.
             testOneActor(config2,
                          5,
+                         "ping:"
                          "listCollections:listCollections:"  // 1st phase, 1st call
                          "find:find:find:find:find:commitTransaction:"
                          "listCollections:listCollections:"  // 1st phase, 2nd call
@@ -220,6 +222,7 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerGenerateCollectionNames", "
             // Don't generate the collection names, get them from the database.
             testOneActor(config2,
                          5,
+                         "ping:"
                          "listCollections:find:find:commitTransaction:"
                          "listCollections:find:find:commitTransaction:");
 
@@ -259,7 +262,7 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerGenerateCollectionNames", "
             // Don't generate the collection names, get them from the database.
             testOneActor(config2,
                          5,
-                         "listCollections:find:find:listCollections:find:find:");
+                         "ping:listCollections:find:find:listCollections:find:find:");
 
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
@@ -338,7 +341,7 @@ TEST_CASE_METHOD(MongoTestFixture, "CollectionScannerGenerateCollectionNames", "
             // Generate the collection names.
             testOneActor(config2,
                          5,
-                         "find:find:");
+                         "ping:find:find:");
 
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);

@@ -3,7 +3,7 @@ Owner: "@mongodb/query"
 Description: |
   This test exercises the behavior of $lookup when followed by $unwind that immediately unwinds the
   lookup result array, which is optimized in the execution engine to avoid materializing this array
-  as an intermediate step. We use one "local" collection with a single document {_id, join_val}, and
+  as an intermediate step. We use one "local" collection with 20000 documents {_id, join_val}, and
   vary the "foreign" collection to test different document contents as well as different collection
   sizes. The structure of documents in the foreign collection is {_id, join_val, <data>}, where
   <data> is one of the following:
@@ -42,25 +42,29 @@ JoinField: &JoinField join_val
 # Defines local collection name.
 LocalColl: &LocalColl local_coll
 
+# Defines the local collection document structure
+LocalTemplate: &LocalTemplate
+  join_val: {^RandomInt: {min: 0, max: 9}}
+
 # Defines a foreign collection with an int field in addition to the lookup field
 ForeignIntTemplate: &ForeignIntTemplate
-  join_val: {^RandomInt: {min: 1, max: 1}}
+  join_val: {^RandomInt: {min: 0, max: 9}}
   int_field: {^RandomInt: {min: 0, max: 2147483647}}
 
 # Defines a foreign collection with a short string field in addition to the lookup field
 ForeignShortStrTemplate: &ForeignShortStrTemplate
-  join_val: {^RandomInt: {min: 1, max: 1}}
+  join_val: {^RandomInt: {min: 0, max: 9}}
   str_field: {^RandomString: {length: 20}}
 
 # Defines a foreign collection with a long string field in addition to the lookup field
 ForeignLongStrTemplate: &ForeignLongStrTemplate
-  join_val: {^RandomInt: {min: 1, max: 1}}
+  join_val: {^RandomInt: {min: 0, max: 9}}
   str_field: {^RandomString: {length: 100}}
 
 # Defines a foreign collection with a small object field (10 key-value pairs, 50 bytes each) in
 # addition to the lookup field
 ForeignSmallObjTemplate: &ForeignSmallObjTemplate
-  join_val: {^RandomInt: {min: 1, max: 1}}
+  join_val: {^RandomInt: {min: 0, max: 9}}
   obj_field: {^Object: {
               withNEntries: 10,
               havingKeys: {^RandomString: {length: 20}},
@@ -71,7 +75,7 @@ ForeignSmallObjTemplate: &ForeignSmallObjTemplate
 # Defines a foreign collection with a large object field (100 key-value pairs, 50 bytes each) in
 # addition to the lookup field
 ForeignLargeObjTemplate: &ForeignLargeObjTemplate
-  join_val: {^RandomInt: {min: 1, max: 1}}
+  join_val: {^RandomInt: {min: 0, max: 9}}
   obj_field: {^Object: {
               withNEntries: 100,
               havingKeys: {^RandomString: {length: 20}},
@@ -228,6 +232,25 @@ LookupUnwindLargeObj10000: &LookupUnwindLargeObj10000
       f: *ForeignLargeObj10000
 
 ActorTemplates:
+# Template for loading data into the local collection.
+- TemplateName: LoadLocalTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "LoadLocalCollection"}}
+    Type: CrudActor
+    Database: *db
+    Threads: 1
+    Phases:
+    - Nop: true
+    - Repeat: {^Parameter: {Name: "Size", Default: 1}}
+      Threads: 1
+      Collection: {^Parameter: {Name: "Collection", Default: "Local"}}
+      Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {^Parameter: {Name: "CollectionTemplate", Default: "LocalCollectionTemplate"}}
+    - Nop: true
+    - Nop: true
+
 # Template for loading data into the foreign collections.
 - TemplateName: LoadForeignTemplate
   Config:
@@ -286,21 +309,13 @@ Actors:
     Nop: true
 
 # The 'LoadLocal' and 'LoadForeign*' actors run in the 1st phase.
-- Name: LoadLocal
-  Type: CrudActor
-  Database: *db
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Repeat: 1
-    Threads: 1
-    Collection: *LocalColl
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: {*JoinField: 1}
-  - Nop: true
-  - Nop: true
+- ActorFromTemplate:
+    TemplateName: LoadLocalTemplate
+    TemplateParameters:
+      Name: LoadLocal20000
+      Size: 20000
+      Collection: *LocalColl
+      CollectionTemplate: *LocalTemplate
 
 - ActorFromTemplate:
     TemplateName: LoadForeignTemplate
@@ -489,3 +504,17 @@ Actors:
       Command1000: *LookupUnwindLargeObj1000
       Metric10000: LookupUnwind_ForeignLargeObj10000
       Command10000: *LookupUnwindLargeObj10000
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-sbe
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4

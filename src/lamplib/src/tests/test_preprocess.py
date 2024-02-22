@@ -563,11 +563,13 @@ Clients:
     Type: mongo
     QueryOptions:
       maxPoolSize: 100
+    NoPreWarm: false
     URI: FakeUri
   Stream:
     Type: mongostream
     QueryOptions:
       maxPoolSize: 100
+    NoPreWarm: false
     URI: FakeMongostreamUri
 SchemaVersion: '2018-07-01'
 OverriddenKey: ThisIsTheCorrectValue
@@ -769,6 +771,7 @@ Document:
             "    URI: mongodb://mongod:27017\n"
             "  Stream:\n"
             "    URI: mongodb://mongostream:27017\n"
+            "    NoPreWarm: true\n"
             "SchemaVersion: 2018-07-01\n"
             "MongoClientURI: {^ClientURI: { Name: 'Default' }}\n"
             "MongostreamClientURI: {^ClientURI: { Name: 'Stream' }}"
@@ -777,8 +780,10 @@ Document:
             "Clients:\n"
             "  Default:\n"
             "    URI: mongodb://mongod:27017\n"
+            "    NoPreWarm: false\n"
             "  Stream:\n"
             "    URI: mongodb://mongostream:27017\n"
+            "    NoPreWarm: true\n"
             "SchemaVersion: '2018-07-01'\n"
             "MongoClientURI: mongodb://mongod:27017\n"
             "MongostreamClientURI: mongodb://mongostream:27017\n"

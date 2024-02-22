@@ -1,0 +1,519 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises both $out and $merge aggregation stages. It does this based on all combinations of the following:
+    A. The src collection is sharded or unsharded
+    B. The document size is either 1K, 4K, or 16K.
+    C. There are 1 thread, 4 threads, or 16 threads doing the same operation.
+  Each actor does the following operations concurrently with other actors at the same stage:
+    A. $out to a collection unique amongst actors.
+       This measures $out performance.
+    B. $merge to the source collection with an updated field value.
+       This measures $merge contention on the same collection.
+    C. $merge to a different unsharded collection unique for each Actor with an updated field value.
+       This measures $merge contention on a separate collection shared by all threads of an Actor.
+
+GlobalDefaults:
+  Unsharded1K: &Unsharded1K Unsharded1K
+  Unsharded4K: &Unsharded4K Unsharded4K
+  Unsharded16K: &Unsharded16K Unsharded16K
+  Sharded1K: &Sharded1K Sharded1K
+  Sharded4K: &Sharded4K Sharded4K
+  Sharded16K: &Sharded16K Sharded16K
+  Sharded1KNSS: &Sharded1KNSS test.Sharded1K
+  Sharded4KNSS: &Sharded4KNSS test.Sharded4K
+  Sharded16KNSS: &Sharded16KNSS test.Sharded16K
+  NumDocs: &NumDocs 10_000
+  Database: &Database test
+  NumPhases: &NumPhases 80
+  NumCombinations: &NumCombinations 18 # 3 threads * 3 data sizes * 2 collection source types
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 1024
+
+Documents:
+  Document1K: &1KDoc
+    shardKey: {^RandomInt: {min: 0, max: 16}}
+    text: {^FastRandomString: {length: 1024}}
+  Document4K: &4KDoc
+    shardKey: {^RandomInt: {min: 0, max: 16}}
+    text: {^FastRandomString: {length: 4096}}
+  Document16K: &16KDoc
+    shardKey: {^RandomInt: {min: 0, max: 16}}
+    text: {^FastRandomString: {length: 16384}}
+
+OutputCollections:
+  - &UnshardedCollOutput1 UnshardedCollOutput1
+  - &UnshardedCollOutput2 UnshardedCollOutput2
+  - &UnshardedCollOutput3 UnshardedCollOutput3
+  - &UnshardedCollOutput4 UnshardedCollOutput4
+  - &UnshardedCollOutput5 UnshardedCollOutput5
+  - &UnshardedCollOutput6 UnshardedCollOutput6
+  - &UnshardedCollOutput7 UnshardedCollOutput7
+  - &UnshardedCollOutput8 UnshardedCollOutput8
+  - &UnshardedCollOutput9 UnshardedCollOutput9
+  - &UnshardedCollOutput10 UnshardedCollOutput10
+  - &UnshardedCollOutput11 UnshardedCollOutput11
+  - &UnshardedCollOutput12 UnshardedCollOutput12
+  - &UnshardedCollOutput13 UnshardedCollOutput13
+  - &UnshardedCollOutput14 UnshardedCollOutput14
+  - &UnshardedCollOutput15 UnshardedCollOutput15
+  - &UnshardedCollOutput16 UnshardedCollOutput16
+  - &UnshardedCollOutput17 UnshardedCollOutput17
+  - &UnshardedCollOutput18 UnshardedCollOutput18
+  - &ShardedCollOutput1 ShardedCollOutput1
+  - &ShardedCollOutput2 ShardedCollOutput2
+  - &ShardedCollOutput3 ShardedCollOutput3
+  - &ShardedCollOutput4 ShardedCollOutput4
+  - &ShardedCollOutput5 ShardedCollOutput5
+  - &ShardedCollOutput6 ShardedCollOutput6
+  - &ShardedCollOutput7 ShardedCollOutput7
+  - &ShardedCollOutput8 ShardedCollOutput8
+  - &ShardedCollOutput9 ShardedCollOutput9
+  - &ShardedCollOutput10 ShardedCollOutput10
+  - &ShardedCollOutput11 ShardedCollOutput11
+  - &ShardedCollOutput12 ShardedCollOutput12
+  - &ShardedCollOutput13 ShardedCollOutput13
+  - &ShardedCollOutput14 ShardedCollOutput14
+  - &ShardedCollOutput15 ShardedCollOutput15
+  - &ShardedCollOutput16 ShardedCollOutput16
+  - &ShardedCollOutput17 ShardedCollOutput17
+  - &ShardedCollOutput18 ShardedCollOutput18
+
+ActorTemplates:
+- TemplateName: AggregationActor
+  Config:
+    Name: {^PreprocessorFormatString: {format: "%s_%d_threads", withArgs: [{^Parameter: {Name: "SrcCollection", Default: Collection0}}, {^Parameter: {Name: "Threads", Default: 1}}]}}
+    Type: CrudActor
+    Database: *Database
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Phases:
+    - Phase: {^PreprocessorFormatString: {format: "0..%d", withArgs: [{^Parameter: {Name: StartsAt, Default: 2}}]}}
+      Nop: true
+    - Duration: 20 seconds
+      Database: *Database
+      Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
+      Operations:
+      - OperationMetricsName: plainOutToUnshardedColl
+        OperationName: aggregate
+        OperationCommand:
+          Pipeline: [{$out: {^FormatString: {format: "%d", withArgs: [{^ActorId: {}}]}}}]
+    - Phase: {^PreprocessorFormatString: {format: "%d..%d", withArgs: [
+        {^NumExpr: {withExpression: "startsAt + 2", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}}}},
+        {^NumExpr: {withExpression: "startsAt + 2 + numCombinations - 1", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}}
+      ]}}
+      Nop: true
+    - Duration: 20 seconds
+      Database: *Database
+      Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
+      Operations:
+      - OperationMetricsName: selfMergeWithNewField
+        OperationName: aggregate
+        OperationCommand:
+          Pipeline: [
+            {$addFields: {counter: {$add: [1, '$counter']}}},
+            {$merge: {into: {^Parameter: {Name: "SrcCollection", Default: Collection0}}}}
+          ]
+    - Phase: {^PreprocessorFormatString: {format: "%d..%d", withArgs: [
+        {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 1 + 1", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}},
+        {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 2 + 0", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}}
+      ]}}
+      Nop: true
+    - Duration: 20 seconds
+      Database: *Database
+      Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
+      Operations:
+      - OperationMetricsName: mergeToNewCollUnsharded
+        OperationName: aggregate
+        OperationCommand:
+          Pipeline: [
+            {$addFields: {counter: {$add: [1, '$counter']}}},
+            {$merge: {into: {^Parameter: {Name: UnshardedCollOutput, Default: *UnshardedCollOutput1}}}}
+          ]
+    - Phase: {^PreprocessorFormatString: {format: "%d..%d", withArgs: [
+        {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 2 + 2", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}},
+        {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 3 + 1", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}}
+      ]}}
+      Nop: true
+    # TODO SERVER-84185: Enable this and remove the Nop that follows when sharded output collections are supported without DuplicateKey errors.
+    # - Duration: 20 seconds
+    #   Database: *Database
+    #   Collection: {^Parameter: {Name: "SrcCollection", Default: Collection0}}
+    #   Operations:
+    #   - OperationMetricsName: mergeToNewCollSharded
+    #     OperationName: aggregate
+    #     OperationCommand:
+    #       Pipeline: [
+    #         {$addFields: {counter: {$add: [1, '$counter']}}},
+    #         {$merge: {into: {^Parameter: {Name: ShardedCollOutput, Default: *ShardedCollOutput1}}}}
+    #       ]
+    - Nop: true
+    - Phase: {^PreprocessorFormatString: {format: "%d..%d", withArgs: [
+        {^NumExpr: {withExpression: "startsAt + 2 + numCombinations * 3 + 3", andValues: {startsAt: {^Parameter: {Name: StartsAt, Default: 2}}, numCombinations: {^Parameter: {Name: NumCombinations, Default: 1}}}}},
+        *NumPhases
+      ]}}
+      Nop: true
+Actors:
+- Name: Unsharded1KLoader
+  Type: MonotonicSingleLoader
+  Threads: 5
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Unsharded1K
+        DocumentCount: *NumDocs
+        BatchSize: 100
+        Document: *1KDoc
+- Name: Unsharded4KLoader
+  Type: MonotonicSingleLoader
+  Threads: 5
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Unsharded4K
+        DocumentCount: *NumDocs
+        BatchSize: 100
+        Document: *4KDoc
+- Name: Unsharded16KLoader
+  Type: MonotonicSingleLoader
+  Threads: 5
+  Phases:
+    OnlyActiveInPhases: 
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Unsharded16K
+        DocumentCount: *NumDocs
+        BatchSize: 100
+        Document: *16KDoc
+
+- Name: ShardCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        # Until EVG-21054 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs
+        OnlyRunInInstance: sharded
+        Repeat: 1
+        Operations:
+        - OperationName: AdminCommand
+          OperationMetricsName: EnableShardingMetrics
+          OperationCommand:
+            enableSharding: *Database
+        - OperationName: AdminCommand
+          OperationMetricsName: ShardCollection1KMetrics
+          OperationCommand:
+            shardCollection: *Sharded1KNSS
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationMetricsName: ShardCollection4KMetrics
+          OperationCommand:
+            shardCollection: *Sharded4KNSS
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationMetricsName: ShardCollection16KMetrics
+          OperationCommand:
+            shardCollection: *Sharded16KNSS
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput1]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput2]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput3]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput4]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput5]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput6]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput7]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput8]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput9]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput10]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput11]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput12]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput13]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput14]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput15]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput16]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput17]}}
+            key: {shardKey: "hashed"}
+        - OperationName: AdminCommand
+          OperationCommand:
+            shardCollection: {^PreprocessorFormatString: {format: "test.%s", withArgs: [*ShardedCollOutput18]}}
+            key: {shardKey: "hashed"}
+- Name: Sharded1KLoader
+  Type: MonotonicSingleLoader
+  Threads: 5
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Sharded1K
+        DocumentCount: *NumDocs
+        BatchSize: 100
+        Document: *1KDoc
+- Name: Sharded4KLoader
+  Type: MonotonicSingleLoader
+  Threads: 5
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Sharded4K
+        DocumentCount: *NumDocs
+        BatchSize: 100
+        Document: *4KDoc
+- Name: Sharded16KLoader
+  Type: MonotonicSingleLoader
+  Threads: 5
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *NumPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Collection: *Sharded16K
+        DocumentCount: *NumDocs
+        BatchSize: 100
+        Document: *16KDoc
+
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 1
+      SrcCollection: *Unsharded1K
+      StartsAt: 2
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput1
+      UnshardedCollOutput: *UnshardedCollOutput1
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 1
+      SrcCollection: *Unsharded4K
+      StartsAt: 3
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput2
+      UnshardedCollOutput: *UnshardedCollOutput2
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 1
+      SrcCollection: *Unsharded16K
+      StartsAt: 4
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput3
+      UnshardedCollOutput: *UnshardedCollOutput3
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 4
+      SrcCollection: *Unsharded1K
+      StartsAt: 5
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput4
+      UnshardedCollOutput: *UnshardedCollOutput4
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 4
+      SrcCollection: *Unsharded4K
+      StartsAt: 6
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput5
+      UnshardedCollOutput: *UnshardedCollOutput5
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 4
+      SrcCollection: *Unsharded16K
+      StartsAt: 7
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput6
+      UnshardedCollOutput: *UnshardedCollOutput6
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 16
+      SrcCollection: *Unsharded1K
+      StartsAt: 8
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput7
+      UnshardedCollOutput: *UnshardedCollOutput7
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 16
+      SrcCollection: *Unsharded4K
+      StartsAt: 9
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput8
+      UnshardedCollOutput: *UnshardedCollOutput8
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 16
+      SrcCollection: *Unsharded16K
+      StartsAt: 10
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput9
+      UnshardedCollOutput: *UnshardedCollOutput9
+
+# Sharded colls
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 1
+      SrcCollection: *Sharded1K
+      StartsAt: 11
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput10
+      UnshardedCollOutput: *UnshardedCollOutput10
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 1
+      SrcCollection: *Sharded4K
+      StartsAt: 12
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput11
+      UnshardedCollOutput: *UnshardedCollOutput11
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 1
+      SrcCollection: *Sharded16K
+      StartsAt: 13
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput12
+      UnshardedCollOutput: *UnshardedCollOutput12
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 4
+      SrcCollection: *Sharded1K
+      StartsAt: 14
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput13
+      UnshardedCollOutput: *UnshardedCollOutput13
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 4
+      SrcCollection: *Sharded4K
+      StartsAt: 15
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput14
+      UnshardedCollOutput: *UnshardedCollOutput14
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 4
+      SrcCollection: *Sharded16K
+      StartsAt: 16
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput15
+      UnshardedCollOutput: *UnshardedCollOutput15
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 16
+      SrcCollection: *Sharded1K
+      StartsAt: 17
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput16
+      UnshardedCollOutput: *UnshardedCollOutput16
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 16
+      SrcCollection: *Sharded4K
+      StartsAt: 18
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput17
+      UnshardedCollOutput: *UnshardedCollOutput17
+- ActorFromTemplate:
+    TemplateName: AggregationActor
+    TemplateParameters:
+      Threads: 16
+      SrcCollection: *Sharded16K
+      StartsAt: 19
+      NumCombinations: *NumCombinations
+      ShardedCollOutput: *ShardedCollOutput18
+      UnshardedCollOutput: *UnshardedCollOutput18
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-lite
+      - shard-lite-all-feature-flags

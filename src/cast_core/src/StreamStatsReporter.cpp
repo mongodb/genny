@@ -101,8 +101,7 @@ void StreamStatsReporter::run() {
 StreamStatsReporter::StreamStatsReporter(genny::ActorContext& context)
     : Actor{context},
       _throughput{context.operation("Throughput", StreamStatsReporter::id())},
-      _client{std::move(
-          context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
+      _client{std::move(context.client())},
       _loop{context, (*_client)[context["Database"].to<std::string>()], StreamStatsReporter::id()},
       _orchestrator{context.orchestrator()} {}
 

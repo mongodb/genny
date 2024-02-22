@@ -14,8 +14,13 @@ from genny.tasks.auto_tasks import (
     Repo,
     ConfigWriter,
     YamlReader,
+    VariantTask,
 )
-from genny.tasks.auto_tasks_all import create_configuration, get_all_builds
+from genny.tasks.auto_tasks_all import (
+    create_configuration,
+    get_all_builds,
+    parse_activate_generated_tasks,
+)
 import genny.tasks.auto_tasks_all
 from tests.test_auto_tasks import MockFile, MockReader
 
@@ -65,7 +70,7 @@ class BaseTestClass(unittest.TestCase):
 
 TIMEOUT_COMMAND = {
     "command": "timeout.update",
-    "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
+    "params": {"exec_timeout_secs": 86400, "timeout_secs": 86400},
 }
 
 
@@ -220,14 +225,104 @@ class AutoTasksTests(BaseTestClass):
         expected = {}
 
         repo = Repo(lister, reader, workspace_root=".")
-        config = create_configuration(repo, build_infos, False)
+        config = create_configuration(repo, build_infos, False, [])
+
+        parsed = json.loads(config.to_json())
+        self.assertEqual(EXPECTED, parsed)
+
+    def test_generate_all_activate_tasks(self):
+        """
+        Tests generating all tasks for a given parsed list of variants in a config file, and
+        activating a specific test using activate_generated_tasks.
+        """
+        self.maxDiff = None
+        EXPECTED = {
+            "tasks": [
+                {
+                    "name": "task_a",
+                    "commands": [
+                        TIMEOUT_COMMAND,
+                        {
+                            "func": "f_run_dsi_workload",
+                            "vars": {
+                                "test_control": "task_a",
+                                "auto_workload_path": "src/genny/src/workloads/src/TaskA.yml",
+                            },
+                        },
+                    ],
+                    "priority": 5,
+                },
+                {
+                    "name": "task_b",
+                    "commands": [
+                        TIMEOUT_COMMAND,
+                        {
+                            "func": "f_run_dsi_workload",
+                            "vars": {
+                                "test_control": "task_b",
+                                "auto_workload_path": "src/genny/src/workloads/src/TaskB.yml",
+                            },
+                        },
+                    ],
+                    "priority": 5,
+                },
+            ],
+            "buildvariants": [
+                {
+                    "name": "a",
+                    "tasks": [
+                        {
+                            "name": "task_a",
+                            "activate": True,
+                        }
+                    ],
+                },
+                {"name": "b", "tasks": [{"name": "task_b"}]},
+            ],
+            "exec_timeout_secs": 64800,
+        }
+
+        workload_files = [
+            make_auto_run("TaskA", "a_setup"),
+            make_auto_run("TaskB", "b_setup"),
+        ]
+
+        reader: YamlReader = MockReader(workload_files)
+        lister: WorkloadLister = MagicMock(name="lister", spec=WorkloadLister, instance=True)
+
+        lister.all_workload_files.return_value = [v.base_name for v in workload_files]
+        lister.modified_workload_files.return_value = [
+            v.base_name for v in workload_files if v.modified
+        ]
+
+        build_infos = [
+            CurrentBuildInfo(
+                {
+                    "build_variant": "a",
+                    "mongodb_setup": "a_setup",
+                    "execution": "0",
+                }
+            ),
+            CurrentBuildInfo(
+                {
+                    "build_variant": "b",
+                    "mongodb_setup": "b_setup",
+                    "execution": "0",
+                }
+            ),
+        ]
+
+        expected = {}
+
+        repo = Repo(lister, reader, workspace_root=".")
+        config = create_configuration(repo, build_infos, False, [VariantTask("a", "task_a")])
 
         parsed = json.loads(config.to_json())
         self.assertEqual(EXPECTED, parsed)
 
     def test_parse_project_file(self):
         """
-        Simple test for parsing a YAML project file from Evergreen. Checks that we can find both 
+        Simple test for parsing a YAML project file from Evergreen. Checks that we can find both
         build variants and get the expansions from each of them.
         """
 
@@ -332,6 +427,22 @@ buildvariants:
                     }
                 ),
             ],
+        )
+
+    def test_parse_activate_generated_tasks(self):
+        parsed_tasks = parse_activate_generated_tasks("")
+        self.assertEqual(parsed_tasks, set())
+
+        def try_invalid_string():
+            parse_activate_generated_tasks("a:b,c")
+
+        self.assertRaisesRegex(
+            ValueError, "Invalid value for 'activate_generated_tasks'", try_invalid_string
+        )
+
+        parsed_tasks = parse_activate_generated_tasks("variant1:task1,variant2:task2")
+        self.assertEqual(
+            parsed_tasks, set([VariantTask("variant1", "task1"), VariantTask("variant2", "task2")])
         )
 
 

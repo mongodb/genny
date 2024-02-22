@@ -1,0 +1,122 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: |
+  This workload template does the following (with
+  PauseMigrationsDuringMultiUpdates disabled):
+    * Create an unsharded collection.
+    * Insert 50k documents of around 20kB each using the monotonic loader.
+    * Run updateMany as many times as possible in two 5 minute phases, where
+      updateMany will update all of the 50k documents per command in the first
+      phase and only a single document per command in the second phase.
+
+  Two parameters are accepted to alter the behavior of this workload:
+    * ShardCollectionPhases: Valid values are [] and [1]. If set to []
+      (default), the collection remains unsharded. If set to [1], the collection
+      will be sharded with a hashed shard key on _id.
+    * PauseMigrationsPhases: Valid values are [] and [1]. If set to []
+      (default), PauseMigrationsDuringMultiUpdates will be disabled. If set to
+      [1], PauseMigrationsDuringMultiUpdates will be enabled.
+
+  The intent of this workload is to measure the throughput of updateMany, so the
+  OperationThroughput and OperationsTotal metrics for DocumentUpdater.UpdateAll
+  and DocumentUpdater.UpdateOne should be used to evaluate performance when
+  updating all documents per command and a single document per command
+  respectively.
+Keywords:
+- AdminCommand
+- MonotonicSingleLoader
+- CrudActor
+- updateMany
+- sharding
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+
+  Database: &Database test
+  Collection: &Collection coll
+  Namespace: &Namespace test.coll
+
+  DocumentSize: &DocumentSize 20_000
+  DocumentCount: &DocumentCount 50_000
+
+  MaxPhase: &MaxPhase 4
+
+Actors:
+- Name: Initialize
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *Database
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- ShardCollection:
+  LoadConfig:
+    Path: "../../../phases/sharding/ShardCollectionTemplate.yml"
+    Key: ShardCollection
+    Parameters:
+      Active: {^Parameter: {Name: "ShardCollectionPhases", Default: []}}
+      MaxPhases: *MaxPhase
+      Namespace: *Namespace
+      ShardKey: { _id: hashed }
+
+- SetClusterParameter:
+  LoadConfig:
+    Path: "../../../phases/sharding/SetClusterParameterTemplate.yml"
+    Key: SetClusterParameter
+    Parameters:
+      Active: {^Parameter: {Name: "PauseMigrationsPhases", Default: []}}
+      MaxPhases: *MaxPhase
+      Namespace: *Namespace
+      ClusterParameter: { pauseMigrationsDuringMultiUpdates: { enabled: true } }
+
+- Name: LoadInitialData
+  Type: MonotonicSingleLoader
+  Threads: 100
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    BatchSize: 1000
+    DocumentCount: *DocumentCount
+    Database: *Database
+    Collection: *Collection
+    Document:
+      counter: 0
+      padding: {^FastRandomString: {length: *DocumentSize}}
+  - *Nop
+  - *Nop
+
+- Name: DocumentUpdater
+  Type: CrudActor
+  Threads: 1
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Duration: 5 minutes
+    MetricsName: UpdateAll
+    Collection: *Collection
+    Operations:
+    - OperationName: updateMany
+      OperationCommand:
+        Filter: {}
+        Update: {$inc: {counter: 1}}
+  - Duration: 5 minutes
+    MetricsName: UpdateOne
+    Collection: *Collection
+    Operations:
+    - OperationName: updateMany
+      OperationCommand:
+        Filter: { _id: 0 }
+        Update: {$inc: {counter: 1}}
+

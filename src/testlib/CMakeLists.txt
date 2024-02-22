@@ -27,7 +27,7 @@ CreateGennyTargets(
         Boost::log
         Boost::regex
         Catch2::Catch2WithMain
-        yaml-cpp
+        yaml-cpp::yaml-cpp
     TEST_DEPENDS
         Catch2::Catch2WithMain
 )
