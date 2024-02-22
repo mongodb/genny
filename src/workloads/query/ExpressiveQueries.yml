@@ -189,7 +189,6 @@ AutoRun:
       - atlas
       - atlas-like-replica.2022-10
       - replica
-      - replica-query-stats-rate-limit
       - single-replica
       - standalone
       - standalone-classic-query-engine
