@@ -18,6 +18,7 @@ AutoRun:
       - standalone
       - standalone-all-feature-flags
       - standalone-classic-query-engine
+      - standalone-query-stats
       - standalone-heuristic-bonsai
       - standalone-sampling-bonsai
       - standalone-sbe

@@ -214,13 +214,18 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
+      - standalone-query-stats
       # TODO PERF-4951 Enable sharded versions with multiple mongos.
       # - shard
       # - shard-lite
+      # - shard-query-stats
       - shard-single
       - single-replica
       - replica
+      - replica-query-stats-rate-limit
       - atlas-like-replica.2022-10
+      - atlas-like-replica.2023-09
+      - atlas-like-replica-query-stats.2023-09
     branch_name:
       $gte:
         v7.0
