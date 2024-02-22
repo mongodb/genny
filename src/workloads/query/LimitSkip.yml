@@ -17,7 +17,7 @@ GlobalDefaults:
   Collection: &Collection Collection0
   DocumentCount: &DocumentCount 1e6
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 5
+  MaxPhases: &MaxPhases 6
   LimitSkipNumber: &limitSkipNum {^Inc: {start: 1, step: 100}}
 
 ActorTemplates:
@@ -81,6 +81,7 @@ Actors:
         Document:
           zero: 0
           hello: "hellohellohellohellobye"
+          randomInt: {^Choose: {from: [1, 2, 3, 4, 5], deterministic: true}}
 
 # Phase 2: Ensure all data is synced to disk.
 - Name: Quiesce
@@ -116,6 +117,13 @@ Actors:
       name: "LimitSkipVaryConstant"
       active: [5]
       pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$skip: *limitSkipNum}, {$limit: *limitSkipNum} , {$project: {_id: 0}}]
+
+- ActorFromTemplate:
+    TemplateName: RunAggCommand
+    TemplateParameters:
+      name: "SortLimitVaryConstant"
+      active: [6]
+      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$sort: {randomInt: 1}}, {$limit: *limitSkipNum} , {$project: {_id: 0}}]
 
 AutoRun:
 - When:
