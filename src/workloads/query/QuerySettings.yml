@@ -15,10 +15,10 @@ Clients:
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection querySettingsColl
-  DocumentCount: &DocumentCount 100000
+  DocumentCount: &DocumentCount 1
   MaxPhases: &MaxPhases 12
-  HitFilter: &HitFilter {a1: {^RandomInt: {min: 1, max: 350}}}
-  MissFilter: &MissFilter {a2: {^RandomInt: {min: 1, max: 350}}}
+  HitFilter: &HitFilter {a1: 1}
+  MissFilter: &MissFilter {a2: 1}
   Threads: &Threads 64
 
 Actors:
@@ -52,8 +52,8 @@ Actors:
         DocumentCount: *DocumentCount
         BatchSize: 1000
         Document:
-          a1: &integer {^RandomInt: {min: -100, max: 100}}
-          a2: *integer
+          a1: 1
+          a2: 1
         Indexes:
         - keys: {a1: 1}
         - keys: {a2: 1}
@@ -104,7 +104,7 @@ Actors:
               filter: *HitFilter
             settings:
               indexHints:
-                allowedIndexes: ["a1_1_a2_1"]
+                allowedIndexes: ["a1_1"]
 
 - Name: FindWithQuerySettingsHit
   Type: CrudActor
