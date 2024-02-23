@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  Measure the performance for find command with-/out query settings as well as checking both hit and miss cases.
+  Measure the performance for "find" command with or w/o query settings as well as checking both query settings hit and miss cases.
 
 KeyWords:
 - querySettings
