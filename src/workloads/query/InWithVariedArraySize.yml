@@ -1,0 +1,180 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  This workload measures performance for $in for arrays of different sizes. We add the array length
+  for $in to the plan cache key since there is a possible explodeForSort optimization till we reach
+  internalQueryMaxScansToExplode that limits the maximum number of explode for sort index scans.
+  This workload measures performance for $in in both these cases, with and without indexes.
+Keywords:
+- in
+- cache
+- parametrization
+- classic
+- sbe
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  DocumentCount: &DocumentCount 1e6
+  MaxPhases: &MaxPhases 7
+  # This is internalQueryMaxScansToExplode - 3, since we append the generated array to [1, 2, 3] so
+  # we can actually match "int".
+  internalQueryMaxScansToExplode: &internalQueryMaxScansToExplode 197
+  InUptoMaxScansToExplode: &InUptoMaxScansToExplode {$in: {^Concat: {arrays: [[1, 2, 3], {^Array: {of: {^Inc: {start: 4}}, number: {^Inc: {start: 0, end: *internalQueryMaxScansToExplode}}}}]}}}
+  InAboveMaxScansToExplode: &InAboveMaxScansToExplode {$in:  {^Concat: {arrays: [[1, 2, 3], {^Array: {of: {^Inc: {start: 4}}, number: {^Inc: {start: *internalQueryMaxScansToExplode, end: 2000}}}}]}}}
+
+ActorTemplates:
+- TemplateName: FindQueryTemplate
+  Config:
+    Name: {^Parameter: {Name: "name", Default: "FindQueryTemplate"}}
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: "active", Default: -1}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: {^Parameter: {Name: "repeat", Default: 200}}
+          Collection: *Collection
+          Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {^Parameter: {Name: "filter", Default: {}}}
+              Options:
+                Sort: '{"anotherRandomDouble": {"$numberInt": "1"}}'
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+Actors:
+# Clear any pre-existing collection state.
+- Name: ClearCollection
+  Type: CrudActor
+  Database: *Database
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+        Collection: *Collection
+        Operations:
+        - OperationName: drop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: *DocumentCount
+        BatchSize: 1000
+        Document:
+          int: {^Choose: {from: [1, 2, 3, -1, -2], deterministic: true}}
+          randomDouble: &randomDouble {^RandomDouble: {distribution: normal, mean: 100, sigma: 20}}
+          anotherRandomdouble: *randomDouble
+
+# Phase 2: Ensure all data is synced to disk.
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *Database
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Threads: 1
+
+# Phase 3-N: Run find with "in" filter for different combinations of arrays with less than
+# maxScansToExplode elements, more than maxScansToExplode elements, and collection with and without
+# indexes.
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      name: "InArrayWithLessThanMaxScansToExplodeElemsUnindexed"
+      active: 3
+      repeat: 200
+      filter: {int: *InUptoMaxScansToExplode}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      name: "InArrayWithMoreThanMaxScansToExplodeElemsUnindexed"
+      active: 4
+      repeat: 2000
+      filter: {int: *InAboveMaxScansToExplode}
+
+- Name: CreateIndexes
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [5]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *Database
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *Collection
+            indexes:
+            - key: {int: 1}
+              name: int_1
+            - key: {randomDouble: 1}
+              name: randomDouble_1
+            - key: {anotherRandomDouble: 1}
+              name: anotherRandomDouble_1
+            - key: {int: 1, randomDouble: 1}
+              name: int_1_randomDouble_1
+            - key: {int: 1, anotherRandomDouble: 1}
+              name: int_1_anotherRandomDouble_1
+            - key: {randomDouble: 1, anotherRandomDouble: 1}
+              name: randomDouble_1_anotherRandomDouble_1
+            - key: {int: 1, randomDouble: 1, anotherRandomDouble: 1}
+              name: int_1_randomDouble_1_anotherRandomDouble_1
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      name: "InArrayWithLessThanMaxScansToExplodeElemsIndexed"
+      active: 6
+      repeat: 200
+      filter: {randomDouble: {$eq: 100}, int: *InUptoMaxScansToExplode}
+
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      name: "InArrayWithMoreThanMaxScansToExplodeElemsIndexed"
+      active: 7
+      repeat: 2000
+      filter: {randomDouble: {$eq: 100}, int: *InAboveMaxScansToExplode}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-all-feature-flags
+      - standalone-classic-query-engine
+      - standalone-sbe
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v6.0
