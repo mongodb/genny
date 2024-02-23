@@ -18,9 +18,10 @@ GlobalDefaults:
   # 'Collection0' because it follows the pattern 'Collection<N>' ?
   coll: &coll Collection0
 
+  # TODO more documents... maybe a million ??
   docCount: &docCount 10
 
-  numPhases: &numPhases 3
+  maxPhase: &maxPhase 3
 
   nop: &Nop {Nop: true}
 
@@ -30,11 +31,12 @@ ActorTemplates:
   Config:
     Name: "CreateDataset"
     Type: Loader
+    # TODO more threads since this is likely the slowest part.
     Threads: 1
     Phases:
       OnlyActiveInPhases:
         Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *numPhases
+        NopInPhasesUpTo: *maxPhase
         PhaseConfig:
           Threads: 1
           Repeat: 1
@@ -43,9 +45,135 @@ ActorTemplates:
           DocumentCount: *docCount
           BatchSize: 1000
           Document:
-            _id: {^Inc: {start: 0}}
-            # TODO uniform
-            a: {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}}
+            # Seems unnecessary to provide explicit _id ?
+            # _id: {^Inc: {start: 0}}
+            x1: &distribution {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}}
+            x2: *distribution
+            x3: *distribution
+            x4: *distribution
+            x5: *distribution
+            x6: *distribution
+            x7: *distribution
+            x8: *distribution
+            x9: *distribution
+            x10: *distribution
+            x11: *distribution
+            x12: *distribution
+            x13: *distribution
+            x14: *distribution
+            x15: *distribution
+            x16: *distribution
+            x17: *distribution
+            x18: *distribution
+            x19: *distribution
+            x20: *distribution
+            x21: *distribution
+            x22: *distribution
+            x23: *distribution
+            x24: *distribution
+            x25: *distribution
+            x26: *distribution
+            x27: *distribution
+            x28: *distribution
+            x29: *distribution
+            x30: *distribution
+            x31: *distribution
+            x32: *distribution
+            x33: *distribution
+            x34: *distribution
+            x35: *distribution
+            x36: *distribution
+            x37: *distribution
+            x38: *distribution
+            x39: *distribution
+            x40: *distribution
+            x41: *distribution
+            x42: *distribution
+            x43: *distribution
+            x44: *distribution
+            x45: *distribution
+            x46: *distribution
+            x47: *distribution
+            x48: *distribution
+            x49: *distribution
+            x50: *distribution
+            x51: *distribution
+            x52: *distribution
+            x53: *distribution
+            x54: *distribution
+            x55: *distribution
+            x56: *distribution
+            x57: *distribution
+            x58: *distribution
+            x59: *distribution
+            x60: *distribution
+            x61: *distribution
+            x62: *distribution
+            x63: *distribution
+          Indexes:
+            - keys: {x1: 1}
+            - keys: {x2: 1}
+            - keys: {x3: 1}
+            - keys: {x4: 1}
+            - keys: {x5: 1}
+            - keys: {x6: 1}
+            - keys: {x7: 1}
+            - keys: {x8: 1}
+            - keys: {x9: 1}
+            - keys: {x10: 1}
+            - keys: {x11: 1}
+            - keys: {x12: 1}
+            - keys: {x13: 1}
+            - keys: {x14: 1}
+            - keys: {x15: 1}
+            - keys: {x16: 1}
+            - keys: {x17: 1}
+            - keys: {x18: 1}
+            - keys: {x19: 1}
+            - keys: {x20: 1}
+            - keys: {x21: 1}
+            - keys: {x22: 1}
+            - keys: {x23: 1}
+            - keys: {x24: 1}
+            - keys: {x25: 1}
+            - keys: {x26: 1}
+            - keys: {x27: 1}
+            - keys: {x28: 1}
+            - keys: {x29: 1}
+            - keys: {x30: 1}
+            - keys: {x31: 1}
+            - keys: {x32: 1}
+            - keys: {x33: 1}
+            - keys: {x34: 1}
+            - keys: {x35: 1}
+            - keys: {x36: 1}
+            - keys: {x37: 1}
+            - keys: {x38: 1}
+            - keys: {x39: 1}
+            - keys: {x40: 1}
+            - keys: {x41: 1}
+            - keys: {x42: 1}
+            - keys: {x43: 1}
+            - keys: {x44: 1}
+            - keys: {x45: 1}
+            - keys: {x46: 1}
+            - keys: {x47: 1}
+            - keys: {x48: 1}
+            - keys: {x49: 1}
+            - keys: {x50: 1}
+            - keys: {x51: 1}
+            - keys: {x52: 1}
+            - keys: {x53: 1}
+            - keys: {x54: 1}
+            - keys: {x55: 1}
+            - keys: {x56: 1}
+            - keys: {x57: 1}
+            - keys: {x58: 1}
+            - keys: {x59: 1}
+            - keys: {x60: 1}
+            - keys: {x61: 1}
+            - keys: {x62: 1}
+            - keys: {x63: 1}
 
 Actors:
 - Name: CleanStart
@@ -54,7 +182,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [0]
-      NopInPhasesUpTo: *numPhases
+      NopInPhasesUpTo: *maxPhase
       PhaseConfig:
         Repeat: 1
         Database: *db
