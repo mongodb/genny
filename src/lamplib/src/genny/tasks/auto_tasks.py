@@ -140,6 +140,10 @@ class GeneratedTask(NamedTuple):
     bootstrap_value: Optional[str]
     workload: "Workload"
 
+class TaggedTask(NamedTuple):
+    name: str
+    tags: List[str]
+    workload: "Workload"
 
 class AutoRunBlock(NamedTuple):
     when: dict
@@ -259,6 +263,60 @@ class Workload:
             tasks += self.generate_requested_tasks(block.then_run)
 
         return self._dedup_task(tasks)
+
+    def tagged_task(self, branch_name) -> Optional[TaggedTask]:
+        """
+        :return: tasks that we should do given the current build e.g. if we have When/ThenRun info etc.
+        """
+        if not self.auto_run_info:
+            return []
+
+        tags = []
+        for block in self.auto_run_info:
+            when = block.when
+            # All When conditions must be true. We set okay: False if any single one is not true.
+            okay = True
+
+            for key, condition in when.items():
+                if len(condition) != 1:
+                    raise ValueError(
+                        f"Need exactly one condition per key in When block."
+                        f" Got key ${key} with condition ${condition}."
+                    )
+                operator, value = list(condition.items())[0]
+                if key == "infrastructure_provisioning" and operator == "$neq" and value == ["graviton-single-lite.2022-11"]:
+                    continue
+                if key == "atlas_setup" and operator == "$neq" and "M30-repl" in value:
+                    continue
+                if key == "mongodb_setup":
+                    if operator != "$eq":
+                        raise ValueError("mongodb_setup in AutoRun must always use the $eq operator")
+                    for value in value:
+                        tags.append(f"genny-autorun-{value}")
+                elif key == "branch_name":
+                    if operator == "$eq":
+                        acceptable_values = value
+                        if not isinstance(acceptable_values, list):
+                            acceptable_values = [acceptable_values]
+                        if branch_name not in acceptable_values:
+                            return None
+                    elif operator == "$neq":
+                        unacceptable_values = value
+                        if not isinstance(unacceptable_values, list):
+                            unacceptable_values = [unacceptable_values]
+                        if branch_name in unacceptable_values:
+                            return None
+                    elif self._is_comparison_operator(operator):
+                        build_version = self._extract_major_minor_version_tuple(branch_name)
+                        value_version = self._extract_major_minor_version_tuple(value)
+                        if build_version is not None and value_version is not None:
+                            build_value = build_version
+                            value = value_version
+                        if not self._compare(operator, build_value, value):
+                            return None
+                else:
+                    raise ValueError(f"Invalid key in AutRun. Only mongodb_setup and branch_name allowed. key: {key}")
+        return TaggedTask(self.snake_case_base_name, tags, self)
 
     def variant_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         """
@@ -450,6 +508,10 @@ class Repo:
     def modified_workloads(self) -> List[Workload]:
         return [workload for workload in self.all_workloads() if workload.is_modified]
 
+    def tagged_tasks(self, branch_name: str) -> List[TaggedTask]:
+        maybe_tagged_tasks = [workload.tagged_task(branch_name) for workload in self.all_workloads()]
+        return [tagged_task for tagged_task in maybe_tagged_tasks if tagged_task]
+
     def all_tasks(self) -> List[GeneratedTask]:
         """
         :return: All possible tasks from all possible workloads
@@ -579,6 +641,27 @@ class ConfigWriter:
                     CommandDefinition()
                     .command("timeout.update")
                     .params({"exec_timeout_secs": 86400, "timeout_secs": 86400}),  # 24 hours
+                    CommandDefinition().function("f_run_dsi_workload").vars(bootstrap),
+                ]
+            )
+
+    @staticmethod
+    def configure_tagged_tasks(config: Configuration, tasks: List[TaggedTask]) -> None:
+        """"""
+        config.exec_timeout(64800)  # 18 hours
+        for task in tasks:
+            bootstrap = {
+                "test_control": task.name,
+                "auto_workload_path": task.workload.relative_path,
+            }
+
+            t = config.task(task.name)
+            t.priority(5)
+            t.commands(
+                [
+                    CommandDefinition()
+                    .command("timeout.update")
+                    .params({"exec_timeout_secs": 86400, "timeout_secs": 7200}),  # 24 hours
                     CommandDefinition().function("f_run_dsi_workload").vars(bootstrap),
                 ]
             )
