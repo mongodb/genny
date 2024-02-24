@@ -656,6 +656,20 @@ def auto_tasks_all(ctx: click.Context, project_files: List[str], no_activate: bo
         no_activate=no_activate,
     )
 
+@cli.command(
+    name="tagged-tasks",
+    help=(
+        "Generate tasks tagged with what mongodb_setup and mongo version they should run under"
+    ),
+)
+@click.pass_context
+def tagged_tasks(ctx: click.Context):
+    from genny.tasks import tagged_tasks
+
+    tagged_tasks.main(
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+    )
+
 
 if __name__ == "__main__":
     sys.argv[0] = "run-genny"
