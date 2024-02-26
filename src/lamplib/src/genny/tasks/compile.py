@@ -177,15 +177,10 @@ def cmake(
         ),
     ]
 
-    cmake_toolchain_file = os.path.join(
-        toolchain_info.toolchain_dir, "scripts/buildsystems/vcpkg.cmake"
-    )
-
     cmake_cmd += [
         "-DGENNY_WORKSPACE_ROOT={}".format(workspace_root),
-        # "-DGENNY_REPO_ROOT={}".format(genny_repo_root),  # Not needed (yet).
+        "-DGENNY_TOOLCHAIN_DIR={}".format(toolchain_info.toolchain_dir),
         "-DCMAKE_PREFIX_PATH={}".format(";".join(cmake_prefix_paths)),
-        "-DCMAKE_TOOLCHAIN_FILE={}".format(cmake_toolchain_file),
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
         f"-DVCPKG_TARGET_TRIPLET={toolchain_info.triplet_arch}-{toolchain_info.triplet_os}",
     ]
