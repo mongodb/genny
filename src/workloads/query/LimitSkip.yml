@@ -30,7 +30,7 @@ ActorTemplates:
     Threads: 4
     Phases:
       OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "active", Default: [0]}}
+        Active: {^Parameter: {Name: "active", Default: {unused: "Invalid phase number."}}}
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1000
@@ -40,7 +40,7 @@ ActorTemplates:
           - OperationMetricsName: *Name
             OperationName: aggregate
             OperationCommand:
-              Pipeline: {^Parameter: {Name: "pipeline", Default: []}}
+              Pipeline: {^Parameter: {Name: "pipeline", Default: {unused: "Invalid pipeline."}}}
 
 Clients:
   Default:
