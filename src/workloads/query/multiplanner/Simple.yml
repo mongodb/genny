@@ -15,8 +15,7 @@ GlobalDefaults:
   # Note the 'Loader' actor also hardcodes this name, so it's not actually free to change.
   coll: &coll Collection0
 
-  # At time of writing it takes about a minute to generate this dataset locally.
-  docCount: &docCount 1000000
+  docCount: &docCount 1e5
   resultCount: &resultCount 101
   selectivity: &selectivity {^NumExpr: {withExpression: "resultCount / docCount", andValues: {resultCount: *resultCount, docCount: *docCount}}}
 
