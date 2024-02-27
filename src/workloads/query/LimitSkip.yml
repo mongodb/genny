@@ -18,7 +18,8 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Threads: &Threads 1
   MaxPhases: &MaxPhases 8
-  LimitSkipNumber: &limitSkipNum {^Inc: {start: 1, step: 100}}
+  LimitNumber: &limitNum {^Inc: {start: 100, step: 100}}
+  SkipNumber: &skipNum {^Inc: {start: 0, step: 100}}
 
 ActorTemplates:
 - TemplateName: RunAggCommand
@@ -37,8 +38,7 @@ ActorTemplates:
           Database: *Database
           Collection: *Collection
           Operations:
-          - OperationMetricsName: *Name
-            OperationName: aggregate
+          - OperationName: aggregate
             OperationCommand:
               Pipeline: {^Parameter: {Name: "pipeline", Default: {unused: "Invalid pipeline."}}}
 
@@ -102,42 +102,42 @@ Actors:
     TemplateParameters:
       name: "LimitVaryConstant"
       active: [3]
-      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$limit: *limitSkipNum}, {$project: {_id: 0}}]
+      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$limit: *limitNum}, {$project: {_id: 0}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
       name: "SkipVaryConstant"
       active: [4]
-      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$skip: *limitSkipNum}, {$project: {_id: 0}}]
+      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$skip: *skipNum}, {$project: {_id: 0}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
       name: "LimitSkipVaryConstant"
       active: [5]
-      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$skip: *limitSkipNum}, {$limit: *limitSkipNum}, {$project: {_id: 0}}]
+      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$skip: *skipNum}, {$limit: *limitNum}, {$project: {_id: 0}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
       name: "SortLimitVaryConstant"
       active: [6]
-      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$sort: {randomInt: 1}}, {$limit: *limitSkipNum}, {$project: {_id: 0}}]
+      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$sort: {randomInt: 1}}, {$limit: *limitNum}, {$project: {_id: 0}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
       name: "SortLimitSkipVaryConstant"
       active: [7]
-      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$sort: {randomInt: 1}}, {$limit: *limitSkipNum}, {$skip: *limitSkipNum}, {$project: {_id: 0}}]
+      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$sort: {randomInt: 1}}, {$limit: *limitNum}, {$skip: *skipNum}, {$project: {_id: 0}}]
 
 - ActorFromTemplate:
     TemplateName: RunAggCommand
     TemplateParameters:
       name: "SortSkipLimitVaryConstant"
       active: [8]
-      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$sort: {randomInt: 1}}, {$skip: *limitSkipNum}, {$limit: *limitSkipNum}, {$project: {_id: 0}}]
+      pipeline: [{$match: {$and: [{hello: "hellohellohellohellobye"}, {zero: 0}]}}, {$sort: {randomInt: 1}}, {$skip: *skipNum}, {$limit: *limitNum}, {$project: {_id: 0}}]
 
 AutoRun:
 - When:
