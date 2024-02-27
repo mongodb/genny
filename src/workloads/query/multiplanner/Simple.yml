@@ -1,9 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  TODO document me
-  PERF-5111
-
   The goal of this test is to exercise multiplanning. We create as many indexes as possible, and run a
   query that makes all of them eligible, so we get as many competing plans as possible.
 
@@ -14,12 +11,12 @@ Description: |
 
 GlobalDefaults:
   dbname: &db test
-  # TODO document me: isn't there an implicit dependency where one of the actors hardcodes
-  # 'Collection0' because it follows the pattern 'Collection<N>' ?
+  # Collection name used for queries.
+  # Note the 'Loader' actor also hardcodes this name, so it's not actually free to change.
   coll: &coll Collection0
 
-  # TODO more documents... maybe a million ??
-  docCount: &docCount 1000
+  # At time of writing it takes about a minute to generate this dataset locally.
+  docCount: &docCount 1000000
   resultCount: &resultCount 101
   selectivity: &selectivity {^NumExpr: {withExpression: "resultCount / docCount", andValues: {resultCount: *resultCount, docCount: *docCount}}}
 
@@ -33,7 +30,6 @@ ActorTemplates:
   Config:
     Name: "CreateDataset"
     Type: Loader
-    # TODO more threads? since this is likely the slowest part.
     Threads: 1
     Phases:
       OnlyActiveInPhases:
