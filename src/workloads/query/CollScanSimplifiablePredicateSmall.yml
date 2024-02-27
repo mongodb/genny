@@ -24,4 +24,4 @@ AutoRun:
       - standalone-sbe
     branch_name:
       $gte:
-        v7.3
+        v7.0
