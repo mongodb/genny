@@ -23,7 +23,7 @@ GlobalDefaults:
   resultCount: &resultCount 101
   selectivity: &selectivity {^NumExpr: {withExpression: "resultCount / docCount", andValues: {resultCount: *resultCount, docCount: *docCount}}}
 
-  maxPhase: &maxPhase 3
+  maxPhase: &maxPhase 7
 
   nop: &Nop {Nop: true}
 
@@ -208,6 +208,10 @@ Actors:
   - *Nop
   - Repeat: 1
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: Queries
   Type: CrudActor
@@ -287,6 +291,542 @@ Actors:
           x61: {$lte: 1}
           x62: {$lte: 1}
           x63: {$lte: 1}
+  - *Nop
+  - Repeat: 2
+    Database: *db
+    Collection: *coll
+    Operations:
+    - OperationMetricsName: RunQueries
+      OperationName: find
+      OperationCommand:
+        Filter:
+          x1: {$lt: *selectivity}
+          x2: {$lte: 1}
+          x3: {$lte: 1}
+          x4: {$lte: 1}
+          x5: {$lte: 1}
+          x6: {$lte: 1}
+          x7: {$lte: 1}
+          x8: {$lte: 1}
+          x9: {$lte: 1}
+          x10: {$lte: 1}
+          x11: {$lte: 1}
+          x12: {$lte: 1}
+          x13: {$lte: 1}
+          x14: {$lte: 1}
+          x15: {$lte: 1}
+          x16: {$lte: 1}
+          x17: {$lte: 1}
+          x18: {$lte: 1}
+          x19: {$lte: 1}
+          x20: {$lte: 1}
+          x21: {$lte: 1}
+          x22: {$lte: 1}
+          x23: {$lte: 1}
+          x24: {$lte: 1}
+          x25: {$lte: 1}
+          x26: {$lte: 1}
+          x27: {$lte: 1}
+          x28: {$lte: 1}
+          x29: {$lte: 1}
+          x30: {$lte: 1}
+          x31: {$lte: 1}
+          x32: {$lte: 1}
+          x33: {$lte: 1}
+          x34: {$lte: 1}
+          x35: {$lte: 1}
+          x36: {$lte: 1}
+          x37: {$lte: 1}
+          x38: {$lte: 1}
+          x39: {$lte: 1}
+          x40: {$lte: 1}
+          x41: {$lte: 1}
+          x42: {$lte: 1}
+          x43: {$lte: 1}
+          x44: {$lte: 1}
+          x45: {$lte: 1}
+          x46: {$lte: 1}
+          x47: {$lte: 1}
+          x48: {$lte: 1}
+          x49: {$lte: 1}
+          x50: {$lte: 1}
+          x51: {$lte: 1}
+          x52: {$lte: 1}
+          x53: {$lte: 1}
+          x54: {$lte: 1}
+          x55: {$lte: 1}
+          x56: {$lte: 1}
+          x57: {$lte: 1}
+          x58: {$lte: 1}
+          x59: {$lte: 1}
+          x60: {$lte: 1}
+          x61: {$lte: 1}
+          x62: {$lte: 1}
+          x63: {$lte: 1}
+  - *Nop
+  - Repeat: 2
+    Database: *db
+    Collection: *coll
+    Operations:
+    - OperationMetricsName: RunQueries
+      OperationName: find
+      OperationCommand:
+        Filter:
+          x1: {$lt: *selectivity}
+          x2: {$lte: 1}
+          x3: {$lte: 1}
+          x4: {$lte: 1}
+          x5: {$lte: 1}
+          x6: {$lte: 1}
+          x7: {$lte: 1}
+          x8: {$lte: 1}
+          x9: {$lte: 1}
+          x10: {$lte: 1}
+          x11: {$lte: 1}
+          x12: {$lte: 1}
+          x13: {$lte: 1}
+          x14: {$lte: 1}
+          x15: {$lte: 1}
+          x16: {$lte: 1}
+          x17: {$lte: 1}
+          x18: {$lte: 1}
+          x19: {$lte: 1}
+          x20: {$lte: 1}
+          x21: {$lte: 1}
+          x22: {$lte: 1}
+          x23: {$lte: 1}
+          x24: {$lte: 1}
+          x25: {$lte: 1}
+          x26: {$lte: 1}
+          x27: {$lte: 1}
+          x28: {$lte: 1}
+          x29: {$lte: 1}
+          x30: {$lte: 1}
+          x31: {$lte: 1}
+          x32: {$lte: 1}
+          x33: {$lte: 1}
+          x34: {$lte: 1}
+          x35: {$lte: 1}
+          x36: {$lte: 1}
+          x37: {$lte: 1}
+          x38: {$lte: 1}
+          x39: {$lte: 1}
+          x40: {$lte: 1}
+          x41: {$lte: 1}
+          x42: {$lte: 1}
+          x43: {$lte: 1}
+          x44: {$lte: 1}
+          x45: {$lte: 1}
+          x46: {$lte: 1}
+          x47: {$lte: 1}
+          x48: {$lte: 1}
+          x49: {$lte: 1}
+          x50: {$lte: 1}
+          x51: {$lte: 1}
+          x52: {$lte: 1}
+          x53: {$lte: 1}
+          x54: {$lte: 1}
+          x55: {$lte: 1}
+          x56: {$lte: 1}
+          x57: {$lte: 1}
+          x58: {$lte: 1}
+          x59: {$lte: 1}
+          x60: {$lte: 1}
+          x61: {$lte: 1}
+          x62: {$lte: 1}
+          x63: {$lte: 1}  
+  
+- Name: Hide48Indexes
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *maxPhase
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Collection: *coll
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x17: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x18: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x19: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x20: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x21: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x22: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x23: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x24: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x25: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x26: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x27: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x28: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x29: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x30: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x31: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x32: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x33: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x34: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x35: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x36: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x37: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x38: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x39: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x40: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x41: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x42: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x43: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x44: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x45: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x46: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x47: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x48: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x49: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x50: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x51: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x52: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x53: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x54: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x55: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x56: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x57: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x58: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x59: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x60: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x61: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x62: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x63: 1}
+              hidden: true
+
+- Name: Hide14Indexes
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *maxPhase
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Collection: *coll
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x3: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x4: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x5: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x6: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x7: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x8: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x9: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x10: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x11: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x12: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x13: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x14: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x15: 1}
+              hidden: true
+        - OperationName: RunCommand
+          OperationCommand:
+            collMod: *coll
+            index:
+              keyPattern: {x16: 1}
+              hidden: true
 
 AutoRun:
 - When:
