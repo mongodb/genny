@@ -433,7 +433,6 @@ Actors:
       PhaseConfig:
         Repeat: 1
         Database: *db
-        Collection: *coll
         Operations:
         - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x17: 1}}}}
         - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x18: 1}}}}
@@ -493,7 +492,6 @@ Actors:
       PhaseConfig:
         Repeat: 1
         Database: *db
-        Collection: *coll
         Operations:
         - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x3: 1}}}}
         - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x4: 1}}}}
