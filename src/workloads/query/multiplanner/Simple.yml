@@ -24,7 +24,6 @@ GlobalDefaults:
   nop: &Nop {Nop: true}
 
 Actors:
-# TODO other workloads clean up at the end. does this matter?
 - Name: CleanStart
   Type: RunCommand
   Threads: 1
