@@ -1,0 +1,93 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/service-architecture"
+Description: |
+  Inserts a single document, and keeps reading it (using `findOne` by id) several times.
+  The goal is to use a single thread to measure the path-length of the hot path for `findOne`.
+  Ideally, we should observe similar cost for running all `findOne` operations.
+  Also, the CPU core corresponding to the `findOne` operation must be fully utilized.
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+  Database: &Database tiger
+  Collection: &Collection tiger
+  PaddingLength: &PaddingLength 64 # bytes
+  OperationCount: &OperationCount 1e4
+
+Actors:
+- Name: CreateIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *Database
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *Collection
+        indexes:
+        - key: {genny: 1}
+          name: GennyIndex
+        - key: {padding: 1}
+          name: PaddingIndex
+        - key: {genny: 1, padding: 1}
+          name: GennyPaddingIndex
+  - *Nop
+  - *Nop
+
+- Name: SetQueryKnobs
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        setParameter: *Collection
+        # Disable index pruning so we can test the plan cache itself.
+        internalQueryPlannerEnableIndexPruning: false
+  - *Nop
+  - *Nop
+
+- Name: CRUDOps
+  Type: CrudActor
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: *Database
+    Collection: *Collection
+    Operations:
+    - OperationName: drop
+  - Repeat: 1 # only 1 document is needed for this workload
+    Database: *Database
+    Collection: *Collection
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document:
+          jenny: 8675309
+          padding: {^FastRandomString: {length: *PaddingLength}}
+  - Database: *Database
+    #Duration: 5 minutes
+    Repeat: *OperationCount
+    Collection: *Collection
+    Operations:
+    - OperationName: findOne
+      OperationCommand:
+        Filter: {genny: {$gt: 0, $lt: 18675309}}
+#        Filter: {genny: 8675309}
+
+# Guard against timeout for no output.
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - LogEvery: 4 minutes
+    Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq: standalone
