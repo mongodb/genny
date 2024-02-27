@@ -9,6 +9,10 @@ Description: |
   has to run the list of plans sequentially, which means we can't short-circuit when the shortest-running
   plan finishes.
 
+  We expect classic to have better latency and throughput than SBE on this workload,
+  and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
+  as well as classic.
+
 GlobalDefaults:
   dbname: &db test
   # Collection name used for queries.
@@ -17,14 +21,16 @@ GlobalDefaults:
 
   docCount: &docCount 1e5
   resultCount: &resultCount 101
-  selectivity: &selectivity {^NumExpr: {withExpression: "resultCount / docCount", andValues: {resultCount: *resultCount, docCount: *docCount}}}
+  selectivity: &selectivity {^NumExpr: {
+    withExpression: "resultCount / docCount",
+    andValues: {resultCount: *resultCount, docCount: *docCount}}}
 
   maxPhase: &maxPhase 7
 
   nop: &Nop {Nop: true}
 
 Actors:
-- Name: CleanStart
+- Name: DropCollection
   Type: RunCommand
   Threads: 1
   Phases:
@@ -38,6 +44,28 @@ Actors:
         - OperationName: RunCommand
           OperationCommand:
             drop: Collection0
+
+- Name: SetQueryKnobs
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      # It's ok for this to run in parallel with 'DropCollection'.
+      # It has to be a separate actor because they target different DBs.
+      Active: [0]
+      NopInPhasesUpTo: *maxPhase
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            setParameter: Collection0
+            # Disable the plan cache so we multiplan on every request.
+            internalQueryDisablePlanCache: true
+            # Disable index intersection so we can more easily control the number of competing plans.
+            # We should get one plan per index.
+            internalQueryPlannerEnableIndexIntersection: false
 
 - Name: "CreateDataset"
   Type: Loader
@@ -54,8 +82,10 @@ Actors:
         DocumentCount: *docCount
         BatchSize: 1000
         Document:
-          # Seems unnecessary to provide explicit _id ?
-          # _id: {^Inc: {start: 0}}
+          # Genny's random generators appear to be repeatable, so we might as well
+          # make '_id' explicit to make the overall dataset repeatable. Omitting
+          # '_id' would make it auto-generated based on a timestamp.
+          _id: {^Inc: {start: 0}}
           x1: &distribution {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}}
           x2: *distribution
           x3: *distribution
