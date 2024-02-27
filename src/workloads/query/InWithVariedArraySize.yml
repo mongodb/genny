@@ -15,10 +15,10 @@ Keywords:
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
-  DocumentCount: &DocumentCount 1e6
+  DocumentCount: &DocumentCount 1000000
   MaxPhases: &MaxPhases 7
   internalQueryMaxScansToExplode: &internalQueryMaxScansToExplode 197
-  randomIntUptoDocCount: &randomIntUptoDocCount {^RandomInt: {min: 0, max: 1000000}}
+  randomIntUptoDocCount: &randomIntUptoDocCount {^RandomInt: {min: 0, max: *DocumentCount}}
   InUptoMaxScansToExplode: &InUptoMaxScansToExplode {$in: {^Array: {of: *randomIntUptoDocCount, number: {^Inc: {start: 0, end: *internalQueryMaxScansToExplode}}}}}
   InAboveMaxScansToExplode: &InAboveMaxScansToExplode {$in: {^Array: {of: *randomIntUptoDocCount, number: {^Inc: {start: *internalQueryMaxScansToExplode, end: 2000}}}}}
 
@@ -134,8 +134,15 @@ Actors:
               name: randomDouble_1
             - key: {anotherRandomDouble: 1}
               name: anotherRandomDouble_1
+            - key: {_id: 1, randomDouble: 1}
+              name: _id_1_randomDouble_1
+            - key: {_id: 1, anotherRandomDouble: 1}
+              name: _id_1_anotherRandomDouble_1
             - key: {randomDouble: 1, anotherRandomDouble: 1}
               name: randomDouble_1_anotherRandomDouble_1
+            - key: {_id: 1, randomDouble: 1, anotherRandomDouble: 1}
+              name: _id_1_randomDouble_1_anotherRandomDouble_1
+
 
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
