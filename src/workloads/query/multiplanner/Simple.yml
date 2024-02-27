@@ -435,288 +435,53 @@ Actors:
         Database: *db
         Collection: *coll
         Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x17: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x18: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x19: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x20: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x21: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x22: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x23: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x24: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x25: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x26: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x27: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x28: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x29: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x30: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x31: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x32: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x33: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x34: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x35: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x36: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x37: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x38: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x39: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x40: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x41: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x42: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x43: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x44: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x45: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x46: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x47: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x48: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x49: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x50: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x51: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x52: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x53: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x54: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x55: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x56: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x57: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x58: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x59: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x60: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x61: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x62: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x63: 1}
-              hidden: true
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x17: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x18: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x19: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x20: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x21: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x22: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x23: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x24: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x25: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x26: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x27: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x28: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x29: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x30: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x31: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x32: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x33: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x34: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x35: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x36: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x37: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x38: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x39: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x40: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x41: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x42: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x43: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x44: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x45: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x46: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x47: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x48: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x49: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x50: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x51: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x52: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x53: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x54: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x55: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x56: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x57: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x58: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x59: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x60: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x61: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x62: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x63: 1}}}}
 
 - Name: Hide14Indexes
   Type: RunCommand
@@ -730,90 +495,20 @@ Actors:
         Database: *db
         Collection: *coll
         Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x3: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x4: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x5: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x6: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x7: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x8: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x9: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x10: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x11: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x12: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x13: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x14: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x15: 1}
-              hidden: true
-        - OperationName: RunCommand
-          OperationCommand:
-            collMod: *coll
-            index:
-              keyPattern: {x16: 1}
-              hidden: true
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x3: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x4: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x5: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x6: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x7: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x8: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x9: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x10: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x11: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x12: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x13: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x14: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x15: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x16: 1}}}}
 
 AutoRun:
 - When:
