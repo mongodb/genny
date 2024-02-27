@@ -246,15 +246,14 @@ Actors:
     - OperationMetricsName: MetaPointPredicateTimeSortBoundedSort
       OperationName: RunCommand
       OperationCommand:
-        explain:
-          aggregate: *coll
-          pipeline: [
-            {$match: {m: 1001}},  # this will match 5000 docs
-            {$sort: {t: 1}},
-            {$_internalInhibitOptimization: {}},
-            {$skip: 1e10}
-          ]
-          cursor: {batchSize: *batchSize}
+        aggregate: *coll
+        pipeline: [
+          {$match: {m: 1001}},  # this will match 5000 docs
+          {$sort: {t: 1}},
+          {$_internalInhibitOptimization: {}},
+          {$skip: 1e10}
+        ]
+        cursor: {batchSize: *batchSize}
   - *Nop
   - *Nop
   - Repeat: *numQueryRuns
