@@ -27,6 +27,7 @@ GlobalDefaults:
 
   maxPhase: &maxPhase 7
   nop: &Nop {Nop: true}
+  queryRepeats: &queryRepeats 1000
 
 Actors:
 - Name: DropCollection
@@ -231,7 +232,7 @@ Actors:
     - *Nop
     - *Nop
     - *Nop
-    - Repeat: 2
+    - Repeat: *queryRepeats
       Database: *db
       Collection: *coll
       Operations:
@@ -305,7 +306,7 @@ Actors:
               x63: {$lte: 1}
           }
     - *Nop
-    - Repeat: 2
+    - Repeat: *queryRepeats
       Database: *db
       Collection: *coll
       Operations:
@@ -314,7 +315,7 @@ Actors:
         OperationCommand:
           Filter: *filter
     - *Nop
-    - Repeat: 2
+    - Repeat: *queryRepeats
       Database: *db
       Collection: *coll
       Operations:
