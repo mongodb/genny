@@ -19,8 +19,9 @@ AutoRun:
       - standalone-all-feature-flags
       - standalone-classic-query-engine
       - standalone-heuristic-bonsai
+      - standalone-query-stats
       - standalone-sampling-bonsai
       - standalone-sbe
     branch_name:
       $gte:
-        v7.3
+        v7.0
