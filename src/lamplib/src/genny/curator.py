@@ -1,3 +1,4 @@
+import sys
 import errno
 import socket
 import os
@@ -6,7 +7,7 @@ import subprocess
 import datetime
 import time
 from uuid import uuid4
-from typing import Optional
+from typing import Optional, TextIO
 
 import structlog
 from contextlib import contextmanager
@@ -145,43 +146,80 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
     prior_cwd = os.getcwd()
     try:
         os.chdir(workspace_root)
-        poplar = subprocess.Popen(args)
-        if poplar.poll() is not None:
-            raise OSError("Failed to start Poplar.")
-        try:
-            os.chdir(prior_cwd)
-            connected = False
-            for i in range(10):
-                time.sleep(0.2)  # sleep to let curator get started. This is a heuristic.
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                try:
-                    sock.connect(("127.0.0.1", 2288))
-                    # If we didn't throw an exception, then we successfully connected
-                    connected = True
-                    break
-                except socket.error as socket_error:
-                    if socket_error.errno != errno.ECONNREFUSED:
-                        # We expect to get connection refused if poplar is not up yet.
-                        # If we get something else, bail
-                        raise socket_error
-                finally:
-                    sock.close()
-            if not connected:
-                raise OSError(f"Poplar not listening on port 2288")
-            yield poplar
-        finally:
+        with open("./build/WorkloadOutput/poplar_grpc.log", "w+") as log_file_obj:
+            poplar = subprocess.Popen(
+                args, stdout=log_file_obj, stderr=subprocess.STDOUT, text=True
+            )
+            if poplar.poll() is not None:
+                raise OSError("Failed to start Poplar.")
             try:
-                poplar.terminate()
-                exit_code = poplar.wait(timeout=10)
-                if exit_code not in (0, -15):  # Termination or exit.
-                    raise OSError(f"Poplar exited with code: {exit_code}.")
-            except:
-                # If Poplar doesn't die then future runs can be broken.
-                if poplar.poll() is None:
-                    poplar.kill()
-                raise
+                os.chdir(prior_cwd)
+                connected = False
+                for i in range(10):
+                    time.sleep(0.2)  # sleep to let curator get started. This is a heuristic.
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    try:
+                        sock.connect(("127.0.0.1", 2288))
+                        # If we didn't throw an exception, then we successfully connected
+                        connected = True
+                        break
+                    except socket.error as socket_error:
+                        if socket_error.errno != errno.ECONNREFUSED:
+                            # We expect to get connection refused if poplar is not up yet.
+                            # If we get something else, bail
+                            raise socket_error
+                    finally:
+                        sock.close()
+                if not connected:
+                    raise OSError(f"Poplar not listening on port 2288")
+                yield poplar
+            finally:
+                try:
+                    poplar.terminate()
+                    exit_code = poplar.wait(timeout=10)
+                    if exit_code not in (0, -15):  # Termination or exit.
+                        raise OSError(f"Poplar exited with code: {exit_code}.")
+                except:
+                    # If Poplar doesn't die then future runs can be broken.
+                    if poplar.poll() is None:
+                        poplar.kill()
+                    _report_poplar_error(log_file_obj)
+                    raise
     finally:
         os.chdir(prior_cwd)
+
+
+def _report_poplar_error(log: TextIO):
+    """Review the log file for fatal errors and print them to stderr.
+
+    We don't want to print the entire log, just highlight the fatal error(s).
+
+    """
+
+    log.seek(0)
+
+    is_oom = False
+
+    for line in log:
+        line = line.strip().lower()
+        if "fatal error" in line:
+            # Error messages should go to sys.stderr. Especially, from the
+            # perspective of DSI, all Genny SLOG log entries are just the stdout of
+            # the child process regardless the log level.
+            print(f"Poplar fatal error: {line}", file=sys.stderr)
+            # Also, call SLOG in case we change SLOG to write to a log file in the
+            # future.
+            SLOG.error("Poplar fatal error", line=line)
+        if "out of memory" in line or "cannot allocate memory" in line:
+            #  such lines may appear multiple times. Don't print the prompt each
+            #  time we see it
+            is_oom = True
+
+    if is_oom:
+        print(
+            "Poplar out of memory, please use a larger instance for the Genny workload client",
+            file=sys.stderr,
+        )
 
 
 # For now we put curator in ./src/genny/build/curator, but ideally it would be in ./bin
