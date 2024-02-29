@@ -14,7 +14,7 @@ Actors:
     Phases:
       OnlyActiveInPhases:
         Active: [0]
-        NopInPhasesUpTo: &MaxPhase 2
+        NopInPhasesUpTo: &MaxPhase 3
         PhaseConfig:
           Repeat: 1
           Database: &Database test
@@ -72,20 +72,35 @@ Actors:
     Database: *Database
     Threads: 4
     Phases:
-      OnlyActiveInPhases:
-        Active: [2]
-        NopInPhasesUpTo: *MaxPhase
-        PhaseConfig:
-          Repeat: 100
-          Collection: *Collection
-          Operations:
-            - OperationName: find
-              OperationCommand:
-                Filter:
-                  flag_a: { ^RandomInt: { min: 0, max: 1 } }
-                  flag_b: { ^RandomInt: { min: 0, max: 1 } }
-                  int_a: { ^RandomInt: { min: 1, max: 10 } }
-                  int_b: { $gte: 1900000 }
+      - &Nop {Nop: true}
+      - *Nop
+      - Repeat: 100
+        Collection: *Collection
+        Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter:
+                flag_a: { ^RandomInt: { min: 0, max: 1 } }
+                flag_b: { ^RandomInt: { min: 0, max: 1 } }
+                int_a: { ^RandomInt: { min: 1, max: 10 } }
+                int_b: { $gte: 1900000 }
+      - Repeat: 100
+        Collection: *Collection
+        Operations:
+          - OperationName: aggregate
+            OperationCommand:
+              Pipeline: [
+                {$match: {
+                    flag_a: { ^RandomInt: { min: 0, max: 1 } },
+                    flag_b: { ^RandomInt: { min: 0, max: 1 } },
+                    int_a: { ^RandomInt: { min: 1, max: 10 } },
+                    int_b: { $gte: 1900000 }
+                }},
+                {$group: {
+                    _id: "$int_a",
+                    sum_b: {$sum: "$int_b"}
+                }}
+              ]
 
 AutoRun:
   - When:
