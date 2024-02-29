@@ -1,8 +1,8 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: "@mongodb/query-execution"
 Description: >
   Create collection with multiple indexes and run queries for which multi planner needs to read a lot
-  of data in order to pick the best plan..
+  of data in order to pick the best plan.
 
 Keywords:
   - indexes
@@ -62,8 +62,8 @@ Actors:
           DocumentCount: 2e6
           BatchSize: 1000
           Document:
-            flag_a: { ^RandomInt: { min: 0, max: 1 } }
-            flag_b: { ^RandomInt: { min: 0, max: 1 } }
+            flag_a: &randomBit { ^RandomInt: { min: 0, max: 1 } }
+            flag_b: *randomBit
             int_a: { ^RandomInt: { min: 1, max: 10 } }
             int_b: { ^Inc: {} }
 
@@ -95,3 +95,5 @@ AutoRun:
           - standalone-all-feature-flags
           - standalone-classic-query-engine
           - standalone-sbe
+      branch_name:
+        $gte: 8.0
