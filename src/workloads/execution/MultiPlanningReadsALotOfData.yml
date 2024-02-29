@@ -72,7 +72,7 @@ Actors:
     Database: *Database
     Threads: 4
     Phases:
-      - &Nop {Nop: true}
+      - &Nop { Nop: true }
       - *Nop
       - Repeat: 100
         Collection: *Collection
@@ -89,18 +89,19 @@ Actors:
         Operations:
           - OperationName: aggregate
             OperationCommand:
-              Pipeline: [
-                {$match: {
-                    flag_a: { ^RandomInt: { min: 0, max: 1 } },
-                    flag_b: { ^RandomInt: { min: 0, max: 1 } },
-                    int_a: { ^RandomInt: { min: 1, max: 10 } },
-                    int_b: { $gte: 1900000 }
-                }},
-                {$group: {
-                    _id: "$int_a",
-                    sum_b: {$sum: "$int_b"}
-                }}
-              ]
+              Pipeline:
+                [
+                  {
+                    $match:
+                      {
+                        flag_a: { ^RandomInt: { min: 0, max: 1 } },
+                        flag_b: { ^RandomInt: { min: 0, max: 1 } },
+                        int_a: { ^RandomInt: { min: 1, max: 10 } },
+                        int_b: { $gte: 1900000 },
+                      },
+                  },
+                  { $group: { _id: "$int_a", sum_b: { $sum: "$int_b" } } },
+                ]
 
 AutoRun:
   - When:
@@ -111,4 +112,4 @@ AutoRun:
           - standalone-classic-query-engine
           - standalone-sbe
       branch_name:
-        $gte: 8.0
+        $gte: v8.0
