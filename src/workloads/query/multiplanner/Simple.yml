@@ -26,6 +26,7 @@ GlobalDefaults:
     andValues: {resultCount: *resultCount, docCount: *docCount}}}
 
   maxPhase: &maxPhase 7
+  queryRepeats: &queryRepeats 1000
 
 Actors:
 - Name: DropCollection
@@ -150,7 +151,7 @@ Actors:
     Parameters:
       active: [3]
       nopInPhasesUpTo: *maxPhase
-      repeat: 2
+      repeat: *queryRepeats
       database: *db
       collection: *coll
       selectivity: *selectivity
@@ -221,7 +222,7 @@ Actors:
     Parameters:
       active: [5]
       nopInPhasesUpTo: *maxPhase
-      repeat: 2
+      repeat: *queryRepeats
       database: *db
       collection: *coll
       selectivity: *selectivity
@@ -259,7 +260,7 @@ Actors:
     Parameters:
       active: [7]
       nopInPhasesUpTo: *maxPhase
-      repeat: 2
+      repeat: *queryRepeats
       database: *db
       collection: *coll
       selectivity: *selectivity
