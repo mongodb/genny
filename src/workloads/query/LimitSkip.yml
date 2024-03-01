@@ -18,7 +18,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Threads: &Threads 1
   MaxPhases: &MaxPhases 8
-  LimitNumber: &limitNum {^Inc: {start: 100, step: 100}}
+  LimitNumber: &limitNum {^Inc: {start: 100}}
   SkipNumber: &skipNum {^Inc: {start: 0, step: 100}}
 
 ActorTemplates:
