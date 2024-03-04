@@ -190,10 +190,10 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
 
 
 def _report_poplar_error(log: TextIO):
-    """Review the log file for fatal errors and print them to stderr.
+    """
+    Review the log file for fatal errors and print them to stderr.
 
     We don't want to print the entire log, just highlight the fatal error(s).
-
     """
 
     log.seek(0)
