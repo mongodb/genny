@@ -36,7 +36,7 @@ GlobalDefaults:
     # Fill 168 KB.
     c: {^FastRandomString: {length: *DocSize}}
 
-  # MongoS holds a cursor with a size of up to 16MB when fetching data from each shard.
+  # When fetching data from shards, mongos holds a cursor using up to 16MB per shard.
   # Therefore, with data evenly distributed across shards, the size of all documents to fetch in a step 
   # should approach <num_of_shards> * 16MB. With 2 shards placed in the test topology,  
   # the number of documents to process by each thread is tuned so that *SortStep * *DocSize ~= 32 MB,
@@ -140,8 +140,6 @@ Actors:
           OperationCommand:
             # Loader default collection name.
             aggregate: Collection0
-            # TODO: Investigate how precisely this query will be served by mongos.
-            # How many cursors will mongos open when merging results?
             pipeline:
               [{$match:
                 {$expr:
@@ -153,6 +151,7 @@ Actors:
                   }
                 }
               },
+              # Blocking sort increases the number of heavy cursors kept in the system at once.
               {$sort: {b: 1}}]
             cursor: {batchSize: *SortBatchSize}
 
