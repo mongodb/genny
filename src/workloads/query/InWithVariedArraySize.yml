@@ -16,11 +16,12 @@ GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
   DocumentCount: &DocumentCount 1000000
-  MaxPhases: &MaxPhases 7
+  MaxPhases: &MaxPhases 8
   internalQueryMaxScansToExplode: &internalQueryMaxScansToExplode 197
   randomIntUptoDocCount: &randomIntUptoDocCount {^RandomInt: {min: 0, max: *DocumentCount}}
   InUptoMaxScansToExplode: &InUptoMaxScansToExplode {$in: {^Array: {of: *randomIntUptoDocCount, number: {^Inc: {start: 0, end: *internalQueryMaxScansToExplode}}}}}
   InAboveMaxScansToExplode: &InAboveMaxScansToExplode {$in: {^Array: {of: *randomIntUptoDocCount, number: {^Inc: {start: *internalQueryMaxScansToExplode, end: 2000}}}}}
+  ContinuousInArray: &ContinuousInArray {^Array: {of: {^Inc: {start: 1}}, number: {^Inc: {start: 100}}}}
 
 ActorTemplates:
 - TemplateName: FindQueryTemplate
@@ -96,7 +97,7 @@ Actors:
         Repeat: 1
         Threads: 1
 
-# Phase 3-N: Run find with "in" filter for different combinations of arrays with less than
+# Phase 3-7: Run find with "in" filter for different combinations of arrays with less than
 # maxScansToExplode elements, more than maxScansToExplode elements, and collection with and without
 # indexes.
 - ActorFromTemplate:
@@ -159,6 +160,16 @@ Actors:
       active: 7
       repeat: 2000
       filter: {randomDouble: {$eq: 100}, _id: *InAboveMaxScansToExplode}
+
+# Phase 8: In with a continous array. The classic multiplanner will not do an extra seek if the next
+# document is within the next index bounds, however, the SBE multiplanner will do an extra seek.
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      name: "InArrayWithContinuousElements"
+      active: 8
+      repeat: 1000
+      filter: {_id: *ContinuousInArray}
 
 AutoRun:
 - When:
