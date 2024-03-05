@@ -1,0 +1,575 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-integration"
+Description: |
+  This test stress tests bucket unpacking. Each document has many top-level fields. Each query
+  targets a measurement, and cannot use the index on time/meta for time-series collections. Each
+  query will target a different number of buckets, and a different number of fields to unpack. We
+  should see the runtime for each query increase based on the number of buckets and fields to unpack.
+  We also compare the runtime of queries that project all fields explicitly vs returning the original
+  document "as is" with no projections defined.
+
+Keywords:
+  - aggregate
+
+GlobalDefaults:
+  database: &database test
+  collection: &collection queryOnVariableAmountData
+  maxPhases: &maxPhases 42
+  repeat: &repeat 100
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 4000
+
+ActorTemplates:
+  - TemplateName: InsertDataTemplate
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "InsertData" } }
+      Type: Loader
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: { ^Parameter: { Name: "Active", Default: [1000] } }
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: 1
+            Database: *database
+            CollectionCount: 1
+            Threads: 1
+            DocumentCount: { ^Parameter: { Name: "DocumentCount", Default: 10000000 } }
+            BatchSize: 1000
+            Document:
+              # This is the value we are going to query against.
+              indexField: { ^Parameter: { Name: "IndexFieldVal", Default: 10000000 } }
+              # This is the value we are going to group by.
+              groupField: { ^RandomInt: { min: 0, max: 9999 } }
+              # This is the value we are going to aggregate for $group and $sort.
+              aggAndSort: { ^RandomDouble: { min: -100000, max: 100000 } }
+              # This is the value we are going to aggregate for $min and $max.
+              agg1: { ^RandomDouble: { min: -10, max: 100 } }
+              # This is the value we are going to aggregate for $min and $max.
+              agg2: { ^RandomDouble: { min: -10, max: 100 } }
+              # These fields are just fields to project and cause more stress.
+              payload1: { ^RandomInt: { min: -10, max: 100 } }
+              payload2: { ^RandomInt: { min: -10, max: 100 } }
+              payload3: { ^RandomInt: { min: -10, max: 100 } }
+              payload4: { ^RandomInt: { min: -10, max: 100 } }
+
+  - TemplateName: QuiesceTemplate
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "Quiesce" } }
+      Type: QuiesceActor
+      Threads: 1
+      Database: *database
+      Phases:
+        OnlyActiveInPhases:
+          Active: { ^Parameter: { Name: "Active", Default: [1000] } }
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: 1
+
+  - TemplateName: RunMatchPipelineTemplate
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "RunMatchPipeline" } }
+      Type: CrudActor
+      Threads: 10
+      Phases:
+        OnlyActiveInPhases:
+          Active: { ^Parameter: { Name: "Active", Default: [1000] } }
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: *repeat
+            Database: *database
+            Collection: *collection
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline:
+                    [
+                      { ^Parameter: { Name: "MatchStage", Default: {$invalid: {}} } },
+                    ]
+
+  - TemplateName: RunMatchGroupSortPipelineTemplate
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "RunMatchGroupSortPipeline" } }
+      Type: CrudActor
+      Threads: 10
+      Phases:
+        OnlyActiveInPhases:
+          Active: { ^Parameter: { Name: "Active", Default: [1000] } }
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: *repeat
+            Database: *database
+            Collection: *collection
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline:
+                    [
+                      { ^Parameter: { Name: "MatchStage", Default: {$invalid: {}} } },
+                      { ^Parameter: { Name: "GroupStage", Default: {$invalid: {}} } },
+                      { ^Parameter: { Name: "SortStage", Default: {$invalid: {}} } },
+                    ]
+
+Actors:
+  # Clear any pre-existing collection state. This is helpful to avoid errors during local testing.
+  - Name: ClearCollection_P00
+    Type: CrudActor
+    Database: *database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *collection
+          Operations:
+            - OperationName: drop
+
+  - Name: CreateCollection_P01
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *database
+          Operation:
+            OperationMetricsName: CreateCollection
+            OperationName: RunCommand
+            OperationCommand: { create: *collection }
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData10_P02"
+        Active: [2]
+        DocumentCount: 10
+        IndexFieldVal: 10
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData20_P03"
+        Active: [3]
+        DocumentCount: 20
+        IndexFieldVal: 20
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData50_P04"
+        Active: [4]
+        DocumentCount: 50
+        IndexFieldVal: 50
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData100_P05"
+        Active: [5]
+        DocumentCount: 100
+        IndexFieldVal: 100
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData200_P06"
+        Active: [6]
+        DocumentCount: 200
+        IndexFieldVal: 200
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData500_P07"
+        Active: [7]
+        DocumentCount: 500
+        IndexFieldVal: 500
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData1000_P08"
+        Active: [8]
+        DocumentCount: 1000
+        IndexFieldVal: 1000
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData2000_P09"
+        Active: [9]
+        DocumentCount: 2000
+        IndexFieldVal: 2000
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData5000_P10"
+        Active: [10]
+        DocumentCount: 5000
+        IndexFieldVal: 5000
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData10000_P11"
+        Active: [11]
+        DocumentCount: 10000
+        IndexFieldVal: 10000
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData20000_P12"
+        Active: [12]
+        DocumentCount: 20000
+        IndexFieldVal: 20000
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData50000_P13"
+        Active: [13]
+        DocumentCount: 50000
+        IndexFieldVal: 50000
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData100000_P14"
+        Active: [14]
+        DocumentCount: 100000
+        IndexFieldVal: 100000
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData200000_P15"
+        Active: [15]
+        DocumentCount: 200000
+        IndexFieldVal: 200000
+
+  - ActorFromTemplate:
+      TemplateName: InsertDataTemplate
+      TemplateParameters:
+        Name: "InsertData500000_P16"
+        Active: [16]
+        DocumentCount: 500000
+        IndexFieldVal: 500000
+
+  - Name: IndexCollection_P17
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [17]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *database
+          Operation:
+            OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *collection
+              indexes:
+              - key: {indexField: 1}
+
+  # We will Quiesce before running queries.
+  - ActorFromTemplate:
+      TemplateName: QuiesceTemplate
+      TemplateParameters:
+        Name: "Quiesce_P18"
+        Active: [18]
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch10_P19"
+        Active: [19]
+        MatchStage: { $match: { indexField: { $eq: 10 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch20_P20"
+        Active: [20]
+        MatchStage: { $match: { indexField: { $eq: 20 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch50_P21"
+        Active: [21]
+        MatchStage: { $match: { indexField: { $eq: 50 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch100_P22"
+        Active: [22]
+        MatchStage: { $match: { indexField: { $eq: 100 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch200_P23"
+        Active: [23]
+        MatchStage: { $match: { indexField: { $eq: 200 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch500_P24"
+        Active: [24]
+        MatchStage: { $match: { indexField: { $eq: 500 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch1000_P25"
+        Active: [25]
+        MatchStage: { $match: { indexField: { $eq: 1000 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchGroupSortPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch1000GroupSort_P26"
+        Active: [26]
+        MatchStage: { $match: { indexField: { $eq: 1000 } } }
+        GroupStage:
+          {
+            $group:
+              {
+                _id: "$groupField",
+                acc1: { $min: "$aggAndSort" },
+                acc2: { $max: "$aggAndSort" },
+                acc3: { $avg: "$agg1" },
+                acc4: { $sum: "$agg2" },
+              }
+          }
+        SortStage: { $sort: { acc2: 1 } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch2000_P27"
+        Active: [27]
+        MatchStage: { $match: { indexField: { $eq: 2000 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchGroupSortPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch2000GroupSort_P28"
+        Active: [28]
+        MatchStage: { $match: { indexField: { $eq: 2000 } } }
+        GroupStage:
+          {
+            $group:
+              {
+                _id: "$groupField",
+                acc1: { $min: "$aggAndSort" },
+                acc2: { $max: "$aggAndSort" },
+                acc3: { $avg: "$agg1" },
+                acc4: { $sum: "$agg2" },
+              }
+          }
+        SortStage: { $sort: { acc2: 1 } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch5000_P29"
+        Active: [29]
+        MatchStage: { $match: { indexField: { $eq: 5000 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchGroupSortPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch5000GroupSort_P30"
+        Active: [30]
+        MatchStage: { $match: { indexField: { $eq: 5000 } } }
+        GroupStage:
+          {
+            $group:
+              {
+                _id: "$groupField",
+                acc1: { $min: "$aggAndSort" },
+                acc2: { $max: "$aggAndSort" },
+                acc3: { $avg: "$agg1" },
+                acc4: { $sum: "$agg2" },
+              }
+          }
+        SortStage: { $sort: { acc2: 1 } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch10000_P31"
+        Active: [31]
+        MatchStage: { $match: { indexField: { $eq: 10000 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchGroupSortPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch10000GroupSort_P32"
+        Active: [32]
+        MatchStage: { $match: { indexField: { $eq: 10000 } } }
+        GroupStage:
+          {
+            $group:
+              {
+                _id: "$groupField",
+                acc1: { $min: "$aggAndSort" },
+                acc2: { $max: "$aggAndSort" },
+                acc3: { $avg: "$agg1" },
+                acc4: { $sum: "$agg2" },
+              }
+          }
+        SortStage: { $sort: { acc2: 1 } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch20000_P33"
+        Active: [33]
+        MatchStage: { $match: { indexField: { $eq: 20000 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchGroupSortPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch20000GroupSort_P34"
+        Active: [34]
+        MatchStage: { $match: { indexField: { $eq: 20000 } } }
+        GroupStage:
+          {
+            $group:
+              {
+                _id: "$groupField",
+                acc1: { $min: "$aggAndSort" },
+                acc2: { $max: "$aggAndSort" },
+                acc3: { $avg: "$agg1" },
+                acc4: { $sum: "$agg2" },
+              }
+          }
+        SortStage: { $sort: { acc2: 1 } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch50000_P35"
+        Active: [35]
+        MatchStage: { $match: { indexField: { $eq: 50000 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchGroupSortPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch50000GroupSort_P36"
+        Active: [36]
+        MatchStage: { $match: { indexField: { $eq: 50000 } } }
+        GroupStage:
+          {
+            $group:
+              {
+                _id: "$groupField",
+                acc1: { $min: "$aggAndSort" },
+                acc2: { $max: "$aggAndSort" },
+                acc3: { $avg: "$agg1" },
+                acc4: { $sum: "$agg2" },
+              }
+          }
+        SortStage: { $sort: { acc2: 1 } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch100000_P37"
+        Active: [37]
+        MatchStage: { $match: { indexField: { $eq: 100000 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchGroupSortPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch100000GroupSort_P38"
+        Active: [38]
+        MatchStage: { $match: { indexField: { $eq: 100000 } } }
+        GroupStage:
+          {
+            $group:
+              {
+                _id: "$groupField",
+                acc1: { $min: "$aggAndSort" },
+                acc2: { $max: "$aggAndSort" },
+                acc3: { $avg: "$agg1" },
+                acc4: { $sum: "$agg2" },
+              }
+          }
+        SortStage: { $sort: { acc2: 1 } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch200000_P39"
+        Active: [39]
+        MatchStage: { $match: { indexField: { $eq: 200000 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchGroupSortPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch200000GroupSort_P40"
+        Active: [40]
+        MatchStage: { $match: { indexField: { $eq: 200000 } } }
+        GroupStage:
+          {
+            $group:
+              {
+                _id: "$groupField",
+                acc1: { $min: "$aggAndSort" },
+                acc2: { $max: "$aggAndSort" },
+                acc3: { $avg: "$agg1" },
+                acc4: { $sum: "$agg2" },
+              }
+          }
+        SortStage: { $sort: { acc2: 1 } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch500000_P41"
+        Active: [41]
+        MatchStage: { $match: { indexField: { $eq: 500000 } } }
+
+  - ActorFromTemplate:
+      TemplateName: RunMatchGroupSortPipelineTemplate
+      TemplateParameters:
+        Name: "RunMatch500000GroupSort_P42"
+        Active: [42]
+        MatchStage: { $match: { indexField: { $eq: 500000 } } }
+        GroupStage:
+          {
+            $group:
+              {
+                _id: "$groupField",
+                acc1: { $min: "$aggAndSort" },
+                acc2: { $max: "$aggAndSort" },
+                acc3: { $avg: "$agg1" },
+                acc4: { $sum: "$agg2" },
+              }
+          }
+        SortStage: { $sort: { acc2: 1 } }
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica-all-feature-flags
+          - replica
+      branch_name:
+        $gte: v8.0
