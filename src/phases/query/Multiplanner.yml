@@ -46,6 +46,7 @@ InsertTemplate:
           # make '_id' explicit to make the overall dataset repeatable. Omitting
           # '_id' would make it auto-generated based on a timestamp.
           _id: {^Inc: {start: 0}}
+          tenantId: {^RandomInt: {distribution: uniform, min: 0, max: 100}}
           x1: &distribution {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}}
           x2: *distribution
           x3: *distribution
