@@ -152,10 +152,9 @@ Actors:
       repeat: *queryRepeats
       database: *db
       collection: *coll
-      selectivity: *selectivity
       query: &query {
         Filter: {
-          x1: {$lt: {^Parameter: {Name: "selectivity", Default: 1}}},
+          x1: {$lt: *selectivity},
           x2: {$lte: 1},
           x3: {$lte: 1},
           x4: {$lte: 1},
@@ -221,7 +220,6 @@ Actors:
         }
       }
 
-  
 - Name: Hide48Indexes
   Type: RunCommand
   Threads: 1
@@ -291,7 +289,6 @@ Actors:
       repeat: *queryRepeats
       database: *db
       collection: *coll
-      selectivity: *selectivity
       query: *query
 
 - Name: Hide14Indexes
@@ -330,7 +327,6 @@ Actors:
       repeat: *queryRepeats
       database: *db
       collection: *coll
-      selectivity: *selectivity
       query: *query
 
 AutoRun:
