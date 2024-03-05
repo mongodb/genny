@@ -343,4 +343,3 @@ AutoRun:
       - standalone-classic-query-engine
     branch_name:
       $gte: v7.3
- 
