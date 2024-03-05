@@ -16,9 +16,6 @@ GlobalDefaults:
 
   docCount: &docCount 1e5
   resultCount: &resultCount 101
-  selectivity: &selectivity {^NumExpr: {
-    withExpression: "resultCount / docCount",
-    andValues: {resultCount: *resultCount, docCount: *docCount}}}
 
   maxPhase: &maxPhase 7
   queryRepeats: &queryRepeats 1000
@@ -148,7 +145,6 @@ Actors:
       repeat: *queryRepeats
       database: *db
       collection: *coll
-      selectivity: *selectivity
       query: &query {
         Filter: {
           tenantId: {$eq : 0},
@@ -228,7 +224,6 @@ Actors:
       repeat: *queryRepeats
       database: *db
       collection: *coll
-      selectivity: *selectivity
       query: *query
 
 - Name: Hide14Indexes
@@ -267,7 +262,6 @@ Actors:
       repeat: *queryRepeats
       database: *db
       collection: *coll
-      selectivity: *selectivity
       query: *query
 
 AutoRun:
