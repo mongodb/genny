@@ -280,7 +280,7 @@ Actors:
             OperationCommand:
               createIndexes: *collection
               indexes:
-              - key: {indexField: 1}
+              - key: {indexField: 1, name: "indexField_1"}
 
   # We will Quiesce before running queries.
   - ActorFromTemplate:
