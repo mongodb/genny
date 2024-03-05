@@ -21,7 +21,7 @@ GlobalDefaults:
   randomIntUptoDocCount: &randomIntUptoDocCount {^RandomInt: {min: 0, max: *DocumentCount}}
   InUptoMaxScansToExplode: &InUptoMaxScansToExplode {$in: {^Array: {of: *randomIntUptoDocCount, number: {^Inc: {start: 0, end: *internalQueryMaxScansToExplode}}}}}
   InAboveMaxScansToExplode: &InAboveMaxScansToExplode {$in: {^Array: {of: *randomIntUptoDocCount, number: {^Inc: {start: *internalQueryMaxScansToExplode, end: 2000}}}}}
-  ContinuousInArray: &ContinuousInArray {^Array: {of: {^Inc: {start: 1}}, number: {^Inc: {start: 100}}}}
+  ContinuousInArray: &ContinuousInArray {$in: {^Array: {of: {^Inc: {start: 1}}, number: {^Inc: {start: 100}}}}}
 
 ActorTemplates:
 - TemplateName: FindQueryTemplate
