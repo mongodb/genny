@@ -27,14 +27,14 @@ QueryKnobTemplate:
 InsertTemplate:
   Name: CreateDataset
   Type: Loader
-  Threads: {^Parameter: {Name: "threadsA", Default: {unused: "Invalid thread count."}}}
+  Threads: &threads {^Parameter: {Name: "threads", Default: {unused: "Invalid thread count."}}}
   Database: &db {^Parameter: {Name: "database", Default: {unused: "Invalid database name."}}}
   Phases:
     OnlyActiveInPhases:
       Active: {^Parameter: {Name: "active", Default: {unused: "Invalid phase number."}}}
       NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: {unused: "Invalid phase number."}}}
       PhaseConfig:
-        Threads: {^Parameter: {Name: "threadsB", Default: {unused: "Invalid thread count."}}}
+        Threads: *threads
         Repeat: {^Parameter: {Name: "repeat", Default: {unused: "Invalid repeat count."}}}
         Database: *db
         Collection: {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}}
@@ -113,7 +113,7 @@ InsertTemplate:
           {^Parameter: {Name: "indexes", Default: {unused: "Invalid index list."}}}
 
 QueryTemplate:
-  Name: RunQueries
+  Name: FindOnAllPredicates
   Type: CrudActor
   Threads: 1
   Phases:

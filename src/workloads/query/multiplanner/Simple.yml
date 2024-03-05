@@ -61,8 +61,7 @@ Actors:
     Key: InsertTemplate
     Parameters:
       database: *db
-      threadsA: 1
-      threadsB: 1
+      threads: 1
       active: [1]
       nopInPhasesUpTo: *maxPhase
       repeat: 1
