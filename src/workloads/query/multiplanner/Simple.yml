@@ -16,7 +16,6 @@ Description: |
 GlobalDefaults:
   dbname: &db test
   # Collection name used for queries.
-  # Note the 'Loader' actor also hardcodes this name, so it's not actually free to change.
   coll: &coll Collection0
 
   docCount: &docCount 1e5
