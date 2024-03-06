@@ -1,20 +1,32 @@
 SchemaVersion: 2018-07-01
 Owner: Service Architecture
 Description: |
-  Used to test performance of the router under heavy memory pressure caused by accumulating
-  many heavy cursors. This workload is expected to fail due to host(s) being unreachable as a
+  Used to test performance of the router under memory pressure caused by accumulating
+  many heavy cursors. The workload is expected to fail due to host(s) being unreachable as a
   result of mongos running out of memory.
+
+  To achieve this, many threads are then spawned to run aggregate sort on a number of documents.
+  The document size and the number of documents to sort by each thread are tuned so, that the
+  operations do not spill to disk [<100MB], and mongos is able to exhaust the cursors on shards
+  when pre-filling its buffers [<16MB per shard]. As a result, memory pressure on the shards
+  remains low, while it's kept large on the mongos.
 
 Keywords:
 - scale
 - memory stress
 - cursor storm
 - mongos
+- fail
 - oom
 - out of memory
 
 GlobalDefaults:
-  dbname: &DBName memorystress
+  NumShards: &NumShards 2
+
+  DBName: &DBName memorystress
+  # Collection0 is the default collection used by the loader.
+  Namespace: &Namespace memorystress.Collection0
+
   MaxPhases: &MaxPhases 20
 
   LoadThreads: &LoadThreads 128
@@ -36,14 +48,17 @@ GlobalDefaults:
     # Fill 168 KB.
     c: {^FastRandomString: {length: *DocSize}}
 
-  # When fetching data from shards, mongos holds a cursor using up to 16MB per shard.
-  # Therefore, with data evenly distributed across shards, the size of all documents to fetch in a step 
-  # should approach <num_of_shards> * 16MB. With 2 shards placed in the test topology,  
-  # the number of documents to process by each thread is tuned so that *SortStep * *DocSize ~= 32 MB,
-  SortStep: &SortStep 180
-  SortBatchSize: &SortBatchSize 180
+  # The size of documents to process in a given step should approach 16MB per shard. Therefore, the
+  # number of documents to sort per shard is tuned such that SortStepPerShard * DocSize -> 16 MB.
+  SortStepPerShard: &SortStepPerShard 90
+  # With data distributed evenly across shards, the total size of documents to process in a
+  # given step should be equall to NumOfShards * SortStepPerShard.
+  SortStep: &SortStep
+    ^NumExpr:
+      withExpression: "num_shards * sort_step_per_shard"
+      andValues: {num_shards: *NumShards, sort_step_per_shard: *SortStepPerShard}
   SortThreads: &SortThreads 250
-  SortRepeat: &SortRepeat 5
+  SortRepeat: &SortRepeat 10
 
 Clients:
   Default:
@@ -81,6 +96,7 @@ Actors:
         Operations:
         - OperationName: RunCommand
           OperationCommand:
+            # Loader default collection name.
             create: Collection0
 
 # Enable sharding
@@ -103,7 +119,7 @@ Actors:
         - OperationMetricsName: ShardCollection
           OperationName: AdminCommand
           OperationCommand:
-            shardCollection: memorystress.Collection0
+            shardCollection: *Namespace
             key: {a: hashed}
 
 # Load 20,096 documents around 168KB as described by the structure in GlobalDefaults.
@@ -123,7 +139,7 @@ Actors:
         DocumentCount: *NumDocs
         BatchSize: *LoadBatchSize
 
-# Spawn many threads to sort enough documents to test the routers capacity to handle memory pressure.
+# Spawn many threads to test the routers capacity to handle memory pressure.
 - Name: SortMany
   Type: RunCommand
   Threads: *SortThreads
@@ -151,9 +167,9 @@ Actors:
                   }
                 }
               },
-              # Blocking sort increases the number of heavy cursors kept in the system at once.
+              # Merge-sorting results increases the number of heavy cursors on mongos
               {$sort: {b: 1}}]
-            cursor: {batchSize: *SortBatchSize}
+            cursor: {batchSize: *SortStep}
 
 # Commented out because this should not be regularly scheduled, as the task is expected to fail.
 # Uncomment the lines below (and possibly change the build variant) to run the workload.
