@@ -135,7 +135,6 @@ Actors:
         x62: *distribution,
         x63: *distribution
       }
-
       indexes:
         - keys: {x1: 1}
         - keys: {x2: 1}
