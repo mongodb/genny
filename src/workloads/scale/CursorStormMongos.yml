@@ -5,7 +5,7 @@ Description: |
   many heavy cursors. The workload is expected to fail due to host(s) being unreachable as a
   result of mongos running out of memory.
 
-  To achieve this, many threads are then spawned to run aggregate sort on a number of documents.
+  To achieve this, many threads are spawned to run aggregate sort on a number of documents.
   The document size and the number of documents to sort by each thread are tuned so, that the
   operations do not spill to disk [<100MB], and mongos is able to exhaust the cursors on shards
   when pre-filling its buffers [<16MB per shard]. As a result, memory pressure on the shards
@@ -83,7 +83,7 @@ Actors:
           OperationCommand: {dropDatabase: 1}
 
 # Create collection
-- Name: Create
+- Name: CreateCollection
   Type: RunCommand
   Threads: 1
   Phases:
@@ -99,7 +99,7 @@ Actors:
             # Loader default collection name.
             create: Collection0
 
-# Enable sharding
+# Enable sharding & shard collection
 - Name: ShardCollection
   Type: AdminCommand
   Threads: 1
@@ -167,7 +167,7 @@ Actors:
                   }
                 }
               },
-              # Merge-sorting results increases the number of heavy cursors on mongos
+              # Merge-sorting results imposes additional memory pressure on mongos
               {$sort: {b: 1}}]
             cursor: {batchSize: *SortStep}
 
