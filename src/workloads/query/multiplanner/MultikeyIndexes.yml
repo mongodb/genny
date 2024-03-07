@@ -1,0 +1,215 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  The goal of this test is to exercise multiplanning with multikey indexes. We create many indexes and
+  run a query that makes all of them eligible, so we get as many competing plans as possible. Because 
+  an IXSCAN of a multikey index has to deduplicate RIDs, a lot of space will be used. The classic 
+  multi-planner will behave more optimally than the SBE multiplanner because it will cut off execution
+  when the one good plan reaches the end.
+
+  We expect classic to have better latency and throughput than SBE on this workload,
+  and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
+  as well as classic.
+
+GlobalDefaults:
+  dbname: &db test
+  # Collection name used for queries.
+  coll: &coll Collection0
+
+  docCount: &docCount 1e5
+  resultCount: &resultCount 101
+  selectivity: &selectivity {^NumExpr: {
+    withExpression: "resultCount / docCount",
+    andValues: {resultCount: *resultCount, docCount: *docCount}}}
+
+  maxPhase: &maxPhase 5
+  queryRepeats: &queryRepeats 1000
+
+Actors:
+- Name: DropCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *maxPhase
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            drop: *coll
+
+- Name: SetQueryKnobs
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: QueryKnobTemplate
+    Parameters:
+        # It's ok for this to run in parallel with 'DropCollection'.
+        # It has to be a separate actor because they target different DBs.
+      active: [0]
+      nopInPhasesUpTo: *maxPhase
+      collection: *coll
+
+- Name: CreateDataset
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: InsertTemplate
+    Parameters:
+      database: *db
+      threads: 1
+      active: [1]
+      nopInPhasesUpTo: *maxPhase
+      repeat: 1
+      collection: *coll
+      docCount: *docCount
+      document: {
+        # Genny's random generators appear to be repeatable, so we might as well
+        # make '_id' explicit to make the overall dataset repeatable. Omitting
+        # '_id' would make it auto-generated based on a timestamp.
+        _id: {^Inc: {start: 0}},
+        x1: &distribution {^Array: {of: {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}}, number: 3}},
+        x2: *distribution,
+        x3: *distribution,
+        x4: *distribution,
+        x5: *distribution,
+        x6: *distribution,
+        x7: *distribution,
+        x8: *distribution,
+        x9: *distribution,
+        x10: *distribution,
+        x11: *distribution,
+        x12: *distribution,
+        x13: *distribution,
+        x14: *distribution,
+        x15: *distribution,
+        x16: *distribution,
+        x17: *distribution,
+        x18: *distribution,
+        x19: *distribution,
+        x20: *distribution,
+        x21: *distribution,
+      }
+      indexes:
+        - keys: {x1: 1}
+        - keys: {x2: 1}
+        - keys: {x3: 1}
+        - keys: {x4: 1}
+        - keys: {x5: 1}
+        - keys: {x6: 1}
+        - keys: {x7: 1}
+        - keys: {x8: 1}
+        - keys: {x9: 1}
+        - keys: {x10: 1}
+        - keys: {x11: 1}
+        - keys: {x12: 1}
+        - keys: {x13: 1}
+        - keys: {x14: 1}
+        - keys: {x15: 1}
+        - keys: {x16: 1}
+        - keys: {x17: 1}
+        - keys: {x18: 1}
+        - keys: {x19: 1}
+        - keys: {x20: 1}
+        - keys: {x21: 1}
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *maxPhase
+      PhaseConfig:
+        Repeat: 1
+
+- Name: SimpleMultiplannerWith21Indexes
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: QueryTemplate
+    Parameters:
+      active: [3]
+      nopInPhasesUpTo: *maxPhase
+      repeat: *queryRepeats
+      database: *db
+      collection: *coll
+      query: &query {
+        Filter: {
+          x1: {$lt: *selectivity},
+          x2: {$lte: 1},
+          x3: {$lte: 1},
+          x4: {$lte: 1},
+          x5: {$lte: 1},
+          x6: {$lte: 1},
+          x7: {$lte: 1},
+          x8: {$lte: 1},
+          x9: {$lte: 1},
+          x10: {$lte: 1},
+          x11: {$lte: 1},
+          x12: {$lte: 1},
+          x13: {$lte: 1},
+          x14: {$lte: 1},
+          x15: {$lte: 1},
+          x16: {$lte: 1},
+          x17: {$lte: 1},
+          x18: {$lte: 1},
+          x19: {$lte: 1},
+          x20: {$lte: 1},
+          x21: {$lte: 1}
+        }
+      }
+
+- Name: Hide19Indexes
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *maxPhase
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operations:
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x3: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x4: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x5: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x6: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x7: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x8: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x9: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x10: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x11: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x12: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x13: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x14: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x15: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x16: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x17: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x18: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x19: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x20: 1}}}}
+        - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, keyPattern: {x21: 1}}}}
+
+- Name: SimpleMultiplannerWith2Indexes
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: QueryTemplate
+    Parameters:
+      active: [5]
+      nopInPhasesUpTo: *maxPhase
+      repeat: *queryRepeats
+      database: *db
+      collection: *coll
+      query: *query
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-sbe
+      - standalone-all-feature-flags  # At time of writing this will enable PM-3591.
+      - standalone-classic-query-engine
+    branch_name:
+      $gte: v7.3
