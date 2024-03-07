@@ -1,0 +1,62 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This file defines templates to use in multiplanner performance tests.
+
+QueryKnobTemplate:
+  Name: SetQueryKnobs
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: {^Parameter: {Name: "active", Default: {unused: "Invalid phase number."}}}
+      NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: {unused: "Invalid phase number."}}}
+      PhaseConfig:
+        Repeat: 1
+        Database: admin
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            setParameter: {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}}
+            # Disable the plan cache so we multiplan on every request.
+            internalQueryDisablePlanCache: true
+            # Disable index intersection so we can more easily control the number of competing plans.
+            # We should get one plan per index.
+            internalQueryPlannerEnableIndexIntersection: false
+
+InsertTemplate:
+  Name: CreateDataset
+  Type: Loader
+  Threads: &threads {^Parameter: {Name: "threads", Default: {unused: "Invalid thread count."}}}
+  Database: &db {^Parameter: {Name: "database", Default: {unused: "Invalid database name."}}}
+  Phases:
+    OnlyActiveInPhases:
+      Active: {^Parameter: {Name: "active", Default: {unused: "Invalid phase number."}}}
+      NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: {unused: "Invalid phase number."}}}
+      PhaseConfig:
+        Threads: *threads
+        Repeat: {^Parameter: {Name: "repeat", Default: {unused: "Invalid repeat count."}}}
+        Database: *db
+        Collection: {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}}
+        CollectionCount: 1
+        DocumentCount: {^Parameter: {Name: "docCount", Default: {unused: "Invalid doc count."}}}
+        BatchSize: 1000
+        Document: {^Parameter: {Name: "document", Default: {unused: "Invalid document."}}}
+        Indexes:  {^Parameter: {Name: "indexes", Default: {unused: "Invalid index list."}}}
+
+QueryTemplate:
+  Name: FindOnAllPredicates
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases: 
+      Active: {^Parameter: {Name: "active", Default: {unused: "Invalid phase number."}}}
+      NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: {unused: "Invalid phase number."}}}
+      PhaseConfig:
+        Repeat: {^Parameter: {Name: "repeat", Default: {unused: "Invalid repeat count."}}}
+        Database: {^Parameter: {Name: "database", Default: {unused: "Invalid database name."}}}
+        Collection: {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}}
+        Operations:
+          - OperationName: find
+            OperationCommand:
+              {^Parameter: {Name: "query", Default: {unused: "Invalid query."}}}
