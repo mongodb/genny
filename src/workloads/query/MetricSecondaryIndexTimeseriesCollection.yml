@@ -95,7 +95,7 @@ Actors:
         }, {
           $limit: *limit
         }]
-        Options: 
+        Options:
           BatchSize:  *limit
 
 AutoRun:
