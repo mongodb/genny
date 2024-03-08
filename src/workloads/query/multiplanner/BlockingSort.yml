@@ -281,7 +281,7 @@ Actors:
           x62: {$lte: 1},
           x63: {$lte: 1}
         },
-        Sort: {no_such_field: 1}
+        Options: {Sort: '{"no_such_field": {"$numberInt": "1"}}'}
       }
 
 - Name: Hide48Indexes
