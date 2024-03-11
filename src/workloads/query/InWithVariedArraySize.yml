@@ -83,6 +83,7 @@ Actors:
         Document:
           randomDouble: &randomDouble {^RandomDouble: {distribution: normal, mean: 100, sigma: 20}}
           anotherRandomDouble: *randomDouble
+          monotonicInt: {^Inc: {start: 1}}
 
 # Phase 2: Ensure all data is synced to disk.
 - Name: Quiesce
@@ -143,6 +144,8 @@ Actors:
               name: randomDouble_1_anotherRandomDouble_1
             - key: {_id: 1, randomDouble: 1, anotherRandomDouble: 1}
               name: _id_1_randomDouble_1_anotherRandomDouble_1
+            - key: {monotonicInt: 1}
+              name: monotonicInt_1
 
 
 - ActorFromTemplate:
@@ -161,15 +164,16 @@ Actors:
       repeat: 2000
       filter: {randomDouble: {$eq: 100}, _id: *InAboveMaxScansToExplode}
 
-# Phase 8: In with a continous array. The classic multiplanner will not do an extra seek if the next
-# document is within the next index bounds, however, the SBE multiplanner will do an extra seek.
+# Phase 8: In with a continous array. The classic index scan stage will not do an extra seek if the
+# next document is within the next index bounds, however, the SBE index scan stage will do an extra
+# seek.
 - ActorFromTemplate:
     TemplateName: FindQueryTemplate
     TemplateParameters:
       name: "InArrayWithContinuousElements"
       active: 8
       repeat: 1000
-      filter: {_id: *ContinuousInArray}
+      filter: {monotonicInt: *ContinuousInArray}
 
 AutoRun:
 - When:
