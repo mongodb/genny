@@ -402,6 +402,12 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
+      - standalone
+    branch_name:
+      $eq: v4.4
+- When:
+    mongodb_setup:
+      $eq:
       - standalone-sbe
       - standalone-all-feature-flags  # At time of writing this will enable PM-3591.
       - standalone-classic-query-engine
