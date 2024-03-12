@@ -16,11 +16,12 @@ GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
   DocumentCount: &DocumentCount 1000000
-  MaxPhases: &MaxPhases 7
+  MaxPhases: &MaxPhases 8
   internalQueryMaxScansToExplode: &internalQueryMaxScansToExplode 197
   randomIntUptoDocCount: &randomIntUptoDocCount {^RandomInt: {min: 0, max: *DocumentCount}}
   InUptoMaxScansToExplode: &InUptoMaxScansToExplode {$in: {^Array: {of: *randomIntUptoDocCount, number: {^Inc: {start: 0, end: *internalQueryMaxScansToExplode}}}}}
   InAboveMaxScansToExplode: &InAboveMaxScansToExplode {$in: {^Array: {of: *randomIntUptoDocCount, number: {^Inc: {start: *internalQueryMaxScansToExplode, end: 2000}}}}}
+  ContinuousInArray: &ContinuousInArray {$in: {^Array: {of: {^Inc: {start: 1}}, number: {^Inc: {start: 100}}}}}
 
 ActorTemplates:
 - TemplateName: FindQueryTemplate
@@ -82,6 +83,7 @@ Actors:
         Document:
           randomDouble: &randomDouble {^RandomDouble: {distribution: normal, mean: 100, sigma: 20}}
           anotherRandomDouble: *randomDouble
+          monotonicInt: {^Inc: {start: 1}}
 
 # Phase 2: Ensure all data is synced to disk.
 - Name: Quiesce
@@ -96,7 +98,7 @@ Actors:
         Repeat: 1
         Threads: 1
 
-# Phase 3-N: Run find with "in" filter for different combinations of arrays with less than
+# Phase 3-7: Run find with "in" filter for different combinations of arrays with less than
 # maxScansToExplode elements, more than maxScansToExplode elements, and collection with and without
 # indexes.
 - ActorFromTemplate:
@@ -142,6 +144,8 @@ Actors:
               name: randomDouble_1_anotherRandomDouble_1
             - key: {_id: 1, randomDouble: 1, anotherRandomDouble: 1}
               name: _id_1_randomDouble_1_anotherRandomDouble_1
+            - key: {monotonicInt: 1}
+              name: monotonicInt_1
 
 
 - ActorFromTemplate:
@@ -159,6 +163,17 @@ Actors:
       active: 7
       repeat: 2000
       filter: {randomDouble: {$eq: 100}, _id: *InAboveMaxScansToExplode}
+
+# Phase 8: In with a continous array. The classic index scan stage will not do an extra seek if the
+# next document is within the next index bounds, however, the SBE index scan stage will do an extra
+# seek.
+- ActorFromTemplate:
+    TemplateName: FindQueryTemplate
+    TemplateParameters:
+      name: "InArrayWithContinuousElements"
+      active: 8
+      repeat: 1000
+      filter: {monotonicInt: *ContinuousInArray}
 
 AutoRun:
 - When:
