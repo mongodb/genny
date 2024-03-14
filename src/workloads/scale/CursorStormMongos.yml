@@ -25,11 +25,11 @@ GlobalDefaults:
   Namespace: &Namespace test.Collection0
   NumShards: &NumShards 2
   DocSize: &DocSize 168000
-  # The size of documents that mongos will pre-fatch in a given step should approach 16MB per shard.
+  # The size of documents that mongos will pre-fetch in a given step should approach 16MB per shard.
   # Therefore, the number of documents per shard is tuned such that NumDocsPerShard * DocSize -> 16 MB.
   NumDocsPerShard: &NumDocsPerShard 90
   # With data distributed evenly across shards, the total size of documents to process in a
-  # given step should be equall to NumOfShards * NumDocsPerShard.
+  # given step should be equall to NumShards * NumDocsPerShard.
   TotalNumberOfDocuments: &TotalNumberOfDocuments
     ^NumExpr:
       withExpression: "num_shards * num_docs_per_shard"
@@ -61,7 +61,7 @@ Actors:
         - OperationName: RunCommand
           OperationCommand: {dropDatabase: 1}
 
-# Create collection
+# Create collection.
 - Name: CreateCollection
   Type: RunCommand
   Threads: 1
@@ -78,7 +78,7 @@ Actors:
             # Loader default collection name.
             create: Collection0
 
-# Enable sharding & shard collection
+# Enable sharding & shard collection.
 - Name: ShardCollection
   Type: AdminCommand
   Threads: 1
@@ -101,7 +101,7 @@ Actors:
             shardCollection: *Namespace
             key: {_id: hashed}
 
-# Load *NumDocs documents around 168KB as described by the structure in GlobalDefaults.
+# Load *TotalNumberOfDocuments documents of around 168KB each.
 - Name: LoadDocuments
   Type: Loader
   Threads: 1
