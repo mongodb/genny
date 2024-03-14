@@ -5,11 +5,10 @@ Description: |
   many heavy cursors. The workload is expected to fail due to host(s) being unreachable as a
   result of mongos running out of memory.
 
-  To achieve this, many threads are spawned to run aggregate sort on a number of documents.
-  The document size and the number of documents to sort by each thread are tuned so, that the
-  operations do not spill to disk [<100MB], and mongos is able to exhaust the cursors on shards
-  when pre-filling its buffers [<16MB per shard]. As a result, memory pressure on the shards
-  remains low, while it's kept large on the mongos.
+  To achieve this, many threads are spawned to run an unfiltered find on a collection.
+  The number and size of documents in that collection are tuned such, that the mongos is able
+  to exhaust cursors on shards when pre-filling its buffers [<16MB per shard]. As a result, 
+  memory pressure on the shards remains low, while it's kept large on the mongos.
 
 Keywords:
 - scale
@@ -21,50 +20,30 @@ Keywords:
 - out of memory
 
 GlobalDefaults:
-  NumShards: &NumShards 2
-
-  DBName: &DBName memorystress
+  DBName: &DBName test
   # Collection0 is the default collection used by the loader.
-  Namespace: &Namespace memorystress.Collection0
-
-  MaxPhases: &MaxPhases 20
-
-  LoadThreads: &LoadThreads 128
-  LoadBatchSize: &LoadBatchSize 500
-
-  NumberOfDocuments: &NumDocs 20096
-  # NumberOfDocumentsPerWorker = NumberOfDocuments / LoadThreads.
-  NumberOfDocumentsPerWorker: &DocsPerThread 157
-  # Used in Document: a to let the starting value of a = 0.
-  DocumentStartAt: &DocStartAt -157
+  Namespace: &Namespace test.Collection0
+  NumShards: &NumShards 2
   DocSize: &DocSize 168000
-  Document: &Doc
-    # Document number/ID. Starts at *DocStartAt = -*DocsPerThread = -157 because ActorId
-    # starts at 1, and therefore in order for the first output of ^Inc to be 0, "start"
-    # would need to be offset by ActorId * *DocsPerThread = 157.
-    a: {^Inc: {start: *DocStartAt, step: 1, multiplier: *DocsPerThread}}
-    # Random number from [0, NumberOfDocuments].
-    b: {^RandomInt: {min: 0, max: *NumDocs}}
-    # Fill 168 KB.
-    c: {^FastRandomString: {length: *DocSize}}
-
-  # The size of documents to process in a given step should approach 16MB per shard. Therefore, the
-  # number of documents to sort per shard is tuned such that SortStepPerShard * DocSize -> 16 MB.
-  SortStepPerShard: &SortStepPerShard 90
+  # The size of documents that mongos will pre-fatch in a given step should approach 16MB per shard.
+  # Therefore, the number of documents per shard is tuned such that NumDocsPerShard * DocSize -> 16 MB.
+  NumDocsPerShard: &NumDocsPerShard 90
   # With data distributed evenly across shards, the total size of documents to process in a
-  # given step should be equall to NumOfShards * SortStepPerShard.
-  SortStep: &SortStep
+  # given step should be equall to NumOfShards * NumDocsPerShard.
+  TotalNumberOfDocuments: &TotalNumberOfDocuments
     ^NumExpr:
-      withExpression: "num_shards * sort_step_per_shard"
-      andValues: {num_shards: *NumShards, sort_step_per_shard: *SortStepPerShard}
-  SortThreads: &SortThreads 250
-  SortRepeat: &SortRepeat 10
+      withExpression: "num_shards * num_docs_per_shard"
+      andValues: {num_shards: *NumShards, num_docs_per_shard: *NumDocsPerShard}
+  # Use 250 threads to generate memory pressure.
+  TestThreads: &TestThreads 250
+  TestRepeat: &TestRepeat 10
+  MaxPhases: &MaxPhases 5
 
 Clients:
   Default:
     QueryOptions:
       socketTimeoutMS: -1
-      maxPoolSize: 500
+      maxPoolSize: 255
     
 Actors:
 # Drop database to get rid of stale data. Useful when running locally multiple times.
@@ -120,12 +99,12 @@ Actors:
           OperationName: AdminCommand
           OperationCommand:
             shardCollection: *Namespace
-            key: {a: hashed}
+            key: {_id: hashed}
 
-# Load 20,096 documents around 168KB as described by the structure in GlobalDefaults.
+# Load *NumDocs documents around 168KB as described by the structure in GlobalDefaults.
 - Name: LoadDocuments
   Type: Loader
-  Threads: *LoadThreads
+  Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [3]
@@ -134,42 +113,30 @@ Actors:
         CollectionCount: 1
         Database: *DBName
         Repeat: 1
-        Document: *Doc
         MultipleThreadsPerCollection: true
-        DocumentCount: *NumDocs
-        BatchSize: *LoadBatchSize
+        DocumentCount: *TotalNumberOfDocuments
+        BatchSize: 500
+        Document:
+          # Fill 168 KB.
+          a: {^FastRandomString: {length: *DocSize}}
 
 # Spawn many threads to test the routers capacity to handle memory pressure.
-- Name: SortMany
+- Name: FindMany
   Type: RunCommand
-  Threads: *SortThreads
+  Threads: *TestThreads
   Phases:
     OnlyActiveInPhases:
       Active: [4]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Repeat: *SortRepeat
+        Repeat: *TestRepeat
         Database: *DBName
         Operations:
-        - OperationMetricsName: SortMany
+        - OperationMetricsName: FindMany
           OperationName: RunCommand
           OperationCommand:
-            # Loader default collection name.
-            aggregate: Collection0
-            pipeline:
-              [{$match:
-                {$expr:
-                  {$let:
-                    {vars:
-                      {start: {^RandomInt: {min: 0, max: *NumDocs}}},
-                    in: {$and: [$gte: ["$a", "$$start"], $lt: ["$a", {$add: ["$$start", *SortStep]}]]}
-                    }
-                  }
-                }
-              },
-              # Merge-sorting results imposes additional memory pressure on mongos
-              {$sort: {b: 1}}]
-            cursor: {batchSize: *SortStep}
+            # Collection0 is the default collection name used by the Loader.
+            find: Collection0
 
 # Commented out because this should not be regularly scheduled, as the task is expected to fail.
 # Uncomment the lines below (and possibly change the build variant) to run the workload.
