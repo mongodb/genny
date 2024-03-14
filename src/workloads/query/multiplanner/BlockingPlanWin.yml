@@ -17,11 +17,11 @@ GlobalDefaults:
   # Collection name used for queries.
   coll: &coll Collection0
 
-  docCount: &docCount 1e2
+  docCount: &docCount 1e5
   resultCount: &resultCount 101
 
   maxPhase: &maxPhase 6
-  queryRepeats: &queryRepeats 1
+  queryRepeats: &queryRepeats 1000
 
 Actors:
 - Name: DropCollection
