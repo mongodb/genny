@@ -18,7 +18,6 @@ GlobalDefaults:
   coll: &coll Collection0
 
   docCount: &docCount 1e5
-  resultCount: &resultCount 101
 
   maxPhase: &maxPhase 6
   queryRepeats: &queryRepeats 1000
