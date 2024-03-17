@@ -276,8 +276,7 @@ Actors:
       nopInPhasesUpTo: *maxPhase
       repeat: *queryRepeats
       collection: *coll
-      pipeline: [
-        {$match: {
+      pipeline: &pipeline [{$match: {
             x1: {$lte: 1},
             x2: {$lte: 1},
             x3: {$lte: 1},
@@ -340,8 +339,7 @@ Actors:
             x60: {$lte: 1},
             x61: {$lte: 1},
             x62: {$lte: 1},
-            x63: {$lte: 1}}},
-          {$group: {_id: 1, n: {$sum: '$z'}}}]
+            x63: {$lte: 1}}}, {$group: {_id: 1, n: {$sum: '$z'}}}]
 
 - Name: Hide48Indexes
   LoadConfig:
@@ -387,7 +385,7 @@ Actors:
       nopInPhasesUpTo: *maxPhase
       repeat: *queryRepeats
       collection: *coll
-      pipeine: *pipeline
+      pipeline: *pipeline
 
 AutoRun:
 - When:
