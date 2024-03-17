@@ -129,11 +129,11 @@ Actors:
         x62: *distribution,
         x63: *distribution
       }
+      # index2 is deliberately removed so we can sort on x2 and ensure every plan is a blocking plan
+      # since x2 is unindexed.
       indexes:
       - keys: {x1: 1}
         options: {name: index1}
-      - keys: {x2: 1}
-        options: {name: index2}
       - keys: {x3: 1}
         options: {name: index3}
       - keys: {x4: 1}
@@ -268,7 +268,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: SimpleMultiplannerWith64IndexesBlockingSort
+- Name: SimpleMultiplannerWith63IndexesBlockingSort
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -281,7 +281,6 @@ Actors:
       query: &query {
         Filter: {
           x1: {$lte: 1},
-          x2: {$lte: 1},
           x3: {$lte: 1},
           x4: {$lte: 1},
           x5: {$lte: 1},
@@ -344,7 +343,7 @@ Actors:
           x62: {$lte: 1},
           x63: {$lte: 1}
         },
-        Options: {Sort: '{"no_such_field": {"$numberInt": "1"}}'}
+        Options: {Sort: '{"x2": {"$numberInt": "1"}}'}
       }
 
 - Name: Hide48Indexes
@@ -358,7 +357,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: SimpleMultiplannerWith16IndexesBlockingSort
+- Name: SimpleMultiplannerWith15IndexesBlockingSort
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -381,7 +380,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: SimpleMultiplannerWith2IndexesBlockingSort
+- Name: SimpleMultiplannerWith1IndexBlockingSort
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
