@@ -146,7 +146,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: MultiplannerPicksBlockingPlanSelectivity0.01
+- Name: MultiplannerNonBlockingVsBlockingSelectivity0.01
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -161,7 +161,7 @@ Actors:
         Options: {Sort: '{"x2": {"$numberInt": "1"}}'}
       }
 
-- Name: MultiplannerPicksBlockingPlanSelectivity0.1
+- Name: MultiplannerNonBlockingVsBlockingSelectivity0.1
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -176,7 +176,7 @@ Actors:
         Options: {Sort: '{"x2": {"$numberInt": "1"}}'}
       }
 
-- Name: MultiplannerPicksBlockingPlanSelectivity0.5
+- Name: MultiplannerNonBlockingVsBlockingSelectivity0.5
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -191,7 +191,7 @@ Actors:
         Options: {Sort: '{"x2": {"$numberInt": "1"}}'}
       }
 
-- Name: MultiplannerPicksBlockingPlanSelectivity0.9
+- Name: MultiplannerNonBlockingVsBlockingSelectivity0.9
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
