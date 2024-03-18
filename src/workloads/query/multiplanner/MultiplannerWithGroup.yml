@@ -15,7 +15,7 @@ GlobalDefaults:
   dbname: &db test
   # Collection name used for queries.
   coll: &coll Collection0
-  docCount: &docCount 1e4
+  docCount: &docCount 1e5
   maxPhase: &maxPhase 7
   queryRepeats: &queryRepeats 1000
 
@@ -339,7 +339,8 @@ Actors:
             x60: {$lte: 1},
             x61: {$lte: 1},
             x62: {$lte: 1},
-            x63: {$lte: 1}}}, {$group: {_id: 1, n: {$sum: '$z'}}}]
+            x63: {$lte: 1}}},
+            {$group: {_id: 1, n: {$sum: '$z'}}}]
 
 - Name: Hide48Indexes
   LoadConfig:
