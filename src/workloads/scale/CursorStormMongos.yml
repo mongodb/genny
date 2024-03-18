@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Service Architecture
+Owner: "@mongodb/query"
 Description: |
   Used to test performance of the router under memory pressure caused by accumulating
   many heavy cursors. The workload is expected to fail due to host(s) being unreachable as a
