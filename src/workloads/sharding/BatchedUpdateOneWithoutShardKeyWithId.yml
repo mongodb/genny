@@ -120,7 +120,7 @@ Actors:
         OperationCommand:
           update: Collection0
           updates:
-            { ^Parameter: { Name: "Operations", Default: *WriteOps10x } }
+            { ^Parameter: { Name: "Operations", Default: *WriteOps1000x } }
           ordered: false
 
 AutoRun:
