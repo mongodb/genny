@@ -49,7 +49,7 @@ QueryTemplate:
   Type: CrudActor
   Threads: 1
   Phases:
-    OnlyActiveInPhases: 
+    OnlyActiveInPhases:
       Active: {^Parameter: {Name: "active", Default: {unused: "Invalid phase number."}}}
       NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: {unused: "Invalid phase number."}}}
       PhaseConfig:
@@ -60,6 +60,24 @@ QueryTemplate:
           - OperationName: find
             OperationCommand:
               {^Parameter: {Name: "query", Default: {unused: "Invalid query."}}}
+
+AggregationTemplate:
+  Name: AggregationTemplate
+  Type: CrudActor
+  Database: &database {^Parameter: {Name: "database", Default: {unused: "Invalid database name."}}}
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: {^Parameter: {Name: "active", Default: {unused: "Invalid phase number."}}}
+      NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: {unused: "Invalid phase number."}}}
+      PhaseConfig:
+        Repeat: {^Parameter: {Name: "repeat", Default: {unused: "Invalid repeat count."}}}
+        Database: *database
+        Collection: {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}}
+        Operations:
+          - OperationName: aggregate
+            OperationCommand:
+              Pipeline: {^Parameter: {Name: "pipeline", Default: {unused: "Invalid query."}}}
 
 Hide48IndexesTemplate:
   Name: Hide48Indexes
