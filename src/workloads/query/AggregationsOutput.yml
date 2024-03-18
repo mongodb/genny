@@ -41,7 +41,7 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "ActivePhase", Default: 0}}]
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
-          Repeat: 10
+          Repeat: 20
           Database: *Database
           Collection: {^Parameter: {Name: "SrcCollection", Default: "Collection0"}}
           Operations:
@@ -69,7 +69,7 @@ ActorTemplates:
         Active: [{^Parameter: {Name: "ActivePhase", Default: 0}}]
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
-          Repeat: 10
+          Repeat: 20
           Database: *Database
           Collection: {^Parameter: {Name: "SrcCollection", Default: "Collection0"}}
           Operations:
