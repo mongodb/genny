@@ -26,15 +26,15 @@ QueryKnobTemplate:
 
 InsertTemplate:
   Name: CreateDataset
-  Type: Loader
-  Threads: &threads {^Parameter: {Name: "threads", Default: {unused: "Invalid thread count."}}}
+  Type: MonotonicLoader
+  Threads: 4
   Database: &db {^Parameter: {Name: "database", Default: {unused: "Invalid database name."}}}
   Phases:
     OnlyActiveInPhases:
       Active: {^Parameter: {Name: "active", Default: {unused: "Invalid phase number."}}}
       NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: {unused: "Invalid phase number."}}}
       PhaseConfig:
-        Threads: *threads
+        Threads: 4
         Repeat: {^Parameter: {Name: "repeat", Default: {unused: "Invalid repeat count."}}}
         Database: *db
         Collection: {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}}
