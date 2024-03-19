@@ -16,7 +16,7 @@ GlobalDefaults:
   DocumentCount: &documentCount 1e7
   Repeat: &repeat 20
   Threads: &threads 1
-  MaxPhases: &maxPhases 12
+  MaxPhases: &maxPhases 20
   MetaCount: &metaCount 10
 
 Clients:
@@ -109,8 +109,18 @@ Actors:
               }
             array1:
               [
+                { ^RandomDouble: { min: 0, max: 10 } },
+                { ^RandomDouble: { min: 0, max: 10 } },
+              ]
+            array2:
+              [
                 { ^RandomDouble: { min: 0, max: 100 } },
                 { ^RandomDouble: { min: 0, max: 100 } },
+              ]
+            array3:
+              [
+                { ^RandomDouble: { min: 0, max: 1000 } },
+                { ^RandomDouble: { min: 0, max: 1000 } },
               ]
 
   # Phase 2: Ensure all data is synced to disk.
@@ -202,7 +212,7 @@ Actors:
                     { $count: "count" },
                   ]
 
-# This query stresses the bucket level filter on nested fields.
+  # This query stresses the bucket level filter on nested fields.
   - Name: AndOfSelectiveFiltersOnNestedFields
     Type: CrudActor
     Database: *database
@@ -398,6 +408,248 @@ Actors:
                               {$or: [{ "obj.measurement1": {$lt: 10} }, { "obj.measurement1": {$ne: 7} }]},
                               {$or: [{ "obj.measurement2": {$gt: 89.9} }, { "obj.measurement2": {$lte: 15.0} }]},
                               {$or: [{ "obj.measurement3": {$gte: 909.9} }, { "obj.measurement3": {$eq: 270.8} }]},
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
+  - Name: BasicMatchOnArrayField
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [13]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPBasicMatchOnArrayField
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { "array2": { $gt: 50 } } },
+                    { $count: "count" },
+                  ]
+
+  - Name: NarrowMatchOnArrayField
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [14]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPNarrowMatchOnArrayField
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    { $match: { "array2": { $gte: 45, $lt: 55 } } },
+                    { $count: "count" },
+                  ]
+
+  - Name: AndMatchOnArrayField
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [15]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPAndMatchOnArrayFields
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              { "array3": { $gt: 100 } },
+                              { "array3": { $lt: 300 } },
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
+  - Name: AndOfSelectiveFiltersOnArrayFields
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [16]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPAndMatchOnArrayFields
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              { "array1": 10 },
+                              { "array2": { $gt: 99.9 } },
+                              { "array3": { $gt: 999.9 } },
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
+  - Name: OrMatchOnArrayField
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [17]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPOrMatchOnArrayField
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $or:
+                            [
+                              { "array3": { $lt: 100 } },
+                              { "array3": { $gt: 900 } },
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
+  - Name: MatchOnArrayFieldAndTime
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [18]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPMatchOnArrayFieldAndTime
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              {
+                                "time":
+                                  { $lt: { ^Date: "2022-01-02T00:00:00" } },
+                              },
+                              { "array2": { $gte: 25 } },
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
+  - Name: MatchOnMultipleArrayFields
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [19]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPMatchOnMultipleArrayFields
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              {
+                                $or:
+                                  [
+                                    { "array1": 4 },
+                                    { "array1": 9 },
+                                  ],
+                              },
+                              { "array2": { $lte: 175 } },
+                              { "array3": { $gt: 100, $lt: 800 } },
+                            ],
+                        },
+                    },
+                    { $count: "count" },
+                  ]
+
+  - Name: AndOfOrFiltersOnArrayFields
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [20]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBPAndOrMatchOnArrayFields
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $match:
+                        {
+                          $and:
+                            [
+                              {$or: [{ "array1": {$lt: 10} }, { "array1": {$ne: 7} }]},
+                              {$or: [{ "array2": {$gt: 89.9} }, { "array2": {$lte: 15.0} }]},
+                              {$or: [{ "array3": {$gte: 909.9} }, { "array3": {$eq: 270.8} }]},
                             ],
                         },
                     },
