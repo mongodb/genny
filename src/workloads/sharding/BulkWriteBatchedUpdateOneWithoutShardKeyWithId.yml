@@ -11,9 +11,20 @@ Description: |
 
   The inserted documents have the following form:
 
-      {_id: 10, oldKey: 20, newKey: 30, counter: 0, padding: 'random string of bytes ...'}
+      {_id: 10, oldKey: 20, newKey: 30, counter: 0, padding: 'random string of bytes to bring the docs up to 8 to 10 KB...'}
 
-  The collection is sharded on {oldKey: 'hashed'}.
+  The collection is sharded on {oldKey: 'hashed'}.  The metrics to watchout for here are P50, P99 operation latencies and overall throughput.
+
+Keywords:
+- CrudActor
+- sharded
+- Loader
+- insert
+- update
+- updateOne
+- batch
+- bulkWrite
+- latency
 
 GlobalDefaults:
   - &Nop {Nop: true}
@@ -32,36 +43,30 @@ GlobalDefaults:
   - &ShardKeyValueMin 1
   - &ShardKeyValueMax 1000
 
-  - &Document {
-      oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}},
-      newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}},
-      counter: 0,
-    }
-
-  - &WriteOp { 
+  - &UpdateOp { 
       WriteCommand: updateOne,
       Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}},
       Update: {$inc: {counter: 1}},
     }
 
-  - &WriteOps10x [
-      *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp,
-      *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp,
+  - &UpdateOps10x [
+      *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp,
+      *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp,
     ]
 
-  - &WriteOps100x {
+  - &UpdateOps100x {
       ^FlattenOnce:
         [
-          *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
-          *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
+          *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x,
+          *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x,
         ]
     }
 
-  - &WriteOps1000x {
+  - &UpdateOps1000x {
       ^FlattenOnce:
         [
-          *WriteOps100x, *WriteOps100x, *WriteOps100x, *WriteOps100x, *WriteOps100x,
-          *WriteOps100x, *WriteOps100x, *WriteOps100x, *WriteOps100x, *WriteOps100x,
+          *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x,
+          *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x,
         ]
     }
 
