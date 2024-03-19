@@ -1,0 +1,79 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  This is an indexed $in workload that matches documents in a collection.
+  This workload is intended to test a more representative workload 
+  
+  An extremelly common usecase for users is to fetch objects and hydrate with follow up $in query
+  
+  For example:
+  The first query fetches an Author object
+  {
+    type: "author",
+    name: "Tyler",
+    posts: [ObjectId(1), ObjectId(2), ObjectId(3)],
+  }
+
+  The second query fetches the related, but not embedded/denormalized objects
+
+  { $in: [ObjectId(1), ObjectId(2), ObjectId(3)] }
+
+  In this workload, arrays of random integers are generated to use
+  for the $in queries.
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 20000
+  Update:
+    QueryOptions:
+      maxPoolSize: 100
+
+Actors:
+  - Name: BlogPostsLoader
+    Type: Loader
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: indexedins
+        CollectionCount: 1
+        Threads: 1
+        DocumentCount: 1000
+        BatchSize: 1000
+        Document:
+          _id: { ^Inc: { start: 0 } }
+          title: &randomString { ^RandomString: { length: 8 } }
+          text: *randomString
+      - { Nop: true }
+
+  - Name: FindBlogPosts
+    Type: CrudActor
+    Threads: 64
+    Database: indexedins
+    Phases:
+      - { Nop: true }
+      - Name: MatchDocumentsUsingIn
+        Duration: 2 minutes
+        GlobalRate: 1000 per 15 seconds
+        Collection: Collection0
+        Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter:
+                _id:
+                  $in:
+                    {
+                      ^Array:
+                        {
+                          of: { ^RandomInt: { min: 0, max: 1000 } },
+                          number: 50,
+                        },
+                    }
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - single-replica
+          - single-replica-classic-query-engine
+          - single-replica-sbe
