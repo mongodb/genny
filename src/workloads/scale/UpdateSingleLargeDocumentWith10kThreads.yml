@@ -58,7 +58,7 @@ Actors:
       Active: [1]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Blocking: None
+        Duration: 10 minutes
         Collection: Collection0
         Operations:
         - OperationName: updateOne
