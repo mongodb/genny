@@ -65,6 +65,10 @@ Actors:
       collection: *coll
       docCount: *docCount
       document: {
+        # Genny's random generators appear to be repeatable, so we might as well
+        # make '_id' explicit to make the overall dataset repeatable. Omitting
+        # '_id' would make it auto-generated based on a timestamp.
+        _id: {^Inc: {start: 0}},
         x1: &distribution {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}},
         x2: *distribution,
         x3: *distribution,
@@ -268,7 +272,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: SimpleMultiplannerWith64Indexes
+- Name: MultiplannerWith63UnhiddenIndexes
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -357,7 +361,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: SimpleMultiplannerWith16Indexes
+- Name: MultiplannerWith15UnhiddenIndexes
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -380,7 +384,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: SimpleMultiplannerWith2Indexes
+- Name: MultiplannerWith1UnhiddenIndex
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
