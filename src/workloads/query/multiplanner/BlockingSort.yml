@@ -268,7 +268,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: SimpleMultiplannerWith63IndexesBlockingSort
+- Name: MultiplannerWith63IndexesBlockingSort
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -357,7 +357,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: SimpleMultiplannerWith15IndexesBlockingSort
+- Name: MultiplannerWith15IndexesBlockingSort
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -380,7 +380,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: SimpleMultiplannerWith1IndexBlockingSort
+- Name: MultiplannerWith1IndexBlockingSort
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
