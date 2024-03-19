@@ -20,6 +20,15 @@ cmake_policy(SET CMP0110 OLD)
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(genny VERSION 0.0.1 LANGUAGES CXX)
 
+# Many of the wrapped usages of Genny do not set the build type, so we default
+# to Release, which is likely what they want.
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+endif()
+
+# Include Genny toolchain cmake file, now build type is set
+include(${GENNY_TOOLCHAIN_DIR}/scripts/buildsystems/vcpkg.cmake)
+
 # Include our local cmake folder in the module path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
