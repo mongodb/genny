@@ -7,6 +7,15 @@ Description: >
   integer field, the command itself is relatively small, so most of the memory pressure should come
   from the query subsystem.
 
+Keywords:
+- CrudActor
+- Loader
+- memory
+- scale
+- stress
+- updateOne
+- WriteConflict
+
 GlobalDefaults:
   MaxPhases: &MaxPhases 2
 
@@ -49,7 +58,7 @@ Actors:
       Active: [1]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
-        Duration: 3 minutes
+        Blocking: None
         Collection: Collection0
         Operations:
         - OperationName: updateOne
