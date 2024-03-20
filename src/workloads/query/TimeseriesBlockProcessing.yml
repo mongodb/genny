@@ -110,7 +110,6 @@ Actors:
             array1:
               [
                 { ^RandomDouble: { min: 0, max: 10 } },
-                { ^RandomDouble: { min: 0, max: 10 } },
               ]
             array2:
               [
@@ -119,6 +118,7 @@ Actors:
               ]
             array3:
               [
+                { ^RandomDouble: { min: 0, max: 1000 } },
                 { ^RandomDouble: { min: 0, max: 1000 } },
                 { ^RandomDouble: { min: 0, max: 1000 } },
               ]
