@@ -199,6 +199,11 @@ void requireEvent(ApmEvent& event, YAML::Node requirements) {
         auto actualProjection = event.command["projection"].get_document();
         REQUIRE(actualProjection.view() == expectedProjection.view());
     }
+    if (auto let = requirements["let"]) {
+        auto expectedLet  = genny::testing::toDocumentBson(let);
+        auto actualLet = event.command["let"].get_document();
+        REQUIRE(actualLet.view() == expectedLet.view());
+    }
 }
 
 void requireAllEvents(mongocxx::pool::entry& client, ApmEvents events, YAML::Node requirements) {

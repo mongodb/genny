@@ -731,6 +731,9 @@ struct FindOperation : public BaseOperation {
             if (options["Projection"]) {
                 _projection.emplace(options["Projection"].to<DocumentGenerator>(context, id));
             }
+            if (options["Let"]) {
+                _let.emplace(options["Let"].to<DocumentGenerator>(context, id));
+            }
         }
     }
 
@@ -738,6 +741,9 @@ struct FindOperation : public BaseOperation {
         auto filter = _filter();
         if (_projection) {
             _options.projection(_projection.value()());
+        }
+        if (_let) {
+            _options.let(_let.value()());
         }
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto cursor = (_onSession) ? _collection.find(session, filter.view(), _options)
@@ -757,6 +763,7 @@ private:
     mongocxx::options::find _options;
     DocumentGenerator _filter;
     std::optional<DocumentGenerator> _projection;
+    std::optional<DocumentGenerator> _let;
     metrics::Operation _operation;
 };
 
@@ -777,6 +784,9 @@ struct FindOneOperation : public BaseOperation {
             if (options["Projection"]) {
                 _projection.emplace(options["Projection"].to<DocumentGenerator>(context, id));
             }
+            if (options["Let"]) {
+                _let.emplace(options["Let"].to<DocumentGenerator>(context, id));
+            }
             if (options["Limit"]) {
                 BOOST_THROW_EXCEPTION(
                     InvalidConfigurationException("Cannot specify 'limit' to 'findOne' operation"));
@@ -792,6 +802,9 @@ struct FindOneOperation : public BaseOperation {
         auto filter = _filter();
         if (_projection) {
             _options.projection(_projection.value()());
+        }
+        if (_let) {
+            _options.let(_let.value()());
         }
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession) ? _collection.find_one(session, filter.view(), _options)
@@ -810,6 +823,7 @@ private:
     mongocxx::options::find _options;
     DocumentGenerator _filter;
     std::optional<DocumentGenerator> _projection;
+    std::optional<DocumentGenerator> _let;
     metrics::Operation _operation;
 };
 
@@ -825,13 +839,19 @@ struct AggregateOperation : public BaseOperation {
           _collection{std::move(collection)},
           _operation{operation},
           _pipelineGenerator{opNode["Pipeline"].to<PipelineGenerator>(context, id)} {
-        if (opNode["Options"]) {
+        if (const auto& options = opNode["Options"]; options) {
             _options = opNode["Options"].to<mongocxx::options::aggregate>();
+            if (options["Let"]) {
+                _let.emplace(options["Let"].to<DocumentGenerator>(context, id));
+            }
         }
     }
 
     void run(mongocxx::client_session& session) override {
         auto pipeline = pipeline_helpers::makePipeline(_pipelineGenerator);
+        if (_let) {
+            _options.let(_let.value()());
+        }
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto cursor = _onSession ? _collection.aggregate(session, pipeline, _options)
                                      : _collection.aggregate(pipeline, _options);
@@ -847,6 +867,7 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::aggregate _options;
+    std::optional<DocumentGenerator> _let;
     PipelineGenerator _pipelineGenerator;
     metrics::Operation _operation;
 };
