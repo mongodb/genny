@@ -784,6 +784,9 @@ struct FindOneOperation : public BaseOperation {
             if (options["Projection"]) {
                 _projection.emplace(options["Projection"].to<DocumentGenerator>(context, id));
             }
+            if (options["Let"]) {
+                _let.emplace(options["Let"].to<DocumentGenerator>(context, id));
+            }
             if (options["Limit"]) {
                 BOOST_THROW_EXCEPTION(
                     InvalidConfigurationException("Cannot specify 'limit' to 'findOne' operation"));
@@ -799,6 +802,9 @@ struct FindOneOperation : public BaseOperation {
         auto filter = _filter();
         if (_projection) {
             _options.projection(_projection.value()());
+        }
+        if (_let) {
+            _options.let(_let.value()());
         }
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession) ? _collection.find_one(session, filter.view(), _options)
@@ -817,6 +823,7 @@ private:
     mongocxx::options::find _options;
     DocumentGenerator _filter;
     std::optional<DocumentGenerator> _projection;
+    std::optional<DocumentGenerator> _let;
     metrics::Operation _operation;
 };
 

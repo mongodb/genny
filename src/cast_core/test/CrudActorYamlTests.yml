@@ -762,6 +762,16 @@ Tests:
     Error: |
       .*Cannot do exclusion on field a in inclusion projection.*
 
+  - Description: Test that a 'find' command applies the specified let.
+    Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: {$expr: {$eq: ["$a", "$$val"]}},
+          Options:
+            Let: {val: 1}
+    ExpectAllEvents:
+      let: {val: 1}
+
   - Description: Test that a 'find' command applies the specified sort.
     Operations:
       - OperationName: find
@@ -922,6 +932,16 @@ Tests:
             Sort: '{"a": {"$numberInt": "-1"}}'
     ExpectAllEvents:
       sort: { a: -1 }
+
+  - Description: Test that a 'findOne' command applies the specified let.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: {$expr: {$eq: ["$a", "$$val"]}},
+          Options:
+            Let: {val: 1}
+    ExpectAllEvents:
+      let: {val: 1}
 
   - Description: Test that a 'findOne' command applies the specified collation.
     Operations:
