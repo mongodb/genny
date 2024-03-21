@@ -15,7 +15,7 @@
         3.  [What is a phase?](#orgb655d69)
         4.  [How do I run a workload?](#org32b8ad3)
     5.  [Outputs](#orgec88ad4)
-        1.  [Analyzing workload output locally](#org2f7c9d4)
+        1.  [Analyzing workload output locally](#analyzing-workload-output-locally)
     6.  [Workload Development](#org0e7c476)
 4.  [Further Concepts](#org61c719c)
     1.  [Common Actors](#org78b250a)
@@ -385,53 +385,30 @@ If your workload requires a MongoDB connection (most do), then you can pass it i
 
 ## Outputs
 
-Genny's primary output is time-series data. Every time an Actor performs an operation, such as an
-insert, a removal, a runCommand, etc, the Actor thread starts a timer. When the operation returns
-from the server, the operation is recorded as either a success or failure. The duration of the
-operation, as viewed from the client, is recorded with the operation completion time.
+Genny's primary output is time-series data. Every time an Actor performs an operation, such as an insert, a removal, a runCommand, etc, the Actor thread starts a timer. When the operation returns from the server, the operation is recorded as either a success or failure. The duration of the operation, as viewed from the client, is recorded with the operation completion time.
 
-Genny outputs to `./build/WorkloadOutput`. When running Genny for the first time, you should see two
-outputs in that directory:
+Genny outputs to `./build/WorkloadOutput`. When running Genny for the first time, you should see two outputs in that directory:
 
--   `CedarMetrics` - a directory full of FTDC files, where each file corresponds to a single
-    time-series metric for a single operation. For more details about the format and contents of
-    these FTDC files, see our tool-agnostic documentation
-    [here](https://github.com/10gen/performance-tooling-docs/blob/main/getting_started/intrarun_data_generation.md).
--   `workload` - a directory containing the preprocessed workload. Learn more about the preprocessor
-    [here](#org2078b23).
+-   `CedarMetrics` - a directory full of FTDC files, where each file corresponds to a single time-series metric for a single operation. For more details about the format and contents of these FTDC files, see our tool-agnostic documentation [here](https://github.com/10gen/performance-tooling-docs/blob/main/getting_started/intrarun_data_generation.md).
+-   `workload` - a directory containing the preprocessed workload. Learn more about the preprocessor [here](#org2078b23).
 
-If you run Genny and the `CedarMetrics` directory already exists, it will be moved to
-`CedarMetrics-<current_time>` to avoid overwriting results. The preprocessed workload will be
-deposited into the `workload` directory, possibly overwriting the existing one. (Or you may end up
-with multiple workloads in the directory, if they have different names. This has no impact on
-execution.)
+If you run Genny and the `CedarMetrics` directory already exists, it will be moved to `CedarMetrics-<current_time>` to avoid overwriting results. The preprocessed workload will be deposited into the `workload` directory, possibly overwriting the existing one. (Or you may end up with multiple workloads in the directory, if they have different names. This has no impact on execution.)
 
-You can use the `export` command that Genny provides to export outputted FTDC to CSV.
-For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
+You can use the `export` command that Genny provides to export outputted FTDC to CSV. For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
 
 ```bash
 ./run-genny export build/WorkloadOutput/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
 ```
 
-You can also use the `translate` subcommand to convert results to a
-[t2-readable](https://github.com/10gen/t2/) format.
+You can also use the `translate` subcommand to convert results to a [t2-readable](https://github.com/10gen/t2/) format.
 
-If you are running Genny through DSI in Evergreen, the FTDC contents are rolled up into summary
-statistics like `OperationThroughput` and such, viewable in the Evergreen perf UI. 
+If you are running Genny through DSI in Evergreen, the FTDC contents are rolled up into summary statistics like `OperationThroughput` and such, viewable in the Evergreen perf UI.
 
-<a id="org2f7c9d4)"></a>
+<a id="analyzing-workload-output-locally"></a>
 
 ### Analyzing workload output locally
 
-If you are running Genny locally, you can use
-`src/workloads/contrib/analysis/test_result_summary.py` to print a summary of the most recent run
-(or any `CedarMetrics` directory) to the console. This script has its own Python dependencies which
-must be installed as a prerequisite (preferably in a Python virtual environment). The dependencies
-are captured in
-[src/workloads/contrib/analysis/requirements.txt](https://github.com/mongodb/genny/blob/master/src/workloads/contrib/analysis/requirements.txt).
-See [this
-README](https://github.com/mongodb/genny/blob/master/src/workloads/contrib/analysis/README.md) for
-more detailed instructions.
+If you are running Genny locally, you can use `src/workloads/contrib/analysis/test_result_summary.py` to print a summary of the most recent run (or any `CedarMetrics` directory) to the console. This script has its own Python dependencies which must be installed as a prerequisite (preferably in a Python virtual environment). The dependencies are captured in [src/workloads/contrib/analysis/requirements.txt](https://github.com/mongodb/genny/blob/master/src/workloads/contrib/analysis/requirements.txt). See [this README](https://github.com/mongodb/genny/blob/master/src/workloads/contrib/analysis/README.md) for more detailed instructions.
 
 After installing the required Python packages, the tool can be run as in the following example:
 
