@@ -18,8 +18,7 @@ Description: |
 
   { $in: [ObjectId(1), ObjectId(2), ObjectId(3)] }
 
-  In this workload, arrays of random integers are generated to use
-  for the $in queries.
+  In this workload, arrays of random integers are generated to use for the $in queries.
 Clients:
   Default:
     QueryOptions:
@@ -65,7 +64,7 @@ Actors:
                       ^Array:
                         {
                           of: { ^RandomInt: { min: 0, max: 1000 } },
-                          number: 50,
+                          number: 20000,
                         },
                     }
 
