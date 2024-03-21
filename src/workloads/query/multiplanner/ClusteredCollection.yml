@@ -275,7 +275,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: MultiplannerWith64Indexes
+- Name: ClusteredCollectionMultiplannerWith64Indexes
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -364,7 +364,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: MultiplannerWith16Indexes
+- Name: ClusteredCollectionMultiplannerWith16Indexes
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -387,7 +387,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: MultiplannerWith2Indexes
+- Name: ClusteredCollectionMultiplannerWith2Indexes
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
