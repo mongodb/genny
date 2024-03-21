@@ -1,0 +1,142 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+Description: |
+  Runs the batched bulk updateOne writes of type WithoutShardKeyWithId with a batch size of 1000 using
+  bulkWrite command.
+
+  The workload consists of 3 phases:
+    1. Creating an empty sharded collection distributed across all shards in the cluster.
+    2. Populating the sharded collection with data.
+    3. Running updateOne writes of type WriteWithoutShardKeyWithId.
+
+  The inserted documents have the following form:
+
+      {_id: 10, oldKey: 20, newKey: 30, counter: 0, padding: 'random string of bytes to bring the docs up to 8 to 10 KB...'}
+
+  The collection is sharded on {oldKey: 'hashed'}.  The metrics to watchout for here are P50, P99 operation latencies and overall throughput.
+
+Keywords:
+- CrudActor
+- sharded
+- Loader
+- insert
+- update
+- updateOne
+- batch
+- bulkWrite
+- latency
+
+GlobalDefaults:
+  - &Nop {Nop: true}
+
+  - &Database test
+  # Collection0 is the default collection populated by the MonotonicSingleLoader.
+  - &Collection Collection0
+  - &Namespace test.Collection0
+
+  # Note that the exact document size may exceed ApproxDocumentSize because of field names and other
+  # fields in the document.
+  - &ApproxDocumentSize 10000  # = 10kB
+  - &ApproxDocumentSize80Pct 8000  # = 8kB
+  - &DocumentCount 100000  # for an approximate total of 1GB
+
+  - &ShardKeyValueMin 1
+  - &ShardKeyValueMax 1000
+
+  - &UpdateOp { 
+      WriteCommand: updateOne,
+      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}},
+      Update: {$inc: {counter: 1}},
+    }
+
+  - &UpdateOps10x [
+      *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp,
+      *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp,
+    ]
+
+  - &UpdateOps100x {
+      ^FlattenOnce:
+        [
+          *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x,
+          *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x,
+        ]
+    }
+
+  - &UpdateOps1000x {
+      ^FlattenOnce:
+        [
+          *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x,
+          *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x,
+        ]
+    }
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 600
+      
+Actors:
+- Name: CreateShardedCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *Database
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: *Namespace
+        # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
+        # the shards.
+        key: {oldKey: hashed}
+  - *Nop
+  - *Nop
+
+- Name: LoadInitialData
+  Type: MonotonicSingleLoader
+  Threads: 100
+  Phases:
+  - *Nop
+  - Repeat: 1
+    BatchSize: 1000
+    DocumentCount: *DocumentCount
+    Database: *Database
+    Document:
+      oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+      newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+      counter: 0
+      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize80Pct, max: *ApproxDocumentSize}}}}
+  - *Nop
+
+- Name: WriteCollection
+  Type: CrudActor
+  Threads: 450
+  Database: *Database
+  Phases:
+  - *Nop
+  - *Nop
+  - MetricsName: UpdateOneMetrics
+    Duration: 200 seconds
+    Collection: *Collection
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            { ^Parameter: { Name: "Operations", Default: *UpdateOps1000x } }
+          Options:
+            Ordered: false
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - shard
+      - shard-lite
+      - shard-lite-all-feature-flags
+    branch_name:
+      $gte: v8.0
