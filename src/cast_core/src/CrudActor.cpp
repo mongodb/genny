@@ -839,13 +839,19 @@ struct AggregateOperation : public BaseOperation {
           _collection{std::move(collection)},
           _operation{operation},
           _pipelineGenerator{opNode["Pipeline"].to<PipelineGenerator>(context, id)} {
-        if (opNode["Options"]) {
+        if (const auto& options = opNode["Options"]; options) {
             _options = opNode["Options"].to<mongocxx::options::aggregate>();
+            if (options["Let"]) {
+                _let.emplace(options["Let"].to<DocumentGenerator>(context, id));
+            }
         }
     }
 
     void run(mongocxx::client_session& session) override {
         auto pipeline = pipeline_helpers::makePipeline(_pipelineGenerator);
+        if (_let) {
+            _options.let(_let.value()());
+        }
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto cursor = _onSession ? _collection.aggregate(session, pipeline, _options)
                                      : _collection.aggregate(pipeline, _options);
@@ -861,6 +867,7 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::aggregate _options;
+    std::optional<DocumentGenerator> _let;
     PipelineGenerator _pipelineGenerator;
     metrics::Operation _operation;
 };
