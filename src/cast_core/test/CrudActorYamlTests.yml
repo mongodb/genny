@@ -736,7 +736,7 @@ Tests:
     Operations:
       - OperationName: aggregate
         OperationCommand:
-            Pipeline: {$group: {_id: "$a", sum: {$sum: {$expr: {$add: ["$b", "$$val"]}}}}}
+            Pipeline: [{$group: {_id: "$a", sum: {$sum: {$expr: {$add: ["$b", "$$val"]}}}}}]
             Options:
               Let: {val : 1}
     ExpectAllEvents:
