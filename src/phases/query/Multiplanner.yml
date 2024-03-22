@@ -165,3 +165,98 @@ Hide14IndexesTemplate:
         - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index14}}}
         - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index15}}}
         - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index16}}}
+
+fraction: &frac {^NumExpr: {withExpression: "resultCount / docCount", andValues: {
+                      resultCount: &resultCount {^Parameter: {Name: "resultCount", Default: {unused: "Invalid result count."}}},
+                      docCount: {^Parameter: {Name: "docCount", Default: {unused: "Invalid docCount."}}}}}}
+
+FindWithNExpectedResults:
+  Name: FindOnAllPredicates
+  Type: CrudActor
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases: 
+      Active: {^Parameter: {Name: "active", Default: {unused: "Invalid phase number."}}}
+      NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: {unused: "Invalid phase number."}}}
+      PhaseConfig:
+        Repeat: {^Parameter: {Name: "repeat", Default: {unused: "Invalid repeat count."}}}
+        Database: {^Parameter: {Name: "database", Default: {unused: "Invalid database name."}}}
+        Collection: {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}}
+        Operations:
+          - OperationName: find
+            OperationCommand: {
+              Filter: {$expr: {$and: [
+                # Confirm that lowBound <= x1 < lowBound + size
+                {$gte: ["$x1", "$$lowBound"]},
+                {$lt: ["$x1", {$add: ["$$lowBound", "$$size"]}]},
+                {$lte: ["$x2", 1]},
+                {$lte: ["$x3", 1]},
+                {$lte: ["$x4", 1]},
+                {$lte: ["$x5", 1]},
+                {$lte: ["$x6", 1]},
+                {$lte: ["$x7", 1]},
+                {$lte: ["$x8", 1]},
+                {$lte: ["$x9", 1]},
+                {$lte: ["$x10", 1]},
+                {$lte: ["$x11", 1]},
+                {$lte: ["$x12", 1]},
+                {$lte: ["$x13", 1]},
+                {$lte: ["$x14", 1]},
+                {$lte: ["$x15", 1]},
+                {$lte: ["$x16", 1]},
+                {$lte: ["$x17", 1]},
+                {$lte: ["$x18", 1]},
+                {$lte: ["$x19", 1]},
+                {$lte: ["$x20", 1]},
+                {$lte: ["$x21", 1]},
+                {$lte: ["$x22", 1]},
+                {$lte: ["$x23", 1]},
+                {$lte: ["$x24", 1]},
+                {$lte: ["$x25", 1]},
+                {$lte: ["$x26", 1]},
+                {$lte: ["$x27", 1]},
+                {$lte: ["$x28", 1]},
+                {$lte: ["$x29", 1]},
+                {$lte: ["$x30", 1]},
+                {$lte: ["$x31", 1]},
+                {$lte: ["$x32", 1]},
+                {$lte: ["$x33", 1]},
+                {$lte: ["$x34", 1]},
+                {$lte: ["$x35", 1]},
+                {$lte: ["$x36", 1]},
+                {$lte: ["$x37", 1]},
+                {$lte: ["$x38", 1]},
+                {$lte: ["$x39", 1]},
+                {$lte: ["$x40", 1]},
+                {$lte: ["$x41", 1]},
+                {$lte: ["$x42", 1]},
+                {$lte: ["$x43", 1]},
+                {$lte: ["$x44", 1]},
+                {$lte: ["$x45", 1]},
+                {$lte: ["$x46", 1]},
+                {$lte: ["$x47", 1]},
+                {$lte: ["$x48", 1]},
+                {$lte: ["$x49", 1]},
+                {$lte: ["$x50", 1]},
+                {$lte: ["$x51", 1]},
+                {$lte: ["$x52", 1]},
+                {$lte: ["$x53", 1]},
+                {$lte: ["$x54", 1]},
+                {$lte: ["$x55", 1]},
+                {$lte: ["$x56", 1]},
+                {$lte: ["$x57", 1]},
+                {$lte: ["$x58", 1]},
+                {$lte: ["$x59", 1]},
+                {$lte: ["$x60", 1]},
+                {$lte: ["$x61", 1]},
+                {$lte: ["$x62", 1]},
+                {$lte: ["$x63", 1]}
+              ]}},
+              Options: {
+                Let: {
+                  lowBound: {$multiply: [{$subtract: [1, *frac]}, {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}}]}, 
+                  size: *frac
+                },
+                Limit: *resultCount
+              }
+            }
