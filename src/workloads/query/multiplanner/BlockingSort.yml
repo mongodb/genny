@@ -1,12 +1,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  The goal of this test is to exercise multiplanning with many index seeks. We create as many compound
-  indexes as possible, each comprising of two fields. One of the indices (x1, ...) is designed to be
-  the most effective index, while the rest of them (..., x1) are very ineffective. We then run a query
-  having predicates on all the fields, while only the predicate on field x1 has selective range. This
-  leads to many index seeks on the less effective indices (..., x1). Because every time we hit a non-
-  matching field we seek again, and the scan ends when we reach a non-matching x1.
+  The goal of this test is to exercise multiplanning. We create as many indexes as possible, and run
+  a query that makes all of them eligible, so we get as many competing plans as possible. We also
+  add a sort stage on an unindexed field, ensuring that every plan is a blocking plan. Because all 
+  plans are blocking and return as many documents as possible, multiplanning will hit "max works"
+  instead of EOF of numToReturn. This maximizes the overhead of multiplanning on both classic and SBE.
 
   We expect classic to have better latency and throughput than SBE on this workload,
   and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
@@ -18,10 +17,6 @@ GlobalDefaults:
   coll: &coll Collection0
 
   docCount: &docCount 1e5
-  resultCount: &resultCount 101
-  selectivity: &selectivity {^NumExpr: {
-    withExpression: "resultCount / docCount",
-    andValues: {resultCount: *resultCount, docCount: *docCount}}}
 
   maxPhase: &maxPhase 7
   queryRepeats: &queryRepeats 1000
@@ -59,12 +54,17 @@ Actors:
     Key: InsertTemplate
     Parameters:
       database: *db
+      threads: 1
       active: [1]
       nopInPhasesUpTo: *maxPhase
       repeat: 1
       collection: *coll
       docCount: *docCount
       document: {
+        # Genny's random generators appear to be repeatable, so we might as well
+        # make '_id' explicit to make the overall dataset repeatable. Omitting
+        # '_id' would make it auto-generated based on a timestamp.
+        _id: {^Inc: {start: 0}},
         x1: &distribution {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}},
         x2: *distribution,
         x3: *distribution,
@@ -129,134 +129,132 @@ Actors:
         x62: *distribution,
         x63: *distribution
       }
+      # index2 is deliberately removed so we can sort on x2 and ensure every plan is a blocking plan
+      # since x2 is unindexed.
       indexes:
-      # Intentionally makes index1 to be the most selective. The rest of the indices are less selective
-      # because their first field has worse selectivity.
-      - keys: {x1: 1, x2: 1}
+      - keys: {x1: 1}
         options: {name: index1}
-      - keys: {x2: 1, x1: 1}
-        options: {name: index2}
-      - keys: {x3: 1, x1: 1}
+      - keys: {x3: 1}
         options: {name: index3}
-      - keys: {x4: 1, x1: 1}
+      - keys: {x4: 1}
         options: {name: index4}
-      - keys: {x5: 1, x1: 1}
+      - keys: {x5: 1}
         options: {name: index5}
-      - keys: {x6: 1, x1: 1}
+      - keys: {x6: 1}
         options: {name: index6}
-      - keys: {x7: 1, x1: 1}
+      - keys: {x7: 1}
         options: {name: index7}
-      - keys: {x8: 1, x1: 1}
+      - keys: {x8: 1}
         options: {name: index8}
-      - keys: {x9: 1, x1: 1}
+      - keys: {x9: 1}
         options: {name: index9}
-      - keys: {x10: 1, x1: 1}
+      - keys: {x10: 1}
         options: {name: index10}
-      - keys: {x11: 1, x1: 1}
+      - keys: {x11: 1}
         options: {name: index11}
-      - keys: {x12: 1, x1: 1}
+      - keys: {x12: 1}
         options: {name: index12}
-      - keys: {x13: 1, x1: 1}
+      - keys: {x13: 1}
         options: {name: index13}
-      - keys: {x14: 1, x1: 1}
+      - keys: {x14: 1}
         options: {name: index14}
-      - keys: {x15: 1, x1: 1}
+      - keys: {x15: 1}
         options: {name: index15}
-      - keys: {x16: 1, x1: 1}
+      - keys: {x16: 1}
         options: {name: index16}
-      - keys: {x17: 1, x1: 1}
+      - keys: {x17: 1}
         options: {name: index17}
-      - keys: {x18: 1, x1: 1}
+      - keys: {x18: 1}
         options: {name: index18}
-      - keys: {x19: 1, x1: 1}
+      - keys: {x19: 1}
         options: {name: index19}
-      - keys: {x20: 1, x1: 1}
+      - keys: {x20: 1}
         options: {name: index20}
-      - keys: {x21: 1, x1: 1}
+      - keys: {x21: 1}
         options: {name: index21}
-      - keys: {x22: 1, x1: 1}
+      - keys: {x22: 1}
         options: {name: index22}
-      - keys: {x23: 1, x1: 1}
+      - keys: {x23: 1}
         options: {name: index23}
-      - keys: {x24: 1, x1: 1}
+      - keys: {x24: 1}
         options: {name: index24}
-      - keys: {x25: 1, x1: 1}
+      - keys: {x25: 1}
         options: {name: index25}
-      - keys: {x26: 1, x1: 1}
+      - keys: {x26: 1}
         options: {name: index26}
-      - keys: {x27: 1, x1: 1}
+      - keys: {x27: 1}
         options: {name: index27}
-      - keys: {x28: 1, x1: 1}
+      - keys: {x28: 1}
         options: {name: index28}
-      - keys: {x29: 1, x1: 1}
+      - keys: {x29: 1}
         options: {name: index29}
-      - keys: {x30: 1, x1: 1}
+      - keys: {x30: 1}
         options: {name: index30}
-      - keys: {x31: 1, x1: 1}
+      - keys: {x31: 1}
         options: {name: index31}
-      - keys: {x32: 1, x1: 1}
+      - keys: {x32: 1}
         options: {name: index32}
-      - keys: {x33: 1, x1: 1}
+      - keys: {x33: 1}
         options: {name: index33}
-      - keys: {x34: 1, x1: 1}
+      - keys: {x34: 1}
         options: {name: index34}
-      - keys: {x35: 1, x1: 1}
+      - keys: {x35: 1}
         options: {name: index35}
-      - keys: {x36: 1, x1: 1}
+      - keys: {x36: 1}
         options: {name: index36}
-      - keys: {x37: 1, x1: 1}
+      - keys: {x37: 1}
         options: {name: index37}
-      - keys: {x38: 1, x1: 1}
+      - keys: {x38: 1}
         options: {name: index38}
-      - keys: {x39: 1, x1: 1}
+      - keys: {x39: 1}
         options: {name: index39}
-      - keys: {x40: 1, x1: 1}
+      - keys: {x40: 1}
         options: {name: index40}
-      - keys: {x41: 1, x1: 1}
+      - keys: {x41: 1}
         options: {name: index41}
-      - keys: {x42: 1, x1: 1}
+      - keys: {x42: 1}
         options: {name: index42}
-      - keys: {x43: 1, x1: 1}
+      - keys: {x43: 1}
         options: {name: index43}
-      - keys: {x44: 1, x1: 1}
+      - keys: {x44: 1}
         options: {name: index44}
-      - keys: {x45: 1, x1: 1}
+      - keys: {x45: 1}
         options: {name: index45}
-      - keys: {x46: 1, x1: 1}
+      - keys: {x46: 1}
         options: {name: index46}
-      - keys: {x47: 1, x1: 1}
+      - keys: {x47: 1}
         options: {name: index47}
-      - keys: {x48: 1, x1: 1}
+      - keys: {x48: 1}
         options: {name: index48}
-      - keys: {x49: 1, x1: 1}
+      - keys: {x49: 1}
         options: {name: index49}
-      - keys: {x50: 1, x1: 1}
+      - keys: {x50: 1}
         options: {name: index50}
-      - keys: {x51: 1, x1: 1}
+      - keys: {x51: 1}
         options: {name: index51}
-      - keys: {x52: 1, x1: 1}
+      - keys: {x52: 1}
         options: {name: index52}
-      - keys: {x53: 1, x1: 1}
+      - keys: {x53: 1}
         options: {name: index53}
-      - keys: {x54: 1, x1: 1}
+      - keys: {x54: 1}
         options: {name: index54}
-      - keys: {x55: 1, x1: 1}
+      - keys: {x55: 1}
         options: {name: index55}
-      - keys: {x56: 1, x1: 1}
+      - keys: {x56: 1}
         options: {name: index56}
-      - keys: {x57: 1, x1: 1}
+      - keys: {x57: 1}
         options: {name: index57}
-      - keys: {x58: 1, x1: 1}
+      - keys: {x58: 1}
         options: {name: index58}
-      - keys: {x59: 1, x1: 1}
+      - keys: {x59: 1}
         options: {name: index59}
-      - keys: {x60: 1, x1: 1}
+      - keys: {x60: 1}
         options: {name: index60}
-      - keys: {x61: 1, x1: 1}
+      - keys: {x61: 1}
         options: {name: index61}
-      - keys: {x62: 1, x1: 1}
+      - keys: {x62: 1}
         options: {name: index62}
-      - keys: {x63: 1, x1: 1}
+      - keys: {x63: 1}
         options: {name: index63}
 
 - Name: Quiesce
@@ -270,7 +268,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: MultiplannerWith64IndexesManyIndexSeeks
+- Name: MultiplannerWith63IndexesBlockingSort
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -282,8 +280,7 @@ Actors:
       collection: *coll
       query: &query {
         Filter: {
-          x1: {$lt: *selectivity},
-          x2: {$lte: 1},
+          x1: {$lte: 1},
           x3: {$lte: 1},
           x4: {$lte: 1},
           x5: {$lte: 1},
@@ -345,7 +342,8 @@ Actors:
           x61: {$lte: 1},
           x62: {$lte: 1},
           x63: {$lte: 1}
-        }
+        },
+        Options: {Sort: '{"x2": {"$numberInt": "1"}}'}
       }
 
 - Name: Hide48Indexes
@@ -359,7 +357,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: MultiplannerWith16IndexesManyIndexSeeks
+- Name: MultiplannerWith15IndexesBlockingSort
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -382,7 +380,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: MultiplannerWith2IndexesManyIndexSeeks
+- Name: MultiplannerWith1IndexBlockingSort
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate

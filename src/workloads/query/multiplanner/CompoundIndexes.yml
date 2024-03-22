@@ -56,17 +56,12 @@ Actors:
     Key: InsertTemplate
     Parameters:
       database: *db
-      threads: 1
       active: [1]
       nopInPhasesUpTo: *maxPhase
       repeat: 1
       collection: *coll
       docCount: *docCount
       document: {
-        # Genny's random generators appear to be repeatable, so we might as well
-        # make '_id' explicit to make the overall dataset repeatable. Omitting
-        # '_id' would make it auto-generated based on a timestamp.
-        _id: {^Inc: {start: 0}},
         tenantId: {^RandomInt: {distribution: uniform, min: 0, max: 100}},
         x1: &distribution {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}},
         x2: *distribution,
@@ -271,7 +266,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: SimpleMultiplannerWith64Indexes
+- Name: MultiplannerWith64CompoundIndexes
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -301,7 +296,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: SimpleMultiplannerWith16Indexes
+- Name: MultiplannerWith16CompoundIndexes
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -324,7 +319,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: SimpleMultiplannerWith2Indexes
+- Name: MultiplannerWith2CompoundIndexes
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
