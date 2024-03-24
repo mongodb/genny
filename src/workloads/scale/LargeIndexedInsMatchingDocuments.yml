@@ -77,10 +77,11 @@ Actors:
                     }
 
 AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - single-replica
-          - single-replica-classic-query-engine
-          - single-replica-sbe
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - replica-all-feature-flags
+      - single-replica
+      - single-replica-classic-query-engine
+      - single-replica-sbe
