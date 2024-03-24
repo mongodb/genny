@@ -3,9 +3,9 @@ Owner: "@mongodb/product-perf"
 Description: |
   This is an indexed $in workload that matches documents in a collection.
   This workload is intended to test a more representative workload 
-  
+
   An extremelly common usecase for users is to fetch objects and hydrate with follow up $in query
-  
+
   For example:
   The first query fetches an Author object
   {
@@ -18,7 +18,8 @@ Description: |
 
   { $in: [ObjectId(1), ObjectId(2), ObjectId(3)] }
 
-  In this workload, arrays of random integers are generated to use for the $in queries.
+  This workload focuses on the second query of this use case matching documents
+  using arrays of integers that are generated to be used for the $in queries.
 Clients:
   Default:
     QueryOptions:
@@ -36,8 +37,8 @@ Actors:
         Database: indexedins
         CollectionCount: 1
         Threads: 1
-        DocumentCount: 1000
-        BatchSize: 1000
+        DocumentCount: 2048000
+        BatchSize: 100
         Document:
           _id: { ^Inc: { start: 0 } }
           title: &randomString { ^RandomString: { length: 8 } }
@@ -52,18 +53,25 @@ Actors:
       - { Nop: true }
       - Name: MatchDocumentsUsingIn
         Duration: 2 minutes
-        GlobalRate: 1000 per 15 seconds
         Collection: Collection0
         Operations:
           - OperationName: find
             OperationCommand:
               Filter:
                 _id:
-                  $in:
+                  k:
                     {
                       ^Array:
                         {
-                          of: { ^RandomInt: { min: 0, max: 1000 } },
+                          of:
+                            {
+                              ^Inc:
+                                {
+                                  start:
+                                    { ^RandomInt: { min: 0, max: 2028000 } },
+                                  end: 2048000,
+                                },
+                            },
                           number: 20000,
                         },
                     }
