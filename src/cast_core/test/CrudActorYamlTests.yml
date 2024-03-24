@@ -732,6 +732,16 @@ Tests:
     Error: |
       .*'Pipeline' must be an array.*
 
+  - Description: Test that an aggregate command applies the specified let.
+    Operations:
+      - OperationName: aggregate
+        OperationCommand:
+            Pipeline: [{$group: {_id: "$a", sum: {$sum: {$add: ["$b", "$$val"]}}}}]
+            Options:
+              Let: {val : 1}
+    ExpectAllEvents:
+      let: {val : 1}
+
   - Description: Test that a 'find' command can accept 'allowDiskUse'.
     Operations:
       - OperationName: find
@@ -761,6 +771,16 @@ Tests:
             Projection: {_id: 0, b: 1, a: 0}
     Error: |
       .*Cannot do exclusion on field a in inclusion projection.*
+
+  - Description: Test that a 'find' command applies the specified let.
+    Operations:
+      - OperationName: find
+        OperationCommand:
+          Filter: {$expr: {$eq: ["$a", "$$val"]}}
+          Options:
+            Let: {val: 1}
+    ExpectAllEvents:
+      let: {val: 1}
 
   - Description: Test that a 'find' command applies the specified sort.
     Operations:
@@ -922,6 +942,16 @@ Tests:
             Sort: '{"a": {"$numberInt": "-1"}}'
     ExpectAllEvents:
       sort: { a: -1 }
+
+  - Description: Test that a 'findOne' command applies the specified let.
+    Operations:
+      - OperationName: findOne
+        OperationCommand:
+          Filter: {$expr: {$eq: ["$a", "$$val"]}}
+          Options:
+            Let: {val: 1}
+    ExpectAllEvents:
+      let: {val: 1}
 
   - Description: Test that a 'findOne' command applies the specified collation.
     Operations:

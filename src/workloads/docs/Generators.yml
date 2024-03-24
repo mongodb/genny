@@ -152,6 +152,9 @@ Actors:
             # Generate the current Date
             now: {^Now: {}}
 
+            # Generate the current timestamp
+            nowTimestamp: {^NowTimestamp: {}}
+
             # Generate field with a null value
             nullField: {^Null: {}}
 
