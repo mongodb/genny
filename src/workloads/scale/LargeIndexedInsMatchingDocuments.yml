@@ -59,29 +59,27 @@ Actors:
             OperationCommand:
               Filter:
                 _id:
-                  k:
-                    {
-                      ^Array:
-                        {
-                          of:
-                            {
-                              ^Inc:
-                                {
-                                  start:
-                                    { ^RandomInt: { min: 0, max: 2028000 } },
-                                  end: 2048000,
-                                },
-                            },
-                          number: 20000,
-                        },
-                    }
+                  {
+                    ^Array:
+                      {
+                        of:
+                          {
+                            ^Inc:
+                              {
+                                start: { ^RandomInt: { min: 0, max: 2028000 } },
+                                end: 2048000,
+                              },
+                          },
+                        number: 20000,
+                      },
+                  }
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-all-feature-flags
-      - single-replica
-      - single-replica-classic-query-engine
-      - single-replica-sbe
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-all-feature-flags
+          - single-replica
+          - single-replica-classic-query-engine
+          - single-replica-sbe
