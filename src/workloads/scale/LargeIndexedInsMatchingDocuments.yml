@@ -2,7 +2,7 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 Description: |
   This is an indexed $in workload that matches documents in a collection.
-  This workload is intended to test a more representative workload 
+  This workload is intended to test a more representative workload
 
   An extremelly common usecase for users is to fetch objects and hydrate with follow up $in query
 
