@@ -1949,12 +1949,13 @@ private:
     OnDuplicatedKeys _onDuplicatedKeys;
 };
 
-
 class IncGenerator : public Generator<int64_t> {
 public:
     IncGenerator(const Node& node, GeneratorArgs generatorArgs)
         : _step{node["step"].maybe<int64_t>().value_or(1)} {
-        _counter = node["start"].maybe<int64_t>().value_or(1) +
+       
+        int64_t start = node["start"] ? intGenerator(node["start"], generatorArgs)->evaluate() : 1;
+        _counter = start +
             generatorArgs.actorId * node["multiplier"].maybe<int64_t>().value_or(0);
     }
 
