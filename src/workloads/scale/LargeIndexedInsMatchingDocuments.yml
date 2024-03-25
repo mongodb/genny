@@ -66,8 +66,7 @@ Actors:
                           {
                             ^Inc:
                               {
-                                start: { ^RandomInt: { min: 0, max: 2028000 } },
-                                end: 2048000,
+                                start: { ^RandomInt: { min: 0, max: 2028000 } }
                               },
                           },
                         number: 20000,
