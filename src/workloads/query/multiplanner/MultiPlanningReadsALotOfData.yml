@@ -109,7 +109,7 @@ Actors:
     Database: *Database
     Threads: 4
     Phases:
-      - &Nop { Nop: true }
+      - *Nop
       - *Nop
       - *Nop
       - *Nop
@@ -132,8 +132,8 @@ Actors:
                   {
                     $match:
                       {
-                        flag_a: *randomBit
-                        int_a: { $gte: 1, $lte: 6}
+                        flag_a: *randomBit,
+                        int_a: { $gte: 1, $lte: 6 },
                         int_b: { $gte: 1900000 },
                       },
                   },
