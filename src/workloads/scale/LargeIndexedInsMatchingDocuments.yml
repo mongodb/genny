@@ -73,7 +73,7 @@ Actors:
                       $in:
                         {
                           # An array of distinct and sequential integers up to documentCount. It will make sure all documents in this filter are found.
-                          ^Array: 
+                          ^Array:
                             {
                               of:
                                 {
