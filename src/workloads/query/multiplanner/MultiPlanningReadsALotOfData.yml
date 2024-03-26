@@ -4,6 +4,13 @@ Description: >
   Create collection with multiple indexes and run queries for which multi planner needs to read a lot
   of data in order to pick the best plan.
 
+  First CrudActor QueryWithMultiplanning will use queries specifically design to trick tie
+  breaking heuristics, so that if the planner doesn't reach enough data, it will pick the wrong
+  index.
+
+  Second CrudActor QueryWithMultiplanningAndTieBreakingHeuristics will use queries for which tie
+  breaking heuristics are guessing the correct index.
+
 Keywords:
   - indexes
 
