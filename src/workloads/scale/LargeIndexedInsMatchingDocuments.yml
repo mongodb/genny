@@ -32,16 +32,21 @@ Keywords:
   - $in
   - matching documents
 
+GlobalDefaults:
+  database: indexedins
+  documentCount: 2048000
+  filterArraySize: 20000
+
 Actors:
   - Name: BlogPostsLoader
     Type: Loader
     Threads: 1
     Phases:
       - Repeat: 1
-        Database: indexedins
+        Database: *database
         CollectionCount: 1
         Threads: 1
-        DocumentCount: 2048000
+        DocumentCount: *documentCount
         BatchSize: 100
         Document:
           _id: { ^Inc: { start: 0 } }
@@ -52,7 +57,7 @@ Actors:
   - Name: FindBlogPosts
     Type: CrudActor
     Threads: 64
-    Database: indexedins
+    Database: *database
     Phases:
       - { Nop: true }
       - Name: MatchDocumentsUsingIn
@@ -65,17 +70,23 @@ Actors:
                 {
                   _id:
                     {
-                      ^Array:
+                      $in:
                         {
-                          of:
+                          # An array of distinct and sequential integers up to documentCount. It will make sure all documents in this filter are found.
+                          ^Array: 
                             {
-                              ^Inc:
+                              of:
                                 {
-                                  start:
-                                    { ^RandomInt: { min: 0, max: 2028000 } },
+                                  ^Inc:
+                                    {
+                                      start:
+                                        {
+                                          ^RandomInt: { min: 0, max: 2028000 }, # max ^Inc.start is documentCount - inArraySize
+                                        },
+                                    },
                                 },
+                              number: *filterArraySize,
                             },
-                          number: 20000,
                         },
                     },
                 }
