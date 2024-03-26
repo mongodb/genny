@@ -33,9 +33,9 @@ Keywords:
   - matching documents
 
 GlobalDefaults:
-  database: indexedins
-  documentCount: 2048000
-  filterArraySize: 20000
+  database: &database indexedins
+  documentCount: &documentCount 2048000
+  filterArraySize: &filterArraySize 20000
 
 Actors:
   - Name: BlogPostsLoader
