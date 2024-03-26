@@ -4,7 +4,7 @@ Description: |
   This is an indexed $in workload that matches documents in a collection.
   This workload is intended to test a more representative workload
 
-  An extremelly common usecase for users is to fetch objects and hydrate with follow up $in query
+  An extremely common usecase for users is to fetch objects and hydrate with follow up $in query
 
   For example:
   The first query fetches an Author object
@@ -20,13 +20,17 @@ Description: |
 
   This workload focuses on the second query of this use case matching documents
   using arrays of integers that are generated to be used for the $in queries.
-Clients:
-  Default:
-    QueryOptions:
-      maxPoolSize: 20000
-  Update:
-    QueryOptions:
-      maxPoolSize: 100
+
+  The important metrics for this workload are:
+  * FindBlogPost actor
+    * DocumentThroughput
+
+Keywords:
+  - Loader
+  - CrudActor
+  - find
+  - $in
+  - matching documents
 
 Actors:
   - Name: BlogPostsLoader
@@ -58,20 +62,23 @@ Actors:
           - OperationName: find
             OperationCommand:
               Filter:
-                _id:
-                  {
-                    ^Array:
-                      {
-                        of:
-                          {
-                            ^Inc:
-                              {
-                                start: { ^RandomInt: { min: 0, max: 2028000 } }
-                              },
-                          },
-                        number: 20000,
-                      },
-                  }
+                {
+                  _id:
+                    {
+                      ^Array:
+                        {
+                          of:
+                            {
+                              ^Inc:
+                                {
+                                  start:
+                                    { ^RandomInt: { min: 0, max: 2028000 } },
+                                },
+                            },
+                          number: 20000,
+                        },
+                    },
+                }
 
 AutoRun:
   - When:
