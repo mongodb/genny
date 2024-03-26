@@ -6,24 +6,6 @@ tasks:
       timeout_secs: 7200
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: ./src/genny/src/workloads/query/CollScanComplexPredicateLarge.yml
-      test_control: coll_scan_complex_predicate_large
-  name: coll_scan_complex_predicate_large
-  priority: 5
-  tags:
-  - genny-autorun-standalone
-  - genny-autorun-standalone-all-feature-flags
-  - genny-autorun-standalone-classic-query-engine
-  - genny-autorun-standalone-heuristic-bonsai
-  - genny-autorun-standalone-sampling-bonsai
-  - genny-autorun-standalone-sbe
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 7200
-  - func: f_run_dsi_workload
-    vars:
       auto_workload_path: ./src/genny/src/workloads/query/MatchFiltersMedium.yml
       test_control: match_filters_medium
   name: match_filters_medium
