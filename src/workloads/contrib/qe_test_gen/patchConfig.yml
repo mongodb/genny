@@ -3,7 +3,7 @@
 workload_name: qe_test_insert
 Owner: "@10gen/server-security"
 Description: |
-  TODO: Add a description for this workload.
+ This workload evaluates the performance of Queryable Encryption against the established “Queryable Encryption Performance Release Criteria.” 
 patches:
   # This patch excludes the sharded test results
   ReplaceMeWithPatchID:

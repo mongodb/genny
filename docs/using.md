@@ -450,12 +450,14 @@ Try using `python test_result_summary.py --help` for more options.
 2.  Run the self-tests:
 
     ```bash
-	./run-genny lint-yaml  # Lint all YAML files
+	./run-genny lint-yaml  --no-format # Lint all YAML files
 	./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
 	./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
     ```
 
-    Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
+    Notes: 
+      - the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
+      - `--no-format` is required at this time because of out of compliance files. See [DEVPROD-5862](https://jira.mongodb.org/browse/DEVPROD-5862).
 
 3.  (Optional) To double-check which Actors run in each Phase, run your workload in dry-run mode with `debug` log level.
 This would set up the workload and print it as a list of Phases with the Actors that run in each Phase, then quit:
