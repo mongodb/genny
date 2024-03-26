@@ -572,11 +572,14 @@ def self_test(ctx: click.Context):
 
 
 @cli.command(name="lint-yaml", help="Run pylint on all workload and phase yamls")
+@click.option(
+    "--no-format", is_flag=True, help="Do not lint the yaml formatting.", default=False, type=bool
+)
 @click.pass_context
-def lint_yaml(ctx: click.Context):
+def lint_yaml(ctx: click.Context, no_format: bool):
     from genny.tasks import yaml_linter
 
-    yaml_linter.main(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
+    yaml_linter.main(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], no_format=no_format)
 
 
 @cli.command(
