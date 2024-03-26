@@ -19,7 +19,7 @@ GlobalDefaults:
   docCount: &docCount 1e5
 
   maxPhase: &maxPhase 7
-  queryRepeats: &queryRepeats 1000
+  queryRepeats: &queryRepeats 50
 
 Actors:
 - Name: DropCollection

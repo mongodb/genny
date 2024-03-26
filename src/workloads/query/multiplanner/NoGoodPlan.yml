@@ -23,7 +23,7 @@ GlobalDefaults:
     andValues: {resultCount: *resultCount, docCount: *docCount}}}
 
   maxPhase: &maxPhase 7
-  queryRepeats: &queryRepeats 1000
+  queryRepeats: &queryRepeats 500
 
 Actors:
 - Name: DropCollection
