@@ -10,7 +10,10 @@ Description: >
 
   Second CrudActor QueryWithMultiplanningAndTieBreakingHeuristics will use queries for which tie
   breaking heuristics are guessing the correct index.
-
+    In both cases, heuristics lead us to pick the (flag_a, flag_b) index.  In the first case, this is a bad choice:
+    the two boolean predicates select 25% of documents while the int_a predicate is much narrower.
+    In the second case, we still choose the (flag_a, flag_b) index, but this time it is the correct choice,
+    because the int_a predicate matches >50% of documents.
 Keywords:
   - indexes
 
