@@ -1716,3 +1716,10 @@ Tests:
     GivenTemplate:
       stoi: {^ConvertToInt32: {from: "abc"}}
     ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: IncrementWithRandomStart
+    GivenTemplate:
+      int: {^Inc: {start: {^RandomInt: {min: 2, max: 3}}}}
+    ThenReturns:
+    - "int": { "$numberLong" : "4"}
+    - "int": { "$numberLong" : "5"}

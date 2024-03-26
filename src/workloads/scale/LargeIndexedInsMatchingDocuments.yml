@@ -30,11 +30,11 @@ Keywords:
   - CrudActor
   - find
   - $in
-  - matching documents
+  - matching documents using $in
 
 GlobalDefaults:
   database: &database indexedins
-  documentCount: &documentCount 2048000
+  documentCount: &documentCount 2048000 # multiple of BatchSize * Threads (100*64)
   filterArraySize: &filterArraySize 20000
 
 Actors:
