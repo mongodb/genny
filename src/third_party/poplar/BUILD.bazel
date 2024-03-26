@@ -1,0 +1,15 @@
+cc_library(
+    name = "poplar",
+    srcs = glob(["poplarlib/**/*.cc"]),
+    hdrs = glob(["poplarlib/**/*.h"]),
+    # copts = [
+    #     "-Isrc/gennylib/include",
+    #     "-std=c++17",
+    # ],
+    # include_prefix = "src/gennylib/include",
+    strip_include_prefix = ".",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@genny_toolchain//:grpc",
+    ],
+)

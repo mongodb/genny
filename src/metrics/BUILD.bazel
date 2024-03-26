@@ -1,0 +1,16 @@
+cc_library(
+    name = "metrics",
+    srcs = glob(["src/**/*.cpp"]),
+    hdrs = glob(["include/**/*.hpp"]),
+    copts = [
+        "-Isrc/metrics/include",
+        "-std=c++17",
+    ],
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//src/third_party/poplar",
+        "@genny_toolchain//:boost_filesystem",
+        "@genny_toolchain//:grpc",
+    ],
+)

@@ -1,0 +1,94 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "boost_build", "cmake")
+# load("@rules_foreign_cc//tools/build_defs:boost_build.bzl", "boost_build")
+
+boost_build(
+    name = "boost_algorithm",
+    lib_source = "@boost//:all_srcs",
+    # user_options = ["--with-algorithm"],
+    out_headers_only = True,
+    out_static_libs = ["libboost_algorithm.a"],
+    visibility = ["//visibility:public"],
+    # deps = [":boost_context"],
+)
+
+boost_build(
+    name = "boost_log",
+    lib_source = "@boost//:all_srcs",
+    out_static_libs = ["libboost_log.a"],
+    user_options = ["--with-log"],
+    visibility = ["//visibility:public"],
+)
+
+cmake(
+    name = "mongocxx",
+    cache_entries = {
+        # "MONGOCXX_OVERRIDE_DEFAULT_INSTALL_PREFIX": "OFF",
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_VERSION": "3.8.1",
+        "ENABLE_TESTS": "OFF",
+    },
+    copts = ["-std=c++17"],
+    lib_source = "@com_github_mongodb_mongo_cxx_driver//:all_srcs",
+    out_shared_libs = [
+        "libmongocxx.so",
+        "libbsoncxx.so",
+    ],
+    postfix_script = "mv $INSTALLDIR/include/mongocxx $INSTALLDIR/include/mongocxx_old && \
+    mv $INSTALLDIR/include/mongocxx_old/v_noabi/mongocxx $INSTALLDIR/include/mongocxx && \
+    mv $INSTALLDIR/include/bsoncxx $INSTALLDIR/include/bsoncxx_old && \
+    mv $INSTALLDIR/include/bsoncxx_old/v_noabi/bsoncxx $INSTALLDIR/include/bsoncxx",
+    # postfix_script = "pwd && printenv && ls -al $INSTALLDIR && exit 1",
+    # build_args = ["--target mongocxx_shared"],
+    targets = ["mongocxx_shared"],
+    visibility = ["//visibility:public"],
+)
+
+# configure_make(
+#     name = "sasl2",
+#     args = ["asdfasdf"],
+#     configure_command = "asdfasdf",
+#     configure_prefix = "asdfasdf",
+#     # copts = ["-std=c++17"],
+#     # out_shared_libs = [
+#     #     "libsasl2.so",
+#     #     "libsasl2.so.2.0.25",
+#     #     "libsasl2.so.2",
+#     # ],
+#     env = {
+#         "CC": "/usr/bin/gcc-12",
+#         "ABC": "/usr/bin/gcc-12",
+#     },
+#     lib_source = "@sasl2//:all_srcs",
+#     out_static_libs = [
+#         "libsasl2.a",
+#     ],
+#     targets = ["asdfasdf"],
+#     # postfix_script = "mv $INSTALLDIR/include/mongocxx $INSTALLDIR/include/mongocxx_old && \
+#     # mv $INSTALLDIR/include/mongocxx_old/v_noabi/mongocxx $INSTALLDIR/include/mongocxx && \
+#     # mv $INSTALLDIR/include/bsoncxx $INSTALLDIR/include/bsoncxx_old && \
+#     # mv $INSTALLDIR/include/bsoncxx_old/v_noabi/bsoncxx $INSTALLDIR/include/bsoncxx",
+#     # # postfix_script = "pwd && printenv && ls -al $INSTALLDIR && exit 1",
+#     # # build_args = ["--target mongocxx_shared"],
+#     # targets = ["mongocxx_shared"],
+#     visibility = ["//visibility:public"],
+# )
+
+# bazel-bin/bazel/mongocxx/include/bsoncxx/v_noabi/bsoncxx/
+# bazel-bin/bazel/mongocxx/include/mongocxx/v_noabi/mongocxx/
+
+# ./src/mongocxx/libmongocxx.so
+# ./src/mongocxx/libmongocxx-mocked.so
+# ./src/bsoncxx/libbsoncxx-testing.so
+# ./src/bsoncxx/libbsoncxx.so
+
+# cmake(
+#     name = "bsoncxx",
+#     cache_entries = {
+#         "CMAKE_BUILD_TYPE": "Release",
+#         "BUILD_VERSION": "3.6.7",
+#         # "MONGOCXX_OVERRIDE_DEFAULT_INSTALL_PREFIX": "OFF",
+#     },
+#     lib_source = "@com_github_mongodb_mongo_cxx_driver//:all_srcs",
+#     out_static_libs = ["libpcre.a"],
+#     visibility = ["//visibility:public"],
+# )
