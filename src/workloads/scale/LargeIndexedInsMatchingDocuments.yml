@@ -81,7 +81,7 @@ Actors:
                                     {
                                       start:
                                         {
-                                          ^RandomInt: { min: 0, max: 2028000 }, # max ^Inc.start is documentCount - inArraySize
+                                          ^RandomInt: { min: 0, max: 2028000 }, # max ^Inc.start is documentCount - filterArraySize
                                         },
                                     },
                                 },

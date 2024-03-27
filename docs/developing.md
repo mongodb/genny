@@ -54,6 +54,45 @@ Read more about what parameters you can pass [here][catch2].
 
 [catch2]: https://github.com/catchorg/Catch2/blob/v2.5.0/docs/command-line.md#specifying-which-tests-to-run
 
+### Value Generator Tests
+
+When modifing or creating new value generators it is highly valuable and important to test the implementation with a test case and to provide an example of the generator usage.
+
+#### Authroing Test Cases
+
+The test cases are implemented in src/value_generators/test/DocumentGeneratorTestCases.yml using the following template
+
+```
+ - Name: 
+    GivenTemplate:
+      <template>
+    ThenReturns:
+    - <expected output 1>
+    - <expected output 2>
+    - <expected output 3>
+```
+
+   Note:
+
+   *  The tests are executed in iterations, one for each of the expected outpus. 
+   For each iteration the `GivenTemplate` is compiled and evaulated with the declared
+   value generators in it. Then the actual and expected outputs are compared.
+   * In the sample above the template will be evaluated 3 times and the test will run in 3 iterations.
+   * Random generators declared in the templates are created only once and reused for all iterations. The produced values are incremental.
+
+*  Testing value generators locally
+
+If you have successfully installed genny with `./run-genny install` you should have a test executable for running locally the value generator tests. Test can be executed with 
+
+```sh
+~/workspace/genny$ cd build/src/value_generators/
+~/workspace/genny/build/src/value_generators$ ./value_generators_test -d yes --order lex
+```
+
+#### Providing Value Generator Examples
+
+While tests are usually the best documentation, sometimes they may be too verbose and go into edge cases, so clear and concise examples are prefered.
+Value generator examples are documented in src/workloads/docs/Generators.yml.
 
 ### Benchmark Tests
 
