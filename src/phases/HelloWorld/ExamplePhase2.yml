@@ -1,4 +1,5 @@
 SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
 Description: |
   Example phase to illustrate how PhaseConfig composition works.
 
