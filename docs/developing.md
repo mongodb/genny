@@ -58,7 +58,7 @@ Read more about what parameters you can pass [here][catch2].
 
 When modifing or creating new value generators it is highly valuable and important to test the implementation with a test case and to provide an example of the generator usage.
 
-#### Authroing Test Cases
+#### Authoring Test Cases
 
 The test cases are implemented in src/value_generators/test/DocumentGeneratorTestCases.yml using the following template
 
@@ -74,11 +74,12 @@ The test cases are implemented in src/value_generators/test/DocumentGeneratorTes
 
    Note:
 
-   *  The tests are executed in iterations, one for each of the expected outpus. 
-   For each iteration the `GivenTemplate` is compiled and evaulated with the declared
+   *  The tests are executed in iterations, one for each of the expected outputs. 
+   For each iteration the `GivenTemplate` is compiled and evaluated with the declared
    value generators in it. Then the actual and expected outputs are compared.
    * In the sample above the template will be evaluated 3 times and the test will run in 3 iterations.
-   * Random generators declared in the templates are created only once and reused for all iterations. The produced values are incremental.
+   * Random generators declared in the templates are created only once and reused for all iterations. The produced values are incremental. 
+     When adding a test with random data you may need to run the tests first, validate the results are reasonable and use them as expected values.
 
 *  Testing value generators locally
 
@@ -92,7 +93,8 @@ If you have successfully installed genny with `./run-genny install` you should h
 #### Providing Value Generator Examples
 
 While tests are usually the best documentation, sometimes they may be too verbose and go into edge cases, so clear and concise examples are prefered.
-Value generator examples are documented in src/workloads/docs/Generators.yml.
+Value generator examples are documented in src/workloads/docs/Generators.yml. Please add examples to that file when adding or extending a generator.
+
 
 ### Benchmark Tests
 
