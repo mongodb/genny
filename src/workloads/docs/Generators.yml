@@ -324,6 +324,9 @@ Actors:
             # Ranged OID: "0000bbbbbbbbbbbbbbbbbbbb" ... "9999bbbbbbbbbbbbbbbbbbbb"
             rangedOid: {^ObjectId: {^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 9999}}, {^RandomString: {length: 20, alphabet: b}}]}} }
 
+            #Array of sequential ObjectIds in the format "000000000000000000000000", "000000000000000000000001", "000000000000000000000002"...
+            sequentialObjectIds: { ^Array: { of: { ^ObjectId: { ^FormatString: { "format": "%024d%s", "withArgs": [{ ^Inc: { start: 0 } }, ""] } } }, number: 10 } }
+
             # Next OID
             noid: {^ObjectId: ""}
 

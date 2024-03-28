@@ -1719,7 +1719,12 @@ Tests:
 
   - Name: IncrementWithRandomStart
     GivenTemplate:
-      arrayOfInts: {^Array: {of: {^Inc: {start: {^RandomInt: {min: 10000000000, max: 10000000010}}}}, number: 5}}
+      arrayOfInts: { ^Array: {of: { ^Inc: { start: { ^RandomInt: {min: 10000000000, max: 10000000010}}}}, number: 5}}
     ThenReturns:
     - { arrayOfInts: [10000000001, 10000000002, 10000000003, 10000000004, 10000000005]}
-    - { arrayOfInts: [10000000006, 10000000007, 10000000008, 10000000009, 10000000010]}
+
+  - Name: ArrayOfSequentialObjectIds
+    GivenTemplate:
+      sequentialObjectIds: { ^Array: { of: { ^ObjectId: { ^FormatString: { "format": "%024d%s", "withArgs": [{ ^Inc: { start: 0 } }, ""] } } }, number: 3 } }
+    ThenReturns:
+    - { sequentialObjectIds: [{ "$oid" : "000000000000000000000000" }, { "$oid" : "000000000000000000000001" }, { "$oid" : "000000000000000000000002" } ] }
