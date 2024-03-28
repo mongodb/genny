@@ -65,7 +65,7 @@ Actors:
     Database: *database
     Phases:
       - { Nop: true }
-      - Name: MatchDocumentsUsingIn
+      - Name: MatchDocumentsUsingInById
         Duration: 2 minutes
         Collection: Collection0
         Operations:
@@ -89,7 +89,7 @@ Actors:
     Phases:
       - { Nop: true }
       - { Nop: true }
-      - Name: MatchDocumentsUsingIn
+      - Name: MatchDocumentsUsingInByObjectId
         Duration: 2 minutes
         Collection: Collection0
         Operations:
