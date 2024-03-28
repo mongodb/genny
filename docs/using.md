@@ -454,6 +454,7 @@ Try using `python test_result_summary.py --help` for more options.
 	./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
 	./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
     ```
+
   Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
 
 3.  (Optional) To double-check which Actors run in each Phase, run your workload in dry-run mode with `debug` log level.
