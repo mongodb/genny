@@ -108,6 +108,9 @@ Actors:
             # it would be calculated as start + ActorId * multiplier + i * step
             counter: {^Inc: {start: 1000}}
 
+            # increment generator ^Inc with random parameter `start`
+            randomStartCounter: {^Inc: { start: {^RandomInt: {min: 10, max: 555}}}}
+
             # You can randomly choose objects. from is an array of values to pick from. Weigths is
             # optional and weights the probability of each option in the from array. If Weights is
             # ommitted, each entry has the same probability. The choices can be any valid generator
@@ -260,13 +263,11 @@ Actors:
             # You can also filter items out, similar to a set, by setting `distinct` = true.
             # For example, you can generate 10 distinct random integers. Without `distinct` = true,
             # the generated array might have duplicate values.
-            distinctSeq10Ints: {^Array: {
-                of: {^Inc: {start: 0, end: 1000}}, number: 10, distinct: true}}
+            arrayOfDistinct10Ints: {^Array: { of: { ^RandomInt: { min: 0, max: 1000}}, number: 10, distinct: true}}
 
             # Just be careful, the generator will give up if the failure rate gets too high, such as
             # with this next generator.
-            distinctSeqFailure: {^Array: {of: {^Repeat: {count: 10000, fromGenerator: {
-              ^Inc: {start: 0, end: 1000}}}}, number: 10, distinct: true}}
+            distinctFailure: {^Array: { of: { ^RandomInt: { min: 0, max: 3 }}, number: 100, distinct: true}}
 
             # A good rule of thumb is that you should be selecting less than 50% of your range.
             # You're not limited to integers, though! You can also filter doubles, strings, even
@@ -322,6 +323,9 @@ Actors:
 
             # Ranged OID: "0000bbbbbbbbbbbbbbbbbbbb" ... "9999bbbbbbbbbbbbbbbbbbbb"
             rangedOid: {^ObjectId: {^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 9999}}, {^RandomString: {length: 20, alphabet: b}}]}} }
+
+            #Array of sequential ObjectIds in the format "000000000000000000000000", "000000000000000000000001", "000000000000000000000002"...
+            sequentialObjectIds: { ^Array: { of: { ^ObjectId: { ^FormatString: { "format": "%024d%s", "withArgs": [{ ^Inc: { start: 0 } }, ""] } } }, number: 10 } }
 
             # Next OID
             noid: {^ObjectId: ""}
