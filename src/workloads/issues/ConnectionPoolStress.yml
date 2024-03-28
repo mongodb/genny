@@ -30,7 +30,7 @@ Keywords:
 
 Parameters:
 - ConnectionThreads: &GlobalConnectionThreads 8000
-- ConnectionDuration: &GlobalConnectionDuration 600 seconds
+- ConnectionDuration: &GlobalConnectionDuration 300 seconds
 - ReadMode: &GlobalReadMode secondaryPreferred
 - MaxPoolSize: &GlobalMaxPoolSize 15000
 
