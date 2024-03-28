@@ -74,13 +74,27 @@ The test cases are implemented in src/value_generators/test/DocumentGeneratorTes
 
    Note:
 
+   * As we are using the same seeded PRNG, you should append new tests at the end of the file 
+   
    *  The tests are executed in iterations, one for each of the expected outputs. 
    For each iteration the `GivenTemplate` is compiled and evaluated with the declared
    value generators in it. Then the actual and expected outputs are compared.
+   
    * In the sample above the template will be evaluated 3 times and the test will run in 3 iterations.
+   
    * Random generators declared in the templates are created only once and reused for all iterations. The produced values are incremental. 
      When adding a test with random data you may need to run the tests first, validate the results are reasonable and use them as expected values.
+   
    * Use large numbers for number parameters because short numbers get automatically narrowed to `int32` values whereas number value-generators always produce `int64` values.
+   
+   * In cases where you can't know the output and/or want to ensure the generator executes succesfully, you can ignore the results with 
+      
+      ```
+      - Name: Now
+        GivenTemplate:
+          date: {^Now: {}}
+        ThenExecuteAndIgnore: true
+      ```
 
 *  Testing value generators locally
 
@@ -88,7 +102,7 @@ If you have successfully installed genny with `./run-genny install` you should h
 
 ```sh
 ~/workspace/genny$ cd build/src/value_generators/
-~/workspace/genny/build/src/value_generators$ ./value_generators_test -d yes --order lex
+~/workspace/genny/build/src/value_generators$ ./value_generators_test -d yes --order lex -\# '[#DocGenYamlTestCaseRunner]'
 ```
 
 #### Providing Value Generator Examples
