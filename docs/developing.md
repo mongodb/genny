@@ -29,7 +29,7 @@ Lint Python:
 Lint Workload and other YAML:
 
 ```sh
-./run-genny lint-yaml --no-format # --no-format is required at this time because of out of compliance files. See DEVPROD-5862.
+./run-genny lint-yaml 
 ```
 
 ### C++ Unit-Tests

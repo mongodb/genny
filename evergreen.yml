@@ -456,7 +456,6 @@ functions:
       args:
       - -v
       - lint-yaml
-      - --no-format
 
   ##
   # Lint python

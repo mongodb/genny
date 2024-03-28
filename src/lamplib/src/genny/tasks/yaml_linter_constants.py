@@ -3,7 +3,7 @@ import os
 # These fields are required in every workload file.
 REQUIRED_FIELDS = ["Description", "Owner", "Keywords"]
 
-# These workloads are grandfathered in and don't need to be linted for the keywords field.
+# These workloads are grandfathered in and don't need to be linted for the keywords field. See DEVPROD-5930.
 GRANDFATHERED_WORKLOADS_WITHOUT_KEYWORDS = set(
     os.path.join(os.getenv("GENNY_REPO_ROOT", ""), path)
     for path in [
