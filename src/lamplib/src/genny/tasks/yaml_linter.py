@@ -13,7 +13,7 @@ from genny.tasks.yaml_linter_constants import (
 SLOG = structlog.get_logger(__name__)
 
 
-def main(genny_repo_root: str, no_format: bool):
+def main(genny_repo_root: str, lint_format: bool):
     workload_dirs = [
         path.join(genny_repo_root, "src", "workloads"),
         path.join(genny_repo_root, "src", "phases"),
@@ -47,7 +47,7 @@ def main(genny_repo_root: str, no_format: bool):
         )
         has_errors = True
 
-    if not no_format:
+    if lint_format:
         config_file_path = path.join(genny_repo_root, ".yamllint")
         yamllint_argv = ["--strict", "--config-file", config_file_path] + all_yamls
 
