@@ -242,7 +242,9 @@ std::optional<std::string> getMetaKey(const Node& node) {
             out = key;
         }
         if (foundKeys > 1 && out) {
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Found multiple meta-keys"));
+            std::stringstream msg;
+            msg << "Found multiple meta-keys on node at path: " << node.path();
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
         }
     }
     return out;

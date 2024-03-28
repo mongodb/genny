@@ -267,7 +267,7 @@ Actors:
 
             # Just be careful, the generator will give up if the failure rate gets too high, such as
             # with this next generator.
-            distinctFailure: {^Array: { of: { ^RandomInt: { min: 0, max: 3 }}}, number: 100, distinct: true}
+            distinctFailure: {^Array: { of: { ^RandomInt: { min: 0, max: 3 }}, number: 100, distinct: true}}
 
             # A good rule of thumb is that you should be selecting less than 50% of your range.
             # You're not limited to integers, though! You can also filter doubles, strings, even
