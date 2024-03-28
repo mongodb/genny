@@ -29,7 +29,7 @@ Lint Python:
 Lint Workload and other YAML:
 
 ```sh
-./run-genny lint-yaml 
+./run-genny lint-yaml
 ```
 
 ### C++ Unit-Tests
