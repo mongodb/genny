@@ -362,5 +362,7 @@ GRANDFATHERED_WORKLOADS_WITHOUT_KEYWORDS = set(
         "src/phases/query/TimeSeriesSortCommands.yml",
         "src/phases/query/GetBsonDate.yml",
         "src/phases/issues/ConnectionsBuildup.yml",
+        "src/workloads/query/multiplanner/VariedSelectivity.yml",
+        "src/workloads/query/multiplanner/Subplanning.yml",
     ]
 )
