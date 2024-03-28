@@ -80,6 +80,7 @@ The test cases are implemented in src/value_generators/test/DocumentGeneratorTes
    * In the sample above the template will be evaluated 3 times and the test will run in 3 iterations.
    * Random generators declared in the templates are created only once and reused for all iterations. The produced values are incremental. 
      When adding a test with random data you may need to run the tests first, validate the results are reasonable and use them as expected values.
+   * Use large numbers for number parameters because short numbers get automatically narrowed to `int32` values whereas number value-generators always produce `int64` values.
 
 *  Testing value generators locally
 
