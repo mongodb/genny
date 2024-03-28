@@ -32,6 +32,16 @@ Lint Workload and other YAML:
 ./run-genny lint-yaml
 ```
 
+### Workload Documentation Generation
+
+Markdown documentation is generated for the workload YAML files. When a workload is updated run the following command:
+
+```sh
+./run-genny generate-docs
+```
+
+An evergreen task verifies that docs have been updated for each commit. If this task fails you need to run the `generate-docs` command and include the updated documentation in your commit.
+
 ### C++ Unit-Tests
 
 ```sh

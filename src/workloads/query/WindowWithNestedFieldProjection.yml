@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This test exercises the performance of '$setWindowFields' projecting a nested field.
 
 Actors:

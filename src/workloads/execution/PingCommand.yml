@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
-Description: >
+Description: |
   This is a simple test that runs ping command on MongoDB to meassure the latency of command dispatch.
 
 Clients:

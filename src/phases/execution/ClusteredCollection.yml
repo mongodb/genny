@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
-Description: >
+Description: |
   Run basic insert and find and delete workload on a collection clustered by {_id: 1} .
   Clustered collections are planned to mainly serve operations over the cluster
   key such as monotonically increasing inserts, range queries and range deletions.

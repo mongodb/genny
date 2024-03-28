@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
-Description: >
+Description: |
   Updates a large range of documents in the collection.
   Multiple secondary indexes are present.
   Update performed with and without a hint.

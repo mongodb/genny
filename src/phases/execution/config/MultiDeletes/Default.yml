@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
-Description: >
+Description: |
   Configuration for the MultiDeletes workload.
 
 InitializeDatabaseOps:

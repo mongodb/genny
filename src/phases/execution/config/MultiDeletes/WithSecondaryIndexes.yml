@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
-Description: >
+Description: |
   Configuration for MultiDeletes workload. This configuration introduces secondary indexes.
 
 InitializeDatabaseOps:

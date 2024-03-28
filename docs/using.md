@@ -457,20 +457,28 @@ Try using `python test_result_summary.py --help` for more options.
 
     Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
 
-3.  (Optional) To double-check which Actors run in each Phase, run your workload in dry-run mode with `debug` log level.
+3. Update workload documentation.
+
+    ```bash
+    ./run-genny generate-docs
+    ```
+
+    If changes have been made to the workload name, description, owners, or keywords you need to generate documentation for the workload. Include the generated documentation with your commit.
+
+4.  (Optional) To double-check which Actors run in each Phase, run your workload in dry-run mode with `debug` log level.
 This would set up the workload and print it as a list of Phases with the Actors that run in each Phase, then quit:
 
     ```bash
     ./run-genny workload --dry-run --verbosity debug src/workloads/[workload_dir/workload_name.yml]
     ```
 
-4.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
+5.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
 
     ```bash
     ./run-genny workload -u [connection_uri] src/workloads/[workload_dir/workload_name.yml]
     ```
 
-5.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](go/running-dsi-locally) for details:
+6.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](go/running-dsi-locally) for details:
 
 	```bash
 	./run-dsi onboarding  # introductory DSI command; see link above for details
@@ -480,7 +488,7 @@ This would set up the workload and print it as a list of Phases with the Actors 
 	vim bootstrap.yml
 	```
 
-6.  Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
+7.  Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
 
 	```bash
 	cd ~/[path_to_evg_project_repo]

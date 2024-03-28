@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This test exercises the behavior of '$setWindowFields' with sliding windows, for multiaccumulators (like
   $topN, $firstN, etc) and $top/$bottom which are not present in v5.0
 
