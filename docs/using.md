@@ -455,7 +455,7 @@ Try using `python test_result_summary.py --help` for more options.
 	./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
     ```
 
-  Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
+ Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
 
 3.  (Optional) To double-check which Actors run in each Phase, run your workload in dry-run mode with `debug` log level.
 This would set up the workload and print it as a list of Phases with the Actors that run in each Phase, then quit:
