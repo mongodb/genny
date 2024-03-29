@@ -111,6 +111,7 @@ AutoRun:
       - standalone
       - standalone-query-stats
       - shard
+      - shard-80-feature-flags
       - shard-query-stats
       - shard-lite
       - single-replica
