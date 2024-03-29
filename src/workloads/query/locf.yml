@@ -504,10 +504,12 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
+      - standalone-80-feature-flags
       - standalone-all-feature-flags
       - standalone-classic-query-engine
       - standalone-sbe
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - shard-lite
     branch_name:

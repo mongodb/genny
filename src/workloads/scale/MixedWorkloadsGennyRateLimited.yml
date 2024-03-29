@@ -187,6 +187,7 @@ AutoRun:
       $eq:
       - replica
       - replica-1dayhistory-15gbwtcache
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - replica-maintenance-events
       - replica-noflowcontrol

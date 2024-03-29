@@ -241,6 +241,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - atlas-like-replica
     branch_name:

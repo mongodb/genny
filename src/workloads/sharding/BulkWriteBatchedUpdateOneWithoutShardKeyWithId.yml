@@ -136,7 +136,9 @@ AutoRun:
     mongodb_setup:
       $eq:
       - shard
+      - shard-80-feature-flags
       - shard-lite
+      - shard-lite-80-feature-flags
       - shard-lite-all-feature-flags
     branch_name:
       $gte: v8.0

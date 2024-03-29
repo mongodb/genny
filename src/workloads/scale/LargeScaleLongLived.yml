@@ -92,8 +92,10 @@ AutoRun:
       - atlas-like-replica.2023-09
       - atlas-like-replica-query-stats.2023-09
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - shard
+      - shard-80-feature-flags
       - single-replica
       - single-replica-15gbwtcache
       - standalone
