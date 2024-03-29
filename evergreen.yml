@@ -165,7 +165,6 @@ tasks:
   
 - name: t_check_generated_docs
   commands:
-  - func: f_fetch_source
   - func: f_check_generated_docs
 
 - name: t_lint_python
