@@ -1,5 +1,6 @@
 from os import path
 import os
+from pathlib import Path, PurePosixPath
 from re import S
 from typing import NamedTuple
 
@@ -53,7 +54,7 @@ def get_workload_files(roots: list[str]) -> list[str]:
 def get_workload_from_file(yaml_path: str) -> Workload:
     with open(yaml_path, "r") as f:
         workload_yaml = yaml.safe_load(f)
-        workload_name = f.name.split("/")[-1].split(".")[0]
+        workload_name = PurePosixPath(yaml_path).stem
         return Workload(
             name=workload_name,
             owner=workload_yaml.get("Owner"),

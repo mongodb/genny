@@ -261,8 +261,8 @@ task_groups:
   - t_python_test
   #- t_lint_python
   - t_lint_workloads
-  - t_cmake_test
   - t_check_generated_docs
+  - t_cmake_test
 
 - <<: *a_compile_and_test
   name: tg_compile_and_benchmark
@@ -277,12 +277,12 @@ task_groups:
   - t_python_test
   #- t_lint_python
   - t_lint_workloads
+  - t_check_generated_docs
   - t_cmake_test
   - t_integration_test_single_node_replset
   - t_integration_test_three_node_replset
   - t_integration_test_sharded
   - t_test_create_new_actor_script  # Must run this task last.
-  - t_check_generated_docs
 
 - <<: *a_compile_and_test
   name: tg_compile_and_test_with_server_on_macos
@@ -482,8 +482,6 @@ functions:
         cd src/genny
 
         ./run-genny generate-docs
-
-        git diff
 
         # Check for changes
         if git diff --quiet; then
