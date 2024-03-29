@@ -31,6 +31,10 @@ Keywords:
   - find
   - $in
   - matching documents using $in
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 200
 
 GlobalDefaults:
   database: &database indexedins
@@ -80,6 +84,15 @@ Actors:
                               number: *filterArraySize,
                             },
                         } } }
+      - { Nop: true }
+
+  - Name: FindBlogPostsByAuthor
+    Type: CrudActor
+    Threads: 64
+    Database: *database
+    Phases:
+      - { Nop: true }
+      - { Nop: true }
       - Name: MatchDocumentsUsingInByObjectId
         Duration: 2 minutes
         Collection: Collection0
