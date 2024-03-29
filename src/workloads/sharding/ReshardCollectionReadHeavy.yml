@@ -187,6 +187,7 @@ AutoRun:
       - shard
       - shard-heuristic-bonsai
       - shard-lite
+      - shard-lite-80-feature-flags
       - shard-lite-all-feature-flags
     branch_name:
       $neq:

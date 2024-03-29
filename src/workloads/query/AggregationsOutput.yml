@@ -206,4 +206,5 @@ AutoRun:
       $eq:
       - shard
       - shard-lite
+      - shard-lite-80-feature-flags
       - shard-lite-all-feature-flags

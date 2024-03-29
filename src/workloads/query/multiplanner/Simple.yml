@@ -398,6 +398,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone-sbe
+      - standalone-80-feature-flags # At time of writing this will enable PM-3591.
       - standalone-all-feature-flags  # At time of writing this will enable PM-3591.
       - standalone-classic-query-engine
     branch_name:

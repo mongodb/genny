@@ -267,7 +267,8 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - replica-all-feature-flags
+      - replica-80-feature-flags
+      - replica-all-feature-flags
           - replica
       branch_name:
         $gte: v6.0
