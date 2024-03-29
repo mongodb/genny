@@ -80,15 +80,6 @@ Actors:
                               number: *filterArraySize,
                             },
                         } } }
-      - { Nop: true }
-
-  - Name: FindBlogPostsByAuthor
-    Type: CrudActor
-    Threads: 64
-    Database: *database
-    Phases:
-      - { Nop: true }
-      - { Nop: true }
       - Name: MatchDocumentsUsingInByObjectId
         Duration: 2 minutes
         Collection: Collection0
