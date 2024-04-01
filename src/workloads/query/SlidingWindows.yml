@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This test exercises the behavior of '$setWindowFields' with sliding windows. Both time and
   position based windows are tested. In an attempt to reduce noise, the collection size has been
   kept sufficiently small so that neither the partitioning nor the sorting, in the case of time

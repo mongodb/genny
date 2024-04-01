@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This workload tests the performance of IDHACK on queries with int _id over a no-op identity view.
 
 KeyWords:

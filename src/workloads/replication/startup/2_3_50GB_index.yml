@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: mongodb/server-replication"
-Description: >
+Description: |
   Initiates an index build to be continued during startup recovery for the heavy load phase.
   To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -10,6 +10,7 @@ Description: >
   during startup recovery but we should see continuation of the index builds during initialization.
 
   Sample logs:
+  ```
   +-----------------------------------------------------------------+
   |   1- Alot of "Dropping unknown ident".                          |
   |   2- Continuation of the index build:                           |
@@ -63,6 +64,7 @@ Description: >
   |       }                                                         |
   |   }                                                             |
   +-----------------------------------------------------------------+
+  ```
 
 Keywords:
 - startup

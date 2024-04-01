@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This test exercises the behavior of multiple '$setWindowFields' stages, each with an
   ["unbounded", "current"] window and a different window function.  Only a single pass over the data
   is needed in this case. The workload consists of the following three phases: collection creation,

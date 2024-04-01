@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This workload stresses the query execution engine by running queries over a set of paths which
   share a common prefix. Crucially, these queries never match a document in the collection.
 

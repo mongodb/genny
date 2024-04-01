@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This workload stresses path traversal over nested arrays. Crucially, these queries never match
   a document in the collection.
   Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
