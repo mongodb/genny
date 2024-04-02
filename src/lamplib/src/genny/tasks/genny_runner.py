@@ -4,6 +4,7 @@ import structlog
 import tempfile
 import shutil
 import os
+import genny.tasks.qe_range_data_generation as qe_range_data_generation
 
 from genny.cmd_runner import run_command
 from genny.curator import poplar_grpc
@@ -63,6 +64,13 @@ def main_genny_runner(
 
         cmd.append("--workload-file")
         cmd.append(processed_workload)
+
+        os.makedirs('workload_tmpfiles', exist_ok=True)
+        try:
+            os.close(os.open('workload_tmpfiles/.lock', os.O_CREAT | os.O_EXCL))
+            qe_range_data_generation.generate_all_data('workload_tmpfiles/')
+        except FileExistsError:
+            pass
 
         if hang:
             import time

@@ -1,0 +1,46 @@
+workload_name: experiment_3
+patches:
+{% for patch_str, experiments in experiments_by_patch.items() %}
+  {{ patch_str }}: 
+    linux-1-node-replSet-fle.2022-11: {% for exp_name in experiments %}
+    - "qe_range_testing_workloads_evergreen_{{ exp_name }}"{% endfor %}
+{% endfor %}
+genny_metrics:
+  tests:
+  - "InsertActor.load.inserts"
+  {% for i in range(thread_count) %}- "InsertActor_Thread{{ i }}.load.inserts"
+  {% endfor %}
+  metrics:
+  - "OperationsTotal"
+  - "DocumentsTotal"
+  - "SizeTotal"
+  - "DurationTotal"
+  - "OverheadTotal"
+  - "ErrorsTotal"
+  - "AverageLatency"
+  - "AverageSize"
+  - "OperationThroughput"
+  - "DocumentThroughput"
+  - "SizeThroughput"
+  - "LatencyMin"
+  - "LatencyMax"
+  - "Latency50thPercentile"
+  - "Latency80thPercentile"
+  - "Latency90thPercentile"
+  - "Latency95thPercentile"
+  - "Latency99thPercentile"
+  - "WorkersMin"
+  - "WorkersMax"
+  - "ErrorRate"
+storage_metrics:
+  tests: {% for exp_name in all_experiments %}
+    - "qe_range_testing_workloads_evergreen_{{ exp_name }} Storage Metrics"{% endfor %}
+  metrics:
+  - "Average Growth in /data/dbs/ (bytes/s)"
+  - "End size of /data/dbs/ (bytes)"
+timing_metrics:
+  tests: {% for exp_name in all_experiments %}
+    - "qe_range_testing_workloads_evergreen_{{ exp_name }} Timing Metrics"{% endfor %}
+  metrics:
+  - "Total Duration (s)"
+curator: "/home/ubuntu/genny/build/curator/curator"

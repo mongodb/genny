@@ -1,0 +1,193 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+  Queryable Encryption Range Experiment 3
+
+GlobalDefaults:
+  Database: &test_db genny_qerangebench_experiment3
+  Collection: &test_coll testcoll
+  ClientName: &test_pool TestPool
+  Nop: &nop {Nop: true}
+
+
+Encryption:
+  
+  UseCryptSharedLib: true
+  CryptSharedLibPath: /home/ubuntu/mongo_crypt/lib/mongo_crypt_v1.so
+  
+  EncryptedCollections:
+  - Database: *test_db
+    Collection: *test_coll
+    EncryptionType: queryable
+    QueryableEncryptedFields:
+        field1: { type: "int", queries: [{queryType: "rangePreview", min: -2147483648, max: 2147483647, contention: 0, sparsity: 1}] }
+
+
+Clients:
+  TestPool:
+    QueryOptions:
+      maxPoolSize: 400
+
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_qerangebench_experiment3.testcoll
+
+
+Actors:
+
+
+  - Name: InsertActor_Thread0
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+    - Repeat: 12500
+      Collection: *test_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+            field1: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/workloads/contrib/qe_range_testing/misc/ones.txt", "sequential": true, "startFromLine": 0}}}}
+            _id: {^Inc: {start: 0, multiplier: 12500}}
+
+  - Name: InsertActor_Thread1
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+    - Repeat: 12500
+      Collection: *test_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+            field1: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/workloads/contrib/qe_range_testing/misc/ones.txt", "sequential": true, "startFromLine": 12500}}}}
+            _id: {^Inc: {start: 0, multiplier: 12500}}
+
+  - Name: InsertActor_Thread2
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+    - Repeat: 12500
+      Collection: *test_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+            field1: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/workloads/contrib/qe_range_testing/misc/ones.txt", "sequential": true, "startFromLine": 25000}}}}
+            _id: {^Inc: {start: 0, multiplier: 12500}}
+
+  - Name: InsertActor_Thread3
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+    - Repeat: 12500
+      Collection: *test_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+            field1: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/workloads/contrib/qe_range_testing/misc/ones.txt", "sequential": true, "startFromLine": 37500}}}}
+            _id: {^Inc: {start: 0, multiplier: 12500}}
+
+  - Name: InsertActor_Thread4
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+    - Repeat: 12500
+      Collection: *test_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+            field1: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/workloads/contrib/qe_range_testing/misc/ones.txt", "sequential": true, "startFromLine": 50000}}}}
+            _id: {^Inc: {start: 0, multiplier: 12500}}
+
+  - Name: InsertActor_Thread5
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+    - Repeat: 12500
+      Collection: *test_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+            field1: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/workloads/contrib/qe_range_testing/misc/ones.txt", "sequential": true, "startFromLine": 62500}}}}
+            _id: {^Inc: {start: 0, multiplier: 12500}}
+
+  - Name: InsertActor_Thread6
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+    - Repeat: 12500
+      Collection: *test_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+            field1: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/workloads/contrib/qe_range_testing/misc/ones.txt", "sequential": true, "startFromLine": 75000}}}}
+            _id: {^Inc: {start: 0, multiplier: 12500}}
+
+  - Name: InsertActor_Thread7
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+    - Repeat: 12500
+      Collection: *test_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+            field1: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/workloads/contrib/qe_range_testing/misc/ones.txt", "sequential": true, "startFromLine": 87500}}}}
+            _id: {^Inc: {start: 0, multiplier: 12500}}
+
+
+
+  - Name: LoggingActor0
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      - Phase: 0
+        LogEvery: 5 minutes
+        Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica-fle
+    branch_name:
+      $gte: v7.0

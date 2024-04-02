@@ -107,6 +107,7 @@ private:
         std::string queryType;
         std::optional<int> contention;
         std::optional<int> sparsity;
+        std::optional<int> trimFactor;
         std::optional<int> precision;
         std::optional<std::string> min, max;
     };
@@ -340,6 +341,7 @@ QueryableEncryptedField::Query::Query(const Node& yaml) {
     queryType = yaml["queryType"].to<std::string>();
     contention = yaml["contention"].maybe<int>();
     sparsity = yaml["sparsity"].maybe<int>();
+    trimFactor = yaml["trimFactor"].maybe<int>();
     precision = yaml["precision"].maybe<int>();
     min = yaml["min"].maybe<std::string>();
     max = yaml["max"].maybe<std::string>();
@@ -412,6 +414,9 @@ void QueryableEncryptedField::appendEncryptInfo(sub_document subdoc) const {
                     }
                     if(query.sparsity) {
                         queryDoc.append(kvp("sparsity", query.sparsity.value()));
+                    }
+                    if(query.trimFactor) {
+                        queryDoc.append(kvp("trimFactor", query.trimFactor.value()));
                     }
                     if(query.precision) {
                         queryDoc.append(kvp("precision", query.precision.value()));
