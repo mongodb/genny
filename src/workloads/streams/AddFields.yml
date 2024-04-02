@@ -110,6 +110,7 @@ Actors:
           { $emit: { connectionName: "__noopSink" }}
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
+        options: {}
   - Phase: 1
     Nop: true
   - Phase: 2
