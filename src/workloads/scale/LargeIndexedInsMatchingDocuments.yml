@@ -22,8 +22,10 @@ Description: |
   using arrays of integers that are generated to be used for the $in queries.
 
   The important metrics for this workload are:
-  * FindBlogPost actor
-    * DocumentThroughput
+    * FindBlogPostsById.find and FindBlogPostsByAuthor.find
+      * DocumentThroughput # Documents matched for the entire duration of the phase.
+      * OperationThroughput # how many queries per second were achieved.
+    Since this workload finds all the documents in the query the DocumentThroughput should be equal to `OperationThroughput * filterArraySize`
 
 Keywords:
   - Loader
