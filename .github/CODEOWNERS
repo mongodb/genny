@@ -6,13 +6,20 @@
 # Operates through the PERF Jira board.
 # @mongodb/performance
 
+# DevProd Performance Infrastructure owns unowned files. Files that are
+# explicitly owned by Performance Infrastructure should be added to this file
+# too.
+*                 @mongodb/devprod-performance-infrastructure
+
+
 # Repository Configuration
-/.gitignore        @mongodb/devprod-performance-infrastructure james.littlejohn@mongodb.com
-/.github           @mongodb/devprod-performance-infrastructure james.littlejohn@mongodb.com
-/.vscode           @mongodb/devprod-performance-infrastructure james.littlejohn@mongodb.com
+/.gitignore       @mongodb/devprod-performance-infrastructure james.littlejohn@mongodb.com
+/.github          @mongodb/devprod-performance-infrastructure james.littlejohn@mongodb.com
+/.vscode          @mongodb/devprod-performance-infrastructure james.littlejohn@mongodb.com
 
 # Workload Configuration
 /src/workloads    @mongodb/performance
+/src/phases       @mongodb/performance
 
 # Genny Core Components
 /cmake            @mongodb/devprod-performance-infrastructure
@@ -21,3 +28,4 @@
 
 # Workload-related C++ Components
 /src/value_generators    @mongodb/performance @mongodb/devprod-performance-infrastructure
+
