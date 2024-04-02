@@ -40,6 +40,31 @@ GlobalDefaults:
   database: &database indexedins
   documentCount: &documentCount 2048000 # multiple of BatchSize * Threads (100*64)
   filterArraySize: &filterArraySize 20000
+  TestArrayInt: &TestArrayInt { $in: { ^FixedGeneratedValue: { fromGenerator: {
+                  # An array of distinct and sequential integers up to documentCount. It will make sure all documents in this filter are found.
+                  # The max ^Inc.start is documentCount - filterArraySize
+                  ^Array:
+                    { of: { ^Inc: { start: { ^RandomInt: { min: 0, max: 2028000 } } } }, number: *filterArraySize },
+                } } } }
+  TestArrayObjectId: &TestArrayObjectId { $in: { ^FixedGeneratedValue: { fromGenerator: {
+                  # An array of distinct and sequential ObjectIds up to documentCount. It will make sure all documents in this filter are found.
+                  # The max ^Inc.start is documentCount - filterArraySize
+                  ^Array:
+                    {
+                      of:
+                        {
+                          ^ObjectId:
+                            {
+                              ^FormatString:
+                                {
+                                  "format": "%024d%s",
+                                  "withArgs": [{ ^Inc: { start: { ^RandomInt: { min: 0, max: 2028000 } } } }, ""],
+                                },
+                            },
+                        },
+                      number: *filterArraySize,
+                    },
+                } } } }
 
 Actors:
   - Name: BlogPostsLoader
@@ -75,15 +100,7 @@ Actors:
         Operations:
           - OperationName: find
             OperationCommand:
-              Filter: { _id: { $in: {
-                          # An array of distinct and sequential integers up to documentCount. It will make sure all documents in this filter are found.
-                          # The max ^Inc.start is documentCount - filterArraySize
-                          ^Array:
-                            {
-                              of: { ^Inc: { start: { ^RandomInt: { min: 0, max: 2028000 } } } },
-                              number: *filterArraySize,
-                            },
-                        } } }
+              Filter: { _id: *TestArrayInt }
       - { Nop: true }
 
   - Name: FindBlogPostsByAuthor
@@ -99,26 +116,7 @@ Actors:
         Operations:
           - OperationName: find
             OperationCommand:
-              Filter: { authorId: { $in: {
-                          # An array of distinct and sequential ObjectIds up to documentCount. It will make sure all documents in this filter are found.
-                          # The max ^Inc.start is documentCount - filterArraySize
-                          ^Array:
-                            {
-                              of:
-                                {
-                                  ^ObjectId:
-                                    {
-                                      ^FormatString:
-                                        {
-                                          "format": "%024d%s",
-                                          "withArgs":
-                                            [{ ^Inc: { start: { ^RandomInt: { min: 0, max: 2028000 } } } }, ""],
-                                        },
-                                    },
-                                },
-                              number: *filterArraySize,
-                            },
-                        } } }
+              Filter: { authorId: *TestArrayObjectId }
 
 AutoRun:
   - When:
