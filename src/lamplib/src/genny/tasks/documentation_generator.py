@@ -1,10 +1,10 @@
 from os import path
 import os
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 from re import S
 from typing import NamedTuple
 
-from jinja2 import Environment, PackageLoader, select_autoescape
+from jinja2 import Environment, PackageLoader
 import structlog
 import yaml
 
@@ -17,17 +17,28 @@ class Workload(NamedTuple):
     description: str
     keywords: list[str]
     path: str
+    github_link: str
 
 
 def main(genny_repo_root: str):
-    workload_dirs = [
-        path.join(genny_repo_root, "src", "workloads"),
-        path.join(genny_repo_root, "src", "phases"),
-    ]
+    SLOG.info("Generating workload documentation.")
+    input_dir = path.join(genny_repo_root, "src", "workloads")
+    output_file = path.join(genny_repo_root, "docs", "generated", "workloads.md")
+    generate_workload_documentation(genny_repo_root, input_dir, output_file)
+
+    SLOG.info("Generating phase documentation.")
+    input_dir = path.join(genny_repo_root, "src", "phases")
+    output_file = path.join(genny_repo_root, "docs", "generated", "phases.md")
+    generate_workload_documentation(genny_repo_root, input_dir, output_file)
+
+
+def generate_workload_documentation(genny_repo_root, input_dir, output_file):
+    workload_dirs = [input_dir]
     SLOG.info("Gathering workloads from files.", workload_dirs=workload_dirs)
 
     workloads = [
-        get_workload_from_file(yaml_path) for yaml_path in get_workload_files(workload_dirs)
+        get_workload_from_file(yaml_path, genny_repo_root)
+        for yaml_path in get_workload_files(workload_dirs)
     ]
     # Sort workloads by path to ensure consistent ordering.
     workloads.sort(key=lambda workload: workload.path)
@@ -38,7 +49,7 @@ def main(genny_repo_root: str):
     documentation = generate_markdown(workloads)
 
     SLOG.info("Writing documentation to file.")
-    write_documentation(documentation, genny_repo_root)
+    write_documentation(documentation, output_file)
 
 
 def get_workload_files(roots: list[str]) -> list[str]:
@@ -51,16 +62,18 @@ def get_workload_files(roots: list[str]) -> list[str]:
     return yaml_files
 
 
-def get_workload_from_file(yaml_path: str) -> Workload:
+def get_workload_from_file(yaml_path: str, genny_repo_root: str) -> Workload:
     with open(yaml_path, "r") as f:
         workload_yaml = yaml.safe_load(f)
         workload_name = PurePosixPath(yaml_path).stem
+        path = yaml_path.replace(genny_repo_root, "")
         return Workload(
             name=workload_name,
             owner=workload_yaml.get("Owner"),
             description=workload_yaml.get("Description"),
             keywords=workload_yaml.get("Keywords", []),
-            path=f.name,
+            path=path,
+            github_link=f"https://www.github.com/mongodb/genny/blob/master{path}",
         )
 
 
@@ -70,7 +83,6 @@ def generate_markdown(workloads: list[Workload]) -> str:
     return template.render(workloads=workloads)
 
 
-def write_documentation(documentation: str, genny_repo_root: str):
-    output_path = path.join(genny_repo_root, "docs", "generated", "workloads.md")
-    with open(output_path, "w") as f:
+def write_documentation(documentation: str, output_file: str):
+    with open(output_file, "w") as f:
         f.write(documentation)

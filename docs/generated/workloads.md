@@ -1,925 +1,6 @@
-# Workload Documenation
+# Workload Documentation 
 
-## ExamplePhase2
-### Owner
-@mongodb/product-perf
-### Description
-Example phase to illustrate how PhaseConfig composition works.
-
-
-
-## ContinuousWritesWithExponentialCompactTemplate
-### Owner
-@10gen/server-security
-### Description
-With queryable encryption enabled, this workload runs alternating CRUD and compact phases,
-where the total number of inserts & updates is increased on every CRUD+Compact cycle in order
-to grow the ECOC collection to a size that is at least twice its pre-compaction size in
-the previous cycle. This is meant to test how long compaction takes relative to ECOC size.
-Parameters:
-  Database:             name of encrypted database
-  Collection:           name of encrypted collection
-  ClientName:           name of encrypted client pool
-  Namespace:            namespace of the encrypted collection
-
-
-
-## YCSBLikeActorTemplate
-### Owner
-@10gen/server-security
-### Description
-Phase definitions for encrypted YCSB-like workloads. This defines the YCSBLikeActor
-that emulates the MongoDB YCSB workloads.
-Parameters:
-  Database:             name of encrypted database
-  Collection:           name of encrypted collection
-  ClientName:           name of encrypted client pool
-  Threads:              number of client threads for the CrudActor
-  Filter:               filter document to use for find and update operations
-  UpdateDocument:       document used in the $set field of an update operation
-  InsertDocument:       document to insert during the load phase
-  100ReadRepeat:        how many iterations of the 100% read phase to run per thread
-  95Read5UpdateRepeat:  how many iterations of the 95/5 phase to run per thread
-  100UpdateRepeat:      how many iterations of the 100% update phase to run per thread
-  50Read50UpdateRepeat: how many iterations of the 50/50 phase to run per thread
-
-
-
-## YCSBLikeEncryptedTemplate
-### Owner
-@10gen/server-security
-### Description
-Template for encryption-enabled workloads that emulate a YCSB workload.
-Performs queries on an encrypted field, instead of _id, during the read/update phase.
-Parameters:
-  Database:             name of encrypted database
-  Collection:           name of encrypted collection
-  ClientName:           name of encrypted client pool
-  Field<n>Value:        value of the nth field (n is 1..8)
-
-
-
-## ClusteredCollection
-### Owner
-@mongodb/server-execution
-### Description
-Run basic insert and find and delete workload on a collection clustered by {_id: 1} .
-Clustered collections are planned to mainly serve operations over the cluster
-key such as monotonically increasing inserts, range queries and range deletions.
-
-
-
-## CreateIndexPhase
-### Owner
-@mongodb/server-execution
-### Description
-This Phase has 2 actors, InsertData and IndexCollection. InsertData inserts documents containing
-all types of indexes, and IndexCollection creates indexes for each of them, one at a time.
-
-
-
-## MixedMultiDeletes
-### Owner
-@mongodb/server-execution
-### Description
-Runs mass deletions over a set of 1KB documents, then mass deletions over a set of larger, 10MB documents.
-For each size of document:
-  . Populates a collection with documents of size n-bytes, then performs a mass deletion on the collection.
-  . Repopulates a collection with documents of size n-bytes, then performs a mass deletion while
-    performing concurrent writes on another collection.
-Allows for comparing the performance of the DELETE_STAGE vs the BATCHED_DELETE_STAGE, primarily in
-terms of deletion throughput, and w:majority latencies of the concurrent writes. Also, allows for
-comparisons in performance when mass deletions are performed over different sized documents.
-The mass deletion namespace is test.Collection0
-The concurrent writes namespace is test.concurrentWritesColl
-
-  
-### Keywords
-RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency 
-
-
-## TimeSeriesUpdatesAndDeletes
-### Owner
-@mongodb/server-execution
-### Description
-Set up 1000 independent sensors which will each have 100 buckets, and each bucket has 100
-measurements.
-
-The buckets have the meta field, 'sensorId', with values from 0 to 999, each of which has 100
-measurements with timestamps within an hour with 36-second intervals. For example, in a bucket,
-the measurements look like:
-{t: 2023-01-01T5:00:00, m: 42, ...},
-{t: 2023-01-01T5:00:36, m: 42, ...},
-...
-{t: 2023-01-01T5:59:24, m: 42, ...}
-
-
-
-## UpdateWithSecondaryIndexes
-### Owner
-@mongodb/server-execution
-### Description
-Runs a workload that updates a large range of documents.
-Multiple secondary indexes are present.
-Update performed with and without a hint.
-
-  
-### Keywords
-RunCommand, Loader, LoggingActor, CrudActor, insert, update, latency 
-
-
-## ValidateCmd
-### Owner
-@mongodb/server-execution
-### Description
-This workload inserts ~1GB of documents, creates various indexes on the data, and then runs the
-validate command. We created this workload to see the performance benefits of improvements
-to the validate command, including background validation.
-
-
-
-## Default
-### Owner
-@mongodb/server-execution
-### Description
-Configuration for the MultiDeletes workload.
-
-
-
-## WithSecondaryIndexes
-### Owner
-@mongodb/server-execution
-### Description
-Configuration for MultiDeletes workload. This configuration introduces secondary indexes.
-
-
-
-## ConnectionsBuildup
-### Owner
-@mongodb/product-perf
-### Description
-These are the phases used to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
-low performance with secondaryPreferred reads
-
-
-
-## AggregateExpressions
-### Owner
-@mongodb/query
-### Description
-This file defines a template to use in aggregation expression performance tests.
-
-
-
-## BooleanSimplifier
-### Owner
-@mongodb/query-optimization
-### Description
-This workload measures performance of boolean expressions which can be simplified by
-the Boolean Simplifier. It is designed to track effectiveness of the simplifier.
-
-
-
-## CollScanComplexPredicate
-### Owner
-@mongodb/query
-### Description
-This workload tests the performance of collection scan queries with complex predicates of
-various shapes (CNF, DNF, and mixed predicates with different levels of nestedness).
-
-
-
-## CollScanComplexPredicateQueries
-### Owner
-@mongodb/query
-### Description
-Defines complex, randomly generated CNF and DNF queries used in 'CollScanComplexPredicate.yml'.
-
-
-
-## CollScanLargeNumberOfFields
-### Owner
-@mongodb/query
-### Description
-This workload tests the performance of collection scan queries against a collection containing
-documents with a large number of fields.
-
-  
-### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
-
-
-## CollScanOnMixedDataTypes
-### Owner
-@mongodb/query
-### Description
-This workload runs collscan queries on various data types.
-
-
-
-## CollScanPredicateSelectivity
-### Owner
-@mongodb/query
-### Description
-This workload tests the performance of collection scan queries which include conjunctions where the order of
-predicates matters due to selectivity of the predicates. In actors' names, a 'good' case means that the ordering
-of predicates defined by actual selectivities matches the ordering defined by heuristic selectivity estimation.
-Similarly, an 'indistinguishable' case means that heuristic CE defines the same selectivity for all predicates
-in the query. For this workload, the important metrics to look at are OperationThroughput and all latency measurements.
-
-  
-### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
-
-
-## CollScanProjection
-### Owner
-@mongodb/query
-### Description
-This workload runs collscan queries with a large projection on around 20 fields.
-
-
-
-## CollScanSimplifiablePredicate
-### Owner
-@mongodb/query
-### Description
-This workload tests the performance of collection scan queries with complex predicates
-that can be simplified by the optimizer.
-
-
-
-## FilterWithComplexLogicalExpression
-### Owner
-@mongodb/query
-### Description
-This workload stresses the query execution engine by running queries with complex logical
-expressions that never match a document in the collection.
-Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
-'SyntaxType' can be:
-  - 'AggregationExpression' means expressions which can be used inside $expr
-  - 'MatchExpression' means operators of the find command match predicate language
-'PredicateType' can be:
-  - 'DeepPredicate' means query with deeply nested expressions
-  - 'WidePredicate' means query where operators have a large number of arguments
-  - 'SingletonPredicateWithDeepFieldpaths' means query with a single equality predicate where
-    nested fieldpaths like '$a.b.c' are used
-  - 'WidePredicateWithDeepFieldpaths' means a wide query where nested fieldpaths like '$a.b.c'
-    are used
-  - 'MixedPredicate' means query which combines wide and deep types
-  - 'TargetPath' and 'MissingPath' mean query which targets a path present only in some documents
-  - 'MissingPathSuffix' means query is searching a path whose suffix cannot be found in the
-  document
-
-  
-### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
-
-
-## GetBsonDate
-### Owner
-@mongodb/query-execution
-### Description
-This file defines a parameterized configuration 'GetBsonDate' to work around the issue of
-ISODate.
-
-TODO PERF-3132 Use the date generator instead of this workaround.
-
-
-
-## GroupStagesOnComputedFields
-### Owner
-@mongodb/query
-### Description
-This file defines templates to use in workloads exercising aggregate stages on computed
-time fields.
-
-
-
-## IDHack
-### Owner
-@mongodb/query
-### Description
-Defines common configurations for IDHack query workloads.
-
-
-
-## LookupCommands
-### Owner
-@mongodb/query-execution
-### Description
-Defines common configurations for 'LookupSBEPushdown' and 'LookupSBEPushdownMisc' workloads.
-
-
-
-## MatchFilters
-### Owner
-@mongodb/query
-### Description
-This workload tests a set of filters in the match language. The actors below offer basic
-performance coverage for said filters.
-
-  
-### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
-
-
-## Multiplanner
-### Owner
-@mongodb/query
-### Description
-This file defines templates to use in multiplanner performance tests.
-
-
-
-## RepeatedPathTraversal
-### Owner
-@mongodb/query
-### Description
-This workload stresses the query execution engine by running queries over a set of paths which
-share a common prefix. Crucially, these queries never match a document in the collection.
-
-  
-### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
-
-
-## RunLargeArithmeticOp
-### Owner
-@mongodb/query
-### Description
-This phase template constructs an aggregation pipeline that multiplies together
-the provided arguments.
-
-
-
-## TimeSeriesLastpoint
-### Owner
-@mongodb/query
-### Description
-These are the phases used to measure performance of the last-point-in-time query optimization on timeseries collections.
-
-
-
-## TimeSeriesSortCommands
-### Owner
-@mongodb/query
-### Description
-These are the phases used to measure performance of the bounded sorter for timeseries collections.
-
-
-
-## Views
-### Owner
-@mongodb/query
-### Description
-Defines common configurations for workloads that operate on views.
-
-
-
-## StartupPhasesTemplate
-### Owner
-mongodb/server-replication"
-### Description
-Common definitions to support the workloads in replication/startup.
-
-
-
-## DesignDocWorkloadPhases
-### Owner
-STM
-### Description
-Common definitions to support the workloads in scale/LargeScale. See
-LargeScaleSerial.yml for a general overview of what the large-scale workloads are
-testing.
-
-Note that there aren't any performance targets defined - these were moved to an
-out-of-band tracking system that automatically spots regressions across all recorded
-measurements.
-
-
-
-## LargeScalePhases
-### Owner
-Storage Engines
-### Description
-This is the set of shared phases for the Large Scale Workload Automation project.
-
-Since the LSWA workloads contain common phases, they've been separated in this phase file and can
-be included in each workload as needed via the `ExternalPhaseConfig` functionality.
-
-
-
-## MixPhases
-### Owner
-@mongodb/product-perf
-### Description
-Phase defintions for the MixedWorkloadsGenny, which is a port of the mixed_workloads in the
-workloads repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
-operations, each with dedicated actors/threads. The 4 operations are insertOne, findOne,
-updateOne, and deleteOne. Since each type of operation runs in a dedicated thread it enables
-interesting behavior, such as reads getting faster because of a write regression, or reads being
-starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
-starved out by writes.
-
-  
-### Keywords
-scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete 
-
-
-## SetClusterParameterTemplate
-### Owner
-@mongodb/sharding
-### Description
-Template for setting a cluster parameter.
-
-
-
-## ShardCollectionTemplate
-### Owner
-@mongodb/sharding
-### Description
-Template for sharding a collection.
-
-
-
-## MultiUpdatesTemplate
-### Owner
-@mongodb/sharding
-### Description
-This workload template does the following (with
-PauseMigrationsDuringMultiUpdates disabled):
-  * Create an unsharded collection.
-  * Insert 50k documents of around 20kB each using the monotonic loader.
-  * Run updateMany as many times as possible in two 5 minute phases, where
-    updateMany will update all of the 50k documents per command in the first
-    phase and only a single document per command in the second phase.
-
-Two parameters are accepted to alter the behavior of this workload:
-  * ShardCollectionPhases: Valid values are [] and [1]. If set to []
-    (default), the collection remains unsharded. If set to [1], the collection
-    will be sharded with a hashed shard key on _id.
-  * PauseMigrationsPhases: Valid values are [] and [1]. If set to []
-    (default), PauseMigrationsDuringMultiUpdates will be disabled. If set to
-    [1], PauseMigrationsDuringMultiUpdates will be enabled.
-
-The intent of this workload is to measure the throughput of updateMany, so the
-OperationThroughput and OperationsTotal metrics for DocumentUpdater.UpdateAll
-and DocumentUpdater.UpdateOne should be used to evaluate performance when
-updating all documents per command and a single document per command
-respectively.
-
-  
-### Keywords
-AdminCommand, MonotonicSingleLoader, CrudActor, updateMany, sharding 
-
-
-## AvgAcctBal
-### Owner
-@mongodb/product-query
-### Description
-Run an internal TPC-H query to get the average customer account balance against the denormalized
-schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## AvgItemCost
-### Owner
-@mongodb/product-query
-### Description
-Run an internal TPC-H query to get the average cost of item sold against the denormalized schema
-for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## BiggestOrders
-### Owner
-@mongodb/product-query
-### Description
-Run an internal TPC-H query to get the biggest EUROPE orders against the denormalized schema for
-scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q1
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 1 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q10
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 10 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q11
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 11 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q12
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 12 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q13
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 13 gainst the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q14
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 14 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q15
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 15 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q16
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 16 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q17
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 17 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q18
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 18 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q19
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 19 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q2
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 2 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q20
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 20 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q21
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 21 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q22
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 22 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q3
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 3 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q4
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 4 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q5
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 5 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q6
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 6 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q7
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 7 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q8
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 8 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q9
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 9 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## TotalLineitemRevenue
-### Owner
-@mongodb/product-query
-### Description
-Run an internal TPC-H query to sum up total price across all lineitems against the denormalized
-schema for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## TotalOrderRevenue
-### Owner
-@mongodb/product-query
-### Description
-Run an internal TPC-H query to sum up total price across all orders against the denormalized
-schema for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q1
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 1 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q10
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 10 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q11
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 11 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q12
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 12 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q13
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 13 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q14
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 14 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q15
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 15 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q16
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 16 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q17
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 17 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q18
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 18 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q19
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 19 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q2
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 2 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
-
-
-
-## Q20
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 20 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q21
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 21 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q22
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 22 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q3
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 3 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q4
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 4 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q5
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 5 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q6
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 6 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q7
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 7 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q8
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 8 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## Q9
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 9 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## ChangeEventApplication
+## [ChangeEventApplication](https://www.github.com/mongodb/genny/blob/master/src/workloads/c2c/ChangeEventApplication.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -933,7 +14,7 @@ CEA and then starts inserting documents on the source cluster.
 c2c, replication, cluster to cluster sync, change event application, CEA 
 
 
-## CollectionCopy
+## [CollectionCopy](https://www.github.com/mongodb/genny/blob/master/src/workloads/c2c/CollectionCopy.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -945,7 +26,7 @@ The workload starts Mongosync on a cluster with an preloaded initial dataset.
 c2c, replication, collection copy, cluster to cluster sync 
 
 
-## MongosyncScripts
+## [MongosyncScripts](https://www.github.com/mongodb/genny/blob/master/src/workloads/c2c/MongosyncScripts.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -962,7 +43,7 @@ For example:
 
 
 
-## eMRCfBench
+## [eMRCfBench](https://www.github.com/mongodb/genny/blob/master/src/workloads/contrib/historystore/eMRCfBench.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -983,7 +64,7 @@ four phases. Each phase performs one million operations with different request m
 
 
 
-## eMRCfGrow
+## [eMRCfGrow](https://www.github.com/mongodb/genny/blob/master/src/workloads/contrib/historystore/eMRCfGrow.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -1000,7 +81,7 @@ but to cause the WT history store to grow when we run it on a degraded PSA repli
 
 
 
-## eMRCfPopulate
+## [eMRCfPopulate](https://www.github.com/mongodb/genny/blob/master/src/workloads/contrib/historystore/eMRCfPopulate.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -1016,7 +97,7 @@ of small (50-200 byte) and large (200-1000 byte) documents in a 10:1 ratio.
 
 
 
-## maps_medical
+## [maps_medical](https://www.github.com/mongodb/genny/blob/master/src/workloads/contrib/qe_test_gen/maps_medical.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1024,7 +105,7 @@ Models the QE acceptance criteria workload.
 
 
 
-## patchConfig
+## [patchConfig](https://www.github.com/mongodb/genny/blob/master/src/workloads/contrib/qe_test_gen/patchConfig.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1032,7 +113,7 @@ This workload evaluates the performance of Queryable Encryption against the esta
 
 
 
-## ChooseFromDataset
+## [ChooseFromDataset](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/ChooseFromDataset.yml)
 ### Owner
 @10gen/product-perf
 ### Description
@@ -1045,7 +126,7 @@ If running locally, the relative path needs to be: ./src/workloads/datasets/.
 
 
 
-## CollectionScanner
+## [CollectionScanner](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/CollectionScanner.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -1054,7 +135,7 @@ given database. It takes numerous configuration options to adjust its behaviour.
 
 
 
-## CrudActor
+## [CrudActor](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/CrudActor.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -1063,7 +144,7 @@ to demonstrate the actor.
 
 
 
-## CrudActorAggregate
+## [CrudActorAggregate](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/CrudActorAggregate.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -1073,7 +154,7 @@ operations.
 
 
 
-## CrudActorEncrypted
+## [CrudActorEncrypted](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/CrudActorEncrypted.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1144,7 +225,7 @@ provide the path to the mongo_crypt_v1.so shared library file using Encryption.C
 
 
 
-## CrudActorFSM
+## [CrudActorFSM](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/CrudActorFSM.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -1171,7 +252,7 @@ machinery tracking of state.
 
 
 
-## CrudActorFSMAdvanced
+## [CrudActorFSMAdvanced](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/CrudActorFSMAdvanced.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -1207,7 +288,7 @@ the other three states (also update operations).
 
 
 
-## CrudActorTransaction
+## [CrudActorTransaction](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/CrudActorTransaction.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -1216,7 +297,7 @@ behavior is largely the same, nesting operations inside the transaction block.
 
 
 
-## CrudFSMTrivial
+## [CrudFSMTrivial](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/CrudFSMTrivial.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -1228,7 +309,7 @@ includes it's ActorId in the documents.
 
 
 
-## Deleter
+## [Deleter](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/Deleter.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -1237,7 +318,7 @@ iteration.
 
 
 
-## ExternalScriptActor
+## [ExternalScriptActor](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/ExternalScriptActor.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -1247,7 +328,7 @@ If the script writes and only writes an integer to stdout as result, the result 
 
 
 
-## Generators
+## [Generators](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/Generators.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -1256,7 +337,7 @@ Follow the inline commentary to learn more about them.
 
 
 
-## GeneratorsSeeded
+## [GeneratorsSeeded](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/GeneratorsSeeded.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -1269,7 +350,7 @@ the same base workload Generators.yml and varies the RandomSeed and database nam
 
 
 
-## HelloWorld-ActorTemplate
+## [HelloWorld-ActorTemplate](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/HelloWorld-ActorTemplate.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -1278,7 +359,7 @@ actor template which can then be instantiated with parameters substituted.
 
 
 
-## HelloWorld-LoadConfig
+## [HelloWorld-LoadConfig](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/HelloWorld-LoadConfig.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -1287,7 +368,7 @@ to load anything, even other workloads.
 
 
 
-## HelloWorld-MultiplePhases
+## [HelloWorld-MultiplePhases](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/HelloWorld-MultiplePhases.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -1386,7 +467,7 @@ it takes B to do this.
 
 
 
-## HelloWorld
+## [HelloWorld](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/HelloWorld.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -1395,7 +476,7 @@ This workload writes a few messages to the screen.
 
 
 
-## HotCollectionWriter
+## [HotCollectionWriter](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/HotCollectionWriter.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -1404,7 +485,7 @@ designated "hot" collection.
 
 
 
-## HotDocumentWriter
+## [HotDocumentWriter](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/HotDocumentWriter.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -1413,7 +494,7 @@ specified collection.
 
 
 
-## InsertWithNop
+## [InsertWithNop](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/InsertWithNop.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -1427,7 +508,7 @@ remove.
 InsertRemove, docs 
 
 
-## Loader
+## [Loader](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/Loader.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -1463,7 +544,7 @@ In this mode of operation the loader Actor will:
 docs, loader 
 
 
-## LoggingActorExample
+## [LoggingActorExample](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/LoggingActorExample.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -1490,7 +571,7 @@ every Phase that may last longer than a few minutes.
 
 
 
-## LongLivedCreator
+## [LongLivedCreator](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/LongLivedCreator.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -1499,7 +580,7 @@ create and populate a set of long lived collections.
 
 
 
-## LongLivedReader
+## [LongLivedReader](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/LongLivedReader.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -1509,7 +590,7 @@ time.
 
 
 
-## LongLivedWriter
+## [LongLivedWriter](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/LongLivedWriter.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -1518,7 +599,7 @@ long lived collections.
 
 
 
-## MonotonicSingleLoader
+## [MonotonicSingleLoader](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/MonotonicSingleLoader.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -1529,7 +610,7 @@ Loads a large set of documents with a random value assinged to `field`.
 insert 
 
 
-## MoveRandomChunkToRandomShard
+## [MoveRandomChunkToRandomShard](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/MoveRandomChunkToRandomShard.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -1540,7 +621,7 @@ Shards a test collection and does a random move chunk.
 sharding, moveChunk 
 
 
-## ParallelInsert
+## [ParallelInsert](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/ParallelInsert.yml)
 ### Owner
 @mongodb/repl
 ### Description
@@ -1548,7 +629,7 @@ TODO: TIG-3321
 
 
 
-## QuiesceActor
+## [QuiesceActor](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/QuiesceActor.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -1557,7 +638,7 @@ database state and reduce noise.
 
 
 
-## RandomSampler
+## [RandomSampler](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/RandomSampler.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -1567,7 +648,7 @@ ependency on the documents in the collections having monotonically increasing _i
 
 
 
-## RollingCollections
+## [RollingCollections](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/RollingCollections.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -1580,7 +661,7 @@ This actor is intended to create a rolling window of collections.
 
 
 
-## RunCommand-Simple
+## [RunCommand-Simple](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/RunCommand-Simple.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -1589,7 +670,7 @@ to execute a command against the server.
 
 
 
-## RunCommand
+## [RunCommand](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/RunCommand.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -1598,7 +679,7 @@ run commands against a target server.
 
 
 
-## SamplingLoader
+## [SamplingLoader](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/SamplingLoader.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -1609,7 +690,7 @@ re-inserting to avoid duplicate key errors.
 
 
 
-## StreamStatsReporter
+## [StreamStatsReporter](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/StreamStatsReporter.yml)
 ### Owner
 @10gen/atlas-streams
 ### Description
@@ -1619,7 +700,7 @@ the processing is fully async.
 
 
 
-## ExponentialCompact
+## [ExponentialCompact](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/ExponentialCompact.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1630,7 +711,7 @@ the previous cycle. This is meant to test how long compaction takes relative to 
 
 
 
-## YCSBLikeQueryableEncrypt1Cf16
+## [YCSBLikeQueryableEncrypt1Cf16](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/YCSBLikeQueryableEncrypt1Cf16.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1641,7 +722,7 @@ merged into a single file when "OnlyRunInInstance: sharded" became an option.
 
 
 
-## YCSBLikeQueryableEncrypt1Cf32
+## [YCSBLikeQueryableEncrypt1Cf32](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/YCSBLikeQueryableEncrypt1Cf32.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1652,7 +733,7 @@ merged into a single file when "OnlyRunInInstance: sharded" became an option.
 
 
 
-## YCSBLikeQueryableEncrypt1Cfdefault
+## [YCSBLikeQueryableEncrypt1Cfdefault](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/YCSBLikeQueryableEncrypt1Cfdefault.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1663,7 +744,7 @@ It was merged into a single file when "OnlyRunInInstance: sharded" became an opt
 
 
 
-## YCSBLikeQueryableEncrypt5Cf16
+## [YCSBLikeQueryableEncrypt5Cf16](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/YCSBLikeQueryableEncrypt5Cf16.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1674,7 +755,7 @@ merged into a single file when "OnlyRunInInstance: sharded" became an option.
 
 
 
-## YCSBLikeQueryableEncrypt5Cf32
+## [YCSBLikeQueryableEncrypt5Cf32](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/YCSBLikeQueryableEncrypt5Cf32.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1685,7 +766,7 @@ merged into a single file when "OnlyRunInInstance: sharded" became an option.
 
 
 
-## YCSBLikeQueryableEncrypt5Cfdefault
+## [YCSBLikeQueryableEncrypt5Cfdefault](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/YCSBLikeQueryableEncrypt5Cfdefault.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1696,7 +777,7 @@ It was merged into a single file when "OnlyRunInInstance: sharded" became an opt
 
 
 
-## medical_workload-diagnosis-100-0-unencrypted
+## [medical_workload-diagnosis-100-0-unencrypted](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-diagnosis-100-0-unencrypted.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1704,7 +785,7 @@ Models the Queryable Encryption acceptance criteria workloads
 
 
 
-## medical_workload-diagnosis-100-0
+## [medical_workload-diagnosis-100-0](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-diagnosis-100-0.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1712,7 +793,7 @@ Models the Queryable Encryption acceptance criteria workloads
 
 
 
-## medical_workload-diagnosis-50-50-unencrypted
+## [medical_workload-diagnosis-50-50-unencrypted](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-diagnosis-50-50-unencrypted.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1720,7 +801,7 @@ Models the Queryable Encryption acceptance criteria workloads
 
 
 
-## medical_workload-diagnosis-50-50
+## [medical_workload-diagnosis-50-50](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-diagnosis-50-50.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1728,7 +809,7 @@ Models the Queryable Encryption acceptance criteria workloads
 
 
 
-## medical_workload-guid-50-50-unencrypted
+## [medical_workload-guid-50-50-unencrypted](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-guid-50-50-unencrypted.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1736,7 +817,7 @@ Models the Queryable Encryption acceptance criteria workloads
 
 
 
-## medical_workload-guid-50-50
+## [medical_workload-guid-50-50](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-guid-50-50.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1744,7 +825,7 @@ Models the Queryable Encryption acceptance criteria workloads
 
 
 
-## medical_workload-load-unencrypted
+## [medical_workload-load-unencrypted](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-load-unencrypted.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1752,7 +833,7 @@ Models the Queryable Encryption acceptance criteria workloads
 
 
 
-## medical_workload-load
+## [medical_workload-load](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-load.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -1760,7 +841,7 @@ Models the Queryable Encryption acceptance criteria workloads
 
 
 
-## BackgroundIndexConstruction
+## [BackgroundIndexConstruction](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/BackgroundIndexConstruction.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -1779,7 +860,7 @@ saturated server.
 stress, indexes, InsertRemove 
 
 
-## BackgroundTTLDeletions
+## [BackgroundTTLDeletions](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/BackgroundTTLDeletions.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -1795,7 +876,7 @@ more correct.
 ttl, stress, indexes, insertMany, CrudActor 
 
 
-## BackgroundValidateCmd
+## [BackgroundValidateCmd](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/BackgroundValidateCmd.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -1807,7 +888,7 @@ validation concurrently.
 
 
 
-## ClusteredCollection
+## [ClusteredCollection](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/ClusteredCollection.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -1818,7 +899,7 @@ Run basic workload on a collection clustered by {_id: 1}.
 indexes, clustered 
 
 
-## ClusteredCollectionLargeRecordIds
+## [ClusteredCollectionLargeRecordIds](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/ClusteredCollectionLargeRecordIds.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -1829,7 +910,7 @@ Run basic workload on a collection clustered by {_id: 1} with large RecordId's (
 indexes, clustered 
 
 
-## CreateBigIndex
+## [CreateBigIndex](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/CreateBigIndex.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -1848,7 +929,7 @@ and CreateIndexSharded.yml, but was merged into one as part of PERF-4347.
 indexes, sharding 
 
 
-## MixedMultiDeletesBatched
+## [MixedMultiDeletesBatched](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/MixedMultiDeletesBatched.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -1859,7 +940,7 @@ Deletes a range of documents using the BATCHED_DELETE query exec stage both in i
 RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency 
 
 
-## MixedMultiDeletesBatchedWithSecondaryIndexes
+## [MixedMultiDeletesBatchedWithSecondaryIndexes](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/MixedMultiDeletesBatchedWithSecondaryIndexes.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -1874,7 +955,7 @@ concurrent write latency. Tests deletes on documents of size ~1KB then deletes o
 RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency 
 
 
-## MixedMultiDeletesDocByDoc
+## [MixedMultiDeletesDocByDoc](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/MixedMultiDeletesDocByDoc.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -1887,7 +968,7 @@ documents of ~10MB.
 RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency 
 
 
-## MixedMultiDeletesDocByDocWithSecondaryIndexes
+## [MixedMultiDeletesDocByDocWithSecondaryIndexes](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/MixedMultiDeletesDocByDocWithSecondaryIndexes.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -1902,7 +983,7 @@ concurrent write latency. Tests deletes on documents of size ~1KB then deletes o
 RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency 
 
 
-## MultiPlanning
+## [MultiPlanning](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/MultiPlanning.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -1914,7 +995,7 @@ indexes to test how efficiently multi planning can choose the most selective ind
 indexes 
 
 
-## PingCommand
+## [PingCommand](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/PingCommand.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -1922,7 +1003,7 @@ This is a simple test that runs ping command on MongoDB to meassure the latency 
 
 
 
-## SecondaryReadsGenny
+## [SecondaryReadsGenny](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/SecondaryReadsGenny.yml)
 ### Owner
 mongodb/server-replication"
 ### Description
@@ -1970,7 +1051,7 @@ The test cycles through these stages for 1, 16, and 32 reader threads.
 
 
 
-## SinusoidalReadWrites
+## [SinusoidalReadWrites](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/SinusoidalReadWrites.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -1989,7 +1070,7 @@ In this workload, we try to ensure that reads and writes do not overlap much.
 sinusoidal, execution control, insertMany, find, CrudActor 
 
 
-## TimeSeriesArbitraryUpdate
+## [TimeSeriesArbitraryUpdate](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/TimeSeriesArbitraryUpdate.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -2003,7 +1084,7 @@ the use case where users want to correct fields of some measurements.
 
 
 
-## TimeSeriesRangeDelete
+## [TimeSeriesRangeDelete](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/TimeSeriesRangeDelete.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -2018,7 +1099,7 @@ application deletes data within some time ranges.
 
 
 
-## UpdateWithSecondaryIndexes
+## [UpdateWithSecondaryIndexes](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/UpdateWithSecondaryIndexes.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -2031,14 +1112,14 @@ Update performed with and without a hint.
 RunCommand, Loader, LoggingActor, CrudActor, insert, update, latency, secondary indexes 
 
 
-## UserAcquisition
+## [UserAcquisition](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/UserAcquisition.yml)
 ### Owner
 @mongodb/security
 ### Description
 Measure user acquisition time on UserCache miss.
 
 
-## ValidateCmd
+## [ValidateCmd](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/ValidateCmd.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -2051,7 +1132,7 @@ to the validate command, including background validation.
 RunCommand, Loader, validate 
 
 
-## ValidateCmdFull
+## [ValidateCmdFull](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/ValidateCmdFull.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -2064,7 +1145,7 @@ to the validate command, including background validation.
 RunCommand, Loader, validate 
 
 
-## Flushing
+## [Flushing](https://www.github.com/mongodb/genny/blob/master/src/workloads/filesystem/Flushing.yml)
 ### Owner
 @mongodb/server-perf
 ### Description
@@ -2093,7 +1174,7 @@ The important ftdc metrics to look at are:
 Flushing, IO, bulk insert, stress, checkpoint, journal 
 
 
-## ConnectionPoolStress
+## [ConnectionPoolStress](https://www.github.com/mongodb/genny/blob/master/src/workloads/issues/ConnectionPoolStress.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -2122,7 +1203,7 @@ The workload performs the following steps:
 reproducer, connections, secondaryPreferred, sharding, latency 
 
 
-## ConnectionsBuildup
+## [ConnectionsBuildup](https://www.github.com/mongodb/genny/blob/master/src/workloads/issues/ConnectionsBuildup.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -2136,7 +1217,7 @@ ConnectionsBuildup.yml and ConnectionsBuildupNoSharding.yml. It was merged into 
 reproducer, connections, secondaryPreferred, sharding 
 
 
-## MongosLatency
+## [MongosLatency](https://www.github.com/mongodb/genny/blob/master/src/workloads/issues/MongosLatency.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -2156,7 +1237,7 @@ The main metrics to monitor are:
 
 
 
-## CommitLatency
+## [CommitLatency](https://www.github.com/mongodb/genny/blob/master/src/workloads/networking/CommitLatency.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -2169,7 +1250,7 @@ http://henrikingo.github.io/presentations/Highload%202018%20-%20The%20cost%20of%
 transactions, sessions, write concern, read concern 
 
 
-## CommitLatencySingleUpdate
+## [CommitLatencySingleUpdate](https://www.github.com/mongodb/genny/blob/master/src/workloads/networking/CommitLatencySingleUpdate.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -2180,7 +1261,7 @@ Single threaded updates to measure commit latency for various write concern.
 latency, write concern 
 
 
-## SecondaryAllowed
+## [SecondaryAllowed](https://www.github.com/mongodb/genny/blob/master/src/workloads/networking/SecondaryAllowed.yml)
 ### Owner
 @mongodb/service-architecture
 ### Description
@@ -2191,7 +1272,7 @@ secondary reads during an election.
 
 
 
-## ServiceArchitectureWorkloads
+## [ServiceArchitectureWorkloads](https://www.github.com/mongodb/genny/blob/master/src/workloads/networking/ServiceArchitectureWorkloads.yml)
 ### Owner
 @mongodb/service-architecture
 ### Description
@@ -2202,7 +1283,7 @@ reads during an election.
 
 
 
-## TransportLayerConnectTiming
+## [TransportLayerConnectTiming](https://www.github.com/mongodb/genny/blob/master/src/workloads/networking/TransportLayerConnectTiming.yml)
 ### Owner
 @mongodb/security
 ### Description
@@ -2210,7 +1291,7 @@ Invoke replSetTestEgress command on replica set members.
 Command synchronously establishes temporary connections between cluster nodes.
 
 
-## AggregateExpressions
+## [AggregateExpressions](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/AggregateExpressions.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -2229,7 +1310,7 @@ for the classic aggregation expressions.
 aggregate, sbe 
 
 
-## AggregationsOutput
+## [AggregationsOutput](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/AggregationsOutput.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2240,7 +1321,7 @@ This test exercises both $out and $merge aggregation stages. It does this based 
 
 
 
-## ArrayTraversal
+## [ArrayTraversal](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ArrayTraversal.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2263,7 +1344,7 @@ document
 Loader, CrudActor, QuiesceActor, insert, find 
 
 
-## BooleanSimplifier
+## [BooleanSimplifier](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/BooleanSimplifier.yml)
 ### Owner
 @mongodb/query-optimization
 ### Description
@@ -2272,7 +1353,7 @@ the Boolean Simplifier. It is designed to track effectiveness of the simplifier.
 
 
 
-## BooleanSimplifierSmallDataset
+## [BooleanSimplifierSmallDataset](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/BooleanSimplifierSmallDataset.yml)
 ### Owner
 @mongodb/query-optimization
 ### Description
@@ -2281,7 +1362,7 @@ the Boolean Simplifier. It is designed to track effectiveness of the simplifier.
 
 
 
-## CPUCycleMetricsDelete
+## [CPUCycleMetricsDelete](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CPUCycleMetricsDelete.yml)
 ### Owner
 @mongodb/sys-perf
 ### Description
@@ -2291,7 +1372,7 @@ when utilizing the Linux 3-Node ReplSet CPU Cycle Metrics 2023-06 variant
 
 
 
-## CPUCycleMetricsFind
+## [CPUCycleMetricsFind](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CPUCycleMetricsFind.yml)
 ### Owner
 @mongodb/sys-perf
 ### Description
@@ -2301,7 +1382,7 @@ when utilizing the Linux 3-Node ReplSet CPU Cycle Metrics 2023-06 variant
 
 
 
-## CPUCycleMetricsInsert
+## [CPUCycleMetricsInsert](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CPUCycleMetricsInsert.yml)
 ### Owner
 @mongodb/sys-perf
 ### Description
@@ -2311,7 +1392,7 @@ utilizing the Linux 3-Node ReplSet CPU Cycle Metrics 2023-06 variant for a mixed
 
 
 
-## CPUCycleMetricsUpdate
+## [CPUCycleMetricsUpdate](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CPUCycleMetricsUpdate.yml)
 ### Owner
 @mongodb/sys-perf
 ### Description
@@ -2321,7 +1402,7 @@ when utilizing the Linux 3-Node ReplSet CPU Cycle Metrics 2023-06 variant
 
 
 
-## CollScanComplexPredicateLarge
+## [CollScanComplexPredicateLarge](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanComplexPredicateLarge.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2330,7 +1411,7 @@ various shapes against a collection of 1M items.
 
 
 
-## CollScanComplexPredicateMedium
+## [CollScanComplexPredicateMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanComplexPredicateMedium.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2339,7 +1420,7 @@ various shapes against a collection of 10K items.
 
 
 
-## CollScanComplexPredicateSmall
+## [CollScanComplexPredicateSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanComplexPredicateSmall.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2348,7 +1429,7 @@ various shapes against a collection of 100 items.
 
 
 
-## CollScanLargeNumberOfFieldsLarge
+## [CollScanLargeNumberOfFieldsLarge](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanLargeNumberOfFieldsLarge.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2357,7 +1438,7 @@ documents with a large number of fields.
 
 
 
-## CollScanLargeNumberOfFieldsMedium
+## [CollScanLargeNumberOfFieldsMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanLargeNumberOfFieldsMedium.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2366,7 +1447,7 @@ documents with a large number of fields.
 
 
 
-## CollScanLargeNumberOfFieldsSmall
+## [CollScanLargeNumberOfFieldsSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanLargeNumberOfFieldsSmall.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2375,7 +1456,7 @@ documents with a large number of fields.
 
 
 
-## CollScanOnMixedDataTypesLarge
+## [CollScanOnMixedDataTypesLarge](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanOnMixedDataTypesLarge.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2384,7 +1465,7 @@ collection of 1M documents.
 
 
 
-## CollScanOnMixedDataTypesMedium
+## [CollScanOnMixedDataTypesMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanOnMixedDataTypesMedium.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2393,7 +1474,7 @@ collection of 10,000 documents.
 
 
 
-## CollScanOnMixedDataTypesSmall
+## [CollScanOnMixedDataTypesSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanOnMixedDataTypesSmall.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2402,7 +1483,7 @@ collection of 100 documents.
 
 
 
-## CollScanPredicateSelectivityLarge
+## [CollScanPredicateSelectivityLarge](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanPredicateSelectivityLarge.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2411,7 +1492,7 @@ predicates matters due to selectivity of the predicates.
 
 
 
-## CollScanPredicateSelectivityMedium
+## [CollScanPredicateSelectivityMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanPredicateSelectivityMedium.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2420,7 +1501,7 @@ predicates matters due to selectivity of the predicates.
 
 
 
-## CollScanPredicateSelectivitySmall
+## [CollScanPredicateSelectivitySmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanPredicateSelectivitySmall.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2429,7 +1510,7 @@ predicates matters due to selectivity of the predicates.
 
 
 
-## CollScanProjectionLarge
+## [CollScanProjectionLarge](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanProjectionLarge.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2438,7 +1519,7 @@ collection of 1M documents.
 
 
 
-## CollScanProjectionMedium
+## [CollScanProjectionMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanProjectionMedium.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2447,7 +1528,7 @@ collection of 10,000 documents.
 
 
 
-## CollScanProjectionSmall
+## [CollScanProjectionSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanProjectionSmall.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2456,7 +1537,7 @@ collection of 100 documents.
 
 
 
-## CollScanSimplifiablePredicateLarge
+## [CollScanSimplifiablePredicateLarge](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanSimplifiablePredicateLarge.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2465,7 +1546,7 @@ that can be simplified by the optimizer against a large collection (1M documents
 
 
 
-## CollScanSimplifiablePredicateMedium
+## [CollScanSimplifiablePredicateMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanSimplifiablePredicateMedium.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2474,7 +1555,7 @@ that can be simplified by the optimizer against a collection of 10K documents.
 
 
 
-## CollScanSimplifiablePredicateSmall
+## [CollScanSimplifiablePredicateSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanSimplifiablePredicateSmall.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2483,7 +1564,7 @@ that can be simplified by the optimizer against a small collection (100 document
 
 
 
-## CollectionLevelDiagnosticCommands
+## [CollectionLevelDiagnosticCommands](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollectionLevelDiagnosticCommands.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -2494,7 +1575,7 @@ This workload measures performance for diagnostic top command.
 top, command, admin, stats 
 
 
-## ColumnStoreIndex
+## [ColumnStoreIndex](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ColumnStoreIndex.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -2512,7 +1593,7 @@ The workload consists of the following phases and actors:
 columnstore, analytics 
 
 
-## ConstantFoldArithmetic
+## [ConstantFoldArithmetic](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ConstantFoldArithmetic.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2542,7 +1623,7 @@ on the level of associativity in the optimizer.
 
 
 
-## CsiFragmentedInsertsFlat
+## [CsiFragmentedInsertsFlat](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CsiFragmentedInsertsFlat.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -2559,7 +1640,7 @@ nested data (CsiFragmentedInsertsNested.yml). Please make sure to update both wh
 columnstore, insert 
 
 
-## CsiFragmentedInsertsNested
+## [CsiFragmentedInsertsNested](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CsiFragmentedInsertsNested.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -2576,7 +1657,7 @@ omitted, please refer to the "flat" workload for the details.
 columnstore, insert 
 
 
-## CsiHeavyDiskUsage
+## [CsiHeavyDiskUsage](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CsiHeavyDiskUsage.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -2604,7 +1685,7 @@ The purpose of this workload is to compare the insert performance in the followi
 columnstore, analytics, scale, insert 
 
 
-## CumulativeWindows
+## [CumulativeWindows](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CumulativeWindows.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2616,7 +1697,7 @@ running of the the cumulative window aggregations.
 
 
 
-## CumulativeWindowsMultiAccums
+## [CumulativeWindowsMultiAccums](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CumulativeWindowsMultiAccums.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2627,7 +1708,7 @@ $derivative here since it fails with "Exceeded max memory" in v5.0
 
 
 
-## DensifyFillCombo
+## [DensifyFillCombo](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/DensifyFillCombo.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2639,7 +1720,7 @@ $fill set values for the output field (in the context of this workload,
 
 
 
-## DensifyHours
+## [DensifyHours](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/DensifyHours.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2684,7 +1765,7 @@ The factors that affect the number of documents generated include, but are not l
 
 
 
-## DensifyMilliseconds
+## [DensifyMilliseconds](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/DensifyMilliseconds.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2731,7 +1812,7 @@ The factors that affect the number of documents generated include, but are not l
 
 
 
-## DensifyMonths
+## [DensifyMonths](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/DensifyMonths.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2777,7 +1858,7 @@ The factors that affect the number of documents generated include, but are not l
 
 
 
-## DensifyNumeric
+## [DensifyNumeric](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/DensifyNumeric.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2823,7 +1904,7 @@ The factors that affect the number of documents generated include, but are not l
 
 
 
-## DensifyTimeseriesCollection
+## [DensifyTimeseriesCollection](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/DensifyTimeseriesCollection.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2832,7 +1913,7 @@ in timeseries collections.
 
 
 
-## ExpressiveQueries
+## [ExpressiveQueries](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ExpressiveQueries.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2843,7 +1924,7 @@ projection, expecting that they will use this index.
 
 
 
-## ExternalSort
+## [ExternalSort](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ExternalSort.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2854,7 +1935,7 @@ documents remain, which ensures that the sort algorithm executes in its entirety
 
 
 
-## FillTimeseriesCollection
+## [FillTimeseriesCollection](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/FillTimeseriesCollection.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2865,7 +1946,7 @@ or the interpolated value (in case of $linearFill).
 
 
 
-## FilterWithComplexLogicalExpression
+## [FilterWithComplexLogicalExpression](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/FilterWithComplexLogicalExpression.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2892,7 +1973,7 @@ Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
 Loader, CrudActor, QuiesceActor, insert, find 
 
 
-## FilterWithComplexLogicalExpressionMedium
+## [FilterWithComplexLogicalExpressionMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/FilterWithComplexLogicalExpressionMedium.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2919,7 +2000,7 @@ Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
 Loader, CrudActor, QuiesceActor, insert, find 
 
 
-## FilterWithComplexLogicalExpressionSmall
+## [FilterWithComplexLogicalExpressionSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/FilterWithComplexLogicalExpressionSmall.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2946,7 +2027,7 @@ Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
 Loader, CrudActor, QuiesceActor, insert, find 
 
 
-## GraphLookup
+## [GraphLookup](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/GraphLookup.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2968,7 +2049,7 @@ The workload consists of the following phases:
 
 
 
-## GraphLookupWithOnlyUnshardedColls
+## [GraphLookupWithOnlyUnshardedColls](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/GraphLookupWithOnlyUnshardedColls.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -2988,7 +2069,7 @@ The workload consists of the following phases:
 
 
 
-## GroupLikeDistinct
+## [GroupLikeDistinct](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/GroupLikeDistinct.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3001,7 +2082,7 @@ be optimized to use DISTINCT_SCAN plan.
 Distinct, Group, First, Last, Top, Bottom, timeseries, aggregate 
 
 
-## GroupSpillToDisk
+## [GroupSpillToDisk](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/GroupSpillToDisk.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3012,7 +2093,7 @@ Runs $group queries which are designed to require spilling to disk.
 Loader, CrudActor, QuiesceActor, insert, aggregate, group, spill 
 
 
-## GroupStagesOnComputedFields
+## [GroupStagesOnComputedFields](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/GroupStagesOnComputedFields.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3025,7 +2106,7 @@ that enables the execution of $addFields, $match, and $sort in SBE.
 aggregate, sbe 
 
 
-## InWithVariedArraySize
+## [InWithVariedArraySize](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/InWithVariedArraySize.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -3039,7 +2120,7 @@ This workload measures performance for $in in both these cases, with and without
 in, cache, parametrization, classic, sbe 
 
 
-## LimitSkip
+## [LimitSkip](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/LimitSkip.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -3051,7 +2132,7 @@ arguments.
 limit, skip, cache, parametrization, classic, sbe 
 
 
-## Lookup
+## [Lookup](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/Lookup.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3073,7 +2154,7 @@ The workload consists of the following phases:
 
 
 
-## LookupColocatedData
+## [LookupColocatedData](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/LookupColocatedData.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3090,7 +2171,7 @@ The workload consists of the following steps:
 
 
 
-## LookupNLJ
+## [LookupNLJ](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/LookupNLJ.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -3128,7 +2209,7 @@ The workload consists of the following phases and actors:
 lookup, aggregate, sbe 
 
 
-## LookupOnly
+## [LookupOnly](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/LookupOnly.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3158,7 +2239,7 @@ The workload consists of the following phases and actors:
 lookup, aggregate 
 
 
-## LookupSBEPushdown
+## [LookupSBEPushdown](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/LookupSBEPushdown.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -3207,7 +2288,7 @@ The workload consists of the following phases and actors:
 lookup, aggregate, sbe 
 
 
-## LookupSBEPushdownINLJMisc
+## [LookupSBEPushdownINLJMisc](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/LookupSBEPushdownINLJMisc.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -3248,7 +2329,7 @@ The workload consists of the following phases and actors:
 lookup, aggregate, sbe 
 
 
-## LookupUnwind
+## [LookupUnwind](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/LookupUnwind.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3280,7 +2361,7 @@ The workload consists of the following phases and actors:
 lookup, unwind, aggregate 
 
 
-## LookupWithOnlyUnshardedColls
+## [LookupWithOnlyUnshardedColls](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/LookupWithOnlyUnshardedColls.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3299,7 +2380,7 @@ The workload consists of the following phases:
 
 
 
-## MatchFilters
+## [MatchFilters](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/MatchFilters.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3311,7 +2392,7 @@ performance coverage for said filters.
 Loader, CrudActor, QuiesceActor, insert, find 
 
 
-## MatchFiltersMedium
+## [MatchFiltersMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/MatchFiltersMedium.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3323,7 +2404,7 @@ performance coverage for said filters.
 Loader, CrudActor, QuiesceActor, insert, find 
 
 
-## MatchFiltersSmall
+## [MatchFiltersSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/MatchFiltersSmall.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3335,7 +2416,7 @@ performance coverage for said filters.
 Loader, CrudActor, QuiesceActor, insert, find 
 
 
-## MatchWithLargeExpression
+## [MatchWithLargeExpression](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/MatchWithLargeExpression.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3348,7 +2429,7 @@ SERVER-79092 fixed this issue by switching over to a map once the amount of expr
 Loader, CrudActor, QuiesceActor, insert, Aggregation, matcher, expressions 
 
 
-## MetricSecondaryIndexTimeseriesCollection
+## [MetricSecondaryIndexTimeseriesCollection](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/MetricSecondaryIndexTimeseriesCollection.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3362,7 +2443,7 @@ The phases are:
 
 
 
-## OneMDocCollection_LargeDocIntId
+## [OneMDocCollection_LargeDocIntId](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/OneMDocCollection_LargeDocIntId.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3372,7 +2453,7 @@ workload locally.
 
 
 
-## PercentilesAgg
+## [PercentilesAgg](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/PercentilesAgg.yml)
 ### Owner
 @mongodb/query-integration
 ### Description
@@ -3389,7 +2470,7 @@ created from 5 different distributions.
 group, percentile 
 
 
-## PercentilesExpr
+## [PercentilesExpr](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/PercentilesExpr.yml)
 ### Owner
 @mongodb/query-integration
 ### Description
@@ -3402,7 +2483,7 @@ bson needs to be parsed to access the field but we want to make sure we compare 
 group, percentile 
 
 
-## PercentilesWindow
+## [PercentilesWindow](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/PercentilesWindow.yml)
 ### Owner
 @mongodb/query-integration
 ### Description
@@ -3426,7 +2507,7 @@ do not show significant differences.
 setWindowFields, percentile 
 
 
-## PercentilesWindowSpillToDisk
+## [PercentilesWindowSpillToDisk](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/PercentilesWindowSpillToDisk.yml)
 ### Owner
 @mongodb/query-integration
 ### Description
@@ -3446,7 +2527,7 @@ partition to control whether or not the $_internalSetWindowsFields will spill.
 setWindowFields, percentile, spill 
 
 
-## PipelineUpdate
+## [PipelineUpdate](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/PipelineUpdate.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3455,7 +2536,7 @@ the two update types on documents of different sizes and shapes.
 
 
 
-## ProjectParse
+## [ProjectParse](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ProjectParse.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3469,7 +2550,7 @@ This issue was fixed by SERVER-78580, and discovered by SERVER-62509.
 Project, Parsing, Aggregation 
 
 
-## QueryStats
+## [QueryStats](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/QueryStats.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3485,7 +2566,7 @@ for more information on using `evaluate`.
 
 
 
-## QueryStatsQueryShapes
+## [QueryStatsQueryShapes](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/QueryStatsQueryShapes.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3495,7 +2576,7 @@ It can be run with and without queryStats for comparison.
 
 
 
-## RepeatedPathTraversal
+## [RepeatedPathTraversal](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/RepeatedPathTraversal.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3504,7 +2585,7 @@ share a common prefix. Crucially, these queries never match a document in the co
 
 
 
-## RepeatedPathTraversalMedium
+## [RepeatedPathTraversalMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/RepeatedPathTraversalMedium.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3513,7 +2594,7 @@ share a common prefix. Crucially, these queries never match a document in the co
 
 
 
-## RepeatedPathTraversalSmall
+## [RepeatedPathTraversalSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/RepeatedPathTraversalSmall.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3522,7 +2603,7 @@ share a common prefix. Crucially, these queries never match a document in the co
 
 
 
-## SSBColumnStoreIndex
+## [SSBColumnStoreIndex](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/SSBColumnStoreIndex.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -3540,7 +2621,7 @@ The DSI test_control will drop caches inbetween each test to measure cold cache 
 columnstore, analytics, SSB 
 
 
-## SetWindowFieldsUnbounded
+## [SetWindowFieldsUnbounded](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/SetWindowFieldsUnbounded.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3562,7 +2643,7 @@ We can divide this up into 4 cases:
 
 
 
-## ShardFilter
+## [ShardFilter](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ShardFilter.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3570,7 +2651,7 @@ This workload tests the performance of queries which need to perform shard filte
 
 
 
-## SlidingWindows
+## [SlidingWindows](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/SlidingWindows.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3581,7 +2662,7 @@ based windows, will spill to disk.
 
 
 
-## SlidingWindowsMultiAccums
+## [SlidingWindowsMultiAccums](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/SlidingWindowsMultiAccums.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3590,7 +2671,7 @@ $topN, $firstN, etc) and $top/$bottom which are not present in v5.0
 
 
 
-## SortByExpression
+## [SortByExpression](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/SortByExpression.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3600,7 +2681,7 @@ after every projection in SBE.
 
 
 
-## TenMDocCollection_IntId
+## [TenMDocCollection_IntId](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_IntId.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3609,7 +2690,7 @@ on regular int indices.
 
 
 
-## TenMDocCollection_IntId_Agg
+## [TenMDocCollection_IntId_Agg](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_IntId_Agg.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3618,7 +2699,7 @@ framework.
 
 
 
-## TenMDocCollection_IntId_IdentityView
+## [TenMDocCollection_IntId_IdentityView](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_IntId_IdentityView.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3626,7 +2707,7 @@ This workload tests the performance of IDHACK on queries with int _id over a no-
 
 
 
-## TenMDocCollection_IntId_IdentityView_Agg
+## [TenMDocCollection_IntId_IdentityView_Agg](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_IntId_IdentityView_Agg.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3635,7 +2716,7 @@ using the aggregation framework.
 
 
 
-## TenMDocCollection_ObjectId
+## [TenMDocCollection_ObjectId](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_ObjectId.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3643,7 +2724,7 @@ This workload tests performance of IDHACK on queries with OID _id.
 
 
 
-## TenMDocCollection_ObjectId_Sharded
+## [TenMDocCollection_ObjectId_Sharded](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_ObjectId_Sharded.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3651,7 +2732,7 @@ This workload tests performance of IDHACK on queries with OID _id on a sharded c
 
 
 
-## TenMDocCollection_SubDocId
+## [TenMDocCollection_SubDocId](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_SubDocId.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3659,7 +2740,7 @@ This workload tests performance of IDHACK on queries with sub-document _id.
 
 
 
-## TimeSeries2dsphere
+## [TimeSeries2dsphere](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeSeries2dsphere.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3675,7 +2756,7 @@ The phases are:
 
 
 
-## TimeSeriesGroupStagesOnComputedFields
+## [TimeSeriesGroupStagesOnComputedFields](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeSeriesGroupStagesOnComputedFields.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3687,7 +2768,7 @@ on computed date fields on a timeseries collection.
 timeseries, aggregate, sbe 
 
 
-## TimeSeriesLastpoint
+## [TimeSeriesLastpoint](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeSeriesLastpoint.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3701,7 +2782,7 @@ currently supported lastpoint aggregate pipelines that are tested here include:
 
 
 
-## TimeSeriesSort
+## [TimeSeriesSort](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeSeriesSort.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3720,7 +2801,7 @@ Test Overview:
 
 
 
-## TimeSeriesSortCompound
+## [TimeSeriesSortCompound](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeSeriesSortCompound.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3731,7 +2812,7 @@ documents. The documents inserted have the same timestamps, with different meta 
 
 
 
-## TimeSeriesSortOverlappingBuckets
+## [TimeSeriesSortOverlappingBuckets](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeSeriesSortOverlappingBuckets.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3742,7 +2823,7 @@ with different meta values.
 
 
 
-## TimeSeriesTelemetry
+## [TimeSeriesTelemetry](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeSeriesTelemetry.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3754,7 +2835,7 @@ telemetry data from arbitrary machines.
 timeseries, aggregate, group 
 
 
-## TimeseriesBlockProcessing
+## [TimeseriesBlockProcessing](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesBlockProcessing.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -3768,7 +2849,7 @@ ineffective. This stresses turning buckets into blocks and running block based o
 timeseries, aggregate 
 
 
-## TimeseriesCount
+## [TimeseriesCount](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesCount.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3781,7 +2862,7 @@ the $unpack stage.
 timeseries, aggregate, group 
 
 
-## TimeseriesEnum
+## [TimeseriesEnum](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesEnum.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3792,7 +2873,7 @@ The queries in this workload exercise group stage that uses an enum like field f
 timeseries, aggregate, group 
 
 
-## TimeseriesFixedBucketing
+## [TimeseriesFixedBucketing](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesFixedBucketing.yml)
 ### Owner
 @mongodb/query-integration
 ### Description
@@ -3807,7 +2888,7 @@ and the metaField is "tags". There are 20736000 documents in the collection.
 timeseries, aggregate, group 
 
 
-## TimeseriesStressUnpacking
+## [TimeseriesStressUnpacking](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesStressUnpacking.yml)
 ### Owner
 @mongodb/query-integration
 ### Description
@@ -3823,7 +2904,7 @@ document "as is" with no projections defined.
 timeseries, aggregate 
 
 
-## TimeseriesTsbsExpressionQuery
+## [TimeseriesTsbsExpressionQuery](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesTsbsExpressionQuery.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3845,7 +2926,7 @@ are random integers between 0-100 we don't expect different fields to have signi
 timeseries, aggregate, group, sort 
 
 
-## TimeseriesTsbsOptimizations
+## [TimeseriesTsbsOptimizations](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesTsbsOptimizations.yml)
 ### Owner
 @mongodb/query-integration
 ### Description
@@ -3872,7 +2953,7 @@ You need to verify how many buckets are hit for each measurement field predicate
 timeseries, aggregate, group, sort 
 
 
-## TimeseriesTsbsQuery
+## [TimeseriesTsbsQuery](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesTsbsQuery.yml)
 ### Owner
 @mongodb/query-integration
 ### Description
@@ -3894,7 +2975,7 @@ are random integers between 0-100 we don't expect different fields to have signi
 timeseries, aggregate, group, sort 
 
 
-## UnionWith
+## [UnionWith](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/UnionWith.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3905,7 +2986,7 @@ environments.
 
 
 
-## UnwindGroup
+## [UnwindGroup](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/UnwindGroup.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3918,7 +2999,7 @@ enabled (whole pipeline runs in SBE) versus disabled (whole pipeline runs in Cla
 unwind, group, aggregate 
 
 
-## UpdateLargeDocuments
+## [UpdateLargeDocuments](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/UpdateLargeDocuments.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3930,7 +3011,7 @@ were finished in a period of time.
 
 
 
-## VariadicAggregateExpressions
+## [VariadicAggregateExpressions](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/VariadicAggregateExpressions.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -3950,7 +3031,7 @@ environment for the classic variadic aggregation expressions.
 aggregate, sbe 
 
 
-## WindowWithComplexPartitionExpression
+## [WindowWithComplexPartitionExpression](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/WindowWithComplexPartitionExpression.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3959,7 +3040,7 @@ partitionBy expression.
 
 
 
-## WindowWithNestedFieldProjection
+## [WindowWithNestedFieldProjection](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/WindowWithNestedFieldProjection.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3967,7 +3048,7 @@ This test exercises the performance of '$setWindowFields' projecting a nested fi
 
 
 
-## linearFill
+## [linearFill](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/linearFill.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -3985,7 +3066,7 @@ https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/
 
 
 
-## locf
+## [locf](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/locf.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4002,7 +3083,7 @@ https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/
 
 
 
-## BlockingSort
+## [BlockingSort](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/BlockingSort.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4018,7 +3099,7 @@ as well as classic.
 
 
 
-## ClusteredCollection
+## [ClusteredCollection](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/ClusteredCollection.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4032,7 +3113,7 @@ The goal of this test is to exercise multiplanning. We create as many indexes as
 
 
 
-## CompoundIndexes
+## [CompoundIndexes](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/CompoundIndexes.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4046,7 +3127,7 @@ as well as classic.
 
 
 
-## ManyIndexSeeks
+## [ManyIndexSeeks](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/ManyIndexSeeks.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4063,7 +3144,7 @@ as well as classic.
 
 
 
-## MultiPlanningReadsALotOfData
+## [MultiPlanningReadsALotOfData](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/MultiPlanningReadsALotOfData.yml)
 ### Owner
 @mongodb/query-execution
 ### Description
@@ -4086,7 +3167,7 @@ breaking heuristics are guessing the correct index.
 indexes 
 
 
-## MultikeyIndexes
+## [MultikeyIndexes](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/MultikeyIndexes.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4102,7 +3183,7 @@ as well as classic.
 
 
 
-## MultiplannerWithGroup
+## [MultiplannerWithGroup](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/MultiplannerWithGroup.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4118,7 +3199,7 @@ as well as classic.
 
 
 
-## NoGoodPlan
+## [NoGoodPlan](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/NoGoodPlan.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4134,7 +3215,7 @@ as well as classic.
 
 
 
-## NoResults
+## [NoResults](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/NoResults.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4149,7 +3230,7 @@ as well as classic.
 
 
 
-## NoSuchField
+## [NoSuchField](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/NoSuchField.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4163,7 +3244,7 @@ as well as classic.
 
 
 
-## NonBlockingVsBlocking
+## [NonBlockingVsBlocking](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/NonBlockingVsBlocking.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4180,7 +3261,7 @@ the combination of classic planner + SBE execution (PM-3591) to perform about as
 
 
 
-## Simple
+## [Simple](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/Simple.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4198,7 +3279,7 @@ as well as classic.
 
 
 
-## Subplanning
+## [Subplanning](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/Subplanning.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4214,7 +3295,7 @@ as well as classic.
 
 
 
-## UseClusteredIndex
+## [UseClusteredIndex](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/UseClusteredIndex.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4228,7 +3309,7 @@ The goal of this test is to exercise multiplanning. We create as many indexes as
 
 
 
-## VariedSelectivity
+## [VariedSelectivity](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/VariedSelectivity.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4246,7 +3327,7 @@ as well as classic.
 
 
 
-## dbcheck_40GB
+## [dbcheck_40GB](https://www.github.com/mongodb/genny/blob/master/src/workloads/replication/dbcheck/dbcheck_40GB.yml)
 ### Owner
 mongodb/server-replication"
 ### Description
@@ -4257,7 +3338,7 @@ Measures the performance of running dbcheck's modes and its effect on crud opera
 dbcheck, collections, indexes, crud 
 
 
-## 1_0_5GB
+## [1_0_5GB](https://www.github.com/mongodb/genny/blob/master/src/workloads/replication/startup/1_0_5GB.yml)
 ### Owner
 mongodb/server-replication"
 ### Description
@@ -4287,7 +3368,7 @@ Sample logs:
 startup, collections, indexes, defaultWC 
 
 
-## 1_1_5GB_crud
+## [1_1_5GB_crud](https://www.github.com/mongodb/genny/blob/master/src/workloads/replication/startup/1_1_5GB_crud.yml)
 ### Owner
 mongodb/server-replication"
 ### Description
@@ -4330,7 +3411,7 @@ Sample logs:
 startup, stopCheckpointing, updates 
 
 
-## 1_2_5GB_ddl
+## [1_2_5GB_ddl](https://www.github.com/mongodb/genny/blob/master/src/workloads/replication/startup/1_2_5GB_ddl.yml)
 ### Owner
 mongodb/server-replication"
 ### Description
@@ -4385,7 +3466,7 @@ Sample logs:
 startup, stopCheckpointing, collections, indexes 
 
 
-## 1_3_5GB_index
+## [1_3_5GB_index](https://www.github.com/mongodb/genny/blob/master/src/workloads/replication/startup/1_3_5GB_index.yml)
 ### Owner
 mongodb/server-replication"
 ### Description
@@ -4459,7 +3540,7 @@ Sample logs:
 startup, hangIndexBuild, collections, indexes, stepdown, stepup 
 
 
-## 2_0_50GB
+## [2_0_50GB](https://www.github.com/mongodb/genny/blob/master/src/workloads/replication/startup/2_0_50GB.yml)
 ### Owner
 mongodb/server-replication"
 ### Description
@@ -4489,7 +3570,7 @@ Sample logs:
 startup, collections, indexes 
 
 
-## 2_1_50GB_crud
+## [2_1_50GB_crud](https://www.github.com/mongodb/genny/blob/master/src/workloads/replication/startup/2_1_50GB_crud.yml)
 ### Owner
 mongodb/server-replication"
 ### Description
@@ -4532,7 +3613,7 @@ Sample logs:
 startup, stopCheckpointing, updates 
 
 
-## 2_2_50GB_ddl
+## [2_2_50GB_ddl](https://www.github.com/mongodb/genny/blob/master/src/workloads/replication/startup/2_2_50GB_ddl.yml)
 ### Owner
 mongodb/server-replication"
 ### Description
@@ -4587,7 +3668,7 @@ Sample logs:
 startup, stopCheckpointing, collections, indexes 
 
 
-## 2_3_50GB_index
+## [2_3_50GB_index](https://www.github.com/mongodb/genny/blob/master/src/workloads/replication/startup/2_3_50GB_index.yml)
 ### Owner
 mongodb/server-replication"
 ### Description
@@ -4661,7 +3742,7 @@ Sample logs:
 startup, hangIndexBuild, collections, indexes, stepdown, stepup 
 
 
-## 3_0_Reads
+## [3_0_Reads](https://www.github.com/mongodb/genny/blob/master/src/workloads/replication/startup/3_0_Reads.yml)
 ### Owner
 mongodb/server-replication"
 ### Description
@@ -4673,7 +3754,7 @@ Issues dummy reads against both databases used in the light and the heavy phases
 startup, reads 
 
 
-## BigUpdate
+## [BigUpdate](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/BigUpdate.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -4687,7 +3768,7 @@ updated.
 stress, collections, indexes, update, find, coldData 
 
 
-## BigUpdate10k
+## [BigUpdate10k](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/BigUpdate10k.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -4701,7 +3782,7 @@ version of the test, using 10k collections and 10k documents per collection.
 stress, collections, indexes, update, find, coldData 
 
 
-## BulkLoading
+## [BulkLoading](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/BulkLoading.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -4726,7 +3807,7 @@ It tests the following scenarios:
 bulk insert, bulk write, indexes, upsert, stress 
 
 
-## CollScan
+## [CollScan](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/CollScan.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -4737,7 +3818,7 @@ This workload loads 10M rows into a collection, then executes collection scans i
 collection scan 
 
 
-## ContentionTTLDeletions
+## [ContentionTTLDeletions](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/ContentionTTLDeletions.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -4749,7 +3830,7 @@ concurrent crud operations on a second collection to simulate extreme ticket con
 ttl, stress, indexes, insertMany, CrudActor 
 
 
-## CreateDropView
+## [CreateDropView](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/CreateDropView.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -4761,7 +3842,7 @@ create and drops a view on that collection.
 view, create, drop 
 
 
-## CursorStormMongos
+## [CursorStormMongos](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/CursorStormMongos.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4779,7 +3860,7 @@ memory pressure on the shards remains low, while it's kept large on the mongos.
 scale, memory stress, cursor storm, mongos, fail, oom, out of memory 
 
 
-## InCacheSnapshotReads
+## [InCacheSnapshotReads](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/InCacheSnapshotReads.yml)
 ### Owner
 Replication
 ### Description
@@ -4787,7 +3868,7 @@ TODO: TIG-3321
 
 
 
-## InsertBigDocs
+## [InsertBigDocs](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/InsertBigDocs.yml)
 ### Owner
 @mongodb/replication
 ### Description
@@ -4795,7 +3876,7 @@ TODO: TIG-3321
 
 
 
-## InsertRemove
+## [InsertRemove](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/InsertRemove.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -4809,7 +3890,7 @@ remove.
 docs, actorInsertRemove, insert, delete 
 
 
-## LargeIndexedIns
+## [LargeIndexedIns](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeIndexedIns.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -4827,6 +3908,7 @@ it uses a ^Once generator to generate the arrays once during initialization.
 
 
 
+<<<<<<< HEAD
 ## LargeIndexedInsMatchingDocuments
 ### Owner
 @mongodb/product-perf
@@ -4863,6 +3945,9 @@ Loader, CrudActor, find, $in, matching documents using $in
 
 
 ## LargeScaleLongLived
+=======
+## [LargeScaleLongLived](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeScaleLongLived.yml)
+>>>>>>> d9bc52e3 (DEVPROD-6041 Documentation generation improvements.)
 ### Owner
 Storage Engines
 ### Description
@@ -4872,7 +3957,7 @@ collections and 10 indexes per collection. It reads at 15K op/s and writes at 5K
 
 
 
-## LargeScaleModel
+## [LargeScaleModel](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeScaleModel.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -4883,7 +3968,7 @@ reads per second.
 
 
 
-## LargeScaleParallel
+## [LargeScaleParallel](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeScaleParallel.yml)
 ### Owner
 STM
 ### Description
@@ -4896,7 +3981,7 @@ multi-collection scan. This adds some concurrent write load.
 collections, oltp, update, query, scale 
 
 
-## LargeScaleSerial
+## [LargeScaleSerial](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeScaleSerial.yml)
 ### Owner
 STM
 ### Description
@@ -4921,7 +4006,7 @@ that shouldn't be too affected by the long-running queries.
 collections, oltp, query, scale 
 
 
-## LoadTest
+## [LoadTest](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LoadTest.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -4929,7 +4014,7 @@ Based on LongLivedTransactions Insert workload. Using to experiment with bulk lo
 
 
 
-## MajorityReads10KThreads
+## [MajorityReads10KThreads](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MajorityReads10KThreads.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -4937,7 +4022,7 @@ This workload simulates a case of extreme overload with a majority of reads happ
 
 
 
-## MajorityWrites10KThreads
+## [MajorityWrites10KThreads](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MajorityWrites10KThreads.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -4945,7 +4030,7 @@ This workload simulates a case of extreme overload with a majority of writes hap
 
 
 
-## ManyUpdate
+## [ManyUpdate](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/ManyUpdate.yml)
 ### Owner
 @mongodb/server-replication
 ### Description
@@ -4962,7 +4047,7 @@ sets to determine if any performance changes are due to replication overhead cha
 RunCommand, Loader, CrudActor, updateMany, update, replication, oplogSourceOverhead 
 
 
-## MassDeleteRegression
+## [MassDeleteRegression](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MassDeleteRegression.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -4973,7 +4058,7 @@ PERF-2075 to find the cause of SERVER-48522
 
 
 
-## Mixed10KThreads
+## [Mixed10KThreads](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/Mixed10KThreads.yml)
 ### Owner
 @mongodb/server-execution
 ### Description
@@ -4996,7 +4081,7 @@ The metrics to monitor are:
 scale, insertMany, find 
 
 
-## MixedWorkloadsGenny
+## [MixedWorkloadsGenny](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MixedWorkloadsGenny.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -5013,7 +4098,7 @@ starved out by writes.
 scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete 
 
 
-## MixedWorkloadsGennyRateLimited
+## [MixedWorkloadsGennyRateLimited](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MixedWorkloadsGennyRateLimited.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -5029,7 +4114,7 @@ Rate Limits were added to maintain CPU utlization at 30-40%, along with using a 
 scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete, rateLimited, globalRate 
 
 
-## MixedWorkloadsGennyStress
+## [MixedWorkloadsGennyStress](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MixedWorkloadsGennyStress.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -5050,7 +4135,7 @@ for 45 minutes.
 scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete 
 
 
-## MixedWorkloadsGennyStressWithScans
+## [MixedWorkloadsGennyStressWithScans](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MixedWorkloadsGennyStressWithScans.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -5072,7 +4157,7 @@ for 45 minutes.
 scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete, aggregate, scan 
 
 
-## MixedWrites
+## [MixedWrites](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MixedWrites.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -5083,6 +4168,7 @@ Requires at least 3-node replset.
 
 
 
+<<<<<<< HEAD
 ## MultiPlanStormRecordIdDedupIdxScan
 ### Owner
 @mongodb/query
@@ -5106,6 +4192,9 @@ memory stress, multi-planning, sort, skip, oom, out of memory
 
 
 ## NegativeScalingLoadStress
+=======
+## [NegativeScalingLoadStress](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/NegativeScalingLoadStress.yml)
+>>>>>>> d9bc52e3 (DEVPROD-6041 Documentation generation improvements.)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -5121,7 +4210,7 @@ negative scaling. This workload is not scheduled to run at this time and is inte
 scale, insertOne, insert, findOne, find 
 
 
-## OutOfCacheScanner
+## [OutOfCacheScanner](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/OutOfCacheScanner.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -5134,7 +4223,7 @@ recorded at all times.
 
 
 
-## OutOfCacheSnapshotReads
+## [OutOfCacheSnapshotReads](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/OutOfCacheSnapshotReads.yml)
 ### Owner
 Replication
 ### Description
@@ -5142,7 +4231,7 @@ TODO: TIG-3321
 
 
 
-## ReadMemoryStressUntilFailure
+## [ReadMemoryStressUntilFailure](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/ReadMemoryStressUntilFailure.yml)
 ### Owner
 Service Architecture
 ### Description
@@ -5163,7 +4252,7 @@ process the operations to fail due to out-of-memory errors.
 scale, memory stress, aggregate, sort, insert, fail, oom, out of memory 
 
 
-## ReplaceMillionDocsInSeparateTxns
+## [ReplaceMillionDocsInSeparateTxns](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/ReplaceMillionDocsInSeparateTxns.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -5175,7 +4264,7 @@ million documents, with a fixed transaction batch size of one hundred.
 transactions, stress, time 
 
 
-## ScanWithLongLived
+## [ScanWithLongLived](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/ScanWithLongLived.yml)
 ### Owner
 Storage Engines
 ### Description
@@ -5184,7 +4273,7 @@ described in PM-1986.
 
 
 
-## TimeSeriesSortScale
+## [TimeSeriesSortScale](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/TimeSeriesSortScale.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -5194,7 +4283,7 @@ random meta value ranging from 0 to 1000.
 
 
 
-## UniqueIndexStress
+## [UniqueIndexStress](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/UniqueIndexStress.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -5208,7 +4297,7 @@ secondary indexes, then 1, 2, up to 7.
 insert, unique indexes 
 
 
-## UpdateMillionDocsInTxn
+## [UpdateMillionDocsInTxn](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/UpdateMillionDocsInTxn.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -5222,7 +4311,7 @@ lifetime of all transactions.
 transactions, stress, time 
 
 
-## UpdateSingleLargeDocumentWith10kThreads
+## [UpdateSingleLargeDocumentWith10kThreads](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/UpdateSingleLargeDocumentWith10kThreads.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -5237,7 +4326,7 @@ from the query subsystem.
 CrudActor, Loader, memory, scale, stress, updateOne, WriteConflict 
 
 
-## GennyOverhead
+## [GennyOverhead](https://www.github.com/mongodb/genny/blob/master/src/workloads/selftests/GennyOverhead.yml)
 ### Owner
 @10gen/dev-prod-tips
 ### Description
@@ -5268,7 +4357,7 @@ be run with the smallest MongoDB setup.
 
 
 
-## IndexStress
+## [IndexStress](https://www.github.com/mongodb/genny/blob/master/src/workloads/serverless/IndexStress.yml)
 ### Owner
 Atlas Serverless
 ### Description
@@ -5288,7 +4377,7 @@ this workload: https://tinyurl.com/ycyr45fs
 
 
 
-## BatchedUpdateOneWithoutShardKeyWithId
+## [BatchedUpdateOneWithoutShardKeyWithId](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/BatchedUpdateOneWithoutShardKeyWithId.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -5310,7 +4399,7 @@ The collection is sharded on {oldKey: 'hashed'}. The metrics to watchout for her
 RunCommand, sharded, Loader, insert, update, updateOne, batch, latency 
 
 
-## BulkWriteBatchedUpdateOneWithoutShardKeyWithId
+## [BulkWriteBatchedUpdateOneWithoutShardKeyWithId](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/BulkWriteBatchedUpdateOneWithoutShardKeyWithId.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -5333,7 +4422,7 @@ The collection is sharded on {oldKey: 'hashed'}.  The metrics to watchout for he
 CrudActor, sharded, Loader, insert, update, updateOne, batch, bulkWrite, latency 
 
 
-## DistinctCommands
+## [DistinctCommands](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/DistinctCommands.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -5347,7 +4436,7 @@ is much higher for both of these actors.
 Distinct, Large Strings 
 
 
-## MongosMerging
+## [MongosMerging](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/MongosMerging.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -5361,43 +4450,21 @@ find a non-duplicate document.
 Aggregations, Mongos, Sample, Unwind, Sort 
 
 
-## MultiShardTransactions
+## [MultiShardTransactions](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/MultiShardTransactions.yml)
 ### Owner
 @mongodb/sharding
 ### Description
 
 
 
-## MultiShardTransactionsWithManyNamespaces
+## [MultiShardTransactionsWithManyNamespaces](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/MultiShardTransactionsWithManyNamespaces.yml)
 ### Owner
 @mongodb/sharding
 ### Description
 
 
 
-## ReshardCollection
-### Owner
-@mongodb/sharding
-### Description
-Runs the reshardCollection command while read and write operations are active on the collection
-being resharded.
-
-The workload consists of 5 phases:
-  1. Creating an empty sharded collection distributed across all shards in the cluster.
-  2. Populating the sharded collection with data.
-  3. Running read and write operations on the collection before it is resharded.
-  4. Running read and write operations on the collection while it is being resharded.
-  5. Running read and write operations on the collection after it has been resharded.
-
-The inserted documents have the following form:
-
-    {_id: 10, oldKey: 20, newKey: 30, counter: 0, padding: 'random string of bytes ...'}
-
-The collection is initially sharded on {oldKey: 'hashed'} and then resharded on {newKey: 1}.
-
-
-
-## ReshardCollectionMixed
+## [ReshardCollection](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/ReshardCollection.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -5419,7 +4486,7 @@ The collection is initially sharded on {oldKey: 'hashed'} and then resharded on 
 
 
 
-## ReshardCollectionReadHeavy
+## [ReshardCollectionMixed](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/ReshardCollectionMixed.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -5441,7 +4508,29 @@ The collection is initially sharded on {oldKey: 'hashed'} and then resharded on 
 
 
 
-## ReshardCollectionWithIndexes
+## [ReshardCollectionReadHeavy](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/ReshardCollectionReadHeavy.yml)
+### Owner
+@mongodb/sharding
+### Description
+Runs the reshardCollection command while read and write operations are active on the collection
+being resharded.
+
+The workload consists of 5 phases:
+  1. Creating an empty sharded collection distributed across all shards in the cluster.
+  2. Populating the sharded collection with data.
+  3. Running read and write operations on the collection before it is resharded.
+  4. Running read and write operations on the collection while it is being resharded.
+  5. Running read and write operations on the collection after it has been resharded.
+
+The inserted documents have the following form:
+
+    {_id: 10, oldKey: 20, newKey: 30, counter: 0, padding: 'random string of bytes ...'}
+
+The collection is initially sharded on {oldKey: 'hashed'} and then resharded on {newKey: 1}.
+
+
+
+## [ReshardCollectionWithIndexes](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/ReshardCollectionWithIndexes.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -5499,7 +4588,7 @@ The indexes are:
 resharding, indexes, replication, collection copy 
 
 
-## WouldChangeOwningShardBatchWrite
+## [WouldChangeOwningShardBatchWrite](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/WouldChangeOwningShardBatchWrite.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -5513,7 +4602,7 @@ The workload consists of 3 phases:
 
 
 
-## WriteOneReplicaSet
+## [WriteOneReplicaSet](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/WriteOneReplicaSet.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -5521,7 +4610,7 @@ Run updateOnes, deleteOnes, and findAndModifys on a replica set.
 
 
 
-## WriteOneWithoutShardKeyShardedCollection
+## [WriteOneWithoutShardKeyShardedCollection](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/WriteOneWithoutShardKeyShardedCollection.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -5529,7 +4618,7 @@ On a sharded collection on a single shard cluster, run workloads that updateOne,
 
 
 
-## WriteOneWithoutShardKeyUnshardedCollection
+## [WriteOneWithoutShardKeyUnshardedCollection](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/WriteOneWithoutShardKeyUnshardedCollection.yml)
 ### Owner
 @mongodb/sharding
 ### Description
@@ -5537,35 +4626,35 @@ On an unsharded collection on a single shard cluster, run workloads that updateO
 
 
 
-## MultiUpdates-PauseMigrations-ShardCollection
+## [MultiUpdates-PauseMigrations-ShardCollection](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/multi_updates/MultiUpdates-PauseMigrations-ShardCollection.yml)
 ### Owner
 @mongodb/sharding
 ### Description
 See phases/sharding/multi_updates/MultiUpdatesTemplate.yml.
 
 
-## MultiUpdates-PauseMigrations
+## [MultiUpdates-PauseMigrations](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/multi_updates/MultiUpdates-PauseMigrations.yml)
 ### Owner
 @mongodb/sharding
 ### Description
 See phases/sharding/multi_updates/MultiUpdatesTemplate.yml.
 
 
-## MultiUpdates-ShardCollection
+## [MultiUpdates-ShardCollection](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/multi_updates/MultiUpdates-ShardCollection.yml)
 ### Owner
 @mongodb/sharding
 ### Description
 See phases/sharding/multi_updates/MultiUpdatesTemplate.yml.
 
 
-## MultiUpdates
+## [MultiUpdates](https://www.github.com/mongodb/genny/blob/master/src/workloads/sharding/multi_updates/MultiUpdates.yml)
 ### Owner
 @mongodb/sharding
 ### Description
 See phases/sharding/multi_updates/MultiUpdatesTemplate.yml.
 
 
-## AddFields
+## [AddFields](https://www.github.com/mongodb/genny/blob/master/src/workloads/streams/AddFields.yml)
 ### Owner
 @10gen/altas-streams
 ### Description
@@ -5582,7 +4671,7 @@ many stages.
 streams 
 
 
-## LargeHoppingWindow
+## [LargeHoppingWindow](https://www.github.com/mongodb/genny/blob/master/src/workloads/streams/LargeHoppingWindow.yml)
 ### Owner
 @10gen/altas-streams
 ### Description
@@ -5603,7 +4692,7 @@ are flushed to the sink.
 streams 
 
 
-## LargeTumblingWindow
+## [LargeTumblingWindow](https://www.github.com/mongodb/genny/blob/master/src/workloads/streams/LargeTumblingWindow.yml)
 ### Owner
 @10gen/altas-streams
 ### Description
@@ -5623,7 +4712,7 @@ are flushed to the sink.
 streams 
 
 
-## LargeWindowMixed
+## [LargeWindowMixed](https://www.github.com/mongodb/genny/blob/master/src/workloads/streams/LargeWindowMixed.yml)
 ### Owner
 @10gen/altas-streams
 ### Description
@@ -5642,7 +4731,7 @@ output atmost 400k documents.
 streams 
 
 
-## LargeWindowUniqueAndExistingKeys
+## [LargeWindowUniqueAndExistingKeys](https://www.github.com/mongodb/genny/blob/master/src/workloads/streams/LargeWindowUniqueAndExistingKeys.yml)
 ### Owner
 @10gen/altas-streams
 ### Description
@@ -5662,7 +4751,7 @@ every document results in updating an existing key in the window.
 streams 
 
 
-## Passthrough
+## [Passthrough](https://www.github.com/mongodb/genny/blob/master/src/workloads/streams/Passthrough.yml)
 ### Owner
 @10gen/altas-streams
 ### Description
@@ -5678,7 +4767,7 @@ one-to-one ratio. This applies a simple projection on incoming documents (curren
 streams 
 
 
-## Passthrough_ChangeStreamSource
+## [Passthrough_ChangeStreamSource](https://www.github.com/mongodb/genny/blob/master/src/workloads/streams/Passthrough_ChangeStreamSource.yml)
 ### Owner
 @10gen/altas-streams
 ### Description
@@ -5696,7 +4785,7 @@ as the source rather than the in-memory source operator.
 streams 
 
 
-## Passthrough_MongoSink
+## [Passthrough_MongoSink](https://www.github.com/mongodb/genny/blob/master/src/workloads/streams/Passthrough_MongoSink.yml)
 ### Owner
 @10gen/altas-streams
 ### Description
@@ -5714,7 +4803,7 @@ rather than the no-op sink operator.
 streams 
 
 
-## Search
+## [Search](https://www.github.com/mongodb/genny/blob/master/src/workloads/streams/Search.yml)
 ### Owner
 @10gen/altas-streams
 ### Description
@@ -5732,7 +4821,7 @@ documents.
 streams 
 
 
-## StreamsLookup
+## [StreamsLookup](https://www.github.com/mongodb/genny/blob/master/src/workloads/streams/StreamsLookup.yml)
 ### Owner
 @10gen/altas-streams
 ### Description
@@ -5750,7 +4839,7 @@ from the $lookup (join) on the foreign mongoDB collection.
 streams 
 
 
-## TopKPerWindow
+## [TopKPerWindow](https://www.github.com/mongodb/genny/blob/master/src/workloads/streams/TopKPerWindow.yml)
 ### Owner
 @10gen/altas-streams
 ### Description
@@ -5768,7 +4857,7 @@ assigned to them.
 streams 
 
 
-## Q1
+## [Q1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q1.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5776,7 +4865,7 @@ Run TPC-H query 1 against the denormalized schema for scale 1.
 
 
 
-## Q10
+## [Q10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q10.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5784,7 +4873,7 @@ Run TPC-H query 10 against the denormalized schema for scale 1.
 
 
 
-## Q11
+## [Q11](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q11.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5792,7 +4881,7 @@ Run TPC-H query 11 against the denormalized schema for scale 1.
 
 
 
-## Q12
+## [Q12](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q12.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5800,7 +4889,7 @@ Run TPC-H query 12 against the denormalized schema for scale 1.
 
 
 
-## Q13
+## [Q13](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q13.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5808,7 +4897,7 @@ Run TPC-H query 13 against the denormalized schema for scale 1.
 
 
 
-## Q14
+## [Q14](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q14.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5816,7 +4905,7 @@ Run TPC-H query 14 against the denormalized schema for scale 1.
 
 
 
-## Q15
+## [Q15](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q15.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5824,7 +4913,7 @@ Run TPC-H query 15 against the denormalized schema for scale 1.
 
 
 
-## Q16
+## [Q16](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q16.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5832,7 +4921,7 @@ Run TPC-H query 16 against the denormalized schema for scale 1.
 
 
 
-## Q17
+## [Q17](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q17.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5840,7 +4929,7 @@ Run TPC-H query 17 against the denormalized schema for scale 1.
 
 
 
-## Q18
+## [Q18](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q18.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5848,7 +4937,7 @@ Run TPC-H query 18 against the denormalized schema for scale 1.
 
 
 
-## Q19
+## [Q19](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q19.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5856,7 +4945,7 @@ Run TPC-H query 19 against the denormalized schema for scale 1.
 
 
 
-## Q2
+## [Q2](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q2.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5864,7 +4953,7 @@ Run TPC-H query 2 against the denormalized schema for scale 1.
 
 
 
-## Q20
+## [Q20](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q20.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5872,7 +4961,7 @@ Run TPC-H query 20 against the denormalized schema for scale 1.
 
 
 
-## Q21
+## [Q21](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q21.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5880,7 +4969,7 @@ Run TPC-H query 21 against the denormalized schema for scale 1.
 
 
 
-## Q22
+## [Q22](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q22.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5888,7 +4977,7 @@ Run TPC-H query 22 against the denormalized schema for scale 1.
 
 
 
-## Q3
+## [Q3](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q3.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5896,7 +4985,7 @@ Run TPC-H query 3 against the denormalized schema for scale 1.
 
 
 
-## Q4
+## [Q4](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q4.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5904,7 +4993,7 @@ Run TPC-H query 4 against the denormalized schema for scale 1.
 
 
 
-## Q5
+## [Q5](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q5.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5912,7 +5001,7 @@ Run TPC-H query 5 against the denormalized schema for scale 1.
 
 
 
-## Q6
+## [Q6](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q6.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5920,7 +5009,7 @@ Run TPC-H query 6 against the denormalized schema for scale 1.
 
 
 
-## Q7
+## [Q7](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q7.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5928,7 +5017,7 @@ Run TPC-H query 7 against the denormalized schema for scale 1.
 
 
 
-## Q8
+## [Q8](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q8.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5936,7 +5025,7 @@ Run TPC-H query 8 against the denormalized schema for scale 1.
 
 
 
-## Q9
+## [Q9](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q9.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5944,7 +5033,7 @@ Run TPC-H query 9 against the denormalized schema for scale 1.
 
 
 
-## validate
+## [validate](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/validate.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5953,7 +5042,7 @@ the AssertiveActor only ensures that any two values of numeric type are approxim
 
 
 
-## AvgAcctBal
+## [AvgAcctBal](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/AvgAcctBal.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5962,7 +5051,7 @@ schema for scale 10.
 
 
 
-## AvgItemCost
+## [AvgItemCost](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/AvgItemCost.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5971,7 +5060,7 @@ for scale 10.
 
 
 
-## BiggestOrders
+## [BiggestOrders](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/BiggestOrders.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5980,7 +5069,7 @@ scale 10.
 
 
 
-## Q1
+## [Q1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q1.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5988,7 +5077,7 @@ Run TPC-H query 1 against the denormalized schema for scale 10.
 
 
 
-## Q10
+## [Q10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q10.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -5996,7 +5085,7 @@ Run TPC-H query 10 against the denormalized schema for scale 10.
 
 
 
-## Q11
+## [Q11](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q11.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6004,7 +5093,7 @@ Run TPC-H query 11 against the denormalized schema for scale 10.
 
 
 
-## Q12
+## [Q12](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q12.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6012,7 +5101,7 @@ Run TPC-H query 12 against the denormalized schema for scale 10.
 
 
 
-## Q13
+## [Q13](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q13.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6020,7 +5109,7 @@ Run TPC-H query 13 against the denormalized schema for scale 10.
 
 
 
-## Q14
+## [Q14](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q14.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6028,7 +5117,7 @@ Run TPC-H query 14 against the denormalized schema for scale 10.
 
 
 
-## Q15
+## [Q15](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q15.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6036,7 +5125,7 @@ Run TPC-H query 15 against the denormalized schema for scale 10.
 
 
 
-## Q16
+## [Q16](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q16.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6044,7 +5133,7 @@ Run TPC-H query 16 against the denormalized schema for scale 10.
 
 
 
-## Q17
+## [Q17](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q17.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6052,7 +5141,7 @@ Run TPC-H query 17 against the denormalized schema for scale 10.
 
 
 
-## Q18
+## [Q18](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q18.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6060,7 +5149,7 @@ Run TPC-H query 18 against the denormalized schema for scale 10.
 
 
 
-## Q19
+## [Q19](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q19.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6068,7 +5157,7 @@ Run TPC-H query 19 against the denormalized schema for scale 10.
 
 
 
-## Q2
+## [Q2](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q2.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6076,7 +5165,7 @@ Run TPC-H query 2 against the denormalized schema for scale 10.
 
 
 
-## Q20
+## [Q20](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q20.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6084,7 +5173,7 @@ Run TPC-H query 20 against the denormalized schema for scale 10.
 
 
 
-## Q21
+## [Q21](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q21.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6092,7 +5181,7 @@ Run TPC-H query 21 against the denormalized schema for scale 10.
 
 
 
-## Q22
+## [Q22](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q22.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6100,7 +5189,7 @@ Run TPC-H query 22 against the denormalized schema for scale 10.
 
 
 
-## Q3
+## [Q3](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q3.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6108,7 +5197,7 @@ Run TPC-H query 3 against the denormalized schema for scale 10.
 
 
 
-## Q4
+## [Q4](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q4.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6116,7 +5205,7 @@ Run TPC-H query 4 against the denormalized schema for scale 10.
 
 
 
-## Q5
+## [Q5](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q5.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6124,7 +5213,7 @@ Run TPC-H query 5 against the denormalized schema for scale 10.
 
 
 
-## Q6
+## [Q6](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q6.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6132,7 +5221,7 @@ Run TPC-H query 6 against the denormalized schema for scale 10.
 
 
 
-## Q7
+## [Q7](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q7.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6140,7 +5229,7 @@ Run TPC-H query 7 against the denormalized schema for scale 10.
 
 
 
-## Q8
+## [Q8](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q8.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6148,7 +5237,7 @@ Run TPC-H query 8 against the denormalized schema for scale 10.
 
 
 
-## Q9
+## [Q9](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q9.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6156,7 +5245,7 @@ Run TPC-H query 9 against the denormalized schema for scale 10.
 
 
 
-## TotalLineitemRevenue
+## [TotalLineitemRevenue](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/TotalLineitemRevenue.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6165,7 +5254,7 @@ schema for scale 10.
 
 
 
-## TotalOrderRevenue
+## [TotalOrderRevenue](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/TotalOrderRevenue.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6174,7 +5263,7 @@ schema for scale 10.
 
 
 
-## validate
+## [validate](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/validate.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6183,7 +5272,7 @@ We don't need validation on scale 10, so this is just a Nop.
 
 
 
-## Q1
+## [Q1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q1.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6191,7 +5280,7 @@ Run TPC-H query 1 against the normalized schema for scale 1.
 
 
 
-## Q10
+## [Q10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q10.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6199,7 +5288,7 @@ Run TPC-H query 10 against the normalized schema for scale 1.
 
 
 
-## Q11
+## [Q11](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q11.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6207,7 +5296,7 @@ Run TPC-H query 11 against the normalized schema for scale 1.
 
 
 
-## Q12
+## [Q12](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q12.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6215,7 +5304,7 @@ Run TPC-H query 12 against the normalized schema for scale 1.
 
 
 
-## Q13
+## [Q13](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q13.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6223,7 +5312,7 @@ Run TPC-H query 13 against the normalized schema for scale 1.
 
 
 
-## Q14
+## [Q14](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q14.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6231,7 +5320,7 @@ Run TPC-H query 14 against the normalized schema for scale 1.
 
 
 
-## Q15
+## [Q15](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q15.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6239,7 +5328,7 @@ Run TPC-H query 15 against the normalized schema for scale 1.
 
 
 
-## Q16
+## [Q16](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q16.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6247,7 +5336,7 @@ Run TPC-H query 16 against the normalized schema for scale 1.
 
 
 
-## Q17
+## [Q17](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q17.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6255,7 +5344,7 @@ Run TPC-H query 17 against the normalized schema for scale 1.
 
 
 
-## Q18
+## [Q18](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q18.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6263,7 +5352,7 @@ Run TPC-H query 18 against the normalized schema for scale 1.
 
 
 
-## Q19
+## [Q19](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q19.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6271,7 +5360,7 @@ Run TPC-H query 19 against the normalized schema for scale 1.
 
 
 
-## Q2
+## [Q2](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q2.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6279,7 +5368,7 @@ Run TPC-H query 2 against the normalized schema for scale 1.
 
 
 
-## Q20
+## [Q20](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q20.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6287,7 +5376,7 @@ Run TPC-H query 20 against the normalized schema for scale 1.
 
 
 
-## Q21
+## [Q21](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q21.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6295,7 +5384,7 @@ Run TPC-H query 21 against the normalized schema for scale 1.
 
 
 
-## Q22
+## [Q22](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q22.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6303,7 +5392,7 @@ Run TPC-H query 22 against the normalized schema for scale 1.
 
 
 
-## Q3
+## [Q3](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q3.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6311,7 +5400,7 @@ Run TPC-H query 3 against the normalized schema for scale 1.
 
 
 
-## Q4
+## [Q4](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q4.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6319,7 +5408,7 @@ Run TPC-H query 4 against the normalized schema for scale 1.
 
 
 
-## Q5
+## [Q5](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q5.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6327,7 +5416,7 @@ Run TPC-H query 5 against the normalized schema for scale 1.
 
 
 
-## Q6
+## [Q6](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q6.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6335,7 +5424,7 @@ Run TPC-H query 6 against the normalized schema for scale 1.
 
 
 
-## Q7
+## [Q7](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q7.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6343,7 +5432,7 @@ Run TPC-H query 7 against the normalized schema for scale 1.
 
 
 
-## Q8
+## [Q8](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q8.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6351,7 +5440,7 @@ Run TPC-H query 8 against the normalized schema for scale 1.
 
 
 
-## Q9
+## [Q9](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q9.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6359,7 +5448,7 @@ Run TPC-H query 9 against the normalized schema for scale 1.
 
 
 
-## validate
+## [validate](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/validate.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6368,7 +5457,7 @@ the AssertiveActor only ensures that any two values of numeric type are approxim
 
 
 
-## Q1
+## [Q1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q1.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6376,7 +5465,7 @@ Run TPC-H query 1 against the normalized schema for scale 10.
 
 
 
-## Q10
+## [Q10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q10.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6384,7 +5473,7 @@ Run TPC-H query 10 against the normalized schema for scale 10.
 
 
 
-## Q11
+## [Q11](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q11.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6392,7 +5481,7 @@ Run TPC-H query 11 against the normalized schema for scale 10.
 
 
 
-## Q12
+## [Q12](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q12.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6400,7 +5489,7 @@ Run TPC-H query 12 against the normalized schema for scale 10.
 
 
 
-## Q13
+## [Q13](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q13.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6408,7 +5497,7 @@ Run TPC-H query 13 against the normalized schema for scale 10.
 
 
 
-## Q14
+## [Q14](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q14.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6416,7 +5505,7 @@ Run TPC-H query 14 against the normalized schema for scale 10.
 
 
 
-## Q15
+## [Q15](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q15.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6424,7 +5513,7 @@ Run TPC-H query 15 against the normalized schema for scale 10.
 
 
 
-## Q16
+## [Q16](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q16.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6432,7 +5521,7 @@ Run TPC-H query 16 against the normalized schema for scale 10.
 
 
 
-## Q17
+## [Q17](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q17.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6440,7 +5529,7 @@ Run TPC-H query 17 against the normalized schema for scale 10.
 
 
 
-## Q18
+## [Q18](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q18.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6448,7 +5537,7 @@ Run TPC-H query 18 against the normalized schema for scale 10.
 
 
 
-## Q19
+## [Q19](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q19.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6456,7 +5545,7 @@ Run TPC-H query 19 against the normalized schema for scale 10.
 
 
 
-## Q2
+## [Q2](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q2.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6464,7 +5553,7 @@ Run TPC-H query 2 against the normalized schema for scale 10.
 
 
 
-## Q20
+## [Q20](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q20.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6472,7 +5561,7 @@ Run TPC-H query 20 against the normalized schema for scale 10.
 
 
 
-## Q21
+## [Q21](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q21.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6480,7 +5569,7 @@ Run TPC-H query 21 against the normalized schema for scale 10.
 
 
 
-## Q22
+## [Q22](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q22.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6488,7 +5577,7 @@ Run TPC-H query 22 against the normalized schema for scale 10.
 
 
 
-## Q3
+## [Q3](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q3.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6496,7 +5585,7 @@ Run TPC-H query 3 against the normalized schema for scale 10.
 
 
 
-## Q4
+## [Q4](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q4.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6504,7 +5593,7 @@ Run TPC-H query 4 against the normalized schema for scale 10.
 
 
 
-## Q5
+## [Q5](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q5.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6512,7 +5601,7 @@ Run TPC-H query 5 against the normalized schema for scale 10.
 
 
 
-## Q6
+## [Q6](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q6.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6520,7 +5609,7 @@ Run TPC-H query 6 against the normalized schema for scale 10.
 
 
 
-## Q7
+## [Q7](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q7.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6528,7 +5617,7 @@ Run TPC-H query 7 against the normalized schema for scale 10.
 
 
 
-## Q8
+## [Q8](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q8.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6536,7 +5625,7 @@ Run TPC-H query 8 against the normalized schema for scale 10.
 
 
 
-## Q9
+## [Q9](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q9.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6544,7 +5633,7 @@ Run TPC-H query 9 against the normalized schema for scale 10.
 
 
 
-## validate
+## [validate](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/validate.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -6553,7 +5642,7 @@ We don't need validation on scale 10, so this is just a Nop.
 
 
 
-## LLTAnalytics
+## [LLTAnalytics](https://www.github.com/mongodb/genny/blob/master/src/workloads/transactions/LLTAnalytics.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -6564,7 +5653,7 @@ Workload to Benchmark the effect of LongLivedTransactions on an Update workload.
 transactions, long lived, snapshot, update 
 
 
-## LLTMixed
+## [LLTMixed](https://www.github.com/mongodb/genny/blob/master/src/workloads/transactions/LLTMixed.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -6588,7 +5677,7 @@ Baseline without scans, benchmark with scans
 transactions, longLived, snapshot, insert, find, update, delete 
 
 
-## LLTMixedSmall
+## [LLTMixedSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/transactions/LLTMixedSmall.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
