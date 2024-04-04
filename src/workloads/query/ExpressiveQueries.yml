@@ -62,7 +62,7 @@ Actors:
           model: {^FastRandomString: {length: 1}},
         },
         }
-      ]}}}}
+      ]}}}
   - &Nop {Nop: true}
   - *Nop
   - *Nop
