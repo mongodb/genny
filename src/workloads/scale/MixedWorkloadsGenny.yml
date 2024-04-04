@@ -305,9 +305,11 @@ AutoRun:
       - atlas-like-replica.2022-10
       - replica
       - replica-1dayhistory-15gbwtcache
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - replica-maintenance-events
       - replica-noflowcontrol
+      - replica-query-stats-rate-limit
       - single-replica
       - single-replica-classic-query-engine
       - single-replica-sbe

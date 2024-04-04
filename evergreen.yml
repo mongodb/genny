@@ -162,6 +162,10 @@ tasks:
 - name: t_lint_workloads
   commands:
   - func: f_lint_workloads
+  
+- name: t_check_generated_docs
+  commands:
+  - func: f_check_generated_docs
 
 - name: t_lint_python
   commands:
@@ -255,7 +259,8 @@ task_groups:
   - t_compile_and_dry_run
   - t_python_test
   #- t_lint_python
-  #- t_lint_workloads
+  - t_lint_workloads
+  - t_check_generated_docs
   - t_cmake_test
 
 - <<: *a_compile_and_test
@@ -270,7 +275,8 @@ task_groups:
   - t_compile
   - t_python_test
   #- t_lint_python
-  #- t_lint_workloads
+  - t_lint_workloads
+  - t_check_generated_docs
   - t_cmake_test
   - t_integration_test_single_node_replset
   - t_integration_test_three_node_replset
@@ -467,6 +473,23 @@ functions:
       args:
       - -v
       - lint-python
+
+  f_check_generated_docs:
+  - command: shell.exec
+    params:
+      script: |
+        cd src/genny
+
+        ./run-genny generate-docs
+
+        # Check for changes
+        if git diff --quiet; then
+            echo 'No changes in the repository'
+            exit 0
+        else
+            echo 'Workload documentation needs to be regenerated. Please run \`./run-genny generate-docs\` and commit the changes.'
+            exit 1
+        fi
 
   ##
   # Reports test results to evergreen API.

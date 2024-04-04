@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This test exercises the scenario of sort by an expression with an $addFields preceding the $sort,
   followed by a $project removing that field. This workload is designed to avoid repeated materialization
   after every projection in SBE.
@@ -78,10 +78,12 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
+      - standalone-80-feature-flags
       - standalone-all-feature-flags
       - standalone-classic-query-engine
       - standalone-sbe
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - shard-lite
     branch_name:

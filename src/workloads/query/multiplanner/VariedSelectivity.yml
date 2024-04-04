@@ -1,0 +1,247 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  The goal of this test is to exercise multiplanning. We run the same query 7 times, each one with a
+  different selectivity value that we are comparing against x1, calcuated based on the number of
+  documents we want the query to match. This will help us measure the overhead of throwing out the
+  result set gathered during multi-planning when the result set exceeds 101 documents.  Unlike many
+  of the other multiplanner/ workloads, we only test with 2 indexes here, because 2 indexes is a
+  worst case for throwing away results. Having more indexes increases planning time, but not query
+  execution time, so having more indexes makes the *relative* cost of throwing away results smaller.
+
+  We expect classic to have better latency and throughput than SBE on this workload,
+  and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
+  as well as classic.
+
+GlobalDefaults:
+  dbname: &db test
+  # Collection name used for queries.
+  coll: &coll Collection0
+
+  docCount: &docCount 1e5
+
+  maxPhase: &maxPhase 9
+  queryRepeats: &queryRepeats 1000
+
+Actors:
+- Name: DropCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *maxPhase
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand:
+            drop: *coll
+
+- Name: SetQueryKnobs
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: QueryKnobTemplate
+    Parameters:
+        # It's ok for this to run in parallel with 'DropCollection'.
+        # It has to be a separate actor because they target different DBs.
+      active: [0]
+      nopInPhasesUpTo: *maxPhase
+      collection: *coll
+
+- Name: CreateDataset
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: InsertTemplate
+    Parameters:
+      database: *db
+      threads: 1
+      active: [1]
+      nopInPhasesUpTo: *maxPhase
+      repeat: 1
+      collection: *coll
+      docCount: *docCount
+      document: {
+        x1: &distribution {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}},
+        x2: *distribution,
+        x3: *distribution,
+        x4: *distribution,
+        x5: *distribution,
+        x6: *distribution,
+        x7: *distribution,
+        x8: *distribution,
+        x9: *distribution,
+        x10: *distribution,
+        x11: *distribution,
+        x12: *distribution,
+        x13: *distribution,
+        x14: *distribution,
+        x15: *distribution,
+        x16: *distribution,
+        x17: *distribution,
+        x18: *distribution,
+        x19: *distribution,
+        x20: *distribution,
+        x21: *distribution,
+        x22: *distribution,
+        x23: *distribution,
+        x24: *distribution,
+        x25: *distribution,
+        x26: *distribution,
+        x27: *distribution,
+        x28: *distribution,
+        x29: *distribution,
+        x30: *distribution,
+        x31: *distribution,
+        x32: *distribution,
+        x33: *distribution,
+        x34: *distribution,
+        x35: *distribution,
+        x36: *distribution,
+        x37: *distribution,
+        x38: *distribution,
+        x39: *distribution,
+        x40: *distribution,
+        x41: *distribution,
+        x42: *distribution,
+        x43: *distribution,
+        x44: *distribution,
+        x45: *distribution,
+        x46: *distribution,
+        x47: *distribution,
+        x48: *distribution,
+        x49: *distribution,
+        x50: *distribution,
+        x51: *distribution,
+        x52: *distribution,
+        x53: *distribution,
+        x54: *distribution,
+        x55: *distribution,
+        x56: *distribution,
+        x57: *distribution,
+        x58: *distribution,
+        x59: *distribution,
+        x60: *distribution,
+        x61: *distribution,
+        x62: *distribution,
+        x63: *distribution
+      }
+      indexes:
+      - keys: {x1: 1}
+        options: {name: index1}
+      - keys: {x2: 1}
+        options: {name: index2}
+
+- Name: Quiesce
+  Type: QuiesceActor
+  Threads: 1
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *maxPhase
+      PhaseConfig:
+        Repeat: 1
+
+- Name: MultiplannerWith10ExpectedResults
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: FindWithNExpectedResults
+    Parameters:
+      active: [3]
+      nopInPhasesUpTo: *maxPhase
+      repeat: *queryRepeats
+      database: *db
+      collection: *coll
+      docCount: *docCount
+      resultCount: 10
+
+- Name: MultiplannerWith50ExpectedResults
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: FindWithNExpectedResults
+    Parameters:
+      active: [4]
+      nopInPhasesUpTo: *maxPhase
+      repeat: *queryRepeats
+      database: *db
+      collection: *coll
+      docCount: *docCount
+      resultCount: 50
+
+- Name: MultiplannerWith101ExpectedResults
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: FindWithNExpectedResults
+    Parameters:
+      active: [5]
+      nopInPhasesUpTo: *maxPhase
+      repeat: *queryRepeats
+      database: *db
+      collection: *coll
+      docCount: *docCount
+      resultCount: 101
+
+- Name: MultiplannerWith110ExpectedResults
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: FindWithNExpectedResults
+    Parameters:
+      active: [6]
+      nopInPhasesUpTo: *maxPhase
+      repeat: *queryRepeats
+      database: *db
+      collection: *coll
+      docCount: *docCount
+      resultCount: 110
+
+- Name: MultiplannerWith200ExpectedResults
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: FindWithNExpectedResults
+    Parameters:
+      active: [7]
+      nopInPhasesUpTo: *maxPhase
+      repeat: *queryRepeats
+      database: *db
+      collection: *coll
+      docCount: *docCount
+      resultCount: 200
+
+- Name: MultiplannerWith300ExpectedResults
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: FindWithNExpectedResults
+    Parameters:
+      active: [8]
+      nopInPhasesUpTo: *maxPhase
+      repeat: *queryRepeats
+      database: *db
+      collection: *coll
+      docCount: *docCount
+      resultCount: 300
+
+- Name: MultiplannerWith1000ExpectedResults
+  LoadConfig:
+    Path: "../../../phases/query/Multiplanner.yml"
+    Key: FindWithNExpectedResults
+    Parameters:
+      active: [9]
+      nopInPhasesUpTo: *maxPhase
+      repeat: *queryRepeats
+      database: *db
+      collection: *coll
+      docCount: *docCount
+      resultCount: 1000
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone-sbe
+      - standalone-80-feature-flags # At time of writing this will enable PM-3591.
+      - standalone-all-feature-flags  # At time of writing this will enable PM-3591.
+      - standalone-classic-query-engine
+    branch_name:
+      $gte: v7.3

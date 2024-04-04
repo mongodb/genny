@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This workload measures the performance of updating large documents in a replica set. First, it
   inserts large documents, each containing 100 nested objects with 1K fields inside of them. Then it
   runs a series of simple updates. Each update is setting only one field and has write concern
@@ -96,8 +96,10 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - shard-lite
+      - shard-lite-80-feature-flags
       - shard-lite-all-feature-flags
     branch_name:
       $neq:

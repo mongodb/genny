@@ -29,14 +29,14 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  - Repeat: 1
+  - Repeat: 1 # Phase 0
     Database: *db
     Operation:
       OperationMetricsName: CreateTimeSeriesCollection
       OperationName: RunCommand
       OperationCommand:
         {create: &coll Collection0, timeseries: {timeField: "t", metaField: "m"}}
-  - Repeat: 1
+  - Repeat: 1 # Phase 1
     Database: *db
     Operations:
     - OperationMetricsName: DropAllIndexesUponCreation
@@ -73,7 +73,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: 1
+  - Repeat: 1 # Phase 4
     Database: *db
     Operations:
     - OperationMetricsName: CreateDescendingTimeIndex
@@ -85,7 +85,7 @@ Actors:
           name: DescendingTime
   - *Nop
   - *Nop
-  - Repeat: 1
+  - Repeat: 1 # Phase 7
     Database: *db
     Operations:
     - OperationMetricsName: DropDescendingTimeIndex
@@ -95,7 +95,7 @@ Actors:
         index: DescendingTime
   - *Nop
   - *Nop
-  - Repeat: 1
+  - Repeat: 1 # Phase 10
     Database: *db
     Operations:
     - OperationMetricsName: CreateMetaTimeIndex
@@ -111,7 +111,8 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: 1
+  - *Nop
+  - Repeat: 1 # Phase 18
     Database: *db
     Operations:
     - OperationMetricsName: DropMetaTimeIndex
@@ -122,7 +123,6 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -130,7 +130,7 @@ Actors:
   Database: *db
   Phases:
     OnlyActiveInPhases:
-      Active: [2, 5, 8, 12, 15, 20]
+      Active: [2, 5, 8, 12, 16, 20]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Repeat: 1
@@ -140,7 +140,7 @@ Actors:
   Threads: 1
   Phases:
   - *Nop
-  - Repeat: 1
+  - Repeat: 1 # Phase 1
     Database: *db
     Collection: *coll
     Threads: 1
@@ -159,7 +159,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: 1
+  - Repeat: 1 # Phase 11
     Database: *db
     Collection: *coll
     Threads: 1
@@ -171,7 +171,8 @@ Actors:
       m: 1001
   - *Nop
   - *Nop
-  - Repeat: 1
+  - *Nop
+  - Repeat: 1 # Phase 15
     Database: *db
     Collection: *coll
     Threads: 1
@@ -183,7 +184,8 @@ Actors:
       m: 1002
   - *Nop
   - *Nop
-  - Repeat: 1
+  - *Nop
+  - Repeat: 1 # Phase 19
     Database: *db
     Collection: *coll
     Threads: 1
@@ -195,8 +197,6 @@ Actors:
       m: {^RandomInt: {min: 0, max: 1000}}
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
 
 - Name: Queries
   Type: RunCommand
@@ -205,7 +205,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: &numQueryRuns 50
+  - Repeat: &numQueryRuns 50 # Phase 3
     Database: *db
     Operations:
     - OperationMetricsName: SortQueryBoundedSort
@@ -216,7 +216,7 @@ Actors:
         cursor: {batchSize: *batchSize}
   - *Nop
   - *Nop
-  - Repeat: *numQueryRuns
+  - Repeat: *numQueryRuns # Phase 6
     Database: *db
     Operations:
     - OperationMetricsName: DescendingSortWithDescendingIndexQueryBoundedSort
@@ -228,7 +228,7 @@ Actors:
         hint: "DescendingTime"
   - *Nop
   - *Nop
-  - Repeat: *numQueryRuns
+  - Repeat: *numQueryRuns # Phase 9
     Database: *db
     Operations:
     - OperationMetricsName: TimeToFirstResultQueryBoundedSort
@@ -240,7 +240,21 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - Repeat: *numQueryRuns
+  - Repeat: *numQueryRuns # Phase 13
+    Database: *db
+    Operations:
+    - OperationMetricsName: MetaPointPredicateTimeSortBoundedSortWithoutExplain
+      OperationName: RunCommand
+      OperationCommand:
+        aggregate: *coll
+        pipeline: [
+          {$match: {m: 1001}},  # this will match 5000 docs
+          {$sort: {t: 1}},
+          {$_internalInhibitOptimization: {}},
+          {$skip: 1e10}
+        ]
+        cursor: {batchSize: *batchSize}
+  - Repeat: *numQueryRuns # Phase 14
     Database: *db
     Operations:
     - OperationMetricsName: MetaPointPredicateTimeSortBoundedSort
@@ -257,7 +271,7 @@ Actors:
           cursor: {batchSize: *batchSize}
   - *Nop
   - *Nop
-  - Repeat: *numQueryRuns
+  - Repeat: *numQueryRuns # Phase 17
     Database: *db
     Operations:
     - OperationMetricsName: SelectiveMetaPointPredicateTimeSortBoundedSort
@@ -274,8 +288,7 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - Repeat: *numQueryRuns
+  - Repeat: *numQueryRuns # Phase 21
     Database: *db
     Operations:
     - OperationMetricsName: SpillVsNoSpillSortQueryBoundedSort
@@ -290,6 +303,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
     branch_name:
       $neq:

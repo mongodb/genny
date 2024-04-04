@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-
+Owner: "@mongodb/product-perf"
 Description: |
   This is a collection of helper scripts used to communicate with mongosync. To use them,
   use LoadConfig and load the script you would like to use in your actor's phase.

@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: mongodb/server-replication"
-Description: >
+Description: |
  Test performance of secondary reads while applying oplogs
 
  ### Setup
@@ -241,6 +241,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - atlas-like-replica
     branch_name:

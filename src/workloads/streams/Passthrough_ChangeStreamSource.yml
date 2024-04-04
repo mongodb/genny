@@ -33,6 +33,12 @@ GlobalDefaults:
     *Channel
   ]}}
 
+  # Used for `startAtOperationTime` when creating the stream processor so that it starts
+  # consuming from the beginning of the mongo collection. It is important that this used
+  # with `FixedGeneratedValue` so that the timestamp is generated before the documents
+  # start being inserted into the mongo collection.
+  StartTimestamp: &StartTimestamp {^FixedGeneratedValue: { fromGenerator: {^NowTimestamp: {}}}}
+
   Document: &Document
     auction: {^Inc: { start: 1000, multipler: 1 }}
     bidder: {^Inc: { start: 1000, multipler: 1 }}
@@ -49,15 +55,16 @@ Actors:
   Threads: *NumThreads
   Phases:
   - Phase: 0
-    Nop: true
-  - Phase: 1
     Repeat: *NumInputDocumentsPerThread
     Collection: *InputCollectionName
     Operations:
     - OperationName: insertOne
       OperationCommand:
         Document: *Document
-  - Phase: 2
+        Options:
+          WriteConcern:
+            Level: Majority
+  - Phase: 1..3
     Nop: true
 
 - Name: Setup
@@ -66,6 +73,8 @@ Actors:
   Threads: 1
   Phases:
   - Phase: 0
+    Nop: true
+  - Phase: 1
     Repeat: 1
     Database: *DatabaseName
     Operations:
@@ -79,7 +88,10 @@ Actors:
             $source: {
               connectionName: "db",
               db: *DatabaseName,
-              coll: *InputCollectionName
+              coll: *InputCollectionName,
+              config: {
+                  startAtOperationTime: *StartTimestamp
+              }
             }
           },
           { $replaceRoot: { newRoot: "$fullDocument" } },
@@ -94,9 +106,10 @@ Actors:
           { $emit: { connectionName: "__noopSink" } }
         ]
         connections: [{ name: "db", type: "atlas", options: { uri: {^ClientURI: { Name: "Default" }}}}]
-  - Phase: 1
-    Nop: true
+        options: {}
   - Phase: 2
+    Nop: true
+  - Phase: 3
     Repeat: 1
     Database: *DatabaseName
     Operations:
@@ -112,11 +125,11 @@ Actors:
   Database: *DatabaseName
   Threads: 1
   Phases:
-  - Phase: 0
+  - Phase: 0..1
     Nop: true
-  - Phase: 1
+  - Phase: 2
     Repeat: 1
     StreamProcessorName: *StreamProcessorName
     ExpectedDocumentCount: *ExpectedDocumentCount
-  - Phase: 2
+  - Phase: 3
     Nop: true

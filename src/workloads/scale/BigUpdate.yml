@@ -131,12 +131,14 @@ AutoRun:
       - atlas-like-replica.2022-10
       - replica
       - replica-1dayhistory-15gbwtcache
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - replica-disable-execution-control
       - replica-noflowcontrol
       - single-replica
       - standalone
       - standalone-classic-query-engine
+      - standalone-query-stats
       - standalone-sbe
     atlas_setup:
       $neq:

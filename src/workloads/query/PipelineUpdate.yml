@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This workload runs both classic and pipeline-based updates. It records and monitors the metrics of
   the two update types on documents of different sizes and shapes.
 
@@ -269,6 +269,7 @@ AutoRun:
       - atlas
       - atlas-like-replica.2022-10
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - standalone
     branch_name:

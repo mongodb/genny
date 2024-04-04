@@ -1,0 +1,164 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query-execution"
+Description: |
+  Create collection with multiple indexes and run queries for which multi planner needs to read a lot
+  of data in order to pick the best plan.
+
+  First CrudActor QueryWithMultiplanning will use queries specifically design to trick tie
+  breaking heuristics, so that if the planner doesn't reach enough data, it will pick the wrong
+  index.
+
+  Second CrudActor QueryWithMultiplanningAndTieBreakingHeuristics will use queries for which tie
+  breaking heuristics are guessing the correct index.
+    In both cases, heuristics lead us to pick the (flag_a, flag_b) index.  In the first case, this is a bad choice:
+    the two boolean predicates select 25% of documents while the int_a predicate is much narrower.
+    In the second case, we still choose the (flag_a, flag_b) index, but this time it is the correct choice,
+    because the int_a predicate matches >50% of documents.
+Keywords:
+  - indexes
+
+Actors:
+  - Name: InitCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: &MaxPhase 5
+        PhaseConfig:
+          Repeat: 1
+          Database: &Database test
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                createIndexes: &Collection Collection0
+                indexes:
+                  - key:
+                      flag_a: 1
+                      flag_b: 1
+                    name: flags
+                  - key:
+                      int_a: 1
+                    name: int
+
+  - Name: DisablePlanCache
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhase
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          Operations:
+            - OperationName: AdminCommand
+              OperationCommand:
+                setParameter: 1
+                internalQueryDisablePlanCache: true
+
+  - Name: Insert
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhase
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Threads: 1
+          CollectionCount: 1
+          DocumentCount: 2e6
+          BatchSize: 1000
+          Document:
+            flag_a: &randomBit { ^RandomInt: { min: 0, max: 1 } }
+            flag_b: *randomBit
+            int_a: &randomSmallInt { ^RandomInt: { min: 1, max: 10 } }
+            int_b: { ^Inc: {} }
+
+  - Name: QueryWithMultiplanning
+    Type: CrudActor
+    Database: *Database
+    Threads: 4
+    Phases:
+      - &Nop { Nop: true }
+      - *Nop
+      - Repeat: 100
+        Collection: *Collection
+        Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter:
+                flag_a: *randomBit
+                flag_b: *randomBit
+                int_a: *randomSmallInt
+                int_b: { $gte: 1900000 }
+      - Repeat: 100
+        Collection: *Collection
+        Operations:
+          - OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $match:
+                      {
+                        flag_a: *randomBit,
+                        flag_b: *randomBit,
+                        int_a: *randomSmallInt,
+                        int_b: { $gte: 1900000 },
+                      },
+                  },
+                  { $group: { _id: "$int_a", sum_b: { $sum: "$int_b" } } },
+                ]
+      - *Nop
+      - *Nop
+  - Name: QueryWithMultiplanningAndTieBreakingHeuristics
+    Type: CrudActor
+    Database: *Database
+    Threads: 4
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 100
+        Collection: *Collection
+        Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter:
+                flag_a: *randomBit
+                int_a: { $gte: 1, $lte: 7}
+                int_b: { $gte: 1900000 }
+      - Repeat: 100
+        Collection: *Collection
+        Operations:
+          - OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $match:
+                      {
+                        flag_a: *randomBit,
+                        int_a: { $gte: 1, $lte: 6 },
+                        int_b: { $gte: 1900000 },
+                      },
+                  },
+                  { $group: { _id: "$int_a", sum_b: { $sum: "$int_b" } } },
+                ]
+
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-sbe
+      branch_name:
+        $gte: v8.0

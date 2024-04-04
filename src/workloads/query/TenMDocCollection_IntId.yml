@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This workload tests the performance of IDHACK on queries with int _id versus non-IDHACK queries
   on regular int indices.
 
@@ -170,11 +170,17 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
+      - standalone-80-feature-flags
       - standalone-all-feature-flags
       - standalone
+      - standalone-query-stats
       - shard
+      - shard-80-feature-flags
       - shard-lite
+      - shard-query-stats
       - single-replica
       - replica
       - replica-query-stats-rate-limit
       - atlas-like-replica.2022-10
+      - atlas-like-replica.2023-09
+      - atlas-like-replica-query-stats.2023-09

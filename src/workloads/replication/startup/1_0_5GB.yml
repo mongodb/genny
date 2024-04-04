@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: mongodb/server-replication"
-Description: >
+Description: |
   Loads the data for the light phase.
   To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -10,6 +10,7 @@ Description: >
   during startup recovery:
 
   Sample logs:
+  ```
   +-------------------------------------------------------------------------------------------+
   | {                                                                                         |
   |     s: "I",                                                                               |
@@ -19,6 +20,7 @@ Description: >
   |     msg: "No oplog entries to apply for recovery. Start point is at the top of the oplog" |
   |   }                                                                                       |
   +-------------------------------------------------------------------------------------------+
+  ```
 
 Keywords:
 - startup
