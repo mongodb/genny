@@ -40,12 +40,12 @@ Actors:
         {^Choose: {from: ["net"]}}
       ]}}
       dob: {^RandomDate: {min: "1930-01-01", max: "2016-12-31"}}
-      gender: {^Choose: {from: ["Other"]}}
+      gender: {^Choose: {from: ["Female"]}}
       address: &address {
         number: {^RandomInt: {min: 9999, max: 9999}},
         street: {^FastRandomString: {length: {^RandomInt: {min: 30, max: 30}}}},
         city: {^FastRandomString: {length: {^RandomInt: {min: 5, max: 5}}}},
-        state: {^Choose: {from: ["WY"]}},
+        state: {^Choose: {from: ["UT"]}},
         zip: {^FastRandomString: {length: 6, alphabet: "2"}},
         location: {position: {type: "Point", coordinates: [
           {^RandomDouble: {min: -118.668469, max: -118.668469}},
@@ -54,14 +54,13 @@ Actors:
       }
       policies: {^Array: {number: {^RandomInt: {min: 3, max: 3}}, of: {^Choose: {from: [
         {
-          policyType: "auto",
+          policyType: "life",
           policyNum: &policyNum {^FastRandomString: {length: 1}},
           nextRenewalDt: &nextRenewalDt {^RandomDate: {min: "2017-01-01", max: "2017-12-31"}},
           year: {^RandomInt: {min: 1980, max: 2017}},
           value: {^RandomInt: {min: 500000, max: 500000}},
           model: {^FastRandomString: {length: 1}},
         },
-
         }
       ]}}}}
   - &Nop {Nop: true}
