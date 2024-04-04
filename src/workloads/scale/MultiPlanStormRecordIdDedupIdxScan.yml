@@ -8,6 +8,15 @@ Description: >
   RecordId set. This causes the memory footprint to increase until the server is eventually OOM
   killed.
 
+Keywords:
+- CrudActor
+- indexes
+- Loader
+- memory
+- planning
+- scale
+- stress
+
 GlobalDefaults:
   MaxPhases: &MaxPhases 2
   # The amount of documents here is important. Since trial-runs in the query planner "tournament"
