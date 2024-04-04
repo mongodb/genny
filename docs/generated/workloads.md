@@ -1,4 +1,11 @@
-# Workload Documentation 
+# Workload Documentation
+
+This documentation is generated from the yaml files in the `src/workloads` directory. The workloads listed here are limited in scope to the Genny repo.
+
+We parse the `keywords`, `owner`, `description`, and the workload name from each yaml file to generate this documentation. Clicking on the header of each workload will take you to its yaml file in the repo.
+
+If you want to update the documentation please update the workload's respective yaml file, run `./run-genny generate-docs`, and commit the changes.
+
 
 ## [ChangeEventApplication](https://www.github.com/mongodb/genny/blob/master/src/workloads/c2c/ChangeEventApplication.yml)
 ### Owner

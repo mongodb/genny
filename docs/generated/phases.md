@@ -1,4 +1,11 @@
-# Workload Documentation 
+# Phase Documentation
+
+This documentation is generated from the yaml files in the `src/phases` directory. The phases listed here are limited in scope to the Genny repo.
+
+We parse the `keywords`, `owner`, `description`, and the phase name from each yaml file to generate this documentation. Clicking on the header of each phase will take you to its yaml file in the repo.
+
+If you want to update the documentation please update the phase's respective yaml file, run `./run-genny generate-docs`, and commit the changes.
+
 
 ## [ExamplePhase2](https://www.github.com/mongodb/genny/blob/master/src/phases/HelloWorld/ExamplePhase2.yml)
 ### Owner

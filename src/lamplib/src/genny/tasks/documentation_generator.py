@@ -24,15 +24,15 @@ def main(genny_repo_root: str):
     SLOG.info("Generating workload documentation.")
     input_dir = path.join(genny_repo_root, "src", "workloads")
     output_file = path.join(genny_repo_root, "docs", "generated", "workloads.md")
-    generate_workload_documentation(genny_repo_root, input_dir, output_file)
+    generate_workload_documentation(genny_repo_root, input_dir, output_file, "workload")
 
     SLOG.info("Generating phase documentation.")
     input_dir = path.join(genny_repo_root, "src", "phases")
     output_file = path.join(genny_repo_root, "docs", "generated", "phases.md")
-    generate_workload_documentation(genny_repo_root, input_dir, output_file)
+    generate_workload_documentation(genny_repo_root, input_dir, output_file, "phase")
 
 
-def generate_workload_documentation(genny_repo_root, input_dir, output_file):
+def generate_workload_documentation(genny_repo_root, input_dir, output_file, documentation_type):
     workload_dirs = [input_dir]
     SLOG.info("Gathering workloads from files.", workload_dirs=workload_dirs)
 
@@ -46,7 +46,7 @@ def generate_workload_documentation(genny_repo_root, input_dir, output_file):
     SLOG.info("Workloads found.", count=len(workloads))
 
     SLOG.info("Generating documentation.")
-    documentation = generate_markdown(workloads)
+    documentation = generate_markdown(workloads, documentation_type)
 
     SLOG.info("Writing documentation to file.")
     write_documentation(documentation, output_file)
@@ -77,10 +77,10 @@ def get_workload_from_file(yaml_path: str, genny_repo_root: str) -> Workload:
         )
 
 
-def generate_markdown(workloads: list[Workload]) -> str:
+def generate_markdown(workloads: list[Workload], documentation_type) -> str:
     environment = Environment(loader=PackageLoader("genny"), autoescape=False)
     template = environment.get_template("documentation.md.j2")
-    return template.render(workloads=workloads)
+    return template.render(workloads=workloads, documentation_type=documentation_type)
 
 
 def write_documentation(documentation: str, output_file: str):
