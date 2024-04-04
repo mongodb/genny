@@ -224,3 +224,10 @@ AutoRun:
     branch_name:
       $gte:
         v7.1
+- When:
+    mongodb_setup:
+      $eq:
+      - atlas-like-replica-query-stats.2023-09
+    branch_name:
+      $gte:
+        v7.0
