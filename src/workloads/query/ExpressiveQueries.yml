@@ -60,9 +60,7 @@ Actors:
           year: {^RandomInt: {min: 1980, max: 2017}},
           value: {^RandomInt: {min: 500000, max: 500000}},
           model: {^FastRandomString: {length: 1}},
-        },
-        }
-      ]}}}
+        }]}}}}
   - &Nop {Nop: true}
   - *Nop
   - *Nop
