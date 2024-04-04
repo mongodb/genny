@@ -49,7 +49,7 @@ def dry_run_workload(
         "MajorityWrites10KThreads.yml",
         "ConnectionPoolStress.yml",
         "SinusoidalReadWrites.yml",
-        "MultiPlanStormRecordIdDedupIdxScan.yml"
+        "MultiPlanStormRecordIdDedupIdxScan.yml",
         "UpdateSingleLargeDocumentWith10kThreads.yml",
     ]:
         SLOG.info("TIG-1435 skipping dry run on macOS", file=yaml_file_path)
