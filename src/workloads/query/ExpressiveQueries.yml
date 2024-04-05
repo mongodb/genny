@@ -129,7 +129,7 @@ Actors:
 
 - Name: RunQueries
   Type: CrudActor
-  Threads: 
+  Threads: 1
   Phases:
   - *Nop
   - *Nop
