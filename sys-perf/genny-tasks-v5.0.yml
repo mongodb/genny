@@ -1,0 +1,1629 @@
+tasks:
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TenMDocCollection_IntId_Agg.yml
+      test_control: ten_m_doc_collection__int_id__agg
+  name: ten_m_doc_collection__int_id__agg
+  priority: 5
+  tags:
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-query-stats
+  - genny-autorun-shard-lite
+  - genny-autorun-single-replica
+  - genny-autorun-replica
+  - genny-autorun-replica-query-stats-rate-limit
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-atlas-like-replica.2023-09
+  - genny-autorun-atlas-like-replica-query-stats.2023-09
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TenMDocCollection_SubDocId.yml
+      test_control: ten_m_doc_collection__sub_doc_id
+  name: ten_m_doc_collection__sub_doc_id
+  priority: 5
+  tags:
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-query-stats
+  - genny-autorun-single-replica
+  - genny-autorun-replica
+  - genny-autorun-replica-query-stats-rate-limit
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-atlas-like-replica.2023-09
+  - genny-autorun-atlas-like-replica-query-stats.2023-09
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/Mixed10KThreads.yml
+      test_control: mixed10_k_threads
+  name: mixed10_k_threads
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/issues/ConnectionsBuildup.yml
+      test_control: connections_buildup
+  name: connections_buildup
+  priority: 5
+  tags:
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-single-replica
+  - genny-autorun-shard-single
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/LargeScaleLongLived.yml
+      test_control: large_scale_long_lived
+  name: large_scale_long_lived
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-atlas-like-replica.2023-09
+  - genny-autorun-atlas-like-replica-query-stats.2023-09
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-single-replica
+  - genny-autorun-single-replica-15gbwtcache
+  - genny-autorun-standalone
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-standalone-sbe
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MassDeleteRegression.yml
+      test_control: mass_delete_regression
+  name: mass_delete_regression
+  priority: 5
+  tags:
+  - genny-autorun-replica
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/docs/ParallelInsert.yml
+      test_control: parallel_insert
+  name: parallel_insert
+  priority: 5
+  tags:
+  - genny-autorun-replica
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/AggregationsOutput.yml
+      test_control: aggregations_output
+  name: aggregations_output
+  priority: 5
+  tags:
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-lite-80-feature-flags
+  - genny-autorun-shard-lite-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/SetWindowFieldsUnbounded.yml
+      test_control: set_window_fields_unbounded
+  name: set_window_fields_unbounded
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-sbe
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-shard-lite
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/multi_updates/MultiUpdates.yml
+      test_control: multi_updates_multi_updates
+  name: multi_updates_multi_updates
+  priority: 5
+  tags:
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-lite-80-feature-flags
+  - genny-autorun-shard-lite-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/ReshardCollectionReadHeavy.yml
+      test_control: reshard_collection_read_heavy
+  name: reshard_collection_read_heavy
+  priority: 5
+  tags:
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-heuristic-bonsai
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-lite-80-feature-flags
+  - genny-autorun-shard-lite-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/SlidingWindows.yml
+      test_control: sliding_windows
+  name: sliding_windows
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-sbe
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-shard-lite
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/RepeatedPathTraversalSmall.yml
+      test_control: repeated_path_traversal_small
+  name: repeated_path_traversal_small
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-heuristic-bonsai
+  - genny-autorun-standalone-sampling-bonsai
+  - genny-autorun-standalone-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MixedWrites.yml
+      test_control: mixed_writes
+  name: mixed_writes
+  priority: 5
+  tags:
+  - genny-autorun-replica
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/WindowWithComplexPartitionExpression.yml
+      test_control: window_with_complex_partition_expression
+  name: window_with_complex_partition_expression
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-sbe
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-shard-lite
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TenMDocCollection_ObjectId_Sharded.yml
+      test_control: ten_m_doc_collection__object_id__sharded
+  name: ten_m_doc_collection__object_id__sharded
+  priority: 5
+  tags:
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-query-stats
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/transactions/LLTMixed.yml
+      test_control: llt_mixed
+  name: llt_mixed
+  priority: 5
+  tags:
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-single-replica
+  - genny-autorun-single-replica-classic-query-engine
+  - genny-autorun-single-replica-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/WouldChangeOwningShardBatchWrite.yml
+      test_control: would_change_owning_shard_batch_write
+  name: would_change_owning_shard_batch_write
+  priority: 5
+  tags:
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-lite-80-feature-flags
+  - genny-autorun-shard-lite-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/selftests/GennyOverhead.yml
+      test_control: genny_overhead
+  name: genny_overhead
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/OneMDocCollection_LargeDocIntId.yml
+      test_control: one_m_doc_collection__large_doc_int_id
+  name: one_m_doc_collection__large_doc_int_id
+  priority: 5
+  tags:
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-query-stats
+  - genny-autorun-shard-lite
+  - genny-autorun-single-replica
+  - genny-autorun-replica
+  - genny-autorun-replica-query-stats-rate-limit
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-atlas-like-replica.2023-09
+  - genny-autorun-atlas-like-replica-query-stats.2023-09
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/LookupNLJ.yml
+      test_control: lookup_nlj
+  name: lookup_nlj
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-standalone-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/ExpressiveQueries.yml
+      test_control: expressive_queries
+  name: expressive_queries
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-single-replica
+  - genny-autorun-standalone
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-standalone-sbe
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/issues/MongosLatency.yml
+      test_control: mongos_latency
+  name: mongos_latency
+  priority: 5
+  tags:
+  - genny-autorun-atlas-shard
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/LookupSBEPushdown.yml
+      test_control: lookup_sbe_pushdown
+  name: lookup_sbe_pushdown
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-standalone-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/LoadTest.yml
+      test_control: load_test
+  name: load_test
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/LookupOnly.yml
+      test_control: lookup_only
+  name: lookup_only
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/CreateBigIndex.yml
+      test_control: create_big_index
+  name: create_big_index
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-single-replica
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/PrivateWorkloads/src/workloads/examples/HelloWorld-Private.yml
+      test_control: hello_world__private
+  name: hello_world__private
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/CreateDropView.yml
+      test_control: create_drop_view
+  name: create_drop_view
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-shard-lite
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TenMDocCollection_IntId_IdentityView.yml
+      test_control: ten_m_doc_collection__int_id__identity_view
+  name: ten_m_doc_collection__int_id__identity_view
+  priority: 5
+  tags:
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-query-stats
+  - genny-autorun-shard-lite
+  - genny-autorun-single-replica
+  - genny-autorun-replica
+  - genny-autorun-replica-query-stats-rate-limit
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-atlas-like-replica.2023-09
+  - genny-autorun-atlas-like-replica-query-stats.2023-09
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/ScanWithLongLived.yml
+      test_control: scan_with_long_lived
+  name: scan_with_long_lived
+  priority: 5
+  tags:
+  - genny-autorun-replica-noflowcontrol
+  - genny-autorun-single-replica
+  - genny-autorun-single-replica-classic-query-engine
+  - genny-autorun-single-replica-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/LookupSBEPushdownINLJMisc.yml
+      test_control: lookup_sbe_pushdown_inlj_misc
+  name: lookup_sbe_pushdown_inlj_misc
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-standalone-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/LookupWithOnlyUnshardedColls.yml
+      test_control: lookup_with_only_unsharded_colls
+  name: lookup_with_only_unsharded_colls
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-lite-80-feature-flags
+  - genny-autorun-shard-lite-all-feature-flags
+  - genny-autorun-single-replica
+  - genny-autorun-single-replica-classic-query-engine
+  - genny-autorun-single-replica-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MixedWorkloadsGenny.yml
+      test_control: mixed_workloads_genny
+  name: mixed_workloads_genny
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-1dayhistory-15gbwtcache
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-replica-maintenance-events
+  - genny-autorun-replica-noflowcontrol
+  - genny-autorun-replica-query-stats-rate-limit
+  - genny-autorun-single-replica
+  - genny-autorun-single-replica-classic-query-engine
+  - genny-autorun-single-replica-sbe
+  - genny-autorun-standalone
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/networking/CommitLatency.yml
+      test_control: commit_latency
+  name: commit_latency
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-replica-noflowcontrol
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CPUCycleMetricsFind.yml
+      test_control: cpu_cycle_metrics_find
+  name: cpu_cycle_metrics_find
+  priority: 5
+  tags:
+  - genny-autorun-replica-ipc-counters.2023-06
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/RepeatedPathTraversalMedium.yml
+      test_control: repeated_path_traversal_medium
+  name: repeated_path_traversal_medium
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-heuristic-bonsai
+  - genny-autorun-standalone-sampling-bonsai
+  - genny-autorun-standalone-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/issues/ConnectionPoolStress.yml
+      test_control: connection_pool_stress
+  name: connection_pool_stress
+  priority: 5
+  tags:
+  - genny-autorun-shard-single
+  - genny-autorun-replica
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/ValidateCmd.yml
+      test_control: validate_cmd
+  name: validate_cmd
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/transactions/LLTMixedSmall.yml
+      test_control: llt_mixed_small
+  name: llt_mixed_small
+  priority: 5
+  tags:
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-single-replica
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MajorityReads10KThreads.yml
+      test_control: majority_reads10_k_threads
+  name: majority_reads10_k_threads
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-single-replica
+  - genny-autorun-single-replica-classic-query-engine
+  - genny-autorun-single-replica-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TenMDocCollection_ObjectId.yml
+      test_control: ten_m_doc_collection__object_id
+  name: ten_m_doc_collection__object_id
+  priority: 5
+  tags:
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-query-stats
+  - genny-autorun-single-replica
+  - genny-autorun-replica
+  - genny-autorun-replica-query-stats-rate-limit
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-atlas-like-replica.2023-09
+  - genny-autorun-atlas-like-replica-query-stats.2023-09
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/multi_updates/MultiUpdates-PauseMigrations-ShardCollection.yml
+      test_control: multi_updates_multi_updates__pause_migrations__shard_collection
+  name: multi_updates_multi_updates__pause_migrations__shard_collection
+  priority: 5
+  tags:
+  - genny-autorun-shard-lite-80-feature-flags
+  - genny-autorun-shard-lite-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/ExternalSort.yml
+      test_control: external_sort
+  name: external_sort
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MixedWorkloadsGennyStressWithScans.yml
+      test_control: mixed_workloads_genny_stress_with_scans
+  name: mixed_workloads_genny_stress_with_scans
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-replica
+  - genny-autorun-replica-disable-execution-control
+  - genny-autorun-atlas-like-replica.2022-10
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/InsertBigDocs.yml
+      test_control: insert_big_docs
+  name: insert_big_docs
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-single-replica
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/UpdateWithSecondaryIndexes.yml
+      test_control: update_with_secondary_indexes
+  name: update_with_secondary_indexes
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MixedWorkloadsGennyStress.yml
+      test_control: mixed_workloads_genny_stress
+  name: mixed_workloads_genny_stress
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-replica
+  - genny-autorun-replica-disable-execution-control
+  - genny-autorun-atlas-like-replica.2022-10
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/ReshardCollection.yml
+      test_control: reshard_collection
+  name: reshard_collection
+  priority: 5
+  tags:
+  - genny-autorun-shard-lite-80-feature-flags
+  - genny-autorun-shard-lite-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CumulativeWindows.yml
+      test_control: cumulative_windows
+  name: cumulative_windows
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-sbe
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-shard-lite
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CPUCycleMetricsDelete.yml
+      test_control: cpu_cycle_metrics_delete
+  name: cpu_cycle_metrics_delete
+  priority: 5
+  tags:
+  - genny-autorun-replica-ipc-counters.2023-06
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/ManyUpdate.yml
+      test_control: many_update
+  name: many_update
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-noflowcontrol
+  - genny-autorun-replica-1dayhistory-15gbwtcache
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-single-replica
+  - genny-autorun-standalone
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/BigUpdate.yml
+      test_control: big_update
+  name: big_update
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-1dayhistory-15gbwtcache
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-replica-disable-execution-control
+  - genny-autorun-replica-noflowcontrol
+  - genny-autorun-single-replica
+  - genny-autorun-standalone
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-standalone-sbe
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/ConstantFoldArithmetic.yml
+      test_control: constant_fold_arithmetic
+  name: constant_fold_arithmetic
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-single-replica
+  - genny-autorun-single-replica-classic-query-engine
+  - genny-autorun-single-replica-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/BulkLoading.yml
+      test_control: bulk_loading
+  name: bulk_loading
+  priority: 5
+  tags:
+  - genny-autorun-replica
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/PrivateWorkloads/src/workloads/customer_representative/DeviceMonitoring.yml
+      test_control: device_monitoring
+  name: device_monitoring
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-single-replica
+  - genny-autorun-standalone
+  - genny-autorun-atlas-like-replica
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-replica-last-continuous-fcv
+  - genny-autorun-replica-last-lts-fcv
+  - genny-autorun-replica-ssl
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/PingCommand.yml
+      test_control: ping_command
+  name: ping_command
+  priority: 5
+  tags:
+  - genny-autorun-single-replica
+  - genny-autorun-standalone
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/UnwindGroup.yml
+      test_control: unwind_group
+  name: unwind_group
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/BackgroundTTLDeletions.yml
+      test_control: background_ttl_deletions
+  name: background_ttl_deletions
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/SecondaryReadsGenny.yml
+      test_control: secondary_reads_genny
+  name: secondary_reads_genny
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-atlas-like-replica
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TenMDocCollection_IntId.yml
+      test_control: ten_m_doc_collection__int_id
+  name: ten_m_doc_collection__int_id
+  priority: 5
+  tags:
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-query-stats
+  - genny-autorun-single-replica
+  - genny-autorun-replica
+  - genny-autorun-replica-query-stats-rate-limit
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-atlas-like-replica.2023-09
+  - genny-autorun-atlas-like-replica-query-stats.2023-09
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/networking/CommitLatencySingleUpdate.yml
+      test_control: commit_latency_single_update
+  name: commit_latency_single_update
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-replica-noflowcontrol
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/InCacheSnapshotReads.yml
+      test_control: in_cache_snapshot_reads
+  name: in_cache_snapshot_reads
+  priority: 5
+  tags:
+  - genny-autorun-replica-1dayhistory-15gbwtcache
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/SinusoidalReadWrites.yml
+      test_control: sinusoidal_read_writes
+  name: sinusoidal_read_writes
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/WriteOneReplicaSet.yml
+      test_control: write_one_replica_set
+  name: write_one_replica_set
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-single-replica
+  - genny-autorun-standalone
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/WriteOneWithoutShardKeyUnshardedCollection.yml
+      test_control: write_one_without_shard_key_unsharded_collection
+  name: write_one_without_shard_key_unsharded_collection
+  priority: 5
+  tags:
+  - genny-autorun-shard-single
+  - genny-autorun-shard-single-stress
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/InsertRemove.yml
+      test_control: insert_remove
+  name: insert_remove
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-single-replica
+  - genny-autorun-standalone
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-replica-1dayhistory-15gbwtcache
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/SortByExpression.yml
+      test_control: sort_by_expression
+  name: sort_by_expression
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-sbe
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-shard-lite
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/LookupUnwind.yml
+      test_control: lookup_unwind
+  name: lookup_unwind
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/ReshardCollectionMixed.yml
+      test_control: reshard_collection_mixed
+  name: reshard_collection_mixed
+  priority: 5
+  tags:
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-lite-80-feature-flags
+  - genny-autorun-shard-lite-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/networking/ServiceArchitectureWorkloads.yml
+      test_control: service_architecture_workloads
+  name: service_architecture_workloads
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-noflowcontrol
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/MultiPlanning.yml
+      test_control: multi_planning
+  name: multi_planning
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-standalone-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/GraphLookupWithOnlyUnshardedColls.yml
+      test_control: graph_lookup_with_only_unsharded_colls
+  name: graph_lookup_with_only_unsharded_colls
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-lite-80-feature-flags
+  - genny-autorun-shard-lite-all-feature-flags
+  - genny-autorun-single-replica
+  - genny-autorun-single-replica-classic-query-engine
+  - genny-autorun-single-replica-sbe
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/multi_updates/MultiUpdates-PauseMigrations.yml
+      test_control: multi_updates_multi_updates__pause_migrations
+  name: multi_updates_multi_updates__pause_migrations
+  priority: 5
+  tags:
+  - genny-autorun-shard-lite-80-feature-flags
+  - genny-autorun-shard-lite-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/TenMDocCollection_IntId_IdentityView_Agg.yml
+      test_control: ten_m_doc_collection__int_id__identity_view__agg
+  name: ten_m_doc_collection__int_id__identity_view__agg
+  priority: 5
+  tags:
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-query-stats
+  - genny-autorun-shard-lite
+  - genny-autorun-single-replica
+  - genny-autorun-replica
+  - genny-autorun-replica-query-stats-rate-limit
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-atlas-like-replica.2023-09
+  - genny-autorun-atlas-like-replica-query-stats.2023-09
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/networking/TransportLayerConnectTiming.yml
+      test_control: transport_layer_connect_timing
+  name: transport_layer_connect_timing
+  priority: 5
+  tags:
+  - genny-autorun-replica-auth-cluster-delay
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/QueryStatsQueryShapes.yml
+      test_control: query_stats_query_shapes
+  name: query_stats_query_shapes
+  priority: 5
+  tags:
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-single-replica
+  - genny-autorun-replica
+  - genny-autorun-replica-query-stats-rate-limit
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-atlas-like-replica.2023-09
+  - genny-autorun-atlas-like-replica-query-stats.2023-09
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/sharding/multi_updates/MultiUpdates-ShardCollection.yml
+      test_control: multi_updates_multi_updates__shard_collection
+  name: multi_updates_multi_updates__shard_collection
+  priority: 5
+  tags:
+  - genny-autorun-shard
+  - genny-autorun-shard-80-feature-flags
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-lite-80-feature-flags
+  - genny-autorun-shard-lite-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/OutOfCacheSnapshotReads.yml
+      test_control: out_of_cache_snapshot_reads
+  name: out_of_cache_snapshot_reads
+  priority: 5
+  tags:
+  - genny-autorun-replica-1dayhistory-15gbwtcache
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/UnionWith.yml
+      test_control: union_with
+  name: union_with
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-shard-lite
+  - genny-autorun-standalone
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-query-stats
+  - genny-autorun-standalone-sbe
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/BackgroundValidateCmd.yml
+      test_control: background_validate_cmd
+  name: background_validate_cmd
+  priority: 5
+  tags:
+  - genny-autorun-replica
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/execution/ValidateCmdFull.yml
+      test_control: validate_cmd_full
+  name: validate_cmd_full
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MixedWorkloadsGennyRateLimited.yml
+      test_control: mixed_workloads_genny_rate_limited
+  name: mixed_workloads_genny_rate_limited
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-replica-1dayhistory-15gbwtcache
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-replica-maintenance-events
+  - genny-autorun-replica-noflowcontrol
+  - genny-autorun-single-replica
+  - genny-autorun-single-replica-classic-query-engine
+  - genny-autorun-single-replica-sbe
+  - genny-autorun-standalone
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/OutOfCacheScanner.yml
+      test_control: out_of_cache_scanner
+  name: out_of_cache_scanner
+  priority: 5
+  tags:
+  - genny-autorun-single-replica-15gbwtcache
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CPUCycleMetricsInsert.yml
+      test_control: cpu_cycle_metrics_insert
+  name: cpu_cycle_metrics_insert
+  priority: 5
+  tags:
+  - genny-autorun-replica-ipc-counters.2023-06
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/PipelineUpdate.yml
+      test_control: pipeline_update
+  name: pipeline_update
+  priority: 5
+  tags:
+  - genny-autorun-atlas
+  - genny-autorun-atlas-like-replica.2022-10
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-standalone
+  - no-m30
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/MajorityWrites10KThreads.yml
+      test_control: majority_writes10_k_threads
+  name: majority_writes10_k_threads
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/CPUCycleMetricsUpdate.yml
+      test_control: cpu_cycle_metrics_update
+  name: cpu_cycle_metrics_update
+  priority: 5
+  tags:
+  - genny-autorun-replica-ipc-counters.2023-06
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/UpdateLargeDocuments.yml
+      test_control: update_large_documents
+  name: update_large_documents
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-shard-lite
+  - genny-autorun-shard-lite-80-feature-flags
+  - genny-autorun-shard-lite-all-feature-flags
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/query/WindowWithNestedFieldProjection.yml
+      test_control: window_with_nested_field_projection
+  name: window_with_nested_field_projection
+  priority: 5
+  tags:
+  - genny-autorun-standalone
+  - genny-autorun-standalone-80-feature-flags
+  - genny-autorun-standalone-all-feature-flags
+  - genny-autorun-standalone-classic-query-engine
+  - genny-autorun-standalone-sbe
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-shard-lite
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 7200
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: ./src/genny/src/workloads/scale/LargeIndexedIns.yml
+      test_control: large_indexed_ins
+  name: large_indexed_ins
+  priority: 5
+  tags:
+  - genny-autorun-replica
+  - genny-autorun-replica-80-feature-flags
+  - genny-autorun-replica-all-feature-flags
+  - genny-autorun-single-replica
+  - genny-autorun-single-replica-classic-query-engine
+  - genny-autorun-single-replica-sbe

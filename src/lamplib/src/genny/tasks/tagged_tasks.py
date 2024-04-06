@@ -69,7 +69,7 @@ def parse_activate_generated_tasks(activate_generated_tasks_param):
     return activate_tasks
 
 
-ALL_BRANCHES = ["v4.4", "v5.0", "v6.0", "v7.0", "v7.2", "v7.3", "master"]
+ALL_BRANCHES = ["v5.0", "v6.0", "v7.0", "v7.3", "v8.0", "master"]
 
 def main(workspace_root: str) -> None:
     lister = WorkloadLister(workspace_root=workspace_root)
@@ -78,6 +78,6 @@ def main(workspace_root: str) -> None:
     repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
     for branch in ALL_BRANCHES:
         project = create_project(repo, branch)
-        os.makedirs(os.path.join(workspace_root, "src", "genny", "generated_tasks"), exist_ok=True)
-        with open(os.path.join(workspace_root, "src", "genny", "generated_tasks", f"genny-tasks-{branch}.yml"), "w") as outfile:
+        os.makedirs(os.path.join(workspace_root, "src", "genny", "sys-perf"), exist_ok=True)
+        with open(os.path.join(workspace_root, "src", "genny", "sys-perf", f"genny-tasks-{branch}.yml"), "w") as outfile:
             outfile.write(yaml.dump(project))

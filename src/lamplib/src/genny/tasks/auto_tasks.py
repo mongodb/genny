@@ -285,14 +285,17 @@ class Workload:
                     )
                 operator, value = list(condition.items())[0]
                 if key == "infrastructure_provisioning" and operator == "$neq" and value == ["graviton-single-lite.2022-11"]:
-                    continue
-                if key == "atlas_setup" and operator == "$neq" and "M30-repl" in value:
-                    continue
-                if key == "mongodb_setup":
+                    tags.append("no-graviton-single-lite")
+                elif key == "atlas_setup" and operator == "$neq" and "M30-repl" in value:
+                    tags.append("no-m30")
+                elif key == "mongodb_setup":
                     if operator != "$eq":
                         raise ValueError("mongodb_setup in AutoRun must always use the $eq operator")
-                    for value in value:
+                    if isinstance(value, str):
                         tags.append(f"genny-autorun-{value}")
+                    else:
+                        for value in value:
+                            tags.append(f"genny-autorun-{value}")
                 elif key == "branch_name":
                     if operator == "$eq":
                         acceptable_values = value
