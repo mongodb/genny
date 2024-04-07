@@ -142,8 +142,6 @@ Actors:
       OperationName: find
       OperationCommand:
         Filter: &filter {
-          gender: "Female",
-          address.state: "UT",
           policies: {
             $elemMatch: {
               policyType: "life",
