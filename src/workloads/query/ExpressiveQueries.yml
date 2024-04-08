@@ -142,12 +142,7 @@ Actors:
       OperationName: find
       OperationCommand:
         Filter: &filter {
-          dob: {
-            # Currently, using generator is the only way to generate date value with the appropriate BSON type.
-            # TODO: PERF-2084 Use ^Date instead.
-            $gte: {^RandomDate: {min: "1990-01-01", max: "1990-01-01T00:00:00.001"}},
-            $lte: {^RandomDate: {min: "1990-12-31", max: "1990-12-31T00:00:00.001"}}
-          }
+          address.state: "UT"
         }
   - Repeat: 100
     Duration: 5 minutes
