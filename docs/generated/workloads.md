@@ -5047,6 +5047,17 @@ Requires at least 3-node replset.
 
 
 
+## MultiPlanStormRecordIdDedupIdxScan
+### Owner
+@mongodb/query
+### Description
+The workload tests the server under a "multi-plan storm" which results in unbounded growth of the deduplicated set of RecordIds during an index scan. The same query requiring a multi-plan is executed by many threads, each of them triggering a multi-plan. Each of the plans in the multi-plan, on each thread, is index scanning a large number of documents, while maintaining a RecordId set. This causes the memory footprint to increase until the server is eventually OOM killed.
+
+  
+### Keywords
+CrudActor, indexes, Loader, memory, planning, scale, stress 
+
+
 ## NegativeScalingLoadStress
 ### Owner
 @mongodb/product-perf
