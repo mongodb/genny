@@ -142,7 +142,12 @@ Actors:
       OperationName: find
       OperationCommand:
         Filter: &filter {
-          address.state: "UT"
+          policies: {
+            $elemMatch: {
+              policyType: "life",
+              insured_person.smoking: 1
+            }
+          }
         }
   - Repeat: 100
     Duration: 5 minutes
