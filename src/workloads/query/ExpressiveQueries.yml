@@ -142,6 +142,7 @@ Actors:
       OperationName: find
       OperationCommand:
         Filter: &filter {
+          gender: "Female",
           address.state: "UT",
         }
   - Repeat: 100
