@@ -24,10 +24,13 @@ def main_genny_runner(
     workspace_root: str,
     hang: bool = False,
     mongostream_uri: Optional[str] = None,
+    poplar_port: int = 2288,
 ):
     """
     Intended to be the main entry point for running Genny.
     """
+    os.environ["POPLAR_RPC_PORT"] = str(poplar_port)
+
     with poplar_grpc(
         cleanup_metrics=cleanup_metrics,
         workspace_root=workspace_root,

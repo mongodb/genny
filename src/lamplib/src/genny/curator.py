@@ -141,7 +141,8 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
     if cleanup_metrics:
         _cleanup_metrics()
     _create_metrics()
-    SLOG.info("Starting poplar grpc in the background.", command=args, cwd=workspace_root)
+    poplar_port = int(os.environ.get("POPLAR_RPC_PORT", 2288))
+    SLOG.info("Starting poplar grpc in the background.", command=args, cwd=workspace_root, poplar_port=poplar_port)
 
     prior_cwd = os.getcwd()
     try:
@@ -150,7 +151,6 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
             poplar = subprocess.Popen(
                 args, stdout=log_file_obj, stderr=subprocess.STDOUT, text=True
             )
-            poplar_port = int(os.environ.get("POPLAR_RPC_PORT", 2288))
             if poplar.poll() is not None:
                 raise OSError("Failed to start Poplar.")
             try:

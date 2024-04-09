@@ -1,6 +1,7 @@
 import glob
 import os
 import structlog
+from threading import Thread
 
 from genny.tasks import genny_runner
 from genny.toolchain import toolchain_info
@@ -12,12 +13,19 @@ WIP_YML_FILES = ["CrudActorFSMAdvanced.yml"]
 
 
 def dry_run_workload(
-    yaml_file_path: str, is_darwin: bool, genny_repo_root: str, workspace_root: str
+    yaml_file_path: str,
+    is_darwin: bool,
+    genny_repo_root: str,
+    workspace_root: str,
+    poplar_port: int,
 ):
     yaml_file_basename = os.path.basename(yaml_file_path)
 
     if yaml_file_basename in WIP_YML_FILES:
-        SLOG.info("Skipping dry run for workloads for future functionality.", file=yaml_file_path)
+        SLOG.info(
+            "Skipping dry run for workloads for future functionality.",
+            file=yaml_file_path,
+        )
         return
 
     if yaml_file_basename in [
@@ -34,7 +42,7 @@ def dry_run_workload(
         "YCSBLikeQueryableEncrypt5Cf32.yml",
         "YCSBLikeQueryableEncrypt5Cfdefault.yml",
         "ExponentialCompact.yml",
-        "CursorStormMongos.yml"
+        "CursorStormMongos.yml",
     ]:
         SLOG.info(f"EVG-21054 skipping dry run for {yaml_file_basename}.", file=yaml_file_path)
         return
@@ -64,6 +72,7 @@ def dry_run_workload(
         genny_repo_root=genny_repo_root,
         workspace_root=workspace_root,
         cleanup_metrics=True,
+        poplar_port=poplar_port,
     )
 
 
@@ -75,13 +84,28 @@ def dry_run_workloads(genny_repo_root: str, workspace_root: str, given_workload:
     else:
         glob_pattern = os.path.join(genny_repo_root, "src", "workloads", "*", "*.yml")
         workloads = glob.glob(glob_pattern)
-    curr = 0
-    for workload in workloads:
-        SLOG.info("Checking workload", workload=workload, index=curr, of_how_many=len(workloads))
-        dry_run_workload(
-            yaml_file_path=workload,
-            is_darwin=info.is_darwin,
-            genny_repo_root=genny_repo_root,
-            workspace_root=workspace_root,
+
+    threads: list[Thread] = []
+    for i, workload in enumerate(workloads):
+        poplar_port = 2288 + i
+        SLOG.info(
+            "Checking workload",
+            workload=workload,
+            index=i,
+            of_how_many=len(workloads),
+            poplar_port=poplar_port,
         )
-        curr += 1
+        thread = Thread(
+            target=dry_run_workload,
+            kwargs=dict(
+                yaml_file_path=workload,
+                is_darwin=info.is_darwin,
+                genny_repo_root=genny_repo_root,
+                workspace_root=workspace_root,
+                poplar_port=poplar_port,
+            ),
+        )
+        thread.start()
+        threads.append(thread)
+    for thread in threads:
+        thread.join()
