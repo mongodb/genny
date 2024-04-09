@@ -81,98 +81,17 @@ Actors:
           }
         }
       ]}}}}
+
+- Name: ShellScriptRunner
+  Type: ExternalScriptRunner
+  Threads: 1
+  Phases:
   - &Nop {Nop: true}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *DB
-  Phases:
-  - *Nop
   - Repeat: 1
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-
-- Name: CreateIndex
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  # Create index *after* running some queries without it.
-  - Repeat: 1
-    Database: *DB
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        createIndexes: Collection0
-        indexes:
-        - key:
-            address.state: 1
-            policies.policyType: 1
-            policies.insured_person.smoking: 1
-            gender: 1
-            dob: 1
-          name: usefulIndex
-  - *Nop
-  - *Nop
-
-- Name: RunQueries
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 100
-    Duration: 5 minutes
-    Database: *DB
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: QueryNoProjectionNoIndex
-      OperationName: find
-      OperationCommand:
-        Filter: &filter {
-          dob: {
-            # Currently, using generator is the only way to generate date value with the appropriate BSON type.
-            # TODO: PERF-2084 Use ^Date instead.
-            $gte: {^RandomDate: {min: "1990-01-01", max: "1990-01-01T00:00:00.001"}},
-            $lte: {^RandomDate: {min: "1990-12-31", max: "1990-12-31T00:00:00.001"}}
-          }
-        }
-  - Repeat: 100
-    Duration: 5 minutes
-    Database: *DB
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: QueryWithProjectionNoIndex
-      OperationName: find
-      OperationCommand:
-        Filter: *filter
-        Options:
-          Projection: &projection {_id: 0, firstname: 1, lastname: 1, dob: 1}
-  - *Nop
-  - *Nop
-  - Repeat: 1000  # This query is very fast, so we need to run it more times than others.
-    Duration: 5 minutes
-    Database: *DB
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: QueryWithProjectionWithIndex
-      OperationName: find
-      OperationCommand:
-        Filter: *filter
-        Options:
-          Projection: *projection
+    # script command
+    Command: "sh"
+    MetricsName: MyMetrics
+    Script: "lscpu"
 
 AutoRun:
 - When:
