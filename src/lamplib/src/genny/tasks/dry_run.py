@@ -49,6 +49,7 @@ def dry_run_workload(
         "MajorityWrites10KThreads.yml",
         "ConnectionPoolStress.yml",
         "SinusoidalReadWrites.yml",
+        "MultiPlanStormSortSkip.yml",
         "MultiPlanStormRecordIdDedupIdxScan.yml",
         "UpdateSingleLargeDocumentWith10kThreads.yml",
     ]:
