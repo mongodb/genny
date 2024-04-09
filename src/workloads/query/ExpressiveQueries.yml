@@ -118,10 +118,6 @@ Actors:
         createIndexes: Collection0
         indexes:
         - key:
-            address.state: 1
-            policies.policyType: 1
-            policies.insured_person.smoking: 1
-            gender: 1
             dob: 1
           name: usefulIndex
   - *Nop
