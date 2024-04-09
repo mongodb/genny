@@ -4257,7 +4257,7 @@ Measures the performance of running dbcheck's modes and its effect on crud opera
 dbcheck, collections, indexes, crud
 
 ## Replication Startup
-## 1_0_5GB
+### 1_0_5GB
 #### Owner
 mongodb/server-replication"
 #### Description
