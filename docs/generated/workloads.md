@@ -5529,7 +5529,7 @@ See phases/sharding/multi_updates/MultiUpdatesTemplate.yml.
 See phases/sharding/multi_updates/MultiUpdatesTemplate.yml.
 
 ## Streams
-## AddFields
+### AddFields
 #### Owner
 @10gen/altas-streams
 #### Description
